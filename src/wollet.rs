@@ -11,11 +11,13 @@ const SCAN_DELAY_SEC: u64 = 6;
 
 pub struct Wollet {
     wollet: LwkWollet,
+    signer: SwSigner,
     electrum_url: ElectrumUrl,
     db_root_dir: String
 }
 
 pub struct WolletOptions {
+    pub signer: SwSigner,
     pub network: ElementsNetwork,
     pub electrum_url: ElectrumUrl,
     pub desc: String,
@@ -32,6 +34,7 @@ impl Wollet {
         
         Ok(Wollet {
             wollet,
+            signer: opts.signer,
             electrum_url: opts.electrum_url,
             db_root_dir
         })
@@ -77,6 +80,10 @@ impl Wollet {
         }
 
         Err(anyhow!("Balance did not change over {} seconds", MAX_SCAN_RETRIES * SCAN_DELAY_SEC))
+    }
+
+    pub fn get_signer(&self) -> SwSigner {
+        self.signer.clone()
     }
 
     pub fn get_descriptor(&self) -> WolletDescriptor {

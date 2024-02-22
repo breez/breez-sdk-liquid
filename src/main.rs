@@ -64,6 +64,7 @@ async fn main() -> Result<()> {
     let electrum_url = ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, true);
 
     let mut wollet = Wollet::new(WolletOptions {
+        signer,
         network: lwk_wollet::ElementsNetwork::LiquidTestnet,
         electrum_url,
         desc,

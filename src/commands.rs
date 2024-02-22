@@ -4,7 +4,7 @@ use std::str::FromStr;
 use clap::Parser;
 use anyhow::Result;
 use rustyline::Editor;
-use lwk_signer::SwSigner;
+use lwk_signer::AnySigner;
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::{Helper, Completer, Hinter, Validator, hint::HistoryHinter};
@@ -51,9 +51,7 @@ pub(crate) async fn handle_command(
             Ok(format!("Funding successful! New balance: {new_balance} sat"))
         },
         Command::Send { amount_sat, address } => {
-            let signer = lwk_signer::AnySigner::Software(
-                SwSigner::new(&wollet.get_descriptor().to_string(), false)?
-            );
+            let signer = AnySigner::Software(wollet.get_signer());
             let recipient = lwk_wollet::elements::Address::from_str(&address)?;
             let txid = wollet
                 .send_lbtc(&[signer], None, &recipient, amount_sat)?;
