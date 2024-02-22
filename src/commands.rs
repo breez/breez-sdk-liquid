@@ -1,18 +1,15 @@
-use std::thread;
-use std::time::Duration;
 use std::borrow::Cow::{self, Owned};
+use std::str::FromStr;
 
 use clap::Parser;
-use log::debug;
+use anyhow::Result;
 use rustyline::Editor;
-use lwk_common::Signer;
-use anyhow::{Result, anyhow};
+use lwk_signer::SwSigner;
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::{Helper, Completer, Hinter, Validator, hint::HistoryHinter};
-use lwk_wollet::{Wollet, full_scan_with_electrum_client, ElectrumClient, BlockchainBackend};
 
-use crate::context::CliCtx;
+use crate::wollet::Wollet;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -38,64 +35,42 @@ impl Highlighter for CliHelper {
     }
 }
 
-fn get_balance_sat(wollet: &mut Wollet, electrum: &mut ElectrumClient) -> Result<u64> {
-      full_scan_with_electrum_client(wollet, electrum)?;
-      Ok(wollet.balance()?.values().sum())
-}
-
-fn poll_balance_changes(wollet: &mut Wollet, electrum: &mut ElectrumClient) -> Result<u64> {
-    let current_balance = get_balance_sat(wollet, electrum)?;
-    let mut balance = 0u64;
-
-    while balance <= current_balance {
-      debug!("Polling for balance changes...");
-      balance = get_balance_sat(wollet, electrum)?;
-      thread::sleep(Duration::from_secs(5));
-    }
-
-    Ok(balance)
-}
-
 pub(crate) async fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
-    ctx: &mut CliCtx,
+    wollet: &mut Wollet,
     command: Command,
 ) -> Result<String> {
     match command {
         Command::Receive {  } => {
-          let address = ctx.wollet.address(None)?.address().to_string();
-          println!("Please send your liquid funds to the following address: {address}");
 
-          let new_balance = poll_balance_changes(&mut ctx.wollet, &mut ctx.electrum_client)?;
+            let address = wollet.address(None)?;
+            println!("Please send your liquid funds to the following address: {address}");
 
-          Ok(format!("Funding successful! New balance: {new_balance} sat"))
+            let new_balance = wollet.wait_balance_change()?;
+
+            Ok(format!("Funding successful! New balance: {new_balance} sat"))
         },
         Command::Send { amount_sat, address } => {
-          let balance = get_balance_sat(&mut ctx.wollet, &mut ctx.electrum_client)?;
-          if amount_sat > balance {
-            return Err(anyhow!("You cannot send more than your balance ({balance} sat)"))
-          }
-
-          let mut pset = ctx.wollet.send_lbtc(amount_sat, &address, None)?;
-          ctx.signer.sign(&mut pset)?;
-
-          let tx = ctx.wollet.finalize(&mut pset)?;
-          ctx.electrum_client.broadcast(&tx)?;
+            let signer = lwk_signer::AnySigner::Software(
+                SwSigner::new(&wollet.get_descriptor().to_string(), false)?
+            );
+            let recipient = lwk_wollet::elements::Address::from_str(&address)?;
+            let txid = wollet
+                .send_lbtc(&[signer], None, &recipient, amount_sat)?;
           
-          Ok(
-            format!(r#"
-              Succesffully sent {amount_sat} to {address}.
-              You can view the transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
-              tx.txid().to_string()
+            Ok(
+              format!(r#"
+                Succesffully sent {amount_sat} to {address}.
+                You can view the transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
+                txid
+              )
             )
-          )
         },
         Command::GetAddress {  } => {
-          Ok(format!("Here's the main funding address for your wallet: {}", ctx.wollet.address(None)?.address().to_string()))
-          
+          Ok(format!("Here's the main funding address for your wallet: {}", wollet.address(None)?))
         },
         Command::GetBalance {  } => {
-          Ok(format!("Current balance: {} sat", get_balance_sat(&mut ctx.wollet, &mut ctx.electrum_client)?))
+          Ok(format!("Current balance: {} sat", wollet.total_balance_sat()?))
         }
     }
 }

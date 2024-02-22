@@ -1,12 +1,11 @@
 mod persist;
 mod commands;
-mod context;
+mod wollet;
 
-use context::CliCtx;
 use anyhow::{anyhow, Result};
 use lwk_common::{Singlesig, singlesig_desc};
 use lwk_signer::SwSigner;
-use lwk_wollet::{ElectrumClient, ElectrumUrl, ElementsNetwork, NoPersist, Wollet};
+use lwk_wollet::ElectrumUrl;
 use std::{path::PathBuf, fs};
 
 use clap::Parser;
@@ -14,7 +13,8 @@ use log::{info,error};
 use rustyline::{Editor, hint::HistoryHinter, error::ReadlineError};
 
 use persist::CliPersistence;
-use crate::commands::{CliHelper, Command, handle_command};
+use wollet::{Wollet, WolletOptions};
+use commands::{CliHelper, Command, handle_command};
 
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
@@ -29,17 +29,6 @@ fn show_results(res: Result<String>) {
         Ok(inner) => println!("{inner}"),
         Err(err) => eprintln!("Error: {err}"),
     }
-}
-
-fn init_wollet(signer: &SwSigner) -> Result<Wollet> {
-    let descriptor = singlesig_desc(
-        signer, 
-        Singlesig::Wpkh, 
-        lwk_common::DescriptorBlindingKey::Elip151, 
-        false
-    ).expect("Expected valid descriptor");
-
-    Ok(Wollet::new(ElementsNetwork::LiquidTestnet, NoPersist::new(), &descriptor)?)
 }
 
 #[tokio::main]
@@ -66,14 +55,20 @@ async fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
-    let wollet = init_wollet(&signer)?;
-    let electrum_client = ElectrumClient::new(&ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, true))?;
+    let desc = singlesig_desc(
+        &signer, 
+        Singlesig::Wpkh, 
+        lwk_common::DescriptorBlindingKey::Elip151, 
+        false
+    ).expect("Expected valid descriptor");
+    let electrum_url = ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, true);
 
-    let mut ctx = CliCtx {
-        signer,
-        wollet,
-        electrum_client
-    };
+    let mut wollet = Wollet::new(WolletOptions {
+        network: lwk_wollet::ElementsNetwork::LiquidTestnet,
+        electrum_url,
+        desc,
+        db_root_dir: None
+    })?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
@@ -87,7 +82,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &mut ctx, cli_res.unwrap()).await;
+                let res = handle_command(rl, &mut wollet, cli_res.unwrap()).await;
                 show_results(res);
             },
             Err(ReadlineError::Interrupted) => {
