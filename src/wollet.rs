@@ -1,5 +1,7 @@
-use std::{time::Duration, thread};
+use std::{time::Duration, thread, str::FromStr};
 
+use boltz_client::swaps::boltz::{BoltzApiClient, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL, CreateSwapRequest};
+use lightning_invoice::Bolt11Invoice;
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use anyhow::{anyhow, Result};
@@ -12,8 +14,9 @@ const SCAN_DELAY_SEC: u64 = 6;
 pub struct Wollet {
     wollet: LwkWollet,
     signer: SwSigner,
+    db_root_dir: String,
     electrum_url: ElectrumUrl,
-    db_root_dir: String
+    network: ElementsNetwork,
 }
 
 pub struct WolletOptions {
@@ -22,6 +25,18 @@ pub struct WolletOptions {
     pub electrum_url: ElectrumUrl,
     pub desc: String,
     pub db_root_dir: Option<String>
+}
+
+#[derive(thiserror::Error, Debug)]
+enum SwapError {
+    #[error("Could not contact Boltz servers")]
+    ServersUnreachable,
+
+    #[error("Invoice amount is too low to be swapped")]
+    AmountTooLow,
+
+    #[error("An invoice with an amount is required")]
+    ExpectedAmount,
 }
 
 impl Wollet {
@@ -34,9 +49,10 @@ impl Wollet {
         
         Ok(Wollet {
             wollet,
+            db_root_dir,
             signer: opts.signer,
+            network: opts.network,
             electrum_url: opts.electrum_url,
-            db_root_dir
         })
     }
 
@@ -114,5 +130,44 @@ impl Wollet {
 
         self.wait_for_tx(&txid)?;
         Ok(txid)
+    }
+
+    pub fn swap_to_ln(&mut self, invoice: String) -> Result<()> {
+        let base_url = match self.network {
+            ElementsNetwork::LiquidTestnet => BOLTZ_TESTNET_URL,
+            ElementsNetwork::Liquid => BOLTZ_MAINNET_URL,
+            ElementsNetwork::ElementsRegtest { .. } => todo!(),
+        };
+
+        let client = BoltzApiClient::new(base_url);
+        let invoice = invoice.trim().parse::<Bolt11Invoice>()?;
+
+        let pairs = client.get_pairs()
+            .map_err(|_| SwapError::ServersUnreachable)?;
+
+        let lbtc_pair = pairs.get_lbtc_pair()
+            .map_err(|_| SwapError::ServersUnreachable)?;
+
+
+        let amount_sat = invoice.amount_milli_satoshis().ok_or(SwapError::ExpectedAmount)? / 1000;
+        if lbtc_pair.limits.minimal > amount_sat as i64 {
+            return Err(SwapError::AmountTooLow.into());
+        }
+
+        let swap_response = client.create_swap(
+            CreateSwapRequest::new_lbtc_submarine(&lbtc_pair.hash, &invoice.to_string(), "")
+        ).map_err(|_| SwapError::ServersUnreachable)?;
+        
+        let funding_amount = swap_response.get_funding_amount()
+            .map_err(|_| anyhow!("Could not get funding amount"))?;
+
+        let funding_addr = swap_response.get_funding_address()
+            .map_err(|_| anyhow!("Could not get funding address"))?;
+        let funding_addr = Address::from_str(&funding_addr)?;
+
+        let signer = AnySigner::Software(self.get_signer());
+        self.send_lbtc(&[signer], None, &funding_addr, funding_amount)?;
+
+        Ok(())
     }
 }
