@@ -5,7 +5,6 @@ mod wollet;
 use anyhow::{anyhow, Result};
 use lwk_common::{Singlesig, singlesig_desc};
 use lwk_signer::SwSigner;
-use lwk_wollet::ElectrumUrl;
 use std::{path::PathBuf, fs};
 
 use clap::Parser;
@@ -16,7 +15,6 @@ use persist::CliPersistence;
 use wollet::{Wollet, WolletOptions};
 use commands::{CliHelper, Command, handle_command};
 
-const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 #[derive(Parser, Debug)]
 pub(crate) struct Args {
@@ -51,14 +49,13 @@ fn init_wollet(persistence: &CliPersistence) -> Result<Wollet> {
         lwk_common::DescriptorBlindingKey::Elip151, 
         false
     ).expect("Expected valid descriptor");
-    let electrum_url = ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, true);
 
     Wollet::new(WolletOptions {
         signer,
-        network: lwk_wollet::ElementsNetwork::LiquidTestnet,
-        electrum_url,
         desc,
-        db_root_dir: None
+        electrum_url: None,
+        db_root_dir: None,
+        network: lwk_wollet::ElementsNetwork::LiquidTestnet,
     })
 }
 
@@ -115,30 +112,52 @@ async fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use std::io;
-
-    use clap::Parser;
-
     use anyhow::Result;
-    use crate::{Args, init_persistence, init_wollet};
+    use crate::{Args, init_persistence, init_wollet, wollet::SwapStatus};
 
     #[tokio::test]
     async fn normal_submarine_swap() -> Result<()> {
-        let args = Args::parse();
+        let args = Args {
+            data_dir: None
+        };
         let persistence = init_persistence(&args)?;
-
         let mut wollet = init_wollet(&persistence)?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        wollet.swap_to_ln(invoice)?;
+        wollet.swap_to_ln(&invoice)?;
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn reverse_submarine_swap() -> Result<()> {
+    async fn reverse_submarine_swap_success() -> Result<()> {
+        let args = Args {
+            data_dir: None
+        };
+        let persistence = init_persistence(&args)?;
+        let mut wollet = init_wollet(&persistence)?;
+
+        let swap_response = wollet.swap_to_lbtc(1000)?;
+
+        println!("Please pay the following invoice: {}", swap_response.invoice);
+
+        // Wait for the lightning transaction to be seen by Boltz
+        wollet.wait_boltz_swap(&swap_response.id, SwapStatus::Mempool);
+
+        // Claim the funds using the redeem script
+        let txid = wollet.claim_lbtc_swap_funds(&swap_response.claim)?;
+
+        println!("Swap completed successfully! Txid: {txid}");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn reverse_submarine_swap_fail() -> Result<()> {
+
         Ok(())
     }
 }

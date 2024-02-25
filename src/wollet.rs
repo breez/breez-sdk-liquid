@@ -1,7 +1,8 @@
 use std::{time::Duration, thread, str::FromStr};
 
-use boltz_client::swaps::boltz::{BoltzApiClient, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL, CreateSwapRequest};
+use boltz_client::{ZKKeyPair, swaps::{boltz::{BoltzApiClient, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL, CreateSwapRequest, SwapStatusRequest}, liquid::{LBtcSwapScript, LBtcSwapTx}}, util::secrets::{Preimage, LBtcReverseRecovery}, network::{Chain, electrum::ElectrumConfig}, Keypair};
 use lightning_invoice::Bolt11Invoice;
+use log::debug;
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use anyhow::{anyhow, Result};
@@ -11,10 +12,11 @@ const DEFAULT_DB_DIR: &str = ".wollet";
 const MAX_SCAN_RETRIES: u64 = 100;
 const SCAN_DELAY_SEC: u64 = 6;
 
+const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
+
 pub struct Wollet {
     wollet: LwkWollet,
     signer: SwSigner,
-    db_root_dir: String,
     electrum_url: ElectrumUrl,
     network: ElementsNetwork,
 }
@@ -22,9 +24,37 @@ pub struct Wollet {
 pub struct WolletOptions {
     pub signer: SwSigner,
     pub network: ElementsNetwork,
-    pub electrum_url: ElectrumUrl,
     pub desc: String,
-    pub db_root_dir: Option<String>
+    pub db_root_dir: Option<String>,
+    pub electrum_url: Option<ElectrumUrl>,
+}
+
+pub struct SwapLbtcResponse {
+    pub id: String,
+    pub invoice: String,
+    pub recovery: LBtcReverseRecovery,
+    pub claim: ClaimDetails,
+}
+
+pub struct ClaimDetails {
+    pub redeem_script: String,
+    pub blinding_str: String,
+    pub preimage: Preimage,
+    pub absolute_fees: u64
+}
+
+pub enum SwapStatus {
+    Created,
+    Mempool,
+}
+
+impl ToString for SwapStatus {
+    fn to_string(&self) -> String {
+        match self {
+            SwapStatus::Mempool => "transaction.mempool",
+            SwapStatus::Created => "swap.created"
+        }.to_string()
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -39,6 +69,7 @@ enum SwapError {
     ExpectedAmount,
 }
 
+#[allow(dead_code)]
 impl Wollet {
     pub fn new(opts: WolletOptions) -> Result<Self> {
         let desc: WolletDescriptor = opts.desc.parse()?;
@@ -46,13 +77,17 @@ impl Wollet {
 
         let persister = EncryptedFsPersister::new(&db_root_dir, opts.network, &desc)?;
         let wollet = LwkWollet::new(opts.network, persister, &opts.desc)?;
+
+        let electrum_url = opts.electrum_url.unwrap_or(match opts.network {
+            ElementsNetwork::Liquid | ElementsNetwork::LiquidTestnet => ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, false),
+            ElementsNetwork::ElementsRegtest { .. } => todo!()
+        });
         
         Ok(Wollet {
             wollet,
-            db_root_dir,
+            electrum_url,
             signer: opts.signer,
             network: opts.network,
-            electrum_url: opts.electrum_url,
         })
     }
 
@@ -66,6 +101,7 @@ impl Wollet {
     }
 
     pub fn total_balance_sat(&mut self) -> Result<u64> {
+        self.scan()?;
         let balance = self.wollet.balance()?;
         Ok(balance.values().sum())
     }
@@ -112,7 +148,7 @@ impl Wollet {
         fee_rate: Option<f32>,
         recipient: &Address,
         amount_sat: u64
-    ) -> Result<Txid> {
+    ) -> Result<String> {
         let mut pset = self.wollet
             .send_lbtc(amount_sat, &recipient.to_string(), fee_rate)?;
 
@@ -120,26 +156,48 @@ impl Wollet {
             signer.sign(&mut pset)?;
         }
 
-        self.send(&mut pset)
+        self.send(&mut pset).map(|txid| txid.to_string())
     }
 
-    fn send(&mut self, pset: &mut PartiallySignedTransaction) -> Result<Txid> {
+    fn send(&mut self, pset: &mut PartiallySignedTransaction) -> Result<String> {
         let tx = self.wollet.finalize(pset)?;
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
         let txid = electrum_client.broadcast(&tx)?;
 
         self.wait_for_tx(&txid)?;
-        Ok(txid)
+        Ok(txid.to_string())
     }
 
-    pub fn swap_to_ln(&mut self, invoice: String) -> Result<()> {
+    fn boltz_client(&self) -> BoltzApiClient {
         let base_url = match self.network {
             ElementsNetwork::LiquidTestnet => BOLTZ_TESTNET_URL,
             ElementsNetwork::Liquid => BOLTZ_MAINNET_URL,
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         };
 
-        let client = BoltzApiClient::new(base_url);
+        BoltzApiClient::new(base_url)
+    }
+
+    pub fn get_chain(&self) -> Chain {
+        match self.network {
+            ElementsNetwork::Liquid => Chain::Liquid,
+            ElementsNetwork::LiquidTestnet => Chain::LiquidTestnet,
+            ElementsNetwork::ElementsRegtest { .. } => todo!(),
+        }
+    }
+
+    fn get_network_config(&self) -> ElectrumConfig {
+        ElectrumConfig::new(
+            self.get_chain(),
+            &self.electrum_url.to_string(),
+            true,
+            false,
+            100
+        )
+    }
+
+    pub fn swap_to_ln(&mut self, invoice: &str) -> Result<()> {
+        let client = self.boltz_client();
         let invoice = invoice.trim().parse::<Bolt11Invoice>()?;
 
         let pairs = client.get_pairs()
@@ -147,7 +205,6 @@ impl Wollet {
 
         let lbtc_pair = pairs.get_lbtc_pair()
             .map_err(|_| SwapError::ServersUnreachable)?;
-
 
         let amount_sat = invoice.amount_milli_satoshis().ok_or(SwapError::ExpectedAmount)? / 1000;
         if lbtc_pair.limits.minimal > amount_sat as i64 {
@@ -170,4 +227,120 @@ impl Wollet {
 
         Ok(())
     }
+
+    pub fn wait_boltz_swap(&self, id: &str, swap_status: SwapStatus) -> Result<()> {
+        let client = self.boltz_client();
+        let request = SwapStatusRequest { id: id.to_string() };
+
+        loop {
+            let response = client.swap_status(request).unwrap();
+
+            if response.status == swap_status.to_string() {
+                break
+            }
+
+            thread::sleep(Duration::from_secs(5));
+        }
+
+        Ok(())
+    }
+
+    pub fn swap_to_lbtc(
+        &mut self, 
+        amount_sat: u64
+    ) -> Result<SwapLbtcResponse> {
+        let client = self.boltz_client();
+
+        let pairs = client.get_pairs()
+            .map_err(|_| SwapError::ServersUnreachable)?;
+
+        let lbtc_pair = pairs.get_lbtc_pair()
+            .map_err(|_| SwapError::ServersUnreachable)?;
+
+        if lbtc_pair.limits.minimal > amount_sat as i64 {
+            return Err(SwapError::AmountTooLow.into());
+        }
+
+        let preimage = Preimage::new();
+        let pubkey = self.address(None)?.to_string();
+
+        let swap_response = client.create_swap(
+            CreateSwapRequest::new_lbtc_reverse_invoice_amt(
+                lbtc_pair.hash, 
+                preimage.sha256.to_string(),
+                pubkey, 
+                amount_sat
+            )
+        )
+            .unwrap();
+
+        let swap_id = swap_response.get_id();
+        let invoice = swap_response.get_invoice().unwrap();
+        let blinding_str = swap_response.get_blinding_key().unwrap();
+        let blinding_key = ZKKeyPair::from_str(&blinding_str).unwrap();
+        let redeem_script = swap_response.get_redeem_script().unwrap();
+
+        let recovery = LBtcReverseRecovery::new(
+            &swap_id,
+            &preimage,
+            &keypair,
+            &blinding_key,
+            &redeem_script
+        );
+
+        self.wait_boltz_swap(&swap_id, SwapStatus::Created)?;
+
+        Ok(SwapLbtcResponse {
+            id: swap_id,
+            invoice: invoice.to_string(),
+            recovery,
+            claim: ClaimDetails {
+                redeem_script,
+                blinding_str,
+                preimage,
+                absolute_fees: 900
+            }
+        })
+    }
+
+    pub fn claim_lbtc_swap_funds(
+        &self, 
+        claim: &ClaimDetails
+    ) -> Result<String> {
+        let network_config = &self.get_network_config();
+        let rev_swap_tx = LBtcSwapTx::new_claim(
+            LBtcSwapScript::reverse_from_str(&claim.redeem_script, &claim.blinding_str).unwrap(),
+            self.address(None)?.to_string(),
+            network_config
+        )
+        .unwrap();
+
+        let signed_tx = rev_swap_tx
+            .sign_claim(todo!(), &claim.preimage, claim.absolute_fees)
+            .unwrap();
+        let txid = rev_swap_tx.broadcast(signed_tx, network_config).unwrap();
+
+        debug!("Funds claimed successfully! Txid: {txid}");
+
+        Ok(txid)
+    }
+
+    pub fn recover_lbtc_swap_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
+        let script: LBtcSwapScript = recovery.try_into().unwrap();
+        let network_config = self.get_network_config();
+        debug!("{:?}", script.fetch_utxo(&network_config));
+
+        let mut tx =
+            LBtcSwapTx::new_claim(script.clone(), self.address(None)?.to_string(), &network_config).expect("Expecting valid tx");
+        let keypair: Keypair = recovery.try_into().unwrap();
+        let preimage: Preimage = recovery.try_into().unwrap();
+
+        let signed_tx = tx.sign_claim(&keypair, &preimage, 1_000).unwrap();
+        let txid = tx.broadcast(signed_tx, &network_config).unwrap();
+
+        debug!("Funds recovered successfully! Txid: {txid}");
+
+        Ok(txid)
+    }
+
 }
