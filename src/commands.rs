@@ -56,7 +56,7 @@ pub(crate) async fn handle_command(
             let signer = AnySigner::Software(wollet.get_signer());
             let recipient = lwk_wollet::elements::Address::from_str(&address)?;
             let txid = wollet
-                .send_lbtc(&[signer], None, &recipient, amount_sat)?;
+                .sign_and_send(&[signer], None, &recipient, amount_sat)?;
           
             Ok(
               format!(r#"

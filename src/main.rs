@@ -127,7 +127,7 @@ mod tests {
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        wollet.swap_to_ln(&invoice)?;
+        wollet.send_lbtc(&invoice)?;
 
         Ok(())
     }
@@ -140,15 +140,15 @@ mod tests {
         let persistence = init_persistence(&args)?;
         let mut wollet = init_wollet(&persistence)?;
 
-        let swap_response = wollet.swap_to_lbtc(1000)?;
+        let swap_response = wollet.receive_lbtc(1000)?;
 
         println!("Please pay the following invoice: {}", swap_response.invoice);
 
         // Wait for the lightning transaction to be seen by Boltz
-        wollet.wait_boltz_swap(&swap_response.id, SwapStatus::Mempool);
+        wollet.wait_boltz_swap(&swap_response.id, SwapStatus::Mempool)?;
 
         // Claim the funds using the redeem script
-        let txid = wollet.claim_lbtc_swap_funds(&swap_response.claim)?;
+        let txid = wollet.claim_lbtc(&swap_response.claim)?;
 
         println!("Swap completed successfully! Txid: {txid}");
 
@@ -156,8 +156,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn reverse_submarine_swap_fail() -> Result<()> {
-
+    async fn reverse_submarine_swap_recovery() -> Result<()> {
         Ok(())
     }
 }
