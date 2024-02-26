@@ -1,7 +1,11 @@
-use std::{path::{PathBuf, Path}, fs, str::FromStr, io};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use anyhow::Result;
-use bip39::{Mnemonic, Language};
+use bip39::{Language, Mnemonic};
 
 const PHRASE_FILE_NAME: &str = "phrase";
 const HISTORY_FILE_NAME: &str = "history.txt";
@@ -13,7 +17,7 @@ pub(crate) struct CliPersistence {
 impl CliPersistence {
     pub(crate) fn get_or_create_mnemonic(&self) -> Result<Mnemonic> {
         let filename = Path::new(&self.data_dir).join(PHRASE_FILE_NAME);
-        
+
         let mnemonic = match fs::read_to_string(filename.clone()) {
             Ok(phrase) => Mnemonic::from_str(&phrase).unwrap(),
             Err(e) => {

@@ -1,20 +1,17 @@
-[package]
-name = "breez-sdk-liquid"
-version = "0.1.0"
-edition = "2021"
+[profile.release]
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+resolver = "2"
+members = [
+  "lib"
+]
+exclude = [
+  "cli"
+]
 
-[dependencies]
-anyhow = "1.0.80"
-bip39 = { version = "2.0.0", features = ["serde"] }
-boltz-client = "0.1.2"
-clap = { version = "4.5.1", features = ["derive"] }
-lightning-invoice = "0.29.0"
-log = "0.4.20"
-lwk_common = "0.2.0"
-lwk_signer = "0.2.0"
-lwk_wollet = "0.2.0"
-rustyline = { version = "13.0.0", features = ["derive"] }
-thiserror = "1.0.57"
-tokio = { version = "1.36.0", features = ["full"] }
+[workspace.package]
+version = "0.0.1"

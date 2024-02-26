@@ -1,25 +1,23 @@
-mod persist;
 mod commands;
-mod wollet;
+mod persist;
 
 use anyhow::{anyhow, Result};
-use lwk_common::{Singlesig, singlesig_desc};
+use lwk_common::{singlesig_desc, Singlesig};
 use lwk_signer::SwSigner;
-use std::{path::PathBuf, fs};
+use std::{fs, path::PathBuf};
 
 use clap::Parser;
-use log::{info,error};
-use rustyline::{Editor, hint::HistoryHinter, error::ReadlineError};
+use log::{error, info};
+use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
+use breez_sdk_liquid::{Network, Wollet, WolletOptions};
+use commands::{handle_command, CliHelper, Command};
 use persist::CliPersistence;
-use wollet::{Wollet, WolletOptions};
-use commands::{CliHelper, Command, handle_command};
-
 
 #[derive(Parser, Debug)]
 pub(crate) struct Args {
     #[clap(name = "data_dir", short = 'd', long = "data_dir")]
-    pub(crate) data_dir: Option<String>
+    pub(crate) data_dir: Option<String>,
 }
 
 fn show_results(res: Result<String>) {
@@ -35,27 +33,26 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
 
     fs::create_dir_all(&data_dir)?;
 
-    Ok(CliPersistence { 
-        data_dir
-    })
+    Ok(CliPersistence { data_dir })
 }
 
 fn init_wollet(persistence: &CliPersistence) -> Result<Wollet> {
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
     let desc = singlesig_desc(
-        &signer, 
-        Singlesig::Wpkh, 
-        lwk_common::DescriptorBlindingKey::Elip151, 
-        false
-    ).expect("Expected valid descriptor");
+        &signer,
+        Singlesig::Wpkh,
+        lwk_common::DescriptorBlindingKey::Elip151,
+        false,
+    )
+    .expect("Expected valid descriptor");
 
     Wollet::new(WolletOptions {
         signer,
         desc,
         electrum_url: None,
         db_root_dir: None,
-        network: lwk_wollet::ElementsNetwork::LiquidTestnet,
+        network: Network::LiquidTestnet,
     })
 }
 
@@ -67,7 +64,7 @@ async fn main() -> Result<()> {
 
     let rl = &mut Editor::new()?;
     rl.set_helper(Some(CliHelper {
-        hinter: HistoryHinter {}
+        hinter: HistoryHinter {},
     }));
 
     if rl.load_history(history_file).is_err() {
@@ -90,7 +87,7 @@ async fn main() -> Result<()> {
                 }
                 let res = handle_command(rl, &mut wollet, cli_res.unwrap()).await;
                 show_results(res);
-            },
+            }
             Err(ReadlineError::Interrupted) => {
                 info!("CTRL-C");
                 break;
@@ -105,21 +102,20 @@ async fn main() -> Result<()> {
             }
         }
     }
-    
+
     rl.save_history(history_file).map_err(|e| anyhow!(e))
 }
 
 #[cfg(test)]
 mod tests {
-    use std::io;
+    use crate::{init_persistence, init_wollet, Args};
     use anyhow::Result;
-    use crate::{Args, init_persistence, init_wollet, wollet::SwapStatus};
+    use breez_sdk_liquid::SwapStatus;
+    use std::io;
 
     #[tokio::test]
     async fn normal_submarine_swap() -> Result<()> {
-        let args = Args {
-            data_dir: None
-        };
+        let args = Args { data_dir: None };
         let persistence = init_persistence(&args)?;
         let mut wollet = init_wollet(&persistence)?;
 
@@ -134,15 +130,16 @@ mod tests {
 
     #[tokio::test]
     async fn reverse_submarine_swap_success() -> Result<()> {
-        let args = Args {
-            data_dir: None
-        };
+        let args = Args { data_dir: None };
         let persistence = init_persistence(&args)?;
         let mut wollet = init_wollet(&persistence)?;
 
         let swap_response = wollet.receive_lbtc(1000)?;
 
-        println!("Please pay the following invoice: {}", swap_response.invoice);
+        println!(
+            "Please pay the following invoice: {}",
+            swap_response.invoice
+        );
 
         // Wait for the lightning transaction to be seen by Boltz
         wollet.wait_boltz_swap(&swap_response.id, SwapStatus::Mempool)?;

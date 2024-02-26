@@ -1,15 +1,14 @@
 use std::borrow::Cow::{self, Owned};
-use std::str::FromStr;
 
-use clap::Parser;
 use anyhow::Result;
-use rustyline::Editor;
+use clap::Parser;
 use lwk_signer::AnySigner;
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
-use rustyline::{Helper, Completer, Hinter, Validator, hint::HistoryHinter};
+use rustyline::Editor;
+use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use crate::wollet::Wollet;
+use breez_sdk_liquid::Wollet;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -22,7 +21,7 @@ pub(crate) enum Command {
     /// Get the balance of the currently loaded wallet
     GetBalance,
     /// Hangs the current thread until the wallet's balance has changed
-    AwaitBalance
+    AwaitBalance,
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -43,39 +42,46 @@ pub(crate) async fn handle_command(
     command: Command,
 ) -> Result<String> {
     match command {
-        Command::Receive {  } => {
-
+        Command::Receive {} => {
             let address = wollet.address(None)?;
             println!("Please send your liquid funds to the following address: {address}");
 
             let new_balance = wollet.wait_balance_change()?;
 
-            Ok(format!("Funding successful! New balance: {new_balance} sat"))
-        },
-        Command::Send { amount_sat, address } => {
+            Ok(format!(
+                "Funding successful! New balance: {new_balance} sat"
+            ))
+        }
+        Command::Send {
+            amount_sat,
+            address,
+        } => {
             let signer = AnySigner::Software(wollet.get_signer());
-            let recipient = lwk_wollet::elements::Address::from_str(&address)?;
-            let txid = wollet
-                .sign_and_send(&[signer], None, &recipient, amount_sat)?;
-          
-            Ok(
-              format!(r#"
+            let txid = wollet.sign_and_send(&[signer], None, &address, amount_sat)?;
+
+            Ok(format!(
+                r#"
                 Succesffully sent {amount_sat} to {address}.
                 You can view the transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
                 txid
-              )
-            )
-        },
-        Command::GetAddress {  } => {
-            Ok(format!("Here's the main funding address for your wallet: {}", wollet.address(None)?))
-        },
-        Command::GetBalance {  } => {
-            Ok(format!("Current balance: {} sat", wollet.total_balance_sat()?))
-        },
-        Command::AwaitBalance {  } => {
+            ))
+        }
+        Command::GetAddress {} => Ok(format!(
+            "Here's the main funding address for your wallet: {}",
+            wollet.address(None)?
+        )),
+        Command::GetBalance {} => Ok(format!(
+            "Current balance: {} sat",
+            wollet.total_balance_sat()?
+        )),
+        Command::AwaitBalance {} => {
             println!("Waiting for balance changes...");
             let old_balance = wollet.total_balance_sat()?;
-            Ok(format!("Balance has changed! Old balance: {} sat, New balance: {} sat", old_balance, wollet.wait_balance_change()?))
+            Ok(format!(
+                "Balance has changed! Old balance: {} sat, New balance: {} sat",
+                old_balance,
+                wollet.wait_balance_change()?
+            ))
         }
     }
 }
