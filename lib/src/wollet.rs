@@ -124,7 +124,7 @@ impl BreezWollet {
         })
     }
 
-    pub fn scan(&mut self) -> Result<(), lwk_wollet::Error> {
+    pub(crate) fn scan(&mut self) -> Result<(), lwk_wollet::Error> {
         let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
         full_scan_with_electrum_client(&mut self.wollet, &mut electrum_client)
     }
@@ -141,7 +141,7 @@ impl BreezWollet {
         Ok(balance.values().sum())
     }
 
-    pub fn wait_for_tx(&mut self, txid: &Txid) -> Result<()> {
+    pub(crate) fn wait_for_tx(&mut self, txid: &Txid) -> Result<()> {
         let mut electrum_client: ElectrumClient = ElectrumClient::new(&self.electrum_url)?;
         for _ in 0..MAX_SCAN_RETRIES {
             full_scan_with_electrum_client(&mut self.wollet, &mut electrum_client)?;
@@ -176,7 +176,7 @@ impl BreezWollet {
         self.signer.clone()
     }
 
-    pub fn get_descriptor(&self) -> WolletDescriptor {
+    pub(crate) fn get_descriptor(&self) -> WolletDescriptor {
         self.wollet.wollet_descriptor()
     }
 
@@ -190,7 +190,7 @@ impl BreezWollet {
         BoltzApiClient::new(base_url)
     }
 
-    pub fn get_chain(&self) -> Chain {
+    pub(crate) fn get_chain(&self) -> Chain {
         match self.network {
             ElementsNetwork::Liquid => Chain::Liquid,
             ElementsNetwork::LiquidTestnet => Chain::LiquidTestnet,
@@ -233,7 +233,7 @@ impl BreezWollet {
         Ok(txid.to_string())
     }
 
-    pub fn send_lbtc(&mut self, invoice: &str) -> Result<()> {
+    pub fn send_payment(&mut self, invoice: &str) -> Result<()> {
         let client = self.boltz_client();
         let invoice = invoice.trim().parse::<Bolt11Invoice>()?;
 
@@ -275,7 +275,7 @@ impl BreezWollet {
         Ok(())
     }
 
-    pub fn wait_boltz_swap(&self, id: &str, swap_status: SwapStatus) -> Result<()> {
+    pub(crate) fn wait_boltz_swap(&self, id: &str, swap_status: SwapStatus) -> Result<()> {
         let client = self.boltz_client();
 
         loop {
@@ -292,7 +292,7 @@ impl BreezWollet {
         Ok(())
     }
 
-    pub fn receive_lbtc(&mut self, amount_sat: u64) -> Result<SwapLbtcResponse> {
+    pub fn receive_payment(&mut self, amount_sat: u64) -> Result<SwapLbtcResponse> {
         let client = self.boltz_client();
 
         let pairs = client
@@ -352,7 +352,7 @@ impl BreezWollet {
         })
     }
 
-    pub fn claim_lbtc(&self, claim: &ClaimDetails) -> Result<String> {
+    pub fn claim_payment(&self, claim: &ClaimDetails) -> Result<String> {
         let network_config = &self.get_network_config();
         let mut rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(&claim.redeem_script, &claim.blinding_str).unwrap(),
@@ -376,7 +376,7 @@ impl BreezWollet {
         Ok(txid)
     }
 
-    pub fn recover_lbtc(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
+    pub fn recover_on_receive(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
         let script: LBtcSwapScript = recovery.try_into().unwrap();
         let network_config = self.get_network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));
