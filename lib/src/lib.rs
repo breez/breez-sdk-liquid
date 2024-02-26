@@ -9,7 +9,7 @@ mod tests {
     use lwk_common::{Singlesig, singlesig_desc};
     use lwk_signer::SwSigner;
     use std::{io, env, path::PathBuf, fs, str::FromStr};
-    use crate::{SwapStatus, BreezWollet, WolletOptions, Network};
+    use crate::{BreezWollet, WolletOptions, Network};
 
     const DEFAULT_DATA_DIR: &str = ".data";
     const PHRASE_FILE_NAME: &str = "phrase";
@@ -82,13 +82,7 @@ mod tests {
             swap_response.invoice
         );
 
-        // Wait for the lightning transaction to be seen by Boltz
-        wollet.wait_boltz_swap(&swap_response.id, SwapStatus::Mempool)?;
-
-        // Claim the funds using the redeem script
-        let txid = wollet.claim_payment(&swap_response.claim)?;
-
-        println!("Swap completed successfully! Txid: {txid}");
+        wollet.wait_and_claim(&swap_response.id, &swap_response.claim_details)?;
 
         Ok(())
     }
