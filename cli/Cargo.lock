@@ -298,6 +298,7 @@ dependencies = [
  "lwk_signer",
  "lwk_wollet",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
