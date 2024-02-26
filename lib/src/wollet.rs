@@ -133,8 +133,10 @@ impl BreezWollet {
         Ok(self.wollet.address(index)?.address().clone())
     }
 
-    pub fn total_balance_sat(&mut self) -> Result<u64> {
-        self.scan()?;
+    pub fn total_balance_sat(&mut self, with_scan: bool) -> Result<u64> {
+        if with_scan {
+            self.scan()?;
+        }
         let balance = self.wollet.balance()?;
         Ok(balance.values().sum())
     }
@@ -154,10 +156,10 @@ impl BreezWollet {
     }
 
     pub fn wait_balance_change(&mut self) -> Result<u64> {
-        let initial_balance = self.total_balance_sat()?;
+        let initial_balance = self.total_balance_sat(true)?;
 
         for _ in 0..MAX_SCAN_RETRIES {
-            let new_balance = self.total_balance_sat()?;
+            let new_balance = self.total_balance_sat(true)?;
             if new_balance != initial_balance {
                 return Ok(new_balance);
             }

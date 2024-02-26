@@ -72,11 +72,11 @@ pub(crate) async fn handle_command(
         )),
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
-            wollet.total_balance_sat()?
+            wollet.total_balance_sat(true)?
         )),
         Command::AwaitBalance {} => {
             println!("Waiting for balance changes...");
-            let old_balance = wollet.total_balance_sat()?;
+            let old_balance = wollet.total_balance_sat(true)?;
             Ok(format!(
                 "Balance has changed! Old balance: {} sat, New balance: {} sat",
                 old_balance,
