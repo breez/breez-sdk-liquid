@@ -29,7 +29,7 @@ const SCAN_DELAY_SEC: u64 = 6;
 
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
-pub struct Wollet {
+pub struct BreezWollet {
     wollet: LwkWollet,
     signer: SwSigner,
     electrum_url: ElectrumUrl,
@@ -100,7 +100,7 @@ enum SwapError {
 }
 
 #[allow(dead_code)]
-impl Wollet {
+impl BreezWollet {
     pub fn new(opts: WolletOptions) -> Result<Self> {
         let desc: WolletDescriptor = opts.desc.parse()?;
         let db_root_dir = opts.db_root_dir.unwrap_or(DEFAULT_DB_DIR.to_string());
@@ -116,7 +116,7 @@ impl Wollet {
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         });
 
-        Ok(Wollet {
+        Ok(BreezWollet {
             wollet,
             network,
             electrum_url,

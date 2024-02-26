@@ -8,7 +8,7 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::Wollet;
+use breez_sdk_liquid::BreezWollet;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -38,7 +38,7 @@ impl Highlighter for CliHelper {
 
 pub(crate) async fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
-    wollet: &mut Wollet,
+    wollet: &mut BreezWollet,
     command: Command,
 ) -> Result<String> {
     match command {

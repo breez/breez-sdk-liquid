@@ -10,7 +10,7 @@ use clap::Parser;
 use log::{error, info};
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
-use breez_sdk_liquid::{Network, Wollet, WolletOptions};
+use breez_sdk_liquid::{Network, BreezWollet, WolletOptions};
 use commands::{handle_command, CliHelper, Command};
 use persist::CliPersistence;
 
@@ -36,7 +36,7 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-fn init_wollet(persistence: &CliPersistence) -> Result<Wollet> {
+fn init_wollet(persistence: &CliPersistence) -> Result<BreezWollet> {
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
     let desc = singlesig_desc(
@@ -47,7 +47,7 @@ fn init_wollet(persistence: &CliPersistence) -> Result<Wollet> {
     )
     .expect("Expected valid descriptor");
 
-    Wollet::new(WolletOptions {
+    BreezWollet::new(WolletOptions {
         signer,
         desc,
         electrum_url: None,
