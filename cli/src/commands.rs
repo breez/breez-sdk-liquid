@@ -13,9 +13,9 @@ use breez_sdk_liquid::BreezWollet;
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
-    Send { amount_sat: u64, address: String },
+    SendPayment { amount_sat: u64, address: String },
     /// Receive lbtc and send btc through a swap
-    Receive,
+    ReceivePayment,
     /// Get the first fungible address of the currently loaded wallet
     GetAddress,
     /// Get the balance of the currently loaded wallet
@@ -42,7 +42,7 @@ pub(crate) async fn handle_command(
     command: Command,
 ) -> Result<String> {
     match command {
-        Command::Receive {} => {
+        Command::ReceivePayment {} => {
             let address = wollet.address(None)?;
             println!("Please send your liquid funds to the following address: {address}");
 
@@ -52,7 +52,7 @@ pub(crate) async fn handle_command(
                 "Funding successful! New balance: {new_balance} sat"
             ))
         }
-        Command::Send {
+        Command::SendPayment {
             amount_sat,
             address,
         } => {
