@@ -8,7 +8,7 @@ mod tests {
     use bip39::{Mnemonic, Language};
     use lwk_common::{Singlesig, singlesig_desc};
     use lwk_signer::SwSigner;
-    use std::{io, env, path::PathBuf, fs, str::FromStr};
+    use std::{io, env, path::PathBuf, fs, str::FromStr, sync::Arc};
     use crate::{BreezWollet, WolletOptions, Network};
 
     const DEFAULT_DATA_DIR: &str = ".data";
@@ -38,7 +38,7 @@ mod tests {
         Ok(mnemonic)
     }
 
-    fn init_wollet() -> Result<BreezWollet> {
+    async fn init_wollet() -> Result<Arc<BreezWollet>> {
         let mnemonic = get_mnemonic()?;
         let signer = SwSigner::new(&mnemonic.to_string(), false)?;
         let desc = singlesig_desc(
@@ -55,34 +55,36 @@ mod tests {
             electrum_url: None,
             db_root_dir: None,
             network: Network::LiquidTestnet,
-        })
+        }).await
     }
 
     #[tokio::test]
     async fn normal_submarine_swap() -> Result<()> {
-        let mut wollet = init_wollet()?;
+        let breez_wollet = init_wollet().await?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        wollet.send_payment(&invoice)?;
+        breez_wollet.send_payment(&invoice).await?;
 
         Ok(())
     }
 
     #[tokio::test]
     async fn reverse_submarine_swap_success() -> Result<()> {
-        let mut wollet = init_wollet()?;
+        let breez_wollet = init_wollet().await?;
 
-        let swap_response = wollet.receive_payment(1000)?;
+        let swap_response = breez_wollet.receive_payment(1000)?;
 
         println!(
             "Please pay the following invoice: {}",
             swap_response.invoice
         );
 
-        wollet.wait_and_claim(&swap_response.id, &swap_response.claim_details)?;
+        breez_wollet.wait_balance_change().await?;
+
+        // wollet.wait_and_claim(&swap_response.id, &swap_response.claim_details)?;
 
         Ok(())
     }

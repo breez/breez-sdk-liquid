@@ -4,7 +4,7 @@ mod persist;
 use anyhow::{anyhow, Result};
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_signer::SwSigner;
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, sync::Arc};
 
 use clap::Parser;
 use log::{error, info};
@@ -36,7 +36,7 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-fn init_wollet(persistence: &CliPersistence) -> Result<BreezWollet> {
+async fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
     let desc = singlesig_desc(
@@ -53,7 +53,7 @@ fn init_wollet(persistence: &CliPersistence) -> Result<BreezWollet> {
         electrum_url: None,
         db_root_dir: None,
         network: Network::LiquidTestnet,
-    })
+    }).await
 }
 
 #[tokio::main]
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let mut wollet = init_wollet(&persistence)?;
+    let wollet = init_wollet(&persistence).await?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &mut wollet, cli_res.unwrap()).await;
+                let res = handle_command(rl, &wollet, cli_res.unwrap()).await;
                 show_results(res);
             }
             Err(ReadlineError::Interrupted) => {

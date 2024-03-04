@@ -1,4 +1,5 @@
 use std::borrow::Cow::{self, Owned};
+use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
@@ -15,7 +16,7 @@ pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
     SendPayment { amount_sat: u64, address: String },
     /// Receive lbtc and send btc through a swap
-    ReceivePayment,
+    ReceivePayment { amount_sat: u64 },
     /// Get the first fungible address of the currently loaded wallet
     GetAddress,
     /// Get the balance of the currently loaded wallet
@@ -38,18 +39,32 @@ impl Highlighter for CliHelper {
 
 pub(crate) async fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
-    wollet: &mut BreezWollet,
+    wollet: &Arc<BreezWollet>,
     command: Command,
 ) -> Result<String> {
     match command {
-        Command::ReceivePayment {} => {
-            let address = wollet.address(None)?;
-            println!("Please send your liquid funds to the following address: {address}");
+        Command::ReceivePayment { amount_sat } => {
+            // let address = wollet.address(None).await?;
+            // println!("Please send your liquid funds to the following address: {address}");
+            //
+            // let new_balance = wollet.wait_balance_change().await?;
+            //
+            // Ok(format!(
+            //     "Funding successful! New balance: {new_balance} sat"
+            // ))
+            
+            let response = wollet.receive_payment(amount_sat).await?;
 
-            let new_balance = wollet.wait_balance_change()?;
+            dbg!(&response);
+            println!("Please pay the following invoice: {}", response.invoice);
+
+            let new_balance_sat = wollet.wait_balance_change().await?;
 
             Ok(format!(
-                "Funding successful! New balance: {new_balance} sat"
+                r#"
+                Wollet funded successfully! New balance: {} sat
+                "#,
+               new_balance_sat 
             ))
         }
         Command::SendPayment {
@@ -57,7 +72,7 @@ pub(crate) async fn handle_command(
             address,
         } => {
             let signer = AnySigner::Software(wollet.get_signer());
-            let txid = wollet.sign_and_send(&[signer], None, &address, amount_sat)?;
+            let txid = wollet.sign_and_send(&[signer], None, &address, amount_sat).await?;
 
             Ok(format!(
                 r#"
@@ -68,19 +83,19 @@ pub(crate) async fn handle_command(
         }
         Command::GetAddress {} => Ok(format!(
             "Here's the main funding address for your wallet: {}",
-            wollet.address(None)?
+            wollet.address(None).await?
         )),
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
-            wollet.total_balance_sat(true)?
+            wollet.total_balance_sat(true).await?
         )),
         Command::AwaitBalance {} => {
             println!("Waiting for balance changes...");
-            let old_balance = wollet.total_balance_sat(true)?;
+            let old_balance = wollet.total_balance_sat(true).await?;
             Ok(format!(
                 "Balance has changed! Old balance: {} sat, New balance: {} sat",
                 old_balance,
-                wollet.wait_balance_change()?
+                wollet.wait_balance_change().await?
             ))
         }
     }

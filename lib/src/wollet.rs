@@ -1,4 +1,4 @@
-use std::{str::FromStr, thread, time::Duration};
+use std::{str::FromStr, thread, time::Duration, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use boltz_client::{
@@ -14,14 +14,15 @@ use boltz_client::{
     Keypair, ZKKeyPair,
 };
 use lightning_invoice::Bolt11Invoice;
-use log::debug;
+use log::{debug, info};
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::{pset::PartiallySignedTransaction, Address, Txid},
+    elements::{Address, Txid},
     full_scan_with_electrum_client, BlockchainBackend, ElectrumClient, ElectrumUrl,
     ElementsNetwork, EncryptedFsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
+use tokio::sync::Mutex;
 
 const DEFAULT_DB_DIR: &str = ".wollet";
 const MAX_SCAN_RETRIES: u64 = 100;
@@ -30,10 +31,11 @@ const SCAN_DELAY_SEC: u64 = 6;
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct BreezWollet {
-    wollet: LwkWollet,
     signer: SwSigner,
     electrum_url: ElectrumUrl,
     network: ElementsNetwork,
+    wollet: Arc<Mutex<LwkWollet>>,
+    pending_claims: Arc<Mutex<Vec<ClaimDetails>>>,
 }
 
 pub enum Network {
@@ -58,6 +60,7 @@ pub struct WolletOptions {
     pub electrum_url: Option<ElectrumUrl>,
 }
 
+#[derive(Debug)]
 pub struct SwapLbtcResponse {
     pub id: String,
     pub invoice: String,
@@ -65,8 +68,10 @@ pub struct SwapLbtcResponse {
     pub recovery_details: LBtcReverseRecovery,
 }
 
+#[derive(Debug, Clone)]
 pub struct ClaimDetails {
     pub redeem_script: String,
+    pub lockup_address: String,
     pub blinding_str: String,
     pub preimage: Preimage,
     pub absolute_fees: u64,
@@ -128,13 +133,13 @@ impl From<S5Error> for SwapError {
 
 #[allow(dead_code)]
 impl BreezWollet {
-    pub fn new(opts: WolletOptions) -> Result<Self> {
+    pub async fn new(opts: WolletOptions) -> Result<Arc<Self>> {
         let desc: WolletDescriptor = opts.desc.parse()?;
         let db_root_dir = opts.db_root_dir.unwrap_or(DEFAULT_DB_DIR.to_string());
         let network: ElementsNetwork = opts.network.into();
 
         let persister = EncryptedFsPersister::new(db_root_dir, network, &desc)?;
-        let wollet = LwkWollet::new(network, persister, &opts.desc)?;
+        let wollet = Arc::new(Mutex::new(LwkWollet::new(network, persister, &opts.desc)?));
 
         let electrum_url = opts.electrum_url.unwrap_or(match network {
             ElementsNetwork::Liquid | ElementsNetwork::LiquidTestnet => {
@@ -143,36 +148,67 @@ impl BreezWollet {
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         });
 
-        Ok(BreezWollet {
+        let wollet = Arc::new(BreezWollet {
             wollet,
             network,
             electrum_url,
             signer: opts.signer,
-        })
+            pending_claims: Arc::default()
+        });
+
+        BreezWollet::track_claims(&wollet).await.unwrap();
+
+        Ok(wollet)
     }
 
-    pub(crate) fn scan(&mut self) -> Result<(), lwk_wollet::Error> {
+    async fn track_claims(self: &Arc<BreezWollet>) -> Result<()> {
+        let cloned = self.clone();
+
+        tokio::spawn(async move {
+            loop {
+                let pending_claims = cloned.pending_claims.lock().await;
+
+                tokio_scoped::scope(|scope| {
+                    pending_claims.iter()
+                        .for_each(|claim| {
+                            info!("Trying to claim at address {}", claim.blinding_str);
+                            scope.spawn(async {
+                                cloned.try_claim(claim).await.unwrap();
+                            });
+                        })
+                });
+                thread::sleep(Duration::from_secs(5));
+            }
+        });
+
+        Ok(())
+    }
+
+    pub(crate) async fn scan(&self) -> Result<(), lwk_wollet::Error> {
         let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
-        full_scan_with_electrum_client(&mut self.wollet, &mut electrum_client)
+        let mut wollet = self.wollet.lock().await;
+        full_scan_with_electrum_client(&mut wollet, &mut electrum_client)
     }
 
-    pub fn address(&self, index: Option<u32>) -> Result<Address> {
-        Ok(self.wollet.address(index)?.address().clone())
+    pub async fn address(&self, index: Option<u32>) -> Result<Address> {
+        let wollet = self.wollet.lock().await;
+        Ok(wollet.address(index)?.address().clone())
     }
 
-    pub fn total_balance_sat(&mut self, with_scan: bool) -> Result<u64> {
+    pub async fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
         if with_scan {
-            self.scan()?;
+            self.scan().await?;
         }
-        let balance = self.wollet.balance()?;
+        let balance = self.wollet.lock().await.balance()?;
         Ok(balance.values().sum())
     }
 
-    pub(crate) fn wait_for_tx(&mut self, txid: &Txid) -> Result<()> {
+    pub(crate) async fn wait_for_tx(&self, wollet: &mut LwkWollet, txid: &Txid) -> Result<()> {
         let mut electrum_client: ElectrumClient = ElectrumClient::new(&self.electrum_url)?;
+
         for _ in 0..MAX_SCAN_RETRIES {
-            full_scan_with_electrum_client(&mut self.wollet, &mut electrum_client)?;
-            let list = self.wollet.transactions()?;
+            full_scan_with_electrum_client(wollet, &mut electrum_client)?;
+            let list = wollet.transactions()?;
             if list.iter().any(|e| &e.tx.txid() == txid) {
                 return Ok(());
             }
@@ -182,11 +218,11 @@ impl BreezWollet {
         Err(anyhow!("Wallet does not have {} in its list", txid))
     }
 
-    pub fn wait_balance_change(&mut self) -> Result<u64> {
-        let initial_balance = self.total_balance_sat(true)?;
+    pub async fn wait_balance_change(&self) -> Result<u64> {
+        let initial_balance = self.total_balance_sat(true).await?;
 
         for _ in 0..MAX_SCAN_RETRIES {
-            let new_balance = self.total_balance_sat(true)?;
+            let new_balance = self.total_balance_sat(true).await?;
             if new_balance != initial_balance {
                 return Ok(new_balance);
             }
@@ -203,8 +239,8 @@ impl BreezWollet {
         self.signer.clone()
     }
 
-    pub(crate) fn get_descriptor(&self) -> WolletDescriptor {
-        self.wollet.wollet_descriptor()
+    pub(crate) async fn get_descriptor(&self) -> WolletDescriptor {
+        self.wollet.lock().await.wollet_descriptor()
     }
 
     fn boltz_client(&self) -> BoltzApiClient {
@@ -235,32 +271,32 @@ impl BreezWollet {
         )
     }
 
-    pub fn sign_and_send(
-        &mut self,
+    pub async fn sign_and_send(
+        &self,
         signers: &[AnySigner],
         fee_rate: Option<f32>,
         recipient: &str,
         amount_sat: u64,
     ) -> Result<String> {
-        let mut pset = self.wollet.send_lbtc(amount_sat, recipient, fee_rate)?;
+        let cloned_wollet = self.wollet.clone();
+        let mut wollet = cloned_wollet.lock().await;
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+
+        let mut pset = wollet.send_lbtc(amount_sat, recipient, fee_rate)?;
 
         for signer in signers {
             signer.sign(&mut pset)?;
         }
 
-        self.send(&mut pset).map(|txid| txid.to_string())
-    }
-
-    fn send(&mut self, pset: &mut PartiallySignedTransaction) -> Result<String> {
-        let tx = self.wollet.finalize(pset)?;
-        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let tx = wollet.finalize(&mut pset)?;
         let txid = electrum_client.broadcast(&tx)?;
 
-        self.wait_for_tx(&txid)?;
+        self.wait_for_tx(&mut wollet, &txid).await?;
+
         Ok(txid.to_string())
     }
 
-    pub fn send_payment(&mut self, invoice: &str) -> Result<(), SwapError> {
+    pub async fn send_payment(&self, invoice: &str) -> Result<(), SwapError> {
         let client = self.boltz_client();
         let invoice = invoice.trim().parse::<Bolt11Invoice>()
             .map_err(|_| SwapError::InvalidInvoice)?;
@@ -288,7 +324,9 @@ impl BreezWollet {
         let funding_addr = swap_response.get_funding_address()?;
 
         let signer = AnySigner::Software(self.get_signer());
+        
         self.sign_and_send(&[signer], None, &funding_addr, funding_amount)
+            .await
             .map_err(|_| SwapError::SendError)?;
 
         Ok(())
@@ -311,11 +349,11 @@ impl BreezWollet {
         Ok(())
     }
 
-    fn claim_payment(&self, claim_details: &ClaimDetails) -> Result<String, SwapError> {
+    async fn try_claim(&self, claim_details: &ClaimDetails) -> Result<String, SwapError> {
         let network_config = &self.get_network_config();
         let mut rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(&claim_details.redeem_script, &claim_details.blinding_str)?,
-            self.address(None).map_err(|_| SwapError::WalletError)?.to_string(),
+            self.address(None).await.map_err(|_| SwapError::WalletError)?.to_string(),
             network_config,
         )
         .unwrap();
@@ -333,13 +371,13 @@ impl BreezWollet {
         Ok(txid)
     }
 
-    pub fn wait_and_claim(&self, id: &str, claim_details: &ClaimDetails) -> Result<String, SwapError> {
+    pub async fn wait_and_claim(&self, id: &str, claim_details: &ClaimDetails) -> Result<String, SwapError> {
       self.wait_swap_status(id, SwapStatus::Mempool)
         .map_err(|_| SwapError::ServersUnreachable)?;
-      self.claim_payment(claim_details)
+      self.try_claim(claim_details).await
     }
 
-    pub fn receive_payment(&mut self, amount_sat: u64) -> Result<SwapLbtcResponse, SwapError> {
+    pub async fn receive_payment(&self, amount_sat: u64) -> Result<SwapLbtcResponse, SwapError> {
         let client = self.boltz_client();
 
         let pairs = client.get_pairs()?;
@@ -370,6 +408,7 @@ impl BreezWollet {
         let blinding_str = swap_response.get_blinding_key()?;
         let blinding_key = ZKKeyPair::from_str(&blinding_str).map_err(|_| SwapError::BadResponse)?;
         let redeem_script = swap_response.get_redeem_script()?;
+        let lockup_address = swap_response.get_lockup_address()?;
 
         let recovery = LBtcReverseRecovery::new(
             &swap_id,
@@ -382,27 +421,32 @@ impl BreezWollet {
         self.wait_swap_status(&swap_id, SwapStatus::Created)
             .map_err(|_| SwapError::ServersUnreachable)?;
 
+        let claim_details = ClaimDetails {
+                redeem_script,
+                lockup_address,
+                blinding_str,
+                preimage,
+                absolute_fees: 900,
+        };
+
+        self.pending_claims.lock().await.push(claim_details.clone());
+
         Ok(SwapLbtcResponse {
             id: swap_id,
             invoice: invoice.to_string(),
             recovery_details: recovery,
-            claim_details: ClaimDetails {
-                redeem_script,
-                blinding_str,
-                preimage,
-                absolute_fees: 900,
-            },
+            claim_details,
         })
     }
 
-    pub fn recover_on_receive(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
+    pub async fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
         let script: LBtcSwapScript = recovery.try_into().unwrap();
         let network_config = self.get_network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));
 
         let mut tx = LBtcSwapTx::new_claim(
             script.clone(),
-            self.address(None)?.to_string(),
+            self.address(None).await?.to_string(),
             &network_config,
         )
         .expect("Expecting valid tx");
