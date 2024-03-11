@@ -36,7 +36,7 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-async fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
+fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
     let desc = singlesig_desc(
@@ -53,7 +53,7 @@ async fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
         electrum_url: None,
         db_root_dir: None,
         network: Network::LiquidTestnet,
-    }).await
+    })
 }
 
 #[tokio::main]
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let wollet = init_wollet(&persistence).await?;
+    let wollet = init_wollet(&persistence)?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");

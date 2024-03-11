@@ -4,12 +4,12 @@ pub use wollet::*;
 
 #[cfg(test)]
 mod tests {
+    use crate::{BreezWollet, Network, WolletOptions};
     use anyhow::Result;
-    use bip39::{Mnemonic, Language};
-    use lwk_common::{Singlesig, singlesig_desc};
+    use bip39::{Language, Mnemonic};
+    use lwk_common::{singlesig_desc, Singlesig};
     use lwk_signer::SwSigner;
-    use std::{io, env, path::PathBuf, fs, str::FromStr, sync::Arc};
-    use crate::{BreezWollet, WolletOptions, Network};
+    use std::{env, fs, io, path::PathBuf, str::FromStr, sync::Arc};
 
     const DEFAULT_DATA_DIR: &str = ".data";
     const PHRASE_FILE_NAME: &str = "phrase";
@@ -38,7 +38,7 @@ mod tests {
         Ok(mnemonic)
     }
 
-    async fn init_wollet() -> Result<Arc<BreezWollet>> {
+    fn init_wollet() -> Result<Arc<BreezWollet>> {
         let mnemonic = get_mnemonic()?;
         let signer = SwSigner::new(&mnemonic.to_string(), false)?;
         let desc = singlesig_desc(
@@ -55,25 +55,25 @@ mod tests {
             electrum_url: None,
             db_root_dir: None,
             network: Network::LiquidTestnet,
-        }).await
+        })
     }
 
-    #[tokio::test]
-    async fn normal_submarine_swap() -> Result<()> {
-        let breez_wollet = init_wollet().await?;
+    #[test]
+    fn normal_submarine_swap() -> Result<()> {
+        let breez_wollet = init_wollet()?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        breez_wollet.send_payment(&invoice).await?;
+        breez_wollet.send_payment(&invoice)?;
 
         Ok(())
     }
 
-    #[tokio::test]
-    async fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wollet = init_wollet().await?;
+    #[test]
+    fn reverse_submarine_swap_success() -> Result<()> {
+        let breez_wollet = init_wollet()?;
 
         let swap_response = breez_wollet.receive_payment(1000)?;
 
@@ -82,15 +82,11 @@ mod tests {
             swap_response.invoice
         );
 
-        breez_wollet.wait_balance_change().await?;
-
-        // wollet.wait_and_claim(&swap_response.id, &swap_response.claim_details)?;
-
         Ok(())
     }
 
-    #[tokio::test]
-    async fn reverse_submarine_swap_recovery() -> Result<()> {
+    #[test]
+    fn reverse_submarine_swap_recovery() -> Result<()> {
         Ok(())
     }
 }

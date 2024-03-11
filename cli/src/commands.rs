@@ -39,12 +39,12 @@ pub(crate) async fn handle_command(
 ) -> Result<String> {
     match command {
         Command::ReceivePayment { amount_sat } => {
-            let response = wollet.receive_payment(amount_sat).await?;
+            let response = wollet.receive_payment(amount_sat)?;
             dbg!(&response);
             Ok(format!("Please pay the following invoice: {}", response.invoice))
         }
         Command::SendPayment { bolt11 } => {
-            let response = wollet.send_payment(&bolt11).await?;
+            let response = wollet.send_payment(&bolt11)?;
 
             Ok(format!(
                 r#"
