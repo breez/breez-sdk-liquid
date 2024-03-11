@@ -94,6 +94,10 @@ impl ToString for SwapStatus {
     }
 }
 
+pub struct SendPaymentResponse {
+    pub txid: String,
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum SwapError {
     #[error("Could not contact Boltz servers")]
@@ -296,7 +300,7 @@ impl BreezWollet {
         Ok(txid.to_string())
     }
 
-    pub async fn send_payment(&self, invoice: &str) -> Result<(), SwapError> {
+    pub async fn send_payment(&self, invoice: &str) -> Result<SendPaymentResponse, SwapError> {
         let client = self.boltz_client();
         let invoice = invoice.trim().parse::<Bolt11Invoice>()
             .map_err(|_| SwapError::InvalidInvoice)?;
@@ -325,11 +329,13 @@ impl BreezWollet {
 
         let signer = AnySigner::Software(self.get_signer());
         
-        self.sign_and_send(&[signer], None, &funding_addr, funding_amount)
+        let txid = self.sign_and_send(&[signer], None, &funding_addr, funding_amount)
             .await
             .map_err(|_| SwapError::SendError)?;
 
-        Ok(())
+        Ok(SendPaymentResponse {
+            txid
+        })
     }
 
     fn wait_swap_status(&self, id: &str, swap_status: SwapStatus) -> Result<()> {

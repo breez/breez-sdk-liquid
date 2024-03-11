@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use clap::Parser;
-use lwk_signer::AnySigner;
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
@@ -14,7 +13,7 @@ use breez_sdk_liquid::BreezWollet;
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
-    SendPayment { amount_sat: u64, address: String },
+    SendPayment { bolt11: String },
     /// Receive lbtc and send btc through a swap
     ReceivePayment { amount_sat: u64 },
     /// Get the first fungible address of the currently loaded wallet
@@ -65,24 +64,21 @@ pub(crate) async fn handle_command(
                new_balance_sat 
             ))
         }
-        Command::SendPayment {
-            amount_sat,
-            address,
-        } => {
-            let signer = AnySigner::Software(wollet.get_signer());
-            let txid = wollet.sign_and_send(&[signer], None, &address, amount_sat).await?;
+        Command::SendPayment { bolt11 } => {
+            let response = wollet.send_payment(&bolt11).await?;
 
             Ok(format!(
                 r#"
-                Succesffully sent {amount_sat} to {address}.
-                You can view the transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
-                txid
+                Successfully paid the invoice!
+                You can view the onchain transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
+                response.txid
             ))
         }
         Command::GetAddress {} => Ok(format!(
             "Here's the main funding address for your wallet: {}",
             wollet.address(None).await?
         )),
+        },
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
             wollet.total_balance_sat(true).await?
