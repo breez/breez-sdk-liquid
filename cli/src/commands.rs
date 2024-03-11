@@ -41,28 +41,9 @@ pub(crate) async fn handle_command(
 ) -> Result<String> {
     match command {
         Command::ReceivePayment { amount_sat } => {
-            // let address = wollet.address(None).await?;
-            // println!("Please send your liquid funds to the following address: {address}");
-            //
-            // let new_balance = wollet.wait_balance_change().await?;
-            //
-            // Ok(format!(
-            //     "Funding successful! New balance: {new_balance} sat"
-            // ))
-            
             let response = wollet.receive_payment(amount_sat).await?;
-
             dbg!(&response);
-            println!("Please pay the following invoice: {}", response.invoice);
-
-            let new_balance_sat = wollet.wait_balance_change().await?;
-
-            Ok(format!(
-                r#"
-                Wollet funded successfully! New balance: {} sat
-                "#,
-               new_balance_sat 
-            ))
+            Ok(format!("Please pay the following invoice: {}", response.invoice))
         }
         Command::SendPayment { bolt11 } => {
             let response = wollet.send_payment(&bolt11).await?;
