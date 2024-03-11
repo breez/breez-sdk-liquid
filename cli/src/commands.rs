@@ -20,9 +20,7 @@ pub(crate) enum Command {
     /// Get the first fungible address of the currently loaded wallet
     GetAddress,
     /// Get the balance of the currently loaded wallet
-    GetBalance,
-    /// Hangs the current thread until the wallet's balance has changed
-    AwaitBalance,
+    GetBalance
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -89,14 +87,5 @@ pub(crate) async fn handle_command(
             "Current balance: {} sat",
             wollet.total_balance_sat(true).await?
         )),
-        Command::AwaitBalance {} => {
-            println!("Waiting for balance changes...");
-            let old_balance = wollet.total_balance_sat(true).await?;
-            Ok(format!(
-                "Balance has changed! Old balance: {} sat, New balance: {} sat",
-                old_balance,
-                wollet.wait_balance_change().await?
-            ))
-        }
     }
 }
