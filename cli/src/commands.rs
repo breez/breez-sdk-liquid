@@ -16,8 +16,6 @@ pub(crate) enum Command {
     SendPayment { bolt11: String },
     /// Receive lbtc and send btc through a swap
     ReceivePayment { amount_sat: u64 },
-    /// Get the first fungible address of the currently loaded wallet
-    GetAddress,
     /// Get the balance of the currently loaded wallet
     GetBalance
 }
@@ -54,11 +52,6 @@ pub(crate) async fn handle_command(
                 You can view the onchain transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
                 response.txid
             ))
-        }
-        Command::GetAddress {} => Ok(format!(
-            "Here's the main funding address for your wallet: {}",
-            wollet.address(None).await?
-        )),
         },
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
