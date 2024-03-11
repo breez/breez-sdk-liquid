@@ -55,7 +55,7 @@ pub(crate) async fn handle_command(
         },
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
-            wollet.total_balance_sat(true).await?
+            wollet.total_balance_sat(true)?
         )),
     }
 }

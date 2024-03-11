@@ -2,7 +2,7 @@ use std::{
     str::FromStr,
     sync::{Arc, Mutex},
     thread,
-    time::Duration,
+    time::Duration, collections::HashSet,
 };
 
 use anyhow::{anyhow, Result};
@@ -42,7 +42,7 @@ pub struct BreezWollet {
     electrum_url: ElectrumUrl,
     network: ElementsNetwork,
     wollet: Arc<Mutex<LwkWollet>>,
-    pending_claims: Arc<Mutex<Vec<ClaimDetails>>>,
+    pending_claims: Arc<Mutex<HashSet<ClaimDetails>>>,
 }
 
 pub enum Network {
@@ -75,12 +75,12 @@ pub struct SwapLbtcResponse {
     pub recovery_details: LBtcReverseRecovery,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ClaimDetails {
     pub redeem_script: String,
     pub lockup_address: String,
     pub blinding_str: String,
-    pub preimage: Preimage,
+    pub preimage: String,
     pub absolute_fees: u64,
 }
 
@@ -162,7 +162,7 @@ impl BreezWollet {
             network,
             electrum_url,
             signer: opts.signer,
-            pending_claims: Arc::default(),
+            pending_claims: Default::default()
         });
 
         BreezWollet::track_claims(&wollet)?;
@@ -174,17 +174,21 @@ impl BreezWollet {
         let cloned = self.clone();
 
         thread::spawn(move || loop {
+            thread::sleep(Duration::from_secs(5));
             let pending_claims = cloned.pending_claims.lock().unwrap();
 
             thread::scope(|scope| {
-                pending_claims.iter().for_each(|claim| {
+                for claim in pending_claims.iter() {
                     info!("Trying to claim at address {}", claim.lockup_address);
+
                     scope.spawn(|| {
-                        cloned.try_claim(claim).unwrap();
+                        match cloned.try_claim(claim) {
+                            Ok(txid) => info!("Claim successful! Txid: {txid}"),
+                            Err(e) => info!("Could not claim yet. Err: {}", e)
+                        }
                     });
-                })
+                }
             });
-            thread::sleep(Duration::from_secs(5));
         });
 
         Ok(())
@@ -201,7 +205,7 @@ impl BreezWollet {
         Ok(wollet.address(index)?.address().clone())
     }
 
-    pub async fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
+    pub fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
         if with_scan {
             self.scan()?;
         }
@@ -351,8 +355,7 @@ impl BreezWollet {
                 .map_err(|_| SwapError::WalletError)?
                 .to_string(),
             network_config,
-        )
-        .unwrap();
+        )?;
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
@@ -361,7 +364,7 @@ impl BreezWollet {
 
         let signed_tx = rev_swap_tx.sign_claim(
             &lsk.keypair,
-            &claim_details.preimage,
+            &Preimage::from_str(&claim_details.preimage)?,
             claim_details.absolute_fees,
         )?;
         let txid = rev_swap_tx.broadcast(signed_tx, network_config)?;
@@ -423,14 +426,14 @@ impl BreezWollet {
             redeem_script,
             lockup_address,
             blinding_str,
-            preimage,
-            absolute_fees: 900,
+            preimage: preimage.to_string().unwrap(),
+            absolute_fees: 0
         };
 
         self.pending_claims
             .lock()
             .unwrap()
-            .push(claim_details.clone());
+            .insert(claim_details.clone());
 
         Ok(SwapLbtcResponse {
             id: swap_id,
