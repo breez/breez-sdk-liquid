@@ -1,3 +1,5 @@
+use core::fmt;
+
 use boltz_client::util::{error::S5Error, secrets::LBtcReverseRecovery};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork};
@@ -94,5 +96,23 @@ impl From<S5Error> for SwapError {
             boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
             _ => SwapError::BoltzGeneric { err: err.message },
         }
+    }
+}
+
+pub struct WalletInfo {
+    pub balance_sat: u64,
+    pub pubkey: String,
+}
+
+impl fmt::Display for WalletInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            r#"
+        Current Balance: {} sat
+        Public Key: {}
+        "#,
+            self.balance_sat, self.pubkey
+        )
     }
 }

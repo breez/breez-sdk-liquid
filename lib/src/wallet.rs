@@ -29,7 +29,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ClaimDetails, SendPaymentResponse, SwapError, SwapLbtcResponse, SwapStatus, WalletOptions,
+    ClaimDetails, SendPaymentResponse, SwapError, SwapLbtcResponse, SwapStatus, WalletInfo,
+    WalletOptions,
 };
 
 const DEFAULT_DB_DIR: &str = ".wollet";
@@ -106,12 +107,19 @@ impl Wallet {
         Ok(wallet.address(index)?.address().clone())
     }
 
-    pub fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
+    fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
         if with_scan {
             self.scan()?;
         }
         let balance = self.wallet.lock().unwrap().balance()?;
         Ok(balance.values().sum())
+    }
+
+    pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo> {
+        Ok(WalletInfo {
+            balance_sat: self.total_balance_sat(with_scan)?,
+            pubkey: self.signer.xpub().public_key.to_string(),
+        })
     }
 
     fn get_signer(&self) -> SwSigner {
