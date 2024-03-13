@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use boltz_client::{
     network::{electrum::ElectrumConfig, Chain},
     swaps::{
@@ -24,9 +24,8 @@ use log::{debug, info};
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::{Address, Txid},
-    full_scan_with_electrum_client, BlockchainBackend, ElectrumClient, ElectrumUrl,
-    ElementsNetwork, EncryptedFsPersister, Wollet as LwkWollet, WolletDescriptor,
+    elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
+    ElectrumUrl, ElementsNetwork, EncryptedFsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -34,9 +33,6 @@ use crate::{
 };
 
 const DEFAULT_DB_DIR: &str = ".wollet";
-const MAX_SCAN_RETRIES: u64 = 100;
-const SCAN_DELAY_SEC: u64 = 6;
-
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -118,21 +114,6 @@ impl Wallet {
         Ok(balance.values().sum())
     }
 
-    fn wait_for_tx(&self, wallet: &mut LwkWollet, txid: &Txid) -> Result<()> {
-        let mut electrum_client: ElectrumClient = ElectrumClient::new(&self.electrum_url)?;
-
-        for _ in 0..MAX_SCAN_RETRIES {
-            full_scan_with_electrum_client(wallet, &mut electrum_client)?;
-            let list = wallet.transactions()?;
-            if list.iter().any(|e| &e.tx.txid() == txid) {
-                return Ok(());
-            }
-            thread::sleep(Duration::from_secs(SCAN_DELAY_SEC));
-        }
-
-        Err(anyhow!("Wallet does not have {} in its list", txid))
-    }
-
     fn get_signer(&self) -> SwSigner {
         self.signer.clone()
     }
@@ -172,8 +153,7 @@ impl Wallet {
         recipient: &str,
         amount_sat: u64,
     ) -> Result<String> {
-        let cloned_wallet = self.wallet.clone();
-        let mut wallet = cloned_wallet.lock().unwrap();
+        let wallet = self.wallet.lock().unwrap();
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
 
         let mut pset = wallet.send_lbtc(amount_sat, recipient, fee_rate)?;
@@ -184,8 +164,6 @@ impl Wallet {
 
         let tx = wallet.finalize(&mut pset)?;
         let txid = electrum_client.broadcast(&tx)?;
-
-        self.wait_for_tx(&mut wallet, &txid)?;
 
         Ok(txid.to_string())
     }
