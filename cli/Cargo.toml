@@ -1,0 +1,16 @@
+[package]
+name = "breez-sdk-liquid-cli"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.80"
+log = "0.4.20"
+breez-sdk-liquid = { path = "../lib" }
+tokio = { version = "1.36.0", features = ["full"] }
+clap = { version = "4.5.1", features = ["derive"] }
+rustyline = { version = "13.0.0", features = ["derive"] }
+lwk_signer = "0.2.0"
+lwk_common = "0.2.0"
+bip39 = "2.0.0"
