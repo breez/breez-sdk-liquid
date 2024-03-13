@@ -1,10 +1,12 @@
-pub mod wollet;
+pub mod model;
+pub mod wallet;
 
-pub use wollet::*;
+pub use model::*;
+pub use wallet::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::{BreezWollet, Network, WolletOptions};
+    use crate::{Network, Wallet, WalletOptions};
     use anyhow::Result;
     use bip39::{Language, Mnemonic};
     use lwk_common::{singlesig_desc, Singlesig};
@@ -38,7 +40,7 @@ mod tests {
         Ok(mnemonic)
     }
 
-    fn init_wollet() -> Result<Arc<BreezWollet>> {
+    fn init_wallet() -> Result<Arc<Wallet>> {
         let mnemonic = get_mnemonic()?;
         let signer = SwSigner::new(&mnemonic.to_string(), false)?;
         let desc = singlesig_desc(
@@ -49,7 +51,7 @@ mod tests {
         )
         .expect("Expected valid descriptor");
 
-        BreezWollet::new(WolletOptions {
+        Wallet::new(WalletOptions {
             signer,
             desc,
             electrum_url: None,
@@ -60,22 +62,22 @@ mod tests {
 
     #[test]
     fn normal_submarine_swap() -> Result<()> {
-        let breez_wollet = init_wollet()?;
+        let breez_wallet = init_wallet()?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        breez_wollet.send_payment(&invoice)?;
+        breez_wallet.send_payment(&invoice)?;
 
         Ok(())
     }
 
     #[test]
     fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wollet = init_wollet()?;
+        let breez_wallet = init_wallet()?;
 
-        let swap_response = breez_wollet.receive_payment(1000)?;
+        let swap_response = breez_wallet.receive_payment(1000)?;
 
         println!(
             "Please pay the following invoice: {}",

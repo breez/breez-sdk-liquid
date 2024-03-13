@@ -10,7 +10,7 @@ use clap::Parser;
 use log::{error, info};
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
-use breez_sdk_liquid::{Network, BreezWollet, WolletOptions};
+use breez_sdk_liquid::{Network, Wallet, WalletOptions};
 use commands::{handle_command, CliHelper, Command};
 use persist::CliPersistence;
 
@@ -36,7 +36,7 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
+fn init_wallet(persistence: &CliPersistence) -> Result<Arc<Wallet>> {
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let signer = SwSigner::new(&mnemonic.to_string(), false)?;
     let desc = singlesig_desc(
@@ -47,7 +47,7 @@ fn init_wollet(persistence: &CliPersistence) -> Result<Arc<BreezWollet>> {
     )
     .expect("Expected valid descriptor");
 
-    BreezWollet::new(WolletOptions {
+    Wallet::new(WalletOptions {
         signer,
         desc,
         electrum_url: None,
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let wollet = init_wollet(&persistence)?;
+    let wallet = init_wallet(&persistence)?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &wollet, cli_res.unwrap()).await;
+                let res = handle_command(rl, &wallet, cli_res.unwrap()).await;
                 show_results(res);
             }
             Err(ReadlineError::Interrupted) => {
