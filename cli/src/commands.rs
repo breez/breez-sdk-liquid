@@ -8,7 +8,7 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::BreezWollet;
+use breez_sdk_liquid::Wallet;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -17,7 +17,7 @@ pub(crate) enum Command {
     /// Receive lbtc and send btc through a swap
     ReceivePayment { amount_sat: u64 },
     /// Get the balance of the currently loaded wallet
-    GetBalance
+    GetBalance,
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -34,17 +34,20 @@ impl Highlighter for CliHelper {
 
 pub(crate) async fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
-    wollet: &Arc<BreezWollet>,
+    wallet: &Arc<Wallet>,
     command: Command,
 ) -> Result<String> {
     match command {
         Command::ReceivePayment { amount_sat } => {
-            let response = wollet.receive_payment(amount_sat)?;
+            let response = wallet.receive_payment(amount_sat)?;
             dbg!(&response);
-            Ok(format!("Please pay the following invoice: {}", response.invoice))
+            Ok(format!(
+                "Please pay the following invoice: {}",
+                response.invoice
+            ))
         }
         Command::SendPayment { bolt11 } => {
-            let response = wollet.send_payment(&bolt11)?;
+            let response = wallet.send_payment(&bolt11)?;
 
             Ok(format!(
                 r#"
@@ -52,10 +55,10 @@ pub(crate) async fn handle_command(
                 You can view the onchain transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
                 response.txid
             ))
-        },
+        }
         Command::GetBalance {} => Ok(format!(
             "Current balance: {} sat",
-            wollet.total_balance_sat(true)?
+            wallet.total_balance_sat(true)?
         )),
     }
 }
