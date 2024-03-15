@@ -42,6 +42,7 @@ pub struct Wallet {
     network: ElementsNetwork,
     wallet: Arc<Mutex<LwkWollet>>,
     pending_claims: Arc<Mutex<HashSet<ClaimDetails>>>,
+    active_address: Option<u32>,
 }
 
 #[allow(dead_code)]
@@ -67,6 +68,7 @@ impl Wallet {
             electrum_url,
             signer: opts.signer,
             pending_claims: Default::default(),
+            active_address: None,
         });
 
         Wallet::track_claims(&wallet)?;
@@ -102,9 +104,9 @@ impl Wallet {
         full_scan_with_electrum_client(&mut wallet, &mut electrum_client)
     }
 
-    fn address(&self, index: Option<u32>) -> Result<Address> {
+    fn address(&self) -> Result<Address> {
         let wallet = self.wallet.lock().unwrap();
-        Ok(wallet.address(index)?.address().clone())
+        Ok(wallet.address(self.active_address)?.address().clone())
     }
 
     fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
@@ -119,6 +121,7 @@ impl Wallet {
         Ok(WalletInfo {
             balance_sat: self.total_balance_sat(with_scan)?,
             pubkey: self.signer.xpub().public_key.to_string(),
+            active_address: self.address()?.to_string(),
         })
     }
 
@@ -242,7 +245,7 @@ impl Wallet {
                 &claim_details.redeem_script,
                 &claim_details.blinding_str,
             )?,
-            self.address(None)
+            self.address()
                 .map_err(|_| SwapError::WalletError)?
                 .to_string(),
             network_config,
@@ -339,12 +342,9 @@ impl Wallet {
         let network_config = self.get_network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));
 
-        let mut tx = LBtcSwapTx::new_claim(
-            script.clone(),
-            self.address(None)?.to_string(),
-            &network_config,
-        )
-        .expect("Expecting valid tx");
+        let mut tx =
+            LBtcSwapTx::new_claim(script.clone(), self.address()?.to_string(), &network_config)
+                .expect("Expecting valid tx");
         let keypair: Keypair = recovery.try_into().unwrap();
         let preimage: Preimage = recovery.try_into().unwrap();
 
