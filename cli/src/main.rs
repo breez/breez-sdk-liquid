@@ -58,6 +58,8 @@ fn init_wallet(persistence: &CliPersistence) -> Result<Arc<Wallet>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
+
     let args = Args::parse();
     let persistence = init_persistence(&args)?;
     let history_file = &persistence.history_file();
