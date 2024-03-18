@@ -51,7 +51,8 @@ fn init_wallet(persistence: &CliPersistence) -> Result<Arc<Wallet>> {
         signer,
         desc,
         electrum_url: None,
-        db_root_dir: None,
+        db_root_path: None,
+        chain_cache_path: None,
         network: Network::LiquidTestnet,
     })
 }

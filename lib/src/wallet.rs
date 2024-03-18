@@ -1,6 +1,4 @@
 use std::{
-    collections::HashSet,
-    str::FromStr,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -10,17 +8,13 @@ use anyhow::Result;
 use boltz_client::{
     network::{electrum::ElectrumConfig, Chain},
     swaps::{
-        boltz::{
-            BoltzApiClient, CreateSwapRequest, SwapStatusRequest, BOLTZ_MAINNET_URL,
-            BOLTZ_TESTNET_URL,
-        },
+        boltz::{BoltzApiClient, CreateSwapRequest, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL},
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
-    Keypair, ZKKeyPair,
+    Bolt11Invoice, Keypair,
 };
-use lightning_invoice::Bolt11Invoice;
-use log::{debug, info, warn};
+use log::{debug, warn};
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -29,12 +23,13 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ClaimDetails, SendPaymentResponse, SwapError, SwapLbtcResponse, SwapStatus, WalletInfo,
+    persist::Persister, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
     WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
 const CLAIM_ABSOLUTE_FEES: u64 = 134;
+const DEFAULT_SWAPS_DIR: &str = ".data";
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -42,8 +37,8 @@ pub struct Wallet {
     electrum_url: ElectrumUrl,
     network: ElementsNetwork,
     wallet: Arc<Mutex<LwkWollet>>,
-    pending_claims: Arc<Mutex<HashSet<ClaimDetails>>>,
     active_address: Option<u32>,
+    swap_persister: Persister,
 }
 
 #[allow(dead_code)]
@@ -52,8 +47,12 @@ impl Wallet {
         opts.desc.parse::<String>()?;
         let network: ElementsNetwork = opts.network.into();
 
-        let persister = NoPersist::new();
-        let wallet = Arc::new(Mutex::new(LwkWollet::new(network, persister, &opts.desc)?));
+        let lwk_persister = NoPersist::new();
+        let wallet = Arc::new(Mutex::new(LwkWollet::new(
+            network,
+            lwk_persister,
+            &opts.desc,
+        )?));
 
         let electrum_url = opts.electrum_url.unwrap_or(match network {
             ElementsNetwork::Liquid | ElementsNetwork::LiquidTestnet => {
@@ -62,13 +61,17 @@ impl Wallet {
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         });
 
+        let swap_persister =
+            Persister::new(opts.db_root_path.unwrap_or(DEFAULT_SWAPS_DIR.to_string()));
+        swap_persister.init()?;
+
         let wallet = Arc::new(Wallet {
             wallet,
             network,
             electrum_url,
             signer: opts.signer,
-            pending_claims: Default::default(),
             active_address: None,
+            swap_persister,
         });
 
         Wallet::track_claims(&wallet)?;
@@ -81,15 +84,21 @@ impl Wallet {
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let pending_claims = cloned.pending_claims.lock().unwrap();
+            let ongoing_swaps = cloned.swap_persister.list_ongoing_swaps().unwrap();
 
             thread::scope(|scope| {
-                for claim in pending_claims.iter() {
-                    info!("Trying to claim from lockup address {}", claim.lockup_address);
-
-                    scope.spawn(|| match cloned.try_claim(claim) {
-                        Ok(txid) => info!("Claim successful! Txid: {txid}"),
-                        Err(e) => warn!("Could not claim yet. Err: {}", e),
+                for swap in ongoing_swaps {
+                    scope.spawn(|| {
+                        let OngoingSwap {
+                            preimage,
+                            redeem_script,
+                            blinding_key,
+                            ..
+                        } = swap;
+                        match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                            Ok(_) => cloned.swap_persister.resolve_ongoing_swap(swap.id).unwrap(),
+                            Err(e) => warn!("Could not claim yet. Err: {}", e),
+                        }
                     });
                 }
             });
@@ -217,30 +226,16 @@ impl Wallet {
         Ok(SendPaymentResponse { txid })
     }
 
-    fn wait_swap_status(&self, id: &str, swap_status: SwapStatus) -> Result<()> {
-        let client = self.boltz_client();
-
-        loop {
-            let request = SwapStatusRequest { id: id.to_string() };
-            let response = client.swap_status(request).unwrap();
-
-            if response.status == swap_status.to_string() {
-                break;
-            }
-
-            thread::sleep(Duration::from_secs(5));
-        }
-
-        Ok(())
-    }
-
-    fn try_claim(&self, claim_details: &ClaimDetails) -> Result<String, SwapError> {
+    fn try_claim(
+        &self,
+        preimage: &str,
+        redeem_script: &str,
+        blinding_key: &str,
+        absolute_fees: Option<u64>,
+    ) -> Result<String, SwapError> {
         let network_config = &self.get_network_config();
         let mut rev_swap_tx = LBtcSwapTx::new_claim(
-            LBtcSwapScript::reverse_from_str(
-                &claim_details.redeem_script,
-                &claim_details.blinding_str,
-            )?,
+            LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
             self.address()
                 .map_err(|_| SwapError::WalletError)?
                 .to_string(),
@@ -250,12 +245,13 @@ impl Wallet {
         let mnemonic = self.signer.mnemonic();
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.get_chain(), 0)?;
+
         let lsk = LiquidSwapKey::from(swap_key);
 
         let signed_tx = rev_swap_tx.sign_claim(
             &lsk.keypair,
-            &Preimage::from_str(&claim_details.preimage)?,
-            claim_details.absolute_fees,
+            &Preimage::from_str(preimage)?,
+            absolute_fees.unwrap_or(CLAIM_ABSOLUTE_FEES),
         )?;
         let txid = rev_swap_tx.broadcast(signed_tx, network_config)?;
 
@@ -280,10 +276,11 @@ impl Wallet {
         let lsk = LiquidSwapKey::from(swap_key);
 
         let preimage = Preimage::new();
+        let preimage_hash = preimage.sha256.to_string();
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
             lbtc_pair.hash,
-            preimage.sha256.to_string(),
+            preimage_hash.clone(),
             lsk.keypair.public_key().to_string(),
             amount_sat,
         ))?;
@@ -291,46 +288,36 @@ impl Wallet {
         let swap_id = swap_response.get_id();
         let invoice = swap_response.get_invoice()?;
         let blinding_str = swap_response.get_blinding_key()?;
-        let blinding_key =
-            ZKKeyPair::from_str(&blinding_str).map_err(|_| SwapError::BadResponse)?;
         let redeem_script = swap_response.get_redeem_script()?;
-        let lockup_address = swap_response.get_lockup_address()?;
 
-        let recovery = LBtcReverseRecovery::new(
-            &swap_id,
-            &preimage,
-            &lsk.keypair,
-            &blinding_key,
-            &redeem_script,
-        );
-
-        self.wait_swap_status(&swap_id, SwapStatus::Created)
-            .map_err(|e| SwapError::BoltzGeneric {
-                err: e.to_string()
-            })?;
-
-        let claim_details = ClaimDetails {
-            redeem_script,
-            lockup_address,
-            blinding_str,
-            preimage: preimage.to_string().unwrap(),
-            absolute_fees: CLAIM_ABSOLUTE_FEES,
+        // Double check that the generated invoice includes our data
+        // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
+        if invoice.payment_hash().to_string() != preimage_hash
+            || invoice
+                .amount_milli_satoshis()
+                .ok_or(SwapError::InvalidInvoice)?
+                / 1000
+                != amount_sat
+        {
+            return Err(SwapError::InvalidInvoice);
         };
 
-        self.pending_claims
-            .lock()
-            .unwrap()
-            .insert(claim_details.clone());
+        self.swap_persister
+            .insert_ongoing_swaps(&[OngoingSwap {
+                id: swap_id.clone(),
+                preimage: preimage.to_string().expect("Expecting valid preimage"),
+                blinding_key: blinding_str,
+                redeem_script,
+            }])
+            .map_err(|_| SwapError::WalletError)?;
 
         Ok(SwapLbtcResponse {
             id: swap_id,
             invoice: invoice.to_string(),
-            recovery_details: recovery,
-            claim_details,
         })
     }
 
-    pub async fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
+    pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
         let script: LBtcSwapScript = recovery.try_into().unwrap();
         let network_config = self.get_network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));

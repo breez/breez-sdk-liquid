@@ -1,4 +1,4 @@
-use boltz_client::util::{error::S5Error, secrets::LBtcReverseRecovery};
+use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork};
 
@@ -20,7 +20,8 @@ pub struct WalletOptions {
     pub signer: SwSigner,
     pub network: Network,
     pub desc: String,
-    pub db_root_dir: Option<String>,
+    pub db_root_path: Option<String>,
+    pub chain_cache_path: Option<String>,
     pub electrum_url: Option<ElectrumUrl>,
 }
 
@@ -28,17 +29,6 @@ pub struct WalletOptions {
 pub struct SwapLbtcResponse {
     pub id: String,
     pub invoice: String,
-    pub claim_details: ClaimDetails,
-    pub recovery_details: LBtcReverseRecovery,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ClaimDetails {
-    pub redeem_script: String,
-    pub lockup_address: String,
-    pub blinding_str: String,
-    pub preimage: String,
-    pub absolute_fees: u64,
 }
 
 pub enum SwapStatus {
@@ -90,9 +80,9 @@ impl From<S5Error> for SwapError {
     fn from(err: S5Error) -> Self {
         match err.kind {
             boltz_client::util::error::ErrorKind::Network
-            | boltz_client::util::error::ErrorKind::BoltzApi => SwapError::ServersUnreachable {
-                err: err.message
-            },
+            | boltz_client::util::error::ErrorKind::BoltzApi => {
+                SwapError::ServersUnreachable { err: err.message }
+            }
             boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
             _ => SwapError::BoltzGeneric { err: err.message },
         }
@@ -103,4 +93,11 @@ pub struct WalletInfo {
     pub balance_sat: u64,
     pub pubkey: String,
     pub active_address: String,
+}
+
+pub struct OngoingSwap {
+    pub id: String,
+    pub preimage: String,
+    pub redeem_script: String,
+    pub blinding_key: String,
 }

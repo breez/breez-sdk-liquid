@@ -1,5 +1,6 @@
-pub mod model;
-pub mod wallet;
+mod model;
+mod persist;
+mod wallet;
 
 pub use model::*;
 pub use wallet::*;
@@ -55,7 +56,8 @@ mod tests {
             signer,
             desc,
             electrum_url: None,
-            db_root_dir: None,
+            db_root_path: None,
+            chain_cache_path: None,
             network: Network::LiquidTestnet,
         })
     }
