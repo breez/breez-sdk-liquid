@@ -34,7 +34,6 @@ use crate::{
 };
 
 const CLAIM_ABSOLUTE_FEES: u64 = 0;
-const DEFAULT_DB_DIR: &str = ".wollet";
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
