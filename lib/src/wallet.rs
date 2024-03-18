@@ -33,7 +33,8 @@ use crate::{
     WalletOptions,
 };
 
-// const DEFAULT_DB_DIR: &str = ".wollet";
+const CLAIM_ABSOLUTE_FEES: u64 = 0;
+const DEFAULT_DB_DIR: &str = ".wollet";
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -320,7 +321,7 @@ impl Wallet {
             lockup_address,
             blinding_str,
             preimage: preimage.to_string().unwrap(),
-            absolute_fees: 0,
+            absolute_fees: CLAIM_ABSOLUTE_FEES
         };
 
         self.pending_claims
