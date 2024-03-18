@@ -25,7 +25,7 @@ use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
-    ElectrumUrl, ElementsNetwork, EncryptedFsPersister, Wollet as LwkWollet, WolletDescriptor,
+    ElectrumUrl, ElementsNetwork, NoPersist, Wollet as LwkWollet,
 };
 
 use crate::{
@@ -33,7 +33,7 @@ use crate::{
     WalletOptions,
 };
 
-const DEFAULT_DB_DIR: &str = ".wollet";
+// const DEFAULT_DB_DIR: &str = ".wollet";
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -48,11 +48,10 @@ pub struct Wallet {
 #[allow(dead_code)]
 impl Wallet {
     pub fn new(opts: WalletOptions) -> Result<Arc<Self>> {
-        let desc: WolletDescriptor = opts.desc.parse()?;
-        let db_root_dir = opts.db_root_dir.unwrap_or(DEFAULT_DB_DIR.to_string());
+        opts.desc.parse::<String>()?;
         let network: ElementsNetwork = opts.network.into();
 
-        let persister = EncryptedFsPersister::new(db_root_dir, network, &desc)?;
+        let persister = NoPersist::new();
         let wallet = Arc::new(Mutex::new(LwkWollet::new(network, persister, &opts.desc)?));
 
         let electrum_url = opts.electrum_url.unwrap_or(match network {
