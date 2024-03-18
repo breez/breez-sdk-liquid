@@ -185,21 +185,17 @@ impl Wallet {
             .parse::<Bolt11Invoice>()
             .map_err(|_| SwapError::InvalidInvoice)?;
 
-        let pairs = client.get_pairs()?;
-        let lbtc_pair = pairs.get_lbtc_pair()?;
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
 
         let amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(SwapError::AmountOutOfRange)?
             / 1000;
 
-        if lbtc_pair.limits.minimal > amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
-
-        if lbtc_pair.limits.maximal < amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
+        lbtc_pair
+            .limits
+            .within(amount_sat)
+            .map_err(|_| SwapError::AmountOutOfRange)?;
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
             &lbtc_pair.hash,
@@ -270,17 +266,12 @@ impl Wallet {
     pub fn receive_payment(&self, amount_sat: u64) -> Result<SwapLbtcResponse, SwapError> {
         let client = self.boltz_client();
 
-        let pairs = client.get_pairs()?;
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
 
-        let lbtc_pair = pairs.get_lbtc_pair()?;
-
-        if lbtc_pair.limits.minimal > amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
-
-        if lbtc_pair.limits.maximal < amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
+        lbtc_pair
+            .limits
+            .within(amount_sat)
+            .map_err(|_| SwapError::AmountOutOfRange)?;
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
@@ -320,7 +311,7 @@ impl Wallet {
             lockup_address,
             blinding_str,
             preimage: preimage.to_string().unwrap(),
-            absolute_fees: CLAIM_ABSOLUTE_FEES
+            absolute_fees: CLAIM_ABSOLUTE_FEES,
         };
 
         self.pending_claims
