@@ -20,7 +20,7 @@ use boltz_client::{
     Keypair, ZKKeyPair,
 };
 use lightning_invoice::Bolt11Invoice;
-use log::{debug, info};
+use log::{debug, info, warn};
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -33,7 +33,8 @@ use crate::{
     WalletOptions,
 };
 
-const CLAIM_ABSOLUTE_FEES: u64 = 0;
+// To avoid sendrawtransaction error "min relay fee not met"
+const CLAIM_ABSOLUTE_FEES: u64 = 134;
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -84,11 +85,11 @@ impl Wallet {
 
             thread::scope(|scope| {
                 for claim in pending_claims.iter() {
-                    info!("Trying to claim at address {}", claim.lockup_address);
+                    info!("Trying to claim from lockup address {}", claim.lockup_address);
 
                     scope.spawn(|| match cloned.try_claim(claim) {
                         Ok(txid) => info!("Claim successful! Txid: {txid}"),
-                        Err(e) => info!("Could not claim yet. Err: {}", e),
+                        Err(e) => warn!("Could not claim yet. Err: {}", e),
                     });
                 }
             });
@@ -304,7 +305,9 @@ impl Wallet {
         );
 
         self.wait_swap_status(&swap_id, SwapStatus::Created)
-            .map_err(|_| SwapError::ServersUnreachable)?;
+            .map_err(|e| SwapError::BoltzGeneric {
+                err: e.to_string()
+            })?;
 
         let claim_details = ClaimDetails {
             redeem_script,
