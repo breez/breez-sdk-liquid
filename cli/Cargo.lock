@@ -287,7 +287,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "bip39",
@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-cli"
-version = "0.0.0"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "bip39",
