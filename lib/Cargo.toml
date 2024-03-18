@@ -1,6 +1,11 @@
 [package]
 name = "breez-sdk-liquid"
 edition = "2021"
+version = "0.0.1"
+
+[lib]
+name = "breez_sdk_liquid"
+crate-type = ["staticlib", "cdylib", "lib"]
 
 [dependencies]
 anyhow = "1.0.80"
