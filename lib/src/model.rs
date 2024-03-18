@@ -96,3 +96,9 @@ impl From<S5Error> for SwapError {
         }
     }
 }
+
+pub struct WalletInfo {
+    pub balance_sat: u64,
+    pub pubkey: String,
+    pub active_address: String,
+}

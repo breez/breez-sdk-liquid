@@ -17,7 +17,7 @@ pub(crate) enum Command {
     /// Receive lbtc and send btc through a swap
     ReceivePayment { amount_sat: u64 },
     /// Get the balance of the currently loaded wallet
-    GetBalance,
+    GetInfo,
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -56,9 +56,13 @@ pub(crate) async fn handle_command(
                 response.txid
             ))
         }
-        Command::GetBalance {} => Ok(format!(
-            "Current balance: {} sat",
-            wallet.total_balance_sat(true)?
-        )),
+        Command::GetInfo {} => {
+            let info = wallet.get_info(true)?;
+
+            Ok(format!(
+                "Current Balance: {} sat\nPublic Key: {}\nLiquid Address: {}",
+                info.balance_sat, info.pubkey, info.active_address
+            ))
+        }
     }
 }
