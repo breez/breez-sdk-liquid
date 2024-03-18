@@ -20,7 +20,7 @@ use boltz_client::{
     Keypair, ZKKeyPair,
 };
 use lightning_invoice::Bolt11Invoice;
-use log::{debug, info};
+use log::{debug, info, warn};
 use lwk_common::Signer;
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -33,7 +33,8 @@ use crate::{
     WalletOptions,
 };
 
-const CLAIM_ABSOLUTE_FEES: u64 = 0;
+// To avoid sendrawtransaction error "min relay fee not met"
+const CLAIM_ABSOLUTE_FEES: u64 = 134;
 const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
@@ -84,11 +85,11 @@ impl Wallet {
 
             thread::scope(|scope| {
                 for claim in pending_claims.iter() {
-                    info!("Trying to claim at address {}", claim.lockup_address);
+                    info!("Trying to claim from lockup address {}", claim.lockup_address);
 
                     scope.spawn(|| match cloned.try_claim(claim) {
                         Ok(txid) => info!("Claim successful! Txid: {txid}"),
-                        Err(e) => info!("Could not claim yet. Err: {}", e),
+                        Err(e) => warn!("Could not claim yet. Err: {}", e),
                     });
                 }
             });
@@ -185,21 +186,17 @@ impl Wallet {
             .parse::<Bolt11Invoice>()
             .map_err(|_| SwapError::InvalidInvoice)?;
 
-        let pairs = client.get_pairs()?;
-        let lbtc_pair = pairs.get_lbtc_pair()?;
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
 
         let amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(SwapError::AmountOutOfRange)?
             / 1000;
 
-        if lbtc_pair.limits.minimal > amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
-
-        if lbtc_pair.limits.maximal < amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
+        lbtc_pair
+            .limits
+            .within(amount_sat)
+            .map_err(|_| SwapError::AmountOutOfRange)?;
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
             &lbtc_pair.hash,
@@ -270,17 +267,12 @@ impl Wallet {
     pub fn receive_payment(&self, amount_sat: u64) -> Result<SwapLbtcResponse, SwapError> {
         let client = self.boltz_client();
 
-        let pairs = client.get_pairs()?;
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
 
-        let lbtc_pair = pairs.get_lbtc_pair()?;
-
-        if lbtc_pair.limits.minimal > amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
-
-        if lbtc_pair.limits.maximal < amount_sat as i64 {
-            return Err(SwapError::AmountOutOfRange);
-        }
+        lbtc_pair
+            .limits
+            .within(amount_sat)
+            .map_err(|_| SwapError::AmountOutOfRange)?;
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
@@ -313,14 +305,16 @@ impl Wallet {
         );
 
         self.wait_swap_status(&swap_id, SwapStatus::Created)
-            .map_err(|_| SwapError::ServersUnreachable)?;
+            .map_err(|e| SwapError::BoltzGeneric {
+                err: e.to_string()
+            })?;
 
         let claim_details = ClaimDetails {
             redeem_script,
             lockup_address,
             blinding_str,
             preimage: preimage.to_string().unwrap(),
-            absolute_fees: CLAIM_ABSOLUTE_FEES
+            absolute_fees: CLAIM_ABSOLUTE_FEES,
         };
 
         self.pending_claims
