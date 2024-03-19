@@ -1,18 +1,15 @@
 mod commands;
 mod persist;
 
+use std::{fs, path::PathBuf};
+
 use anyhow::{anyhow, Result};
-use lwk_common::{singlesig_desc, Singlesig};
-use lwk_signer::SwSigner;
-use std::{fs, path::PathBuf, sync::Arc};
-
+use breez_sdk_liquid::Wallet;
 use clap::Parser;
-use log::{error, info};
-use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
-
-use breez_sdk_liquid::{Network, Wallet, WalletOptions};
 use commands::{handle_command, CliHelper, Command};
+use log::{error, info};
 use persist::CliPersistence;
+use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
 #[derive(Parser, Debug)]
 pub(crate) struct Args {
@@ -36,27 +33,6 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-fn init_wallet(persistence: &CliPersistence) -> Result<Arc<Wallet>> {
-    let mnemonic = persistence.get_or_create_mnemonic()?;
-    let signer = SwSigner::new(&mnemonic.to_string(), false)?;
-    let desc = singlesig_desc(
-        &signer,
-        Singlesig::Wpkh,
-        lwk_common::DescriptorBlindingKey::Elip151,
-        false,
-    )
-    .expect("Expected valid descriptor");
-
-    Wallet::new(WalletOptions {
-        signer,
-        desc,
-        electrum_url: None,
-        db_root_path: None,
-        chain_cache_path: None,
-        network: Network::LiquidTestnet,
-    })
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
@@ -74,7 +50,8 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let wallet = init_wallet(&persistence)?;
+    let mnemonic = persistence.get_or_create_mnemonic()?;
+    let wallet = Wallet::init(mnemonic.to_string())?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");

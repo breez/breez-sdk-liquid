@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::{
     network::{electrum::ElectrumConfig, Chain},
     swaps::{
@@ -15,7 +15,7 @@ use boltz_client::{
     Bolt11Invoice, Keypair,
 };
 use log::{debug, warn};
-use lwk_common::Signer;
+use lwk_common::{Signer, Singlesig, singlesig_desc};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
@@ -23,7 +23,7 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
+    Network, persist::Persister, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
     WalletOptions,
 };
 
@@ -41,17 +41,35 @@ pub struct Wallet {
     swap_persister: Persister,
 }
 
-#[allow(dead_code)]
 impl Wallet {
-    pub fn new(opts: WalletOptions) -> Result<Arc<Self>> {
-        opts.desc.parse::<String>()?;
+    pub fn init(mnemonic: String) -> Result<Arc<Wallet>> {
+        let signer = SwSigner::new(&mnemonic, false)?;
+        let descriptor = singlesig_desc(
+            &signer,
+            Singlesig::Wpkh,
+            lwk_common::DescriptorBlindingKey::Elip151,
+            false,
+        )
+        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+
+        Wallet::new(WalletOptions {
+            signer,
+            descriptor,
+            electrum_url: None,
+            db_root_path: None,
+            chain_cache_path: None,
+            network: Network::LiquidTestnet,
+        })
+    }
+
+    fn new(opts: WalletOptions) -> Result<Arc<Self>> {
         let network: ElementsNetwork = opts.network.into();
 
         let lwk_persister = NoPersist::new();
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
             network,
             lwk_persister,
-            &opts.desc,
+            &opts.descriptor,
         )?));
 
         let electrum_url = opts.electrum_url.unwrap_or(match network {

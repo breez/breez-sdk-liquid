@@ -19,7 +19,10 @@ impl From<Network> for ElementsNetwork {
 pub struct WalletOptions {
     pub signer: SwSigner,
     pub network: Network,
-    pub desc: String,
+    /// Output script descriptor
+    ///
+    /// See <https://github.com/bitcoin/bips/pull/1143>
+    pub descriptor: String,
     pub db_root_path: Option<String>,
     pub chain_cache_path: Option<String>,
     pub electrum_url: Option<ElectrumUrl>,
