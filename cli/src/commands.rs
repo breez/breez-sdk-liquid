@@ -16,6 +16,8 @@ pub(crate) enum Command {
     SendPayment { bolt11: String },
     /// Receive lbtc and send btc through a swap
     ReceivePayment { amount_sat: u64 },
+    /// List incoming and outgoing payments
+    ListPayments,
     /// Get the balance of the currently loaded wallet
     GetInfo,
 }
@@ -56,13 +58,32 @@ pub(crate) async fn handle_command(
                 response.txid
             ))
         }
-        Command::GetInfo {} => {
+        Command::GetInfo => {
             let info = wallet.get_info(true)?;
 
             Ok(format!(
                 "Current Balance: {} sat\nPublic Key: {}\nLiquid Address: {}",
                 info.balance_sat, info.pubkey, info.active_address
             ))
+        }
+        Command::ListPayments => {
+            wallet.get_info(true)?;
+            let payments_str = wallet
+                .list_payments(true)?
+                .iter()
+                .map(|tx| {
+                    format!(
+                        "Id: {} | Type: {} | Amount: {} sat | Timestamp: {}",
+                        tx.id,
+                        tx.payment_type.to_string(),
+                        tx.amount_sat,
+                        tx.timestamp,
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            Ok(payments_str)
         }
     }
 }

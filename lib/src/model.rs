@@ -108,3 +108,24 @@ pub struct OngoingSwap {
     pub blinding_key: String,
     pub requested_amount_sat: u64,
 }
+
+pub enum PaymentType {
+   Sent,
+   Received
+}
+
+impl ToString for PaymentType {
+    fn to_string(&self) -> String {
+        match self {
+            PaymentType::Sent => "Sent",
+            PaymentType::Received => "Received"
+        }.to_string()
+    }
+}
+
+pub struct Payment { 
+    pub id: String,
+    pub timestamp: u32,
+    pub amount_sat: u64,
+    pub payment_type: PaymentType
+}

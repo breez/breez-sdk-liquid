@@ -24,7 +24,7 @@ use lwk_wollet::{
 
 use crate::{
     persist::Persister, Network, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse,
-    WalletInfo, WalletOptions,
+    WalletInfo, WalletOptions, Payment, PaymentType,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
@@ -334,6 +334,31 @@ impl Wallet {
             id: swap_id,
             invoice: invoice.to_string(),
         })
+    }
+
+    pub fn list_payments(&self, with_scan: bool) -> Result<Vec<Payment>> {
+        if with_scan {
+            self.scan()?;
+        }
+
+        let transactions = self.wallet.lock().unwrap().transactions()?;
+
+        let payments: Vec<Payment> = transactions.iter().map(|tx| {
+            let amount_sat = tx.balance.values().sum::<i64>();
+
+            Payment {
+                id: tx.tx.txid().to_string(),
+                timestamp: tx.timestamp.expect("Expected timestamp"),
+                amount_sat: amount_sat.abs() as u64,
+                payment_type: match amount_sat >= 0 {
+                    true => PaymentType::Received,
+                    false => PaymentType::Sent,
+                }
+            }
+        })
+        .collect();
+
+        Ok(payments)
     }
 
     pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
