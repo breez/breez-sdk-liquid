@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn normal_submarine_swap() -> Result<()> {
-        let breez_wallet = Wallet::init(get_mnemonic()?)?;
+        let breez_wallet = Wallet::init(get_mnemonic()?.to_string())?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wallet = Wallet::init(get_mnemonic()?)?;
+        let breez_wallet = Wallet::init(get_mnemonic()?.to_string())?;
 
         let swap_response = breez_wallet.receive_payment(1000)?;
 

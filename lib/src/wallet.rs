@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use bip39::Mnemonic;
 use boltz_client::{
     network::{electrum::ElectrumConfig, Chain},
     swaps::{
@@ -43,8 +42,8 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn init(mnemonic: Mnemonic) -> Result<Arc<Wallet>> {
-        let signer = SwSigner::new(&mnemonic.to_string(), false)?;
+    pub fn init(mnemonic: String) -> Result<Arc<Wallet>> {
+        let signer = SwSigner::new(&mnemonic, false)?;
         let descriptor = singlesig_desc(
             &signer,
             Singlesig::Wpkh,

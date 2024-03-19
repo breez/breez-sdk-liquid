@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let wallet = Wallet::init(mnemonic)?;
+    let wallet = Wallet::init(mnemonic.to_string())?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
