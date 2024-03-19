@@ -336,21 +336,21 @@ impl Wallet {
         })
     }
 
-    pub fn list_payments(&self, with_scan: bool) -> Result<Vec<Payment>> {
+    pub fn list_payments(&self, with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
         if with_scan {
             self.scan()?;
         }
 
         let transactions = self.wallet.lock().unwrap().transactions()?;
 
-        let payments: Vec<Payment> = transactions
+        let mut payments: Vec<Payment> = transactions
             .iter()
             .map(|tx| {
                 let amount_sat = tx.balance.values().sum::<i64>();
 
                 Payment {
-                    id: tx.tx.txid().to_string(),
-                    timestamp: tx.timestamp.expect("Expected timestamp"),
+                    id: Some(tx.tx.txid().to_string()),
+                    timestamp: tx.timestamp,
                     amount_sat: amount_sat.unsigned_abs(),
                     payment_type: match amount_sat >= 0 {
                         true => PaymentType::Received,
@@ -359,6 +359,22 @@ impl Wallet {
                 }
             })
             .collect();
+
+        if include_pending {
+            let pending_swaps = self.swap_persister.list_ongoing_swaps()?;
+
+            for swap in pending_swaps {
+                payments.insert(
+                    0,
+                    Payment {
+                        id: None,
+                        timestamp: None,
+                        payment_type: PaymentType::Pending,
+                        amount_sat: swap.requested_amount_sat,
+                    },
+                );
+            }
+        }
 
         Ok(payments)
     }
