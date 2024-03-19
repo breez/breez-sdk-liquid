@@ -67,7 +67,6 @@ pub(crate) async fn handle_command(
             ))
         }
         Command::ListPayments => {
-            wallet.get_info(true)?;
             let payments_str = wallet
                 .list_payments(true)?
                 .iter()

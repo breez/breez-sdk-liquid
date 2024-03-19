@@ -23,8 +23,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse,
-    WalletInfo, WalletOptions, Payment, PaymentType,
+    persist::Persister, Network, OngoingSwap, Payment, PaymentType, SendPaymentResponse, SwapError,
+    SwapLbtcResponse, WalletInfo, WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
@@ -343,20 +343,22 @@ impl Wallet {
 
         let transactions = self.wallet.lock().unwrap().transactions()?;
 
-        let payments: Vec<Payment> = transactions.iter().map(|tx| {
-            let amount_sat = tx.balance.values().sum::<i64>();
+        let payments: Vec<Payment> = transactions
+            .iter()
+            .map(|tx| {
+                let amount_sat = tx.balance.values().sum::<i64>();
 
-            Payment {
-                id: tx.tx.txid().to_string(),
-                timestamp: tx.timestamp.expect("Expected timestamp"),
-                amount_sat: amount_sat.abs() as u64,
-                payment_type: match amount_sat >= 0 {
-                    true => PaymentType::Received,
-                    false => PaymentType::Sent,
+                Payment {
+                    id: tx.tx.txid().to_string(),
+                    timestamp: tx.timestamp.expect("Expected timestamp"),
+                    amount_sat: amount_sat.unsigned_abs(),
+                    payment_type: match amount_sat >= 0 {
+                        true => PaymentType::Received,
+                        false => PaymentType::Sent,
+                    },
                 }
-            }
-        })
-        .collect();
+            })
+            .collect();
 
         Ok(payments)
     }
