@@ -68,15 +68,18 @@ pub(crate) async fn handle_command(
         }
         Command::ListPayments => {
             let payments_str = wallet
-                .list_payments(true)?
+                .list_payments(true, true)?
                 .iter()
                 .map(|tx| {
                     format!(
                         "Id: {} | Type: {} | Amount: {} sat | Timestamp: {}",
-                        tx.id,
+                        tx.id.clone().unwrap_or("None".to_string()),
                         tx.payment_type.to_string(),
                         tx.amount_sat,
-                        tx.timestamp,
+                        match tx.timestamp {
+                            Some(t) => t.to_string(),
+                            None => "None".to_string(),
+                        },
                     )
                 })
                 .collect::<Vec<String>>()

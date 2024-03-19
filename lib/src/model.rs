@@ -112,6 +112,7 @@ pub struct OngoingSwap {
 pub enum PaymentType {
     Sent,
     Received,
+    Pending,
 }
 
 impl ToString for PaymentType {
@@ -119,14 +120,15 @@ impl ToString for PaymentType {
         match self {
             PaymentType::Sent => "Sent",
             PaymentType::Received => "Received",
+            PaymentType::Pending => "Pending",
         }
         .to_string()
     }
 }
 
 pub struct Payment {
-    pub id: String,
-    pub timestamp: u32,
+    pub id: Option<String>,
+    pub timestamp: Option<u32>,
     pub amount_sat: u64,
     pub payment_type: PaymentType,
 }
