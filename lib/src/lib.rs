@@ -7,12 +7,12 @@ pub use wallet::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Network, Wallet, WalletOptions};
+    use std::{env, fs, io, path::PathBuf, str::FromStr};
+
     use anyhow::Result;
     use bip39::{Language, Mnemonic};
-    use lwk_common::{singlesig_desc, Singlesig};
-    use lwk_signer::SwSigner;
-    use std::{env, fs, io, path::PathBuf, str::FromStr, sync::Arc};
+
+    use crate::Wallet;
 
     const DEFAULT_DATA_DIR: &str = ".data";
     const PHRASE_FILE_NAME: &str = "phrase";
@@ -41,30 +41,9 @@ mod tests {
         Ok(mnemonic)
     }
 
-    fn init_wallet() -> Result<Arc<Wallet>> {
-        let mnemonic = get_mnemonic()?;
-        let signer = SwSigner::new(&mnemonic.to_string(), false)?;
-        let desc = singlesig_desc(
-            &signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Elip151,
-            false,
-        )
-        .expect("Expected valid descriptor");
-
-        Wallet::new(WalletOptions {
-            signer,
-            desc,
-            electrum_url: None,
-            db_root_path: None,
-            chain_cache_path: None,
-            network: Network::LiquidTestnet,
-        })
-    }
-
     #[test]
     fn normal_submarine_swap() -> Result<()> {
-        let breez_wallet = init_wallet()?;
+        let breez_wallet = Wallet::init(get_mnemonic()?)?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
@@ -77,7 +56,7 @@ mod tests {
 
     #[test]
     fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wallet = init_wallet()?;
+        let breez_wallet = Wallet::init(get_mnemonic()?)?;
 
         let swap_response = breez_wallet.receive_payment(1000)?;
 
