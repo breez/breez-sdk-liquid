@@ -1,0 +1,4 @@
+# breez-sdk-liquid
+
+## Tests
+In order to run tests, you can execute `cargo test -- --nocapture --test-threads 1`. This is due to the fact that currently tests require some degree of interaction (e.g. adding the funding invoice) in order to work, and thus should be run with a single thread (sequentially).
