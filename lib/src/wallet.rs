@@ -309,7 +309,7 @@ impl Wallet {
                 blinding_key: blinding_str,
                 redeem_script,
             }])
-            .map_err(|_| SwapError::WalletError)?;
+            .map_err(|_| SwapError::PersistError)?;
 
         Ok(SwapLbtcResponse {
             id: swap_id,

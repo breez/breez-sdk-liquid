@@ -72,6 +72,9 @@ pub enum SwapError {
     #[error("Could not fetch the required wallet information")]
     WalletError,
 
+    #[error("Could not store the swap details locally")]
+    PersistError,
+
     #[error("Generic boltz error: {err}")]
     BoltzGeneric { err: String },
 }
