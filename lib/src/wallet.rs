@@ -326,7 +326,7 @@ impl Wallet {
                 preimage: preimage.to_string().expect("Expecting valid preimage"),
                 blinding_key: blinding_str,
                 redeem_script,
-                requested_amount_sat: amount_sat
+                requested_amount_sat: amount_sat,
             }])
             .map_err(|_| SwapError::PersistError)?;
 

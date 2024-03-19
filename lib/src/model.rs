@@ -108,4 +108,3 @@ pub struct OngoingSwap {
     pub blinding_key: String,
     pub requested_amount_sat: u64,
 }
-

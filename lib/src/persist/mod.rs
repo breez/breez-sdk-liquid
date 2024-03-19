@@ -57,7 +57,7 @@ impl Persister {
                 &swap.preimage,
                 &swap.redeem_script,
                 &swap.blinding_key,
-                &swap.requested_amount_sat
+                &swap.requested_amount_sat,
             ))?
         }
 
