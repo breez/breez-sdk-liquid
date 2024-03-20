@@ -325,8 +325,6 @@ dependencies = [
  "clap",
  "env_logger",
  "log",
- "lwk_common",
- "lwk_signer",
  "rustyline",
  "tokio",
 ]
