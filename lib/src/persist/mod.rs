@@ -1,12 +1,11 @@
 mod migrations;
 
 use anyhow::Result;
+use migrations::current_migrations;
 use rusqlite::{params, Connection, Row};
 use rusqlite_migration::{Migrations, M};
 
-use crate::OngoingSwap;
-
-use migrations::current_migrations;
+use crate::swap_out::model::OngoingSwap;
 
 pub(crate) struct Persister {
     main_db_file: String,

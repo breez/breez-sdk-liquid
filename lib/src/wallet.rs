@@ -23,7 +23,7 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingSwap, Payment, PaymentType, SendPaymentResponse, SwapError,
+    persist::Persister, Network, swap_out::model::OngoingSwap, swap_out::error::SwapError, Payment, PaymentType, SendPaymentResponse,
     SwapLbtcResponse, WalletInfo, WalletOptions,
 };
 
