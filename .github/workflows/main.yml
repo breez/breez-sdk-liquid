@@ -27,3 +27,15 @@ jobs:
           cargo fmt -- --check
           cd ../cli
           cargo fmt -- --check
+
+  clippy:
+    name: Cargo Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Rust Clippy
+        run: |
+          cd lib
+          cargo clippy -- -D warnings
+          cd ../cli
+          cargo clippy -- -D warnings
