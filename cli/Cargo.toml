@@ -7,12 +7,12 @@ version = "0.0.1"
 
 [dependencies]
 anyhow = "1.0.80"
+bip39 = "2.0.0"
+breez-sdk-liquid = { path = "../lib" }
+clap = { version = "4.5.1", features = ["derive"] }
 env_logger = "0.11"
 log = "0.4.20"
-breez-sdk-liquid = { path = "../lib" }
-tokio = { version = "1.36.0", features = ["full"] }
-clap = { version = "4.5.1", features = ["derive"] }
-rustyline = { version = "13.0.0", features = ["derive"] }
 lwk_signer = "0.2.0"
 lwk_common = "0.2.0"
-bip39 = "2.0.0"
+rustyline = { version = "13.0.0", features = ["derive"] }
+tokio = { version = "1.36.0", features = ["full"] }
