@@ -1,7 +1,8 @@
 use std::{
+    fs,
     sync::{Arc, Mutex},
     thread,
-    time::Duration, fs,
+    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
