@@ -1,4 +1,5 @@
 use std::{
+    fs,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -79,8 +80,10 @@ impl Wallet {
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         });
 
-        let swap_persister =
-            Persister::new(opts.db_root_path.unwrap_or(DEFAULT_SWAPS_DIR.to_string()));
+        let persister_path = opts.db_root_path.unwrap_or(DEFAULT_SWAPS_DIR.to_string());
+        fs::create_dir_all(&persister_path)?;
+
+        let swap_persister = Persister::new(persister_path);
         swap_persister.init()?;
 
         let wallet = Arc::new(Wallet {
