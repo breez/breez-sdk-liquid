@@ -326,7 +326,7 @@ impl Wallet {
                 preimage: preimage.to_string().expect("Expecting valid preimage"),
                 blinding_key: blinding_str,
                 redeem_script,
-                requested_amount_sat: amount_sat,
+                invoice_amount_sat: amount_sat,
             }])
             .map_err(|_| SwapError::PersistError)?;
 
@@ -370,7 +370,7 @@ impl Wallet {
                         id: None,
                         timestamp: None,
                         payment_type: PaymentType::Pending,
-                        amount_sat: swap.requested_amount_sat,
+                        amount_sat: swap.invoice_amount_sat,
                     },
                 );
             }

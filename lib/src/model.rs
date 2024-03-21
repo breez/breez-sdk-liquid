@@ -106,7 +106,7 @@ pub struct OngoingSwap {
     pub preimage: String,
     pub redeem_script: String,
     pub blinding_key: String,
-    pub requested_amount_sat: u64,
+    pub invoice_amount_sat: u64,
 }
 
 pub enum PaymentType {
