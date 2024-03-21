@@ -40,17 +40,6 @@ pub enum SwapStatus {
     Completed,
 }
 
-impl ToString for SwapStatus {
-    fn to_string(&self) -> String {
-        match self {
-            SwapStatus::Mempool => "transaction.mempool",
-            SwapStatus::Completed => "transaction.mempool",
-            SwapStatus::Created => "swap.created",
-        }
-        .to_string()
-    }
-}
-
 pub struct ReceivePaymentRequest {
     pub invoice_amount_sat: Option<u64>,
     pub onchain_amount_sat: Option<u64>,
@@ -103,6 +92,7 @@ impl From<S5Error> for SwapError {
     }
 }
 
+#[derive(Debug)]
 pub struct WalletInfo {
     pub balance_sat: u64,
     pub pubkey: String,
@@ -128,23 +118,14 @@ pub struct OngoingSendSwap {
     // pub onchain_amount_sat: Option<u64>,
 }
 
+#[derive(Debug)]
 pub enum PaymentType {
     Sent,
     Received,
     PendingReceive,
 }
 
-impl ToString for PaymentType {
-    fn to_string(&self) -> String {
-        match self {
-            PaymentType::Sent => "Sent",
-            PaymentType::Received => "Received",
-            PaymentType::PendingReceive => "Pending Receive",
-        }
-        .to_string()
-    }
-}
-
+#[derive(Debug)]
 pub struct Payment {
     pub id: Option<String>,
     pub timestamp: Option<u32>,
