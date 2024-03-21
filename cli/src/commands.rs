@@ -84,9 +84,9 @@ pub(crate) async fn handle_command(
                 .iter()
                 .map(|tx| {
                     format!(
-                        "Id: {} | Type: {} | Amount: {} sat | Timestamp: {}",
+                        "Id: {} | Type: {:?} | Amount: {} sat | Timestamp: {}",
                         tx.id.clone().unwrap_or("None".to_string()),
-                        tx.payment_type.to_string(),
+                        tx.payment_type,
                         tx.amount_sat,
                         match tx.timestamp {
                             Some(t) => t.to_string(),
