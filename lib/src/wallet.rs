@@ -23,8 +23,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse,
-    WalletInfo, WalletOptions,
+    persist::Persister, Network, OngoingSwap, Payment, PaymentType, SendPaymentResponse, SwapError,
+    SwapLbtcResponse, WalletInfo, WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
@@ -294,6 +294,7 @@ impl Wallet {
         let lsk = LiquidSwapKey::from(swap_key);
 
         let preimage = Preimage::new();
+        let preimage_str = preimage.to_string().ok_or(SwapError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
@@ -323,9 +324,10 @@ impl Wallet {
         self.swap_persister
             .insert_ongoing_swaps(&[OngoingSwap {
                 id: swap_id.clone(),
-                preimage: preimage.to_string().expect("Expecting valid preimage"),
+                preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
+                invoice_amount_sat: amount_sat,
             }])
             .map_err(|_| SwapError::PersistError)?;
 
@@ -333,6 +335,49 @@ impl Wallet {
             id: swap_id,
             invoice: invoice.to_string(),
         })
+    }
+
+    pub fn list_payments(&self, with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
+        if with_scan {
+            self.scan()?;
+        }
+
+        let transactions = self.wallet.lock().unwrap().transactions()?;
+
+        let mut payments: Vec<Payment> = transactions
+            .iter()
+            .map(|tx| {
+                let amount_sat = tx.balance.values().sum::<i64>();
+
+                Payment {
+                    id: Some(tx.tx.txid().to_string()),
+                    timestamp: tx.timestamp,
+                    amount_sat: amount_sat.unsigned_abs(),
+                    payment_type: match amount_sat >= 0 {
+                        true => PaymentType::Received,
+                        false => PaymentType::Sent,
+                    },
+                }
+            })
+            .collect();
+
+        if include_pending {
+            let pending_swaps = self.swap_persister.list_ongoing_swaps()?;
+
+            for swap in pending_swaps {
+                payments.insert(
+                    0,
+                    Payment {
+                        id: None,
+                        timestamp: None,
+                        payment_type: PaymentType::PendingReceive,
+                        amount_sat: swap.invoice_amount_sat,
+                    },
+                );
+            }
+        }
+
+        Ok(payments)
     }
 
     pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {

@@ -78,6 +78,9 @@ pub enum SwapError {
     #[error("Could not store the swap details locally")]
     PersistError,
 
+    #[error("The generated preimage is not valid")]
+    InvalidPreimage,
+
     #[error("Generic boltz error: {err}")]
     BoltzGeneric { err: String },
 }
@@ -106,4 +109,29 @@ pub struct OngoingSwap {
     pub preimage: String,
     pub redeem_script: String,
     pub blinding_key: String,
+    pub invoice_amount_sat: u64,
+}
+
+pub enum PaymentType {
+    Sent,
+    Received,
+    PendingReceive,
+}
+
+impl ToString for PaymentType {
+    fn to_string(&self) -> String {
+        match self {
+            PaymentType::Sent => "Sent",
+            PaymentType::Received => "Received",
+            PaymentType::PendingReceive => "Pending Receive",
+        }
+        .to_string()
+    }
+}
+
+pub struct Payment {
+    pub id: Option<String>,
+    pub timestamp: Option<u32>,
+    pub amount_sat: u64,
+    pub payment_type: PaymentType,
 }

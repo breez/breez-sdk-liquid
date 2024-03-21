@@ -44,9 +44,10 @@ impl Persister {
                     id,
                     preimage,
                     redeem_script,
-                    blinding_key
+                    blinding_key,
+                    invoice_amount_sat
                 )
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
             ",
         )?;
 
@@ -56,6 +57,7 @@ impl Persister {
                 &swap.preimage,
                 &swap.redeem_script,
                 &swap.blinding_key,
+                &swap.invoice_amount_sat,
             ))?
         }
 
@@ -90,6 +92,7 @@ impl Persister {
             preimage: row.get(1)?,
             redeem_script: row.get(2)?,
             blinding_key: row.get(3)?,
+            invoice_amount_sat: row.get(4)?,
         })
     }
 }
