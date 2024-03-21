@@ -51,6 +51,11 @@ impl ToString for SwapStatus {
     }
 }
 
+pub struct ReceivePaymentRequest {
+    pub invoice_amount_sat: Option<u64>,
+    pub onchain_amount_sat: Option<u64>,
+}
+
 pub struct SendPaymentResponse {
     pub txid: String,
 }
@@ -104,12 +109,23 @@ pub struct WalletInfo {
     pub active_address: String,
 }
 
-pub struct OngoingSwap {
+#[derive(Debug)]
+pub struct OngoingReceiveSwap {
     pub id: String,
     pub preimage: String,
     pub redeem_script: String,
     pub blinding_key: String,
     pub invoice_amount_sat: u64,
+    pub onchain_amount_sat: u64,
+}
+
+pub struct OngoingSendSwap {
+    pub id: String,
+    // pub preimage: String,
+    // pub redeem_script: String,
+    // pub blinding_key: String,
+    // pub invoice_amount_sat: Option<u64>,
+    // pub onchain_amount_sat: Option<u64>,
 }
 
 pub enum PaymentType {

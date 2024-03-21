@@ -2,20 +2,26 @@ use std::borrow::Cow::{self, Owned};
 use std::sync::Arc;
 
 use anyhow::Result;
-use clap::Parser;
+use clap::{arg, Parser};
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::Wallet;
+use breez_sdk_liquid::{ReceivePaymentRequest, Wallet};
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
     SendPayment { bolt11: String },
     /// Receive lbtc and send btc through a swap
-    ReceivePayment { amount_sat: u64 },
+    ReceivePayment {
+        #[arg(short, long)]
+        onchain_amount_sat: Option<u64>,
+
+        #[arg(short, long)]
+        invoice_amount_sat: Option<u64>,
+    },
     /// List incoming and outgoing payments
     ListPayments,
     /// Get the balance of the currently loaded wallet
@@ -40,8 +46,14 @@ pub(crate) async fn handle_command(
     command: Command,
 ) -> Result<String> {
     match command {
-        Command::ReceivePayment { amount_sat } => {
-            let response = wallet.receive_payment(amount_sat)?;
+        Command::ReceivePayment {
+            onchain_amount_sat,
+            invoice_amount_sat,
+        } => {
+            let response = wallet.receive_payment(ReceivePaymentRequest {
+                invoice_amount_sat,
+                onchain_amount_sat,
+            })?;
             dbg!(&response);
             Ok(format!(
                 "Please pay the following invoice: {}",

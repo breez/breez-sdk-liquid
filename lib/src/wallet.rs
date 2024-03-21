@@ -23,8 +23,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingSwap, Payment, PaymentType, SendPaymentResponse, SwapError,
-    SwapLbtcResponse, WalletInfo, WalletOptions,
+    persist::Persister, Network, OngoingReceiveSwap, Payment, PaymentType, ReceivePaymentRequest,
+    SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo, WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
@@ -107,7 +107,7 @@ impl Wallet {
             thread::scope(|scope| {
                 for swap in ongoing_swaps {
                     scope.spawn(|| {
-                        let OngoingSwap {
+                        let OngoingReceiveSwap {
                             preimage,
                             redeem_script,
                             blinding_key,
@@ -273,12 +273,18 @@ impl Wallet {
         )?;
         let txid = rev_swap_tx.broadcast(signed_tx, network_config)?;
 
-        debug!("Funds claimed successfully! Txid: {txid}");
-
         Ok(txid)
     }
 
-    pub fn receive_payment(&self, amount_sat: u64) -> Result<SwapLbtcResponse, SwapError> {
+    pub fn receive_payment(
+        &self,
+        req: ReceivePaymentRequest,
+    ) -> Result<SwapLbtcResponse, SwapError> {
+        let mut amount_sat = req
+            .onchain_amount_sat
+            .or(req.invoice_amount_sat)
+            .ok_or(SwapError::AmountOutOfRange)?;
+
         let client = self.boltz_client();
 
         let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
@@ -297,12 +303,22 @@ impl Wallet {
         let preimage_str = preimage.to_string().ok_or(SwapError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
-        let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
-            lbtc_pair.hash,
-            preimage_hash.clone(),
-            lsk.keypair.public_key().to_string(),
-            amount_sat,
-        ))?;
+        let swap_response = if req.onchain_amount_sat.is_some() {
+            amount_sat += CLAIM_ABSOLUTE_FEES;
+            client.create_swap(CreateSwapRequest::new_lbtc_reverse_onchain_amt(
+                lbtc_pair.hash,
+                preimage_hash.clone(),
+                lsk.keypair.public_key().to_string(),
+                amount_sat,
+            ))?
+        } else {
+            client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
+                lbtc_pair.hash,
+                preimage_hash.clone(),
+                lsk.keypair.public_key().to_string(),
+                amount_sat,
+            ))?
+        };
 
         let swap_id = swap_response.get_id();
         let invoice = swap_response.get_invoice()?;
@@ -311,24 +327,29 @@ impl Wallet {
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
-        if invoice.payment_hash().to_string() != preimage_hash
-            || invoice
-                .amount_milli_satoshis()
-                .ok_or(SwapError::InvalidInvoice)?
-                / 1000
-                != amount_sat
-        {
+        if invoice.payment_hash().to_string() != preimage_hash {
             return Err(SwapError::InvalidInvoice);
         };
 
+        let invoice_amount_sat = invoice
+            .amount_milli_satoshis()
+            .ok_or(SwapError::InvalidInvoice)?
+            / 1000;
+
         self.swap_persister
-            .insert_ongoing_swaps(&[OngoingSwap {
+            .insert_ongoing_swaps(dbg!(&[OngoingReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
-                invoice_amount_sat: amount_sat,
-            }])
+                invoice_amount_sat,
+                onchain_amount_sat: req.onchain_amount_sat.unwrap_or(
+                    invoice_amount_sat
+                        - lbtc_pair.fees.reverse_boltz(invoice_amount_sat)?
+                        - lbtc_pair.fees.reverse_lockup()?
+                        - CLAIM_ABSOLUTE_FEES
+                ),
+            }]))
             .map_err(|_| SwapError::PersistError)?;
 
         Ok(SwapLbtcResponse {

@@ -4,7 +4,7 @@ use anyhow::Result;
 use rusqlite::{params, Connection, Row};
 use rusqlite_migration::{Migrations, M};
 
-use crate::OngoingSwap;
+use crate::OngoingReceiveSwap;
 
 use migrations::current_migrations;
 
@@ -35,7 +35,7 @@ impl Persister {
         Ok(())
     }
 
-    pub fn insert_ongoing_swaps(&self, swaps: &[OngoingSwap]) -> Result<()> {
+    pub fn insert_ongoing_swaps(&self, swaps: &[OngoingReceiveSwap]) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -45,9 +45,10 @@ impl Persister {
                     preimage,
                     redeem_script,
                     blinding_key,
-                    invoice_amount_sat
+                    invoice_amount_sat,
+                    onchain_amount_sat
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
             ",
         )?;
 
@@ -58,6 +59,7 @@ impl Persister {
                 &swap.redeem_script,
                 &swap.blinding_key,
                 &swap.invoice_amount_sat,
+                &swap.onchain_amount_sat,
             ))?
         }
 
@@ -73,12 +75,12 @@ impl Persister {
         Ok(())
     }
 
-    pub fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
+    pub fn list_ongoing_swaps(&self) -> Result<Vec<OngoingReceiveSwap>> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare("SELECT * FROM ongoing_swaps")?;
 
-        let swaps: Vec<OngoingSwap> = stmt
+        let swaps: Vec<OngoingReceiveSwap> = stmt
             .query_map(params![], |row| self.sql_row_to_swap(row))?
             .map(|i| i.unwrap())
             .collect();
@@ -86,13 +88,14 @@ impl Persister {
         Ok(swaps)
     }
 
-    fn sql_row_to_swap(&self, row: &Row) -> Result<OngoingSwap, rusqlite::Error> {
-        Ok(OngoingSwap {
+    fn sql_row_to_swap(&self, row: &Row) -> Result<OngoingReceiveSwap, rusqlite::Error> {
+        Ok(OngoingReceiveSwap {
             id: row.get(0)?,
             preimage: row.get(1)?,
             redeem_script: row.get(2)?,
             blinding_key: row.get(3)?,
             invoice_amount_sat: row.get(4)?,
+            onchain_amount_sat: row.get(5)?,
         })
     }
 }
