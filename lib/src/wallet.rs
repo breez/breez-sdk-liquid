@@ -369,7 +369,7 @@ impl Wallet {
                     Payment {
                         id: None,
                         timestamp: None,
-                        payment_type: PaymentType::Pending,
+                        payment_type: PaymentType::PendingReceive,
                         amount_sat: swap.invoice_amount_sat,
                     },
                 );
