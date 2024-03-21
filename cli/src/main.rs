@@ -33,8 +33,7 @@ fn init_persistence(args: &Args) -> Result<CliPersistence> {
     Ok(CliPersistence { data_dir })
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     env_logger::init();
 
     let args = Args::parse();
@@ -65,7 +64,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &wallet, cli_res.unwrap()).await;
+                let res = handle_command(rl, &wallet, cli_res.unwrap());
                 show_results(res);
             }
             Err(ReadlineError::Interrupted) => {

@@ -40,7 +40,7 @@ impl Highlighter for CliHelper {
     }
 }
 
-pub(crate) async fn handle_command(
+pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     wallet: &Arc<Wallet>,
     command: Command,

@@ -13,4 +13,3 @@ clap = { version = "4.5.1", features = ["derive"] }
 env_logger = "0.11"
 log = "0.4.20"
 rustyline = { version = "13.0.0", features = ["derive"] }
-tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
