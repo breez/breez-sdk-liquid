@@ -15,7 +15,7 @@ use boltz_client::{
     Bolt11Invoice, Keypair,
 };
 use log::{debug, warn};
-use lwk_common::{Signer, Singlesig, singlesig_desc};
+use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
@@ -23,8 +23,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    Network, persist::Persister, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
-    WalletOptions,
+    persist::Persister, Network, OngoingSwap, SendPaymentResponse, SwapError, SwapLbtcResponse,
+    WalletInfo, WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
