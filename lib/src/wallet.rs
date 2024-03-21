@@ -294,6 +294,7 @@ impl Wallet {
         let lsk = LiquidSwapKey::from(swap_key);
 
         let preimage = Preimage::new();
+        let preimage_str = preimage.to_string().ok_or(SwapError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
@@ -323,7 +324,7 @@ impl Wallet {
         self.swap_persister
             .insert_ongoing_swaps(&[OngoingSwap {
                 id: swap_id.clone(),
-                preimage: preimage.to_string().expect("Expecting valid preimage"),
+                preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice_amount_sat: amount_sat,

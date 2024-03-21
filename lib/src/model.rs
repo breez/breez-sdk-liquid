@@ -78,6 +78,9 @@ pub enum SwapError {
     #[error("Could not store the swap details locally")]
     PersistError,
 
+    #[error("The generated preimage is not valid")]
+    InvalidPreimage,
+
     #[error("Generic boltz error: {err}")]
     BoltzGeneric { err: String },
 }
