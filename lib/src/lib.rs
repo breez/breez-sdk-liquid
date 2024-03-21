@@ -12,7 +12,7 @@ mod tests {
     use anyhow::Result;
     use bip39::{Language, Mnemonic};
 
-    use crate::Wallet;
+    use crate::{ReceivePaymentRequest, Wallet};
 
     const DEFAULT_DATA_DIR: &str = ".data";
     const PHRASE_FILE_NAME: &str = "phrase";
@@ -58,7 +58,10 @@ mod tests {
     fn reverse_submarine_swap_success() -> Result<()> {
         let breez_wallet = Wallet::init(get_mnemonic()?.to_string())?;
 
-        let swap_response = breez_wallet.receive_payment(1000)?;
+        let swap_response = breez_wallet.receive_payment(ReceivePaymentRequest {
+            onchain_amount_sat: Some(1000),
+            invoice_amount_sat: None,
+        })?;
 
         println!(
             "Please pay the following invoice: {}",
