@@ -10,6 +10,15 @@ const CLAIM_ABSOLUTE_FEES: u64 = 134;
 const DEFAULT_DATA_DIR: &str = ".data";
 const DEFAULT_ELECTRUM_URL: &str = "blockstream.info:465";
 
+#[macro_export]
+macro_rules! ensure_sdk {
+    ($cond:expr, $err:expr) => {
+        if !$cond {
+            return Err($err);
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use std::{env, fs, io, path::PathBuf, str::FromStr};
