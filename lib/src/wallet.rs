@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use boltz_client::{
-    network::{electrum::ElectrumConfig, Chain},
+    network::electrum::ElectrumConfig,
     swaps::{
         boltz::{BoltzApiClient, CreateSwapRequest, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL},
         liquid::{LBtcSwapScript, LBtcSwapTx},
@@ -160,16 +160,9 @@ impl Wallet {
         BoltzApiClient::new(base_url)
     }
 
-    fn get_chain(&self) -> Chain {
-        match self.network {
-            Network::Liquid => Chain::Liquid,
-            Network::LiquidTestnet => Chain::LiquidTestnet,
-        }
-    }
-
     fn get_network_config(&self) -> ElectrumConfig {
         ElectrumConfig::new(
-            self.get_chain(),
+            self.network.into(),
             &self.electrum_url.to_string(),
             true,
             false,
@@ -255,7 +248,7 @@ impl Wallet {
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.get_chain(), 0)?;
+            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
         let lsk = LiquidSwapKey::from(swap_key);
 
@@ -289,7 +282,7 @@ impl Wallet {
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.get_chain(), 0)?;
+            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
         let lsk = LiquidSwapKey::from(swap_key);
 
         let preimage = Preimage::new();
