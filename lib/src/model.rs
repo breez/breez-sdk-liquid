@@ -23,8 +23,10 @@ pub struct WalletOptions {
     ///
     /// See <https://github.com/bitcoin/bips/pull/1143>
     pub descriptor: String,
-    pub db_root_path: Option<String>,
-    pub chain_cache_path: Option<String>,
+    /// Absolute or relative path to the data dir, including the dir name.
+    ///
+    /// If not set, it defaults to [crate::DEFAULT_DATA_DIR].
+    pub data_dir_path: Option<String>,
     pub electrum_url: Option<ElectrumUrl>,
 }
 

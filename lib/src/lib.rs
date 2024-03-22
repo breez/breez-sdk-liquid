@@ -5,6 +5,11 @@ mod wallet;
 pub use model::*;
 pub use wallet::*;
 
+// To avoid sendrawtransaction error "min relay fee not met"
+const CLAIM_ABSOLUTE_FEES: u64 = 134;
+const DEFAULT_DATA_DIR: &str = ".data";
+const DEFAULT_ELECTRUM_URL: &str = "blockstream.info:465";
+
 #[cfg(test)]
 mod tests {
     use std::{env, fs, io, path::PathBuf, str::FromStr};
@@ -12,9 +17,8 @@ mod tests {
     use anyhow::Result;
     use bip39::{Language, Mnemonic};
 
-    use crate::{ReceivePaymentRequest, Wallet};
+    use crate::{ReceivePaymentRequest, Wallet, DEFAULT_DATA_DIR};
 
-    const DEFAULT_DATA_DIR: &str = ".data";
     const PHRASE_FILE_NAME: &str = "phrase";
 
     fn get_mnemonic() -> Result<Mnemonic> {
