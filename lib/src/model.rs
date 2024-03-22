@@ -2,6 +2,7 @@ use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork};
 
+#[derive(Copy, Clone, PartialEq)]
 pub enum Network {
     Liquid,
     LiquidTestnet,
