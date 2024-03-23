@@ -76,8 +76,8 @@ pub enum SwapError {
     #[error("The specified invoice is not valid")]
     InvalidInvoice,
 
-    #[error("Could not sign/send the transaction")]
-    SendError,
+    #[error("Could not sign/send the transaction: {err}")]
+    SendError { err: String },
 
     #[error("Could not fetch the required wallet information")]
     WalletError,

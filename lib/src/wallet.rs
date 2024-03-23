@@ -40,12 +40,13 @@ pub struct Wallet {
 
 impl Wallet {
     pub fn init(mnemonic: &str, data_dir: Option<String>, network: Network) -> Result<Arc<Wallet>> {
-        let signer = SwSigner::new(mnemonic, network == Network::Liquid)?;
+        let is_mainnet = network == Network::Liquid;
+        let signer = SwSigner::new(mnemonic, is_mainnet)?;
         let descriptor = singlesig_desc(
             &signer,
             Singlesig::Wpkh,
             lwk_common::DescriptorBlindingKey::Slip77,
-            false,
+            is_mainnet,
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
 
@@ -225,7 +226,7 @@ impl Wallet {
 
         let txid = self
             .sign_and_send(&[signer], None, &funding_addr, funding_amount)
-            .map_err(|_| SwapError::SendError)?;
+            .map_err(|e| SwapError::SendError { err: e.to_string() })?;
 
         Ok(SendPaymentResponse { txid })
     }
