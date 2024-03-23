@@ -303,6 +303,7 @@ impl Wallet {
                     err: "Both invoice and onchain amounts were specified".into(),
                 }),
             }?;
+        debug!("Creating reverse swap with: onchain_amount_sat {onchain_amount_sat} sat, invoice_amount_sat {invoice_amount_sat} sat");
 
         lbtc_pair
             .limits
@@ -357,12 +358,7 @@ impl Wallet {
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice_amount_sat,
-                onchain_amount_sat: req.onchain_amount_sat.unwrap_or(
-                    invoice_amount_sat
-                        - lbtc_pair.fees.reverse_boltz(invoice_amount_sat)?
-                        - lbtc_pair.fees.reverse_lockup()?
-                        - CLAIM_ABSOLUTE_FEES
-                ),
+                onchain_amount_sat,
             }]))
             .map_err(|_| SwapError::PersistError)?;
 
