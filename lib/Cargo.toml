@@ -1,10 +1,10 @@
 [package]
-name = "breez-sdk-liquid"
+name = "ls-sdk"
 edition = "2021"
 version = "0.0.1"
 
 [lib]
-name = "breez_sdk_liquid"
+name = "ls_sdk"
 crate-type = ["staticlib", "cdylib", "lib"]
 
 [dependencies]
