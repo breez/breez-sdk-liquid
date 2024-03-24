@@ -1,0 +1,62 @@
+[Error]
+enum LsSdkError {
+    "Generic",
+};
+
+[Error]
+enum PaymentError {
+    "AmountOutOfRange",
+    "InvalidInvoice",
+    "SendError",
+    "WalletError",
+    "PersistError",
+    "InvalidPreimage",
+    "BoltzGeneric",
+};
+
+enum Network {
+    "Liquid",
+    "LiquidTestnet",
+};
+
+dictionary WalletInfo {
+    u64 balance_sat;
+    string pubkey;
+    string active_address;
+};
+
+dictionary PreparePaymentResponse {
+    string id;
+    u64 funding_amount;
+    string funding_address;
+};
+
+dictionary ReceivePaymentRequest {
+    u64? invoice_amount_sat;
+    u64? onchain_amount_sat;
+};
+
+dictionary ReceivePaymentResponse {
+    string id;
+    string invoice;
+};
+
+dictionary SendPaymentResponse {
+    string txid;
+};
+
+namespace ls_sdk {
+    [Throws=LsSdkError]
+    BindingWallet init(string mnemonic, string? data_dir, Network network);
+};
+
+interface BindingWallet {
+    [Throws=LsSdkError]
+    WalletInfo get_info(boolean with_scan);
+
+    [Throws=PaymentError]
+    SendPaymentResponse send_payment(PreparePaymentResponse req);
+
+    [Throws=PaymentError]
+    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
+};

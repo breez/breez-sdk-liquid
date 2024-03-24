@@ -4,10 +4,10 @@ mod persist;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
-use breez_sdk_liquid::{Network, Wallet};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
+use ls_sdk::{Network, Wallet};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 

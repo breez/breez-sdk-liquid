@@ -1,0 +1,22 @@
+[package]
+name = "ls-sdk-bindings"
+edition = "2021"
+version.workspace = true
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[lib]
+name = "ls_sdk_bindings"
+crate-type = ["staticlib", "cdylib", "lib"]
+
+
+[dependencies]
+anyhow = { workspace = true }
+ls-sdk = { path = "../ls-sdk-core" }
+uniffi = { version = "0.25.3", features = [ "cli" ] }
+thiserror = { workspace = true }
+
+[build-dependencies]
+uniffi = { version = "0.25.3", features = [ "build" ] }
