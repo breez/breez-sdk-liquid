@@ -1,0 +1,20 @@
+[package]
+name = "ls-sdk"
+edition = "2021"
+version.workspace = true
+
+[lib]
+name = "ls_sdk"
+crate-type = ["staticlib", "cdylib", "lib"]
+
+[dependencies]
+anyhow = "1.0.80"
+bip39 = { version = "2.0.0", features = ["serde"] }
+boltz-client = "0.1.2"
+log = "0.4.20"
+lwk_common = "0.2.0"
+lwk_signer = "0.2.0"
+lwk_wollet = "0.2.0"
+rusqlite = "0.29"
+rusqlite_migration = "1.0"
+thiserror = "1.0.57"

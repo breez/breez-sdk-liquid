@@ -10,8 +10,8 @@ anyhow = "1.0.80"
 bip39 = "2.0.0"
 clap = { version = "4.5.1", features = ["derive"] }
 env_logger = "0.11"
-ls-sdk = { path = "../lib" }
 log = "0.4.20"
+ls-sdk = { path = "../lib/ls-sdk-core" }
 qr2term = "0.3.1"
 rustyline = { version = "13.0.0", features = ["derive"] }
 serde = { version = "1.0.197", features = ["derive"] }

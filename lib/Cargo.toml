@@ -1,28 +1,12 @@
-[package]
-name = "ls-sdk"
-edition = "2021"
+[workspace]
+members = [
+    "ls-sdk-core",
+]
+resolver = "2"
+
+[workspace.package]
 version = "0.0.1"
 
-[lib]
-name = "ls_sdk"
-crate-type = ["staticlib", "cdylib", "lib"]
-
-[dependencies]
-anyhow = "1.0.80"
-bip39 = { version = "2.0.0", features = ["serde"] }
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "e55b8439f3311be7fcd18ec14a5747d0f3dbd74f" }
-log = "0.4.20"
-lwk_common = "0.3.0"
-lwk_signer = "0.3.0"
-lwk_wollet = "0.3.0"
-rusqlite = "0.29"
-rusqlite_migration = "1.0"
-serde = { version = "1.0.197", features = ["derive"] }
-thiserror = "1.0.57"
-
-[dev-dependencies]
-tempdir = "0.3.7"
-uuid = { version = "1.8.0", features = ["v4"] }
-
-[patch.crates-io]
-secp256k1-zkp = {git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}
+[workspace.dependencies]
+uniffi = "0.25.3"
+uniffi_macros = "0.25.3"
