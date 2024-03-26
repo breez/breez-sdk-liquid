@@ -48,7 +48,7 @@ impl Wallet {
         let descriptor = singlesig_desc(
             &signer,
             Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Elip151,
+            lwk_common::DescriptorBlindingKey::Slip77,
             false,
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
