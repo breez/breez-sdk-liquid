@@ -26,7 +26,7 @@ mod tests {
     use anyhow::Result;
     use bip39::{Language, Mnemonic};
 
-    use crate::{ReceivePaymentRequest, Wallet, DEFAULT_DATA_DIR};
+    use crate::{Network, ReceivePaymentRequest, Wallet, DEFAULT_DATA_DIR};
 
     const PHRASE_FILE_NAME: &str = "phrase";
 
@@ -56,7 +56,8 @@ mod tests {
 
     #[test]
     fn normal_submarine_swap() -> Result<()> {
-        let breez_wallet = Wallet::init(get_mnemonic()?.to_string())?;
+        let breez_wallet =
+            Wallet::init(&get_mnemonic()?.to_string(), None, Network::LiquidTestnet)?;
 
         let mut invoice = String::new();
         println!("Please paste the invoice to be paid: ");
@@ -70,7 +71,8 @@ mod tests {
 
     #[test]
     fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wallet = Wallet::init(get_mnemonic()?.to_string())?;
+        let breez_wallet =
+            Wallet::init(&get_mnemonic()?.to_string(), None, Network::LiquidTestnet)?;
 
         let swap_response = breez_wallet.receive_payment(ReceivePaymentRequest {
             onchain_amount_sat: Some(1000),
