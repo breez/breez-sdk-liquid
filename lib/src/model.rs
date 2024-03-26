@@ -1,5 +1,6 @@
 use boltz_client::network::Chain;
-use boltz_client::util::error::S5Error;
+use boltz_client::error::Error;
+use boltz_client::error::Error::*;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 
@@ -92,15 +93,14 @@ pub enum SwapError {
     BoltzGeneric { err: String },
 }
 
-impl From<S5Error> for SwapError {
-    fn from(err: S5Error) -> Self {
-        match err.kind {
-            boltz_client::util::error::ErrorKind::Network
-            | boltz_client::util::error::ErrorKind::BoltzApi => {
-                SwapError::ServersUnreachable { err: err.message }
-            }
-            boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
-            _ => SwapError::BoltzGeneric { err: err.message },
+impl From<Error> for SwapError {
+    fn from(err: Error) -> Self {
+        match err {
+            // boltz_client::util::error::ErrorKind::Network | boltz_client::util::error::ErrorKind::BoltzApi => {
+            //     SwapError::ServersUnreachable { err: err.message }
+            // }
+            // boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
+            // _ => SwapError::BoltzGeneric { err: err.message },
         }
     }
 }
