@@ -62,7 +62,8 @@ mod tests {
         println!("Please paste the invoice to be paid: ");
         io::stdin().read_line(&mut invoice)?;
 
-        breez_wallet.send_payment(&invoice)?;
+        let prepare_response = breez_wallet.prepare_payment(&invoice)?;
+        breez_wallet.send_payment(&prepare_response)?;
 
         Ok(())
     }
