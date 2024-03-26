@@ -1,3 +1,4 @@
+use boltz_client::network::Chain;
 use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork};
@@ -13,6 +14,15 @@ impl From<Network> for ElementsNetwork {
         match value {
             Network::Liquid => ElementsNetwork::Liquid,
             Network::LiquidTestnet => ElementsNetwork::LiquidTestnet,
+        }
+    }
+}
+
+impl From<Network> for Chain {
+    fn from(value: Network) -> Self {
+        match value {
+            Network::Liquid => Chain::Liquid,
+            Network::LiquidTestnet => Chain::LiquidTestnet,
         }
     }
 }
