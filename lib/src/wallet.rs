@@ -24,9 +24,9 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingSwap, Payment, PaymentType, PreparePaymentResponse,
-    ReceivePaymentRequest, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
-    WalletOptions,
+    persist::Persister, Network, OngoingSwap, Payment, PaymentError, PaymentType,
+    PreparePaymentResponse, ReceivePaymentRequest, ReceivePaymentResponse, SendPaymentResponse,
+    WalletInfo, WalletOptions,
 };
 
 // To avoid sendrawtransaction error "min relay fee not met"
@@ -213,24 +213,24 @@ impl Wallet {
         Ok(txid.to_string())
     }
 
-    pub fn prepare_payment(&self, invoice: &str) -> Result<PreparePaymentResponse, SwapError> {
+    pub fn prepare_payment(&self, invoice: &str) -> Result<PreparePaymentResponse, PaymentError> {
         let client = self.boltz_client();
         let invoice = invoice
             .trim()
             .parse::<Bolt11Invoice>()
-            .map_err(|_| SwapError::InvalidInvoice)?;
+            .map_err(|_| PaymentError::InvalidInvoice)?;
 
         let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
 
         let amount_sat = invoice
             .amount_milli_satoshis()
-            .ok_or(SwapError::AmountOutOfRange)?
+            .ok_or(PaymentError::AmountOutOfRange)?
             / 1000;
 
         lbtc_pair
             .limits
             .within(amount_sat)
-            .map_err(|_| SwapError::AmountOutOfRange)?;
+            .map_err(|_| PaymentError::AmountOutOfRange)?;
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
             &lbtc_pair.hash,
@@ -248,7 +248,7 @@ impl Wallet {
                 amount_sat,
                 funding_address: funding_address.clone(),
             }])
-            .map_err(|_| SwapError::PersistError)?;
+            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(PreparePaymentResponse {
             id,
@@ -260,16 +260,16 @@ impl Wallet {
     pub fn send_payment(
         &self,
         res: &PreparePaymentResponse,
-    ) -> Result<SendPaymentResponse, SwapError> {
+    ) -> Result<SendPaymentResponse, PaymentError> {
         let signer = AnySigner::Software(self.get_signer());
 
         let txid = self
             .sign_and_send(&[signer], None, &res.funding_address, res.funding_amount)
-            .map_err(|_| SwapError::SendError)?;
+            .map_err(|_| PaymentError::SendError)?;
 
         self.swap_persister
             .resolve_ongoing_swap(&res.id)
-            .map_err(|_| SwapError::PersistError)?;
+            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(SendPaymentResponse { txid })
     }
@@ -280,12 +280,12 @@ impl Wallet {
         redeem_script: &str,
         blinding_key: &str,
         absolute_fees: Option<u64>,
-    ) -> Result<String, SwapError> {
+    ) -> Result<String, PaymentError> {
         let network_config = &self.get_network_config();
         let mut rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
             self.address()
-                .map_err(|_| SwapError::WalletError)?
+                .map_err(|_| PaymentError::WalletError)?
                 .to_string(),
             network_config,
         )?;
@@ -309,11 +309,11 @@ impl Wallet {
     pub fn receive_payment(
         &self,
         req: ReceivePaymentRequest,
-    ) -> Result<SwapLbtcResponse, SwapError> {
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
         let mut amount_sat = req
             .onchain_amount_sat
             .or(req.invoice_amount_sat)
-            .ok_or(SwapError::AmountOutOfRange)?;
+            .ok_or(PaymentError::AmountOutOfRange)?;
 
         let client = self.boltz_client();
 
@@ -322,7 +322,7 @@ impl Wallet {
         lbtc_pair
             .limits
             .within(amount_sat)
-            .map_err(|_| SwapError::AmountOutOfRange)?;
+            .map_err(|_| PaymentError::AmountOutOfRange)?;
 
         let mnemonic = self.signer.mnemonic();
         let swap_key =
@@ -330,7 +330,7 @@ impl Wallet {
         let lsk = LiquidSwapKey::from(swap_key);
 
         let preimage = Preimage::new();
-        let preimage_str = preimage.to_string().ok_or(SwapError::InvalidPreimage)?;
+        let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
         let swap_response = if req.onchain_amount_sat.is_some() {
@@ -358,12 +358,12 @@ impl Wallet {
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
         if invoice.payment_hash().to_string() != preimage_hash {
-            return Err(SwapError::InvalidInvoice);
+            return Err(PaymentError::InvalidInvoice);
         };
 
         let invoice_amount_sat = invoice
             .amount_milli_satoshis()
-            .ok_or(SwapError::InvalidInvoice)?
+            .ok_or(PaymentError::InvalidInvoice)?
             / 1000;
 
         self.swap_persister
@@ -380,9 +380,9 @@ impl Wallet {
                         - CLAIM_ABSOLUTE_FEES
                 ),
             }]))
-            .map_err(|_| SwapError::PersistError)?;
+            .map_err(|_| PaymentError::PersistError)?;
 
-        Ok(SwapLbtcResponse {
+        Ok(ReceivePaymentResponse {
             id: swap_id,
             invoice: invoice.to_string(),
         })

@@ -2,6 +2,7 @@ use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork};
 
+#[derive(Debug)]
 pub enum Network {
     Liquid,
     LiquidTestnet,
@@ -16,6 +17,7 @@ impl From<Network> for ElementsNetwork {
     }
 }
 
+#[derive(Debug)]
 pub struct WalletOptions {
     pub signer: SwSigner,
     pub network: Network,
@@ -29,28 +31,31 @@ pub struct WalletOptions {
 }
 
 #[derive(Debug)]
-pub struct SwapLbtcResponse {
-    pub id: String,
-    pub invoice: String,
-}
-
-pub enum SwapStatus {
-    Created,
-    Mempool,
-    Completed,
-}
-
 pub struct ReceivePaymentRequest {
     pub invoice_amount_sat: Option<u64>,
     pub onchain_amount_sat: Option<u64>,
 }
 
+#[derive(Debug)]
+pub struct ReceivePaymentResponse {
+    pub id: String,
+    pub invoice: String,
+}
+
+#[derive(Debug)]
+pub struct PreparePaymentResponse {
+    pub id: String,
+    pub funding_amount: u64,
+    pub funding_address: String,
+}
+
+#[derive(Debug)]
 pub struct SendPaymentResponse {
     pub txid: String,
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum SwapError {
+pub enum PaymentError {
     #[error("Could not contact Boltz servers: {err}")]
     ServersUnreachable { err: String },
 
@@ -79,15 +84,15 @@ pub enum SwapError {
     BoltzGeneric { err: String },
 }
 
-impl From<S5Error> for SwapError {
+impl From<S5Error> for PaymentError {
     fn from(err: S5Error) -> Self {
         match err.kind {
             boltz_client::util::error::ErrorKind::Network
             | boltz_client::util::error::ErrorKind::BoltzApi => {
-                SwapError::ServersUnreachable { err: err.message }
+                PaymentError::ServersUnreachable { err: err.message }
             }
-            boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
-            _ => SwapError::BoltzGeneric { err: err.message },
+            boltz_client::util::error::ErrorKind::Input => PaymentError::BadResponse,
+            _ => PaymentError::BoltzGeneric { err: err.message },
         }
     }
 }
@@ -151,11 +156,4 @@ impl From<OngoingSwap> for Payment {
             },
         }
     }
-}
-
-#[derive(Debug)]
-pub struct PreparePaymentResponse {
-    pub id: String,
-    pub funding_amount: u64,
-    pub funding_address: String,
 }
