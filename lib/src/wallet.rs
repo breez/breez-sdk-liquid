@@ -26,12 +26,8 @@ use lwk_wollet::{
 use crate::{
     persist::Persister, Network, OngoingReceiveSwap, Payment, PaymentType, ReceivePaymentRequest,
     SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo, WalletOptions,
+    CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR, DEFAULT_ELECTRUM_URL,
 };
-
-// To avoid sendrawtransaction error "min relay fee not met"
-const CLAIM_ABSOLUTE_FEES: u64 = 134;
-const DEFAULT_SWAPS_DIR: &str = ".data";
-const BLOCKSTREAM_ELECTRUM_URL: &str = "blockstream.info:465";
 
 pub struct Wallet {
     signer: SwSigner,
@@ -43,7 +39,7 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn init(mnemonic: &str) -> Result<Arc<Wallet>> {
+    pub fn init(mnemonic: &str, data_dir: Option<String>) -> Result<Arc<Wallet>> {
         let signer = SwSigner::new(mnemonic, false)?;
         let descriptor = singlesig_desc(
             &signer,
@@ -57,8 +53,7 @@ impl Wallet {
             signer,
             descriptor,
             electrum_url: None,
-            db_root_path: None,
-            chain_cache_path: None,
+            data_dir_path: data_dir,
             network: Network::LiquidTestnet,
         })
     }
@@ -75,12 +70,12 @@ impl Wallet {
 
         let electrum_url = opts.electrum_url.unwrap_or(match network {
             ElementsNetwork::Liquid | ElementsNetwork::LiquidTestnet => {
-                ElectrumUrl::new(BLOCKSTREAM_ELECTRUM_URL, true, false)
+                ElectrumUrl::new(DEFAULT_ELECTRUM_URL, true, false)
             }
             ElementsNetwork::ElementsRegtest { .. } => todo!(),
         });
 
-        let persister_path = opts.db_root_path.unwrap_or(DEFAULT_SWAPS_DIR.to_string());
+        let persister_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
         fs::create_dir_all(&persister_path)?;
 
         let swap_persister = Persister::new(persister_path);

@@ -24,20 +24,15 @@ fn show_results(res: Result<String>) {
     }
 }
 
-fn init_persistence(args: &Args) -> Result<CliPersistence> {
-    let data_dir = args.data_dir.clone().unwrap_or(".data".to_string());
-    let data_dir = PathBuf::from(&data_dir);
-
-    fs::create_dir_all(&data_dir)?;
-
-    Ok(CliPersistence { data_dir })
-}
-
 fn main() -> Result<()> {
     env_logger::init();
 
     let args = Args::parse();
-    let persistence = init_persistence(&args)?;
+    let data_dir_str = args.data_dir.clone().unwrap_or(".data".to_string());
+    let data_dir = PathBuf::from(&data_dir_str);
+    fs::create_dir_all(&data_dir)?;
+
+    let persistence = CliPersistence { data_dir };
     let history_file = &persistence.history_file();
 
     let rl = &mut Editor::new()?;
@@ -50,7 +45,7 @@ fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let wallet = Wallet::init(&mnemonic.to_string())?;
+    let wallet = Wallet::init(&mnemonic.to_string(), Some(data_dir_str))?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
