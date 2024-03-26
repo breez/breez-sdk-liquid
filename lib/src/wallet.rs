@@ -32,15 +32,15 @@ use crate::{
 pub struct Wallet {
     signer: SwSigner,
     electrum_url: ElectrumUrl,
-    network: ElementsNetwork,
+    network: Network,
     wallet: Arc<Mutex<LwkWollet>>,
     active_address: Option<u32>,
     swap_persister: Persister,
 }
 
 impl Wallet {
-    pub fn init(mnemonic: &str, data_dir: Option<String>) -> Result<Arc<Wallet>> {
-        let signer = SwSigner::new(mnemonic, false)?;
+    pub fn init(mnemonic: &str, data_dir: Option<String>, network: Network) -> Result<Arc<Wallet>> {
+        let signer = SwSigner::new(mnemonic, network == Network::Liquid)?;
         let descriptor = singlesig_desc(
             &signer,
             Singlesig::Wpkh,
@@ -54,27 +54,24 @@ impl Wallet {
             descriptor,
             electrum_url: None,
             data_dir_path: data_dir,
-            network: Network::LiquidTestnet,
+            network,
         })
     }
 
     fn new(opts: WalletOptions) -> Result<Arc<Self>> {
-        let network: ElementsNetwork = opts.network.into();
+        let network = opts.network;
+        let elements_network: ElementsNetwork = opts.network.into();
 
         let lwk_persister = NoPersist::new();
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
-            network,
+            elements_network,
             lwk_persister,
             &opts.descriptor,
         )?));
 
-        let electrum_url = opts.electrum_url.unwrap_or(match network {
-            ElementsNetwork::Liquid | ElementsNetwork::LiquidTestnet => {
-                ElectrumUrl::new(DEFAULT_ELECTRUM_URL, true, false)
-            }
-            ElementsNetwork::ElementsRegtest { .. } => todo!(),
-        });
-
+        let electrum_url =
+            opts.electrum_url
+                .unwrap_or(ElectrumUrl::new(DEFAULT_ELECTRUM_URL, true, false));
         let persister_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
         fs::create_dir_all(&persister_path)?;
 
@@ -113,7 +110,7 @@ impl Wallet {
                         } = swap;
                         match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
                             Ok(_) => cloned.swap_persister.resolve_ongoing_swap(swap.id).unwrap(),
-                            Err(e) => warn!("Could not claim yet. Err: {}", e),
+                            Err(e) => warn!("Could not claim yet. Err: {e}"),
                         }
                     });
                 }
@@ -156,9 +153,8 @@ impl Wallet {
 
     fn boltz_client(&self) -> BoltzApiClient {
         let base_url = match self.network {
-            ElementsNetwork::LiquidTestnet => BOLTZ_TESTNET_URL,
-            ElementsNetwork::Liquid => BOLTZ_MAINNET_URL,
-            ElementsNetwork::ElementsRegtest { .. } => todo!(),
+            Network::LiquidTestnet => BOLTZ_TESTNET_URL,
+            Network::Liquid => BOLTZ_MAINNET_URL,
         };
 
         BoltzApiClient::new(base_url)
@@ -166,9 +162,8 @@ impl Wallet {
 
     fn get_chain(&self) -> Chain {
         match self.network {
-            ElementsNetwork::Liquid => Chain::Liquid,
-            ElementsNetwork::LiquidTestnet => Chain::LiquidTestnet,
-            ElementsNetwork::ElementsRegtest { .. } => todo!(),
+            Network::Liquid => Chain::Liquid,
+            Network::LiquidTestnet => Chain::LiquidTestnet,
         }
     }
 

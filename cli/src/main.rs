@@ -4,7 +4,7 @@ mod persist;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
-use breez_sdk_liquid::Wallet;
+use breez_sdk_liquid::{Network, Wallet};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command};
 use log::{error, info};
@@ -45,7 +45,11 @@ fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let wallet = Wallet::init(&mnemonic.to_string(), Some(data_dir_str))?;
+    let wallet = Wallet::init(
+        &mnemonic.to_string(),
+        Some(data_dir_str),
+        Network::LiquidTestnet,
+    )?;
 
     loop {
         let readline = rl.readline("breez-liquid> ");
