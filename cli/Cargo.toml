@@ -13,3 +13,6 @@ clap = { version = "4.5.1", features = ["derive"] }
 env_logger = "0.11"
 log = "0.4.20"
 rustyline = { version = "13.0.0", features = ["derive"] }
+
+[patch.crates-io]
+secp256k1-zkp = {git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}

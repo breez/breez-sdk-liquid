@@ -1,5 +1,5 @@
+use boltz_client::error::Error;
 use boltz_client::network::Chain;
-use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 
@@ -64,14 +64,8 @@ pub struct SendPaymentResponse {
 
 #[derive(thiserror::Error, Debug)]
 pub enum SwapError {
-    #[error("Could not contact Boltz servers: {err}")]
-    ServersUnreachable { err: String },
-
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
-
-    #[error("Wrong response received from Boltz servers")]
-    BadResponse,
 
     #[error("The specified invoice is not valid")]
     InvalidInvoice,
@@ -92,15 +86,10 @@ pub enum SwapError {
     BoltzGeneric { err: String },
 }
 
-impl From<S5Error> for SwapError {
-    fn from(err: S5Error) -> Self {
-        match err.kind {
-            boltz_client::util::error::ErrorKind::Network
-            | boltz_client::util::error::ErrorKind::BoltzApi => {
-                SwapError::ServersUnreachable { err: err.message }
-            }
-            boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
-            _ => SwapError::BoltzGeneric { err: err.message },
+impl From<Error> for SwapError {
+    fn from(err: Error) -> Self {
+        SwapError::BoltzGeneric {
+            err: format!("{err:?}"),
         }
     }
 }
