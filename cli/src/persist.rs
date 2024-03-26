@@ -22,12 +22,9 @@ impl CliPersistence {
             Ok(phrase) => Mnemonic::from_str(&phrase).unwrap(),
             Err(e) => {
                 if e.kind() != io::ErrorKind::NotFound {
-                    panic!(
-                        "Can't read from file: {}, err {e}",
-                        filename.to_str().unwrap()
-                    );
+                    panic!("Can't read from file: {}, err {e}", filename.display());
                 }
-                let mnemonic = Mnemonic::generate_in(Language::English, 24)?;
+                let mnemonic = Mnemonic::generate_in(Language::English, 12)?;
                 fs::write(filename, mnemonic.to_string())?;
                 mnemonic
             }
