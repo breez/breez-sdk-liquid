@@ -43,8 +43,8 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn init(mnemonic: String) -> Result<Arc<Wallet>> {
-        let signer = SwSigner::new(&mnemonic, false)?;
+    pub fn init(mnemonic: &str) -> Result<Arc<Wallet>> {
+        let signer = SwSigner::new(mnemonic, false)?;
         let descriptor = singlesig_desc(
             &signer,
             Singlesig::Wpkh,
