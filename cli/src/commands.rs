@@ -8,7 +8,7 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::{ReceivePaymentRequest, Wallet};
+use breez_sdk_liquid::{ReceivePaymentRequest, SendPaymentResponse, Wallet};
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -61,13 +61,14 @@ pub(crate) fn handle_command(
             ))
         }
         Command::SendPayment { bolt11 } => {
-            let response = wallet.send_payment(&bolt11)?;
+            let prepare_response = wallet.prepare_payment(&bolt11)?;
+            let SendPaymentResponse { txid } = wallet.send_payment(&prepare_response)?;
 
             Ok(format!(
                 r#"
                 Successfully paid the invoice!
                 You can view the onchain transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
-                response.txid
+                txid
             ))
         }
         Command::GetInfo => {
