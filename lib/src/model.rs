@@ -1,7 +1,7 @@
 use boltz_client::network::Chain;
 use boltz_client::util::error::S5Error;
 use lwk_signer::SwSigner;
-use lwk_wollet::{ElectrumUrl, ElementsNetwork};
+use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Network {
@@ -33,7 +33,7 @@ pub struct WalletOptions {
     /// Output script descriptor
     ///
     /// See <https://github.com/bitcoin/bips/pull/1143>
-    pub descriptor: String,
+    pub descriptor: WolletDescriptor,
     /// Absolute or relative path to the data dir, including the dir name.
     ///
     /// If not set, it defaults to [crate::DEFAULT_DATA_DIR].
