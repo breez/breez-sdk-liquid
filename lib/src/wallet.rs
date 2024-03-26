@@ -24,9 +24,9 @@ use lwk_wollet::{
 };
 
 use crate::{
-    persist::Persister, Network, OngoingReceiveSwap, Payment, PaymentType, ReceivePaymentRequest,
-    SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo, WalletOptions,
-    CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR, DEFAULT_ELECTRUM_URL,
+    ensure_sdk, persist::Persister, Network, OngoingReceiveSwap, Payment, PaymentType,
+    ReceivePaymentRequest, SendPaymentResponse, SwapError, SwapLbtcResponse, WalletInfo,
+    WalletOptions, CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR, DEFAULT_ELECTRUM_URL,
 };
 
 pub struct Wallet {
@@ -266,18 +266,46 @@ impl Wallet {
         &self,
         req: ReceivePaymentRequest,
     ) -> Result<SwapLbtcResponse, SwapError> {
-        let mut amount_sat = req
-            .onchain_amount_sat
-            .or(req.invoice_amount_sat)
-            .ok_or(SwapError::AmountOutOfRange)?;
-
         let client = self.boltz_client();
-
         let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
+
+        let (onchain_amount_sat, invoice_amount_sat) =
+            match (req.onchain_amount_sat, req.invoice_amount_sat) {
+                (Some(onchain_amount_sat), None) => {
+                    // TODO Calculate correct fees, once these PRs are merged and published
+                    // https://github.com/SatoshiPortal/boltz-rust/pull/31
+                    // https://github.com/SatoshiPortal/boltz-rust/pull/32
+
+                    // TODO Until above is fixed, this is only an approximation (using onchain instead of invoice amount to calc. fees)
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(onchain_amount_sat)?;
+                    let fees_lockup = lbtc_pair.fees.reverse_lockup()?;
+                    let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
+                    let fees_total = fees_boltz + fees_lockup + fees_claim;
+
+                    Ok((onchain_amount_sat, onchain_amount_sat + fees_total))
+                }
+                (None, Some(invoice_amount_sat)) => {
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat)?;
+                    let fees_lockup = lbtc_pair.fees.reverse_lockup()?;
+                    let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
+                    let fees_total = fees_boltz + fees_lockup + fees_claim;
+
+                    ensure_sdk!(invoice_amount_sat > fees_total, SwapError::AmountOutOfRange);
+
+                    Ok((invoice_amount_sat - fees_total, invoice_amount_sat))
+                }
+                (None, None) => Err(SwapError::AmountOutOfRange),
+
+                // TODO The request should not allow setting both invoice and onchain amounts, so this case shouldn't be possible.
+                //      See example of how it's done in the SDK.
+                _ => Err(SwapError::BoltzGeneric {
+                    err: "Both invoice and onchain amounts were specified".into(),
+                }),
+            }?;
 
         lbtc_pair
             .limits
-            .within(amount_sat)
+            .within(invoice_amount_sat)
             .map_err(|_| SwapError::AmountOutOfRange)?;
 
         let mnemonic = self.signer.mnemonic();
@@ -290,19 +318,18 @@ impl Wallet {
         let preimage_hash = preimage.sha256.to_string();
 
         let swap_response = if req.onchain_amount_sat.is_some() {
-            amount_sat += CLAIM_ABSOLUTE_FEES;
             client.create_swap(CreateSwapRequest::new_lbtc_reverse_onchain_amt(
                 lbtc_pair.hash,
                 preimage_hash.clone(),
                 lsk.keypair.public_key().to_string(),
-                amount_sat,
+                onchain_amount_sat,
             ))?
         } else {
             client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
                 lbtc_pair.hash,
                 preimage_hash.clone(),
                 lsk.keypair.public_key().to_string(),
-                amount_sat,
+                invoice_amount_sat,
             ))?
         };
 
