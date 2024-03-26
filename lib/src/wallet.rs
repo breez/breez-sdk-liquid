@@ -201,7 +201,8 @@ impl Wallet {
             .parse::<Bolt11Invoice>()
             .map_err(|_| SwapError::InvalidInvoice)?;
 
-        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
+        // TODO Separate error type? Or make WalletError more generic?
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair().ok_or(SwapError::WalletError)?;
 
         let amount_sat = invoice
             .amount_milli_satoshis()
@@ -252,7 +253,7 @@ impl Wallet {
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
-        let lsk = LiquidSwapKey::from(swap_key);
+        let lsk = LiquidSwapKey::try_from(swap_key)?;
 
         let signed_tx = rev_swap_tx.sign_claim(
             &lsk.keypair,
@@ -269,7 +270,7 @@ impl Wallet {
         req: ReceivePaymentRequest,
     ) -> Result<SwapLbtcResponse, SwapError> {
         let client = self.boltz_client();
-        let lbtc_pair = client.get_pairs()?.get_lbtc_pair()?;
+        let lbtc_pair = client.get_pairs()?.get_lbtc_pair().ok_or(SwapError::WalletError)?;
 
         let (onchain_amount_sat, invoice_amount_sat) =
             match (req.onchain_amount_sat, req.invoice_amount_sat) {
@@ -279,16 +280,16 @@ impl Wallet {
                     // https://github.com/SatoshiPortal/boltz-rust/pull/32
 
                     // TODO Until above is fixed, this is only an approximation (using onchain instead of invoice amount to calc. fees)
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(onchain_amount_sat)?;
-                    let fees_lockup = lbtc_pair.fees.reverse_lockup()?;
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(onchain_amount_sat);
+                    let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let fees_total = fees_boltz + fees_lockup + fees_claim;
 
                     Ok((onchain_amount_sat, onchain_amount_sat + fees_total))
                 }
                 (None, Some(invoice_amount_sat)) => {
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat)?;
-                    let fees_lockup = lbtc_pair.fees.reverse_lockup()?;
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat);
+                    let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let fees_total = fees_boltz + fees_lockup + fees_claim;
 
@@ -314,7 +315,7 @@ impl Wallet {
         let mnemonic = self.signer.mnemonic().ok_or(SwapError::WalletError)?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
-        let lsk = LiquidSwapKey::from(swap_key);
+        let lsk = LiquidSwapKey::try_from(swap_key)?;
 
         let preimage = Preimage::new();
         let preimage_str = preimage.to_string().ok_or(SwapError::InvalidPreimage)?;

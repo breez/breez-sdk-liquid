@@ -96,6 +96,9 @@ pub enum SwapError {
 impl From<Error> for SwapError {
     fn from(err: Error) -> Self {
         match err {
+            // TODO Better mapping
+            // TODO Since there is no more clear ServersUnreachable, do we need that type?
+            _ => SwapError::BoltzGeneric { err: format!("{err:?}") },
             // boltz_client::util::error::ErrorKind::Network | boltz_client::util::error::ErrorKind::BoltzApi => {
             //     SwapError::ServersUnreachable { err: err.message }
             // }
