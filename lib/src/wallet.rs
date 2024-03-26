@@ -20,7 +20,7 @@ use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
-    ElectrumUrl, ElementsNetwork, NoPersist, Wollet as LwkWollet,
+    ElectrumUrl, ElementsNetwork, NoPersist, Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -42,13 +42,14 @@ impl Wallet {
     pub fn init(mnemonic: &str, data_dir: Option<String>, network: Network) -> Result<Arc<Wallet>> {
         let is_mainnet = network == Network::Liquid;
         let signer = SwSigner::new(mnemonic, is_mainnet)?;
-        let descriptor = singlesig_desc(
+        let descriptor_str = singlesig_desc(
             &signer,
             Singlesig::Wpkh,
             lwk_common::DescriptorBlindingKey::Slip77,
             is_mainnet,
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+        let descriptor: WolletDescriptor = descriptor_str.parse()?;
 
         Wallet::new(WalletOptions {
             signer,
@@ -67,7 +68,7 @@ impl Wallet {
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
             elements_network,
             lwk_persister,
-            &opts.descriptor,
+            opts.descriptor,
         )?));
 
         let electrum_url =
@@ -247,7 +248,7 @@ impl Wallet {
             network_config,
         )?;
 
-        let mnemonic = self.signer.mnemonic();
+        let mnemonic = self.signer.mnemonic().ok_or(SwapError::WalletError)?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
@@ -310,7 +311,7 @@ impl Wallet {
             .within(invoice_amount_sat)
             .map_err(|_| SwapError::AmountOutOfRange)?;
 
-        let mnemonic = self.signer.mnemonic();
+        let mnemonic = self.signer.mnemonic().ok_or(SwapError::WalletError)?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
         let lsk = LiquidSwapKey::from(swap_key);
