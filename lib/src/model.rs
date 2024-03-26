@@ -1,6 +1,5 @@
-use boltz_client::network::Chain;
 use boltz_client::error::Error;
-use boltz_client::error::Error::*;
+use boltz_client::network::Chain;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 
@@ -65,14 +64,8 @@ pub struct SendPaymentResponse {
 
 #[derive(thiserror::Error, Debug)]
 pub enum SwapError {
-    #[error("Could not contact Boltz servers: {err}")]
-    ServersUnreachable { err: String },
-
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
-
-    #[error("Wrong response received from Boltz servers")]
-    BadResponse,
 
     #[error("The specified invoice is not valid")]
     InvalidInvoice,
@@ -95,15 +88,8 @@ pub enum SwapError {
 
 impl From<Error> for SwapError {
     fn from(err: Error) -> Self {
-        match err {
-            // TODO Better mapping
-            // TODO Since there is no more clear ServersUnreachable, do we need that type?
-            _ => SwapError::BoltzGeneric { err: format!("{err:?}") },
-            // boltz_client::util::error::ErrorKind::Network | boltz_client::util::error::ErrorKind::BoltzApi => {
-            //     SwapError::ServersUnreachable { err: err.message }
-            // }
-            // boltz_client::util::error::ErrorKind::Input => SwapError::BadResponse,
-            // _ => SwapError::BoltzGeneric { err: err.message },
+        SwapError::BoltzGeneric {
+            err: format!("{err:?}"),
         }
     }
 }

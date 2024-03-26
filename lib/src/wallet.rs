@@ -202,7 +202,10 @@ impl Wallet {
             .map_err(|_| SwapError::InvalidInvoice)?;
 
         // TODO Separate error type? Or make WalletError more generic?
-        let lbtc_pair = client.get_pairs()?.get_lbtc_pair().ok_or(SwapError::WalletError)?;
+        let lbtc_pair = client
+            .get_pairs()?
+            .get_lbtc_pair()
+            .ok_or(SwapError::WalletError)?;
 
         let amount_sat = invoice
             .amount_milli_satoshis()
@@ -241,7 +244,7 @@ impl Wallet {
         absolute_fees: Option<u64>,
     ) -> Result<String, SwapError> {
         let network_config = &self.get_network_config();
-        let mut rev_swap_tx = LBtcSwapTx::new_claim(
+        let rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
             self.address()
                 .map_err(|_| SwapError::WalletError)?
@@ -270,7 +273,10 @@ impl Wallet {
         req: ReceivePaymentRequest,
     ) -> Result<SwapLbtcResponse, SwapError> {
         let client = self.boltz_client();
-        let lbtc_pair = client.get_pairs()?.get_lbtc_pair().ok_or(SwapError::WalletError)?;
+        let lbtc_pair = client
+            .get_pairs()?
+            .get_lbtc_pair()
+            .ok_or(SwapError::WalletError)?;
 
         let (onchain_amount_sat, invoice_amount_sat) =
             match (req.onchain_amount_sat, req.invoice_amount_sat) {
@@ -418,7 +424,7 @@ impl Wallet {
         let network_config = self.get_network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));
 
-        let mut tx =
+        let tx =
             LBtcSwapTx::new_claim(script.clone(), self.address()?.to_string(), &network_config)
                 .expect("Expecting valid tx");
         let keypair: Keypair = recovery.try_into().unwrap();
