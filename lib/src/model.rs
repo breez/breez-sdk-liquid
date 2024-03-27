@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Network {
     Liquid,
     LiquidTestnet,
@@ -27,6 +27,7 @@ impl From<Network> for Chain {
     }
 }
 
+#[derive(Debug)]
 pub struct WalletOptions {
     pub signer: SwSigner,
     pub network: Network,
@@ -42,28 +43,31 @@ pub struct WalletOptions {
 }
 
 #[derive(Debug)]
-pub struct SwapLbtcResponse {
-    pub id: String,
-    pub invoice: String,
-}
-
-pub enum SwapStatus {
-    Created,
-    Mempool,
-    Completed,
-}
-
 pub struct ReceivePaymentRequest {
     pub invoice_amount_sat: Option<u64>,
     pub onchain_amount_sat: Option<u64>,
 }
 
+#[derive(Debug)]
+pub struct ReceivePaymentResponse {
+    pub id: String,
+    pub invoice: String,
+}
+
+#[derive(Debug)]
+pub struct PreparePaymentResponse {
+    pub id: String,
+    pub funding_amount: u64,
+    pub funding_address: String,
+}
+
+#[derive(Debug)]
 pub struct SendPaymentResponse {
     pub txid: String,
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum SwapError {
+pub enum PaymentError {
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
 
@@ -86,9 +90,9 @@ pub enum SwapError {
     BoltzGeneric { err: String },
 }
 
-impl From<Error> for SwapError {
+impl From<Error> for PaymentError {
     fn from(err: Error) -> Self {
-        SwapError::BoltzGeneric {
+        PaymentError::BoltzGeneric {
             err: format!("{err:?}"),
         }
     }
@@ -102,22 +106,20 @@ pub struct WalletInfo {
 }
 
 #[derive(Debug)]
-pub struct OngoingReceiveSwap {
-    pub id: String,
-    pub preimage: String,
-    pub redeem_script: String,
-    pub blinding_key: String,
-    pub invoice_amount_sat: u64,
-    pub onchain_amount_sat: u64,
-}
-
-pub struct OngoingSendSwap {
-    pub id: String,
-    // pub preimage: String,
-    // pub redeem_script: String,
-    // pub blinding_key: String,
-    // pub invoice_amount_sat: Option<u64>,
-    // pub onchain_amount_sat: Option<u64>,
+pub(crate) enum OngoingSwap {
+    Send {
+        id: String,
+        amount_sat: u64,
+        funding_address: String,
+    },
+    Receive {
+        id: String,
+        preimage: String,
+        redeem_script: String,
+        blinding_key: String,
+        invoice_amount_sat: u64,
+        onchain_amount_sat: u64,
+    },
 }
 
 #[derive(Debug)]
@@ -125,6 +127,7 @@ pub enum PaymentType {
     Sent,
     Received,
     PendingReceive,
+    PendingSend,
 }
 
 #[derive(Debug)]
@@ -133,4 +136,25 @@ pub struct Payment {
     pub timestamp: Option<u32>,
     pub amount_sat: u64,
     pub payment_type: PaymentType,
+}
+
+impl From<OngoingSwap> for Payment {
+    fn from(swap: OngoingSwap) -> Self {
+        match swap {
+            OngoingSwap::Send { amount_sat, .. } => Payment {
+                id: None,
+                timestamp: None,
+                payment_type: PaymentType::PendingSend,
+                amount_sat,
+            },
+            OngoingSwap::Receive {
+                onchain_amount_sat, ..
+            } => Payment {
+                id: None,
+                timestamp: None,
+                payment_type: PaymentType::PendingReceive,
+                amount_sat: onchain_amount_sat,
+            },
+        }
+    }
 }
