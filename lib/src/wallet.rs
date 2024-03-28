@@ -101,25 +101,21 @@ impl Wallet {
             thread::sleep(Duration::from_secs(5));
             let ongoing_swaps = cloned.swap_persister.list_ongoing_swaps().unwrap();
 
-            thread::scope(|scope| {
-                for swap in ongoing_swaps {
-                    scope.spawn(|| {
-                        if let OngoingSwap::Receive {
-                            id,
-                            preimage,
-                            redeem_script,
-                            blinding_key,
-                            ..
-                        } = swap
-                        {
-                            match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                                Ok(_) => cloned.swap_persister.resolve_ongoing_swap(&id).unwrap(),
-                                Err(e) => warn!("Could not claim yet. Err: {e}"),
-                            }
-                        }
-                    });
+            for swap in ongoing_swaps {
+                if let OngoingSwap::Receive {
+                    id,
+                    preimage,
+                    redeem_script,
+                    blinding_key,
+                    ..
+                } = swap
+                {
+                    match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                        Ok(_) => cloned.swap_persister.resolve_ongoing_swap(&id).unwrap(),
+                        Err(e) => warn!("Could not claim yet. Err: {e}"),
+                    }
                 }
-            });
+            }
         });
 
         Ok(())
