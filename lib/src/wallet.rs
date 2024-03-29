@@ -128,7 +128,13 @@ impl Wallet {
                 {
                     match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
                         Ok(_) => cloned.persister.resolve_ongoing_swap(&id).unwrap(),
-                        Err(e) => warn!("Could not claim yet. Err: {e}"),
+                        Err(err) => {
+                            if let PaymentError::AlreadyClaimed = err {
+                                warn!("Funds already claimed");
+                                cloned.persister.resolve_ongoing_swap(&id).unwrap()
+                            }
+                            warn!("Could not claim yet. Err: {err}");
+                        }
                     }
                 }
             }

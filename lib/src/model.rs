@@ -101,14 +101,26 @@ pub enum PaymentError {
     #[error("The generated preimage is not valid")]
     InvalidPreimage,
 
+    #[error("The specified funds have already been claimed")]
+    AlreadyClaimed,
+
     #[error("Generic boltz error: {err}")]
     BoltzGeneric { err: String },
 }
 
 impl From<Error> for PaymentError {
     fn from(err: Error) -> Self {
-        PaymentError::BoltzGeneric {
-            err: format!("{err:?}"),
+        match err {
+            Error::Protocol(msg) => {
+                if msg == "Could not find utxos for script" {
+                    return PaymentError::AlreadyClaimed;
+                }
+
+                PaymentError::BoltzGeneric { err: msg }
+            }
+            _ => PaymentError::BoltzGeneric {
+                err: format!("{err:?}"),
+            }
         }
     }
 }
