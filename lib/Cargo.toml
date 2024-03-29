@@ -12,7 +12,7 @@ anyhow = "1.0.80"
 bip39 = { version = "2.0.0", features = ["serde"] }
 #boltz-client = "0.1.2"
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "61592bcf0ad2e9bd68c593bc87c5a487805b6d00" }
-boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-expose-error" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", branch = "yse-breez-latest" }
 log = "0.4.20"
 lwk_common = "0.3.0"
 lwk_signer = "0.3.0"
