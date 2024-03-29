@@ -115,7 +115,7 @@ impl Wallet {
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let ongoing_swaps = cloned.swap_persister.list_ongoing_swaps().unwrap();
+            let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
 
             for swap in ongoing_swaps {
                 if let OngoingSwap::Receive {
@@ -127,7 +127,7 @@ impl Wallet {
                 } = swap
                 {
                     match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                        Ok(_) => cloned.swap_persister.resolve_ongoing_swap(&id).unwrap(),
+                        Ok(_) => cloned.persister.resolve_ongoing_swap(&id).unwrap(),
                         Err(e) => warn!("Could not claim yet. Err: {e}"),
                     }
                 }
@@ -242,7 +242,7 @@ impl Wallet {
         let funding_amount = swap_response.get_funding_amount()?;
         let funding_address = swap_response.get_funding_address()?;
 
-        self.swap_persister
+        self.persister
             .insert_ongoing_swap(&[OngoingSwap::Send {
                 id: id.clone(),
                 amount_sat,
@@ -269,7 +269,7 @@ impl Wallet {
                 err: err.to_string(),
             })?;
 
-        self.swap_persister
+        self.persister
             .resolve_ongoing_swap(&res.id)
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -401,7 +401,7 @@ impl Wallet {
             .ok_or(PaymentError::InvalidInvoice)?
             / 1000;
 
-        self.swap_persister
+        self.persister
             .insert_ongoing_swap(dbg!(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
@@ -443,7 +443,7 @@ impl Wallet {
             .collect();
 
         if include_pending {
-            for swap in self.swap_persister.list_ongoing_swaps()? {
+            for swap in self.persister.list_ongoing_swaps()? {
                 payments.insert(0, swap.into());
             }
         }

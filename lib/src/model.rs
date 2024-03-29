@@ -174,3 +174,9 @@ impl From<OngoingSwap> for Payment {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct BackupHistoryItem {
+    /// Backup timestamp in UNIX format
+    pub timestamp: u64,
+}

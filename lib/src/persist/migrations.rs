@@ -15,5 +15,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             funding_address TEXT NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS backup_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp INTEGER NOT NULL
+        ) STRICT;",
     ]
 }

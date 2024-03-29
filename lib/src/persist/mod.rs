@@ -1,26 +1,32 @@
+mod backup;
 mod migrations;
 
-use anyhow::Result;
+use std::{path::PathBuf, str::FromStr};
+
+use anyhow::{anyhow, Result};
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::OngoingSwap;
+use crate::{ensure_sdk, OngoingSwap, MAIN_DB_FILE};
 
 use migrations::current_migrations;
 
 pub(crate) struct Persister {
-    main_db_file: String,
+    pub(crate) main_db_dir: PathBuf,
 }
 
 impl Persister {
-    pub fn new(working_dir: &str) -> Self {
-        let main_db_file = format!("{}/storage.sql", working_dir);
-        Persister { main_db_file }
+    pub fn new(working_dir: &str) -> Result<Self> {
+        let main_db_dir = PathBuf::from_str(working_dir)?;
+        ensure_sdk!(
+            main_db_dir.exists(),
+            anyhow!("Database directory does not exist")
+        );
+        Ok(Persister { main_db_dir })
     }
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
-        let con = Connection::open(self.main_db_file.clone())?;
-        Ok(con)
+        Ok(Connection::open(self.main_db_dir.join(MAIN_DB_FILE))?)
     }
 
     pub fn init(&self) -> Result<()> {
