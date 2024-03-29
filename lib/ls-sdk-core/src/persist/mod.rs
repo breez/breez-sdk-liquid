@@ -1,3 +1,4 @@
+mod backup;
 mod migrations;
 
 use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};
@@ -10,8 +11,8 @@ use rusqlite_migration::{Migrations, M};
 use crate::{Network, Network::*, OngoingSwap, PaymentData};
 
 pub(crate) struct Persister {
-    main_db_dir: PathBuf,
-    network: Network,
+    pub main_db_dir: PathBuf,
+    pub network: Network,
 }
 
 impl Persister {
