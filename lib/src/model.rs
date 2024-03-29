@@ -144,7 +144,7 @@ pub(crate) enum OngoingSwap {
         preimage: String,
         redeem_script: String,
         blinding_key: String,
-        invoice_amount_sat: u64,
+        invoice: String,
         onchain_amount_sat: u64,
     },
 }
@@ -164,6 +164,9 @@ pub struct Payment {
     pub amount_sat: u64,
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
+
+    /// Only for [PaymentType::PendingReceive]
+    pub invoice: Option<String>
 }
 
 impl From<OngoingSwap> for Payment {
@@ -174,14 +177,17 @@ impl From<OngoingSwap> for Payment {
                 timestamp: None,
                 payment_type: PaymentType::PendingSend,
                 amount_sat,
+                invoice: None,
             },
             OngoingSwap::Receive {
-                onchain_amount_sat, ..
+                onchain_amount_sat,
+                invoice, ..
             } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingReceive,
                 amount_sat: onchain_amount_sat,
+                invoice: Some(invoice)
             },
         }
     }

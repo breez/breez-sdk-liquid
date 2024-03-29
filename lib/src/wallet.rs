@@ -410,18 +410,13 @@ impl Wallet {
             return Err(PaymentError::InvalidInvoice);
         };
 
-        let invoice_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::InvalidInvoice)?
-            / 1000;
-
         self.persister
             .insert_ongoing_swap(dbg!(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
-                invoice_amount_sat,
+                invoice: invoice.to_string(),
                 onchain_amount_sat,
             }]))
             .map_err(|_| PaymentError::PersistError)?;
@@ -452,6 +447,7 @@ impl Wallet {
                         true => PaymentType::Received,
                         false => PaymentType::Sent,
                     },
+                    invoice: None
                 }
             })
             .collect();

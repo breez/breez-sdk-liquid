@@ -67,7 +67,7 @@ impl Persister {
                preimage,
                redeem_script,
                blinding_key,
-               invoice_amount_sat,
+               invoice,
                onchain_amount_sat,
                created_at
            FROM backup.ongoing_receive_swaps

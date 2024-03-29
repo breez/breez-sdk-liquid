@@ -5,7 +5,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             preimage TEXT NOT NULL,
             redeem_script TEXT NOT NULL,
             blinding_key TEXT NOT NULL,
-            invoice_amount_sat INTEGER NOT NULL,
+            invoice TEXT NOT NULL,
             onchain_amount_sat INTEGER NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         ) STRICT;",

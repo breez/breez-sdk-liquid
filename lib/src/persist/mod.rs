@@ -69,7 +69,7 @@ impl Persister {
                     preimage,
                     redeem_script,
                     blinding_key,
-                    invoice_amount_sat,
+                    invoice,
                     onchain_amount_sat,
                 } => {
                     let mut stmt = con.prepare(
@@ -79,7 +79,7 @@ impl Persister {
                                 preimage,
                                 redeem_script,
                                 blinding_key,
-                                invoice_amount_sat,
+                                invoice,
                                 onchain_amount_sat
                             )
                             VALUES (?, ?, ?, ?, ?, ?)
@@ -91,7 +91,7 @@ impl Persister {
                         &preimage,
                         &redeem_script,
                         &blinding_key,
-                        &invoice_amount_sat,
+                        &invoice,
                         &onchain_amount_sat,
                     ))?
                 }
@@ -157,7 +157,7 @@ impl Persister {
                 preimage,
                 redeem_script,
                 blinding_key,
-                invoice_amount_sat,
+                invoice,
                 onchain_amount_sat,
                 created_at
             FROM ongoing_receive_swaps
@@ -172,7 +172,7 @@ impl Persister {
                     preimage: row.get(1)?,
                     redeem_script: row.get(2)?,
                     blinding_key: row.get(3)?,
-                    invoice_amount_sat: row.get(4)?,
+                    invoice: row.get(4)?,
                     onchain_amount_sat: row.get(5)?,
                 })
             })?
