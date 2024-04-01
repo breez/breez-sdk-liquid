@@ -10,7 +10,10 @@ use anyhow::{anyhow, Result};
 use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
-        boltz::{BoltzApiClient, CreateSwapRequest, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL},
+        boltz::{
+            BoltzApiClient, CreateSwapRequest, SwapStatusRequest, BOLTZ_MAINNET_URL,
+            BOLTZ_TESTNET_URL,
+        },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
@@ -93,7 +96,7 @@ impl Wallet {
             data_dir_path,
         });
 
-        Wallet::track_claims(&wallet)?;
+        Wallet::track_pending_swaps(&wallet)?;
 
         Ok(wallet)
     }
@@ -110,7 +113,7 @@ impl Wallet {
         Ok(descriptor_str.parse()?)
     }
 
-    fn track_claims(self: &Arc<Wallet>) -> Result<()> {
+    fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
         let cloned = self.clone();
 
         thread::spawn(move || loop {
@@ -118,15 +121,24 @@ impl Wallet {
             let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
 
             for swap in ongoing_swaps {
-                if let OngoingSwap::Receive {
-                    id,
-                    preimage,
-                    redeem_script,
-                    blinding_key,
-                    ..
-                } = swap
-                {
-                    match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                match swap {
+                    OngoingSwap::Send { id, .. } => {
+                        let client = cloned.boltz_client();
+                        let status_response = client
+                            .swap_status(SwapStatusRequest { id: id.clone() })
+                            .unwrap();
+
+                        if status_response.status == "transaction.claimed" {
+                            cloned.persister.resolve_ongoing_swap(&id).unwrap();
+                        }
+                    }
+                    OngoingSwap::Receive {
+                        id,
+                        preimage,
+                        redeem_script,
+                        blinding_key,
+                        ..
+                    } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
                         Ok(_) => cloned.persister.resolve_ongoing_swap(&id).unwrap(),
                         Err(err) => {
                             if let PaymentError::AlreadyClaimed = err {
@@ -135,7 +147,7 @@ impl Wallet {
                             }
                             warn!("Could not claim yet. Err: {err}");
                         }
-                    }
+                    },
                 }
             }
         });
@@ -274,10 +286,6 @@ impl Wallet {
             .map_err(|err| PaymentError::SendError {
                 err: err.to_string(),
             })?;
-
-        self.persister
-            .resolve_ongoing_swap(&res.id)
-            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(SendPaymentResponse { txid })
     }

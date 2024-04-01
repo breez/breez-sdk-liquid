@@ -120,7 +120,7 @@ impl From<Error> for PaymentError {
             }
             _ => PaymentError::BoltzGeneric {
                 err: format!("{err:?}"),
-            }
+            },
         }
     }
 }
