@@ -21,5 +21,9 @@ rusqlite = "0.29"
 rusqlite_migration = "1.0"
 thiserror = "1.0.57"
 
+[dev-dependencies]
+tempdir = "0.3.7"
+uuid = { version = "1.8.0", features = ["v4"] }
+
 [patch.crates-io]
 secp256k1-zkp = {git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}

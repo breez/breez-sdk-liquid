@@ -122,7 +122,7 @@ pub(crate) enum OngoingSwap {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PaymentType {
     Sent,
     Received,
@@ -130,7 +130,7 @@ pub enum PaymentType {
     PendingSend,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Payment {
     pub id: Option<String>,
     pub timestamp: Option<u32>,

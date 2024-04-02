@@ -21,68 +21,58 @@ macro_rules! ensure_sdk {
 
 #[cfg(test)]
 mod tests {
-    use std::{env, fs, io, path::PathBuf, str::FromStr};
-
     use anyhow::Result;
-    use bip39::{Language, Mnemonic};
+    use tempdir::TempDir;
 
-    use crate::{Network, ReceivePaymentRequest, Wallet, DEFAULT_DATA_DIR};
+    use crate::{Network, Payment, PaymentType, ReceivePaymentRequest, Wallet};
 
-    const PHRASE_FILE_NAME: &str = "phrase";
+    const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
-    fn get_mnemonic() -> Result<Mnemonic> {
-        let data_dir = PathBuf::from(env::var("DATA_DIR").unwrap_or(DEFAULT_DATA_DIR.to_string()));
-        fs::create_dir_all(&data_dir)?;
+    fn create_temp_dir() -> Result<(TempDir, String)> {
+        let data_dir = TempDir::new(&uuid::Uuid::new_v4().to_string())?;
+        let data_dir_str = data_dir
+            .as_ref()
+            .to_path_buf()
+            .to_str()
+            .expect("Expecting valid temporary path")
+            .to_owned();
+        Ok((data_dir, data_dir_str))
+    }
 
-        let filename = data_dir.join(PHRASE_FILE_NAME);
+    fn list_pending(wallet: &Wallet) -> Result<Vec<Payment>> {
+        let payments = wallet.list_payments(true, true)?;
 
-        let mnemonic = match fs::read_to_string(filename.clone()) {
-            Ok(phrase) => Mnemonic::from_str(&phrase).unwrap(),
-            Err(e) => {
-                if e.kind() != io::ErrorKind::NotFound {
-                    panic!(
-                        "Can't read from file: {}, err {e}",
-                        filename.to_str().unwrap()
-                    );
-                }
-                let mnemonic = Mnemonic::generate_in(Language::English, 24)?;
-                fs::write(filename, mnemonic.to_string())?;
-                mnemonic
-            }
-        };
-
-        Ok(mnemonic)
+        Ok(payments
+            .iter()
+            .filter(|p| {
+                [PaymentType::PendingSend, PaymentType::PendingReceive].contains(&p.payment_type)
+            })
+            .map(|p| p.clone())
+            .collect())
     }
 
     #[test]
     fn normal_submarine_swap() -> Result<()> {
-        let breez_wallet =
-            Wallet::init(&get_mnemonic()?.to_string(), None, Network::LiquidTestnet)?;
+        let (_data_dir, data_dir_str) = create_temp_dir()?;
+        let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
-        let mut invoice = String::new();
-        println!("Please paste the invoice to be paid: ");
-        io::stdin().read_line(&mut invoice)?;
-
-        let prepare_response = breez_wallet.prepare_payment(&invoice)?;
-        breez_wallet.send_payment(&prepare_response)?;
+        let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq";
+        breez_wallet.prepare_payment(&invoice)?;
+        assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())
     }
 
     #[test]
-    fn reverse_submarine_swap_success() -> Result<()> {
-        let breez_wallet =
-            Wallet::init(&get_mnemonic()?.to_string(), None, Network::LiquidTestnet)?;
+    fn reverse_submarine_swap() -> Result<()> {
+        let (_data_dir, data_dir_str) = create_temp_dir()?;
+        let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
-        let swap_response = breez_wallet.receive_payment(ReceivePaymentRequest {
+        breez_wallet.receive_payment(ReceivePaymentRequest {
             onchain_amount_sat: Some(1000),
             invoice_amount_sat: None,
         })?;
-
-        println!(
-            "Please pay the following invoice: {}",
-            swap_response.invoice
-        );
+        assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())
     }
