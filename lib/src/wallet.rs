@@ -124,12 +124,22 @@ impl Wallet {
                 match swap {
                     OngoingSwap::Send { id, .. } => {
                         let client = cloned.boltz_client();
-                        let status_response = client
-                            .swap_status(SwapStatusRequest { id: id.clone() })
-                            .unwrap();
+                        let status_response =
+                            match client.swap_status(SwapStatusRequest { id: id.clone() }) {
+                                Ok(res) => res,
+                                Err(err) => {
+                                    warn!("Could not determine swap status. Err: {err:?}");
+                                    continue;
+                                }
+                            };
 
                         if status_response.status == "transaction.claimed" {
-                            cloned.persister.resolve_ongoing_swap(&id).unwrap();
+                            cloned
+                                .persister
+                                .resolve_ongoing_swap(&id)
+                                .unwrap_or_else(|err| {
+                                    warn!("Could not write to database. Err: {err:?}")
+                                })
                         }
                     }
                     OngoingSwap::Receive {
@@ -139,7 +149,12 @@ impl Wallet {
                         blinding_key,
                         ..
                     } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                        Ok(_) => cloned.persister.resolve_ongoing_swap(&id).unwrap(),
+                        Ok(_) => cloned
+                            .persister
+                            .resolve_ongoing_swap(&id)
+                            .unwrap_or_else(|err| {
+                                warn!("Could not write to database. Err: {err:?}")
+                            }),
                         Err(err) => {
                             if let PaymentError::AlreadyClaimed = err {
                                 warn!("Funds already claimed");

@@ -80,16 +80,4 @@ mod tests {
     fn reverse_submarine_swap_recovery() -> Result<()> {
         Ok(())
     }
-
-    #[test]
-    fn backup() -> Result<()> {
-        let breez_wallet =
-            Wallet::init(&get_mnemonic()?.to_string(), None, Network::LiquidTestnet)?;
-
-        breez_wallet.backup()?;
-        let backups = breez_wallet.list_backups()?;
-
-        assert!(!backups.is_empty());
-        Ok(())
-    }
 }

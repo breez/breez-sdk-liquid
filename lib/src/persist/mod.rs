@@ -1,4 +1,3 @@
-mod backup;
 mod migrations;
 
 use std::{path::PathBuf, str::FromStr};
