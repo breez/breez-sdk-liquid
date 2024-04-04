@@ -39,7 +39,21 @@ pub struct WalletOptions {
     ///
     /// If not set, it defaults to [crate::DEFAULT_DATA_DIR].
     pub data_dir_path: Option<String>,
+    /// Custom Electrum URL. If set, it must match the specified network.
+    ///
+    /// If not set, it defaults to a Blockstream instance.
     pub electrum_url: Option<ElectrumUrl>,
+}
+impl WalletOptions {
+    pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
+        self.electrum_url.clone().unwrap_or({
+            let (url, validate_domain, tls) = match &self.network {
+                Network::Liquid => ("blockstream.info:995", true, true),
+                Network::LiquidTestnet => ("blockstream.info:465", true, true),
+            };
+            ElectrumUrl::new(url, tls, validate_domain)
+        })
+    }
 }
 
 #[derive(Debug)]
