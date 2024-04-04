@@ -8,7 +8,6 @@ pub use wallet::*;
 // To avoid sendrawtransaction error "min relay fee not met"
 const CLAIM_ABSOLUTE_FEES: u64 = 134;
 const DEFAULT_DATA_DIR: &str = ".data";
-const DEFAULT_ELECTRUM_URL: &str = "blockstream.info:465";
 
 #[macro_export]
 macro_rules! ensure_sdk {

@@ -26,7 +26,7 @@ use lwk_wollet::{
 use crate::{
     ensure_sdk, persist::Persister, Network, OngoingSwap, Payment, PaymentError, PaymentType,
     PreparePaymentResponse, ReceivePaymentRequest, ReceivePaymentResponse, SendPaymentResponse,
-    WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR, DEFAULT_ELECTRUM_URL,
+    WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR,
 };
 
 pub struct Wallet {
@@ -63,6 +63,7 @@ impl Wallet {
     fn new(opts: WalletOptions) -> Result<Arc<Self>> {
         let network = opts.network;
         let elements_network: ElementsNetwork = opts.network.into();
+        let electrum_url = opts.get_electrum_url();
 
         let lwk_persister = NoPersist::new();
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
@@ -71,9 +72,6 @@ impl Wallet {
             opts.descriptor,
         )?));
 
-        let electrum_url =
-            opts.electrum_url
-                .unwrap_or(ElectrumUrl::new(DEFAULT_ELECTRUM_URL, true, false));
         let persister_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
         fs::create_dir_all(&persister_path)?;
 
