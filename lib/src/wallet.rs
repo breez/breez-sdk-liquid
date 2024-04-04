@@ -305,17 +305,16 @@ impl Wallet {
         let (onchain_amount_sat, invoice_amount_sat) =
             match (req.onchain_amount_sat, req.invoice_amount_sat) {
                 (Some(onchain_amount_sat), None) => {
-                    // TODO Calculate correct fees, once these PRs are merged and published
-                    // https://github.com/SatoshiPortal/boltz-rust/pull/31
-                    // https://github.com/SatoshiPortal/boltz-rust/pull/32
-
-                    // TODO Until above is fixed, this is only an approximation (using onchain instead of invoice amount to calc. fees)
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(onchain_amount_sat);
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
-                    let fees_total = fees_boltz + fees_lockup + fees_claim;
+                    let p = lbtc_pair.fees.percentage;
 
-                    Ok((onchain_amount_sat, onchain_amount_sat + fees_total))
+                    let temp_recv_amt = onchain_amount_sat;
+                    let invoice_amt_minus_service_fee = temp_recv_amt + fees_lockup + fees_claim;
+                    let invoice_amount_sat =
+                        (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
+
+                    Ok((onchain_amount_sat, invoice_amount_sat))
                 }
                 (None, Some(invoice_amount_sat)) => {
                     let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat);
