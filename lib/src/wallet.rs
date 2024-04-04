@@ -311,7 +311,8 @@ impl Wallet {
 
                     let temp_recv_amt = onchain_amount_sat;
                     let invoice_amt_minus_service_fee = temp_recv_amt + fees_lockup + fees_claim;
-                    let invoice_amount_sat = (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
+                    let invoice_amount_sat =
+                        (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
 
                     Ok((onchain_amount_sat, invoice_amount_sat))
                 }
