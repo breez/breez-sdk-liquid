@@ -447,7 +447,7 @@ impl Wallet {
                         true => PaymentType::Received,
                         false => PaymentType::Sent,
                     },
-                    invoice: None
+                    invoice: None,
                 }
             })
             .collect();

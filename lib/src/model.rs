@@ -166,7 +166,7 @@ pub struct Payment {
     pub payment_type: PaymentType,
 
     /// Only for [PaymentType::PendingReceive]
-    pub invoice: Option<String>
+    pub invoice: Option<String>,
 }
 
 impl From<OngoingSwap> for Payment {
@@ -181,13 +181,14 @@ impl From<OngoingSwap> for Payment {
             },
             OngoingSwap::Receive {
                 onchain_amount_sat,
-                invoice, ..
+                invoice,
+                ..
             } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingReceive,
                 amount_sat: onchain_amount_sat,
-                invoice: Some(invoice)
+                invoice: Some(invoice),
             },
         }
     }
