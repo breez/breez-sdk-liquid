@@ -1,8 +1,9 @@
 use std::{
     fs,
+    path::PathBuf,
     sync::{Arc, Mutex},
     thread,
-    time::Duration, path::PathBuf,
+    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -19,8 +20,11 @@ use log::{debug, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
-    ElectrumUrl, ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor, hashes::{sha256t_hash_newtype, Hash}
+    elements::Address,
+    full_scan_with_electrum_client,
+    hashes::{sha256t_hash_newtype, Hash},
+    BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
+    Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -67,11 +71,7 @@ impl Wallet {
         let electrum_url = opts.get_electrum_url();
         let data_dir_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
 
-        let lwk_persister = FsPersister::new(
-            &data_dir_path,
-            network.into(),
-            &opts.descriptor,
-        )?;
+        let lwk_persister = FsPersister::new(&data_dir_path, network.into(), &opts.descriptor)?;
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
             elements_network,
             lwk_persister,
@@ -90,7 +90,7 @@ impl Wallet {
             signer: opts.signer,
             active_address: None,
             swap_persister,
-            data_dir_path
+            data_dir_path,
         });
 
         Wallet::track_claims(&wallet)?;
@@ -106,7 +106,7 @@ impl Wallet {
             lwk_common::DescriptorBlindingKey::Slip77,
             is_mainnet,
         )
-            .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
     }
 
