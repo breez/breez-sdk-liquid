@@ -55,6 +55,8 @@ pub(crate) fn handle_command(
                 onchain_amount_sat,
             })?;
             dbg!(&response);
+            qr2term::print_qr(response.invoice.clone())?;
+
             Ok(format!(
                 "Please pay the following invoice: {}",
                 response.invoice
