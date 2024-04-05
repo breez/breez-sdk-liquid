@@ -26,6 +26,8 @@ pub(crate) enum Command {
     ListPayments,
     /// Get the balance of the currently loaded wallet
     GetInfo,
+    /// Empties the encrypted wallet transaction cache
+    EmptyCache
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -99,6 +101,12 @@ pub(crate) fn handle_command(
                 .join("\n");
 
             Ok(payments_str)
+        },
+        Command::EmptyCache => {
+            Ok(match wallet.empty_wallet_cache() {
+                Ok(_) => "Cache emptied successfully".to_string(),
+                Err(e) => format!("Could not empty cache. Err: {e}")
+            })
         }
     }
 }
