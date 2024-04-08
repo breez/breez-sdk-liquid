@@ -49,7 +49,7 @@ pub struct Wallet {
     network: Network,
     wallet: Arc<Mutex<LwkWollet>>,
     active_address: Option<u32>,
-    swap_persister: Persister,
+    persister: Persister,
     data_dir_path: String,
 }
 
@@ -83,8 +83,8 @@ impl Wallet {
 
         fs::create_dir_all(&data_dir_path)?;
 
-        let swap_persister = Persister::new(&data_dir_path);
-        swap_persister.init()?;
+        let persister = Persister::new(&data_dir_path)?;
+        persister.init()?;
 
         let wallet = Arc::new(Wallet {
             wallet,
@@ -92,7 +92,7 @@ impl Wallet {
             electrum_url,
             signer: opts.signer,
             active_address: None,
-            swap_persister,
+            persister,
             data_dir_path,
         });
 
