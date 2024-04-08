@@ -1,5 +1,6 @@
 use std::{
     fs,
+    path::PathBuf,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -19,8 +20,11 @@ use log::{debug, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::Address, full_scan_with_electrum_client, BlockchainBackend, ElectrumClient,
-    ElectrumUrl, ElementsNetwork, NoPersist, Wollet as LwkWollet, WolletDescriptor,
+    elements::Address,
+    full_scan_with_electrum_client,
+    hashes::{sha256t_hash_newtype, Hash},
+    BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
+    Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -29,6 +33,13 @@ use crate::{
     WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR,
 };
 
+sha256t_hash_newtype! {
+    struct DirectoryIdTag = hash_str("LWK-FS-Directory-Id/1.0");
+
+    #[hash_newtype(forward)]
+    struct DirectoryIdHash(_);
+}
+
 pub struct Wallet {
     signer: SwSigner,
     electrum_url: ElectrumUrl,
@@ -36,20 +47,14 @@ pub struct Wallet {
     wallet: Arc<Mutex<LwkWollet>>,
     active_address: Option<u32>,
     swap_persister: Persister,
+    data_dir_path: String,
 }
 
 impl Wallet {
     pub fn init(mnemonic: &str, data_dir: Option<String>, network: Network) -> Result<Arc<Wallet>> {
         let is_mainnet = network == Network::Liquid;
         let signer = SwSigner::new(mnemonic, is_mainnet)?;
-        let descriptor_str = singlesig_desc(
-            &signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-            is_mainnet,
-        )
-        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
-        let descriptor: WolletDescriptor = descriptor_str.parse()?;
+        let descriptor = Wallet::get_descriptor(&signer, network)?;
 
         Wallet::new(WalletOptions {
             signer,
@@ -64,18 +69,18 @@ impl Wallet {
         let network = opts.network;
         let elements_network: ElementsNetwork = opts.network.into();
         let electrum_url = opts.get_electrum_url();
+        let data_dir_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
 
-        let lwk_persister = NoPersist::new();
+        let lwk_persister = FsPersister::new(&data_dir_path, network.into(), &opts.descriptor)?;
         let wallet = Arc::new(Mutex::new(LwkWollet::new(
             elements_network,
             lwk_persister,
             opts.descriptor,
         )?));
 
-        let persister_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
-        fs::create_dir_all(&persister_path)?;
+        fs::create_dir_all(&data_dir_path)?;
 
-        let swap_persister = Persister::new(&persister_path);
+        let swap_persister = Persister::new(&data_dir_path);
         swap_persister.init()?;
 
         let wallet = Arc::new(Wallet {
@@ -85,11 +90,24 @@ impl Wallet {
             signer: opts.signer,
             active_address: None,
             swap_persister,
+            data_dir_path,
         });
 
         Wallet::track_claims(&wallet)?;
 
         Ok(wallet)
+    }
+
+    fn get_descriptor(signer: &SwSigner, network: Network) -> Result<WolletDescriptor> {
+        let is_mainnet = network == Network::Liquid;
+        let descriptor_str = singlesig_desc(
+            signer,
+            Singlesig::Wpkh,
+            lwk_common::DescriptorBlindingKey::Slip77,
+            is_mainnet,
+        )
+        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+        Ok(descriptor_str.parse()?)
     }
 
     fn track_claims(self: &Arc<Wallet>) -> Result<()> {
@@ -450,5 +468,19 @@ impl Wallet {
         debug!("Funds recovered successfully! Txid: {txid}");
 
         Ok(txid)
+    }
+
+    pub fn empty_wallet_cache(&self) -> Result<()> {
+        let mut path = PathBuf::from(self.data_dir_path.clone());
+        path.push(Into::<ElementsNetwork>::into(self.network).as_str());
+        path.push("enc_cache");
+
+        let descriptor = Wallet::get_descriptor(&self.get_signer(), self.network)?;
+        path.push(DirectoryIdHash::hash(descriptor.to_string().as_bytes()).to_string());
+
+        fs::remove_dir_all(&path)?;
+        fs::create_dir_all(path)?;
+
+        Ok(())
     }
 }
