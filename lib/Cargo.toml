@@ -17,6 +17,7 @@ lwk_signer = "0.3.0"
 lwk_wollet = "0.3.0"
 rusqlite = "0.29"
 rusqlite_migration = "1.0"
+serde = { version = "1.0.197", features = ["derive"] }
 thiserror = "1.0.57"
 
 [dev-dependencies]

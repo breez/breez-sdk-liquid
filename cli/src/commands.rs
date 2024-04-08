@@ -8,7 +8,9 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::{ReceivePaymentRequest, SendPaymentResponse, Wallet};
+use breez_sdk_liquid::{ReceivePaymentRequest, Wallet};
+use serde::Serialize;
+use serde_json::to_string_pretty;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -42,12 +44,27 @@ impl Highlighter for CliHelper {
     }
 }
 
+#[derive(Serialize)]
+pub(crate) struct CommandResult<T: Serialize> {
+    pub success: bool,
+    pub message: T,
+}
+
+macro_rules! command_result {
+    ($expr:expr) => {{
+        to_string_pretty(&CommandResult {
+            success: true,
+            message: $expr,
+        })?
+    }};
+}
+
 pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     wallet: &Arc<Wallet>,
     command: Command,
 ) -> Result<String> {
-    match command {
+    Ok(match command {
         Command::ReceivePayment {
             onchain_amount_sat,
             invoice_amount_sat,
@@ -56,57 +73,23 @@ pub(crate) fn handle_command(
                 invoice_amount_sat,
                 onchain_amount_sat,
             })?;
-            dbg!(&response);
             qr2term::print_qr(response.invoice.clone())?;
-
-            Ok(format!(
-                "Please pay the following invoice: {}",
-                response.invoice
-            ))
+            command_result!(response)
         }
         Command::SendPayment { bolt11 } => {
             let prepare_response = wallet.prepare_payment(&bolt11)?;
-            let SendPaymentResponse { txid } = wallet.send_payment(&prepare_response)?;
-
-            Ok(format!(
-                r#"
-                Successfully paid the invoice!
-                You can view the onchain transaction at https://blockstream.info/liquidtestnet/tx/{}"#,
-                txid
-            ))
+            let response = wallet.send_payment(&prepare_response)?;
+            command_result!(response)
         }
         Command::GetInfo => {
-            let info = wallet.get_info(true)?;
-
-            Ok(format!(
-                "Current Balance: {} sat\nPublic Key: {}\nLiquid Address: {}",
-                info.balance_sat, info.pubkey, info.active_address
-            ))
+            command_result!(wallet.get_info(true)?)
         }
         Command::ListPayments => {
-            let payments_str = wallet
-                .list_payments(true, true)?
-                .iter()
-                .map(|tx| {
-                    format!(
-                        "Id: {} | Type: {:?} | Amount: {} sat | Timestamp: {}",
-                        tx.id.clone().unwrap_or("None".to_string()),
-                        tx.payment_type,
-                        tx.amount_sat,
-                        match tx.timestamp {
-                            Some(t) => t.to_string(),
-                            None => "None".to_string(),
-                        },
-                    )
-                })
-                .collect::<Vec<String>>()
-                .join("\n");
-
-            Ok(payments_str)
+            command_result!(wallet.list_payments(true, true)?)
         }
-        Command::EmptyCache => Ok(match wallet.empty_wallet_cache() {
-            Ok(_) => "Cache emptied successfully".to_string(),
-            Err(e) => format!("Could not empty cache. Err: {e}"),
-        }),
-    }
+        Command::EmptyCache => {
+            wallet.empty_wallet_cache()?;
+            command_result!("Cache emptied successfully")
+        }
+    })
 }

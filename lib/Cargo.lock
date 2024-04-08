@@ -267,6 +267,7 @@ dependencies = [
  "lwk_wollet",
  "rusqlite",
  "rusqlite_migration",
+ "serde",
  "tempdir",
  "thiserror",
  "uuid",

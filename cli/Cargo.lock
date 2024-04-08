@@ -315,6 +315,7 @@ dependencies = [
  "lwk_wollet",
  "rusqlite",
  "rusqlite_migration",
+ "serde",
  "thiserror",
 ]
 
@@ -330,6 +331,8 @@ dependencies = [
  "log",
  "qr2term",
  "rustyline",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
