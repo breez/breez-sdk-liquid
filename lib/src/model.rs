@@ -69,7 +69,7 @@ pub struct ReceivePaymentResponse {
     pub invoice: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PreparePaymentResponse {
     pub id: String,
     pub funding_amount: u64,
