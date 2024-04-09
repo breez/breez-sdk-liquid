@@ -6,7 +6,7 @@ use std::{fs, path::PathBuf};
 use anyhow::{anyhow, Result};
 use breez_sdk_liquid::{Network, Wallet};
 use clap::Parser;
-use commands::{handle_command, CliHelper, Command};
+use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
@@ -17,11 +17,16 @@ pub(crate) struct Args {
     pub(crate) data_dir: Option<String>,
 }
 
-fn show_results(res: Result<String>) {
-    match res {
-        Ok(inner) => println!("{inner}"),
-        Err(err) => eprintln!("Error: {err}"),
-    }
+fn show_results(result: Result<String>) -> Result<()> {
+    let result_str = match result {
+        Ok(r) => r,
+        Err(err) => serde_json::to_string_pretty(&CommandResult {
+            success: false,
+            message: err.to_string(),
+        })?,
+    };
+
+    Ok(println!("{result_str}"))
 }
 
 fn main() -> Result<()> {
@@ -64,7 +69,7 @@ fn main() -> Result<()> {
                     continue;
                 }
                 let res = handle_command(rl, &wallet, cli_res.unwrap());
-                show_results(res);
+                show_results(res)?;
             }
             Err(ReadlineError::Interrupted) => {
                 info!("CTRL-C");

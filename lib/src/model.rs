@@ -2,6 +2,7 @@ use boltz_client::error::Error;
 use boltz_client::network::Chain;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
+use serde::Serialize;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Network {
@@ -62,7 +63,7 @@ pub struct ReceivePaymentRequest {
     pub onchain_amount_sat: Option<u64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     pub id: String,
     pub invoice: String,
@@ -75,7 +76,7 @@ pub struct PreparePaymentResponse {
     pub funding_address: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
     pub txid: String,
 }
@@ -112,7 +113,7 @@ impl From<Error> for PaymentError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct WalletInfo {
     pub balance_sat: u64,
     pub pubkey: String,
@@ -136,7 +137,7 @@ pub(crate) enum OngoingSwap {
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum PaymentType {
     Sent,
     Received,
@@ -144,11 +145,12 @@ pub enum PaymentType {
     PendingSend,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Payment {
     pub id: Option<String>,
     pub timestamp: Option<u32>,
     pub amount_sat: u64,
+    #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
 }
 
