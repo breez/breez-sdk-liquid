@@ -1,12 +1,12 @@
 mod migrations;
 
-use std::{path::PathBuf, str::FromStr};
+use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::{ensure_sdk, OngoingSwap, MAIN_DB_FILE};
+use crate::{OngoingSwap, MAIN_DB_FILE};
 
 use migrations::current_migrations;
 
@@ -17,10 +17,9 @@ pub(crate) struct Persister {
 impl Persister {
     pub fn new(working_dir: &str) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
-        ensure_sdk!(
-            main_db_dir.exists(),
-            anyhow!("Database directory does not exist")
-        );
+        if !main_db_dir.exists() {
+            create_dir_all(&main_db_dir)?;
+        }
         Ok(Persister { main_db_dir })
     }
 
