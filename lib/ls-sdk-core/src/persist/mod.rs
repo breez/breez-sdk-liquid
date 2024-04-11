@@ -1,13 +1,13 @@
 mod migrations;
 
-use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use anyhow::Result;
 use migrations::current_migrations;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::{Network, Network::*, OngoingSwap};
+use crate::{OngoingSwap, Network, Network::*, PaymentData};
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
@@ -54,22 +54,23 @@ impl Persister {
                 OngoingSwap::Send {
                     id,
                     funding_address,
-                    amount_sat,
                     invoice,
+                    onchain_amount_sat,
+                    txid,
                 } => {
                     let mut stmt = con.prepare(
                         "
-                            INSERT INTO ongoing_send_swaps (
+                            INSERT OR REPLACE INTO ongoing_send_swaps (
                                 id,
-                                amount_sat,
                                 funding_address,
-                                invoice
+                                invoice,
+                                onchain_amount_sat,
+                                txid
                             )
-                            VALUES (?, ?, ?, ?)
+                            VALUES (?, ?, ?, ?, ?)
                         ",
                     )?;
-
-                    _ = stmt.execute((&id, &amount_sat, &funding_address, invoice))?
+                    _ = stmt.execute((id, funding_address, invoice, onchain_amount_sat, txid))?
                 }
                 OngoingSwap::Receive {
                     id,
@@ -81,7 +82,7 @@ impl Persister {
                 } => {
                     let mut stmt = con.prepare(
                         "
-                            INSERT INTO ongoing_receive_swaps (
+                            INSERT OR REPLACE INTO ongoing_receive_swaps (
                                 id,
                                 preimage,
                                 redeem_script,
@@ -94,12 +95,12 @@ impl Persister {
                     )?;
 
                     _ = stmt.execute((
-                        &id,
-                        &preimage,
-                        &redeem_script,
-                        &blinding_key,
-                        &invoice,
-                        &receiver_amount_sat,
+                        id,
+                        preimage,
+                        redeem_script,
+                        blinding_key,
+                        invoice,
+                        receiver_amount_sat,
                     ))?
                 }
             }
@@ -108,7 +109,11 @@ impl Persister {
         Ok(())
     }
 
-    pub fn resolve_ongoing_swap(&self, id: &str) -> Result<()> {
+    pub fn resolve_ongoing_swap(
+        &self,
+        id: &str,
+        payment_data: Option<(String, PaymentData)>,
+    ) -> Result<()> {
         let mut con = self.get_connection()?;
 
         let tx = con.transaction()?;
@@ -117,6 +122,13 @@ impl Persister {
             "DELETE FROM ongoing_receive_swaps WHERE id = ?",
             params![id],
         )?;
+        if let Some((txid, payment_data)) = payment_data {
+            tx.execute(
+                "INSERT INTO payment_data(id, invoice_amount_sat)
+              VALUES(?, ?)",
+                (txid, payment_data.invoice_amount_sat),
+            )?;
+        }
         tx.commit()?;
 
         Ok(())
@@ -134,9 +146,10 @@ impl Persister {
             "
            SELECT 
                id,
-               amount_sat,
                funding_address,
                invoice,
+               onchain_amount_sat,
+               txid,
                created_at
            FROM ongoing_send_swaps
            ORDER BY created_at
@@ -147,9 +160,10 @@ impl Persister {
             .query_map(params![], |row| {
                 Ok(OngoingSwap::Send {
                     id: row.get(0)?,
-                    amount_sat: row.get(1)?,
-                    funding_address: row.get(2)?,
-                    invoice: row.get(3)?,
+                    funding_address: row.get(1)?,
+                    invoice: row.get(2)?,
+                    onchain_amount_sat: row.get(3)?,
+                    txid: row.get(4)?,
                 })
             })?
             .map(|i| i.unwrap())
@@ -189,5 +203,29 @@ impl Persister {
             .collect();
 
         Ok(ongoing_receive)
+    }
+
+    pub fn get_payment_data(&self) -> Result<HashMap<String, PaymentData>> {
+        let con = self.get_connection()?;
+
+        let mut stmt = con.prepare(
+            "
+            SELECT id, invoice_amount_sat
+            FROM payment_data
+        ",
+        )?;
+
+        let data = stmt
+            .query_map(params![], |row| {
+                Ok((
+                    row.get(0)?,
+                    PaymentData {
+                        invoice_amount_sat: row.get(1)?,
+                    },
+                ))
+            })?
+            .map(|i| i.unwrap())
+            .collect();
+        Ok(data)
     }
 }

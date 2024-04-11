@@ -11,10 +11,15 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS ongoing_send_swaps (
             id TEXT NOT NULL PRIMARY KEY,
-            amount_sat INTEGER NOT NULL,
             funding_address TEXT NOT NULL,
             invoice TEXT NOT NULL,
+            onchain_amount_sat INTEGER NOT NULL,
+            txid TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS payment_data(
+            id TEXT NOT NULL PRIMARY KEY,
+            invoice_amount_sat INTEGER NOT NULL
         ) STRICT;",
     ]
 }

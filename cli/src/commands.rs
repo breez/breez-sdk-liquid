@@ -12,6 +12,8 @@ use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
+
+use breez_sdk_liquid::{PrepareReceiveRequest, Wallet};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
@@ -78,20 +80,31 @@ pub(crate) fn handle_command(
             receiver_amount_sat,
             payer_amount_sat,
         } => {
-            let response = wallet.receive_payment(ReceivePaymentRequest {
+            let prepare_response = wallet.prepare_receive_payment(PrepareReceiveRequest {
                 payer_amount_sat,
                 receiver_amount_sat,
             })?;
+            println!(
+                "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                prepare_response.fees_sat
+            );
 
+            let mut buf = String::new();
+            std::io::stdin().read_line(&mut buf)?;
+            if !['y', 'Y'].contains(&(buf.as_bytes()[0] as char)) {
+                return Ok(command_result!("Payment receive halted"));
+            }
+
+            let response = wallet.receive_payment(&prepare_response)?;
             let invoice = response.invoice.clone();
+
             let mut result = command_result!(response);
             result.push('\n');
             result.push_str(&build_qr_text(&invoice));
-
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response = wallet.prepare_payment(&bolt11)?;
+            let prepare_response = wallet.prepare_send_payment(&bolt11)?;
 
             if let Some(delay) = delay {
                 let wallet_cloned = wallet.clone();
@@ -111,7 +124,9 @@ pub(crate) fn handle_command(
             command_result!(wallet.get_info(true)?)
         }
         Command::ListPayments => {
-            command_result!(wallet.list_payments(true, true)?)
+            let mut payments = wallet.list_payments(true, true)?;
+            payments.reverse();
+            command_result!(payments)
         }
         Command::EmptyCache => {
             wallet.empty_wallet_cache()?;
