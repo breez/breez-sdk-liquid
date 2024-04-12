@@ -10,7 +10,10 @@ use anyhow::{anyhow, Result};
 use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
-        boltz::{BoltzApiClient, CreateSwapRequest, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL},
+        boltz::{
+            BoltzApiClient, CreateSwapRequest, SubSwapStates, SwapStatusRequest, BOLTZ_MAINNET_URL,
+            BOLTZ_TESTNET_URL,
+        },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
@@ -112,21 +115,21 @@ impl Wallet {
 
     fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
         let cloned = self.clone();
+        let client = self.boltz_client();
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
             let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
 
             for swap in ongoing_swaps {
-                if let OngoingSwap::Receive {
-                    id,
-                    preimage,
-                    redeem_script,
-                    blinding_key,
-                    ..
-                } = swap
-                {
-                    match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                match swap {
+                    OngoingSwap::Receive {
+                        id,
+                        preimage,
+                        redeem_script,
+                        blinding_key,
+                        ..
+                    } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
                         Ok(_) => cloned
                             .persister
                             .resolve_ongoing_swap(&id)
@@ -139,6 +142,22 @@ impl Wallet {
                                 cloned.persister.resolve_ongoing_swap(&id).unwrap()
                             }
                             warn!("Could not claim yet. Err: {err}");
+                        }
+                    },
+                    OngoingSwap::Send { id, .. } => {
+                        let Ok(status_response) =
+                            client.swap_status(SwapStatusRequest { id: id.clone() })
+                        else {
+                            continue;
+                        };
+
+                        if status_response.status == SubSwapStates::TransactionClaimed.to_string() {
+                            cloned
+                                .persister
+                                .resolve_ongoing_swap(&id)
+                                .unwrap_or_else(|err| {
+                                    warn!("Could not write to database. Err: {err:?}")
+                                });
                         }
                     }
                 }
@@ -279,10 +298,6 @@ impl Wallet {
             .map_err(|err| PaymentError::SendError {
                 err: err.to_string(),
             })?;
-
-        self.persister
-            .resolve_ongoing_swap(&res.id)
-            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(SendPaymentResponse { txid })
     }
