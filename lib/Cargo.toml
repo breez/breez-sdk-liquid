@@ -11,8 +11,8 @@ version = "0.0.1"
 [workspace.dependencies]
 anyhow = "1.0"
 thiserror = "1.0"
-uniffi = "0.25.3"
-uniffi_macros = "0.25.3"
+uniffi = "0.27.1"
+uniffi_macros = "0.27.1"
 
 [patch.crates-io]
 secp256k1-zkp = {git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}
