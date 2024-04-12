@@ -138,6 +138,7 @@ pub(crate) enum OngoingSwap {
         id: String,
         amount_sat: u64,
         funding_address: String,
+        invoice: String,
     },
     Receive {
         id: String,
@@ -172,12 +173,16 @@ pub struct Payment {
 impl From<OngoingSwap> for Payment {
     fn from(swap: OngoingSwap) -> Self {
         match swap {
-            OngoingSwap::Send { amount_sat, .. } => Payment {
+            OngoingSwap::Send {
+                amount_sat,
+                invoice,
+                ..
+            } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingSend,
                 amount_sat,
-                invoice: None,
+                invoice: Some(invoice),
             },
             OngoingSwap::Receive {
                 onchain_amount_sat,

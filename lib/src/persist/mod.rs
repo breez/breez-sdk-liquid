@@ -48,19 +48,21 @@ impl Persister {
                     id,
                     funding_address,
                     amount_sat,
+                    invoice,
                 } => {
                     let mut stmt = con.prepare(
                         "
                             INSERT INTO ongoing_send_swaps (
                                 id,
                                 amount_sat,
-                                funding_address
+                                funding_address,
+                                invoice
                             )
-                            VALUES (?, ?, ?)
+                            VALUES (?, ?, ?, ?)
                         ",
                     )?;
 
-                    _ = stmt.execute((&id, &amount_sat, &funding_address))?
+                    _ = stmt.execute((&id, &amount_sat, &funding_address, invoice))?
                 }
                 OngoingSwap::Receive {
                     id,
@@ -127,6 +129,7 @@ impl Persister {
                id,
                amount_sat,
                funding_address,
+               invoice,
                created_at
            FROM ongoing_send_swaps
            ORDER BY created_at
@@ -139,6 +142,7 @@ impl Persister {
                     id: row.get(0)?,
                     amount_sat: row.get(1)?,
                     funding_address: row.get(2)?,
+                    invoice: row.get(3)?,
                 })
             })?
             .map(|i| i.unwrap())

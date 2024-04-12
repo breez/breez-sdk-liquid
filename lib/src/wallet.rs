@@ -277,6 +277,7 @@ impl Wallet {
                 id: id.clone(),
                 amount_sat,
                 funding_address: funding_address.clone(),
+                invoice: invoice.to_string(),
             }])
             .map_err(|_| PaymentError::PersistError)?;
 

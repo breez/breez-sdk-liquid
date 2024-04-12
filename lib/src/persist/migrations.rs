@@ -13,6 +13,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             id TEXT NOT NULL PRIMARY KEY,
             amount_sat INTEGER NOT NULL,
             funding_address TEXT NOT NULL,
+            invoice TEXT NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         ) STRICT;",
     ]
