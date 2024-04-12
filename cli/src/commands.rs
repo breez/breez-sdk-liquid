@@ -1,5 +1,7 @@
 use std::borrow::Cow::{self, Owned};
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
 
 use anyhow::Result;
 use clap::{arg, Parser};
@@ -15,7 +17,13 @@ use serde_json::to_string_pretty;
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
-    SendPayment { bolt11: String },
+    SendPayment {
+        bolt11: String,
+
+        /// Delay for the send, in seconds
+        #[arg(short, long)]
+        delay: Option<u64>,
+    },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
         #[arg(short, long)]
@@ -76,10 +84,22 @@ pub(crate) fn handle_command(
             qr2term::print_qr(response.invoice.clone())?;
             command_result!(response)
         }
-        Command::SendPayment { bolt11 } => {
+        Command::SendPayment { bolt11, delay } => {
             let prepare_response = wallet.prepare_payment(&bolt11)?;
-            let response = wallet.send_payment(&prepare_response)?;
-            command_result!(response)
+
+            if let Some(delay) = delay {
+                let wallet_cloned = wallet.clone();
+                let prepare_cloned = prepare_response.clone();
+
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_secs(delay));
+                    wallet_cloned.send_payment(&prepare_cloned).unwrap();
+                });
+                command_result!(prepare_response)
+            } else {
+                let response = wallet.send_payment(&prepare_response)?;
+                command_result!(response)
+            }
         }
         Command::GetInfo => {
             command_result!(wallet.get_info(true)?)

@@ -10,7 +10,10 @@ use anyhow::{anyhow, Result};
 use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
-        boltz::{BoltzApiClient, CreateSwapRequest, BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL},
+        boltz::{
+            BoltzApiClient, CreateSwapRequest, SubSwapStates, SwapStatusRequest, BOLTZ_MAINNET_URL,
+            BOLTZ_TESTNET_URL,
+        },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
@@ -46,7 +49,7 @@ pub struct Wallet {
     network: Network,
     wallet: Arc<Mutex<LwkWollet>>,
     active_address: Option<u32>,
-    swap_persister: Persister,
+    persister: Persister,
     data_dir_path: String,
 }
 
@@ -80,8 +83,8 @@ impl Wallet {
 
         fs::create_dir_all(&data_dir_path)?;
 
-        let swap_persister = Persister::new(&data_dir_path);
-        swap_persister.init()?;
+        let persister = Persister::new(&data_dir_path)?;
+        persister.init()?;
 
         let wallet = Arc::new(Wallet {
             wallet,
@@ -89,11 +92,11 @@ impl Wallet {
             electrum_url,
             signer: opts.signer,
             active_address: None,
-            swap_persister,
+            persister,
             data_dir_path,
         });
 
-        Wallet::track_claims(&wallet)?;
+        Wallet::track_pending_swaps(&wallet)?;
 
         Ok(wallet)
     }
@@ -110,25 +113,52 @@ impl Wallet {
         Ok(descriptor_str.parse()?)
     }
 
-    fn track_claims(self: &Arc<Wallet>) -> Result<()> {
+    fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
         let cloned = self.clone();
+        let client = self.boltz_client();
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let ongoing_swaps = cloned.swap_persister.list_ongoing_swaps().unwrap();
+            let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
 
             for swap in ongoing_swaps {
-                if let OngoingSwap::Receive {
-                    id,
-                    preimage,
-                    redeem_script,
-                    blinding_key,
-                    ..
-                } = swap
-                {
-                    match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                        Ok(_) => cloned.swap_persister.resolve_ongoing_swap(&id).unwrap(),
-                        Err(e) => warn!("Could not claim yet. Err: {e}"),
+                match swap {
+                    OngoingSwap::Receive {
+                        id,
+                        preimage,
+                        redeem_script,
+                        blinding_key,
+                        ..
+                    } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                        Ok(_) => cloned
+                            .persister
+                            .resolve_ongoing_swap(&id)
+                            .unwrap_or_else(|err| {
+                                warn!("Could not write to database. Err: {err:?}")
+                            }),
+                        Err(err) => {
+                            if let PaymentError::AlreadyClaimed = err {
+                                warn!("Funds already claimed");
+                                cloned.persister.resolve_ongoing_swap(&id).unwrap()
+                            }
+                            warn!("Could not claim yet. Err: {err}");
+                        }
+                    },
+                    OngoingSwap::Send { id, .. } => {
+                        let Ok(status_response) =
+                            client.swap_status(SwapStatusRequest { id: id.clone() })
+                        else {
+                            continue;
+                        };
+
+                        if status_response.status == SubSwapStates::TransactionClaimed.to_string() {
+                            cloned
+                                .persister
+                                .resolve_ongoing_swap(&id)
+                                .unwrap_or_else(|err| {
+                                    warn!("Could not write to database. Err: {err:?}")
+                                });
+                        }
                     }
                 }
             }
@@ -242,11 +272,12 @@ impl Wallet {
         let funding_amount = swap_response.get_funding_amount()?;
         let funding_address = swap_response.get_funding_address()?;
 
-        self.swap_persister
+        self.persister
             .insert_ongoing_swap(&[OngoingSwap::Send {
                 id: id.clone(),
                 amount_sat,
                 funding_address: funding_address.clone(),
+                invoice: invoice.to_string(),
             }])
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -268,10 +299,6 @@ impl Wallet {
             .map_err(|err| PaymentError::SendError {
                 err: err.to_string(),
             })?;
-
-        self.swap_persister
-            .resolve_ongoing_swap(&res.id)
-            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(SendPaymentResponse { txid })
     }
@@ -396,18 +423,13 @@ impl Wallet {
             return Err(PaymentError::InvalidInvoice);
         };
 
-        let invoice_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::InvalidInvoice)?
-            / 1000;
-
-        self.swap_persister
+        self.persister
             .insert_ongoing_swap(dbg!(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
-                invoice_amount_sat,
+                invoice: invoice.to_string(),
                 onchain_amount_sat,
             }]))
             .map_err(|_| PaymentError::PersistError)?;
@@ -438,12 +460,13 @@ impl Wallet {
                         true => PaymentType::Received,
                         false => PaymentType::Sent,
                     },
+                    invoice: None,
                 }
             })
             .collect();
 
         if include_pending {
-            for swap in self.swap_persister.list_ongoing_swaps()? {
+            for swap in self.persister.list_ongoing_swaps()? {
                 payments.insert(0, swap.into());
             }
         }

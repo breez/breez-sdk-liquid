@@ -69,7 +69,7 @@ pub struct ReceivePaymentResponse {
     pub invoice: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PreparePaymentResponse {
     pub id: String,
     pub funding_amount: u64,
@@ -101,14 +101,26 @@ pub enum PaymentError {
     #[error("The generated preimage is not valid")]
     InvalidPreimage,
 
+    #[error("The specified funds have already been claimed")]
+    AlreadyClaimed,
+
     #[error("Generic boltz error: {err}")]
     BoltzGeneric { err: String },
 }
 
 impl From<Error> for PaymentError {
     fn from(err: Error) -> Self {
-        PaymentError::BoltzGeneric {
-            err: format!("{err:?}"),
+        match err {
+            Error::Protocol(msg) => {
+                if msg == "Could not find utxos for script" {
+                    return PaymentError::AlreadyClaimed;
+                }
+
+                PaymentError::BoltzGeneric { err: msg }
+            }
+            _ => PaymentError::BoltzGeneric {
+                err: format!("{err:?}"),
+            },
         }
     }
 }
@@ -126,13 +138,14 @@ pub(crate) enum OngoingSwap {
         id: String,
         amount_sat: u64,
         funding_address: String,
+        invoice: String,
     },
     Receive {
         id: String,
         preimage: String,
         redeem_script: String,
         blinding_key: String,
-        invoice_amount_sat: u64,
+        invoice: String,
         onchain_amount_sat: u64,
     },
 }
@@ -152,24 +165,35 @@ pub struct Payment {
     pub amount_sat: u64,
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
+
+    /// Only for [PaymentType::PendingReceive]
+    pub invoice: Option<String>,
 }
 
 impl From<OngoingSwap> for Payment {
     fn from(swap: OngoingSwap) -> Self {
         match swap {
-            OngoingSwap::Send { amount_sat, .. } => Payment {
+            OngoingSwap::Send {
+                amount_sat,
+                invoice,
+                ..
+            } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingSend,
                 amount_sat,
+                invoice: Some(invoice),
             },
             OngoingSwap::Receive {
-                onchain_amount_sat, ..
+                onchain_amount_sat,
+                invoice,
+                ..
             } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingReceive,
                 amount_sat: onchain_amount_sat,
+                invoice: Some(invoice),
             },
         }
     }

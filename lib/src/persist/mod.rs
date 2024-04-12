@@ -1,26 +1,30 @@
 mod migrations;
 
+use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
+
 use anyhow::Result;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::OngoingSwap;
+use crate::{OngoingSwap, MAIN_DB_FILE};
 
 use migrations::current_migrations;
 
 pub(crate) struct Persister {
-    main_db_file: String,
+    pub(crate) main_db_dir: PathBuf,
 }
 
 impl Persister {
-    pub fn new(working_dir: &str) -> Self {
-        let main_db_file = format!("{}/storage.sql", working_dir);
-        Persister { main_db_file }
+    pub fn new(working_dir: &str) -> Result<Self> {
+        let main_db_dir = PathBuf::from_str(working_dir)?;
+        if !main_db_dir.exists() {
+            create_dir_all(&main_db_dir)?;
+        }
+        Ok(Persister { main_db_dir })
     }
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
-        let con = Connection::open(self.main_db_file.clone())?;
-        Ok(con)
+        Ok(Connection::open(self.main_db_dir.join(MAIN_DB_FILE))?)
     }
 
     pub fn init(&self) -> Result<()> {
@@ -44,26 +48,28 @@ impl Persister {
                     id,
                     funding_address,
                     amount_sat,
+                    invoice,
                 } => {
                     let mut stmt = con.prepare(
                         "
                             INSERT INTO ongoing_send_swaps (
                                 id,
                                 amount_sat,
-                                funding_address
+                                funding_address,
+                                invoice
                             )
-                            VALUES (?, ?, ?)
+                            VALUES (?, ?, ?, ?)
                         ",
                     )?;
 
-                    _ = stmt.execute((&id, &amount_sat, &funding_address))?
+                    _ = stmt.execute((&id, &amount_sat, &funding_address, invoice))?
                 }
                 OngoingSwap::Receive {
                     id,
                     preimage,
                     redeem_script,
                     blinding_key,
-                    invoice_amount_sat,
+                    invoice,
                     onchain_amount_sat,
                 } => {
                     let mut stmt = con.prepare(
@@ -73,7 +79,7 @@ impl Persister {
                                 preimage,
                                 redeem_script,
                                 blinding_key,
-                                invoice_amount_sat,
+                                invoice,
                                 onchain_amount_sat
                             )
                             VALUES (?, ?, ?, ?, ?, ?)
@@ -85,7 +91,7 @@ impl Persister {
                         &preimage,
                         &redeem_script,
                         &blinding_key,
-                        &invoice_amount_sat,
+                        &invoice,
                         &onchain_amount_sat,
                     ))?
                 }
@@ -123,6 +129,7 @@ impl Persister {
                id,
                amount_sat,
                funding_address,
+               invoice,
                created_at
            FROM ongoing_send_swaps
            ORDER BY created_at
@@ -135,6 +142,7 @@ impl Persister {
                     id: row.get(0)?,
                     amount_sat: row.get(1)?,
                     funding_address: row.get(2)?,
+                    invoice: row.get(3)?,
                 })
             })?
             .map(|i| i.unwrap())
@@ -151,7 +159,7 @@ impl Persister {
                 preimage,
                 redeem_script,
                 blinding_key,
-                invoice_amount_sat,
+                invoice,
                 onchain_amount_sat,
                 created_at
             FROM ongoing_receive_swaps
@@ -166,7 +174,7 @@ impl Persister {
                     preimage: row.get(1)?,
                     redeem_script: row.get(2)?,
                     blinding_key: row.get(3)?,
-                    invoice_amount_sat: row.get(4)?,
+                    invoice: row.get(4)?,
                     onchain_amount_sat: row.get(5)?,
                 })
             })?
