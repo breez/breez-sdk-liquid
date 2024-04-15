@@ -1,7 +1,10 @@
 mod commands;
 mod persist;
 
-use std::{fs, path::PathBuf};
+use std::{
+    fs::{self, File},
+    path::PathBuf,
+};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
@@ -13,8 +16,11 @@ use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
 #[derive(Parser, Debug)]
 pub(crate) struct Args {
-    #[clap(name = "data_dir", short = 'd', long = "data_dir")]
+    #[clap(short, long)]
     pub(crate) data_dir: Option<String>,
+
+    #[clap(short, long)]
+    pub(crate) log_file: Option<String>,
 }
 
 fn show_results(result: Result<String>) -> Result<()> {
@@ -30,9 +36,15 @@ fn show_results(result: Result<String>) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    env_logger::init();
-
     let args = Args::parse();
+
+    env_logger::builder()
+        .target(match args.log_file {
+            Some(log_file) => env_logger::Target::Pipe(Box::new(File::create(log_file)?)),
+            None => env_logger::Target::Stdout,
+        })
+        .init();
+
     let data_dir_str = args.data_dir.clone().unwrap_or(".data".to_string());
     let data_dir = PathBuf::from(&data_dir_str);
     fs::create_dir_all(&data_dir)?;
