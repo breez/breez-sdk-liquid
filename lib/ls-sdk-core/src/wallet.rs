@@ -376,7 +376,7 @@ impl Wallet {
 
                 // TODO The request should not allow setting both invoice and onchain amounts, so this case shouldn't be possible.
                 //      See example of how it's done in the SDK.
-                _ => Err(PaymentError::BoltzGeneric {
+                _ => Err(PaymentError::BoltzError {
                     err: "Both invoice and onchain amounts were specified".into(),
                 }),
             }?;
