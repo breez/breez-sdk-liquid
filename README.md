@@ -1,6 +1,6 @@
-# Breez-SDK Liquid
+# Liquid Swap SDK
 
-- `lib`: [lib/README.md](lib/README.md)
+- `lib`: [lib/README.md](lib/ls-sdk-core/README.md)
 - `cli`: [cli/README.md](cli/README.md)
 
 ## Roadmap

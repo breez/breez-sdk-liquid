@@ -104,8 +104,8 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
-    #[error("Generic boltz error: {err}")]
-    BoltzGeneric { err: String },
+    #[error("Boltz error: {err}")]
+    BoltzError { err: String },
 }
 
 impl From<Error> for PaymentError {
@@ -116,9 +116,9 @@ impl From<Error> for PaymentError {
                     return PaymentError::AlreadyClaimed;
                 }
 
-                PaymentError::BoltzGeneric { err: msg }
+                PaymentError::BoltzError { err: msg }
             }
-            _ => PaymentError::BoltzGeneric {
+            _ => PaymentError::BoltzError {
                 err: format!("{err:?}"),
             },
         }

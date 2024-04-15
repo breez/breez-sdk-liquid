@@ -5,12 +5,11 @@ use std::time::Duration;
 
 use anyhow::Result;
 use clap::{arg, Parser};
+use ls_sdk::{ReceivePaymentRequest, Wallet};
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
-
-use breez_sdk_liquid::{ReceivePaymentRequest, Wallet};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
