@@ -6,6 +6,8 @@ use std::time::Duration;
 use anyhow::Result;
 use clap::{arg, Parser};
 use ls_sdk::{ReceivePaymentRequest, Wallet};
+use qrcode_rs::render::unicode;
+use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
@@ -80,8 +82,13 @@ pub(crate) fn handle_command(
                 invoice_amount_sat,
                 onchain_amount_sat,
             })?;
-            qr2term::print_qr(response.invoice.clone())?;
-            command_result!(response)
+
+            let invoice = response.invoice.clone();
+            let mut result = command_result!(response);
+            result.push('\n');
+            result.push_str(&build_qr_text(&invoice));
+
+            result
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response = wallet.prepare_payment(&bolt11)?;
@@ -111,4 +118,13 @@ pub(crate) fn handle_command(
             command_result!("Cache emptied successfully")
         }
     })
+}
+
+fn build_qr_text(text: &str) -> String {
+    QrCode::with_error_correction_level(text, EcLevel::L)
+        .unwrap()
+        .render::<unicode::Dense1x2>()
+        .dark_color(unicode::Dense1x2::Light)
+        .light_color(unicode::Dense1x2::Dark)
+        .build()
 }
