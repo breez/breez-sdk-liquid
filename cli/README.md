@@ -15,11 +15,16 @@ cargo run
 To specify a custom data directory, use
 
 ```bash
-cargo run -- --data_dir temp-dir
+cargo run -- --data-dir temp-dir
 ```
 
 To set a custom log level, use
 
 ```bash
-RUST_LOG=info cargo run
+RUST_LOG=info|debug|warn cargo run
+```
+
+To specify a file to pipe logs to, use
+```bash
+RUST_LOG=info|debug|warn cargo run -- --log-file /tmp/log
 ```
