@@ -91,7 +91,7 @@ mod tests {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
         let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
-        let prepare_response = breez_wallet.prepare_receive_payment(PrepareReceiveRequest {
+        let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
             receiver_amount_sat: Some(1000),
             payer_amount_sat: None,
         })?;

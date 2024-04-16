@@ -122,7 +122,7 @@ pub enum PaymentError {
     #[error("Boltz error: {err}")]
     BoltzError { err: String },
 
-    #[error("Generic lwk error: {err}")]
+    #[error("Lwk error: {err}")]
     LwkError { err: String },
 }
 

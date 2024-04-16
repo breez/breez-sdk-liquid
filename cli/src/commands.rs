@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use clap::{arg, Parser};
-use ls_sdk::{ReceivePaymentRequest, Wallet};
+use ls_sdk::{PrepareReceiveRequest, Wallet};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;
@@ -13,7 +13,6 @@ use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 
-use breez_sdk_liquid::{PrepareReceiveRequest, Wallet};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
@@ -80,7 +79,7 @@ pub(crate) fn handle_command(
             receiver_amount_sat,
             payer_amount_sat,
         } => {
-            let prepare_response = wallet.prepare_receive_payment(PrepareReceiveRequest {
+            let prepare_response = wallet.prepare_receive_payment(&PrepareReceiveRequest {
                 payer_amount_sat,
                 receiver_amount_sat,
             })?;

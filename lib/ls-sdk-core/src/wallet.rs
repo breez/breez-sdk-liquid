@@ -390,7 +390,7 @@ impl Wallet {
 
     pub fn prepare_receive_payment(
         &self,
-        req: PrepareReceiveRequest,
+        req: &PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         let client = self.boltz_client();
         let lbtc_pair = client
