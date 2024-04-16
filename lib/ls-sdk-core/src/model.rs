@@ -1,5 +1,5 @@
 use boltz_client::network::Chain;
-use boltz_client::{error::Error, Bolt11Invoice};
+use boltz_client::Bolt11Invoice;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use serde::Serialize;
@@ -83,6 +83,7 @@ pub struct PrepareSendResponse {
     pub id: String,
     pub invoice_amount_sat: u64,
     pub onchain_amount_sat: u64,
+    pub network_fees: u64,
     pub funding_address: String,
     pub invoice: String,
 }
@@ -103,9 +104,6 @@ pub enum PaymentError {
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },
 
-    #[error("Could not fetch the required wallet information")]
-    WalletError,
-
     #[error("Could not store the swap details locally")]
     PersistError,
 
@@ -115,14 +113,23 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("Boltz did not return any pairs from the request")]
+    PairsNotFound,
+
+    #[error("Could not sign the transaction: {err}")]
+    SignerError { err: String },
+
     #[error("Boltz error: {err}")]
     BoltzError { err: String },
+
+    #[error("Generic lwk error: {err}")]
+    LwkError { err: String },
 }
 
-impl From<Error> for PaymentError {
-    fn from(err: Error) -> Self {
+impl From<boltz_client::error::Error> for PaymentError {
+    fn from(err: boltz_client::error::Error) -> Self {
         match err {
-            Error::Protocol(msg) => {
+            boltz_client::error::Error::Protocol(msg) => {
                 if msg == "Could not find utxos for script" {
                     return PaymentError::AlreadyClaimed;
                 }
@@ -130,6 +137,28 @@ impl From<Error> for PaymentError {
                 PaymentError::BoltzError { err: msg }
             }
             _ => PaymentError::BoltzError {
+                err: format!("{err:?}"),
+            },
+        }
+    }
+}
+
+#[allow(clippy::match_single_binding)]
+impl From<lwk_wollet::Error> for PaymentError {
+    fn from(err: lwk_wollet::Error) -> Self {
+        match err {
+            _ => PaymentError::LwkError {
+                err: format!("{err:?}"),
+            },
+        }
+    }
+}
+
+#[allow(clippy::match_single_binding)]
+impl From<lwk_signer::SignerError> for PaymentError {
+    fn from(err: lwk_signer::SignerError) -> Self {
+        match err {
+            _ => PaymentError::SignerError {
                 err: format!("{err:?}"),
             },
         }

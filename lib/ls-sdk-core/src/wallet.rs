@@ -23,7 +23,7 @@ use log::{debug, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::Address,
+    elements::{Address, Transaction},
     full_scan_with_electrum_client,
     hashes::{sha256t_hash_newtype, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
@@ -191,7 +191,7 @@ impl Wallet {
         full_scan_with_electrum_client(&mut wallet, &mut electrum_client)
     }
 
-    fn address(&self) -> Result<Address> {
+    fn address(&self) -> Result<Address, lwk_wollet::Error> {
         let wallet = self.wallet.lock().unwrap();
         Ok(wallet.address(self.active_address)?.address().clone())
     }
@@ -235,26 +235,17 @@ impl Wallet {
         )
     }
 
-    fn sign_and_send(
+    fn build_tx(
         &self,
-        signers: &[AnySigner],
         fee_rate: Option<f32>,
-        recipient: &str,
+        recipient_address: &str,
         amount_sat: u64,
-    ) -> Result<String> {
+    ) -> Result<Transaction, PaymentError> {
         let wallet = self.wallet.lock().unwrap();
-        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-
-        let mut pset = wallet.send_lbtc(amount_sat, recipient, fee_rate)?;
-
-        for signer in signers {
-            signer.sign(&mut pset)?;
-        }
-
-        let tx = wallet.finalize(&mut pset)?;
-        let txid = electrum_client.broadcast(&tx)?;
-
-        Ok(txid.to_string())
+        let mut pset = wallet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
+        let signer = AnySigner::Software(self.get_signer());
+        signer.sign(&mut pset)?;
+        Ok(wallet.finalize(&mut pset)?)
     }
 
     pub fn prepare_send_payment(&self, invoice: &str) -> Result<PrepareSendResponse, PaymentError> {
@@ -268,7 +259,7 @@ impl Wallet {
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
-            .ok_or(PaymentError::WalletError)?;
+            .ok_or(PaymentError::PairsNotFound)?;
 
         let invoice_amount_sat = invoice
             .amount_milli_satoshis()
@@ -289,13 +280,18 @@ impl Wallet {
         let id = swap_response.get_id();
         let funding_address = swap_response.get_funding_address()?;
         let onchain_amount_sat = swap_response.get_funding_amount()?;
+        let network_fees = self
+            .build_tx(None, &funding_address.to_string(), onchain_amount_sat)?
+            .all_fees()
+            .values()
+            .sum();
 
         self.persister
             .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
                 id: id.clone(),
                 funding_address: funding_address.clone(),
                 invoice: invoice.to_string(),
-                onchain_amount_sat,
+                onchain_amount_sat: onchain_amount_sat + network_fees,
                 txid: None,
             }])
             .map_err(|_| PaymentError::PersistError)?;
@@ -306,6 +302,7 @@ impl Wallet {
             invoice: invoice.to_string(),
             invoice_amount_sat,
             onchain_amount_sat,
+            network_fees,
         })
     }
 
@@ -313,26 +310,18 @@ impl Wallet {
         &self,
         res: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let signer = AnySigner::Software(self.get_signer());
+        let tx = self.build_tx(None, &res.funding_address, res.onchain_amount_sat)?;
 
-        let txid = self
-            .sign_and_send(
-                &[signer],
-                None,
-                &res.funding_address,
-                res.onchain_amount_sat,
-            )
-            .map_err(|err| PaymentError::SendError {
-                err: err.to_string(),
-            })?;
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let txid = electrum_client.broadcast(&tx)?.to_string();
 
         self.persister
             .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
                 id: res.id.clone(),
                 funding_address: res.funding_address.clone(),
                 invoice: res.invoice.clone(),
-                onchain_amount_sat: res.onchain_amount_sat,
-                txid: Some(txid.to_string()),
+                onchain_amount_sat: res.onchain_amount_sat + res.network_fees,
+                txid: Some(txid.clone()),
             }])
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -349,13 +338,13 @@ impl Wallet {
         let network_config = &self.get_network_config();
         let rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
-            self.address()
-                .map_err(|_| PaymentError::WalletError)?
-                .to_string(),
+            self.address()?.to_string(),
             network_config,
         )?;
 
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::WalletError)?;
+        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
+            err: "Could not claim: Mnemonic not found".to_string(),
+        })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
@@ -379,7 +368,7 @@ impl Wallet {
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
-            .ok_or(PaymentError::WalletError)?;
+            .ok_or(PaymentError::PairsNotFound)?;
 
         let (receiver_amount_sat, payer_amount_sat) =
             match (req.receiver_amount_sat, req.payer_amount_sat) {
@@ -436,7 +425,9 @@ impl Wallet {
         res: &PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         let client = self.boltz_client();
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::WalletError)?;
+        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
+            err: "Could not claim: Mnemonic not found".to_string(),
+        })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
         let lsk = LiquidSwapKey::try_from(swap_key)?;
