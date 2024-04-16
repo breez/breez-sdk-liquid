@@ -1,4 +1,5 @@
 use std::borrow::Cow::{self, Owned};
+use std::io::Write;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -83,10 +84,11 @@ pub(crate) fn handle_command(
                 payer_amount_sat,
                 receiver_amount_sat,
             })?;
-            println!(
+            print!(
                 "Fees: {} sat. Are the fees acceptable? (y/N) ",
                 prepare_response.fees_sat
             );
+            std::io::stdout().flush()?;
 
             let mut buf = String::new();
             std::io::stdin().read_line(&mut buf)?;
