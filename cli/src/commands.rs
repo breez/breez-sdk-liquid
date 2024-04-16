@@ -70,6 +70,19 @@ macro_rules! command_result {
     }};
 }
 
+macro_rules! wait_confirmation {
+    ($prompt:expr,$result:expr) => {
+        print!("{}", $prompt);
+        std::io::stdout().flush()?;
+
+        let mut buf = String::new();
+        std::io::stdin().read_line(&mut buf)?;
+        if !['y', 'Y'].contains(&(buf.as_bytes()[0] as char)) {
+            return Ok(command_result!($result));
+        }
+    };
+}
+
 pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     wallet: &Arc<Wallet>,
@@ -84,17 +97,14 @@ pub(crate) fn handle_command(
                 payer_amount_sat,
                 receiver_amount_sat,
             })?;
-            print!(
-                "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                prepare_response.fees_sat
-            );
-            std::io::stdout().flush()?;
 
-            let mut buf = String::new();
-            std::io::stdin().read_line(&mut buf)?;
-            if !['y', 'Y'].contains(&(buf.as_bytes()[0] as char)) {
-                return Ok(command_result!("Payment receive halted"));
-            }
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.fees_sat
+                ),
+                "Payment receive halted"
+            );
 
             let response = wallet.receive_payment(&prepare_response)?;
             let invoice = response.invoice.clone();
@@ -106,6 +116,13 @@ pub(crate) fn handle_command(
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response = wallet.prepare_send_payment(&bolt11)?;
+            let fees = (prepare_response.onchain_amount_sat + prepare_response.network_fees)
+                - prepare_response.invoice_amount_sat;
+
+            wait_confirmation!(
+                format!("Fees: {fees} sat. Are the fees acceptable? (y/N) "),
+                "Payment send halted"
+            );
 
             if let Some(delay) = delay {
                 let wallet_cloned = wallet.clone();
