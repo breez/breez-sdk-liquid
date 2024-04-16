@@ -31,10 +31,10 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ensure_sdk, get_invoice_amount, persist::Persister, Network, OngoingSwap, Payment, PaymentData,
-    PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-    ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES,
-    DEFAULT_DATA_DIR,
+    ensure_sdk, get_invoice_amount, ok_or_warn, persist::Persister, Network, OngoingSwap, Payment,
+    PaymentData, PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse,
+    PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions,
+    CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR,
 };
 
 sha256t_hash_newtype! {
@@ -131,27 +131,53 @@ impl Wallet {
                         blinding_key,
                         invoice,
                         ..
-                    } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                        Ok(txid) => {
-                            let invoice_amount_sat = get_invoice_amount!(invoice);
-                            cloned
-                                .persister
-                                .resolve_ongoing_swap(
-                                    &id,
-                                    Some((txid, PaymentData { invoice_amount_sat })),
-                                )
-                                .unwrap_or_else(|err| {
-                                    warn!("Could not write to database. Err: {err:?}")
-                                });
-                        }
-                        Err(err) => {
-                            if let PaymentError::AlreadyClaimed = err {
-                                warn!("Funds already claimed");
-                                cloned.persister.resolve_ongoing_swap(&id, None).unwrap()
+                    } => {
+                        let status_response = ok_or_warn!(
+                            client.swap_status(SwapStatusRequest { id: id.clone() }),
+                            "Could not contact Boltz servers for claim status"
+                        );
+
+                        let swap_state = ok_or_warn!(
+                            status_response.status.parse::<SubSwapStates>(),
+                            "Invalid swap state received"
+                        );
+
+                        match swap_state {
+                            SubSwapStates::SwapExpired => {
+                                warn!("Cannot claim: swap expired");
+                                ok_or_warn!(
+                                    cloned.persister.resolve_ongoing_swap(&id, None),
+                                    "Could not resolve swap in database"
+                                );
+                                continue;
                             }
-                            warn!("Could not claim yet. Err: {err}");
+                            SubSwapStates::TransactionMempool => {}
+                            _ => {
+                                warn!("Cannot claim: invoice not paid yet");
+                                continue;
+                            }
                         }
-                    },
+
+                        match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
+                            Ok(txid) => {
+                                let invoice_amount_sat = get_invoice_amount!(invoice);
+                                ok_or_warn!(
+                                    cloned.persister.resolve_ongoing_swap(
+                                        &id,
+                                        Some((txid, PaymentData { invoice_amount_sat })),
+                                    ),
+                                    "Could not resolve swap in database"
+                                );
+                            }
+                            Err(err) => {
+                                if let PaymentError::AlreadyClaimed = err {
+                                    warn!("Funds already claimed");
+                                    cloned.persister.resolve_ongoing_swap(&id, None).unwrap()
+                                }
+                                warn!("Could not claim yet. Err: {err}");
+                            }
+                        }
+                    }
                     OngoingSwap::Send {
                         id, invoice, txid, ..
                     } => {
@@ -159,23 +185,25 @@ impl Wallet {
                             continue;
                         };
 
-                        let Ok(status_response) =
-                            client.swap_status(SwapStatusRequest { id: id.clone() })
-                        else {
-                            continue;
-                        };
+                        let status_response = ok_or_warn!(
+                            client.swap_status(SwapStatusRequest { id: id.clone() }),
+                            "Could not contact Boltz servers for claim status"
+                        );
 
-                        if status_response.status == SubSwapStates::TransactionClaimed.to_string() {
+                        if [
+                            SubSwapStates::TransactionClaimed.to_string(),
+                            SubSwapStates::SwapExpired.to_string(),
+                        ]
+                        .contains(&status_response.status)
+                        {
                             let invoice_amount_sat = get_invoice_amount!(invoice);
-                            cloned
-                                .persister
-                                .resolve_ongoing_swap(
+                            ok_or_warn!(
+                                cloned.persister.resolve_ongoing_swap(
                                     &id,
                                     Some((txid, PaymentData { invoice_amount_sat })),
-                                )
-                                .unwrap_or_else(|err| {
-                                    warn!("Could not write to database. Err: {err:?}")
-                                });
+                                ),
+                                "Could not resolve swap in database"
+                            );
                         }
                     }
                 }
