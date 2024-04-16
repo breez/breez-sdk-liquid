@@ -46,7 +46,7 @@ impl Persister {
         Ok(())
     }
 
-    pub fn insert_ongoing_swap(&self, swaps: &[OngoingSwap]) -> Result<()> {
+    pub fn insert_or_update_ongoing_swap(&self, swaps: &[OngoingSwap]) -> Result<()> {
         let con = self.get_connection()?;
 
         for swap in swaps {

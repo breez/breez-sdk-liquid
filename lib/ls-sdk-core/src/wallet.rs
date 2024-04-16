@@ -291,7 +291,7 @@ impl Wallet {
         let onchain_amount_sat = swap_response.get_funding_amount()?;
 
         self.persister
-            .insert_ongoing_swap(&[OngoingSwap::Send {
+            .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
                 id: id.clone(),
                 funding_address: funding_address.clone(),
                 invoice: invoice.to_string(),
@@ -327,7 +327,7 @@ impl Wallet {
             })?;
 
         self.persister
-            .insert_ongoing_swap(&[OngoingSwap::Send {
+            .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
                 id: res.id.clone(),
                 funding_address: res.funding_address.clone(),
                 invoice: res.invoice.clone(),
@@ -468,7 +468,7 @@ impl Wallet {
         };
 
         self.persister
-            .insert_ongoing_swap(dbg!(&[OngoingSwap::Receive {
+            .insert_or_update_ongoing_swap(dbg!(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
