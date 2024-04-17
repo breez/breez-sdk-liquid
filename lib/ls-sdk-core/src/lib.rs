@@ -70,7 +70,7 @@ mod tests {
 
         breez_wallet.receive_payment(ReceivePaymentRequest {
             onchain_amount_sat: Some(1000),
-            invoice_amount_sat: None,
+            payer_amount_sat: None,
         })?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 

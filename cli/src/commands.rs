@@ -31,7 +31,7 @@ pub(crate) enum Command {
         onchain_amount_sat: Option<u64>,
 
         #[arg(short, long)]
-        invoice_amount_sat: Option<u64>,
+        payer_amount_sat: Option<u64>,
     },
     /// List incoming and outgoing payments
     ListPayments,
@@ -76,10 +76,10 @@ pub(crate) fn handle_command(
     Ok(match command {
         Command::ReceivePayment {
             onchain_amount_sat,
-            invoice_amount_sat,
+            payer_amount_sat,
         } => {
             let response = wallet.receive_payment(ReceivePaymentRequest {
-                invoice_amount_sat,
+                payer_amount_sat,
                 onchain_amount_sat,
             })?;
 

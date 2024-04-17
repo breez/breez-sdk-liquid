@@ -59,7 +59,7 @@ impl WalletOptions {
 
 #[derive(Debug)]
 pub struct ReceivePaymentRequest {
-    pub invoice_amount_sat: Option<u64>,
+    pub payer_amount_sat: Option<u64>,
     pub onchain_amount_sat: Option<u64>,
 }
 
