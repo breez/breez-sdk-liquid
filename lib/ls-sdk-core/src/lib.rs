@@ -7,7 +7,6 @@ pub use wallet::*;
 
 // To avoid sendrawtransaction error "min relay fee not met"
 const CLAIM_ABSOLUTE_FEES: u64 = 134;
-const MAIN_DB_FILE: &str = "storage.sql";
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
