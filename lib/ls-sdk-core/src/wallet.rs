@@ -83,7 +83,7 @@ impl Wallet {
 
         fs::create_dir_all(&data_dir_path)?;
 
-        let persister = Persister::new(&data_dir_path)?;
+        let persister = Persister::new(&data_dir_path, network)?;
         persister.init()?;
 
         let wallet = Arc::new(Wallet {

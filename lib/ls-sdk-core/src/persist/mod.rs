@@ -3,28 +3,35 @@ mod migrations;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use anyhow::Result;
+use migrations::current_migrations;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::{OngoingSwap, MAIN_DB_FILE};
-
-use migrations::current_migrations;
+use crate::{Network, Network::*, OngoingSwap};
 
 pub(crate) struct Persister {
-    pub(crate) main_db_dir: PathBuf,
+    main_db_dir: PathBuf,
+    network: Network,
 }
 
 impl Persister {
-    pub fn new(working_dir: &str) -> Result<Self> {
+    pub fn new(working_dir: &str, network: Network) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;
         }
-        Ok(Persister { main_db_dir })
+        Ok(Persister {
+            main_db_dir,
+            network,
+        })
     }
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
-        Ok(Connection::open(self.main_db_dir.join(MAIN_DB_FILE))?)
+        let db_file = match self.network {
+            Liquid => "storage.sql",
+            LiquidTestnet => "storage-testnet.sql",
+        };
+        Ok(Connection::open(self.main_db_dir.join(db_file))?)
     }
 
     pub fn init(&self) -> Result<()> {

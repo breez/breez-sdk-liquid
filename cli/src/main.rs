@@ -10,7 +10,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
-use ls_sdk::{Network, Wallet};
+use ls_sdk::{Network, Wallet, DEFAULT_DATA_DIR};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
         })
         .init();
 
-    let data_dir_str = args.data_dir.clone().unwrap_or(".data".to_string());
+    let data_dir_str = args.data_dir.unwrap_or(DEFAULT_DATA_DIR.to_string());
     let data_dir = PathBuf::from(&data_dir_str);
     fs::create_dir_all(&data_dir)?;
 
