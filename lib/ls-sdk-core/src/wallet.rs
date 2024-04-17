@@ -308,7 +308,7 @@ impl Wallet {
         let id = swap_response.get_id();
         let funding_address = swap_response.get_funding_address()?;
         let onchain_amount_sat = swap_response.get_funding_amount()?;
-        let network_fees = self
+        let network_fees: u64 = self
             .build_tx(None, &funding_address.to_string(), onchain_amount_sat)?
             .all_fees()
             .values()
@@ -330,7 +330,7 @@ impl Wallet {
             invoice: invoice.to_string(),
             invoice_amount_sat,
             onchain_amount_sat,
-            network_fees,
+            total_fees: onchain_amount_sat + network_fees - invoice_amount_sat,
         })
     }
 
@@ -348,7 +348,7 @@ impl Wallet {
                 id: res.id.clone(),
                 funding_address: res.funding_address.clone(),
                 invoice: res.invoice.clone(),
-                onchain_amount_sat: res.onchain_amount_sat + res.network_fees,
+                onchain_amount_sat: res.invoice_amount_sat + res.total_fees,
                 txid: Some(txid.clone()),
             }])
             .map_err(|_| PaymentError::PersistError)?;

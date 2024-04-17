@@ -32,7 +32,7 @@ dictionary PrepareSendResponse {
     string id;
     u64 invoice_amount_sat;
     u64 onchain_amount_sat;
-    u64 network_fees;
+    u64 total_fees;
     string funding_address;
 };
 

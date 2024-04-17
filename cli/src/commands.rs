@@ -116,11 +116,9 @@ pub(crate) fn handle_command(
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response = wallet.prepare_send_payment(&bolt11)?;
-            let fees = (prepare_response.onchain_amount_sat + prepare_response.network_fees)
-                - prepare_response.invoice_amount_sat;
 
             wait_confirmation!(
-                format!("Fees: {fees} sat. Are the fees acceptable? (y/N) "),
+                format!("Fees: {} sat. Are the fees acceptable? (y/N) ", prepare_response.total_fees),
                 "Payment send halted"
             );
 

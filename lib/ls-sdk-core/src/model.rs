@@ -83,7 +83,7 @@ pub struct PrepareSendResponse {
     pub id: String,
     pub invoice_amount_sat: u64,
     pub onchain_amount_sat: u64,
-    pub network_fees: u64,
+    pub total_fees: u64,
     pub funding_address: String,
     pub invoice: String,
 }
