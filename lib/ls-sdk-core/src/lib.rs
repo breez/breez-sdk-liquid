@@ -69,8 +69,8 @@ mod tests {
         let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
         breez_wallet.receive_payment(ReceivePaymentRequest {
-            onchain_amount_sat: Some(1000),
-            invoice_amount_sat: None,
+            receiver_amount_sat: Some(1000),
+            payer_amount_sat: None,
         })?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 

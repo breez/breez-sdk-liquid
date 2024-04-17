@@ -33,8 +33,8 @@ dictionary PreparePaymentResponse {
 };
 
 dictionary ReceivePaymentRequest {
-    u64? invoice_amount_sat;
-    u64? onchain_amount_sat;
+    u64? payer_amount_sat;
+    u64? receiver_amount_sat;
 };
 
 dictionary ReceivePaymentResponse {

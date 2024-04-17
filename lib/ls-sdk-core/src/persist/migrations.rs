@@ -6,7 +6,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             redeem_script TEXT NOT NULL,
             blinding_key TEXT NOT NULL,
             invoice TEXT NOT NULL,
-            onchain_amount_sat INTEGER NOT NULL,
+            receiver_amount_sat INTEGER NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS ongoing_send_swaps (

@@ -77,7 +77,7 @@ impl Persister {
                     redeem_script,
                     blinding_key,
                     invoice,
-                    onchain_amount_sat,
+                    receiver_amount_sat,
                 } => {
                     let mut stmt = con.prepare(
                         "
@@ -87,7 +87,7 @@ impl Persister {
                                 redeem_script,
                                 blinding_key,
                                 invoice,
-                                onchain_amount_sat
+                                receiver_amount_sat
                             )
                             VALUES (?, ?, ?, ?, ?, ?)
                         ",
@@ -99,7 +99,7 @@ impl Persister {
                         &redeem_script,
                         &blinding_key,
                         &invoice,
-                        &onchain_amount_sat,
+                        &receiver_amount_sat,
                     ))?
                 }
             }
@@ -167,7 +167,7 @@ impl Persister {
                 redeem_script,
                 blinding_key,
                 invoice,
-                onchain_amount_sat,
+                receiver_amount_sat,
                 created_at
             FROM ongoing_receive_swaps
             ORDER BY created_at
@@ -182,7 +182,7 @@ impl Persister {
                     redeem_script: row.get(2)?,
                     blinding_key: row.get(3)?,
                     invoice: row.get(4)?,
-                    onchain_amount_sat: row.get(5)?,
+                    receiver_amount_sat: row.get(5)?,
                 })
             })?
             .map(|i| i.unwrap())

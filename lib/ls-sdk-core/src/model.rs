@@ -59,8 +59,8 @@ impl WalletOptions {
 
 #[derive(Debug)]
 pub struct ReceivePaymentRequest {
-    pub invoice_amount_sat: Option<u64>,
-    pub onchain_amount_sat: Option<u64>,
+    pub payer_amount_sat: Option<u64>,
+    pub receiver_amount_sat: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -146,7 +146,7 @@ pub(crate) enum OngoingSwap {
         redeem_script: String,
         blinding_key: String,
         invoice: String,
-        onchain_amount_sat: u64,
+        receiver_amount_sat: u64,
     },
 }
 
@@ -185,14 +185,14 @@ impl From<OngoingSwap> for Payment {
                 invoice: Some(invoice),
             },
             OngoingSwap::Receive {
-                onchain_amount_sat,
+                receiver_amount_sat,
                 invoice,
                 ..
             } => Payment {
                 id: None,
                 timestamp: None,
                 payment_type: PaymentType::PendingReceive,
-                amount_sat: onchain_amount_sat,
+                amount_sat: receiver_amount_sat,
                 invoice: Some(invoice),
             },
         }
