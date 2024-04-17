@@ -345,8 +345,8 @@ impl Wallet {
             .get_lbtc_pair()
             .ok_or(PaymentError::WalletError)?;
 
-        let (onchain_amount_sat, payer_amount_sat) =
-            match (req.onchain_amount_sat, req.payer_amount_sat) {
+        let (receiver_amount_sat, payer_amount_sat) =
+            match (req.receiver_amount_sat, req.payer_amount_sat) {
                 (Some(onchain_amount_sat), None) => {
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
@@ -380,7 +380,7 @@ impl Wallet {
                     err: "Both invoice and onchain amounts were specified".into(),
                 }),
             }?;
-        debug!("Creating reverse swap with: onchain_amount_sat {onchain_amount_sat} sat, payer_amount_sat {payer_amount_sat} sat");
+        debug!("Creating reverse swap with: receiver_amount_sat {receiver_amount_sat} sat, payer_amount_sat {payer_amount_sat} sat");
 
         lbtc_pair
             .limits
@@ -396,12 +396,12 @@ impl Wallet {
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
-        let swap_response = if req.onchain_amount_sat.is_some() {
+        let swap_response = if req.receiver_amount_sat.is_some() {
             client.create_swap(CreateSwapRequest::new_lbtc_reverse_onchain_amt(
                 lbtc_pair.hash,
                 preimage_hash.clone(),
                 lsk.keypair.public_key().to_string(),
-                onchain_amount_sat,
+                receiver_amount_sat,
             ))?
         } else {
             client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
@@ -430,7 +430,7 @@ impl Wallet {
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice: invoice.to_string(),
-                onchain_amount_sat,
+                receiver_amount_sat,
             }]))
             .map_err(|_| PaymentError::PersistError)?;
 
