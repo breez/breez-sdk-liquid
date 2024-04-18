@@ -8,11 +8,13 @@ enum PaymentError {
     "AmountOutOfRange",
     "InvalidInvoice",
     "SendError",
-    "WalletError",
     "PersistError",
     "InvalidPreimage",
     "AlreadyClaimed",
+    "PairsNotFound",
+    "SignerError",
     "BoltzError",
+    "LwkError",
 };
 
 enum Network {
@@ -26,24 +28,33 @@ dictionary WalletInfo {
     string active_address;
 };
 
-dictionary PreparePaymentResponse {
+dictionary PrepareSendResponse {
     string id;
-    u64 funding_amount;
+    u64 payer_amount_sat;
+    u64 receiver_amount_sat;
+    u64 total_fees;
     string funding_address;
-};
-
-dictionary ReceivePaymentRequest {
-    u64? payer_amount_sat;
-    u64? receiver_amount_sat;
-};
-
-dictionary ReceivePaymentResponse {
-    string id;
     string invoice;
 };
 
 dictionary SendPaymentResponse {
     string txid;
+};
+
+dictionary PrepareReceiveRequest {
+    u64? payer_amount_sat;
+    u64? receiver_amount_sat;
+};
+
+dictionary PrepareReceiveResponse {
+    string pair_hash;
+    u64 payer_amount_sat;
+    u64 fees_sat;
+};
+
+dictionary ReceivePaymentResponse {
+    string id;
+    string invoice;
 };
 
 namespace ls_sdk {
@@ -56,8 +67,14 @@ interface BindingWallet {
     WalletInfo get_info(boolean with_scan);
 
     [Throws=PaymentError]
-    SendPaymentResponse send_payment(PreparePaymentResponse req);
+    PrepareSendResponse prepare_send_payment(string invoice);
 
     [Throws=PaymentError]
-    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
+    SendPaymentResponse send_payment(PrepareSendResponse req);
+
+    [Throws=PaymentError]
+    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
+
+    [Throws=PaymentError]
+    ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
 };

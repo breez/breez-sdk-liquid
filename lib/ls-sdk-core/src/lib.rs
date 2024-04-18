@@ -19,12 +19,24 @@ macro_rules! ensure_sdk {
     };
 }
 
+#[macro_export]
+macro_rules! get_invoice_amount {
+    ($invoice:expr) => {
+        $invoice
+            .parse::<Bolt11Invoice>()
+            .expect("Expecting valid invoice")
+            .amount_milli_satoshis()
+            .expect("Expecting valid amount")
+            / 1000
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use tempdir::TempDir;
 
-    use crate::{Network, Payment, PaymentType, ReceivePaymentRequest, Wallet};
+    use crate::{Network, Payment, PaymentType, PrepareReceiveRequest, Wallet};
 
     const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -57,7 +69,7 @@ mod tests {
         let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
         let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq";
-        breez_wallet.prepare_payment(&invoice)?;
+        breez_wallet.prepare_send_payment(&invoice)?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())
@@ -68,10 +80,11 @@ mod tests {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
         let breez_wallet = Wallet::init(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
-        breez_wallet.receive_payment(ReceivePaymentRequest {
+        let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
             receiver_amount_sat: Some(1000),
             payer_amount_sat: None,
         })?;
+        breez_wallet.receive_payment(&prepare_response)?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())

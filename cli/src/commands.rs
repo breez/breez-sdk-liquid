@@ -1,17 +1,19 @@
 use std::borrow::Cow::{self, Owned};
+use std::io::Write;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
 use clap::{arg, Parser};
-use ls_sdk::{ReceivePaymentRequest, Wallet};
+use ls_sdk::{PrepareReceiveRequest, Wallet};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;
 use rustyline::history::DefaultHistory;
 use rustyline::Editor;
 use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
+
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
@@ -68,6 +70,19 @@ macro_rules! command_result {
     }};
 }
 
+macro_rules! wait_confirmation {
+    ($prompt:expr,$result:expr) => {
+        print!("{}", $prompt);
+        std::io::stdout().flush()?;
+
+        let mut buf = String::new();
+        std::io::stdin().read_line(&mut buf)?;
+        if !['y', 'Y'].contains(&(buf.as_bytes()[0] as char)) {
+            return Ok(command_result!($result));
+        }
+    };
+}
+
 pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     wallet: &Arc<Wallet>,
@@ -78,20 +93,37 @@ pub(crate) fn handle_command(
             receiver_amount_sat,
             payer_amount_sat,
         } => {
-            let response = wallet.receive_payment(ReceivePaymentRequest {
+            let prepare_response = wallet.prepare_receive_payment(&PrepareReceiveRequest {
                 payer_amount_sat,
                 receiver_amount_sat,
             })?;
 
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.fees_sat
+                ),
+                "Payment receive halted"
+            );
+
+            let response = wallet.receive_payment(&prepare_response)?;
             let invoice = response.invoice.clone();
+
             let mut result = command_result!(response);
             result.push('\n');
             result.push_str(&build_qr_text(&invoice));
-
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response = wallet.prepare_payment(&bolt11)?;
+            let prepare_response = wallet.prepare_send_payment(&bolt11)?;
+
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.total_fees
+                ),
+                "Payment send halted"
+            );
 
             if let Some(delay) = delay {
                 let wallet_cloned = wallet.clone();
@@ -111,7 +143,9 @@ pub(crate) fn handle_command(
             command_result!(wallet.get_info(true)?)
         }
         Command::ListPayments => {
-            command_result!(wallet.list_payments(true, true)?)
+            let mut payments = wallet.list_payments(true, true)?;
+            payments.reverse();
+            command_result!(payments)
         }
         Command::EmptyCache => {
             wallet.empty_wallet_cache()?;

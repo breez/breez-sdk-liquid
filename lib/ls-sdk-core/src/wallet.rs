@@ -19,11 +19,11 @@ use boltz_client::{
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
     Bolt11Invoice, Keypair,
 };
-use log::{debug, warn};
+use log::{debug, error, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::Address,
+    elements::{Address, Transaction},
     full_scan_with_electrum_client,
     hashes::{sha256t_hash_newtype, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
@@ -31,9 +31,10 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ensure_sdk, persist::Persister, Network, OngoingSwap, Payment, PaymentError, PaymentType,
-    PreparePaymentResponse, ReceivePaymentRequest, ReceivePaymentResponse, SendPaymentResponse,
-    WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR,
+    ensure_sdk, get_invoice_amount, persist::Persister, Network, OngoingSwap, Payment, PaymentData,
+    PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
+    ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES,
+    DEFAULT_DATA_DIR,
 };
 
 sha256t_hash_newtype! {
@@ -113,54 +114,116 @@ impl Wallet {
         Ok(descriptor_str.parse()?)
     }
 
+    fn try_resolve_pending_swap(
+        wallet: &Arc<Wallet>,
+        client: &BoltzApiClient,
+        swap: &OngoingSwap,
+    ) -> Result<()> {
+        match swap {
+            OngoingSwap::Receive {
+                id,
+                preimage,
+                redeem_script,
+                blinding_key,
+                invoice,
+                ..
+            } => {
+                let status_response = client
+                    .swap_status(SwapStatusRequest { id: id.clone() })
+                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+
+                let swap_state = status_response
+                    .status
+                    .parse::<SubSwapStates>()
+                    .map_err(|_| anyhow!("Invalid swap state received"))?;
+
+                match swap_state {
+                    SubSwapStates::SwapExpired => {
+                        warn!("Cannot claim: swap expired");
+                        wallet
+                            .persister
+                            .resolve_ongoing_swap(id, None)
+                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                    }
+                    SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
+                    _ => {
+                        return Err(anyhow!(
+                            "Cannot claim: invoice not paid yet. Swap state: {}",
+                            swap_state.to_string()
+                        ));
+                    }
+                }
+
+                match wallet.try_claim(preimage, redeem_script, blinding_key, None) {
+                    Ok(txid) => {
+                        let payer_amount_sat = get_invoice_amount!(invoice);
+                        wallet
+                            .persister
+                            .resolve_ongoing_swap(
+                                id,
+                                Some((txid, PaymentData { payer_amount_sat })),
+                            )
+                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                    }
+                    Err(err) => {
+                        if let PaymentError::AlreadyClaimed = err {
+                            warn!("Funds already claimed");
+                            wallet
+                                .persister
+                                .resolve_ongoing_swap(id, None)
+                                .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                        }
+                        warn!("Could not claim yet. Err: {err}");
+                    }
+                }
+            }
+            OngoingSwap::Send {
+                id, invoice, txid, ..
+            } => {
+                let Some(txid) = txid.clone() else {
+                    return Err(anyhow!("Transaction not broadcast yet"));
+                };
+
+                let status_response = client
+                    .swap_status(SwapStatusRequest { id: id.clone() })
+                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+
+                if [
+                    SubSwapStates::TransactionClaimed.to_string(),
+                    SubSwapStates::SwapExpired.to_string(),
+                ]
+                .contains(&status_response.status)
+                {
+                    let payer_amount_sat = get_invoice_amount!(invoice);
+                    wallet
+                        .persister
+                        .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                        .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                }
+            }
+        };
+
+        Ok(())
+    }
+
     fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
         let cloned = self.clone();
         let client = self.boltz_client();
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
+            let Ok(ongoing_swaps) = cloned.persister.list_ongoing_swaps() else {
+                error!("Could not read ongoing swaps from database");
+                continue;
+            };
 
             for swap in ongoing_swaps {
-                match swap {
-                    OngoingSwap::Receive {
-                        id,
-                        preimage,
-                        redeem_script,
-                        blinding_key,
-                        ..
-                    } => match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                        Ok(_) => cloned
-                            .persister
-                            .resolve_ongoing_swap(&id)
-                            .unwrap_or_else(|err| {
-                                warn!("Could not write to database. Err: {err:?}")
-                            }),
-                        Err(err) => {
-                            if let PaymentError::AlreadyClaimed = err {
-                                warn!("Funds already claimed");
-                                cloned.persister.resolve_ongoing_swap(&id).unwrap()
-                            }
-                            warn!("Could not claim yet. Err: {err}");
-                        }
-                    },
-                    OngoingSwap::Send { id, .. } => {
-                        let Ok(status_response) =
-                            client.swap_status(SwapStatusRequest { id: id.clone() })
-                        else {
-                            continue;
-                        };
-
-                        if status_response.status == SubSwapStates::TransactionClaimed.to_string() {
-                            cloned
-                                .persister
-                                .resolve_ongoing_swap(&id)
-                                .unwrap_or_else(|err| {
-                                    warn!("Could not write to database. Err: {err:?}")
-                                });
-                        }
+                Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
+                    match swap {
+                        OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
+                        OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
                     }
-                }
+                })
             }
         });
 
@@ -173,7 +236,7 @@ impl Wallet {
         full_scan_with_electrum_client(&mut wallet, &mut electrum_client)
     }
 
-    fn address(&self) -> Result<Address> {
+    fn address(&self) -> Result<Address, lwk_wollet::Error> {
         let wallet = self.wallet.lock().unwrap();
         Ok(wallet.address(self.active_address)?.address().clone())
     }
@@ -217,29 +280,20 @@ impl Wallet {
         )
     }
 
-    fn sign_and_send(
+    fn build_tx(
         &self,
-        signers: &[AnySigner],
         fee_rate: Option<f32>,
-        recipient: &str,
+        recipient_address: &str,
         amount_sat: u64,
-    ) -> Result<String> {
+    ) -> Result<Transaction, PaymentError> {
         let wallet = self.wallet.lock().unwrap();
-        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-
-        let mut pset = wallet.send_lbtc(amount_sat, recipient, fee_rate)?;
-
-        for signer in signers {
-            signer.sign(&mut pset)?;
-        }
-
-        let tx = wallet.finalize(&mut pset)?;
-        let txid = electrum_client.broadcast(&tx)?;
-
-        Ok(txid.to_string())
+        let mut pset = wallet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
+        let signer = AnySigner::Software(self.get_signer());
+        signer.sign(&mut pset)?;
+        Ok(wallet.finalize(&mut pset)?)
     }
 
-    pub fn prepare_payment(&self, invoice: &str) -> Result<PreparePaymentResponse, PaymentError> {
+    pub fn prepare_send_payment(&self, invoice: &str) -> Result<PrepareSendResponse, PaymentError> {
         let client = self.boltz_client();
         let invoice = invoice
             .trim()
@@ -250,16 +304,16 @@ impl Wallet {
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
-            .ok_or(PaymentError::WalletError)?;
+            .ok_or(PaymentError::PairsNotFound)?;
 
-        let amount_sat = invoice
+        let payer_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::AmountOutOfRange)?
             / 1000;
 
         lbtc_pair
             .limits
-            .within(amount_sat)
+            .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
@@ -269,36 +323,52 @@ impl Wallet {
         ))?;
 
         let id = swap_response.get_id();
-        let funding_amount = swap_response.get_funding_amount()?;
         let funding_address = swap_response.get_funding_address()?;
+        let receiver_amount_sat = swap_response.get_funding_amount()?;
+        let network_fees: u64 = self
+            .build_tx(None, &funding_address.to_string(), receiver_amount_sat)?
+            .all_fees()
+            .values()
+            .sum();
 
         self.persister
-            .insert_ongoing_swap(&[OngoingSwap::Send {
+            .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
                 id: id.clone(),
-                amount_sat,
                 funding_address: funding_address.clone(),
                 invoice: invoice.to_string(),
+                receiver_amount_sat: receiver_amount_sat + network_fees,
+                txid: None,
             }])
             .map_err(|_| PaymentError::PersistError)?;
 
-        Ok(PreparePaymentResponse {
+        Ok(PrepareSendResponse {
             id,
             funding_address,
-            funding_amount,
+            invoice: invoice.to_string(),
+            payer_amount_sat,
+            receiver_amount_sat,
+            total_fees: receiver_amount_sat + network_fees - payer_amount_sat,
         })
     }
 
     pub fn send_payment(
         &self,
-        res: &PreparePaymentResponse,
+        res: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let signer = AnySigner::Software(self.get_signer());
+        let tx = self.build_tx(None, &res.funding_address, res.receiver_amount_sat)?;
 
-        let txid = self
-            .sign_and_send(&[signer], None, &res.funding_address, res.funding_amount)
-            .map_err(|err| PaymentError::SendError {
-                err: err.to_string(),
-            })?;
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let txid = electrum_client.broadcast(&tx)?.to_string();
+
+        self.persister
+            .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
+                id: res.id.clone(),
+                funding_address: res.funding_address.clone(),
+                invoice: res.invoice.clone(),
+                receiver_amount_sat: res.receiver_amount_sat + res.total_fees,
+                txid: Some(txid.clone()),
+            }])
+            .map_err(|_| PaymentError::PersistError)?;
 
         Ok(SendPaymentResponse { txid })
     }
@@ -313,13 +383,13 @@ impl Wallet {
         let network_config = &self.get_network_config();
         let rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
-            self.address()
-                .map_err(|_| PaymentError::WalletError)?
-                .to_string(),
+            self.address()?.to_string(),
             network_config,
         )?;
 
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::WalletError)?;
+        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
+            err: "Could not claim: Mnemonic not found".to_string(),
+        })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
@@ -335,42 +405,42 @@ impl Wallet {
         Ok(txid)
     }
 
-    pub fn receive_payment(
+    pub fn prepare_receive_payment(
         &self,
-        req: ReceivePaymentRequest,
-    ) -> Result<ReceivePaymentResponse, PaymentError> {
+        req: &PrepareReceiveRequest,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
         let client = self.boltz_client();
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
-            .ok_or(PaymentError::WalletError)?;
+            .ok_or(PaymentError::PairsNotFound)?;
 
         let (receiver_amount_sat, payer_amount_sat) =
             match (req.receiver_amount_sat, req.payer_amount_sat) {
-                (Some(onchain_amount_sat), None) => {
+                (Some(receiver_amount_sat), None) => {
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let p = lbtc_pair.fees.percentage;
 
-                    let temp_recv_amt = onchain_amount_sat;
+                    let temp_recv_amt = receiver_amount_sat;
                     let invoice_amt_minus_service_fee = temp_recv_amt + fees_lockup + fees_claim;
-                    let invoice_amount_sat =
+                    let payer_amount_sat =
                         (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
 
-                    Ok((onchain_amount_sat, invoice_amount_sat))
+                    Ok((receiver_amount_sat, payer_amount_sat))
                 }
-                (None, Some(invoice_amount_sat)) => {
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat);
+                (None, Some(payer_amount_sat)) => {
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let fees_total = fees_boltz + fees_lockup + fees_claim;
 
                     ensure_sdk!(
-                        invoice_amount_sat > fees_total,
+                        payer_amount_sat > fees_total,
                         PaymentError::AmountOutOfRange
                     );
 
-                    Ok((invoice_amount_sat - fees_total, invoice_amount_sat))
+                    Ok((payer_amount_sat - fees_total, payer_amount_sat))
                 }
                 (None, None) => Err(PaymentError::AmountOutOfRange),
 
@@ -380,14 +450,29 @@ impl Wallet {
                     err: "Both invoice and onchain amounts were specified".into(),
                 }),
             }?;
-        debug!("Creating reverse swap with: receiver_amount_sat {receiver_amount_sat} sat, payer_amount_sat {payer_amount_sat} sat");
 
         lbtc_pair
             .limits
             .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::WalletError)?;
+        debug!("Creating reverse swap with: receiver_amount_sat {receiver_amount_sat} sat, payer_amount_sat {payer_amount_sat} sat");
+
+        Ok(PrepareReceiveResponse {
+            pair_hash: lbtc_pair.hash,
+            payer_amount_sat,
+            fees_sat: payer_amount_sat - receiver_amount_sat,
+        })
+    }
+
+    pub fn receive_payment(
+        &self,
+        res: &PrepareReceiveResponse,
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
+        let client = self.boltz_client();
+        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
+            err: "Could not claim: Mnemonic not found".to_string(),
+        })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
         let lsk = LiquidSwapKey::try_from(swap_key)?;
@@ -396,26 +481,21 @@ impl Wallet {
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
-        let swap_response = if req.receiver_amount_sat.is_some() {
-            client.create_swap(CreateSwapRequest::new_lbtc_reverse_onchain_amt(
-                lbtc_pair.hash,
-                preimage_hash.clone(),
-                lsk.keypair.public_key().to_string(),
-                receiver_amount_sat,
-            ))?
-        } else {
-            client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
-                lbtc_pair.hash,
-                preimage_hash.clone(),
-                lsk.keypair.public_key().to_string(),
-                payer_amount_sat,
-            ))?
-        };
+        let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
+            res.pair_hash.clone(),
+            preimage_hash.clone(),
+            lsk.keypair.public_key().to_string(),
+            res.payer_amount_sat,
+        ))?;
 
         let swap_id = swap_response.get_id();
         let invoice = swap_response.get_invoice()?;
         let blinding_str = swap_response.get_blinding_key()?;
         let redeem_script = swap_response.get_redeem_script()?;
+        let payer_amount_sat = invoice
+            .amount_milli_satoshis()
+            .ok_or(PaymentError::InvalidInvoice)?
+            / 1000;
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
@@ -424,13 +504,13 @@ impl Wallet {
         };
 
         self.persister
-            .insert_ongoing_swap(dbg!(&[OngoingSwap::Receive {
+            .insert_or_update_ongoing_swap(dbg!(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice: invoice.to_string(),
-                receiver_amount_sat,
+                receiver_amount_sat: payer_amount_sat - res.fees_sat,
             }]))
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -447,13 +527,16 @@ impl Wallet {
 
         let transactions = self.wallet.lock().unwrap().transactions()?;
 
+        let payment_data = self.persister.get_payment_data()?;
         let mut payments: Vec<Payment> = transactions
             .iter()
             .map(|tx| {
+                let id = tx.txid.to_string();
+                let data = payment_data.get(&id);
                 let amount_sat = tx.balance.values().sum::<i64>();
 
                 Payment {
-                    id: Some(tx.tx.txid().to_string()),
+                    id: Some(id.clone()),
                     timestamp: tx.timestamp,
                     amount_sat: amount_sat.unsigned_abs(),
                     payment_type: match amount_sat >= 0 {
@@ -461,6 +544,8 @@ impl Wallet {
                         false => PaymentType::Sent,
                     },
                     invoice: None,
+                    fees_sat: data
+                        .map(|d| (amount_sat.abs() - d.payer_amount_sat as i64).unsigned_abs()),
                 }
             })
             .collect();

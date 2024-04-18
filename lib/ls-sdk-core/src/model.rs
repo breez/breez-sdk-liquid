@@ -1,8 +1,10 @@
-use boltz_client::error::Error;
 use boltz_client::network::Chain;
+use boltz_client::Bolt11Invoice;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use serde::Serialize;
+
+use crate::get_invoice_amount;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Network {
@@ -57,10 +59,17 @@ impl WalletOptions {
     }
 }
 
-#[derive(Debug)]
-pub struct ReceivePaymentRequest {
+#[derive(Debug, Serialize)]
+pub struct PrepareReceiveRequest {
     pub payer_amount_sat: Option<u64>,
     pub receiver_amount_sat: Option<u64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PrepareReceiveResponse {
+    pub pair_hash: String,
+    pub payer_amount_sat: u64,
+    pub fees_sat: u64,
 }
 
 #[derive(Debug, Serialize)]
@@ -69,11 +78,14 @@ pub struct ReceivePaymentResponse {
     pub invoice: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct PreparePaymentResponse {
+#[derive(Debug, Serialize, Clone)]
+pub struct PrepareSendResponse {
     pub id: String,
-    pub funding_amount: u64,
+    pub payer_amount_sat: u64,
+    pub receiver_amount_sat: u64,
+    pub total_fees: u64,
     pub funding_address: String,
+    pub invoice: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -92,9 +104,6 @@ pub enum PaymentError {
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },
 
-    #[error("Could not fetch the required wallet information")]
-    WalletError,
-
     #[error("Could not store the swap details locally")]
     PersistError,
 
@@ -104,14 +113,23 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("Boltz did not return any pairs from the request")]
+    PairsNotFound,
+
+    #[error("Could not sign the transaction: {err}")]
+    SignerError { err: String },
+
     #[error("Boltz error: {err}")]
     BoltzError { err: String },
+
+    #[error("Lwk error: {err}")]
+    LwkError { err: String },
 }
 
-impl From<Error> for PaymentError {
-    fn from(err: Error) -> Self {
+impl From<boltz_client::error::Error> for PaymentError {
+    fn from(err: boltz_client::error::Error) -> Self {
         match err {
-            Error::Protocol(msg) => {
+            boltz_client::error::Error::Protocol(msg) => {
                 if msg == "Could not find utxos for script" {
                     return PaymentError::AlreadyClaimed;
                 }
@@ -119,6 +137,28 @@ impl From<Error> for PaymentError {
                 PaymentError::BoltzError { err: msg }
             }
             _ => PaymentError::BoltzError {
+                err: format!("{err:?}"),
+            },
+        }
+    }
+}
+
+#[allow(clippy::match_single_binding)]
+impl From<lwk_wollet::Error> for PaymentError {
+    fn from(err: lwk_wollet::Error) -> Self {
+        match err {
+            _ => PaymentError::LwkError {
+                err: format!("{err:?}"),
+            },
+        }
+    }
+}
+
+#[allow(clippy::match_single_binding)]
+impl From<lwk_signer::SignerError> for PaymentError {
+    fn from(err: lwk_signer::SignerError) -> Self {
+        match err {
+            _ => PaymentError::SignerError {
                 err: format!("{err:?}"),
             },
         }
@@ -136,9 +176,10 @@ pub struct WalletInfo {
 pub(crate) enum OngoingSwap {
     Send {
         id: String,
-        amount_sat: u64,
         funding_address: String,
         invoice: String,
+        receiver_amount_sat: u64,
+        txid: Option<String>,
     },
     Receive {
         id: String,
@@ -163,6 +204,7 @@ pub struct Payment {
     pub id: Option<String>,
     pub timestamp: Option<u32>,
     pub amount_sat: u64,
+    pub fees_sat: Option<u64>,
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
 
@@ -174,27 +216,39 @@ impl From<OngoingSwap> for Payment {
     fn from(swap: OngoingSwap) -> Self {
         match swap {
             OngoingSwap::Send {
-                amount_sat,
                 invoice,
+                receiver_amount_sat,
                 ..
-            } => Payment {
-                id: None,
-                timestamp: None,
-                payment_type: PaymentType::PendingSend,
-                amount_sat,
-                invoice: Some(invoice),
-            },
+            } => {
+                let payer_amount_sat = get_invoice_amount!(invoice);
+                Payment {
+                    id: None,
+                    timestamp: None,
+                    payment_type: PaymentType::PendingSend,
+                    amount_sat: payer_amount_sat,
+                    invoice: Some(invoice),
+                    fees_sat: Some(receiver_amount_sat - payer_amount_sat),
+                }
+            }
             OngoingSwap::Receive {
                 receiver_amount_sat,
                 invoice,
                 ..
-            } => Payment {
-                id: None,
-                timestamp: None,
-                payment_type: PaymentType::PendingReceive,
-                amount_sat: receiver_amount_sat,
-                invoice: Some(invoice),
-            },
+            } => {
+                let payer_amount_sat = get_invoice_amount!(invoice);
+                Payment {
+                    id: None,
+                    timestamp: None,
+                    payment_type: PaymentType::PendingReceive,
+                    amount_sat: receiver_amount_sat,
+                    invoice: Some(invoice),
+                    fees_sat: Some(payer_amount_sat - receiver_amount_sat),
+                }
+            }
         }
     }
+}
+
+pub(crate) struct PaymentData {
+    pub payer_amount_sat: u64,
 }

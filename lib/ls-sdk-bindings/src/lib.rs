@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use anyhow::{Error, Result};
 use ls_sdk::{
-    model::PaymentError, Network, PreparePaymentResponse, ReceivePaymentRequest,
-    ReceivePaymentResponse, SendPaymentResponse, Wallet, WalletInfo,
+    model::PaymentError, Network, PrepareReceiveRequest, PrepareReceiveResponse,
+    PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse, Wallet, WalletInfo,
 };
 
 // TODO Unify error enum
@@ -37,18 +37,32 @@ impl BindingWallet {
         self.ln_sdk.get_info(with_scan).map_err(Into::into)
     }
 
+    pub fn prepare_send_payment(
+        &self,
+        invoice: String,
+    ) -> Result<PrepareSendResponse, PaymentError> {
+        self.ln_sdk.prepare_send_payment(&invoice)
+    }
+
     pub fn send_payment(
         &self,
-        req: PreparePaymentResponse,
+        req: PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ln_sdk.send_payment(&req)
     }
 
+    pub fn prepare_receive_payment(
+        &self,
+        req: PrepareReceiveRequest,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
+        self.ln_sdk.prepare_receive_payment(&req)
+    }
+
     pub fn receive_payment(
         &self,
-        req: ReceivePaymentRequest,
+        req: PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
-        self.ln_sdk.receive_payment(req)
+        self.ln_sdk.receive_payment(&req)
     }
 }
 
