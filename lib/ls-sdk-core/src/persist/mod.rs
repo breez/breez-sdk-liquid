@@ -55,7 +55,7 @@ impl Persister {
                     id,
                     funding_address,
                     invoice,
-                    onchain_amount_sat,
+                    receiver_amount_sat,
                     txid,
                 } => {
                     let mut stmt = con.prepare(
@@ -64,13 +64,13 @@ impl Persister {
                                 id,
                                 funding_address,
                                 invoice,
-                                onchain_amount_sat,
+                                receiver_amount_sat,
                                 txid
                             )
                             VALUES (?, ?, ?, ?, ?)
                         ",
                     )?;
-                    _ = stmt.execute((id, funding_address, invoice, onchain_amount_sat, txid))?
+                    _ = stmt.execute((id, funding_address, invoice, receiver_amount_sat, txid))?
                 }
                 OngoingSwap::Receive {
                     id,
@@ -124,9 +124,9 @@ impl Persister {
         )?;
         if let Some((txid, payment_data)) = payment_data {
             tx.execute(
-                "INSERT INTO payment_data(id, invoice_amount_sat)
+                "INSERT INTO payment_data(id, payer_amount_sat)
               VALUES(?, ?)",
-                (txid, payment_data.invoice_amount_sat),
+                (txid, payment_data.payer_amount_sat),
             )?;
         }
         tx.commit()?;
@@ -148,7 +148,7 @@ impl Persister {
                id,
                funding_address,
                invoice,
-               onchain_amount_sat,
+               receiver_amount_sat,
                txid,
                created_at
            FROM ongoing_send_swaps
@@ -162,7 +162,7 @@ impl Persister {
                     id: row.get(0)?,
                     funding_address: row.get(1)?,
                     invoice: row.get(2)?,
-                    onchain_amount_sat: row.get(3)?,
+                    receiver_amount_sat: row.get(3)?,
                     txid: row.get(4)?,
                 })
             })?
@@ -210,7 +210,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            SELECT id, invoice_amount_sat
+            SELECT id, payer_amount_sat 
             FROM payment_data
         ",
         )?;
@@ -220,7 +220,7 @@ impl Persister {
                 Ok((
                     row.get(0)?,
                     PaymentData {
-                        invoice_amount_sat: row.get(1)?,
+                        payer_amount_sat: row.get(1)?,
                     },
                 ))
             })?

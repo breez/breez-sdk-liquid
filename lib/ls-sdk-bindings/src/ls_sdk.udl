@@ -30,19 +30,10 @@ dictionary WalletInfo {
 
 dictionary PrepareSendResponse {
     string id;
-    u64 invoice_amount_sat;
-    u64 onchain_amount_sat;
+    u64 payer_amount_sat;
+    u64 receiver_amount_sat;
     u64 total_fees;
     string funding_address;
-};
-
-dictionary ReceivePaymentRequest {
-    u64? payer_amount_sat;
-    u64? receiver_amount_sat;
-};
-
-dictionary ReceivePaymentResponse {
-    string id;
     string invoice;
 };
 
@@ -51,13 +42,13 @@ dictionary SendPaymentResponse {
 };
 
 dictionary PrepareReceiveRequest {
-    u64? invoice_amount_sat;
-    u64? onchain_amount_sat;
+    u64? payer_amount_sat;
+    u64? receiver_amount_sat;
 };
 
 dictionary PrepareReceiveResponse {
     string pair_hash;
-    u64 invoice_amount_sat;
+    u64 payer_amount_sat;
     u64 fees_sat;
 };
 

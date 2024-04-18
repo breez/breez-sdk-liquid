@@ -151,20 +151,20 @@ impl Wallet {
                                 );
                                 continue;
                             }
-                            SubSwapStates::TransactionMempool => {}
+                            SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
                             _ => {
-                                warn!("Cannot claim: invoice not paid yet");
+                                warn!("Cannot claim: invoice not paid yet. Swap state: {}", swap_state.to_string());
                                 continue;
                             }
                         }
 
                         match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
                             Ok(txid) => {
-                                let invoice_amount_sat = get_invoice_amount!(invoice);
+                                let payer_amount_sat = get_invoice_amount!(invoice);
                                 ok_or_warn!(
                                     cloned.persister.resolve_ongoing_swap(
                                         &id,
-                                        Some((txid, PaymentData { invoice_amount_sat })),
+                                        Some((txid, PaymentData { payer_amount_sat })),
                                     ),
                                     "Could not resolve swap in database"
                                 );
@@ -196,11 +196,11 @@ impl Wallet {
                         ]
                         .contains(&status_response.status)
                         {
-                            let invoice_amount_sat = get_invoice_amount!(invoice);
+                            let payer_amount_sat = get_invoice_amount!(invoice);
                             ok_or_warn!(
                                 cloned.persister.resolve_ongoing_swap(
                                     &id,
-                                    Some((txid, PaymentData { invoice_amount_sat })),
+                                    Some((txid, PaymentData { payer_amount_sat })),
                                 ),
                                 "Could not resolve swap in database"
                             );
@@ -289,14 +289,14 @@ impl Wallet {
             .get_lbtc_pair()
             .ok_or(PaymentError::PairsNotFound)?;
 
-        let invoice_amount_sat = invoice
+        let payer_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::AmountOutOfRange)?
             / 1000;
 
         lbtc_pair
             .limits
-            .within(invoice_amount_sat)
+            .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
@@ -307,9 +307,9 @@ impl Wallet {
 
         let id = swap_response.get_id();
         let funding_address = swap_response.get_funding_address()?;
-        let onchain_amount_sat = swap_response.get_funding_amount()?;
+        let receiver_amount_sat = swap_response.get_funding_amount()?;
         let network_fees: u64 = self
-            .build_tx(None, &funding_address.to_string(), onchain_amount_sat)?
+            .build_tx(None, &funding_address.to_string(), receiver_amount_sat)?
             .all_fees()
             .values()
             .sum();
@@ -319,7 +319,7 @@ impl Wallet {
                 id: id.clone(),
                 funding_address: funding_address.clone(),
                 invoice: invoice.to_string(),
-                onchain_amount_sat: onchain_amount_sat + network_fees,
+                receiver_amount_sat: receiver_amount_sat + network_fees,
                 txid: None,
             }])
             .map_err(|_| PaymentError::PersistError)?;
@@ -328,9 +328,9 @@ impl Wallet {
             id,
             funding_address,
             invoice: invoice.to_string(),
-            invoice_amount_sat,
-            onchain_amount_sat,
-            total_fees: onchain_amount_sat + network_fees - invoice_amount_sat,
+            payer_amount_sat,
+            receiver_amount_sat,
+            total_fees: receiver_amount_sat + network_fees - payer_amount_sat,
         })
     }
 
@@ -338,7 +338,7 @@ impl Wallet {
         &self,
         res: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let tx = self.build_tx(None, &res.funding_address, res.onchain_amount_sat)?;
+        let tx = self.build_tx(None, &res.funding_address, res.receiver_amount_sat)?;
 
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
         let txid = electrum_client.broadcast(&tx)?.to_string();
@@ -348,7 +348,7 @@ impl Wallet {
                 id: res.id.clone(),
                 funding_address: res.funding_address.clone(),
                 invoice: res.invoice.clone(),
-                onchain_amount_sat: res.invoice_amount_sat + res.total_fees,
+                receiver_amount_sat: res.receiver_amount_sat + res.total_fees,
                 txid: Some(txid.clone()),
             }])
             .map_err(|_| PaymentError::PersistError)?;
@@ -400,30 +400,30 @@ impl Wallet {
 
         let (receiver_amount_sat, payer_amount_sat) =
             match (req.receiver_amount_sat, req.payer_amount_sat) {
-                (Some(onchain_amount_sat), None) => {
+                (Some(receiver_amount_sat), None) => {
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let p = lbtc_pair.fees.percentage;
 
-                    let temp_recv_amt = onchain_amount_sat;
+                    let temp_recv_amt = receiver_amount_sat;
                     let invoice_amt_minus_service_fee = temp_recv_amt + fees_lockup + fees_claim;
-                    let invoice_amount_sat =
+                    let payer_amount_sat =
                         (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
 
-                    Ok((onchain_amount_sat, invoice_amount_sat))
+                    Ok((receiver_amount_sat, payer_amount_sat))
                 }
-                (None, Some(invoice_amount_sat)) => {
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(invoice_amount_sat);
+                (None, Some(payer_amount_sat)) => {
+                    let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
                     let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
                     let fees_total = fees_boltz + fees_lockup + fees_claim;
 
                     ensure_sdk!(
-                        invoice_amount_sat > fees_total,
+                        payer_amount_sat > fees_total,
                         PaymentError::AmountOutOfRange
                     );
 
-                    Ok((invoice_amount_sat - fees_total, invoice_amount_sat))
+                    Ok((payer_amount_sat - fees_total, payer_amount_sat))
                 }
                 (None, None) => Err(PaymentError::AmountOutOfRange),
 
@@ -475,7 +475,7 @@ impl Wallet {
         let invoice = swap_response.get_invoice()?;
         let blinding_str = swap_response.get_blinding_key()?;
         let redeem_script = swap_response.get_redeem_script()?;
-        let invoice_amount_sat = invoice
+        let payer_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::InvalidInvoice)?
             / 1000;
@@ -493,7 +493,7 @@ impl Wallet {
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice: invoice.to_string(),
-                receiver_amount_sat: invoice_amount_sat - res.fees_sat,
+                receiver_amount_sat: payer_amount_sat - res.fees_sat,
             }]))
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -528,7 +528,7 @@ impl Wallet {
                     },
                     invoice: None,
                     fees_sat: data
-                        .map(|d| (amount_sat.abs() - d.invoice_amount_sat as i64).unsigned_abs()),
+                        .map(|d| (amount_sat.abs() - d.payer_amount_sat as i64).unsigned_abs()),
                 }
             })
             .collect();

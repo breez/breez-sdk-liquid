@@ -81,8 +81,8 @@ pub struct ReceivePaymentResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub id: String,
-    pub invoice_amount_sat: u64,
-    pub onchain_amount_sat: u64,
+    pub payer_amount_sat: u64,
+    pub receiver_amount_sat: u64,
     pub total_fees: u64,
     pub funding_address: String,
     pub invoice: String,
@@ -178,7 +178,7 @@ pub(crate) enum OngoingSwap {
         id: String,
         funding_address: String,
         invoice: String,
-        onchain_amount_sat: u64,
+        receiver_amount_sat: u64,
         txid: Option<String>,
     },
     Receive {
@@ -217,7 +217,7 @@ impl From<OngoingSwap> for Payment {
         match swap {
             OngoingSwap::Send {
                 invoice,
-                onchain_amount_sat,
+                receiver_amount_sat,
                 ..
             } => {
                 let payer_amount_sat = get_invoice_amount!(invoice);
@@ -227,7 +227,7 @@ impl From<OngoingSwap> for Payment {
                     payment_type: PaymentType::PendingSend,
                     amount_sat: payer_amount_sat,
                     invoice: Some(invoice),
-                    fees_sat: Some(onchain_amount_sat - payer_amount_sat),
+                    fees_sat: Some(receiver_amount_sat - payer_amount_sat),
                 }
             }
             OngoingSwap::Receive {
@@ -250,5 +250,5 @@ impl From<OngoingSwap> for Payment {
 }
 
 pub(crate) struct PaymentData {
-    pub invoice_amount_sat: u64,
+    pub payer_amount_sat: u64,
 }
