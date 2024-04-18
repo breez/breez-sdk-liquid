@@ -19,7 +19,7 @@ use boltz_client::{
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
     Bolt11Invoice, Keypair,
 };
-use log::{debug, warn};
+use log::{debug, error, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -212,13 +212,16 @@ impl Wallet {
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
+            let Ok(ongoing_swaps) = cloned.persister.list_ongoing_swaps() else {
+                error!("Could not read ongoing swaps from database");
+                continue;
+            };
 
             for swap in ongoing_swaps {
                 Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
                     match swap {
-                        OngoingSwap::Send { .. } => warn!("[Ongoing Send] {err}"),
-                        OngoingSwap::Receive { .. } => warn!("[Ongoing Receive] {err}"),
+                        OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
+                        OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
                     }
                 })
             }
