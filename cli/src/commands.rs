@@ -118,7 +118,10 @@ pub(crate) fn handle_command(
             let prepare_response = wallet.prepare_send_payment(&bolt11)?;
 
             wait_confirmation!(
-                format!("Fees: {} sat. Are the fees acceptable? (y/N) ", prepare_response.total_fees),
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.total_fees
+                ),
                 "Payment send halted"
             );
 

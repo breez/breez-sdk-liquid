@@ -31,17 +31,6 @@ macro_rules! get_invoice_amount {
     };
 }
 
-#[macro_export]
-macro_rules! ok_or_warn {
-    ($result:expr,$warn:expr) => {{
-        let Ok(value) = $result else {
-            warn!($warn);
-            continue;
-        };
-        value
-    }};
-}
-
 #[cfg(test)]
 mod tests {
     use anyhow::Result;

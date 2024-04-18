@@ -7,7 +7,7 @@ use migrations::current_migrations;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::{OngoingSwap, Network, Network::*, PaymentData};
+use crate::{Network, Network::*, OngoingSwap, PaymentData};
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,

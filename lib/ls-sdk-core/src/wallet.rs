@@ -31,10 +31,10 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ensure_sdk, get_invoice_amount, ok_or_warn, persist::Persister, Network, OngoingSwap, Payment,
-    PaymentData, PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse,
-    PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions,
-    CLAIM_ABSOLUTE_FEES, DEFAULT_DATA_DIR,
+    ensure_sdk, get_invoice_amount, persist::Persister, Network, OngoingSwap, Payment, PaymentData,
+    PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
+    ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES,
+    DEFAULT_DATA_DIR,
 };
 
 sha256t_hash_newtype! {
@@ -114,6 +114,98 @@ impl Wallet {
         Ok(descriptor_str.parse()?)
     }
 
+    fn try_resolve_pending_swap(
+        wallet: &Arc<Wallet>,
+        client: &BoltzApiClient,
+        swap: &OngoingSwap,
+    ) -> Result<()> {
+        match swap {
+            OngoingSwap::Receive {
+                id,
+                preimage,
+                redeem_script,
+                blinding_key,
+                invoice,
+                ..
+            } => {
+                let status_response = client
+                    .swap_status(SwapStatusRequest { id: id.clone() })
+                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+
+                let swap_state = status_response
+                    .status
+                    .parse::<SubSwapStates>()
+                    .map_err(|_| anyhow!("Invalid swap state received"))?;
+
+                match swap_state {
+                    SubSwapStates::SwapExpired => {
+                        warn!("Cannot claim: swap expired");
+                        wallet
+                            .persister
+                            .resolve_ongoing_swap(id, None)
+                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                    }
+                    SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
+                    _ => {
+                        return Err(anyhow!(
+                            "Cannot claim: invoice not paid yet. Swap state: {}",
+                            swap_state.to_string()
+                        ));
+                    }
+                }
+
+                match wallet.try_claim(preimage, redeem_script, blinding_key, None) {
+                    Ok(txid) => {
+                        let payer_amount_sat = get_invoice_amount!(invoice);
+                        wallet
+                            .persister
+                            .resolve_ongoing_swap(
+                                id,
+                                Some((txid, PaymentData { payer_amount_sat })),
+                            )
+                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                    }
+                    Err(err) => {
+                        if let PaymentError::AlreadyClaimed = err {
+                            warn!("Funds already claimed");
+                            wallet
+                                .persister
+                                .resolve_ongoing_swap(id, None)
+                                .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                        }
+                        warn!("Could not claim yet. Err: {err}");
+                    }
+                }
+            }
+            OngoingSwap::Send {
+                id, invoice, txid, ..
+            } => {
+                let Some(txid) = txid.clone() else {
+                    return Err(anyhow!("Transaction not broadcast yet"));
+                };
+
+                let status_response = client
+                    .swap_status(SwapStatusRequest { id: id.clone() })
+                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+
+                if [
+                    SubSwapStates::TransactionClaimed.to_string(),
+                    SubSwapStates::SwapExpired.to_string(),
+                ]
+                .contains(&status_response.status)
+                {
+                    let payer_amount_sat = get_invoice_amount!(invoice);
+                    wallet
+                        .persister
+                        .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                        .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                }
+            }
+        };
+
+        Ok(())
+    }
+
     fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
         let cloned = self.clone();
         let client = self.boltz_client();
@@ -123,90 +215,12 @@ impl Wallet {
             let ongoing_swaps = cloned.persister.list_ongoing_swaps().unwrap();
 
             for swap in ongoing_swaps {
-                match swap {
-                    OngoingSwap::Receive {
-                        id,
-                        preimage,
-                        redeem_script,
-                        blinding_key,
-                        invoice,
-                        ..
-                    } => {
-                        let status_response = ok_or_warn!(
-                            client.swap_status(SwapStatusRequest { id: id.clone() }),
-                            "Could not contact Boltz servers for claim status"
-                        );
-
-                        let swap_state = ok_or_warn!(
-                            status_response.status.parse::<SubSwapStates>(),
-                            "Invalid swap state received"
-                        );
-
-                        match swap_state {
-                            SubSwapStates::SwapExpired => {
-                                warn!("Cannot claim: swap expired");
-                                ok_or_warn!(
-                                    cloned.persister.resolve_ongoing_swap(&id, None),
-                                    "Could not resolve swap in database"
-                                );
-                                continue;
-                            }
-                            SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
-                            _ => {
-                                warn!("Cannot claim: invoice not paid yet. Swap state: {}", swap_state.to_string());
-                                continue;
-                            }
-                        }
-
-                        match cloned.try_claim(&preimage, &redeem_script, &blinding_key, None) {
-                            Ok(txid) => {
-                                let payer_amount_sat = get_invoice_amount!(invoice);
-                                ok_or_warn!(
-                                    cloned.persister.resolve_ongoing_swap(
-                                        &id,
-                                        Some((txid, PaymentData { payer_amount_sat })),
-                                    ),
-                                    "Could not resolve swap in database"
-                                );
-                            }
-                            Err(err) => {
-                                if let PaymentError::AlreadyClaimed = err {
-                                    warn!("Funds already claimed");
-                                    cloned.persister.resolve_ongoing_swap(&id, None).unwrap()
-                                }
-                                warn!("Could not claim yet. Err: {err}");
-                            }
-                        }
+                Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
+                    match swap {
+                        OngoingSwap::Send { .. } => warn!("[Ongoing Send] {err}"),
+                        OngoingSwap::Receive { .. } => warn!("[Ongoing Receive] {err}"),
                     }
-                    OngoingSwap::Send {
-                        id, invoice, txid, ..
-                    } => {
-                        let Some(txid) = txid else {
-                            continue;
-                        };
-
-                        let status_response = ok_or_warn!(
-                            client.swap_status(SwapStatusRequest { id: id.clone() }),
-                            "Could not contact Boltz servers for claim status"
-                        );
-
-                        if [
-                            SubSwapStates::TransactionClaimed.to_string(),
-                            SubSwapStates::SwapExpired.to_string(),
-                        ]
-                        .contains(&status_response.status)
-                        {
-                            let payer_amount_sat = get_invoice_amount!(invoice);
-                            ok_or_warn!(
-                                cloned.persister.resolve_ongoing_swap(
-                                    &id,
-                                    Some((txid, PaymentData { payer_amount_sat })),
-                                ),
-                                "Could not resolve swap in database"
-                            );
-                        }
-                    }
-                }
+                })
             }
         });
 
