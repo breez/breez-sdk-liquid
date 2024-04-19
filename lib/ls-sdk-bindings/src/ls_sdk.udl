@@ -25,7 +25,6 @@ enum Network {
 dictionary WalletInfo {
     u64 balance_sat;
     string pubkey;
-    string active_address;
 };
 
 dictionary PrepareSendResponse {

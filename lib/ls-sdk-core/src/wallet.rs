@@ -250,10 +250,11 @@ impl Wallet {
     }
 
     pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo> {
+        debug!("active_address: {}", self.address()?);
+
         Ok(WalletInfo {
             balance_sat: self.total_balance_sat(with_scan)?,
             pubkey: self.signer.xpub().public_key.to_string(),
-            active_address: self.address()?.to_string(),
         })
     }
 

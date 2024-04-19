@@ -169,7 +169,6 @@ impl From<lwk_signer::SignerError> for PaymentError {
 pub struct WalletInfo {
     pub balance_sat: u64,
     pub pubkey: String,
-    pub active_address: String,
 }
 
 #[derive(Debug)]
