@@ -6,15 +6,15 @@ enum LsSdkError {
 [Error]
 enum PaymentError {
     "AmountOutOfRange",
-    "InvalidInvoice",
-    "SendError",
-    "PersistError",
-    "InvalidPreimage",
     "AlreadyClaimed",
-    "PairsNotFound",
-    "SignerError",
     "Generic",
+    "InvalidInvoice",
+    "InvalidPreimage",
     "LwkError",
+    "PairsNotFound",
+    "PersistError",
+    "SendError",
+    "SignerError",
 };
 
 enum Network {
