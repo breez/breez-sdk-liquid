@@ -98,32 +98,32 @@ pub enum PaymentError {
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
 
+    #[error("The specified funds have already been claimed")]
+    AlreadyClaimed,
+
+    #[error("Generic error: {err}")]
+    Generic { err: String },
+
     #[error("The specified invoice is not valid")]
     InvalidInvoice,
-
-    #[error("Could not sign/send the transaction: {err}")]
-    SendError { err: String },
-
-    #[error("Could not store the swap details locally")]
-    PersistError,
 
     #[error("The generated preimage is not valid")]
     InvalidPreimage,
 
-    #[error("The specified funds have already been claimed")]
-    AlreadyClaimed,
+    #[error("Lwk error: {err}")]
+    LwkError { err: String },
 
     #[error("Boltz did not return any pairs from the request")]
     PairsNotFound,
 
+    #[error("Could not store the swap details locally")]
+    PersistError,
+
+    #[error("Could not sign/send the transaction: {err}")]
+    SendError { err: String },
+
     #[error("Could not sign the transaction: {err}")]
     SignerError { err: String },
-
-    #[error("Boltz error: {err}")]
-    BoltzError { err: String },
-
-    #[error("Lwk error: {err}")]
-    LwkError { err: String },
 }
 
 impl From<boltz_client::error::Error> for PaymentError {
@@ -134,9 +134,9 @@ impl From<boltz_client::error::Error> for PaymentError {
                     return PaymentError::AlreadyClaimed;
                 }
 
-                PaymentError::BoltzError { err: msg }
+                PaymentError::Generic { err: msg }
             }
-            _ => PaymentError::BoltzError {
+            _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
         }
