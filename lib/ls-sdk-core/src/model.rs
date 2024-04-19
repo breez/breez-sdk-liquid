@@ -119,8 +119,8 @@ pub enum PaymentError {
     #[error("Could not sign the transaction: {err}")]
     SignerError { err: String },
 
-    #[error("Boltz error: {err}")]
-    BoltzError { err: String },
+    #[error("Generic error: {err}")]
+    Generic { err: String },
 
     #[error("Lwk error: {err}")]
     LwkError { err: String },
@@ -134,9 +134,9 @@ impl From<boltz_client::error::Error> for PaymentError {
                     return PaymentError::AlreadyClaimed;
                 }
 
-                PaymentError::BoltzError { err: msg }
+                PaymentError::Generic { err: msg }
             }
-            _ => PaymentError::BoltzError {
+            _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
         }
