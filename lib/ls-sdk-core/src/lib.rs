@@ -5,9 +5,7 @@ mod wallet;
 pub use model::*;
 pub use wallet::*;
 
-// To avoid sendrawtransaction error "min relay fee not met"
-const CLAIM_ABSOLUTE_FEES: u64 = 134;
-
+pub const LIQUID_FEE_RATE_SAT: f32 = 0.1;
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
 #[macro_export]

@@ -32,8 +32,8 @@ use lwk_wollet::{
 use crate::{
     ensure_sdk, get_invoice_amount, persist::Persister, Network, OngoingSwap, Payment, PaymentData,
     PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-    ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES,
-    DEFAULT_DATA_DIR,
+    ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, DEFAULT_DATA_DIR,
+    LIQUID_FEE_RATE_SAT,
 };
 
 pub struct Wallet {
@@ -146,7 +146,7 @@ impl Wallet {
                     }
                 }
 
-                match wallet.try_claim(preimage, redeem_script, blinding_key, None) {
+                match wallet.try_claim(preimage, redeem_script, blinding_key) {
                     Ok(txid) => {
                         let payer_amount_sat = get_invoice_amount!(invoice);
                         wallet
@@ -212,8 +212,8 @@ impl Wallet {
             for swap in ongoing_swaps {
                 Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
                     match swap {
-                        OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
-                        OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
+                        OngoingSwap::Send { .. } => warn!("[Ongoing Send] {err}"),
+                        OngoingSwap::Receive { .. } => warn!("[Ongoing Receive] {err}"),
                     }
                 })
             }
@@ -371,7 +371,6 @@ impl Wallet {
         preimage: &str,
         redeem_script: &str,
         blinding_key: &str,
-        absolute_fees: Option<u64>,
     ) -> Result<String, PaymentError> {
         let network_config = &self.get_network_config();
         let rev_swap_tx = LBtcSwapTx::new_claim(
@@ -387,12 +386,16 @@ impl Wallet {
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
         let lsk = LiquidSwapKey::try_from(swap_key)?;
+        let preimage = Preimage::from_str(preimage)?;
 
-        let signed_tx = rev_swap_tx.sign_claim(
-            &lsk.keypair,
-            &Preimage::from_str(preimage)?,
-            absolute_fees.unwrap_or(CLAIM_ABSOLUTE_FEES),
-        )?;
+        // Create a mock tx to calculate the size, then multiply by fee rate
+        let absolute_fees = (rev_swap_tx
+            .sign_claim(&lsk.keypair, &preimage, 100)?
+            .vsize() as f32
+            * LIQUID_FEE_RATE_SAT)
+            .ceil() as u64;
+
+        let signed_tx = rev_swap_tx.sign_claim(&lsk.keypair, &preimage, absolute_fees)?;
         let txid = rev_swap_tx.broadcast(signed_tx, network_config)?;
 
         Ok(txid)
@@ -412,7 +415,7 @@ impl Wallet {
             match (req.receiver_amount_sat, req.payer_amount_sat) {
                 (Some(receiver_amount_sat), None) => {
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
-                    let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
+                    let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
                     let p = lbtc_pair.fees.percentage;
 
                     let temp_recv_amt = receiver_amount_sat;
@@ -425,7 +428,7 @@ impl Wallet {
                 (None, Some(payer_amount_sat)) => {
                     let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
                     let fees_lockup = lbtc_pair.fees.reverse_lockup();
-                    let fees_claim = CLAIM_ABSOLUTE_FEES; // lbtc_pair.fees.reverse_claim_estimate();
+                    let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
                     let fees_total = fees_boltz + fees_lockup + fees_claim;
 
                     ensure_sdk!(
