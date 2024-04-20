@@ -21,6 +21,7 @@ use serde_json::to_string_pretty;
 pub(crate) enum Command {
     /// Send lbtc and receive btc through a swap
     SendPayment {
+        /// Invoice which has to be paid
         bolt11: String,
 
         /// Delay for the send, in seconds
@@ -29,11 +30,8 @@ pub(crate) enum Command {
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
-        #[arg(short, long)]
-        receiver_amount_sat: Option<u64>,
-
-        #[arg(short, long)]
-        payer_amount_sat: Option<u64>,
+        /// Amount of funds to receive, in satoshi
+        amount_sat: u64,
     },
     /// List incoming and outgoing payments
     ListPayments,
@@ -89,13 +87,10 @@ pub(crate) fn handle_command(
     command: Command,
 ) -> Result<String> {
     Ok(match command {
-        Command::ReceivePayment {
-            receiver_amount_sat,
-            payer_amount_sat,
-        } => {
+        Command::ReceivePayment { amount_sat } => {
             let prepare_response = wallet.prepare_receive_payment(&PrepareReceiveRequest {
-                payer_amount_sat,
-                receiver_amount_sat,
+                payer_amount_sat: Some(amount_sat),
+                receiver_amount_sat: None,
             })?;
 
             wait_confirmation!(
