@@ -64,6 +64,14 @@ impl BindingWallet {
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ln_sdk.receive_payment(&req)
     }
+
+    pub fn backup(&self) -> Result<(), LsSdkError> {
+        self.ln_sdk.backup().map_err(Into::into)
+    }
+
+    pub fn restore(&self, backup_path: Option<String>) -> Result<(), LsSdkError> {
+        self.ln_sdk.restore(backup_path).map_err(Into::into)
+    }
 }
 
 uniffi::include_scaffolding!("ls_sdk");
