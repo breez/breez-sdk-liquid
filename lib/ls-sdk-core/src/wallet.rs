@@ -24,10 +24,8 @@ use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::{Address, Transaction},
-    full_scan_with_electrum_client,
-    hashes::{sha256t_hash_newtype, Hash},
-    BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
-    Wollet as LwkWollet, WolletDescriptor,
+    full_scan_with_electrum_client, BlockchainBackend, ElectrumClient, ElectrumUrl,
+    ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -36,13 +34,6 @@ use crate::{
     ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, CLAIM_ABSOLUTE_FEES,
     DEFAULT_DATA_DIR,
 };
-
-sha256t_hash_newtype! {
-    struct DirectoryIdTag = hash_str("LWK-FS-Directory-Id/1.0");
-
-    #[hash_newtype(forward)]
-    struct DirectoryIdHash(_);
-}
 
 pub struct Wallet {
     signer: SwSigner,
@@ -579,13 +570,11 @@ impl Wallet {
         Ok(txid)
     }
 
+    /// Empties all Liquid Wallet caches for this network type.
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.data_dir_path.clone());
         path.push(Into::<ElementsNetwork>::into(self.network).as_str());
         path.push("enc_cache");
-
-        let descriptor = Wallet::get_descriptor(&self.get_signer(), self.network)?;
-        path.push(DirectoryIdHash::hash(descriptor.to_string().as_bytes()).to_string());
 
         fs::remove_dir_all(&path)?;
         fs::create_dir_all(path)?;
