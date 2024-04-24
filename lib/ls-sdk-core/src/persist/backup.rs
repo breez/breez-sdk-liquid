@@ -1,11 +1,18 @@
 use anyhow::Result;
 use rusqlite::{backup::Backup, Connection};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::Persister;
 use crate::Network;
 
 impl Persister {
+    pub(crate) fn get_backup_path(&self) -> PathBuf {
+        self.main_db_dir.join(match self.network {
+            Network::Liquid => "backup.sql",
+            Network::LiquidTestnet => "backup-testnet.sql",
+        })
+    }
+
     pub(crate) fn backup(&self) -> Result<()> {
         let con = self.get_connection()?;
 

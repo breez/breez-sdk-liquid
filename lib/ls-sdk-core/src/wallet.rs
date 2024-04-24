@@ -586,10 +586,7 @@ impl Wallet {
     pub fn restore(&self, backup_path: Option<String>) -> Result<()> {
         let backup_path = match backup_path {
             Some(p) => PathBuf::from_str(&p)?,
-            None => self.persister.main_db_dir.join(match self.network {
-                Network::Liquid => "backup.sql",
-                Network::LiquidTestnet => "backup-testnet.sql",
-            }),
+            None => self.persister.get_backup_path(),
         };
         self.persister.restore_from_backup(backup_path)
     }

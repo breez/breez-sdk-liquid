@@ -11,8 +11,8 @@ use rusqlite_migration::{Migrations, M};
 use crate::{Network, Network::*, OngoingSwap, PaymentData};
 
 pub(crate) struct Persister {
-    pub main_db_dir: PathBuf,
-    pub network: Network,
+    main_db_dir: PathBuf,
+    network: Network,
 }
 
 impl Persister {
