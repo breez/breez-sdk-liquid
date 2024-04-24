@@ -33,7 +33,7 @@ use crate::{
     ensure_sdk, get_invoice_amount, persist::Persister, Network, OngoingSwap, Payment, PaymentData,
     PaymentError, PaymentType, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
     ReceivePaymentResponse, SendPaymentResponse, WalletInfo, WalletOptions, DEFAULT_DATA_DIR,
-    LIQUID_FEE_RATE_SAT,
+    LIQUID_CLAIM_TX_FEERATE,
 };
 
 pub struct Wallet {
@@ -392,7 +392,7 @@ impl Wallet {
         let absolute_fees = (rev_swap_tx
             .sign_claim(&lsk.keypair, &preimage, 100)?
             .vsize() as f32
-            * LIQUID_FEE_RATE_SAT)
+            * LIQUID_CLAIM_TX_FEERATE)
             .ceil() as u64;
 
         let signed_tx = rev_swap_tx.sign_claim(&lsk.keypair, &preimage, absolute_fees)?;
