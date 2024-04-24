@@ -38,16 +38,20 @@ fn show_results(result: Result<String>) -> Result<()> {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    env_logger::builder()
-        .target(match args.log_file {
-            Some(log_file) => env_logger::Target::Pipe(Box::new(File::create(log_file)?)),
-            None => env_logger::Target::Stdout,
-        })
-        .init();
-
     let data_dir_str = args.data_dir.unwrap_or(DEFAULT_DATA_DIR.to_string());
     let data_dir = PathBuf::from(&data_dir_str);
     fs::create_dir_all(&data_dir)?;
+
+    let log_path = args.log_file.unwrap_or(
+        data_dir
+            .join("log")
+            .to_str()
+            .ok_or(anyhow!("Could not create log file"))?
+            .to_string(),
+    );
+    env_logger::builder()
+        .target(env_logger::Target::Pipe(Box::new(File::create(log_path)?)))
+        .init();
 
     let persistence = CliPersistence { data_dir };
     let history_file = &persistence.history_file();
