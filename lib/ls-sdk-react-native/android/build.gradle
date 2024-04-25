@@ -1,0 +1,78 @@
+import groovy.json.JsonSlurper
+
+def getVersionFromNpmPackage() {
+    def inputFile = new File("$rootDir/../node_modules/@breeztech/react-native-liquid-swap-sdk/package.json")
+    def packageJson = new JsonSlurper().parseText(inputFile.text)
+
+    return packageJson["version"]
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21"
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        minSdkVersion 24
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    lintOptions {
+        disable 'GradleCompatible'
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+        url("$rootDir/../node_modules/react-native/android")
+    }
+    google()
+    mavenCentral {
+        // We don't want to fetch react-native from Maven Central as there are
+        // older versions over there.
+        content {
+            excludeGroup "com.facebook.react"
+        }
+    }
+    jcenter()
+}
+
+allprojects {
+    repositories {
+        google()
+    }
+}
+
+dependencies {
+    //noinspection GradleDynamicVersion
+    implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21"
+    // Due to an issue with Jitpack (https://github.com/jitpack/jitpack.io/issues/5752)
+    // the Android platform versions of JNA (specifically libjnadispatch.so) are missing when downloading the Liquid Swap SDK from Jitpack.
+    // Therefore we ignore the version of JNA that comes with the Liquid Swap SDK from Jitpack
+    // and manually add one that does include the necessary Android platform binaries.
+    implementation("com.github.breez:breez-sdk-liquid:${getVersionFromNpmPackage()}") { exclude group:"net.java.dev.jna" } // remove for using locally built bindings during development
+    implementation("net.java.dev.jna:jna:5.14.0@aar")
+}

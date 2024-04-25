@@ -1,0 +1,20 @@
+rootProject.name = 'LiquidSwapSDKExample'
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+include ':app'
+includeBuild('../node_modules/react-native-gradle-plugin')
+
+include ':breeztech_react-native-liquid-swap-sdk'
+project(':breeztech_react-native-liquid-swap-sdk').projectDir = new File(rootProject.projectDir, '../node_modules/@breeztech/react-native-liquid-swap-sdk/android')
+
+include ':react-native-build-config'
+project(':react-native-build-config').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-build-config/android')
+
+include ':react-native-secure-storage'
+project(':react-native-secure-storage').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-secure-storage/android')
+
+if (settings.hasProperty("newArchEnabled") && settings.newArchEnabled == "true") {
+    include(":ReactAndroid")
+    project(":ReactAndroid").projectDir = file('../node_modules/react-native/ReactAndroid')
+    include(":ReactAndroid:hermes-engine")
+    project(":ReactAndroid:hermes-engine").projectDir = file('../node_modules/react-native/ReactAndroid/hermes-engine')
+}
