@@ -8,6 +8,7 @@ rpath = true
 [workspace]
 members = [
     "ls-sdk-bindings",
+    "ls-sdk-bindings/bindings-react-native",
     "ls-sdk-core",
 ]
 resolver = "2"
