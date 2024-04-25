@@ -14,10 +14,11 @@ log = "0.4.20"
 lwk_common = "0.3.0"
 lwk_signer = "0.3.0"
 lwk_wollet = "0.3.0"
-rusqlite = { version = "0.31", features = ["backup"] }
+rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
 serde = { version = "1.0.197", features = ["derive"] }
 thiserror = { workspace = true }
+openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 tempdir = "0.3.7"
