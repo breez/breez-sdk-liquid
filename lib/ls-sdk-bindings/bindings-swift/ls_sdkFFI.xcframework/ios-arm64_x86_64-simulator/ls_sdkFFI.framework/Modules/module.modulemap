@@ -1,0 +1,6 @@
+framework module ls_sdkFFI {
+  umbrella header "ls_sdkFFI-umbrella.h"
+
+  export *
+  module * { export * }
+}

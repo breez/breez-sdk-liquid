@@ -1,17 +1,113 @@
+CURRENT_DIR := $(shell pwd)
 SOURCES=$(sort $(wildcard ./src/*.rs ./src/**/*.rs))
+SHELL := /bin/bash
+OS_NAME=$(shell uname | tr '[:upper:]' '[:lower:]')
+TARGET ?= aarch64-unknown-linux-gnu
 
-TARGET ?= x86_64-unknown-linux-gnu
+.PHONY: init
+init:
+	rustup target add aarch64-apple-ios x86_64-apple-ios
+	rustup target add aarch64-apple-darwin x86_64-apple-darwin
+	rustup target add aarch64-apple-ios-sim
+	rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+	@if [ $$(uname) == "Darwin" ] ; then cargo install cargo-lipo ; fi
+	cargo install cbindgen
+	cargo install cargo-ndk
 
-all: python kotlin swift
+.PHONY: ndk-home
+ndk-home:
+	@if [ ! -d "${ANDROID_NDK_HOME}" ] ; then \
+		echo "Error: Please, set the ANDROID_NDK_HOME env variable to point to your NDK folder" ; \
+		exit 1 ; \
+	fi
 
-python: $(SOURCES)
-	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language python -o ffi/python
+.PHONY: clean
+clean:
+	cargo clean
+	rm -rf ffi
 
+.PHONY: test
+test:
+	cargo test
+
+all: bindings-swift bindings-android python react-native
+
+## Android 
+android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language kotlin -o ffi/kotlin
+
+aarch64-linux-android: $(SOURCES) ndk-home
+	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --release	
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/arm64-v8a/
+
+armv7-linux-androideabi: $(SOURCES) ndk-home
+	cargo ndk -t armv7-linux-androideabi -o ffi/kotlin/jniLibs build --release
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ffi/kotlin/jniLibs/armeabi-v7a/
+
+i686-linux-android: $(SOURCES) ndk-home
+	cargo ndk -t i686-linux-android -o ffi/kotlin/jniLibs build --release
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86/
+
+x86_64-linux-android: $(SOURCES) ndk-home
+	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --release
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
+
+bindings-android: android
+	cp -r ffi/kotlin/jniLibs bindings-android/lib/src/main
+	cp -r ffi/kotlin/ls_sdk bindings-android/lib/src/main/kotlin/
+	cd bindings-android && ./gradlew assemble
+	mkdir -p ffi/android
+	cp bindings-android/lib/build/outputs/aar/lib-release.aar ffi/android
+
+## Kotlin
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
 	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language kotlin -o ffi/kotlin
 
-swift: $(SOURCES)
+## Apple
+ios-universal: $(SOURCES)		
+	mkdir -p ../target/ios-universal/release
+	mkdir -p ../target/ios-universal-sim/release
+	cargo build --release --target aarch64-apple-ios ;\
+	cargo build --release --target x86_64-apple-ios ;\
+	cargo build --release --target aarch64-apple-ios-sim ;\
+	# build universal lib for arm device and x86 sim
+	lipo -create -output ../target/ios-universal/release/libls_sdk_bindings.a ../target/aarch64-apple-ios/release/libls_sdk_bindings.a ../target/x86_64-apple-ios/release/libls_sdk_bindings.a
+	# build universal lib for arm sim and x86 sim
+	lipo -create -output ../target/ios-universal-sim/release/libls_sdk_bindings.a ../target/aarch64-apple-ios-sim/release/libls_sdk_bindings.a ../target/x86_64-apple-ios/release/libls_sdk_bindings.a
+
+darwin-universal: $(SOURCES)
+	mkdir -p ../target/darwin-universal/release
+	cargo lipo --release --targets aarch64-apple-darwin
+	cargo lipo --release --targets x86_64-apple-darwin
+	lipo -create -output ../target/darwin-universal/release/libls_sdk_bindings.dylib ../target/aarch64-apple-darwin/release/libls_sdk_bindings.dylib ../target/x86_64-apple-darwin/release/libls_sdk_bindings.dylib
+	lipo -create -output ../target/darwin-universal/release/libls_sdk_bindings.a ../target/aarch64-apple-darwin/release/libls_sdk_bindings.a ../target/x86_64-apple-darwin/release/libls_sdk_bindings.a
+
+## Swift
+swift-ios: ios-universal
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl -l swift -o ffi/swift-ios
+	cp ../target/ios-universal/release/libls_sdk_bindings.a ffi/swift-ios
+	cd ffi/swift-ios && "swiftc" "-emit-module" "-module-name" "ls_sdk_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-ios/ls_sdkFFI.modulemap" "-I" "."  "-L" "." "-lls_sdk_bindings" ls_sdk.swift
+
+swift-darwin: darwin-universal
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl -l swift -o ffi/swift-darwin
+	cp ../target/darwin-universal/release/libls_sdk_bindings.dylib ffi/swift-darwin
+	cd ffi/swift-darwin && "swiftc" "-emit-module" "-module-name" "ls_sdk_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-darwin/ls_sdkFFI.modulemap" "-I" "."  "-L" "." "-lls_sdk_bindings" ls_sdk.swift
+
+bindings-swift: ios-universal darwin-universal
+	mkdir -p bindings-swift/Sources/LiquidSwapSDK
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language swift -o bindings-swift/Sources/LiquidSwapSDK
+	mv bindings-swift/Sources/LiquidSwapSDK/ls_sdk.swift bindings-swift/Sources/LiquidSwapSDK/LiquidSwapSDK.swift
+	cp bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h bindings-swift/ls_sdkFFI.xcframework/ios-arm64/ls_sdkFFI.framework/Headers
+	cp bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h bindings-swift/ls_sdkFFI.xcframework/ios-arm64_x86_64-simulator/ls_sdkFFI.framework/Headers
+	cp bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h bindings-swift/ls_sdkFFI.xcframework/macos-arm64_x86_64/ls_sdkFFI.framework/Headers
+	cp ../target/aarch64-apple-ios/release/libls_sdk_bindings.a bindings-swift/ls_sdkFFI.xcframework/ios-arm64/ls_sdkFFI.framework/ls_sdkFFI
+	cp ../target/ios-universal-sim/release/libls_sdk_bindings.a bindings-swift/ls_sdkFFI.xcframework/ios-arm64_x86_64-simulator/ls_sdkFFI.framework/ls_sdkFFI
+	cp ../target/darwin-universal/release/libls_sdk_bindings.a bindings-swift/ls_sdkFFI.xcframework/macos-arm64_x86_64/ls_sdkFFI.framework/ls_sdkFFI
+	rm bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h
+	rm bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.modulemap
+
+## Python
+python: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language swift -o ffi/swift
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language python -o ffi/python

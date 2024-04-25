@@ -1,0 +1,8 @@
+.swiftpm/
+.build/
+*.xcodeproj
+*.podspec
+Sources/LiquidSwapSDK/LiquidSwapSDK.swift
+**/ls_sdkFFI.h
+**/ls_sdkFFI
+**/ls_sdkFFI.modulemap
