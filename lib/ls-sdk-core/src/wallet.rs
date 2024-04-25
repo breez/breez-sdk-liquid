@@ -122,7 +122,7 @@ impl Wallet {
             } => {
                 let status_response = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+                    .map_err(|e| anyhow!("Could not contact Boltz servers for claim status: {e:?}"))?;
 
                 let swap_state = status_response
                     .status
@@ -178,7 +178,7 @@ impl Wallet {
 
                 let status_response = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|_| anyhow!("Could not contact Boltz servers for claim status"))?;
+                    .map_err(|e| anyhow!("Could not contact Boltz servers for claim status: {e:?}"))?;
 
                 if [
                     SubSwapStates::TransactionClaimed.to_string(),
