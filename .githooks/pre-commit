@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e 
+
+# Cargo syntax checks
+dirs=("lib" "cli")
+for dir in ${dirs[@]}; do
+  (cd $dir; exec cargo fmt; exec cargo clippy -- -D warnings)
+done
