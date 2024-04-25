@@ -5,9 +5,9 @@ mod wallet;
 pub use model::*;
 pub use wallet::*;
 
-// To avoid sendrawtransaction error "min relay fee not met"
-const CLAIM_ABSOLUTE_FEES: u64 = 134;
-
+/// Claim tx feerate for Receive, in sats per vbyte.
+/// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
+pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
 #[macro_export]
