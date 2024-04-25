@@ -1,3 +1,4 @@
+mod backup;
 mod migrations;
 
 use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};

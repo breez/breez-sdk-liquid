@@ -1,6 +1,7 @@
 use std::{
     fs,
     path::PathBuf,
+    str::FromStr,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -580,5 +581,17 @@ impl Wallet {
         fs::create_dir_all(path)?;
 
         Ok(())
+    }
+
+    pub fn restore(&self, backup_path: Option<String>) -> Result<()> {
+        let backup_path = match backup_path {
+            Some(p) => PathBuf::from_str(&p)?,
+            None => self.persister.get_backup_path(),
+        };
+        self.persister.restore_from_backup(backup_path)
+    }
+
+    pub fn backup(&self) -> Result<()> {
+        self.persister.backup()
     }
 }

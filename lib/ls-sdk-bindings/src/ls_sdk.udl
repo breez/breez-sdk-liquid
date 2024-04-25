@@ -76,4 +76,10 @@ interface BindingWallet {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=LsSdkError]
+    void backup();
+
+    [Throws=LsSdkError]
+    void restore(string? backup_path);
 };

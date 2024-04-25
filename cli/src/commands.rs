@@ -39,6 +39,13 @@ pub(crate) enum Command {
     GetInfo,
     /// Empties the encrypted wallet transaction cache
     EmptyCache,
+    /// Backs up the current pending swaps
+    Backup,
+    /// Retrieve a list of backups
+    Restore {
+        #[arg(short, long)]
+        backup_path: Option<String>,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -145,6 +152,14 @@ pub(crate) fn handle_command(
         Command::EmptyCache => {
             wallet.empty_wallet_cache()?;
             command_result!("Cache emptied successfully")
+        }
+        Command::Backup => {
+            wallet.backup()?;
+            command_result!("Backup created successfully!")
+        }
+        Command::Restore { backup_path } => {
+            wallet.restore(backup_path)?;
+            command_result!("Backup restored successfully!")
         }
     })
 }
