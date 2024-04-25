@@ -44,7 +44,7 @@ fn main() -> Result<()> {
 
     let log_path = args.log_file.unwrap_or(
         data_dir
-            .join("log")
+            .join("cli.log")
             .to_str()
             .ok_or(anyhow!("Could not create log file"))?
             .to_string(),

@@ -212,8 +212,8 @@ impl Wallet {
             for swap in ongoing_swaps {
                 Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
                     match swap {
-                        OngoingSwap::Send { .. } => warn!("[Ongoing Send] {err}"),
-                        OngoingSwap::Receive { .. } => warn!("[Ongoing Receive] {err}"),
+                        OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
+                        OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
                     }
                 })
             }
