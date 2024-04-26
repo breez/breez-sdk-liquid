@@ -2,7 +2,7 @@ mod commands;
 mod persist;
 
 use std::{
-    fs::{self, File},
+    fs::{self, OpenOptions},
     path::PathBuf,
 };
 
@@ -49,8 +49,13 @@ fn main() -> Result<()> {
             .ok_or(anyhow!("Could not create log file"))?
             .to_string(),
     );
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path)?;
+
     env_logger::builder()
-        .target(env_logger::Target::Pipe(Box::new(File::create(log_path)?)))
+        .target(env_logger::Target::Pipe(Box::new(log_file)))
         .init();
 
     let persistence = CliPersistence { data_dir };
