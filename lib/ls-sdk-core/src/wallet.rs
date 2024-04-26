@@ -127,20 +127,20 @@ impl Wallet {
                 let swap_state = status_response
                     .status
                     .parse::<SubSwapStates>()
-                    .map_err(|_| anyhow!("Invalid swap state received"))?;
+                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}"))?;
 
                 match swap_state {
                     SubSwapStates::SwapExpired => {
-                        warn!("Cannot claim: swap expired");
+                        warn!("Cannot claim swap {id}: swap expired");
                         wallet
                             .persister
                             .resolve_ongoing_swap(id, None)
-                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                            .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
                     SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
                     _ => {
                         return Err(anyhow!(
-                            "Cannot claim: invoice not paid yet. Swap state: {}",
+                            "Cannot claim swap {id}: invoice not paid yet. Swap state: {}",
                             swap_state.to_string()
                         ));
                     }
@@ -155,7 +155,7 @@ impl Wallet {
                                 id,
                                 Some((txid, PaymentData { payer_amount_sat })),
                             )
-                            .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                            .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
                     Err(err) => {
                         if let PaymentError::AlreadyClaimed = err {
@@ -163,9 +163,9 @@ impl Wallet {
                             wallet
                                 .persister
                                 .resolve_ongoing_swap(id, None)
-                                .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                                .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                         }
-                        warn!("Could not claim yet. Err: {err}");
+                        warn!("Could not claim swap {id} yet. Err: {err}");
                     }
                 }
             }
@@ -173,7 +173,7 @@ impl Wallet {
                 id, invoice, txid, ..
             } => {
                 let Some(txid) = txid.clone() else {
-                    return Err(anyhow!("Transaction not broadcast yet"));
+                    return Err(anyhow!("Transaction not broadcast yet for swap {id}"));
                 };
 
                 let status_response = client
@@ -190,7 +190,7 @@ impl Wallet {
                     wallet
                         .persister
                         .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
-                        .map_err(|_| anyhow!("Could not resolve swap in database"))?;
+                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                 }
             }
         };
