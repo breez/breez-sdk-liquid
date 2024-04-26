@@ -122,7 +122,7 @@ impl Wallet {
             } => {
                 let status_response = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|e| anyhow!("Failed to fetch swap status: {e:?}"))?;
+                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?;
 
                 let swap_state = status_response
                     .status
@@ -178,7 +178,7 @@ impl Wallet {
 
                 let status_response = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|e| anyhow!("Failed to fetch swap status: {e:?}"))?;
+                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?;
 
                 if [
                     SubSwapStates::TransactionClaimed.to_string(),
