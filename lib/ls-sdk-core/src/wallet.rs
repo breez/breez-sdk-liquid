@@ -124,10 +124,10 @@ impl Wallet {
                     .swap_status(SwapStatusRequest { id: id.clone() })
                     .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?;
 
-                let swap_state = status_response
-                    .status
+                let status = status_response.status;
+                let swap_state = status
                     .parse::<SubSwapStates>()
-                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}"))?;
+                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}: {status}",))?;
 
                 match swap_state {
                     SubSwapStates::SwapExpired => {
@@ -140,8 +140,7 @@ impl Wallet {
                     SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
                     _ => {
                         return Err(anyhow!(
-                            "Cannot claim swap {id}: invoice not paid yet. Swap state: {}",
-                            swap_state.to_string()
+                            "Cannot claim swap {id}: invoice not paid yet. Swap state: {status}",
                         ));
                     }
                 }
