@@ -2,8 +2,11 @@ use std::sync::Arc;
 
 use anyhow::{Error, Result};
 use ls_sdk::{
-    model::PaymentError, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-    PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse, Wallet, WalletInfo,
+    model::{
+        Network, PaymentError, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
+        ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
+    },
+    wallet::Wallet,
 };
 
 // TODO Unify error enum

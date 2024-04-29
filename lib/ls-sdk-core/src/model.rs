@@ -6,6 +6,8 @@ use serde::Serialize;
 
 use crate::get_invoice_amount;
 
+use super::error::LsSdkError;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Network {
     Liquid,
@@ -165,6 +167,22 @@ impl From<lwk_signer::SignerError> for PaymentError {
     }
 }
 
+impl From<anyhow::Error> for PaymentError {
+    fn from(err: anyhow::Error) -> Self {
+        Self::Generic {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<LsSdkError> for PaymentError {
+    fn from(err: LsSdkError) -> Self {
+        Self::Generic {
+            err: err.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct WalletInfo {
     pub balance_sat: u64,
@@ -250,4 +268,16 @@ impl From<OngoingSwap> for Payment {
 
 pub(crate) struct PaymentData {
     pub payer_amount_sat: u64,
+}
+
+#[macro_export]
+macro_rules! get_invoice_amount {
+    ($invoice:expr) => {
+        $invoice
+            .parse::<Bolt11Invoice>()
+            .expect("Expecting valid invoice")
+            .amount_milli_satoshis()
+            .expect("Expecting valid amount")
+            / 1000
+    };
 }
