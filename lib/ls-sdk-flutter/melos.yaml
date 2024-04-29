@@ -34,7 +34,7 @@ scripts:
   build-other-local: dart scripts/build_other.dart --local
 
   test:
-    cargo build --release &&
+    cargo build --package ls-sdk --release &&
     melos run test-dart &&
     melos run test-flutter
   

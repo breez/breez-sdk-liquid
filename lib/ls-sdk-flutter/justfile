@@ -14,7 +14,7 @@ ffigen:
 
 # builds the local library for testing
 build *args:
-	cargo build --manifest-path ../ls-sdk-core/Cargo.toml --features frb {{args}}
+	cargo build --package ls-sdk --manifest-path ../ls-sdk-core/Cargo.toml --features frb {{args}}
 
 build-apple *args:
 	dart scripts/build_apple.dart {{args}}

@@ -71,7 +71,7 @@ Future<void> mainImpl(List<String> args) async {
   for (final target in targets) {
     print(' Building target $target');
     await run('rustup target add $target');
-    await run('cargo build --target=$target $profileArg');
+    await run('cargo build --package ls-sdk --target=$target $profileArg');
   }
 
   await run('mkdir -p mac-lipo ios-sim-lipo');
