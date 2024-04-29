@@ -19,12 +19,12 @@ impl From<anyhow::Error> for LsSdkError {
     }
 }
 
-pub fn init(
+pub fn connect(
     mnemonic: String,
     data_dir: Option<String>,
     network: Network,
 ) -> Result<Arc<BindingWallet>, LsSdkError> {
-    let ln_sdk = Wallet::init(&mnemonic, data_dir, network)?;
+    let ln_sdk = Wallet::connect(&mnemonic, data_dir, network)?;
     Ok(Arc::from(BindingWallet { ln_sdk }))
 }
 
