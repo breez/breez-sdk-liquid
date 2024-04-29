@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use clap::{arg, Parser};
-use ls_sdk::{PrepareReceiveRequest, Wallet};
+use ls_sdk::{model::PrepareReceiveRequest, wallet::Wallet};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;

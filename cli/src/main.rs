@@ -10,7 +10,10 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
-use ls_sdk::{Network, Wallet, DEFAULT_DATA_DIR};
+use ls_sdk::{
+    model::Network,
+    wallet::{Wallet, DEFAULT_DATA_DIR},
+};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 
