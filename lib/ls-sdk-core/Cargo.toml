@@ -28,4 +28,5 @@ tempdir = "0.3.7"
 uuid = { version = "1.8.0", features = ["v4"] }
 
 [features]
+default = ["frb"]
 frb = ["dep:flutter_rust_bridge"]
