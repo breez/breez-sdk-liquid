@@ -62,3 +62,32 @@ jobs:
           export CLASSPATH=$(pwd)/jna-5.12.1.jar;
           cd lib/ls-sdk-bindings
           cargo test
+
+  react-native:
+    name: Check react native bindings
+    runs-on: macOS-14
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: React native codegen
+        working-directory: lib/ls-sdk-react-native
+        run: |
+          yarn global add tslint typescript
+          brew update
+          brew install kotlin ktlint swiftformat
+          make react-native
+
+      - name: Check git status
+        env:
+          GIT_PAGER: cat
+        run: |
+          status=$(git status --porcelain)
+          if [[ -n "$status" ]]; then
+            echo "Git status has changes"
+            echo "$status"
+            git diff
+            exit 1
+          else
+            echo "No changes in git status"
+          fi
