@@ -15,7 +15,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 [dependencies]
 anyhow = { workspace = true }
 ls-sdk = { path = "../ls-sdk-core" }
-uniffi = { workspace = true, features = [ "cli" ] }
+uniffi = { workspace = true, features = [ "bindgen-tests", "cli" ] }
 thiserror = { workspace = true }
 
 [build-dependencies]
