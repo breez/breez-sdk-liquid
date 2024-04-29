@@ -1,0 +1,15 @@
+name: scripts
+description: Supporting scripts
+version: 0.0.1
+homepage: https://breez.technology
+repository: https://github.com/breez-sdk/breez-sdk-liquid
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  args:
+  cli_script: ^0.3.0
+  glob: ^2.1.1
+
