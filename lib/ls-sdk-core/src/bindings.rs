@@ -3,8 +3,9 @@ pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 use std::sync::{Arc, OnceLock};
 
 use crate::{
+    error::PaymentError,
     model::{
-        Network, PaymentError, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
+        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
         ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
     },
     wallet::Wallet,

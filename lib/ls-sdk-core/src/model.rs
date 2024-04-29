@@ -6,8 +6,6 @@ use serde::Serialize;
 
 use crate::get_invoice_amount;
 
-use super::error::LsSdkError;
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Network {
     Liquid,
@@ -93,94 +91,6 @@ pub struct PrepareSendResponse {
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
     pub txid: String,
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum PaymentError {
-    #[error("Invoice amount is out of range")]
-    AmountOutOfRange,
-
-    #[error("The specified funds have already been claimed")]
-    AlreadyClaimed,
-
-    #[error("Generic error: {err}")]
-    Generic { err: String },
-
-    #[error("The specified invoice is not valid")]
-    InvalidInvoice,
-
-    #[error("The generated preimage is not valid")]
-    InvalidPreimage,
-
-    #[error("Lwk error: {err}")]
-    LwkError { err: String },
-
-    #[error("Boltz did not return any pairs from the request")]
-    PairsNotFound,
-
-    #[error("Could not store the swap details locally")]
-    PersistError,
-
-    #[error("Could not sign/send the transaction: {err}")]
-    SendError { err: String },
-
-    #[error("Could not sign the transaction: {err}")]
-    SignerError { err: String },
-}
-
-impl From<boltz_client::error::Error> for PaymentError {
-    fn from(err: boltz_client::error::Error) -> Self {
-        match err {
-            boltz_client::error::Error::Protocol(msg) => {
-                if msg == "Could not find utxos for script" {
-                    return PaymentError::AlreadyClaimed;
-                }
-
-                PaymentError::Generic { err: msg }
-            }
-            _ => PaymentError::Generic {
-                err: format!("{err:?}"),
-            },
-        }
-    }
-}
-
-#[allow(clippy::match_single_binding)]
-impl From<lwk_wollet::Error> for PaymentError {
-    fn from(err: lwk_wollet::Error) -> Self {
-        match err {
-            _ => PaymentError::LwkError {
-                err: format!("{err:?}"),
-            },
-        }
-    }
-}
-
-#[allow(clippy::match_single_binding)]
-impl From<lwk_signer::SignerError> for PaymentError {
-    fn from(err: lwk_signer::SignerError) -> Self {
-        match err {
-            _ => PaymentError::SignerError {
-                err: format!("{err:?}"),
-            },
-        }
-    }
-}
-
-impl From<anyhow::Error> for PaymentError {
-    fn from(err: anyhow::Error) -> Self {
-        Self::Generic {
-            err: err.to_string(),
-        }
-    }
-}
-
-impl From<LsSdkError> for PaymentError {
-    fn from(err: LsSdkError) -> Self {
-        Self::Generic {
-            err: err.to_string(),
-        }
-    }
 }
 
 #[derive(Debug, Serialize)]

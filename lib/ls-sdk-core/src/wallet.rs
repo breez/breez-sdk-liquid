@@ -29,12 +29,16 @@ use lwk_wollet::{
     ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 
-use crate::{ensure_sdk, get_invoice_amount, persist::Persister};
-
-use crate::model::{
-    Network, OngoingSwap, Payment, PaymentData, PaymentError, PaymentType, PrepareReceiveRequest,
-    PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
-    WalletInfo, WalletOptions,
+use crate::{
+    ensure_sdk,
+    error::PaymentError,
+    get_invoice_amount,
+    model::{
+        Network, OngoingSwap, Payment, PaymentData, PaymentType, PrepareReceiveRequest,
+        PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
+        WalletInfo, WalletOptions,
+    },
+    persist::Persister,
 };
 
 /// Claim tx feerate for Receive, in sats per vbyte.

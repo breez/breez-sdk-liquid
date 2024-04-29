@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use anyhow::{Error, Result};
 use ls_sdk::{
+    error::PaymentError,
     model::{
-        Network, PaymentError, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
+        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
         ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
     },
     wallet::Wallet,
