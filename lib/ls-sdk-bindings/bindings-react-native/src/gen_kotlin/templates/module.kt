@@ -50,7 +50,7 @@ class LiquidSwapSDKModule(reactContext: ReactApplicationContext) : ReactContextB
     {%- endfor %}  
 
     @ReactMethod
-    fun initBindingWallet(mnemonic: String, dataDir: String, network: String, promise: Promise) {
+    fun connect(mnemonic: String, dataDir: String, network: String, promise: Promise) {
         if (bindingWallet != null) {
             promise.reject("Generic", "Already initialized")
             return
@@ -60,7 +60,7 @@ class LiquidSwapSDKModule(reactContext: ReactApplicationContext) : ReactContextB
             try {
                 val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/lsSdk" }
                 val networkTmp = asNetwork(network)
-                bindingWallet = init(mnemonic, dataDirTmp, networkTmp)
+                bindingWallet = connect(mnemonic, dataDirTmp, networkTmp)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

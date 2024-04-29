@@ -2,17 +2,9 @@
 #import <React/RCTEventEmitter.h>
 
 @interface RCT_EXTERN_MODULE(RNLiquidSwapSDK, RCTEventEmitter)
-
-RCT_EXTERN_METHOD(
-    connect: (NSString*)mnemonic
-    dataDir: (NSString*)dataDir
-    network: (NSString*)network
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
   
 RCT_EXTERN_METHOD(
-    initBindingWallet: (NSString*)mnemonic
+    connect: (NSString*)mnemonic
     dataDir: (NSString*)dataDir
     network: (NSString*)network
     resolve: (RCTPromiseResolveBlock)resolve
