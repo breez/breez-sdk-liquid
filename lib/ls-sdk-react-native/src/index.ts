@@ -61,6 +61,7 @@ export const connect = async (mnemonic: string, dataDir: string = "", network: N
     return response
 }
 
+
 export const getInfo = async (withScan: boolean): Promise<WalletInfo> => {
     const response = await LiquidSwapSDK.getInfo(withScan)
     return response
