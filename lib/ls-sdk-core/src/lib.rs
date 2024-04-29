@@ -1,6 +1,8 @@
 #[cfg(feature = "frb")]
 pub mod bindings;
-pub mod error;
-pub mod model;
-pub mod persist;
-pub mod wallet;
+pub(crate) mod error;
+#[cfg(feature = "frb")]
+pub mod frb;
+pub(crate) mod model;
+pub(crate) mod persist;
+pub(crate) mod wallet;

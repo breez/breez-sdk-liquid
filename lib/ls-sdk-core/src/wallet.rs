@@ -17,7 +17,7 @@ use boltz_client::{
         },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
-    util::secrets::{LiquidSwapKey, Preimage, SwapKey},
+    util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
     Bolt11Invoice, Keypair,
 };
 use log::{debug, error, warn};
@@ -36,8 +36,6 @@ use crate::model::{
     PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
     WalletInfo, WalletOptions,
 };
-
-pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 
 /// Claim tx feerate for Receive, in sats per vbyte.
 /// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.

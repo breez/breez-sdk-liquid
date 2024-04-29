@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use boltz_client::util::secrets::LBtcReverseRecovery;
+pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 use std::sync::{Arc, OnceLock};
 
 use crate::{
