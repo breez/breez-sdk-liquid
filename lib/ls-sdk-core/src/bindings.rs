@@ -86,3 +86,19 @@ pub fn empty_wallet_cache() -> Result<()> {
         .map_err(|e| PaymentError::Generic { err: e.to_string() })?
         .empty_wallet_cache()
 }
+
+pub fn backup() -> Result<()> {
+    WALLET_INSTANCE
+        .get()
+        .ok_or(anyhow!("Not initialized"))
+        .map_err(|e| PaymentError::Generic { err: e.to_string() })?
+        .backup()
+}
+
+pub fn restore(backup_path: Option<String>) -> Result<()> {
+    WALLET_INSTANCE
+        .get()
+        .ok_or(anyhow!("Not initialized"))
+        .map_err(|e| PaymentError::Generic { err: e.to_string() })?
+        .restore(backup_path)
+}
