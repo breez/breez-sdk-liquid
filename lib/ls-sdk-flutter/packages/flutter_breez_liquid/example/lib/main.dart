@@ -14,7 +14,7 @@ const String mnemonic = "";
 Future initializeWallet() async {
   assert(mnemonic.isNotEmpty, "Please enter your mnemonic.");
   final dataDir = await getApplicationDocumentsDirectory();
-  await init(
+  await connect(
     mnemonic: mnemonic,
     dataDir: dataDir.path,
     network: Network.liquid,
