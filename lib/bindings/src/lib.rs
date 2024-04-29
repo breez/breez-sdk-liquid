@@ -1,20 +1,7 @@
 use std::sync::Arc;
 
-use anyhow::{Error, Result};
-use breez_liquid_sdk::{error::PaymentError, model::*, wallet::Wallet};
-
-// TODO Unify error enum
-#[derive(Debug, thiserror::Error)]
-pub enum LsSdkError {
-    #[error("Error: {err}")]
-    Generic { err: String },
-}
-
-impl From<anyhow::Error> for LsSdkError {
-    fn from(e: Error) -> Self {
-        LsSdkError::Generic { err: e.to_string() }
-    }
-}
+use anyhow::Result;
+use breez_liquid_sdk::{error::*, model::*, wallet::Wallet};
 
 pub fn connect(req: ConnectRequest) -> Result<Arc<BindingWallet>, LsSdkError> {
     let ln_sdk = Wallet::connect(req)?;
