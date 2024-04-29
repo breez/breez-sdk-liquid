@@ -4,6 +4,6 @@ rust_output: ../ls-sdk-core/src/frb/bridge.rs
 c_output: ls_sdk/include/ls_sdk.h
 duplicated_c_output: [packages/flutter_breez_liquid/macos/Classes/ls_sdk.h, packages/flutter_breez_liquid/ios/Classes/ls_sdk.h]
 web: false
-full_dep: false
+full_dep: true
 add_mod_to_lib: false
 deps_check: false
