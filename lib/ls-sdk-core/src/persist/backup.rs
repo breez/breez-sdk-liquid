@@ -3,7 +3,7 @@ use rusqlite::{backup::Backup, Connection};
 use std::path::{Path, PathBuf};
 
 use super::Persister;
-use crate::Network;
+use crate::model::Network;
 
 impl Persister {
     pub(crate) fn get_backup_path(&self) -> PathBuf {
