@@ -648,7 +648,8 @@ mod tests {
     #[test]
     fn normal_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet = Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
+        let breez_wallet =
+            Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
         let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq";
         breez_wallet.prepare_send_payment(&invoice)?;
@@ -660,7 +661,8 @@ mod tests {
     #[test]
     fn reverse_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet = Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
+        let breez_wallet =
+            Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
         let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
             receiver_amount_sat: Some(1000),
