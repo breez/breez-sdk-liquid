@@ -40,6 +40,25 @@ class LiquidSwapSDKModule(reactContext: ReactApplicationContext) : ReactContextB
     fun removeListeners(count: Int) {}
 
     @ReactMethod
+    fun connect(
+        mnemonic: String,
+        dataDir: String,
+        network: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val dataDirTmp = dataDir.takeUnless { it.isEmpty() }
+                val networkTmp = asNetwork(network)
+                val res = connect(mnemonic, dataDirTmp, networkTmp)
+                promise.resolve(res)
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun initBindingWallet(
         mnemonic: String,
         dataDir: String,

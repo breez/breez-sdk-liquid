@@ -60,6 +60,11 @@ export const init = async (mnemonic: string, dataDir: string = "", network: Netw
     const response = await LiquidSwapSDK.initBindingWallet(mnemonic, dataDir, network)
     return response
 }
+export const connect = async (mnemonic: string, dataDir: string = "", network: Network): Promise<BindingWallet> => {
+    const response = await LiquidSwapSDK.connect(mnemonic, dataDir, network)
+    return response
+}
+
 
 export const getInfo = async (withScan: boolean): Promise<WalletInfo> => {
     const response = await LiquidSwapSDK.getInfo(withScan)
