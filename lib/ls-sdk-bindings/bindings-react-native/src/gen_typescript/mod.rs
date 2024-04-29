@@ -26,7 +26,7 @@ static KEYWORDS: Lazy<HashSet<String>> = Lazy::new(|| {
 });
 
 static IGNORED_FUNCTIONS: Lazy<HashSet<String>> = Lazy::new(|| {
-    let list: Vec<&str> = vec!["init"];
+    let list: Vec<&str> = vec![];
     HashSet::from_iter(list.into_iter().map(|s| s.to_string()))
 });
 

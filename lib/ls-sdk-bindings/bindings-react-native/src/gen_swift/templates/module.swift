@@ -57,8 +57,8 @@ class RNLiquidSwapSDK: RCTEventEmitter {
     {% include "TopLevelFunctionTemplate.swift" %}
     {% endif -%}
     {%- endfor %}  
-    @objc(initBindingWallet:dataDir:network:resolve:reject:)
-    func initBindingWallet(_ mnemonic: String, dataDir: String, network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    @objc(connect:dataDir:network:resolve:reject:)
+    func connect(_ mnemonic: String, dataDir: String, network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         if bindingWallet != nil {
             reject("Generic", "Already initialized", nil)
             return
@@ -67,7 +67,7 @@ class RNLiquidSwapSDK: RCTEventEmitter {
         do {
             let dataDirTmp = dataDir.isEmpty ? RNLiquidSwapSDK.defaultDataDir.path : dataDir
             let networkTmp = try LiquidSwapSDKMapper.asNetwork(network: network)
-            bindingWallet = try LiquidSwapSDK.`init`(mnemonic: mnemonic, dataDir: dataDirTmp, network: networkTmp)
+            bindingWallet = try LiquidSwapSDK.connect(mnemonic: mnemonic, dataDir: dataDirTmp, network: networkTmp)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
