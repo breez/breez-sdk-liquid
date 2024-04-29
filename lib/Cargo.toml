@@ -1,9 +1,14 @@
 [profile.release]
-lto = true
+lto = "thin"
 opt-level = "z"
 codegen-units = 1
 panic = "abort"
 rpath = true
+strip = "symbols"
+
+[profile.min]
+inherits = "release"
+lto = true
 
 [workspace]
 members = [
