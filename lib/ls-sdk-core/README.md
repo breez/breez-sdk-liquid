@@ -16,7 +16,7 @@ The wallet provides the ability to `backup` and `restore` ongoing swaps via the 
 let mnemonic = "...";
 let data_dir = None;
 let network = Network::Liquid;
-let breez_wallet = Wallet::init(mnemonic, data_dir, network)?;
+let breez_wallet = Wallet::connect(mnemonic, data_dir, network)?;
 
 breez_wallet.backup()?;  // Backs up the pending swaps under `{data_dir}/backup{-testnet}.sql`. Overwrites previous versions.
 let backup_path = None;  // Can also be Some(String), a path pointing to the database. Default is `{data_dir}/backup{-testnet}.sql`

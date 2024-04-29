@@ -71,7 +71,7 @@ fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let wallet = Wallet::init(
+    let wallet = Wallet::connect(
         &mnemonic.to_string(),
         Some(data_dir_str),
         Network::LiquidTestnet,

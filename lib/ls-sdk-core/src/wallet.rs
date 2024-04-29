@@ -47,7 +47,11 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn init(mnemonic: &str, data_dir: Option<String>, network: Network) -> Result<Arc<Wallet>> {
+    pub fn connect(
+        mnemonic: &str,
+        data_dir: Option<String>,
+        network: Network,
+    ) -> Result<Arc<Wallet>> {
         let is_mainnet = network == Network::Liquid;
         let signer = SwSigner::new(mnemonic, is_mainnet)?;
         let descriptor = Wallet::get_descriptor(&signer, network)?;
