@@ -78,4 +78,4 @@ impl BindingWallet {
     }
 }
 
-uniffi::include_scaffolding!("ls_sdk");
+uniffi::include_scaffolding!("breez_liquid_sdk");
