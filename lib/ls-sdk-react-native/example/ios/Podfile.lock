@@ -1,5 +1,7 @@
 PODS:
   - boost (1.76.0)
+  - BreezLiquidSDK (0.0.1):
+    - React-Core
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.70.15)
@@ -75,8 +77,6 @@ PODS:
   - glog (0.3.5)
   - hermes-engine (0.70.15)
   - libevent (2.1.12)
-  - LiquidSwapSDK (0.0.1):
-    - React-Core
   - OpenSSL-Universal (1.1.1100)
   - RCT-Folly (2021.07.22.00):
     - boost
@@ -388,6 +388,7 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
+  - "BreezLiquidSDK (from `../node_modules/@breeztech/react-native-breez-liquid-sdk`)"
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -415,7 +416,6 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes/hermes-engine.podspec`)
   - libevent (~> 2.1.12)
-  - "LiquidSwapSDK (from `../node_modules/@breeztech/react-native-liquid-swap-sdk`)"
   - OpenSSL-Universal (= 1.1.1100)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
@@ -473,6 +473,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
+  BreezLiquidSDK:
+    :path: "../node_modules/@breeztech/react-native-breez-liquid-sdk"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -483,8 +485,6 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes/hermes-engine.podspec"
-  LiquidSwapSDK:
-    :path: "../node_modules/@breeztech/react-native-liquid-swap-sdk"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -552,6 +552,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 9fa78656d705f55b1220151d997e57e2a3f2cde0
+  BreezLiquidSDK: 4bca3771d7dfe9c834dbe26836ffadfe8f283c76
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 9cf707e46f9bd90816b7c91b2c1c8b8a2f549527
@@ -569,7 +570,6 @@ SPEC CHECKSUMS:
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   hermes-engine: 2592781da1571e4375dfd897f9462638c2d0ceb9
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
-  LiquidSwapSDK: 4f88617d2e3dadf75935b8dd54762851a14cf3b0
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: 2a96ea90ffddd10cc43115bd93803692e09b5d9a
@@ -606,6 +606,6 @@ SPEC CHECKSUMS:
   Yoga: d6134eb3d6e3675afc1d6d65ccb3169b60e21980
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: ac2325ca381131d57d97db3f554ce368d61ce23e
+PODFILE CHECKSUM: 8741374df2d18c097f581557ec59033aefb561e8
 
 COCOAPODS: 1.15.2

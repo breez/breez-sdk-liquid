@@ -1,7 +1,7 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
 
-@interface RCT_EXTERN_MODULE(RNLiquidSwapSDK, RCTEventEmitter)
+@interface RCT_EXTERN_MODULE(RNBreezLiquidSDK, RCTEventEmitter)
 {% for func in ci.function_definitions() %}
 {%- if func.name()|ignored_function == false -%}
 {% include "ExternFunctionTemplate.m" %}

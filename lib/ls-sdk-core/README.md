@@ -1,4 +1,4 @@
-# breez-sdk-liquid
+# breez-liquid-sdk
 
 ## Prerequisites
 

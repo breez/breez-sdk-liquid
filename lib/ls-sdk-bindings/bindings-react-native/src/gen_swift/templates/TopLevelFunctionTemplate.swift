@@ -7,14 +7,14 @@
     {%- when Type::Enum(inner) %}
         {%- let e = ci.get_enum_definition(inner).unwrap() %}
         {%- if e.is_flat() %}
-            let {{arg.name()|var_name|unquote|temporary}} = try LiquidSwapSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+            let {{arg.name()|var_name|unquote|temporary}} = try BreezLiquidSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
         {%- else %}
-            let {{arg.name()|var_name|unquote|temporary}} = try LiquidSwapSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+            let {{arg.name()|var_name|unquote|temporary}} = try BreezLiquidSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
         {%- endif %}
     {%- when Type::Optional(_) %}
             let {{arg.name()|var_name|unquote|temporary}} = {{ arg.type_()|rn_convert_type(arg.name()|var_name|unquote) -}}
     {%- when Type::Record(_) %}
-            let {{arg.type_()|type_name|var_name|unquote}} = try LiquidSwapSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+            let {{arg.type_()|type_name|var_name|unquote}} = try BreezLiquidSDKMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
     {%- else %}
     {%- endmatch %}
 {%- endfor %}

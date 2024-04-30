@@ -18,19 +18,19 @@ make react-native
 
 ### Generated artifacts
 * Android
- >* android/src/main/java/com/lssdk/LiquidSwapSDKMapper.kt
- >* android/src/main/java/com/lssdk/LiquidSwapSDKModule.kt
+ >* android/src/main/java/com/breezliquidsdk/BreezLiquidSDKMapper.kt
+ >* android/src/main/java/com/breezliquidsdk/BreezLiquidSDKModule.kt
 * iOS
- >* ios/LiquidSwapSDKMapper.swift
- >* ios/LiquidSwapSDK.m
- >* ios/LiquidSwapSDK.swift
+ >* ios/BreezLiquidSDKMapper.swift
+ >* ios/BreezLiquidSDK.m
+ >* ios/BreezLiquidSDK.swift
 * Typescript
  >* src/index.ts
 
 ### Publish
 When publishing, make sure the following are updated:
 - Update the version number in `package.json`.
-- Set the published version of `@breeztech/react-native-liquid-swap-sdk` in `example/package.json`. 
+- Set the published version of `@breeztech/react-native-breez-liquid-sdk` in `example/package.json`. 
 
 Then login to npm:
 ```

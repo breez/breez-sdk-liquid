@@ -1,6 +1,6 @@
-package com.lssdk
+package com.breezliquidsdk
 
-import ls_sdk.*
+import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 import java.io.File
@@ -9,12 +9,12 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 {% import "macros.kt" as kt %}
 
-class LiquidSwapSDKModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     private lateinit var executor: ExecutorService
     private var bindingWallet: BindingWallet? = null
 
     companion object {
-        const val TAG = "RNLiquidSwapSDK"
+        const val TAG = "RNBreezLiquidSDK"
     }
 
     override fun initialize() {
@@ -58,7 +58,7 @@ class LiquidSwapSDKModule(reactContext: ReactApplicationContext) : ReactContextB
 
         executor.execute {
             try {
-                val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/lsSdk" }
+                val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
                 val networkTmp = asNetwork(network)
                 bindingWallet = connect(mnemonic, dataDirTmp, networkTmp)
                 promise.resolve(readableMapOf("status" to "ok"))
