@@ -1,13 +1,22 @@
 [profile.release]
-lto = "thin"
-opt-level = "z"
-codegen-units = 1
-panic = "abort"
+lto = true
+opt-level = "z" # Optimize for size.
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+panic = "abort" # Abort on panic, as unwinding code does require extra binary size
 rpath = true
-strip = "symbols"
 
-[profile.min]
+[profile.frb]
 inherits = "release"
+strip = true # Automatically strip symbols from the binary.
+opt-level = 3
+lto = "thin"
+debug = 0
+split-debuginfo = "unpacked"
+incremental = false
+
+[profile.frb-min]
+inherits = "frb"
+opt-level = "z" # Optimize for size.
 lto = true
 
 [workspace]

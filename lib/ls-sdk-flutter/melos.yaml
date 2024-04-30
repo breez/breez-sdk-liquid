@@ -23,10 +23,10 @@ scripts:
     melos run build-other
 
   # the only time 'melos run build-*' is called is to prepare
-  # for distribution, so use the 'min' profile.
-  build-apple: dart scripts/build_apple.dart --profile min
-  build-android: bash scripts/build-android.sh --profile min
-  build-other: dart scripts/build_other.dart --profile min
+  # for distribution, so use the 'frb-min' profile.
+  build-apple: dart scripts/build_apple.dart --profile frb-min
+  build-android: bash scripts/build-android.sh --profile frb-min
+  build-other: dart scripts/build_other.dart --profile frb-min
 
   # Platform-specific builds, mainly for testing
   build-ios: dart scripts/build_apple.dart --ios
@@ -34,7 +34,7 @@ scripts:
   build-other-local: dart scripts/build_other.dart --local
 
   test:
-    cargo build --package ls-sdk --release &&
+    cargo build --package ls-sdk --profile=frb &&
     melos run test-dart &&
     melos run test-flutter
   
