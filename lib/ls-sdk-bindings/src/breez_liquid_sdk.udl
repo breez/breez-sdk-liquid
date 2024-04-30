@@ -41,8 +41,7 @@ dictionary SendPaymentResponse {
 };
 
 dictionary PrepareReceiveRequest {
-    u64? payer_amount_sat;
-    u64? receiver_amount_sat;
+    u64 payer_amount_sat;
 };
 
 dictionary PrepareReceiveResponse {

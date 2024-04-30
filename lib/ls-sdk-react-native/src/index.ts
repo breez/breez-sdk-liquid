@@ -18,8 +18,7 @@ const LiquidSwapSDK = NativeModules.RNLiquidSwapSDK
       )
 
 export interface PrepareReceiveRequest {
-    payerAmountSat?: number
-    receiverAmountSat?: number
+    payerAmountSat: number
 }
 
 export interface PrepareReceiveResponse {

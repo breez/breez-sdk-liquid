@@ -61,8 +61,7 @@ impl WalletOptions {
 
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
-    pub payer_amount_sat: Option<u64>,
-    pub receiver_amount_sat: Option<u64>,
+    pub payer_amount_sat: u64,
 }
 
 #[derive(Debug, Serialize)]

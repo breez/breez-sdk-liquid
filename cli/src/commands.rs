@@ -30,8 +30,8 @@ pub(crate) enum Command {
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
-        /// Amount of funds to receive, in satoshi
-        amount_sat: u64,
+        /// Amount the payer will send, in satoshi
+        payer_amount_sat: u64,
     },
     /// List incoming and outgoing payments
     ListPayments,
@@ -94,11 +94,9 @@ pub(crate) fn handle_command(
     command: Command,
 ) -> Result<String> {
     Ok(match command {
-        Command::ReceivePayment { amount_sat } => {
-            let prepare_response = wallet.prepare_receive_payment(&PrepareReceiveRequest {
-                payer_amount_sat: Some(amount_sat),
-                receiver_amount_sat: None,
-            })?;
+        Command::ReceivePayment { payer_amount_sat } => {
+            let prepare_response =
+                wallet.prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })?;
 
             wait_confirmation!(
                 format!(

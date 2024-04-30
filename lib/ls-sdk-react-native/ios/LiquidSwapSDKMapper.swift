@@ -3,31 +3,17 @@ import LiquidSwapSDK
 
 enum LiquidSwapSDKMapper {
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
-        var payerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveRequest, key: "payerAmountSat") {
-            guard let payerAmountSatTmp = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
-                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "payerAmountSat"))
-            }
-            payerAmountSat = payerAmountSatTmp
-        }
-        var receiverAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveRequest, key: "receiverAmountSat") {
-            guard let receiverAmountSatTmp = prepareReceiveRequest["receiverAmountSat"] as? UInt64 else {
-                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "receiverAmountSat"))
-            }
-            receiverAmountSat = receiverAmountSatTmp
+        guard let payerAmountSat = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
         }
 
         return PrepareReceiveRequest(
-            payerAmountSat: payerAmountSat,
-            receiverAmountSat: receiverAmountSat
-        )
+            payerAmountSat: payerAmountSat)
     }
 
     static func dictionaryOf(prepareReceiveRequest: PrepareReceiveRequest) -> [String: Any?] {
         return [
-            "payerAmountSat": prepareReceiveRequest.payerAmountSat == nil ? nil : prepareReceiveRequest.payerAmountSat,
-            "receiverAmountSat": prepareReceiveRequest.receiverAmountSat == nil ? nil : prepareReceiveRequest.receiverAmountSat,
+            "payerAmountSat": prepareReceiveRequest.payerAmountSat,
         ]
     }
 
