@@ -56,7 +56,7 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
-namespace ls_sdk {
+namespace breez_liquid_sdk {
     [Throws=LsSdkError]
     BindingWallet connect(string mnemonic, string? data_dir, Network network);
 };

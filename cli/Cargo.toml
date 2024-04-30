@@ -1,5 +1,5 @@
 [package]
-name = "ls-sdk-cli"
+name = "breez-liquid-cli"
 edition = "2021"
 version = "0.0.1"
 
@@ -8,10 +8,10 @@ version = "0.0.1"
 [dependencies]
 anyhow = "1.0.80"
 bip39 = "2.0.0"
+breez-liquid-sdk = { path = "../lib/ls-sdk-core" }
 clap = { version = "4.5.1", features = ["derive"] }
 env_logger = "0.11"
 log = "0.4.20"
-ls-sdk = { path = "../lib/ls-sdk-core" }
 qrcode-rs = { version = "0.1", default-features = false }
 rustyline = { version = "13.0.0", features = ["derive"] }
 serde = { version = "1.0.197", features = ["derive"] }
