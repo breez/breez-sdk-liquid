@@ -10,6 +10,7 @@ init:
 	rustup target add aarch64-apple-darwin x86_64-apple-darwin
 	rustup target add aarch64-apple-ios-sim
 	rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+	rustup target add aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu
 	@if [ $$(uname) == "Darwin" ] ; then cargo install cargo-lipo ; fi
 	cargo install cbindgen
 	cargo install cargo-ndk
@@ -30,7 +31,7 @@ clean:
 test:
 	cargo test
 
-all: bindings-swift bindings-android python react-native
+all: bindings-swift bindings-android python-darwin react-native
 
 ## Android 
 android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
@@ -108,9 +109,14 @@ bindings-swift: ios-universal darwin-universal
 	rm bindings-swift/Sources/BreezLiquidSDK/breez_liquid_sdkFFI.modulemap
 
 ## Python
-python: $(SOURCES)
+python-linux: $(SOURCES)	
 	cargo build --release --target $(TARGET)
 	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language python -o ffi/python
+	cp ../target/$(TARGET)/release/libbreez_liquid_sdk_bindings.so ffi/python
+
+python-darwin: darwin-universal	
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language python -o ffi/python
+	cp ../target/darwin-universal/release/libbreez_liquid_sdk_bindings.dylib ffi/python
 
 ## React Native
 react-native:

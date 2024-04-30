@@ -2,6 +2,8 @@
 
 - `lib`: [lib/README.md](lib/ls-sdk-core/README.md)
 - `cli`: [cli/README.md](cli/README.md)
+- Bindings
+  - `python`: [lib/bindings-python/README.md]()
 
 ## Roadmap
 - [x] Send/Recieve Lightning payments
