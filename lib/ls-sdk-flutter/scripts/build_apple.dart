@@ -33,7 +33,7 @@ Future<void> mainImpl(List<String> args) async {
     profileArg = '--profile=dev';
   } else {
     profile = 'release';
-    profileArg = '--release';
+    profileArg = '--profile=frb';
   }
 
   print(' Building profile: $profile');
@@ -71,7 +71,7 @@ Future<void> mainImpl(List<String> args) async {
   for (final target in targets) {
     print(' Building target $target');
     await run('rustup target add $target');
-    await run('cargo build  --target=$target $profileArg');
+    await run('cargo build --target=$target $profileArg');
   }
 
   await run('mkdir -p mac-lipo ios-sim-lipo');

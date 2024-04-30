@@ -28,7 +28,7 @@ Future<void> mainImpl(List<String> args) async {
     profileArg = '--profile=dev';
   } else {
     profile = 'release';
-    profileArg = '--release';
+    profileArg = '--profile=frb';
   }
 
   // -- Begin --
