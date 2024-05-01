@@ -12,8 +12,8 @@ use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
         boltz::{
-            BoltzApiClient, CreateSwapRequest, SubSwapStates, SwapStatusRequest, BOLTZ_MAINNET_URL,
-            BOLTZ_TESTNET_URL,
+            BoltzApiClient, CreateSwapRequest, RevSwapStates, SubSwapStates, SwapStatusRequest,
+            BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL,
         },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
@@ -135,28 +135,29 @@ impl Wallet {
                 invoice,
                 ..
             } => {
-                let status_response = client
+                let status = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?;
+                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?
+                    .status;
 
-                let status = status_response.status;
                 let swap_state = status
-                    .parse::<SubSwapStates>()
+                    .parse::<RevSwapStates>()
                     .map_err(|_| anyhow!("Invalid swap state received for swap {id}: {status}",))?;
 
                 match swap_state {
-                    SubSwapStates::SwapExpired => {
-                        warn!("Cannot claim swap {id}: swap expired");
+                    RevSwapStates::SwapExpired
+                    | RevSwapStates::InvoiceExpired
+                    | RevSwapStates::TransactionFailed
+                    | RevSwapStates::TransactionRefunded => {
+                        warn!("Cannot claim swap {id}, unrecoverable state: {status}");
                         wallet
                             .persister
                             .resolve_ongoing_swap(id, None)
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
-                    SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
+                    RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {}
                     _ => {
-                        return Err(anyhow!(
-                            "Cannot claim swap {id}: invoice not paid yet. Swap state: {status}",
-                        ));
+                        return Err(anyhow!("New swap state for swap {id}: {status}"));
                     }
                 }
 
@@ -190,21 +191,33 @@ impl Wallet {
                     return Err(anyhow!("Transaction not broadcast yet for swap {id}"));
                 };
 
-                let status_response = client
+                let status = client
                     .swap_status(SwapStatusRequest { id: id.clone() })
-                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?;
+                    .map_err(|e| anyhow!("Failed to fetch swap status for ID {id}: {e:?}"))?
+                    .status;
 
-                if [
-                    SubSwapStates::TransactionClaimed.to_string(),
-                    SubSwapStates::SwapExpired.to_string(),
-                ]
-                .contains(&status_response.status)
-                {
-                    let payer_amount_sat = get_invoice_amount!(invoice);
-                    wallet
-                        .persister
-                        .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
-                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                let state: SubSwapStates = status
+                    .parse()
+                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}: {status}"))?;
+
+                match state {
+                    SubSwapStates::TransactionClaimed
+                    | SubSwapStates::InvoiceFailedToPay
+                    | SubSwapStates::SwapExpired => {
+                        warn!("Cannot positively resolve swap {id}, unrecoverable state: {status}");
+
+                        let payer_amount_sat = get_invoice_amount!(invoice);
+                        wallet
+                            .persister
+                            .resolve_ongoing_swap(
+                                id,
+                                Some((txid, PaymentData { payer_amount_sat })),
+                            )
+                            .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                    }
+                    _ => {
+                        return Err(anyhow!("New swap state for swap {id}: {status}"));
+                    }
                 }
             }
         };
