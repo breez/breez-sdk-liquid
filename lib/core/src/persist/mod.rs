@@ -54,24 +54,22 @@ impl Persister {
             match swap {
                 OngoingSwap::Send {
                     id,
-                    funding_address,
                     invoice,
-                    receiver_amount_sat,
+                    payer_amount_sat,
                     txid,
                 } => {
                     let mut stmt = con.prepare(
                         "
                             INSERT OR REPLACE INTO ongoing_send_swaps (
                                 id,
-                                funding_address,
                                 invoice,
-                                receiver_amount_sat,
+                                payer_amount_sat,
                                 txid
                             )
-                            VALUES (?, ?, ?, ?, ?)
+                            VALUES (?, ?, ?, ?)
                         ",
                     )?;
-                    _ = stmt.execute((id, funding_address, invoice, receiver_amount_sat, txid))?
+                    _ = stmt.execute((id, invoice, payer_amount_sat, txid))?
                 }
                 OngoingSwap::Receive {
                     id,
@@ -80,6 +78,7 @@ impl Persister {
                     blinding_key,
                     invoice,
                     receiver_amount_sat,
+                    claim_fees_sat,
                 } => {
                     let mut stmt = con.prepare(
                         "
@@ -89,9 +88,10 @@ impl Persister {
                                 redeem_script,
                                 blinding_key,
                                 invoice,
-                                receiver_amount_sat
+                                receiver_amount_sat,
+                                claim_fees_sat
                             )
-                            VALUES (?, ?, ?, ?, ?, ?)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
                         ",
                     )?;
 
@@ -102,6 +102,7 @@ impl Persister {
                         blinding_key,
                         invoice,
                         receiver_amount_sat,
+                        claim_fees_sat,
                     ))?
                 }
             }
@@ -147,9 +148,8 @@ impl Persister {
             "
            SELECT 
                id,
-               funding_address,
                invoice,
-               receiver_amount_sat,
+               payer_amount_sat,
                txid,
                created_at
            FROM ongoing_send_swaps
@@ -161,10 +161,9 @@ impl Persister {
             .query_map(params![], |row| {
                 Ok(OngoingSwap::Send {
                     id: row.get(0)?,
-                    funding_address: row.get(1)?,
-                    invoice: row.get(2)?,
-                    receiver_amount_sat: row.get(3)?,
-                    txid: row.get(4)?,
+                    invoice: row.get(1)?,
+                    payer_amount_sat: row.get(2)?,
+                    txid: row.get(3)?,
                 })
             })?
             .map(|i| i.unwrap())
@@ -183,6 +182,7 @@ impl Persister {
                 blinding_key,
                 invoice,
                 receiver_amount_sat,
+                claim_fees_sat,
                 created_at
             FROM ongoing_receive_swaps
             ORDER BY created_at
@@ -198,6 +198,7 @@ impl Persister {
                     blinding_key: row.get(3)?,
                     invoice: row.get(4)?,
                     receiver_amount_sat: row.get(5)?,
+                    claim_fees_sat: row.get(6)?,
                 })
             })?
             .map(|i| i.unwrap())

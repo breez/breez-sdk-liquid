@@ -464,33 +464,39 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::AmountOutOfRange;
             }
             1 => {
-                return crate::error::PaymentError::AlreadyClaimed;
+                return crate::error::PaymentError::InvalidOrExpiredFees;
             }
             2 => {
+                return crate::error::PaymentError::InsufficientFunds;
+            }
+            3 => {
+                return crate::error::PaymentError::AlreadyClaimed;
+            }
+            4 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Generic { err: var_err };
             }
-            3 => {
+            5 => {
                 return crate::error::PaymentError::InvalidInvoice;
             }
-            4 => {
+            6 => {
                 return crate::error::PaymentError::InvalidPreimage;
             }
-            5 => {
+            7 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::LwkError { err: var_err };
             }
-            6 => {
+            8 => {
                 return crate::error::PaymentError::PairsNotFound;
             }
-            7 => {
+            9 => {
                 return crate::error::PaymentError::PersistError;
             }
-            8 => {
+            10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            9 => {
+            11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -528,11 +534,9 @@ impl SseDecode for crate::model::PrepareReceiveRequest {
 impl SseDecode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_pairHash = <String>::sse_decode(deserializer);
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
-            pair_hash: var_pairHash,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
         };
@@ -552,19 +556,11 @@ impl SseDecode for crate::model::PrepareSendRequest {
 impl SseDecode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_id = <String>::sse_decode(deserializer);
-        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_totalFees = <u64>::sse_decode(deserializer);
-        let mut var_fundingAddress = <String>::sse_decode(deserializer);
         let mut var_invoice = <String>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
-            id: var_id,
-            payer_amount_sat: var_payerAmountSat,
-            receiver_amount_sat: var_receiverAmountSat,
-            total_fees: var_totalFees,
-            funding_address: var_fundingAddress,
             invoice: var_invoice,
+            fees_sat: var_feesSat,
         };
     }
 }
@@ -768,22 +764,24 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
             crate::error::PaymentError::AmountOutOfRange => [0.into_dart()].into_dart(),
-            crate::error::PaymentError::AlreadyClaimed => [1.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidOrExpiredFees => [1.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds => [2.into_dart()].into_dart(),
+            crate::error::PaymentError::AlreadyClaimed => [3.into_dart()].into_dart(),
             crate::error::PaymentError::Generic { err } => {
-                [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidInvoice => [3.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidPreimage => [4.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidInvoice => [5.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidPreimage => [6.into_dart()].into_dart(),
             crate::error::PaymentError::LwkError { err } => {
-                [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::PairsNotFound => [6.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [7.into_dart()].into_dart(),
+            crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [8.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -832,7 +830,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.pair_hash.into_into_dart().into_dart(),
             self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
         ]
@@ -871,12 +868,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareSendRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.id.into_into_dart().into_dart(),
-            self.payer_amount_sat.into_into_dart().into_dart(),
-            self.receiver_amount_sat.into_into_dart().into_dart(),
-            self.total_fees.into_into_dart().into_dart(),
-            self.funding_address.into_into_dart().into_dart(),
             self.invoice.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1100,35 +1093,41 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::AmountOutOfRange => {
                 <i32>::sse_encode(0, serializer);
             }
-            crate::error::PaymentError::AlreadyClaimed => {
+            crate::error::PaymentError::InvalidOrExpiredFees => {
                 <i32>::sse_encode(1, serializer);
             }
-            crate::error::PaymentError::Generic { err } => {
+            crate::error::PaymentError::InsufficientFunds => {
                 <i32>::sse_encode(2, serializer);
+            }
+            crate::error::PaymentError::AlreadyClaimed => {
+                <i32>::sse_encode(3, serializer);
+            }
+            crate::error::PaymentError::Generic { err } => {
+                <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::InvalidInvoice => {
-                <i32>::sse_encode(3, serializer);
+                <i32>::sse_encode(5, serializer);
             }
             crate::error::PaymentError::InvalidPreimage => {
-                <i32>::sse_encode(4, serializer);
+                <i32>::sse_encode(6, serializer);
             }
             crate::error::PaymentError::LwkError { err } => {
-                <i32>::sse_encode(5, serializer);
+                <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::PairsNotFound => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(8, serializer);
             }
             crate::error::PaymentError::PersistError => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(9, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(9, serializer);
+                <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(err, serializer);
             }
         }
@@ -1163,7 +1162,6 @@ impl SseEncode for crate::model::PrepareReceiveRequest {
 impl SseEncode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.pair_hash, serializer);
         <u64>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
     }
@@ -1179,12 +1177,8 @@ impl SseEncode for crate::model::PrepareSendRequest {
 impl SseEncode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.id, serializer);
-        <u64>::sse_encode(self.payer_amount_sat, serializer);
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
-        <u64>::sse_encode(self.total_fees, serializer);
-        <String>::sse_encode(self.funding_address, serializer);
         <String>::sse_encode(self.invoice, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
     }
 }
 

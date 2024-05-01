@@ -27,6 +27,12 @@ pub enum PaymentError {
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
 
+    #[error("The provided fees have expired")]
+    InvalidOrExpiredFees,
+
+    #[error("Cannot pay: not enough funds")]
+    InsufficientFunds,
+
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 

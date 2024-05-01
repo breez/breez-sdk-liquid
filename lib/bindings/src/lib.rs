@@ -21,7 +21,7 @@ impl BindingLiquidSdk {
         &self,
         req: PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
-        self.sdk.prepare_send_payment(req)
+        self.sdk.prepare_send_payment(&req)
     }
 
     pub fn send_payment(

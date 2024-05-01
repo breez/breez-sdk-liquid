@@ -15,10 +15,12 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 typedef struct _Dart_Handle* Dart_Handle;
 
 /**
- * Claim tx feerate for Receive, in sats per vbyte.
+ * Claim tx feerate, in sats per vbyte.
  * Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
  */
 #define LIQUID_CLAIM_TX_FEERATE 0.1
+
+#define LIQUID_MIN_CLAIM_ABSOLUTE_FEES 134
 
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
@@ -44,7 +46,6 @@ typedef struct wire_cst_prepare_send_request {
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_response {
-  struct wire_cst_list_prim_u_8_strict *pair_hash;
   uint64_t payer_amount_sat;
   uint64_t fees_sat;
 } wire_cst_prepare_receive_response;
@@ -54,12 +55,8 @@ typedef struct wire_cst_restore_request {
 } wire_cst_restore_request;
 
 typedef struct wire_cst_prepare_send_response {
-  struct wire_cst_list_prim_u_8_strict *id;
-  uint64_t payer_amount_sat;
-  uint64_t receiver_amount_sat;
-  uint64_t total_fees;
-  struct wire_cst_list_prim_u_8_strict *funding_address;
   struct wire_cst_list_prim_u_8_strict *invoice;
+  uint64_t fees_sat;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_payment {

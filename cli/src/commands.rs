@@ -117,12 +117,12 @@ pub(crate) fn handle_command(
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response =
-                sdk.prepare_send_payment(PrepareSendRequest { invoice: bolt11 })?;
+                sdk.prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })?;
 
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.total_fees
+                    prepare_response.fees_sat
                 ),
                 "Payment send halted"
             );

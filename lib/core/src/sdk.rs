@@ -15,12 +15,17 @@ use boltz_client::{
             BoltzApiClient, CreateSwapRequest, RevSwapStates, SubSwapStates, SwapStatusRequest,
             BOLTZ_MAINNET_URL, BOLTZ_TESTNET_URL,
         },
+        boltzv2::{
+            BoltzApiClientV2, ReversePair, SubmarinePair, BOLTZ_MAINNET_URL_V2,
+            BOLTZ_TESTNET_URL_V2,
+        },
         liquid::{LBtcSwapScript, LBtcSwapTx},
     },
     util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
     Bolt11Invoice, Keypair,
 };
-use log::{debug, error, warn};
+use elements::hashes::hex::DisplayHex;
+use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -31,9 +36,12 @@ use lwk_wollet::{
 
 use crate::{ensure_sdk, error::PaymentError, get_invoice_amount, model::*, persist::Persister};
 
-/// Claim tx feerate for Receive, in sats per vbyte.
+/// Claim tx feerate, in sats per vbyte.
 /// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
 pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
+
+// TODO: Remove in favor of V2 API (necessary as V1 claim_estimate is not working)
+pub const LIQUID_MIN_CLAIM_ABSOLUTE_FEES: u64 = 134;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
@@ -121,6 +129,7 @@ impl LiquidSdk {
                 redeem_script,
                 blinding_key,
                 invoice,
+                claim_fees_sat,
                 ..
             } => {
                 let status = client
@@ -130,7 +139,7 @@ impl LiquidSdk {
 
                 let swap_state = status
                     .parse::<RevSwapStates>()
-                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}: {status}",))?;
+                    .map_err(|_| anyhow!("Invalid reverse swap state received for swap {id}: {status}",))?;
 
                 match swap_state {
                     RevSwapStates::SwapExpired
@@ -142,13 +151,13 @@ impl LiquidSdk {
                             .resolve_ongoing_swap(id, None)
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
-                    RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {}
+                    RevSwapStates::TransactionConfirmed => {}
                     _ => {
-                        return Err(anyhow!("New swap state for swap {id}: {status}"));
+                        return Err(anyhow!("New swap state for reverse swap {id}: {status}"));
                     }
                 }
 
-                match sdk.try_claim(preimage, redeem_script, blinding_key) {
+                match sdk.try_claim(preimage, redeem_script, blinding_key, *claim_fees_sat) {
                     Ok(txid) => {
                         let payer_amount_sat = get_invoice_amount!(invoice);
                         sdk.persister
@@ -183,7 +192,7 @@ impl LiquidSdk {
 
                 let state: SubSwapStates = status
                     .parse()
-                    .map_err(|_| anyhow!("Invalid swap state received for swap {id}: {status}"))?;
+                    .map_err(|_| anyhow!("Invalid submarine swap state received for swap {id}: {status}"))?;
 
                 match state {
                     SubSwapStates::TransactionClaimed
@@ -200,7 +209,7 @@ impl LiquidSdk {
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
                     _ => {
-                        return Err(anyhow!("New swap state for swap {id}: {status}"));
+                        return Err(anyhow!("New swap state for submarine swap {id}: {status}"));
                     }
                 }
             }
@@ -215,18 +224,22 @@ impl LiquidSdk {
 
         thread::spawn(move || loop {
             thread::sleep(Duration::from_secs(5));
-            let Ok(ongoing_swaps) = cloned.persister.list_ongoing_swaps() else {
-                error!("Could not read ongoing swaps from database");
-                continue;
-            };
-
-            for swap in ongoing_swaps {
-                LiquidSdk::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
-                    match swap {
-                        OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
-                        OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
+            match cloned.persister.list_ongoing_swaps() {
+                Ok(ongoing_swaps) => {
+                    for swap in ongoing_swaps {
+                        match LiquidSdk::try_resolve_pending_swap(&cloned, &client, &swap) {
+                            Ok(_) => info!("Resolved pending swap {}", swap.id()),
+                            Err(err) => match swap {
+                                OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
+                                OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
+                            },
+                        }
                     }
-                })
+                }
+                Err(e) => {
+                    error!("Could not read ongoing swaps from database: {e}");
+                    continue;
+                }
             }
         });
 
@@ -274,12 +287,21 @@ impl LiquidSdk {
         BoltzApiClient::new(base_url)
     }
 
-    fn get_network_config(&self) -> ElectrumConfig {
+    fn boltz_client_v2(&self) -> BoltzApiClientV2 {
+        let base_url = match self.network {
+            Network::LiquidTestnet => BOLTZ_TESTNET_URL_V2,
+            Network::Liquid => BOLTZ_MAINNET_URL_V2,
+        };
+
+        BoltzApiClientV2::new(base_url)
+    }
+
+    fn network_config(&self) -> ElectrumConfig {
         ElectrumConfig::new(
             self.network.into(),
             &self.electrum_url.to_string(),
             true,
-            false,
+            true,
             100,
         )
     }
@@ -297,83 +319,132 @@ impl LiquidSdk {
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
-    pub fn prepare_send_payment(
-        &self,
-        req: PrepareSendRequest,
-    ) -> Result<PrepareSendResponse, PaymentError> {
-        let client = self.boltz_client();
-        let invoice = req
-            .invoice
+    fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
+        let invoice = invoice
             .trim()
             .parse::<Bolt11Invoice>()
             .map_err(|_| PaymentError::InvalidInvoice)?;
 
-        // TODO Separate error type? Or make WalletError more generic?
+        match (invoice.network().to_string().as_str(), self.network) {
+            ("bitcoin", Network::Liquid) => {}
+            ("testnet", Network::LiquidTestnet) => {}
+            _ => return Err(PaymentError::InvalidInvoice),
+        }
+
+        ensure_sdk!(!invoice.is_expired(), PaymentError::InvalidInvoice);
+
+        Ok(invoice)
+    }
+
+    #[allow(dead_code)]
+    fn validate_submarine_pairs(
+        client: &BoltzApiClientV2,
+        receiver_amount_sat: u64,
+    ) -> Result<SubmarinePair, PaymentError> {
+        let lbtc_pair = client
+            .get_submarine_pairs()?
+            .get_lbtc_to_btc_pair()
+            .ok_or(PaymentError::PairsNotFound)?;
+
+        lbtc_pair.limits.within(receiver_amount_sat)?;
+
+        let fees_sat = lbtc_pair.fees.total(receiver_amount_sat);
+
+        ensure_sdk!(
+            receiver_amount_sat > fees_sat,
+            PaymentError::AmountOutOfRange
+        );
+
+        Ok(lbtc_pair)
+    }
+
+    pub fn prepare_send_payment(
+        &self,
+        req: &PrepareSendRequest,
+    ) -> Result<PrepareSendResponse, PaymentError> {
+        let invoice = self.validate_invoice(&req.invoice)?;
+        let receiver_amount_sat = invoice
+            .amount_milli_satoshis()
+            .ok_or(PaymentError::AmountOutOfRange)?
+            / 1000;
+
+        // let client = self.boltz_client_v2();
+        // let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
+
+        let client = self.boltz_client();
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
             .ok_or(PaymentError::PairsNotFound)?;
 
-        let payer_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::AmountOutOfRange)?
-            / 1000;
-
-        lbtc_pair
-            .limits
-            .within(payer_amount_sat)
-            .map_err(|_| PaymentError::AmountOutOfRange)?;
-
-        let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
-            &lbtc_pair.hash,
-            &invoice.to_string(),
-            "",
-        ))?;
-
-        let id = swap_response.get_id();
-        let funding_address = swap_response.get_funding_address()?;
-        let receiver_amount_sat = swap_response.get_funding_amount()?;
-        let network_fees: u64 = self
-            .build_tx(None, &funding_address.to_string(), receiver_amount_sat)?
-            .all_fees()
-            .values()
-            .sum();
-
-        self.persister
-            .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
-                id: id.clone(),
-                funding_address: funding_address.clone(),
-                invoice: invoice.to_string(),
-                receiver_amount_sat: receiver_amount_sat + network_fees,
-                txid: None,
-            }])
-            .map_err(|_| PaymentError::PersistError)?;
-
         Ok(PrepareSendResponse {
-            id,
-            funding_address,
-            invoice: invoice.to_string(),
-            payer_amount_sat,
-            receiver_amount_sat,
-            total_fees: receiver_amount_sat + network_fees - payer_amount_sat,
+            invoice: req.invoice.clone(),
+            fees_sat: lbtc_pair.fees.submarine_boltz(receiver_amount_sat)
+                + lbtc_pair.fees.submarine_lockup_estimate()
+                + LIQUID_MIN_CLAIM_ABSOLUTE_FEES,
         })
     }
 
     pub fn send_payment(
         &self,
-        res: &PrepareSendResponse,
+        req: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let tx = self.build_tx(None, &res.funding_address, res.receiver_amount_sat)?;
+        let invoice = self.validate_invoice(&req.invoice)?;
+        let receiver_amount_sat = invoice
+            .amount_milli_satoshis()
+            .ok_or(PaymentError::AmountOutOfRange)?
+            / 1000;
+
+        // let client = self.boltz_client_v2();
+        // let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
+
+        let client = self.boltz_client();
+        let lbtc_pair = client
+            .get_pairs()?
+            .get_lbtc_pair()
+            .ok_or(PaymentError::PairsNotFound)?;
+
+        // let new_fees = lbtc_pair.fees.total(receiver_amount_sat);
+        let new_fees = lbtc_pair.fees.submarine_boltz(receiver_amount_sat)
+            + lbtc_pair.fees.submarine_lockup_estimate()
+            + LIQUID_MIN_CLAIM_ABSOLUTE_FEES;
+
+        ensure_sdk!(req.fees_sat == new_fees, PaymentError::InvalidOrExpiredFees);
+
+        ensure_sdk!(
+            receiver_amount_sat + req.fees_sat <= self.total_balance_sat(true)?,
+            PaymentError::InsufficientFunds
+        );
+
+        let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_submarine(
+            &lbtc_pair.hash,
+            &req.invoice.to_string(),
+            // TODO Add refund
+            "",
+        ))?;
+
+        let id = swap_response.get_id();
+        let funding_address = swap_response.get_funding_address()?;
+        let funding_amount_sat = swap_response.get_funding_amount()?;
+
+        // let absolute_fees = self
+        //     .build_tx(None, &funding_address, funding_amount_sat)?
+        //     .all_fees()
+        //     .values()
+        //     .sum::<u64>();
+        // let fee_rate = req.fees_sat as f32 * LIQUID_CLAIM_TX_FEERATE / absolute_fees as f32;
+        //
+        // let tx = self.build_tx(Some(fee_rate), &funding_address, funding_amount_sat)?;
+        let tx = self.build_tx(None, &funding_address, funding_amount_sat)?;
 
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
         let txid = electrum_client.broadcast(&tx)?.to_string();
 
         self.persister
             .insert_or_update_ongoing_swap(&[OngoingSwap::Send {
-                id: res.id.clone(),
-                funding_address: res.funding_address.clone(),
-                invoice: res.invoice.clone(),
-                receiver_amount_sat: res.receiver_amount_sat + res.total_fees,
+                id,
+                invoice: req.invoice.clone(),
+                payer_amount_sat: receiver_amount_sat + req.fees_sat,
                 txid: Some(txid.clone()),
             }])
             .map_err(|_| PaymentError::PersistError)?;
@@ -386,8 +457,9 @@ impl LiquidSdk {
         preimage: &str,
         redeem_script: &str,
         blinding_key: &str,
+        claim_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        let network_config = &self.get_network_config();
+        let network_config = &self.network_config();
         let rev_swap_tx = LBtcSwapTx::new_claim(
             LBtcSwapScript::reverse_from_str(redeem_script, blinding_key)?,
             self.address()?.to_string(),
@@ -406,64 +478,93 @@ impl LiquidSdk {
         let lsk = LiquidSwapKey::try_from(swap_key)?;
         let preimage = Preimage::from_str(preimage)?;
 
-        // Create a mock tx to calculate the size, then multiply by fee rate
-        let absolute_fees = (rev_swap_tx
-            .sign_claim(&lsk.keypair, &preimage, 100)?
-            .vsize() as f32
-            * LIQUID_CLAIM_TX_FEERATE)
-            .ceil() as u64;
+        let signed_tx = rev_swap_tx.sign_claim(&lsk.keypair, &preimage, claim_fees_sat)?;
+        let tx_hex = elements::encode::serialize(&signed_tx).to_lower_hex_string();
 
-        let signed_tx = rev_swap_tx.sign_claim(&lsk.keypair, &preimage, absolute_fees)?;
-        let txid = rev_swap_tx.broadcast(signed_tx, network_config)?;
+        let client = self.boltz_client_v2();
+        let response = client.broadcast_tx(self.network.into(), &tx_hex)?;
+        let txid = response
+            .as_object()
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .get("id")
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .as_str()
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .to_string();
 
         Ok(txid)
+    }
+
+    #[allow(dead_code)]
+    fn validate_reverse_pairs(
+        client: &BoltzApiClientV2,
+        payer_amount_sat: u64,
+    ) -> Result<ReversePair, PaymentError> {
+        let lbtc_pair = client
+            .get_reverse_pairs()?
+            .get_btc_to_lbtc_pair()
+            .ok_or(PaymentError::PairsNotFound)?;
+
+        lbtc_pair.limits.within(payer_amount_sat)?;
+
+        let fees_sat = lbtc_pair.fees.total(payer_amount_sat);
+
+        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+
+        Ok(lbtc_pair)
     }
 
     pub fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
+        // let client = self.boltz_client_v2();
+        // let lbtc_pair = Self::validate_reverse_pairs(&client, req.payer_amount_sat)?;
+
         let client = self.boltz_client();
         let lbtc_pair = client
             .get_pairs()?
             .get_lbtc_pair()
             .ok_or(PaymentError::PairsNotFound)?;
 
-        let payer_amount_sat = req.payer_amount_sat;
-        let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
-        let fees_lockup = lbtc_pair.fees.reverse_lockup();
-        let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
-        let fees_total = fees_boltz + fees_lockup + fees_claim;
-
-        ensure_sdk!(
-            payer_amount_sat > fees_total,
-            PaymentError::AmountOutOfRange
-        );
-
-        lbtc_pair
-            .limits
-            .within(payer_amount_sat)
-            .map_err(|_| PaymentError::AmountOutOfRange)?;
-
-        debug!("Creating reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_total {fees_total} sat");
+        let fees_sat = lbtc_pair.fees.reverse_total(req.payer_amount_sat);
 
         Ok(PrepareReceiveResponse {
-            pair_hash: lbtc_pair.hash,
-            payer_amount_sat,
-            fees_sat: fees_total,
+            payer_amount_sat: req.payer_amount_sat,
+            fees_sat,
         })
     }
 
     pub fn receive_payment(
         &self,
-        res: &PrepareReceiveResponse,
+        req: &PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
+        // let client = self.boltz_client_v2();
+        // let lbtc_pair = Self::validate_reverse_pairs(&client, req.payer_amount_sat)?;
+
+        let client = self.boltz_client();
+        let lbtc_pair = client
+            .get_pairs()?
+            .get_lbtc_pair()
+            .ok_or(PaymentError::PairsNotFound)?;
+
+        ensure_sdk!(
+            req.fees_sat == lbtc_pair.fees.reverse_total(req.payer_amount_sat),
+            PaymentError::InvalidOrExpiredFees
+        );
+
         let client = self.boltz_client();
         let mnemonic = self
             .lwk_signer
             .mnemonic()
             .ok_or(PaymentError::SignerError {
-                err: "Could not claim: Mnemonic not found".to_string(),
+                err: "Could not start receive: Mnemonic not found".to_string(),
             })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
@@ -473,11 +574,15 @@ impl LiquidSdk {
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
+        debug!(
+            "Creating reverse swap with: payer_amount_sat {} sat, fees_total {} sat",
+            req.payer_amount_sat, req.fees_sat
+        );
         let swap_response = client.create_swap(CreateSwapRequest::new_lbtc_reverse_invoice_amt(
-            res.pair_hash.clone(),
+            lbtc_pair.hash.clone(),
             preimage_hash.clone(),
             lsk.keypair.public_key().to_string(),
-            res.payer_amount_sat,
+            req.payer_amount_sat,
         ))?;
 
         let swap_id = swap_response.get_id();
@@ -496,14 +601,15 @@ impl LiquidSdk {
         };
 
         self.persister
-            .insert_or_update_ongoing_swap(dbg!(&[OngoingSwap::Receive {
+            .insert_or_update_ongoing_swap(&[OngoingSwap::Receive {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice: invoice.to_string(),
-                receiver_amount_sat: payer_amount_sat - res.fees_sat,
-            }]))
+                receiver_amount_sat: payer_amount_sat - req.fees_sat,
+                claim_fees_sat: lbtc_pair.fees.reverse_claim_estimate(),
+            }])
             .map_err(|_| PaymentError::PersistError)?;
 
         Ok(ReceivePaymentResponse {
@@ -553,7 +659,7 @@ impl LiquidSdk {
 
     pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
         let script: LBtcSwapScript = recovery.try_into().unwrap();
-        let network_config = self.get_network_config();
+        let network_config = self.network_config();
         debug!("{:?}", script.fetch_utxo(&network_config));
 
         let tx =
@@ -638,7 +744,7 @@ mod tests {
         })?;
 
         let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq".to_string();
-        sdk.prepare_send_payment(PrepareSendRequest { invoice })?;
+        sdk.prepare_send_payment(&PrepareSendRequest { invoice })?;
         assert!(!list_pending(&sdk)?.is_empty());
 
         Ok(())

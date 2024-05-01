@@ -26,7 +26,7 @@ pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendRespon
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
-        .prepare_send_payment(req)
+        .prepare_send_payment(&req)
 }
 
 pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, PaymentError> {

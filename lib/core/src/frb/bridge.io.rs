@@ -179,30 +179,32 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
     fn cst_decode(self) -> crate::error::PaymentError {
         match self.tag {
             0 => crate::error::PaymentError::AmountOutOfRange,
-            1 => crate::error::PaymentError::AlreadyClaimed,
-            2 => {
+            1 => crate::error::PaymentError::InvalidOrExpiredFees,
+            2 => crate::error::PaymentError::InsufficientFunds,
+            3 => crate::error::PaymentError::AlreadyClaimed,
+            4 => {
                 let ans = unsafe { self.kind.Generic };
                 crate::error::PaymentError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
-            3 => crate::error::PaymentError::InvalidInvoice,
-            4 => crate::error::PaymentError::InvalidPreimage,
-            5 => {
+            5 => crate::error::PaymentError::InvalidInvoice,
+            6 => crate::error::PaymentError::InvalidPreimage,
+            7 => {
                 let ans = unsafe { self.kind.LwkError };
                 crate::error::PaymentError::LwkError {
                     err: ans.err.cst_decode(),
                 }
             }
-            6 => crate::error::PaymentError::PairsNotFound,
-            7 => crate::error::PaymentError::PersistError,
-            8 => {
+            8 => crate::error::PaymentError::PairsNotFound,
+            9 => crate::error::PaymentError::PersistError,
+            10 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            9 => {
+            11 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -224,7 +226,6 @@ impl CstDecode<crate::model::PrepareReceiveResponse> for wire_cst_prepare_receiv
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
         crate::model::PrepareReceiveResponse {
-            pair_hash: self.pair_hash.cst_decode(),
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
@@ -242,12 +243,8 @@ impl CstDecode<crate::model::PrepareSendResponse> for wire_cst_prepare_send_resp
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         crate::model::PrepareSendResponse {
-            id: self.id.cst_decode(),
-            payer_amount_sat: self.payer_amount_sat.cst_decode(),
-            receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
-            total_fees: self.total_fees.cst_decode(),
-            funding_address: self.funding_address.cst_decode(),
             invoice: self.invoice.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
         }
     }
 }
@@ -360,7 +357,6 @@ impl Default for wire_cst_prepare_receive_request {
 impl NewWithNullPtr for wire_cst_prepare_receive_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            pair_hash: core::ptr::null_mut(),
             payer_amount_sat: Default::default(),
             fees_sat: Default::default(),
         }
@@ -386,12 +382,8 @@ impl Default for wire_cst_prepare_send_request {
 impl NewWithNullPtr for wire_cst_prepare_send_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            id: core::ptr::null_mut(),
-            payer_amount_sat: Default::default(),
-            receiver_amount_sat: Default::default(),
-            total_fees: Default::default(),
-            funding_address: core::ptr::null_mut(),
             invoice: core::ptr::null_mut(),
+            fees_sat: Default::default(),
         }
     }
 }
@@ -702,7 +694,6 @@ pub struct wire_cst_prepare_receive_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_receive_response {
-    pair_hash: *mut wire_cst_list_prim_u_8_strict,
     payer_amount_sat: u64,
     fees_sat: u64,
 }
@@ -714,12 +705,8 @@ pub struct wire_cst_prepare_send_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_send_response {
-    id: *mut wire_cst_list_prim_u_8_strict,
-    payer_amount_sat: u64,
-    receiver_amount_sat: u64,
-    total_fees: u64,
-    funding_address: *mut wire_cst_list_prim_u_8_strict,
     invoice: *mut wire_cst_list_prim_u_8_strict,
+    fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

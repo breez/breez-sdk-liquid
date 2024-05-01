@@ -83,6 +83,100 @@ abstract class PaymentError_AmountOutOfRange extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
+  factory _$$PaymentError_InvalidOrExpiredFeesImplCopyWith(
+          _$PaymentError_InvalidOrExpiredFeesImpl value,
+          $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) then) =
+      __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res,
+        _$PaymentError_InvalidOrExpiredFeesImpl>
+    implements _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
+  __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(
+      _$PaymentError_InvalidOrExpiredFeesImpl _value,
+      $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_InvalidOrExpiredFeesImpl
+    extends PaymentError_InvalidOrExpiredFees {
+  const _$PaymentError_InvalidOrExpiredFeesImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.invalidOrExpiredFees()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_InvalidOrExpiredFeesImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_InvalidOrExpiredFees extends PaymentError {
+  const factory PaymentError_InvalidOrExpiredFees() =
+      _$PaymentError_InvalidOrExpiredFeesImpl;
+  const PaymentError_InvalidOrExpiredFees._() : super._();
+}
+
+/// @nodoc
+abstract class _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
+  factory _$$PaymentError_InsufficientFundsImplCopyWith(
+          _$PaymentError_InsufficientFundsImpl value,
+          $Res Function(_$PaymentError_InsufficientFundsImpl) then) =
+      __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res,
+        _$PaymentError_InsufficientFundsImpl>
+    implements _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
+  __$$PaymentError_InsufficientFundsImplCopyWithImpl(
+      _$PaymentError_InsufficientFundsImpl _value,
+      $Res Function(_$PaymentError_InsufficientFundsImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_InsufficientFundsImpl
+    extends PaymentError_InsufficientFunds {
+  const _$PaymentError_InsufficientFundsImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.insufficientFunds()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_InsufficientFundsImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_InsufficientFunds extends PaymentError {
+  const factory PaymentError_InsufficientFunds() =
+      _$PaymentError_InsufficientFundsImpl;
+  const PaymentError_InsufficientFunds._() : super._();
+}
+
+/// @nodoc
 abstract class _$$PaymentError_AlreadyClaimedImplCopyWith<$Res> {
   factory _$$PaymentError_AlreadyClaimedImplCopyWith(
           _$PaymentError_AlreadyClaimedImpl value,

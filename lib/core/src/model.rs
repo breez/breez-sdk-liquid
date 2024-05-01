@@ -86,7 +86,6 @@ pub struct PrepareReceiveRequest {
 
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveResponse {
-    pub pair_hash: String,
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
@@ -104,12 +103,8 @@ pub struct PrepareSendRequest {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub id: String,
-    pub payer_amount_sat: u64,
-    pub receiver_amount_sat: u64,
-    pub total_fees: u64,
-    pub funding_address: String,
     pub invoice: String,
+    pub fees_sat: u64,
 }
 
 #[derive(Debug, Serialize)]
@@ -137,9 +132,8 @@ pub struct RestoreRequest {
 pub(crate) enum OngoingSwap {
     Send {
         id: String,
-        funding_address: String,
         invoice: String,
-        receiver_amount_sat: u64,
+        payer_amount_sat: u64,
         txid: Option<String>,
     },
     Receive {
@@ -149,7 +143,15 @@ pub(crate) enum OngoingSwap {
         blinding_key: String,
         invoice: String,
         receiver_amount_sat: u64,
+        claim_fees_sat: u64,
     },
+}
+impl OngoingSwap {
+    pub(crate) fn id(&self) -> &str {
+        match &self {
+            OngoingSwap::Send { id, .. } | OngoingSwap::Receive { id, .. } => id,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -169,7 +171,6 @@ pub struct Payment {
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
 
-    /// Only for [PaymentType::PendingReceive]
     pub invoice: Option<String>,
 }
 
@@ -178,17 +179,17 @@ impl From<OngoingSwap> for Payment {
         match swap {
             OngoingSwap::Send {
                 invoice,
-                receiver_amount_sat,
+                payer_amount_sat,
                 ..
             } => {
-                let payer_amount_sat = get_invoice_amount!(invoice);
+                let receiver_amount_sat = get_invoice_amount!(invoice);
                 Payment {
                     id: None,
                     timestamp: None,
                     payment_type: PaymentType::PendingSend,
                     amount_sat: payer_amount_sat,
                     invoice: Some(invoice),
-                    fees_sat: Some(receiver_amount_sat - payer_amount_sat),
+                    fees_sat: Some(payer_amount_sat - receiver_amount_sat),
                 }
             }
             OngoingSwap::Receive {

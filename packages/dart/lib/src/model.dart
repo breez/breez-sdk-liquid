@@ -81,8 +81,6 @@ class Payment {
   final int amountSat;
   final int? feesSat;
   final PaymentType paymentType;
-
-  /// Only for [PaymentType::PendingReceive]
   final String? invoice;
 
   const Payment({
@@ -143,26 +141,22 @@ class PrepareReceiveRequest {
 }
 
 class PrepareReceiveResponse {
-  final String pairHash;
   final int payerAmountSat;
   final int feesSat;
 
   const PrepareReceiveResponse({
-    required this.pairHash,
     required this.payerAmountSat,
     required this.feesSat,
   });
 
   @override
-  int get hashCode =>
-      pairHash.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveResponse &&
           runtimeType == other.runtimeType &&
-          pairHash == other.pairHash &&
           payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat;
 }
@@ -186,42 +180,24 @@ class PrepareSendRequest {
 }
 
 class PrepareSendResponse {
-  final String id;
-  final int payerAmountSat;
-  final int receiverAmountSat;
-  final int totalFees;
-  final String fundingAddress;
   final String invoice;
+  final int feesSat;
 
   const PrepareSendResponse({
-    required this.id,
-    required this.payerAmountSat,
-    required this.receiverAmountSat,
-    required this.totalFees,
-    required this.fundingAddress,
     required this.invoice,
+    required this.feesSat,
   });
 
   @override
-  int get hashCode =>
-      id.hashCode ^
-      payerAmountSat.hashCode ^
-      receiverAmountSat.hashCode ^
-      totalFees.hashCode ^
-      fundingAddress.hashCode ^
-      invoice.hashCode;
+  int get hashCode => invoice.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareSendResponse &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
-          payerAmountSat == other.payerAmountSat &&
-          receiverAmountSat == other.receiverAmountSat &&
-          totalFees == other.totalFees &&
-          fundingAddress == other.fundingAddress &&
-          invoice == other.invoice;
+          invoice == other.invoice &&
+          feesSat == other.feesSat;
 }
 
 class ReceivePaymentResponse {

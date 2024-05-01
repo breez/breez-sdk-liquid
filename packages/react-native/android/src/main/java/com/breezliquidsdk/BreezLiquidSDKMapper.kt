@@ -220,45 +220,66 @@ fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
     return list
 }
 
-fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse? {
+fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
     if (!validateMandatoryFields(
-            prepareSendResponse,
+            prepareSendRequest,
             arrayOf(
-                "id",
-                "payerAmountSat",
-                "receiverAmountSat",
-                "totalFees",
-                "fundingAddress",
                 "invoice",
             ),
         )
     ) {
         return null
     }
-    val id = prepareSendResponse.getString("id")!!
-    val payerAmountSat = prepareSendResponse.getDouble("payerAmountSat").toULong()
-    val receiverAmountSat = prepareSendResponse.getDouble("receiverAmountSat").toULong()
-    val totalFees = prepareSendResponse.getDouble("totalFees").toULong()
-    val fundingAddress = prepareSendResponse.getString("fundingAddress")!!
-    val invoice = prepareSendResponse.getString("invoice")!!
-    return PrepareSendResponse(
-        id,
-        payerAmountSat,
-        receiverAmountSat,
-        totalFees,
-        fundingAddress,
+    val invoice = prepareSendRequest.getString("invoice")!!
+    return PrepareSendRequest(
         invoice,
+    )
+}
+
+fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap {
+    return readableMapOf(
+        "invoice" to prepareSendRequest.invoice,
+    )
+}
+
+fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
+    val list = ArrayList<PrepareSendRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareSendRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse? {
+    if (!validateMandatoryFields(
+            prepareSendResponse,
+            arrayOf(
+                "invoice",
+                "pairHash",
+                "feesSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = prepareSendResponse.getString("invoice")!!
+    val pairHash = prepareSendResponse.getString("pairHash")!!
+    val feesSat = prepareSendResponse.getDouble("feesSat").toULong()
+    return PrepareSendResponse(
+        invoice,
+        pairHash,
+        feesSat,
     )
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap {
     return readableMapOf(
-        "id" to prepareSendResponse.id,
-        "payerAmountSat" to prepareSendResponse.payerAmountSat,
-        "receiverAmountSat" to prepareSendResponse.receiverAmountSat,
-        "totalFees" to prepareSendResponse.totalFees,
-        "fundingAddress" to prepareSendResponse.fundingAddress,
         "invoice" to prepareSendResponse.invoice,
+        "pairHash" to prepareSendResponse.pairHash,
+        "feesSat" to prepareSendResponse.feesSat,
     )
 }
 

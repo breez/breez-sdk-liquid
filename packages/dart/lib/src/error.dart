@@ -13,6 +13,10 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const PaymentError._();
 
   const factory PaymentError.amountOutOfRange() = PaymentError_AmountOutOfRange;
+  const factory PaymentError.invalidOrExpiredFees() =
+      PaymentError_InvalidOrExpiredFees;
+  const factory PaymentError.insufficientFunds() =
+      PaymentError_InsufficientFunds;
   const factory PaymentError.alreadyClaimed() = PaymentError_AlreadyClaimed;
   const factory PaymentError.generic({
     required String err,
