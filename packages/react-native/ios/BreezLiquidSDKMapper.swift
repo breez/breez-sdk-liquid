@@ -2,6 +2,76 @@ import BreezLiquidSDK
 import Foundation
 
 enum BreezLiquidSDKMapper {
+    static func asGetInfoRequest(getInfoRequest: [String: Any?]) throws -> GetInfoRequest {
+        guard let withScan = getInfoRequest["withScan"] as? Bool else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))
+        }
+
+        return GetInfoRequest(
+            withScan: withScan)
+    }
+
+    static func dictionaryOf(getInfoRequest: GetInfoRequest) -> [String: Any?] {
+        return [
+            "withScan": getInfoRequest.withScan,
+        ]
+    }
+
+    static func asGetInfoRequestList(arr: [Any]) throws -> [GetInfoRequest] {
+        var list = [GetInfoRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var getInfoRequest = try asGetInfoRequest(getInfoRequest: val)
+                list.append(getInfoRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(getInfoRequestList: [GetInfoRequest]) -> [Any] {
+        return getInfoRequestList.map { v -> [String: Any?] in dictionaryOf(getInfoRequest: v) }
+    }
+
+    static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
+        guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
+        }
+        guard let pubkey = getInfoResponse["pubkey"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
+        }
+
+        return GetInfoResponse(
+            balanceSat: balanceSat,
+            pubkey: pubkey
+        )
+    }
+
+    static func dictionaryOf(getInfoResponse: GetInfoResponse) -> [String: Any?] {
+        return [
+            "balanceSat": getInfoResponse.balanceSat,
+            "pubkey": getInfoResponse.pubkey,
+        ]
+    }
+
+    static func asGetInfoResponseList(arr: [Any]) throws -> [GetInfoResponse] {
+        var list = [GetInfoResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var getInfoResponse = try asGetInfoResponse(getInfoResponse: val)
+                list.append(getInfoResponse)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(getInfoResponseList: [GetInfoResponse]) -> [Any] {
+        return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
+    }
+
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
         guard let payerAmountSat = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
@@ -203,44 +273,6 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(sendPaymentResponseList: [SendPaymentResponse]) -> [Any] {
         return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
-    }
-
-    static func asWalletInfo(walletInfo: [String: Any?]) throws -> WalletInfo {
-        guard let balanceSat = walletInfo["balanceSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "WalletInfo"))
-        }
-        guard let pubkey = walletInfo["pubkey"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "WalletInfo"))
-        }
-
-        return WalletInfo(
-            balanceSat: balanceSat,
-            pubkey: pubkey
-        )
-    }
-
-    static func dictionaryOf(walletInfo: WalletInfo) -> [String: Any?] {
-        return [
-            "balanceSat": walletInfo.balanceSat,
-            "pubkey": walletInfo.pubkey,
-        ]
-    }
-
-    static func asWalletInfoList(arr: [Any]) throws -> [WalletInfo] {
-        var list = [WalletInfo]()
-        for value in arr {
-            if let val = value as? [String: Any?] {
-                var walletInfo = try asWalletInfo(walletInfo: val)
-                list.append(walletInfo)
-            } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "WalletInfo"))
-            }
-        }
-        return list
-    }
-
-    static func arrayOf(walletInfoList: [WalletInfo]) -> [Any] {
-        return walletInfoList.map { v -> [String: Any?] in dictionaryOf(walletInfo: v) }
     }
 
     static func asNetwork(network: String) throws -> Network {

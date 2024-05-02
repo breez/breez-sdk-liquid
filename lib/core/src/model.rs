@@ -106,7 +106,12 @@ pub struct SendPaymentResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct WalletInfo {
+pub struct GetInfoRequest {
+    pub with_scan: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetInfoResponse {
     pub balance_sat: u64,
     pub pubkey: String,
 }

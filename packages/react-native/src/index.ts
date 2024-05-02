@@ -17,6 +17,15 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
           }
       )
 
+export interface GetInfoRequest {
+    withScan: boolean
+}
+
+export interface GetInfoResponse {
+    balanceSat: number
+    pubkey: string
+}
+
 export interface PrepareReceiveRequest {
     payerAmountSat: number
 }
@@ -45,11 +54,6 @@ export interface SendPaymentResponse {
     txid: string
 }
 
-export interface WalletInfo {
-    balanceSat: number
-    pubkey: string
-}
-
 export enum Network {
     LIQUID = "liquid",
     LIQUID_TESTNET = "liquidTestnet"
@@ -60,8 +64,8 @@ export const connect = async (mnemonic: string, dataDir: string = "", network: N
     return response
 }
 
-export const getInfo = async (withScan: boolean): Promise<WalletInfo> => {
-    const response = await BreezLiquidSDK.getInfo(withScan)
+export const getInfo = async (req: GetInfoRequest): Promise<GetInfoResponse> => {
+    const response = await BreezLiquidSDK.getInfo(req)
     return response
 }
 

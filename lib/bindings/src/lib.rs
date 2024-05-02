@@ -4,8 +4,8 @@ use anyhow::{Error, Result};
 use breez_liquid_sdk::{
     error::PaymentError,
     model::{
-        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-        ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
+        GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
+        PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -37,8 +37,8 @@ pub struct BindingWallet {
 }
 
 impl BindingWallet {
-    pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo, LsSdkError> {
-        self.ln_sdk.get_info(with_scan).map_err(Into::into)
+    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LsSdkError> {
+        self.ln_sdk.get_info(req).map_err(Into::into)
     }
 
     pub fn prepare_send_payment(

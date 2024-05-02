@@ -69,10 +69,11 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     }
 
     @objc(getInfo:resolve:reject:)
-    func getInfo(_ withScan: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func getInfo(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try getBindingWallet().getInfo(withScan: withScan)
-            resolve(BreezLiquidSDKMapper.dictionaryOf(walletInfo: res))
+            let getInfoRequest = try BreezLiquidSDKMapper.asGetInfoRequest(getInfoRequest: req)
+            var res = try getBindingWallet().getInfo(req: getInfoRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(getInfoResponse: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
         }

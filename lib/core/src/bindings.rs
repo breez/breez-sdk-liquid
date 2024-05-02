@@ -5,8 +5,8 @@ use std::sync::{Arc, OnceLock};
 use crate::{
     error::{LsSdkError, PaymentError},
     model::{
-        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-        ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
+        GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
+        PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -21,11 +21,11 @@ pub fn connect(mnemonic: String, data_dir: Option<String>, network: Network) -> 
     Ok(())
 }
 
-pub fn get_info(with_scan: bool) -> Result<WalletInfo> {
+pub fn get_info(req: GetInfoRequest) -> Result<GetInfoResponse> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))?
-        .get_info(with_scan)
+        .get_info(req)
 }
 
 pub fn prepare_send_payment(invoice: String) -> Result<PrepareSendResponse, PaymentError> {

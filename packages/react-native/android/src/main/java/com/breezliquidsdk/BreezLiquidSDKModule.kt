@@ -65,12 +65,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun getInfo(
-        withScan: Boolean,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = getBindingWallet().getInfo(withScan)
+                val getInfoRequest =
+                    asGetInfoRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
+                val res = getBindingWallet().getInfo(getInfoRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

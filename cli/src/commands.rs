@@ -5,7 +5,8 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use breez_liquid_sdk::{model::PrepareReceiveRequest, wallet::Wallet};
+use breez_liquid_sdk::model::{GetInfoRequest, PrepareReceiveRequest};
+use breez_liquid_sdk::wallet::Wallet;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -140,7 +141,7 @@ pub(crate) fn handle_command(
             }
         }
         Command::GetInfo => {
-            command_result!(wallet.get_info(true)?)
+            command_result!(wallet.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
             let mut payments = wallet.list_payments(true, true)?;

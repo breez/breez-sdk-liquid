@@ -34,9 +34,9 @@ use crate::{
     error::PaymentError,
     get_invoice_amount,
     model::{
-        Network, OngoingSwap, Payment, PaymentData, PaymentType, PrepareReceiveRequest,
-        PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
-        WalletInfo, WalletOptions,
+        GetInfoRequest, GetInfoResponse, Network, OngoingSwap, Payment, PaymentData, PaymentType,
+        PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse,
+        SendPaymentResponse, WalletOptions,
     },
     persist::Persister,
 };
@@ -268,11 +268,11 @@ impl Wallet {
         Ok(balance.values().sum())
     }
 
-    pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo> {
+    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         debug!("active_address: {}", self.address()?);
 
-        Ok(WalletInfo {
-            balance_sat: self.total_balance_sat(with_scan)?,
+        Ok(GetInfoResponse {
+            balance_sat: self.total_balance_sat(req.with_scan)?,
             pubkey: self.signer.xpub().public_key.to_string(),
         })
     }

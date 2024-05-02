@@ -22,7 +22,11 @@ enum Network {
     "LiquidTestnet",
 };
 
-dictionary WalletInfo {
+dictionary GetInfoRequest {
+    boolean with_scan;
+};
+
+dictionary GetInfoResponse {
     u64 balance_sat;
     string pubkey;
 };
@@ -62,7 +66,7 @@ namespace breez_liquid_sdk {
 
 interface BindingWallet {
     [Throws=LsSdkError]
-    WalletInfo get_info(boolean with_scan);
+    GetInfoResponse get_info(GetInfoRequest req);
 
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(string invoice);
