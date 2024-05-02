@@ -10,10 +10,10 @@ let package = Package(
         .iOS(.v11),
     ],
     products: [
-        .library(name: "LiquidSwapSDK", targets: ["ls_sdkFFI", "LiquidSwapSDK"]),
+        .library(name: "BreezLiquidSDK", targets: ["breez_liquid_sdkFFI", "BreezLiquidSDK"]),
     ],
     targets: [
-        .binaryTarget(name: "ls_sdkFFI", path: "./ls_sdkFFI.xcframework"),
-        .target(name: "LiquidSwapSDK", dependencies: ["ls_sdkFFI"]),
+        .binaryTarget(name: "breez_liquid_sdkFFI", path: "./breez_liquid_sdkFFI.xcframework"),
+        .target(name: "BreezLiquidSDK", dependencies: ["breez_liquid_sdkFFI"]),
     ]
 )

@@ -1,9 +1,9 @@
 import Foundation
-import LiquidSwapSDK
+import BreezLiquidSDK
 
-@objc(RNLiquidSwapSDK)
-class RNLiquidSwapSDK: RCTEventEmitter {
-    static let TAG: String = "LiquidSwapSDK"
+@objc(RNBreezLiquidSDK)
+class RNBreezLiquidSDK: RCTEventEmitter {
+    static let TAG: String = "BreezLiquidSDK"
     
     public static var emitter: RCTEventEmitter!
     public static var hasListeners: Bool = false
@@ -13,12 +13,12 @@ class RNLiquidSwapSDK: RCTEventEmitter {
     static var defaultDataDir: URL {
         let applicationDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         
-        return applicationDirectory.appendingPathComponent("lsSdk", isDirectory: true)
+        return applicationDirectory.appendingPathComponent("breezLiquidSdk", isDirectory: true)
     }
     
     override init() {
         super.init()
-        RNLiquidSwapSDK.emitter = self
+        RNBreezLiquidSDK.emitter = self
     }
 
     @objc
@@ -31,11 +31,11 @@ class RNLiquidSwapSDK: RCTEventEmitter {
     }
     
     override func startObserving() {
-        RNLiquidSwapSDK.hasListeners = true
+        RNBreezLiquidSDK.hasListeners = true
     }
     
     override func stopObserving() {
-        RNLiquidSwapSDK.hasListeners = false
+        RNBreezLiquidSDK.hasListeners = false
     }
     
     @objc
@@ -51,7 +51,7 @@ class RNLiquidSwapSDK: RCTEventEmitter {
         throw LsSdkError.Generic(message: "Not initialized")
     }
     
-    {% let obj_interface = "LiquidSwapSDK." -%}
+    {% let obj_interface = "BreezLiquidSDK." -%}
     {% for func in ci.function_definitions() %}
     {%- if func.name()|ignored_function == false -%}
     {% include "TopLevelFunctionTemplate.swift" %}
@@ -65,9 +65,9 @@ class RNLiquidSwapSDK: RCTEventEmitter {
         }
 
         do {
-            let dataDirTmp = dataDir.isEmpty ? RNLiquidSwapSDK.defaultDataDir.path : dataDir
-            let networkTmp = try LiquidSwapSDKMapper.asNetwork(network: network)
-            bindingWallet = try LiquidSwapSDK.connect(mnemonic: mnemonic, dataDir: dataDirTmp, network: networkTmp)
+            let dataDirTmp = dataDir.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : dataDir
+            let networkTmp = try BreezLiquidSDKMapper.asNetwork(network: network)
+            bindingWallet = try BreezLiquidSDK.connect(mnemonic: mnemonic, dataDir: dataDirTmp, network: networkTmp)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

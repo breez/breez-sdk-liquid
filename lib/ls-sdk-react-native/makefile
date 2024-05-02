@@ -22,11 +22,11 @@ android-copy:
 	mkdir -p android/src/main/jniLibs/x86_64
 	mkdir -p android/src/main/jniLibs/arm64-v8a
 	mkdir -p android/src/main/jniLibs/armeabi-v7a
-	cp ../ls-sdk-bindings/ffi/kotlin/ls_sdk/ls_sdk.kt android/src/main/java/com/lssdk/ls_sdk.kt
-	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/x86/libls_sdk_bindings.so android/src/main/jniLibs/x86/libls_sdk_bindings.so
-	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/x86_64/libls_sdk_bindings.so android/src/main/jniLibs/x86_64/libls_sdk_bindings.so
-	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/arm64-v8a/libls_sdk_bindings.so android/src/main/jniLibs/arm64-v8a/libls_sdk_bindings.so
-	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/armeabi-v7a/libls_sdk_bindings.so android/src/main/jniLibs/armeabi-v7a/libls_sdk_bindings.so
+	cp ../ls-sdk-bindings/ffi/kotlin/breez_liquid_sdk/breez_liquid_sdk.kt android/src/main/java/com/breezliquidsdk/breez_liquid_sdk.kt
+	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/x86/libbreez_liquid_sdk_bindings.so android/src/main/jniLibs/x86/libbreez_liquid_sdk_bindings.so
+	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/x86_64/libbreez_liquid_sdk_bindings.so android/src/main/jniLibs/x86_64/libbreez_liquid_sdk_bindings.so
+	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/arm64-v8a/libbreez_liquid_sdk_bindings.so android/src/main/jniLibs/arm64-v8a/libbreez_liquid_sdk_bindings.so
+	cp ../ls-sdk-bindings/ffi/kotlin/jniLibs/armeabi-v7a/libbreez_liquid_sdk_bindings.so android/src/main/jniLibs/armeabi-v7a/libbreez_liquid_sdk_bindings.so
 
 android: android-make android-copy
 

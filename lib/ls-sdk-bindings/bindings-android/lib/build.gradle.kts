@@ -54,7 +54,7 @@ publishing {
         }
         maven {
             name = "breezGitHubPackages"
-            url = uri("https://maven.pkg.github.com/breez/breez-sdk-liquid")
+            url = uri("https://maven.pkg.github.com/breez/breez-liquid-sdk")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
@@ -63,7 +63,7 @@ publishing {
     }
     publications {
         create<MavenPublication>("maven") {
-            groupId = "ls_sdk"
+            groupId = "breez_liquid_sdk"
             artifactId = "bindings-android"
             version = libraryVersion
 
@@ -72,19 +72,19 @@ publishing {
             }
 
             pom {
-                name.set("ls-sdk")
-                description.set("The Liquid Swap SDK enables mobile developers to integrate Liquid swaps into their apps with a very shallow learning curve.")
+                name.set("breez-liquid-sdk")
+                description.set("The Breez Liquid SDK enables mobile developers to integrate Liquid swaps into their apps with a very shallow learning curve.")
                 url.set("https://breez.technology")
                 licenses {
                     license {
                         name.set("MIT")
-                        url.set("https://github.com/breez/breez-sdk-liquid/blob/main/LICENSE")
+                        url.set("https://github.com/breez/breez-liquid-sdk/blob/main/LICENSE")
                     }
                 }
                 scm {
-                    connection.set("scm:git:github.com/breez/breez-sdk-liquid.git")
-                    developerConnection.set("scm:git:ssh://github.com/breez/breez-sdk-liquid.git")
-                    url.set("https://github.com/breez/breez-sdk-liquid")
+                    connection.set("scm:git:github.com/breez/breez-liquid-sdk.git")
+                    developerConnection.set("scm:git:ssh://github.com/breez/breez-liquid-sdk.git")
+                    url.set("https://github.com/breez/breez-liquid-sdk")
                 }
             }
         }

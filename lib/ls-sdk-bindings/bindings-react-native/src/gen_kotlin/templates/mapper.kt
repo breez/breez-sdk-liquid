@@ -1,6 +1,6 @@
 {%- import "macros.kt" as kt -%}
-package com.lssdk
-import ls_sdk.*
+package com.breezliquidsdk
+import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 import java.io.File

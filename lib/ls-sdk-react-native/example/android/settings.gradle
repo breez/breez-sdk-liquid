@@ -1,10 +1,10 @@
-rootProject.name = 'LiquidSwapSDKExample'
+rootProject.name = 'BreezLiquidSDKExample'
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
 includeBuild('../node_modules/react-native-gradle-plugin')
 
-include ':breeztech_react-native-liquid-swap-sdk'
-project(':breeztech_react-native-liquid-swap-sdk').projectDir = new File(rootProject.projectDir, '../node_modules/@breeztech/react-native-liquid-swap-sdk/android')
+include ':breeztech_react-native-breez-liquid-sdk'
+project(':breeztech_react-native-breez-liquid-sdk').projectDir = new File(rootProject.projectDir, '../node_modules/@breeztech/react-native-breez-liquid-sdk/android')
 
 include ':react-native-build-config'
 project(':react-native-build-config').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-build-config/android')

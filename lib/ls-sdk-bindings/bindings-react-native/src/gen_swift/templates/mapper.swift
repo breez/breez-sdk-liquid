@@ -1,8 +1,8 @@
 {%- import "macros.swift" as swift -%}
 import Foundation
-import LiquidSwapSDK
+import BreezLiquidSDK
 
-enum LiquidSwapSDKMapper {
+enum BreezLiquidSDKMapper {
 
 {%- include "Types.swift" %}
 
