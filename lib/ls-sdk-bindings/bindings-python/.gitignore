@@ -1,0 +1,5 @@
+src/breez_liquid_sdk/*
+!src/breez_liquid_sdk/__init__.py
+*.egg-info
+build
+dist
