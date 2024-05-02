@@ -12,6 +12,13 @@ Start the CLI with
 cargo run
 ```
 
+To set a specific network, use one of
+
+```bash
+cargo run -- --network mainnet
+cargo run -- --network testnet
+```
+
 To specify a custom data directory, use
 
 ```bash

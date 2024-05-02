@@ -24,6 +24,13 @@ pub(crate) struct Args {
 
     #[clap(short, long)]
     pub(crate) log_file: Option<String>,
+
+    #[clap(short, long, value_parser = parse_network_arg)]
+    pub(crate) network: Option<Network>,
+}
+
+fn parse_network_arg(s: &str) -> Result<Network, String> {
+    Network::try_from(s).map_err(|e| e.to_string())
 }
 
 fn show_results(result: Result<String>) -> Result<()> {
@@ -74,14 +81,16 @@ fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let wallet = Wallet::connect(
-        &mnemonic.to_string(),
-        Some(data_dir_str),
-        Network::LiquidTestnet,
-    )?;
+    let network = args.network.unwrap_or(Network::LiquidTestnet);
+    let wallet = Wallet::connect(&mnemonic.to_string(), Some(data_dir_str), network)?;
+
+    let cli_prompt = match network {
+        Network::Liquid => "breez-liquid-cli [mainnet]> ",
+        Network::LiquidTestnet => "breez-liquid-cli [testnet]> ",
+    };
 
     loop {
-        let readline = rl.readline("breez-liquid> ");
+        let readline = rl.readline(cli_prompt);
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str())?;
