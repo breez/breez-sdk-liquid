@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::get_invoice_amount;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
     Liquid,
     LiquidTestnet,
@@ -70,6 +70,13 @@ impl WalletOptions {
             ElectrumUrl::new(url, tls, validate_domain)
         })
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ConnectRequest {
+    pub mnemonic: String,
+    pub data_dir: Option<String>,
+    pub network: Network,
 }
 
 #[derive(Debug, Serialize)]

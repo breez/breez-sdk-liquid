@@ -3,6 +3,46 @@ import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
+    if (!validateMandatoryFields(
+            connectRequest,
+            arrayOf(
+                "mnemonic",
+                "network",
+            ),
+        )
+    ) {
+        return null
+    }
+    val mnemonic = connectRequest.getString("mnemonic")!!
+    val dataDir = if (hasNonNullKey(connectRequest, "dataDir")) connectRequest.getString("dataDir") else null
+    val network = connectRequest.getString("network")?.let { asNetwork(it) }!!
+    return ConnectRequest(
+        mnemonic,
+        dataDir,
+        network,
+    )
+}
+
+fun readableMapOf(connectRequest: ConnectRequest): ReadableMap {
+    return readableMapOf(
+        "mnemonic" to connectRequest.mnemonic,
+        "dataDir" to connectRequest.dataDir,
+        "network" to connectRequest.network.name.lowercase(),
+    )
+}
+
+fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
+    val list = ArrayList<ConnectRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asConnectRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asGetInfoRequest(getInfoRequest: ReadableMap): GetInfoRequest? {
     if (!validateMandatoryFields(
             getInfoRequest,

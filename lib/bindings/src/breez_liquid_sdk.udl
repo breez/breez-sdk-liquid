@@ -22,6 +22,12 @@ enum Network {
     "LiquidTestnet",
 };
 
+dictionary ConnectRequest {
+    string mnemonic;
+    string? data_dir;
+    Network network;
+};
+
 dictionary GetInfoRequest {
     boolean with_scan;
 };
@@ -69,7 +75,7 @@ dictionary RestoreRequest {
 
 namespace breez_liquid_sdk {
     [Throws=LsSdkError]
-    BindingWallet connect(string mnemonic, string? data_dir, Network network);
+    BindingWallet connect(ConnectRequest req);
 };
 
 interface BindingWallet {

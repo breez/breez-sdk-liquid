@@ -2,6 +2,54 @@ import BreezLiquidSDK
 import Foundation
 
 enum BreezLiquidSDKMapper {
+    static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
+        guard let mnemonic = connectRequest["mnemonic"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
+        }
+        var dataDir: String?
+        if hasNonNilKey(data: connectRequest, key: "dataDir") {
+            guard let dataDirTmp = connectRequest["dataDir"] as? String else {
+                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "dataDir"))
+            }
+            dataDir = dataDirTmp
+        }
+        guard let networkTmp = connectRequest["network"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        return ConnectRequest(
+            mnemonic: mnemonic,
+            dataDir: dataDir,
+            network: network
+        )
+    }
+
+    static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
+        return [
+            "mnemonic": connectRequest.mnemonic,
+            "dataDir": connectRequest.dataDir == nil ? nil : connectRequest.dataDir,
+            "network": valueOf(network: connectRequest.network),
+        ]
+    }
+
+    static func asConnectRequestList(arr: [Any]) throws -> [ConnectRequest] {
+        var list = [ConnectRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var connectRequest = try asConnectRequest(connectRequest: val)
+                list.append(connectRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "ConnectRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(connectRequestList: [ConnectRequest]) -> [Any] {
+        return connectRequestList.map { v -> [String: Any?] in dictionaryOf(connectRequest: v) }
+    }
+
     static func asGetInfoRequest(getInfoRequest: [String: Any?]) throws -> GetInfoRequest {
         guard let withScan = getInfoRequest["withScan"] as? Bool else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))

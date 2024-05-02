@@ -4,11 +4,7 @@ use std::sync::{Arc, OnceLock};
 
 use crate::{
     error::{LsSdkError, PaymentError},
-    model::{
-        GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, RestoreRequest,
-        SendPaymentResponse,
-    },
+    model::*,
     wallet::Wallet,
 };
 
@@ -17,7 +13,11 @@ use super::model::Payment;
 static WALLET_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
 
 pub fn connect(mnemonic: String, data_dir: Option<String>, network: Network) -> Result<()> {
-    let wallet = Wallet::connect(&mnemonic, data_dir, network)?;
+    let wallet = Wallet::connect(ConnectRequest {
+        mnemonic,
+        data_dir,
+        network,
+    })?;
     WALLET_INSTANCE.get_or_init(|| wallet);
     Ok(())
 }
