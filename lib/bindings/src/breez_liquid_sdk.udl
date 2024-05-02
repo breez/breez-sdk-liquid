@@ -63,6 +63,10 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
+dictionary RestoreRequest {
+    string? backup_path;
+};
+
 namespace breez_liquid_sdk {
     [Throws=LsSdkError]
     BindingWallet connect(string mnemonic, string? data_dir, Network network);
@@ -88,5 +92,5 @@ interface BindingWallet {
     void backup();
 
     [Throws=LsSdkError]
-    void restore(string? backup_path);
+    void restore(RestoreRequest req);
 };

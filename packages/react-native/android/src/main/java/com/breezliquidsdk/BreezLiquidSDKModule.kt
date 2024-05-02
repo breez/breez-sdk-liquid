@@ -84,12 +84,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun prepareSendPayment(
-        invoice: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = getBindingWallet().prepareSendPayment(invoice)
+                val prepareSendRequest =
+                    asPrepareSendRequest(req) ?: run {
+                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest"))
+                    }
+                val res = getBindingWallet().prepareSendPayment(prepareSendRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -168,13 +172,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun restore(
-        backupPath: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val backupPathTmp = backupPath.takeUnless { it.isEmpty() }
-                getBindingWallet().restore(backupPathTmp)
+                val restoreRequest =
+                    asRestoreRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
+                getBindingWallet().restore(restoreRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

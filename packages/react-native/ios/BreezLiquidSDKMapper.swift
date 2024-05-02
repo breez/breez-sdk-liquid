@@ -147,6 +147,38 @@ enum BreezLiquidSDKMapper {
         return prepareReceiveResponseList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveResponse: v) }
     }
 
+    static func asPrepareSendRequest(prepareSendRequest: [String: Any?]) throws -> PrepareSendRequest {
+        guard let invoice = prepareSendRequest["invoice"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendRequest"))
+        }
+
+        return PrepareSendRequest(
+            invoice: invoice)
+    }
+
+    static func dictionaryOf(prepareSendRequest: PrepareSendRequest) -> [String: Any?] {
+        return [
+            "invoice": prepareSendRequest.invoice,
+        ]
+    }
+
+    static func asPrepareSendRequestList(arr: [Any]) throws -> [PrepareSendRequest] {
+        var list = [PrepareSendRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareSendRequest = try asPrepareSendRequest(prepareSendRequest: val)
+                list.append(prepareSendRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareSendRequestList: [PrepareSendRequest]) -> [Any] {
+        return prepareSendRequestList.map { v -> [String: Any?] in dictionaryOf(prepareSendRequest: v) }
+    }
+
     static func asPrepareSendResponse(prepareSendResponse: [String: Any?]) throws -> PrepareSendResponse {
         guard let id = prepareSendResponse["id"] as? String else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "PrepareSendResponse"))
@@ -241,6 +273,42 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(receivePaymentResponseList: [ReceivePaymentResponse]) -> [Any] {
         return receivePaymentResponseList.map { v -> [String: Any?] in dictionaryOf(receivePaymentResponse: v) }
+    }
+
+    static func asRestoreRequest(restoreRequest: [String: Any?]) throws -> RestoreRequest {
+        var backupPath: String?
+        if hasNonNilKey(data: restoreRequest, key: "backupPath") {
+            guard let backupPathTmp = restoreRequest["backupPath"] as? String else {
+                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "backupPath"))
+            }
+            backupPath = backupPathTmp
+        }
+
+        return RestoreRequest(
+            backupPath: backupPath)
+    }
+
+    static func dictionaryOf(restoreRequest: RestoreRequest) -> [String: Any?] {
+        return [
+            "backupPath": restoreRequest.backupPath == nil ? nil : restoreRequest.backupPath,
+        ]
+    }
+
+    static func asRestoreRequestList(arr: [Any]) throws -> [RestoreRequest] {
+        var list = [RestoreRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var restoreRequest = try asRestoreRequest(restoreRequest: val)
+                list.append(restoreRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "RestoreRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(restoreRequestList: [RestoreRequest]) -> [Any] {
+        return restoreRequestList.map { v -> [String: Any?] in dictionaryOf(restoreRequest: v) }
     }
 
     static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {

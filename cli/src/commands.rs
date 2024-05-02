@@ -5,7 +5,7 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use breez_liquid_sdk::model::{GetInfoRequest, PrepareReceiveRequest, PrepareSendRequest};
+use breez_liquid_sdk::model::*;
 use breez_liquid_sdk::wallet::Wallet;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -158,7 +158,7 @@ pub(crate) fn handle_command(
             command_result!("Backup created successfully!")
         }
         Command::Restore { backup_path } => {
-            wallet.restore(backup_path)?;
+            wallet.restore(RestoreRequest { backup_path })?;
             command_result!("Backup restored successfully!")
         }
     })

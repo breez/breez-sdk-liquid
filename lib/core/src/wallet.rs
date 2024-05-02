@@ -33,11 +33,7 @@ use crate::{
     ensure_sdk,
     error::PaymentError,
     get_invoice_amount,
-    model::{
-        GetInfoRequest, GetInfoResponse, Network, OngoingSwap, Payment, PaymentData, PaymentType,
-        PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendRequest, PrepareSendResponse,
-        ReceivePaymentResponse, SendPaymentResponse, WalletOptions,
-    },
+    model::*,
     persist::Persister,
 };
 
@@ -592,8 +588,8 @@ impl Wallet {
         Ok(())
     }
 
-    pub fn restore(&self, backup_path: Option<String>) -> Result<()> {
-        let backup_path = match backup_path {
+    pub fn restore(&self, req: RestoreRequest) -> Result<()> {
+        let backup_path = match req.backup_path {
             Some(p) => PathBuf::from_str(&p)?,
             None => self.persister.get_backup_path(),
         };
@@ -633,7 +629,8 @@ mod tests {
             .iter()
             .filter(|p| {
                 [PaymentType::PendingSend, PaymentType::PendingReceive].contains(&p.payment_type)
-            }).cloned()
+            })
+            .cloned()
             .collect())
     }
 

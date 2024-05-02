@@ -121,6 +121,11 @@ pub struct GetInfoResponse {
     pub pubkey: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct RestoreRequest {
+    pub backup_path: Option<String>,
+}
+
 #[derive(Debug)]
 pub(crate) enum OngoingSwap {
     Send {

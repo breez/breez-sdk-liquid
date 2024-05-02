@@ -147,6 +147,39 @@ fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveRespons
     return list
 }
 
+fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
+    if (!validateMandatoryFields(
+            prepareSendRequest,
+            arrayOf(
+                "invoice",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = prepareSendRequest.getString("invoice")!!
+    return PrepareSendRequest(
+        invoice,
+    )
+}
+
+fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap {
+    return readableMapOf(
+        "invoice" to prepareSendRequest.invoice,
+    )
+}
+
+fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
+    val list = ArrayList<PrepareSendRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareSendRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse? {
     if (!validateMandatoryFields(
             prepareSendResponse,
@@ -231,6 +264,37 @@ fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentResponse(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRestoreRequest(restoreRequest: ReadableMap): RestoreRequest? {
+    if (!validateMandatoryFields(
+            restoreRequest,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val backupPath = if (hasNonNullKey(restoreRequest, "backupPath")) restoreRequest.getString("backupPath") else null
+    return RestoreRequest(
+        backupPath,
+    )
+}
+
+fun readableMapOf(restoreRequest: RestoreRequest): ReadableMap {
+    return readableMapOf(
+        "backupPath" to restoreRequest.backupPath,
+    )
+}
+
+fun asRestoreRequestList(arr: ReadableArray): List<RestoreRequest> {
+    val list = ArrayList<RestoreRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRestoreRequest(value)!!)
             else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

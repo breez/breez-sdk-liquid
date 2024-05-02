@@ -36,6 +36,10 @@ export interface PrepareReceiveResponse {
     feesSat: number
 }
 
+export interface PrepareSendRequest {
+    invoice: string
+}
+
 export interface PrepareSendResponse {
     id: string
     payerAmountSat: number
@@ -48,6 +52,10 @@ export interface PrepareSendResponse {
 export interface ReceivePaymentResponse {
     id: string
     invoice: string
+}
+
+export interface RestoreRequest {
+    backupPath?: string
 }
 
 export interface SendPaymentResponse {
@@ -69,8 +77,8 @@ export const getInfo = async (req: GetInfoRequest): Promise<GetInfoResponse> => 
     return response
 }
 
-export const prepareSendPayment = async (invoice: string): Promise<PrepareSendResponse> => {
-    const response = await BreezLiquidSDK.prepareSendPayment(invoice)
+export const prepareSendPayment = async (req: PrepareSendRequest): Promise<PrepareSendResponse> => {
+    const response = await BreezLiquidSDK.prepareSendPayment(req)
     return response
 }
 
@@ -93,6 +101,6 @@ export const backup = async (): Promise<void> => {
     await BreezLiquidSDK.backup()
 }
 
-export const restore = async (backupPath: string = ""): Promise<void> => {
-    await BreezLiquidSDK.restore(backupPath)
+export const restore = async (req: RestoreRequest): Promise<void> => {
+    await BreezLiquidSDK.restore(req)
 }

@@ -80,9 +80,10 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     }
 
     @objc(prepareSendPayment:resolve:reject:)
-    func prepareSendPayment(_ invoice: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func prepareSendPayment(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try getBindingWallet().prepareSendPayment(invoice: invoice)
+            let prepareSendRequest = try BreezLiquidSDKMapper.asPrepareSendRequest(prepareSendRequest: req)
+            var res = try getBindingWallet().prepareSendPayment(req: prepareSendRequest)
             resolve(BreezLiquidSDKMapper.dictionaryOf(prepareSendResponse: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
@@ -133,10 +134,10 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     }
 
     @objc(restore:resolve:reject:)
-    func restore(_ backupPath: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func restore(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let backupPathTmp = backupPath.isEmpty ? nil : backupPath
-            try getBindingWallet().restore(backupPath: backupPathTmp)
+            let restoreRequest = try BreezLiquidSDKMapper.asRestoreRequest(restoreRequest: req)
+            try getBindingWallet().restore(req: restoreRequest)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

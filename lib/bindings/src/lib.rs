@@ -5,7 +5,8 @@ use breez_liquid_sdk::{
     error::PaymentError,
     model::{
         GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
+        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, RestoreRequest,
+        SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -73,8 +74,8 @@ impl BindingWallet {
         self.ln_sdk.backup().map_err(Into::into)
     }
 
-    pub fn restore(&self, backup_path: Option<String>) -> Result<(), LsSdkError> {
-        self.ln_sdk.restore(backup_path).map_err(Into::into)
+    pub fn restore(&self, req: RestoreRequest) -> Result<(), LsSdkError> {
+        self.ln_sdk.restore(req).map_err(Into::into)
     }
 }
 

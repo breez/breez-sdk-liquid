@@ -6,7 +6,8 @@ use crate::{
     error::{LsSdkError, PaymentError},
     model::{
         GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
+        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, RestoreRequest,
+        SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -96,10 +97,10 @@ pub fn backup() -> Result<()> {
         .backup()
 }
 
-pub fn restore(backup_path: Option<String>) -> Result<()> {
+pub fn restore(req: RestoreRequest) -> Result<()> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
-        .restore(backup_path)
+        .restore(req)
 }
