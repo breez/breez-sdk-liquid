@@ -12,7 +12,7 @@ use super::model::Payment;
 
 static WALLET_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
 
-pub fn connect(mnemonic: String, data_dir: Option<String>, network: Network) -> Result<()> {
+pub fn connect(req: ConnectRequest) -> Result<()> {
     let wallet = Wallet::connect(ConnectRequest {
         mnemonic,
         data_dir,
