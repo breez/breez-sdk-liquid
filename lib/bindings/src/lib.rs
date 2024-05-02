@@ -5,7 +5,7 @@ use breez_liquid_sdk::{
     error::PaymentError,
     model::{
         GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-        PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
+        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -43,9 +43,9 @@ impl BindingWallet {
 
     pub fn prepare_send_payment(
         &self,
-        invoice: String,
+        req: PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
-        self.ln_sdk.prepare_send_payment(&invoice)
+        self.ln_sdk.prepare_send_payment(req)
     }
 
     pub fn send_payment(

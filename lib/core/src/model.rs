@@ -91,6 +91,11 @@ pub struct ReceivePaymentResponse {
 }
 
 #[derive(Debug, Serialize, Clone)]
+pub struct PrepareSendRequest {
+    pub invoice: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub id: String,
     pub payer_amount_sat: u64,

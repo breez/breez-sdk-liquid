@@ -31,6 +31,10 @@ dictionary GetInfoResponse {
     string pubkey;
 };
 
+dictionary PrepareSendRequest {
+    string invoice;
+};
+
 dictionary PrepareSendResponse {
     string id;
     u64 payer_amount_sat;
@@ -69,7 +73,7 @@ interface BindingWallet {
     GetInfoResponse get_info(GetInfoRequest req);
 
     [Throws=PaymentError]
-    PrepareSendResponse prepare_send_payment(string invoice);
+    PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
 
     [Throws=PaymentError]
     SendPaymentResponse send_payment(PrepareSendResponse req);

@@ -35,8 +35,8 @@ use crate::{
     get_invoice_amount,
     model::{
         GetInfoRequest, GetInfoResponse, Network, OngoingSwap, Payment, PaymentData, PaymentType,
-        PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse,
-        SendPaymentResponse, WalletOptions,
+        PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendRequest, PrepareSendResponse,
+        ReceivePaymentResponse, SendPaymentResponse, WalletOptions,
     },
     persist::Persister,
 };
@@ -313,9 +313,13 @@ impl Wallet {
         Ok(wallet.finalize(&mut pset)?)
     }
 
-    pub fn prepare_send_payment(&self, invoice: &str) -> Result<PrepareSendResponse, PaymentError> {
+    pub fn prepare_send_payment(
+        &self,
+        req: PrepareSendRequest,
+    ) -> Result<PrepareSendResponse, PaymentError> {
         let client = self.boltz_client();
-        let invoice = invoice
+        let invoice = req
+            .invoice
             .trim()
             .parse::<Bolt11Invoice>()
             .map_err(|_| PaymentError::InvalidInvoice)?;
@@ -606,7 +610,8 @@ mod tests {
     use anyhow::Result;
     use tempdir::TempDir;
 
-    use crate::{wallet::Wallet, Network, Payment, PaymentType, PrepareReceiveRequest, Wallet};
+    use crate::model::{Payment, PaymentType, PrepareReceiveRequest, PrepareSendRequest};
+    use crate::wallet::{Network, Wallet};
 
     const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -628,8 +633,7 @@ mod tests {
             .iter()
             .filter(|p| {
                 [PaymentType::PendingSend, PaymentType::PendingReceive].contains(&p.payment_type)
-            })
-            .map(|p| p.clone())
+            }).cloned()
             .collect())
     }
 
@@ -639,8 +643,8 @@ mod tests {
         let breez_wallet =
             Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
-        let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq";
-        breez_wallet.prepare_send_payment(&invoice)?;
+        let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq".to_string();
+        breez_wallet.prepare_send_payment(PrepareSendRequest { invoice })?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())
@@ -653,8 +657,7 @@ mod tests {
             Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
 
         let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
-            receiver_amount_sat: Some(1000),
-            payer_amount_sat: None,
+            payer_amount_sat: 1_000,
         })?;
         breez_wallet.receive_payment(&prepare_response)?;
         assert!(!list_pending(&breez_wallet)?.is_empty());

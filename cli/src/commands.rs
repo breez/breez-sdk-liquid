@@ -5,7 +5,7 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use breez_liquid_sdk::model::{GetInfoRequest, PrepareReceiveRequest};
+use breez_liquid_sdk::model::{GetInfoRequest, PrepareReceiveRequest, PrepareSendRequest};
 use breez_liquid_sdk::wallet::Wallet;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -116,7 +116,8 @@ pub(crate) fn handle_command(
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response = wallet.prepare_send_payment(&bolt11)?;
+            let prepare_response =
+                wallet.prepare_send_payment(PrepareSendRequest { invoice: bolt11 })?;
 
             wait_confirmation!(
                 format!(

@@ -6,7 +6,7 @@ use crate::{
     error::{LsSdkError, PaymentError},
     model::{
         GetInfoRequest, GetInfoResponse, Network, PrepareReceiveRequest, PrepareReceiveResponse,
-        PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
+        PrepareSendRequest, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
     },
     wallet::Wallet,
 };
@@ -28,12 +28,12 @@ pub fn get_info(req: GetInfoRequest) -> Result<GetInfoResponse> {
         .get_info(req)
 }
 
-pub fn prepare_send_payment(invoice: String) -> Result<PrepareSendResponse, PaymentError> {
+pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendResponse, PaymentError> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
-        .prepare_send_payment(&invoice)
+        .prepare_send_payment(req)
 }
 
 pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, PaymentError> {
