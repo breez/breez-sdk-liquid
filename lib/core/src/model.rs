@@ -38,7 +38,7 @@ impl TryFrom<&str> for Network {
         match value.to_lowercase().as_str() {
             "mainnet" => Ok(Network::Liquid),
             "testnet" => Ok(Network::LiquidTestnet),
-            _ => Err( anyhow!("Invalid network"))
+            _ => Err(anyhow!("Invalid network")),
         }
     }
 }
