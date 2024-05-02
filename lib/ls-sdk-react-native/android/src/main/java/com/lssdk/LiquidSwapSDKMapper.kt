@@ -6,41 +6,22 @@ import java.util.*
 fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveRequest? {
     if (!validateMandatoryFields(
             prepareReceiveRequest,
-            arrayOf(),
+            arrayOf(
+                "payerAmountSat",
+            ),
         )
     ) {
         return null
     }
-    val payerAmountSat =
-        if (hasNonNullKey(
-                prepareReceiveRequest,
-                "payerAmountSat",
-            )
-        ) {
-            prepareReceiveRequest.getDouble("payerAmountSat").toULong()
-        } else {
-            null
-        }
-    val receiverAmountSat =
-        if (hasNonNullKey(
-                prepareReceiveRequest,
-                "receiverAmountSat",
-            )
-        ) {
-            prepareReceiveRequest.getDouble("receiverAmountSat").toULong()
-        } else {
-            null
-        }
+    val payerAmountSat = prepareReceiveRequest.getDouble("payerAmountSat").toULong()
     return PrepareReceiveRequest(
         payerAmountSat,
-        receiverAmountSat,
     )
 }
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap {
     return readableMapOf(
         "payerAmountSat" to prepareReceiveRequest.payerAmountSat,
-        "receiverAmountSat" to prepareReceiveRequest.receiverAmountSat,
     )
 }
 

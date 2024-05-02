@@ -425,53 +425,28 @@ impl Wallet {
             .get_lbtc_pair()
             .ok_or(PaymentError::PairsNotFound)?;
 
-        let (receiver_amount_sat, payer_amount_sat) =
-            match (req.receiver_amount_sat, req.payer_amount_sat) {
-                (Some(receiver_amount_sat), None) => {
-                    let fees_lockup = lbtc_pair.fees.reverse_lockup();
-                    let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
-                    let p = lbtc_pair.fees.percentage;
+        let payer_amount_sat = req.payer_amount_sat;
+        let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
+        let fees_lockup = lbtc_pair.fees.reverse_lockup();
+        let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
+        let fees_total = fees_boltz + fees_lockup + fees_claim;
 
-                    let temp_recv_amt = receiver_amount_sat;
-                    let invoice_amt_minus_service_fee = temp_recv_amt + fees_lockup + fees_claim;
-                    let payer_amount_sat =
-                        (invoice_amt_minus_service_fee as f64 * 100.0 / (100.0 - p)).ceil() as u64;
-
-                    Ok((receiver_amount_sat, payer_amount_sat))
-                }
-                (None, Some(payer_amount_sat)) => {
-                    let fees_boltz = lbtc_pair.fees.reverse_boltz(payer_amount_sat);
-                    let fees_lockup = lbtc_pair.fees.reverse_lockup();
-                    let fees_claim = lbtc_pair.fees.reverse_claim_estimate();
-                    let fees_total = fees_boltz + fees_lockup + fees_claim;
-
-                    ensure_sdk!(
-                        payer_amount_sat > fees_total,
-                        PaymentError::AmountOutOfRange
-                    );
-
-                    Ok((payer_amount_sat - fees_total, payer_amount_sat))
-                }
-                (None, None) => Err(PaymentError::AmountOutOfRange),
-
-                // TODO The request should not allow setting both invoice and onchain amounts, so this case shouldn't be possible.
-                //      See example of how it's done in the SDK.
-                _ => Err(PaymentError::Generic {
-                    err: "Both invoice and onchain amounts were specified".into(),
-                }),
-            }?;
+        ensure_sdk!(
+            payer_amount_sat > fees_total,
+            PaymentError::AmountOutOfRange
+        );
 
         lbtc_pair
             .limits
             .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
-        debug!("Creating reverse swap with: receiver_amount_sat {receiver_amount_sat} sat, payer_amount_sat {payer_amount_sat} sat");
+        debug!("Creating reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_total {fees_total} sat");
 
         Ok(PrepareReceiveResponse {
             pair_hash: lbtc_pair.hash,
             payer_amount_sat,
-            fees_sat: payer_amount_sat - receiver_amount_sat,
+            fees_sat: fees_total,
         })
     }
 
