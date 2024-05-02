@@ -9,9 +9,7 @@ name = "breez_liquid_sdk"
 [dependencies]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
-#boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "cf2544ae126ac46ab2118313d61a57f160e3d64e" }
-# Temp workaround until https://github.com/SatoshiPortal/boltz-rust/pull/41 is reviewed and merged
-boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-fix-swapstatus-close_notify-errors" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "6f45fff8b87c7530c847eb05f018906c48785a6c" }
 flutter_rust_bridge = { version = "=2.0.0-dev.32", features = ["chrono"], optional = true }
 log = "0.4.20"
 lwk_common = "0.3.0"
