@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use boltz_client::network::Chain;
 use boltz_client::Bolt11Invoice;
 use lwk_signer::SwSigner;
@@ -26,6 +27,18 @@ impl From<Network> for Chain {
         match value {
             Network::Liquid => Chain::Liquid,
             Network::LiquidTestnet => Chain::LiquidTestnet,
+        }
+    }
+}
+
+impl TryFrom<&str> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Network, anyhow::Error> {
+        match value.to_lowercase().as_str() {
+            "mainnet" => Ok(Network::Liquid),
+            "testnet" => Ok(Network::LiquidTestnet),
+            _ => Err(anyhow!("Invalid network")),
         }
     }
 }
