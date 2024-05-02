@@ -466,7 +466,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/ok300/boltz-rust?branch=ok300-fix-swapstatus-close_notify-errors#0763847845cb8467f1a1faeb1b59382c034dddd3"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=6f45fff8b87c7530c847eb05f018906c48785a6c#6f45fff8b87c7530c847eb05f018906c48785a6c"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",
