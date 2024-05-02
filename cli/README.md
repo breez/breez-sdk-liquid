@@ -1,4 +1,4 @@
-# breez-sdk-liquid-cli
+# breez-liquid-sdk-cli
 
 ## Setup
 

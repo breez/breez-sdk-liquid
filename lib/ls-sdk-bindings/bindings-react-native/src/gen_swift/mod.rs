@@ -209,14 +209,14 @@ pub mod filters {
         }
         match t {
             Type::Enum(_) | Type::Record(_) => Ok(format!(
-                "LiquidSwapSDKMapper.dictionaryOf({}: res{})",
+                "BreezLiquidSDKMapper.dictionaryOf({}: res{})",
                 name, optional_suffix
             )),
             Type::Sequence(inner) => {
                 let unboxed = inner.as_ref();
                 match unboxed {
                     Type::Enum(_) | Type::Record(_) => Ok(format!(
-                        "LiquidSwapSDKMapper.arrayOf({}List: res{})",
+                        "BreezLiquidSDKMapper.arrayOf({}List: res{})",
                         name, optional_suffix
                     )),
                     _ => Ok(format!("res{}", optional_suffix)),

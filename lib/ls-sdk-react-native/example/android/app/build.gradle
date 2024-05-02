@@ -135,7 +135,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.example.lssdk"
+        applicationId "com.example.breezliquidsdk"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -157,7 +157,7 @@ android {
                     cppFlags "-std=c++17"
                     // Make sure this target name is the same you specify inside the
                     // src/main/jni/Android.mk file for the `LOCAL_MODULE` variable.
-                    targets "LiquidSwapSDKExample_appmodules"
+                    targets "BreezLiquidSDKExample_appmodules"
                     // Fix for windows limit on number of character in file paths and in command lines
                     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                         arguments "NDK_APP_SHORT_COMMANDS=true"
@@ -269,7 +269,7 @@ android {
 }
 
 dependencies {
-    implementation project(':breeztech_react-native-liquid-swap-sdk')
+    implementation project(':breeztech_react-native-breez-liquid-sdk')
 
     implementation project(':react-native-build-config')
 

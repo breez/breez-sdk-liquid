@@ -1,20 +1,20 @@
 {
-  "name": "@breeztech/react-native-liquid-swap-sdk",
+  "name": "@breeztech/react-native-breez-liquid-sdk",
   "version": "0.0.1",
-  "description": "React Native Liquid Swap SDK",
-  "repository": "https://github.com/breez/breez-sdk-liquid",
+  "description": "React Native Breez Liquid SDK",
+  "repository": "https://github.com/breez/breez-liquid-sdk",
   "author": "Breez <contact@breez.technology> (https://github.com/breez)",
   "homepage": "https://breez.technology",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/breez/breez-sdk-liquid/issues"
+    "url": "https://github.com/breez/breez-liquid-sdk/issues"
   },
   "files": [
     "src",
     "lib",
     "android",
     "ios",
-    "ls_sdk.podspec",
+    "breez_liquid_sdk.podspec",
     "!PUBLISHING.md",
     "!android/.gradle",
     "!android/.idea",

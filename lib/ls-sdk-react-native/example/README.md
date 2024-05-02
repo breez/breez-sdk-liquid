@@ -1,4 +1,4 @@
-# Liquid Swap SDK React Native Example
+# Breez Liquid SDK React Native Example
 
 ## Build
 
@@ -24,7 +24,7 @@ yarn android
 * Before running `yarn android`, stop any `Metro` instances that may be running.
 * If you get the error
   ```
-  Failed to load dynamic library 'libls_sdk_bindings.so': dlopen failed: cannot locate symbol "__extenddftf2"
+  Failed to load dynamic library 'libbreez_liquid_sdk_bindings.so': dlopen failed: cannot locate symbol "__extenddftf2"
   ```
   that is likely due to a dependency issue affecting x86_64 images. Try to run the app on a physical Android device or on a x86 image.
 
@@ -37,4 +37,4 @@ yarn ios
 
 ## Development
 
-To develop the Liquid Swap SDK alongside the React Native module and example app, please read [DEVELOPING.md](../DEVELOPING.md) for details on how to setup your development environment.
+To develop the Breez Liquid SDK alongside the React Native module and example app, please read [DEVELOPING.md](../DEVELOPING.md) for details on how to setup your development environment.
