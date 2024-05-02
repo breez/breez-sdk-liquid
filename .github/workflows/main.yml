@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: React native codegen
-        working-directory: lib/ls-sdk-react-native
+        working-directory: packages/react-native
         run: |
           yarn global add tslint typescript
           brew update
