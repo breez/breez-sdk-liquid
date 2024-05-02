@@ -1,9 +1,9 @@
 # Breez Liquid SDK
 
-- `lib`: [lib/README.md](lib/ls-sdk-core/README.md)
+- `lib`: [lib/README.md](lib/core/README.md)
 - `cli`: [cli/README.md](cli/README.md)
 - Bindings
-  - `python`: [lib/bindings-python/README.md]()
+  - `python`: [lib/bindings/bindings-python/README.md]()
 
 ## Roadmap
 - [x] Send/Recieve Lightning payments

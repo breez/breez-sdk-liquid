@@ -8,7 +8,7 @@ The Breez Liquid SDK React Native plugin consumes the underlying Breez Liquid SD
 When developing, it can be useful to work with a locally built version of the Breez Liquid SDK instead of relying on what is published already on CocoaPods / Jitpack.
 To do this, you first need to build the Breez Liquid SDK bindings locally and then point the plugin to make use of the locally built Breez Liquid SDK bindings.
 
-All the following commands can be run in the `lib/ls-sdk-react-native` directory.
+All the following commands can be run in the `packages/react-native` directory.
 
 ## Prerequisites
 
@@ -70,11 +70,11 @@ make ios react-native
 To use the locally built bindings instead of integrating them remotely, make the following changes:
 
 - For iOS:
-	- Rename the podspec files in `lib/ls-sdk-react-native/`:
+	- Rename the podspec files in `packages/react-native/`:
 		- Rename `breez_liquid_sdk.podspec` to `breez_liquid_sdk.podspec.prod`
 		- Rename `BreezLiquidSDK.podspec.dev` to `BreezLiquidSDK.podspec`
 - For Android:
-	- Comment out the following line from the dependencies section in `lib/ls-sdk-react-native/android/build.gradle`:
+	- Comment out the following line from the dependencies section in `packages/react-native/android/build.gradle`:
 		- `implementation("com.github.breez:breez-liquid-sdk:${getVersionFromNpmPackage()}") { exclude group:"net.java.dev.jna" }`
 
 Reinstall the dependencies in the example project and run it.
@@ -83,7 +83,7 @@ It will now use the locally built bindings.
 ## Testing with the example app
 
 To test locally built bindings in the example app, the npm dependencies need to be updated to use the local package.
-In `lib/ls-sdk-react-native/example/package.json` replace the current version with `file:../`:
+In `packages/react-native/example/package.json` replace the current version with `file:../`:
 ```json
     "@breeztech/react-native-breez-liquid-sdk": "file:../",
 ```
@@ -93,7 +93,7 @@ Run the npm/yarn install to download dependences for both the react-native-breez
 yarn bootstrap
 ```
 
-Finally in the `lib/ls-sdk-react-native/example/` directory start either the iOS or Android app:
+Finally in the `packages/react-native/example/` directory start either the iOS or Android app:
 ```bash
 yarn android
 ```

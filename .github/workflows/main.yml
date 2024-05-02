@@ -41,14 +41,14 @@ jobs:
           cargo clippy -- -D warnings
 
   build-bindings:
-    name: Test ls-sdk-bindings
+    name: Test bindings
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build ls-sdk-bindings
-        working-directory: lib/ls-sdk-bindings
+      - name: Build bindings
+        working-directory: lib/bindings
         run: cargo build
 
       - name: Setup python
@@ -56,11 +56,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run ls-sdk-bindings tests
+      - name: Run bindings tests
         run: |
           curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
           export CLASSPATH=$(pwd)/jna-5.12.1.jar;
-          cd lib/ls-sdk-bindings
+          cd lib/bindings
           cargo test
 
   react-native:
@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: React native codegen
-        working-directory: lib/ls-sdk-react-native
+        working-directory: packages/react-native
         run: |
           yarn global add tslint typescript
           brew update

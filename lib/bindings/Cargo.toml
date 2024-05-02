@@ -14,7 +14,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 
 [dependencies]
 anyhow = { workspace = true }
-breez-liquid-sdk = { path = "../ls-sdk-core" }
+breez-liquid-sdk = { path = "../core" }
 uniffi = { workspace = true, features = [ "bindgen-tests", "cli" ] }
 thiserror = { workspace = true }
 

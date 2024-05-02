@@ -1,4 +1,4 @@
 target
 *.so
 *.a
-ls-sdk-bindings/ffi
+bindings/ffi
