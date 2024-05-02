@@ -7,13 +7,13 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use clap::Parser;
-use commands::{handle_command, CliHelper, Command, CommandResult};
-use log::{error, info};
-use ls_sdk::{
+use breez_liquid_sdk::{
     model::Network,
     wallet::{Wallet, DEFAULT_DATA_DIR},
 };
+use clap::Parser;
+use commands::{handle_command, CliHelper, Command, CommandResult};
+use log::{error, info};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
 

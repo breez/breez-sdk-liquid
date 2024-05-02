@@ -361,6 +361,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "breez-liquid-cli"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bip39",
+ "breez-liquid-sdk",
+ "clap",
+ "env_logger 0.11.3",
+ "log",
+ "qrcode-rs",
+ "rustyline",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "breez-liquid-sdk"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bip39",
+ "boltz-client",
+ "flutter_rust_bridge",
+ "log",
+ "lwk_common",
+ "lwk_signer",
+ "lwk_wollet",
+ "openssl",
+ "rusqlite",
+ "rusqlite_migration",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "build-target"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1278,41 +1313,6 @@ name = "log"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
-
-[[package]]
-name = "ls-sdk"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "bip39",
- "boltz-client",
- "flutter_rust_bridge",
- "log",
- "lwk_common",
- "lwk_signer",
- "lwk_wollet",
- "openssl",
- "rusqlite",
- "rusqlite_migration",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "ls-sdk-cli"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "bip39",
- "clap",
- "env_logger 0.11.3",
- "log",
- "ls-sdk",
- "qrcode-rs",
- "rustyline",
- "serde",
- "serde_json",
-]
 
 [[package]]
 name = "lwk_common"

@@ -34,7 +34,7 @@ all: bindings-swift bindings-android python react-native
 
 ## Android 
 android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language kotlin -o ffi/kotlin
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language kotlin -o ffi/kotlin
 
 aarch64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --release	
@@ -62,7 +62,7 @@ bindings-android: android
 ## Kotlin
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language kotlin -o ffi/kotlin
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language kotlin -o ffi/kotlin
 
 ## Apple
 ios-universal: $(SOURCES)		
@@ -85,18 +85,18 @@ darwin-universal: $(SOURCES)
 
 ## Swift
 swift-ios: ios-universal
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl -l swift -o ffi/swift-ios
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl -l swift -o ffi/swift-ios
 	cp ../target/ios-universal/release/libls_sdk_bindings.a ffi/swift-ios
 	cd ffi/swift-ios && "swiftc" "-emit-module" "-module-name" "ls_sdk_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-ios/ls_sdkFFI.modulemap" "-I" "."  "-L" "." "-lls_sdk_bindings" ls_sdk.swift
 
 swift-darwin: darwin-universal
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl -l swift -o ffi/swift-darwin
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl -l swift -o ffi/swift-darwin
 	cp ../target/darwin-universal/release/libls_sdk_bindings.dylib ffi/swift-darwin
 	cd ffi/swift-darwin && "swiftc" "-emit-module" "-module-name" "ls_sdk_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-darwin/ls_sdkFFI.modulemap" "-I" "."  "-L" "." "-lls_sdk_bindings" ls_sdk.swift
 
 bindings-swift: ios-universal darwin-universal
 	mkdir -p bindings-swift/Sources/LiquidSwapSDK
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language swift -o bindings-swift/Sources/LiquidSwapSDK
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language swift -o bindings-swift/Sources/LiquidSwapSDK
 	mv bindings-swift/Sources/LiquidSwapSDK/ls_sdk.swift bindings-swift/Sources/LiquidSwapSDK/LiquidSwapSDK.swift
 	cp bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h bindings-swift/ls_sdkFFI.xcframework/ios-arm64/ls_sdkFFI.framework/Headers
 	cp bindings-swift/Sources/LiquidSwapSDK/ls_sdkFFI.h bindings-swift/ls_sdkFFI.xcframework/ios-arm64_x86_64-simulator/ls_sdkFFI.framework/Headers
@@ -110,7 +110,7 @@ bindings-swift: ios-universal darwin-universal
 ## Python
 python: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/ls_sdk.udl --no-format --language python -o ffi/python
+	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language python -o ffi/python
 
 ## React Native
 react-native:

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{Error, Result};
-use ls_sdk::{
+use breez_liquid_sdk::{
     error::PaymentError,
     model::{
         Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
@@ -78,4 +78,4 @@ impl BindingWallet {
     }
 }
 
-uniffi::include_scaffolding!("ls_sdk");
+uniffi::include_scaffolding!("breez_liquid_sdk");

@@ -5,8 +5,8 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
+use breez_liquid_sdk::{model::PrepareReceiveRequest, wallet::Wallet};
 use clap::{arg, Parser};
-use ls_sdk::{model::PrepareReceiveRequest, wallet::Wallet};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;

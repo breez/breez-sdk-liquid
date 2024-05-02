@@ -1,10 +1,10 @@
 [package]
-name = "ls-sdk"
+name = "breez-liquid-sdk"
 edition = "2021"
 version.workspace = true
 
 [lib]
-name = "ls_sdk"
+name = "breez_liquid_sdk"
 
 [dependencies]
 anyhow = { workspace = true }
