@@ -9,7 +9,7 @@ rpath = true
 members = [
     "bindings",
     "bindings/bindings-react-native",
-    "ls-sdk-core",
+    "core",
 ]
 resolver = "2"
 
