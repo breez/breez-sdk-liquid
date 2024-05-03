@@ -6,6 +6,69 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+class ConnectRequest {
+  final String mnemonic;
+  final String? dataDir;
+  final Network network;
+
+  const ConnectRequest({
+    required this.mnemonic,
+    this.dataDir,
+    required this.network,
+  });
+
+  @override
+  int get hashCode => mnemonic.hashCode ^ dataDir.hashCode ^ network.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConnectRequest &&
+          runtimeType == other.runtimeType &&
+          mnemonic == other.mnemonic &&
+          dataDir == other.dataDir &&
+          network == other.network;
+}
+
+class GetInfoRequest {
+  final bool withScan;
+
+  const GetInfoRequest({
+    required this.withScan,
+  });
+
+  @override
+  int get hashCode => withScan.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GetInfoRequest &&
+          runtimeType == other.runtimeType &&
+          withScan == other.withScan;
+}
+
+class GetInfoResponse {
+  final int balanceSat;
+  final String pubkey;
+
+  const GetInfoResponse({
+    required this.balanceSat,
+    required this.pubkey,
+  });
+
+  @override
+  int get hashCode => balanceSat.hashCode ^ pubkey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GetInfoResponse &&
+          runtimeType == other.runtimeType &&
+          balanceSat == other.balanceSat &&
+          pubkey == other.pubkey;
+}
+
 enum Network {
   liquid,
   liquidTestnet,
@@ -62,24 +125,21 @@ enum PaymentType {
 }
 
 class PrepareReceiveRequest {
-  final int? payerAmountSat;
-  final int? receiverAmountSat;
+  final int payerAmountSat;
 
   const PrepareReceiveRequest({
-    this.payerAmountSat,
-    this.receiverAmountSat,
+    required this.payerAmountSat,
   });
 
   @override
-  int get hashCode => payerAmountSat.hashCode ^ receiverAmountSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveRequest &&
           runtimeType == other.runtimeType &&
-          payerAmountSat == other.payerAmountSat &&
-          receiverAmountSat == other.receiverAmountSat;
+          payerAmountSat == other.payerAmountSat;
 }
 
 class PrepareReceiveResponse {
@@ -105,6 +165,24 @@ class PrepareReceiveResponse {
           pairHash == other.pairHash &&
           payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat;
+}
+
+class PrepareSendRequest {
+  final String invoice;
+
+  const PrepareSendRequest({
+    required this.invoice,
+  });
+
+  @override
+  int get hashCode => invoice.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareSendRequest &&
+          runtimeType == other.runtimeType &&
+          invoice == other.invoice;
 }
 
 class PrepareSendResponse {
@@ -167,6 +245,24 @@ class ReceivePaymentResponse {
           invoice == other.invoice;
 }
 
+class RestoreRequest {
+  final String? backupPath;
+
+  const RestoreRequest({
+    this.backupPath,
+  });
+
+  @override
+  int get hashCode => backupPath.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RestoreRequest &&
+          runtimeType == other.runtimeType &&
+          backupPath == other.backupPath;
+}
+
 class SendPaymentResponse {
   final String txid;
 
@@ -183,25 +279,4 @@ class SendPaymentResponse {
       other is SendPaymentResponse &&
           runtimeType == other.runtimeType &&
           txid == other.txid;
-}
-
-class WalletInfo {
-  final int balanceSat;
-  final String pubkey;
-
-  const WalletInfo({
-    required this.balanceSat,
-    required this.pubkey,
-  });
-
-  @override
-  int get hashCode => balanceSat.hashCode ^ pubkey.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is WalletInfo &&
-          runtimeType == other.runtimeType &&
-          balanceSat == other.balanceSat &&
-          pubkey == other.pubkey;
 }

@@ -52,9 +52,7 @@ fn wire_backup_impl(port_: flutter_rust_bridge::for_generated::MessagePort) {
 }
 fn wire_connect_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    mnemonic: impl CstDecode<String>,
-    data_dir: impl CstDecode<Option<String>>,
-    network: impl CstDecode<crate::model::Network>,
+    req: impl CstDecode<crate::model::ConnectRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -63,14 +61,8 @@ fn wire_connect_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_mnemonic = mnemonic.cst_decode();
-            let api_data_dir = data_dir.cst_decode();
-            let api_network = network.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    crate::bindings::connect(api_mnemonic, api_data_dir, api_network)
-                })())
-            }
+            let api_req = req.cst_decode();
+            move |context| transform_result_dco((move || crate::bindings::connect(api_req))())
         },
     )
 }
@@ -88,13 +80,19 @@ fn wire_empty_wallet_cache_impl(port_: flutter_rust_bridge::for_generated::Messa
 }
 fn wire_get_info_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    with_scan: impl CstDecode<bool>,
+    req: impl CstDecode<crate::model::GetInfoRequest>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "get_info", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_with_scan = with_scan.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
-                         crate::bindings::get_info(api_with_scan)
-                    })())
-                } })
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_info",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_req = req.cst_decode();
+            move |context| transform_result_dco((move || crate::bindings::get_info(api_req))())
+        },
+    )
 }
 fn wire_list_payments_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -138,7 +136,7 @@ fn wire_prepare_receive_payment_impl(
 }
 fn wire_prepare_send_payment_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    invoice: impl CstDecode<String>,
+    req: impl CstDecode<crate::model::PrepareSendRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -147,9 +145,9 @@ fn wire_prepare_send_payment_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_invoice = invoice.cst_decode();
+            let api_req = req.cst_decode();
             move |context| {
-                transform_result_dco((move || crate::bindings::prepare_send_payment(api_invoice))())
+                transform_result_dco((move || crate::bindings::prepare_send_payment(api_req))())
             }
         },
     )
@@ -192,7 +190,7 @@ fn wire_recover_funds_impl(
 }
 fn wire_restore_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
-    backup_path: impl CstDecode<Option<String>>,
+    req: impl CstDecode<crate::model::RestoreRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -201,10 +199,8 @@ fn wire_restore_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
         move || {
-            let api_backup_path = backup_path.cst_decode();
-            move |context| {
-                transform_result_dco((move || crate::bindings::restore(api_backup_path))())
-            }
+            let api_req = req.cst_decode();
+            move |context| transform_result_dco((move || crate::bindings::restore(api_req))())
         },
     )
 }
@@ -324,6 +320,42 @@ impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
+impl SseDecode for crate::model::ConnectRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_mnemonic = <String>::sse_decode(deserializer);
+        let mut var_dataDir = <Option<String>>::sse_decode(deserializer);
+        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        return crate::model::ConnectRequest {
+            mnemonic: var_mnemonic,
+            data_dir: var_dataDir,
+            network: var_network,
+        };
+    }
+}
+
+impl SseDecode for crate::model::GetInfoRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_withScan = <bool>::sse_decode(deserializer);
+        return crate::model::GetInfoRequest {
+            with_scan: var_withScan,
+        };
+    }
+}
+
+impl SseDecode for crate::model::GetInfoResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_balanceSat = <u64>::sse_decode(deserializer);
+        let mut var_pubkey = <String>::sse_decode(deserializer);
+        return crate::model::GetInfoResponse {
+            balance_sat: var_balanceSat,
+            pubkey: var_pubkey,
+        };
     }
 }
 
@@ -486,11 +518,9 @@ impl SseDecode for crate::model::PaymentType {
 impl SseDecode for crate::model::PrepareReceiveRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_payerAmountSat = <Option<u64>>::sse_decode(deserializer);
-        let mut var_receiverAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveRequest {
             payer_amount_sat: var_payerAmountSat,
-            receiver_amount_sat: var_receiverAmountSat,
         };
     }
 }
@@ -505,6 +535,16 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
             pair_hash: var_pairHash,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
+        };
+    }
+}
+
+impl SseDecode for crate::model::PrepareSendRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_invoice = <String>::sse_decode(deserializer);
+        return crate::model::PrepareSendRequest {
+            invoice: var_invoice,
         };
     }
 }
@@ -537,6 +577,16 @@ impl SseDecode for crate::model::ReceivePaymentResponse {
         return crate::model::ReceivePaymentResponse {
             id: var_id,
             invoice: var_invoice,
+        };
+    }
+}
+
+impl SseDecode for crate::model::RestoreRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_backupPath = <Option<String>>::sse_decode(deserializer);
+        return crate::model::RestoreRequest {
+            backup_path: var_backupPath,
         };
     }
 }
@@ -579,18 +629,6 @@ impl SseDecode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
-    }
-}
-
-impl SseDecode for crate::model::WalletInfo {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_balanceSat = <u64>::sse_decode(deserializer);
-        let mut var_pubkey = <String>::sse_decode(deserializer);
-        return crate::model::WalletInfo {
-            balance_sat: var_balanceSat,
-            pubkey: var_pubkey,
-        };
     }
 }
 
@@ -639,6 +677,57 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<LBtcReverseRecovery>> for LBtc
     }
 }
 
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.mnemonic.into_into_dart().into_dart(),
+            self.data_dir.into_into_dart().into_dart(),
+            self.network.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::ConnectRequest {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ConnectRequest>
+    for crate::model::ConnectRequest
+{
+    fn into_into_dart(self) -> crate::model::ConnectRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::GetInfoRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.with_scan.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::GetInfoRequest {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoRequest>
+    for crate::model::GetInfoRequest
+{
+    fn into_into_dart(self) -> crate::model::GetInfoRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::GetInfoResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.balance_sat.into_into_dart().into_dart(),
+            self.pubkey.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::GetInfoResponse {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoResponse>
+    for crate::model::GetInfoResponse
+{
+    fn into_into_dart(self) -> crate::model::GetInfoResponse {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Network {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -725,11 +814,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentType> for crate::mod
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.payer_amount_sat.into_into_dart().into_dart(),
-            self.receiver_amount_sat.into_into_dart().into_dart(),
-        ]
-        .into_dart()
+        [self.payer_amount_sat.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -762,6 +847,23 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveResponse>
     for crate::model::PrepareReceiveResponse
 {
     fn into_into_dart(self) -> crate::model::PrepareReceiveResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.invoice.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PrepareSendRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareSendRequest>
+    for crate::model::PrepareSendRequest
+{
+    fn into_into_dart(self) -> crate::model::PrepareSendRequest {
         self
     }
 }
@@ -812,6 +914,20 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceivePaymentResponse>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::RestoreRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.backup_path.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RestoreRequest {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::RestoreRequest>
+    for crate::model::RestoreRequest
+{
+    fn into_into_dart(self) -> crate::model::RestoreRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.txid.into_into_dart().into_dart()].into_dart()
@@ -825,22 +941,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::SendPaymentResponse>
     for crate::model::SendPaymentResponse
 {
     fn into_into_dart(self) -> crate::model::SendPaymentResponse {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::WalletInfo {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.balance_sat.into_into_dart().into_dart(),
-            self.pubkey.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::WalletInfo {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::WalletInfo> for crate::model::WalletInfo {
-    fn into_into_dart(self) -> crate::model::WalletInfo {
         self
     }
 }
@@ -881,6 +981,30 @@ impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
+impl SseEncode for crate::model::ConnectRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.mnemonic, serializer);
+        <Option<String>>::sse_encode(self.data_dir, serializer);
+        <crate::model::Network>::sse_encode(self.network, serializer);
+    }
+}
+
+impl SseEncode for crate::model::GetInfoRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.with_scan, serializer);
+    }
+}
+
+impl SseEncode for crate::model::GetInfoResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u64>::sse_encode(self.balance_sat, serializer);
+        <String>::sse_encode(self.pubkey, serializer);
     }
 }
 
@@ -1032,8 +1156,7 @@ impl SseEncode for crate::model::PaymentType {
 impl SseEncode for crate::model::PrepareReceiveRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<u64>>::sse_encode(self.payer_amount_sat, serializer);
-        <Option<u64>>::sse_encode(self.receiver_amount_sat, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
     }
 }
 
@@ -1043,6 +1166,13 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
         <String>::sse_encode(self.pair_hash, serializer);
         <u64>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+    }
+}
+
+impl SseEncode for crate::model::PrepareSendRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.invoice, serializer);
     }
 }
 
@@ -1063,6 +1193,13 @@ impl SseEncode for crate::model::ReceivePaymentResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.invoice, serializer);
+    }
+}
+
+impl SseEncode for crate::model::RestoreRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.backup_path, serializer);
     }
 }
 
@@ -1106,14 +1243,6 @@ impl SseEncode for usize {
             .cursor
             .write_u64::<NativeEndian>(self as _)
             .unwrap();
-    }
-}
-
-impl SseEncode for crate::model::WalletInfo {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.balance_sat, serializer);
-        <String>::sse_encode(self.pubkey, serializer);
     }
 }
 

@@ -54,6 +54,20 @@ impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
         String::from_utf8(vec).unwrap()
     }
 }
+impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ConnectRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::GetInfoRequest> for *mut wire_cst_get_info_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::GetInfoRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::GetInfoRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
@@ -68,11 +82,25 @@ impl CstDecode<crate::model::PrepareReceiveResponse> for *mut wire_cst_prepare_r
         CstDecode::<crate::model::PrepareReceiveResponse>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::PrepareSendRequest> for *mut wire_cst_prepare_send_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareSendRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PrepareSendRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::PrepareSendResponse> for *mut wire_cst_prepare_send_response {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::PrepareSendResponse>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::RestoreRequest> for *mut wire_cst_restore_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::RestoreRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::RestoreRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<u32> for *mut u32 {
@@ -85,6 +113,33 @@ impl CstDecode<u64> for *mut u64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u64 {
         unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
+impl CstDecode<crate::model::ConnectRequest> for wire_cst_connect_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ConnectRequest {
+        crate::model::ConnectRequest {
+            mnemonic: self.mnemonic.cst_decode(),
+            data_dir: self.data_dir.cst_decode(),
+            network: self.network.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::GetInfoRequest> for wire_cst_get_info_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::GetInfoRequest {
+        crate::model::GetInfoRequest {
+            with_scan: self.with_scan.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::GetInfoResponse> for wire_cst_get_info_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::GetInfoResponse {
+        crate::model::GetInfoResponse {
+            balance_sat: self.balance_sat.cst_decode(),
+            pubkey: self.pubkey.cst_decode(),
+        }
     }
 }
 impl CstDecode<Vec<crate::model::Payment>> for *mut wire_cst_list_payment {
@@ -162,7 +217,6 @@ impl CstDecode<crate::model::PrepareReceiveRequest> for wire_cst_prepare_receive
     fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
         crate::model::PrepareReceiveRequest {
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
-            receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
         }
     }
 }
@@ -173,6 +227,14 @@ impl CstDecode<crate::model::PrepareReceiveResponse> for wire_cst_prepare_receiv
             pair_hash: self.pair_hash.cst_decode(),
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::PrepareSendRequest> for wire_cst_prepare_send_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareSendRequest {
+        crate::model::PrepareSendRequest {
+            invoice: self.invoice.cst_decode(),
         }
     }
 }
@@ -198,6 +260,14 @@ impl CstDecode<crate::model::ReceivePaymentResponse> for wire_cst_receive_paymen
         }
     }
 }
+impl CstDecode<crate::model::RestoreRequest> for wire_cst_restore_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::RestoreRequest {
+        crate::model::RestoreRequest {
+            backup_path: self.backup_path.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_response {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::SendPaymentResponse {
@@ -206,13 +276,43 @@ impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_resp
         }
     }
 }
-impl CstDecode<crate::model::WalletInfo> for wire_cst_wallet_info {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::WalletInfo {
-        crate::model::WalletInfo {
-            balance_sat: self.balance_sat.cst_decode(),
-            pubkey: self.pubkey.cst_decode(),
+impl NewWithNullPtr for wire_cst_connect_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            mnemonic: core::ptr::null_mut(),
+            data_dir: core::ptr::null_mut(),
+            network: Default::default(),
         }
+    }
+}
+impl Default for wire_cst_connect_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_get_info_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            with_scan: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_get_info_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_get_info_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            balance_sat: Default::default(),
+            pubkey: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_get_info_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
     }
 }
 impl NewWithNullPtr for wire_cst_payment {
@@ -248,8 +348,7 @@ impl Default for wire_cst_payment_error {
 impl NewWithNullPtr for wire_cst_prepare_receive_request {
     fn new_with_null_ptr() -> Self {
         Self {
-            payer_amount_sat: core::ptr::null_mut(),
-            receiver_amount_sat: core::ptr::null_mut(),
+            payer_amount_sat: Default::default(),
         }
     }
 }
@@ -268,6 +367,18 @@ impl NewWithNullPtr for wire_cst_prepare_receive_response {
     }
 }
 impl Default for wire_cst_prepare_receive_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_send_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            invoice: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_send_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -302,6 +413,18 @@ impl Default for wire_cst_receive_payment_response {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_restore_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            backup_path: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_restore_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_send_payment_response {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -314,19 +437,6 @@ impl Default for wire_cst_send_payment_response {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_wallet_info {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            balance_sat: Default::default(),
-            pubkey: core::ptr::null_mut(),
-        }
-    }
-}
-impl Default for wire_cst_wallet_info {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
-}
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire_backup(port_: i64) {
@@ -334,13 +444,8 @@ pub extern "C" fn frbgen_breez_liquid_wire_backup(port_: i64) {
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_connect(
-    port_: i64,
-    mnemonic: *mut wire_cst_list_prim_u_8_strict,
-    data_dir: *mut wire_cst_list_prim_u_8_strict,
-    network: i32,
-) {
-    wire_connect_impl(port_, mnemonic, data_dir, network)
+pub extern "C" fn frbgen_breez_liquid_wire_connect(port_: i64, req: *mut wire_cst_connect_request) {
+    wire_connect_impl(port_, req)
 }
 
 #[no_mangle]
@@ -349,8 +454,11 @@ pub extern "C" fn frbgen_breez_liquid_wire_empty_wallet_cache(port_: i64) {
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_get_info(port_: i64, with_scan: bool) {
-    wire_get_info_impl(port_, with_scan)
+pub extern "C" fn frbgen_breez_liquid_wire_get_info(
+    port_: i64,
+    req: *mut wire_cst_get_info_request,
+) {
+    wire_get_info_impl(port_, req)
 }
 
 #[no_mangle]
@@ -373,9 +481,9 @@ pub extern "C" fn frbgen_breez_liquid_wire_prepare_receive_payment(
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire_prepare_send_payment(
     port_: i64,
-    invoice: *mut wire_cst_list_prim_u_8_strict,
+    req: *mut wire_cst_prepare_send_request,
 ) {
-    wire_prepare_send_payment_impl(port_, invoice)
+    wire_prepare_send_payment_impl(port_, req)
 }
 
 #[no_mangle]
@@ -392,11 +500,8 @@ pub extern "C" fn frbgen_breez_liquid_wire_recover_funds(port_: i64, recovery: u
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_restore(
-    port_: i64,
-    backup_path: *mut wire_cst_list_prim_u_8_strict,
-) {
-    wire_restore_impl(port_, backup_path)
+pub extern "C" fn frbgen_breez_liquid_wire_restore(port_: i64, req: *mut wire_cst_restore_request) {
+    wire_restore_impl(port_, req)
 }
 
 #[no_mangle]
@@ -426,6 +531,22 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
+) -> *mut wire_cst_connect_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_connect_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_get_info_request(
+) -> *mut wire_cst_get_info_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_get_info_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
 ) -> *mut wire_cst_prepare_receive_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -442,10 +563,26 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_respon
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request(
+) -> *mut wire_cst_prepare_send_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_prepare_send_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 ) -> *mut wire_cst_prepare_send_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_response::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_restore_request(
+) -> *mut wire_cst_restore_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_restore_request::new_with_null_ptr(),
     )
 }
 
@@ -482,6 +619,24 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
     flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
 }
 
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_connect_request {
+    mnemonic: *mut wire_cst_list_prim_u_8_strict,
+    data_dir: *mut wire_cst_list_prim_u_8_strict,
+    network: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_get_info_request {
+    with_scan: bool,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_get_info_response {
+    balance_sat: u64,
+    pubkey: *mut wire_cst_list_prim_u_8_strict,
+}
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_list_payment {
@@ -542,8 +697,7 @@ pub struct wire_cst_PaymentError_SignerError {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_receive_request {
-    payer_amount_sat: *mut u64,
-    receiver_amount_sat: *mut u64,
+    payer_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -551,6 +705,11 @@ pub struct wire_cst_prepare_receive_response {
     pair_hash: *mut wire_cst_list_prim_u_8_strict,
     payer_amount_sat: u64,
     fees_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_send_request {
+    invoice: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -570,12 +729,11 @@ pub struct wire_cst_receive_payment_response {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_send_payment_response {
-    txid: *mut wire_cst_list_prim_u_8_strict,
+pub struct wire_cst_restore_request {
+    backup_path: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_wallet_info {
-    balance_sat: u64,
-    pubkey: *mut wire_cst_list_prim_u_8_strict,
+pub struct wire_cst_send_payment_response {
+    txid: *mut wire_cst_list_prim_u_8_strict,
 }
