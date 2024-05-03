@@ -5,7 +5,8 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use breez_liquid_sdk::{model::PrepareReceiveRequest, wallet::Wallet};
+use breez_liquid_sdk::model::*;
+use breez_liquid_sdk::wallet::Wallet;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -115,7 +116,8 @@ pub(crate) fn handle_command(
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response = wallet.prepare_send_payment(&bolt11)?;
+            let prepare_response =
+                wallet.prepare_send_payment(PrepareSendRequest { invoice: bolt11 })?;
 
             wait_confirmation!(
                 format!(
@@ -140,7 +142,7 @@ pub(crate) fn handle_command(
             }
         }
         Command::GetInfo => {
-            command_result!(wallet.get_info(true)?)
+            command_result!(wallet.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
             let mut payments = wallet.list_payments(true, true)?;
@@ -156,7 +158,7 @@ pub(crate) fn handle_command(
             command_result!("Backup created successfully!")
         }
         Command::Restore { backup_path } => {
-            wallet.restore(backup_path)?;
+            wallet.restore(RestoreRequest { backup_path })?;
             command_result!("Backup restored successfully!")
         }
     })

@@ -2,6 +2,124 @@ import BreezLiquidSDK
 import Foundation
 
 enum BreezLiquidSDKMapper {
+    static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
+        guard let mnemonic = connectRequest["mnemonic"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
+        }
+        var dataDir: String?
+        if hasNonNilKey(data: connectRequest, key: "dataDir") {
+            guard let dataDirTmp = connectRequest["dataDir"] as? String else {
+                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "dataDir"))
+            }
+            dataDir = dataDirTmp
+        }
+        guard let networkTmp = connectRequest["network"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        return ConnectRequest(
+            mnemonic: mnemonic,
+            dataDir: dataDir,
+            network: network
+        )
+    }
+
+    static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
+        return [
+            "mnemonic": connectRequest.mnemonic,
+            "dataDir": connectRequest.dataDir == nil ? nil : connectRequest.dataDir,
+            "network": valueOf(network: connectRequest.network),
+        ]
+    }
+
+    static func asConnectRequestList(arr: [Any]) throws -> [ConnectRequest] {
+        var list = [ConnectRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var connectRequest = try asConnectRequest(connectRequest: val)
+                list.append(connectRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "ConnectRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(connectRequestList: [ConnectRequest]) -> [Any] {
+        return connectRequestList.map { v -> [String: Any?] in dictionaryOf(connectRequest: v) }
+    }
+
+    static func asGetInfoRequest(getInfoRequest: [String: Any?]) throws -> GetInfoRequest {
+        guard let withScan = getInfoRequest["withScan"] as? Bool else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))
+        }
+
+        return GetInfoRequest(
+            withScan: withScan)
+    }
+
+    static func dictionaryOf(getInfoRequest: GetInfoRequest) -> [String: Any?] {
+        return [
+            "withScan": getInfoRequest.withScan,
+        ]
+    }
+
+    static func asGetInfoRequestList(arr: [Any]) throws -> [GetInfoRequest] {
+        var list = [GetInfoRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var getInfoRequest = try asGetInfoRequest(getInfoRequest: val)
+                list.append(getInfoRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(getInfoRequestList: [GetInfoRequest]) -> [Any] {
+        return getInfoRequestList.map { v -> [String: Any?] in dictionaryOf(getInfoRequest: v) }
+    }
+
+    static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
+        guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
+        }
+        guard let pubkey = getInfoResponse["pubkey"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
+        }
+
+        return GetInfoResponse(
+            balanceSat: balanceSat,
+            pubkey: pubkey
+        )
+    }
+
+    static func dictionaryOf(getInfoResponse: GetInfoResponse) -> [String: Any?] {
+        return [
+            "balanceSat": getInfoResponse.balanceSat,
+            "pubkey": getInfoResponse.pubkey,
+        ]
+    }
+
+    static func asGetInfoResponseList(arr: [Any]) throws -> [GetInfoResponse] {
+        var list = [GetInfoResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var getInfoResponse = try asGetInfoResponse(getInfoResponse: val)
+                list.append(getInfoResponse)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(getInfoResponseList: [GetInfoResponse]) -> [Any] {
+        return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
+    }
+
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
         guard let payerAmountSat = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
@@ -75,6 +193,38 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(prepareReceiveResponseList: [PrepareReceiveResponse]) -> [Any] {
         return prepareReceiveResponseList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveResponse: v) }
+    }
+
+    static func asPrepareSendRequest(prepareSendRequest: [String: Any?]) throws -> PrepareSendRequest {
+        guard let invoice = prepareSendRequest["invoice"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendRequest"))
+        }
+
+        return PrepareSendRequest(
+            invoice: invoice)
+    }
+
+    static func dictionaryOf(prepareSendRequest: PrepareSendRequest) -> [String: Any?] {
+        return [
+            "invoice": prepareSendRequest.invoice,
+        ]
+    }
+
+    static func asPrepareSendRequestList(arr: [Any]) throws -> [PrepareSendRequest] {
+        var list = [PrepareSendRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareSendRequest = try asPrepareSendRequest(prepareSendRequest: val)
+                list.append(prepareSendRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareSendRequestList: [PrepareSendRequest]) -> [Any] {
+        return prepareSendRequestList.map { v -> [String: Any?] in dictionaryOf(prepareSendRequest: v) }
     }
 
     static func asPrepareSendResponse(prepareSendResponse: [String: Any?]) throws -> PrepareSendResponse {
@@ -173,6 +323,42 @@ enum BreezLiquidSDKMapper {
         return receivePaymentResponseList.map { v -> [String: Any?] in dictionaryOf(receivePaymentResponse: v) }
     }
 
+    static func asRestoreRequest(restoreRequest: [String: Any?]) throws -> RestoreRequest {
+        var backupPath: String?
+        if hasNonNilKey(data: restoreRequest, key: "backupPath") {
+            guard let backupPathTmp = restoreRequest["backupPath"] as? String else {
+                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "backupPath"))
+            }
+            backupPath = backupPathTmp
+        }
+
+        return RestoreRequest(
+            backupPath: backupPath)
+    }
+
+    static func dictionaryOf(restoreRequest: RestoreRequest) -> [String: Any?] {
+        return [
+            "backupPath": restoreRequest.backupPath == nil ? nil : restoreRequest.backupPath,
+        ]
+    }
+
+    static func asRestoreRequestList(arr: [Any]) throws -> [RestoreRequest] {
+        var list = [RestoreRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var restoreRequest = try asRestoreRequest(restoreRequest: val)
+                list.append(restoreRequest)
+            } else {
+                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "RestoreRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(restoreRequestList: [RestoreRequest]) -> [Any] {
+        return restoreRequestList.map { v -> [String: Any?] in dictionaryOf(restoreRequest: v) }
+    }
+
     static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
         guard let txid = sendPaymentResponse["txid"] as? String else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "txid", typeName: "SendPaymentResponse"))
@@ -203,44 +389,6 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(sendPaymentResponseList: [SendPaymentResponse]) -> [Any] {
         return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
-    }
-
-    static func asWalletInfo(walletInfo: [String: Any?]) throws -> WalletInfo {
-        guard let balanceSat = walletInfo["balanceSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "WalletInfo"))
-        }
-        guard let pubkey = walletInfo["pubkey"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "WalletInfo"))
-        }
-
-        return WalletInfo(
-            balanceSat: balanceSat,
-            pubkey: pubkey
-        )
-    }
-
-    static func dictionaryOf(walletInfo: WalletInfo) -> [String: Any?] {
-        return [
-            "balanceSat": walletInfo.balanceSat,
-            "pubkey": walletInfo.pubkey,
-        ]
-    }
-
-    static func asWalletInfoList(arr: [Any]) throws -> [WalletInfo] {
-        var list = [WalletInfo]()
-        for value in arr {
-            if let val = value as? [String: Any?] {
-                var walletInfo = try asWalletInfo(walletInfo: val)
-                list.append(walletInfo)
-            } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "WalletInfo"))
-            }
-        }
-        return list
-    }
-
-    static func arrayOf(walletInfoList: [WalletInfo]) -> [Any] {
-        return walletInfoList.map { v -> [String: Any?] in dictionaryOf(walletInfo: v) }
     }
 
     static func asNetwork(network: String) throws -> Network {

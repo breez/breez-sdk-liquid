@@ -4,10 +4,7 @@ use std::sync::{Arc, OnceLock};
 
 use crate::{
     error::{LsSdkError, PaymentError},
-    model::{
-        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-        ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
-    },
+    model::*,
     wallet::Wallet,
 };
 
@@ -15,25 +12,25 @@ use super::model::Payment;
 
 static WALLET_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
 
-pub fn connect(mnemonic: String, data_dir: Option<String>, network: Network) -> Result<()> {
-    let wallet = Wallet::connect(&mnemonic, data_dir, network)?;
+pub fn connect(req: ConnectRequest) -> Result<()> {
+    let wallet = Wallet::connect(req)?;
     WALLET_INSTANCE.get_or_init(|| wallet);
     Ok(())
 }
 
-pub fn get_info(with_scan: bool) -> Result<WalletInfo> {
+pub fn get_info(req: GetInfoRequest) -> Result<GetInfoResponse> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))?
-        .get_info(with_scan)
+        .get_info(req)
 }
 
-pub fn prepare_send_payment(invoice: String) -> Result<PrepareSendResponse, PaymentError> {
+pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendResponse, PaymentError> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
-        .prepare_send_payment(&invoice)
+        .prepare_send_payment(req)
 }
 
 pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, PaymentError> {
@@ -96,10 +93,10 @@ pub fn backup() -> Result<()> {
         .backup()
 }
 
-pub fn restore(backup_path: Option<String>) -> Result<()> {
+pub fn restore(req: RestoreRequest) -> Result<()> {
     WALLET_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
-        .restore(backup_path)
+        .restore(req)
 }

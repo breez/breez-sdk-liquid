@@ -3,6 +3,116 @@ import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
+    if (!validateMandatoryFields(
+            connectRequest,
+            arrayOf(
+                "mnemonic",
+                "network",
+            ),
+        )
+    ) {
+        return null
+    }
+    val mnemonic = connectRequest.getString("mnemonic")!!
+    val dataDir = if (hasNonNullKey(connectRequest, "dataDir")) connectRequest.getString("dataDir") else null
+    val network = connectRequest.getString("network")?.let { asNetwork(it) }!!
+    return ConnectRequest(
+        mnemonic,
+        dataDir,
+        network,
+    )
+}
+
+fun readableMapOf(connectRequest: ConnectRequest): ReadableMap {
+    return readableMapOf(
+        "mnemonic" to connectRequest.mnemonic,
+        "dataDir" to connectRequest.dataDir,
+        "network" to connectRequest.network.name.lowercase(),
+    )
+}
+
+fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
+    val list = ArrayList<ConnectRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asConnectRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asGetInfoRequest(getInfoRequest: ReadableMap): GetInfoRequest? {
+    if (!validateMandatoryFields(
+            getInfoRequest,
+            arrayOf(
+                "withScan",
+            ),
+        )
+    ) {
+        return null
+    }
+    val withScan = getInfoRequest.getBoolean("withScan")
+    return GetInfoRequest(
+        withScan,
+    )
+}
+
+fun readableMapOf(getInfoRequest: GetInfoRequest): ReadableMap {
+    return readableMapOf(
+        "withScan" to getInfoRequest.withScan,
+    )
+}
+
+fun asGetInfoRequestList(arr: ReadableArray): List<GetInfoRequest> {
+    val list = ArrayList<GetInfoRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asGetInfoRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
+    if (!validateMandatoryFields(
+            getInfoResponse,
+            arrayOf(
+                "balanceSat",
+                "pubkey",
+            ),
+        )
+    ) {
+        return null
+    }
+    val balanceSat = getInfoResponse.getDouble("balanceSat").toULong()
+    val pubkey = getInfoResponse.getString("pubkey")!!
+    return GetInfoResponse(
+        balanceSat,
+        pubkey,
+    )
+}
+
+fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap {
+    return readableMapOf(
+        "balanceSat" to getInfoResponse.balanceSat,
+        "pubkey" to getInfoResponse.pubkey,
+    )
+}
+
+fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
+    val list = ArrayList<GetInfoResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asGetInfoResponse(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveRequest? {
     if (!validateMandatoryFields(
             prepareReceiveRequest,
@@ -71,6 +181,39 @@ fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveResponse(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
+    if (!validateMandatoryFields(
+            prepareSendRequest,
+            arrayOf(
+                "invoice",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = prepareSendRequest.getString("invoice")!!
+    return PrepareSendRequest(
+        invoice,
+    )
+}
+
+fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap {
+    return readableMapOf(
+        "invoice" to prepareSendRequest.invoice,
+    )
+}
+
+fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
+    val list = ArrayList<PrepareSendRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareSendRequest(value)!!)
             else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -167,6 +310,37 @@ fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentRespons
     return list
 }
 
+fun asRestoreRequest(restoreRequest: ReadableMap): RestoreRequest? {
+    if (!validateMandatoryFields(
+            restoreRequest,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val backupPath = if (hasNonNullKey(restoreRequest, "backupPath")) restoreRequest.getString("backupPath") else null
+    return RestoreRequest(
+        backupPath,
+    )
+}
+
+fun readableMapOf(restoreRequest: RestoreRequest): ReadableMap {
+    return readableMapOf(
+        "backupPath" to restoreRequest.backupPath,
+    )
+}
+
+fun asRestoreRequestList(arr: ReadableArray): List<RestoreRequest> {
+    val list = ArrayList<RestoreRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRestoreRequest(value)!!)
+            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asSendPaymentResponse(sendPaymentResponse: ReadableMap): SendPaymentResponse? {
     if (!validateMandatoryFields(
             sendPaymentResponse,
@@ -194,43 +368,6 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asWalletInfo(walletInfo: ReadableMap): WalletInfo? {
-    if (!validateMandatoryFields(
-            walletInfo,
-            arrayOf(
-                "balanceSat",
-                "pubkey",
-            ),
-        )
-    ) {
-        return null
-    }
-    val balanceSat = walletInfo.getDouble("balanceSat").toULong()
-    val pubkey = walletInfo.getString("pubkey")!!
-    return WalletInfo(
-        balanceSat,
-        pubkey,
-    )
-}
-
-fun readableMapOf(walletInfo: WalletInfo): ReadableMap {
-    return readableMapOf(
-        "balanceSat" to walletInfo.balanceSat,
-        "pubkey" to walletInfo.pubkey,
-    )
-}
-
-fun asWalletInfoList(arr: ReadableArray): List<WalletInfo> {
-    val list = ArrayList<WalletInfo>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asWalletInfo(value)!!)
             else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

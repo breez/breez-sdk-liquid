@@ -17,6 +17,21 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
           }
       )
 
+export interface ConnectRequest {
+    mnemonic: string
+    dataDir?: string
+    network: Network
+}
+
+export interface GetInfoRequest {
+    withScan: boolean
+}
+
+export interface GetInfoResponse {
+    balanceSat: number
+    pubkey: string
+}
+
 export interface PrepareReceiveRequest {
     payerAmountSat: number
 }
@@ -25,6 +40,10 @@ export interface PrepareReceiveResponse {
     pairHash: string
     payerAmountSat: number
     feesSat: number
+}
+
+export interface PrepareSendRequest {
+    invoice: string
 }
 
 export interface PrepareSendResponse {
@@ -41,13 +60,12 @@ export interface ReceivePaymentResponse {
     invoice: string
 }
 
-export interface SendPaymentResponse {
-    txid: string
+export interface RestoreRequest {
+    backupPath?: string
 }
 
-export interface WalletInfo {
-    balanceSat: number
-    pubkey: string
+export interface SendPaymentResponse {
+    txid: string
 }
 
 export enum Network {
@@ -55,18 +73,18 @@ export enum Network {
     LIQUID_TESTNET = "liquidTestnet"
 }
 
-export const connect = async (mnemonic: string, dataDir: string = "", network: Network): Promise<void> => {
-    const response = await BreezLiquidSDK.connect(mnemonic, dataDir, network)
+export const connect = async (req: ConnectRequest): Promise<void> => {
+    const response = await BreezLiquidSDK.connect(req)
     return response
 }
 
-export const getInfo = async (withScan: boolean): Promise<WalletInfo> => {
-    const response = await BreezLiquidSDK.getInfo(withScan)
+export const getInfo = async (req: GetInfoRequest): Promise<GetInfoResponse> => {
+    const response = await BreezLiquidSDK.getInfo(req)
     return response
 }
 
-export const prepareSendPayment = async (invoice: string): Promise<PrepareSendResponse> => {
-    const response = await BreezLiquidSDK.prepareSendPayment(invoice)
+export const prepareSendPayment = async (req: PrepareSendRequest): Promise<PrepareSendResponse> => {
+    const response = await BreezLiquidSDK.prepareSendPayment(req)
     return response
 }
 
@@ -89,6 +107,6 @@ export const backup = async (): Promise<void> => {
     await BreezLiquidSDK.backup()
 }
 
-export const restore = async (backupPath: string = ""): Promise<void> => {
-    await BreezLiquidSDK.restore(backupPath)
+export const restore = async (req: RestoreRequest): Promise<void> => {
+    await BreezLiquidSDK.restore(req)
 }

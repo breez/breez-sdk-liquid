@@ -57,17 +57,17 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     {% include "TopLevelFunctionTemplate.swift" %}
     {% endif -%}
     {%- endfor %}  
-    @objc(connect:dataDir:network:resolve:reject:)
-    func connect(_ mnemonic: String, dataDir: String, network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    @objc(connect:resolve:reject:)
+    func connect(_ req:[String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         if bindingWallet != nil {
             reject("Generic", "Already initialized", nil)
             return
         }
 
         do {
-            let dataDirTmp = dataDir.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : dataDir
-            let networkTmp = try BreezLiquidSDKMapper.asNetwork(network: network)
-            bindingWallet = try BreezLiquidSDK.connect(mnemonic: mnemonic, dataDir: dataDirTmp, network: networkTmp)
+            var connectRequest = try BreezLiquidSDKMapper.asConnectRequest(connectRequest: req)
+            connectRequest.dataDir = connectRequest.dataDir.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
+            bindingWallet = try BreezLiquidSDK.connect(req: connectRequest)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

@@ -29,17 +29,7 @@ use lwk_wollet::{
     ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 
-use crate::{
-    ensure_sdk,
-    error::PaymentError,
-    get_invoice_amount,
-    model::{
-        Network, OngoingSwap, Payment, PaymentData, PaymentType, PrepareReceiveRequest,
-        PrepareReceiveResponse, PrepareSendResponse, ReceivePaymentResponse, SendPaymentResponse,
-        WalletInfo, WalletOptions,
-    },
-    persist::Persister,
-};
+use crate::{ensure_sdk, error::PaymentError, get_invoice_amount, model::*, persist::Persister};
 
 /// Claim tx feerate for Receive, in sats per vbyte.
 /// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
@@ -58,21 +48,17 @@ pub struct Wallet {
 }
 
 impl Wallet {
-    pub fn connect(
-        mnemonic: &str,
-        data_dir: Option<String>,
-        network: Network,
-    ) -> Result<Arc<Wallet>> {
-        let is_mainnet = network == Network::Liquid;
-        let signer = SwSigner::new(mnemonic, is_mainnet)?;
-        let descriptor = Wallet::get_descriptor(&signer, network)?;
+    pub fn connect(req: ConnectRequest) -> Result<Arc<Wallet>> {
+        let is_mainnet = req.network == Network::Liquid;
+        let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
+        let descriptor = Wallet::get_descriptor(&signer, req.network)?;
 
         Wallet::new(WalletOptions {
             signer,
             descriptor,
             electrum_url: None,
-            data_dir_path: data_dir,
-            network,
+            data_dir_path: req.data_dir,
+            network: req.network,
         })
     }
 
@@ -268,11 +254,11 @@ impl Wallet {
         Ok(balance.values().sum())
     }
 
-    pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo> {
+    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         debug!("active_address: {}", self.address()?);
 
-        Ok(WalletInfo {
-            balance_sat: self.total_balance_sat(with_scan)?,
+        Ok(GetInfoResponse {
+            balance_sat: self.total_balance_sat(req.with_scan)?,
             pubkey: self.signer.xpub().public_key.to_string(),
         })
     }
@@ -313,9 +299,13 @@ impl Wallet {
         Ok(wallet.finalize(&mut pset)?)
     }
 
-    pub fn prepare_send_payment(&self, invoice: &str) -> Result<PrepareSendResponse, PaymentError> {
+    pub fn prepare_send_payment(
+        &self,
+        req: PrepareSendRequest,
+    ) -> Result<PrepareSendResponse, PaymentError> {
         let client = self.boltz_client();
-        let invoice = invoice
+        let invoice = req
+            .invoice
             .trim()
             .parse::<Bolt11Invoice>()
             .map_err(|_| PaymentError::InvalidInvoice)?;
@@ -588,8 +578,8 @@ impl Wallet {
         Ok(())
     }
 
-    pub fn restore(&self, backup_path: Option<String>) -> Result<()> {
-        let backup_path = match backup_path {
+    pub fn restore(&self, req: RestoreRequest) -> Result<()> {
+        let backup_path = match req.backup_path {
             Some(p) => PathBuf::from_str(&p)?,
             None => self.persister.get_backup_path(),
         };
@@ -606,7 +596,8 @@ mod tests {
     use anyhow::Result;
     use tempdir::TempDir;
 
-    use crate::{wallet::Wallet, Network, Payment, PaymentType, PrepareReceiveRequest, Wallet};
+    use crate::model::*;
+    use crate::wallet::{Network, Wallet};
 
     const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -629,18 +620,21 @@ mod tests {
             .filter(|p| {
                 [PaymentType::PendingSend, PaymentType::PendingReceive].contains(&p.payment_type)
             })
-            .map(|p| p.clone())
+            .cloned()
             .collect())
     }
 
     #[test]
     fn normal_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet =
-            Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
+        let breez_wallet = Wallet::connect(ConnectRequest {
+            mnemonic: TEST_MNEMONIC.to_string(),
+            data_dir: Some(data_dir_str),
+            network: Network::LiquidTestnet,
+        })?;
 
-        let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq";
-        breez_wallet.prepare_send_payment(&invoice)?;
+        let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq".to_string();
+        breez_wallet.prepare_send_payment(PrepareSendRequest { invoice })?;
         assert!(!list_pending(&breez_wallet)?.is_empty());
 
         Ok(())
@@ -649,12 +643,14 @@ mod tests {
     #[test]
     fn reverse_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet =
-            Wallet::connect(TEST_MNEMONIC, Some(data_dir_str), Network::LiquidTestnet)?;
+        let breez_wallet = Wallet::connect(ConnectRequest {
+            mnemonic: TEST_MNEMONIC.to_string(),
+            data_dir: Some(data_dir_str),
+            network: Network::LiquidTestnet,
+        })?;
 
         let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
-            receiver_amount_sat: Some(1000),
-            payer_amount_sat: None,
+            payer_amount_sat: 1_000,
         })?;
         breez_wallet.receive_payment(&prepare_response)?;
         assert!(!list_pending(&breez_wallet)?.is_empty());

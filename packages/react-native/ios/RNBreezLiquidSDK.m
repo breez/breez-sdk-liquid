@@ -4,21 +4,19 @@
 @interface RCT_EXTERN_MODULE(RNBreezLiquidSDK, RCTEventEmitter)
   
 RCT_EXTERN_METHOD(
-    connect: (NSString*)mnemonic
-    dataDir: (NSString*)dataDir
-    network: (NSString*)network
+    connect: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    getInfo: (BOOL)withScan
+    getInfo: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    prepareSendPayment: (NSString*)invoice
+    prepareSendPayment: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -47,7 +45,7 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    restore: (NSString*)backupPath
+    restore: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )

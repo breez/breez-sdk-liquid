@@ -1,14 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::{Error, Result};
-use breez_liquid_sdk::{
-    error::PaymentError,
-    model::{
-        Network, PrepareReceiveRequest, PrepareReceiveResponse, PrepareSendResponse,
-        ReceivePaymentResponse, SendPaymentResponse, WalletInfo,
-    },
-    wallet::Wallet,
-};
+use breez_liquid_sdk::{error::PaymentError, model::*, wallet::Wallet};
 
 // TODO Unify error enum
 #[derive(Debug, thiserror::Error)]
@@ -23,12 +16,8 @@ impl From<anyhow::Error> for LsSdkError {
     }
 }
 
-pub fn connect(
-    mnemonic: String,
-    data_dir: Option<String>,
-    network: Network,
-) -> Result<Arc<BindingWallet>, LsSdkError> {
-    let ln_sdk = Wallet::connect(&mnemonic, data_dir, network)?;
+pub fn connect(req: ConnectRequest) -> Result<Arc<BindingWallet>, LsSdkError> {
+    let ln_sdk = Wallet::connect(req)?;
     Ok(Arc::from(BindingWallet { ln_sdk }))
 }
 
@@ -37,15 +26,15 @@ pub struct BindingWallet {
 }
 
 impl BindingWallet {
-    pub fn get_info(&self, with_scan: bool) -> Result<WalletInfo, LsSdkError> {
-        self.ln_sdk.get_info(with_scan).map_err(Into::into)
+    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LsSdkError> {
+        self.ln_sdk.get_info(req).map_err(Into::into)
     }
 
     pub fn prepare_send_payment(
         &self,
-        invoice: String,
+        req: PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
-        self.ln_sdk.prepare_send_payment(&invoice)
+        self.ln_sdk.prepare_send_payment(req)
     }
 
     pub fn send_payment(
@@ -73,8 +62,8 @@ impl BindingWallet {
         self.ln_sdk.backup().map_err(Into::into)
     }
 
-    pub fn restore(&self, backup_path: Option<String>) -> Result<(), LsSdkError> {
-        self.ln_sdk.restore(backup_path).map_err(Into::into)
+    pub fn restore(&self, req: RestoreRequest) -> Result<(), LsSdkError> {
+        self.ln_sdk.restore(req).map_err(Into::into)
     }
 }
 

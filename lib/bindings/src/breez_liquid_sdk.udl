@@ -22,9 +22,23 @@ enum Network {
     "LiquidTestnet",
 };
 
-dictionary WalletInfo {
+dictionary ConnectRequest {
+    string mnemonic;
+    string? data_dir = null;
+    Network network;
+};
+
+dictionary GetInfoRequest {
+    boolean with_scan;
+};
+
+dictionary GetInfoResponse {
     u64 balance_sat;
     string pubkey;
+};
+
+dictionary PrepareSendRequest {
+    string invoice;
 };
 
 dictionary PrepareSendResponse {
@@ -55,17 +69,21 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
+dictionary RestoreRequest {
+    string? backup_path = null;
+};
+
 namespace breez_liquid_sdk {
     [Throws=LsSdkError]
-    BindingWallet connect(string mnemonic, string? data_dir, Network network);
+    BindingWallet connect(ConnectRequest req);
 };
 
 interface BindingWallet {
     [Throws=LsSdkError]
-    WalletInfo get_info(boolean with_scan);
+    GetInfoResponse get_info(GetInfoRequest req);
 
     [Throws=PaymentError]
-    PrepareSendResponse prepare_send_payment(string invoice);
+    PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
 
     [Throws=PaymentError]
     SendPaymentResponse send_payment(PrepareSendResponse req);
@@ -80,5 +98,5 @@ interface BindingWallet {
     void backup();
 
     [Throws=LsSdkError]
-    void restore(string? backup_path);
+    void restore(RestoreRequest req);
 };

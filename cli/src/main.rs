@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use breez_liquid_sdk::{
-    model::Network,
+    model::*,
     wallet::{Wallet, DEFAULT_DATA_DIR},
 };
 use clap::Parser;
@@ -82,7 +82,11 @@ fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let network = args.network.unwrap_or(Network::LiquidTestnet);
-    let wallet = Wallet::connect(&mnemonic.to_string(), Some(data_dir_str), network)?;
+    let wallet = Wallet::connect(ConnectRequest {
+        mnemonic: mnemonic.to_string(),
+        data_dir: Some(data_dir_str),
+        network,
+    })?;
 
     let cli_prompt = match network {
         Network::Liquid => "breez-liquid-cli [mainnet]> ",

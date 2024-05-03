@@ -41,9 +41,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun connect(
-        mnemonic: String,
-        dataDir: String,
-        network: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         if (bindingWallet != null) {
@@ -53,9 +51,14 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
         executor.execute {
             try {
-                val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
-                val networkTmp = asNetwork(network)
-                bindingWallet = connect(mnemonic, dataDirTmp, networkTmp)
+                var connectRequest =
+                    asConnectRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                connectRequest.dataDir = connectRequest.dataDir.takeUnless {
+                    it.isEmpty()
+                } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
+                bindingWallet = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -65,12 +68,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun getInfo(
-        withScan: Boolean,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = getBindingWallet().getInfo(withScan)
+                val getInfoRequest =
+                    asGetInfoRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
+                val res = getBindingWallet().getInfo(getInfoRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -80,12 +87,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun prepareSendPayment(
-        invoice: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = getBindingWallet().prepareSendPayment(invoice)
+                val prepareSendRequest =
+                    asPrepareSendRequest(req) ?: run {
+                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest"))
+                    }
+                val res = getBindingWallet().prepareSendPayment(prepareSendRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -164,13 +175,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun restore(
-        backupPath: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val backupPathTmp = backupPath.takeUnless { it.isEmpty() }
-                getBindingWallet().restore(backupPathTmp)
+                val restoreRequest =
+                    asRestoreRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
+                getBindingWallet().restore(restoreRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::get_invoice_amount;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
     Liquid,
     LiquidTestnet,
@@ -73,6 +73,13 @@ impl WalletOptions {
 }
 
 #[derive(Debug, Serialize)]
+pub struct ConnectRequest {
+    pub mnemonic: String,
+    pub data_dir: Option<String>,
+    pub network: Network,
+}
+
+#[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
     pub payer_amount_sat: u64,
 }
@@ -87,6 +94,11 @@ pub struct PrepareReceiveResponse {
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     pub id: String,
+    pub invoice: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PrepareSendRequest {
     pub invoice: String,
 }
 
@@ -106,9 +118,19 @@ pub struct SendPaymentResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct WalletInfo {
+pub struct GetInfoRequest {
+    pub with_scan: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetInfoResponse {
     pub balance_sat: u64,
     pub pubkey: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RestoreRequest {
+    pub backup_path: Option<String>,
 }
 
 #[derive(Debug)]
