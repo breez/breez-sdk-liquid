@@ -4,9 +4,7 @@
 @interface RCT_EXTERN_MODULE(RNBreezLiquidSDK, RCTEventEmitter)
   
 RCT_EXTERN_METHOD(
-    connect: (NSString*)mnemonic
-    dataDir: (NSString*)dataDir
-    network: (NSString*)network
+    connect: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
