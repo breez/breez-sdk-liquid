@@ -26,6 +26,7 @@ ndk-home:
 clean:
 	cargo clean
 	rm -rf ffi
+	rm -rf kmp
 
 .PHONY: test
 test:
@@ -64,6 +65,22 @@ bindings-android: android
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
 	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language kotlin -o ffi/kotlin
+
+bindings-kotlin-multiplatform: ios-universal android
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain
+	cp -r ffi/kotlin/jniLibs/ bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/jniLibs/
+	cp -r ffi/kmp/* bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/
+
+	cp -r bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
+
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-arm64/
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-arm64/
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-x64/
+
+	cp ../target/aarch64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-arm64/
+	cp ../target/aarch64-apple-ios-sim/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-arm64/
+	cp ../target/x86_64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-x64/
+	cd bindings-kotlin-multiplatform && ./gradlew :breez-liquid-sdk-kmp:assemble
 
 ## Apple
 ios-universal: $(SOURCES)		

@@ -510,8 +510,11 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "breez-liquid-sdk",
+ "camino",
  "thiserror",
  "uniffi 0.27.1",
+ "uniffi-kotlin-multiplatform",
+ "uniffi_bindgen 0.25.3",
 ]
 
 [[package]]
@@ -1379,6 +1382,25 @@ checksum = "634d9b1461af396cad843f47fdba5597a4f9e6ddd4bfb6ff5d85028c25cb12f6"
 dependencies = [
  "unicode-bidi",
  "unicode-normalization",
+]
+
+[[package]]
+name = "include_dir"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18762faeff7122e89e0857b02f7ce6fcc0d101d5e9ad2ad7846cc01d61b7f19e"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b139284b5cf57ecfa712bcc66950bb635b31aff41c188e8a4cfc758eca374a3f"
+dependencies = [
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]
@@ -2882,6 +2904,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "uniffi-kotlin-multiplatform"
+version = "0.1.0"
+source = "git+https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings?rev=55d51f3abf9819b32bd81756053dcfc10f8d5522#55d51f3abf9819b32bd81756053dcfc10f8d5522"
+dependencies = [
+ "anyhow",
+ "askama 0.12.1",
+ "camino",
+ "clap 4.5.4",
+ "heck 0.4.1",
+ "include_dir",
+ "paste",
+ "serde",
+ "toml",
+ "uniffi_bindgen 0.25.3",
+]
+
+[[package]]
 name = "uniffi_bindgen"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2907,6 +2946,29 @@ dependencies = [
 
 [[package]]
 name = "uniffi_bindgen"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd992f2929a053829d5875af1eff2ee3d7a7001cb3b9a46cc7895f2caede6940"
+dependencies = [
+ "anyhow",
+ "askama 0.12.1",
+ "camino",
+ "cargo_metadata",
+ "fs-err",
+ "glob",
+ "goblin 0.6.1",
+ "heck 0.4.1",
+ "once_cell",
+ "paste",
+ "serde",
+ "toml",
+ "uniffi_meta 0.25.3",
+ "uniffi_testing 0.25.3",
+ "uniffi_udl 0.25.3",
+]
+
+[[package]]
+name = "uniffi_bindgen"
 version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a77bb514bcd4bf27c9bd404d7c3f2a6a8131b957eba9c22cfeb7751c4278e09"
@@ -2927,7 +2989,7 @@ dependencies = [
  "toml",
  "uniffi_meta 0.27.1",
  "uniffi_testing 0.27.1",
- "uniffi_udl",
+ "uniffi_udl 0.27.1",
 ]
 
 [[package]]
@@ -2960,6 +3022,16 @@ checksum = "03de61393a42b4ad4984a3763c0600594ac3e57e5aaa1d05cede933958987c03"
 dependencies = [
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "uniffi_checksum_derive"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55137c122f712d9330fd985d66fa61bdc381752e89c35708c13ce63049a3002c"
+dependencies = [
+ "quote",
+ "syn 2.0.60",
 ]
 
 [[package]]
@@ -3054,6 +3126,18 @@ dependencies = [
 
 [[package]]
 name = "uniffi_meta"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71dc8573a7b1ac4b71643d6da34888273ebfc03440c525121f1b3634ad3417a2"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "siphasher",
+ "uniffi_checksum_derive 0.25.3",
+]
+
+[[package]]
+name = "uniffi_meta"
 version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7224422c4cfd181c7ca9fca2154abca4d21db962f926f270f996edd38b0c4b8"
@@ -3081,6 +3165,19 @@ dependencies = [
 
 [[package]]
 name = "uniffi_testing"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "118448debffcb676ddbe8c5305fb933ab7e0123753e659a71dc4a693f8d9f23c"
+dependencies = [
+ "anyhow",
+ "camino",
+ "cargo_metadata",
+ "fs-err",
+ "once_cell",
+]
+
+[[package]]
+name = "uniffi_testing"
 version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ce878d0bdfc288b58797044eaaedf748526c56eef3575380bb4d4b19d69eee"
@@ -3090,6 +3187,18 @@ dependencies = [
  "cargo_metadata",
  "fs-err",
  "once_cell",
+]
+
+[[package]]
+name = "uniffi_udl"
+version = "0.25.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "889edb7109c6078abe0e53e9b4070cf74a6b3468d141bdf5ef1bd4d1dc24a1c3"
+dependencies = [
+ "anyhow",
+ "uniffi_meta 0.25.3",
+ "uniffi_testing 0.25.3",
+ "weedle2 4.0.0",
 ]
 
 [[package]]
