@@ -5,6 +5,7 @@ version.workspace = true
 
 [lib]
 name = "breez_liquid_sdk"
+crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
 anyhow = { workspace = true }
