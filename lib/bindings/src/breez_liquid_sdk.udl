@@ -75,10 +75,10 @@ dictionary RestoreRequest {
 
 namespace breez_liquid_sdk {
     [Throws=LsSdkError]
-    BindingWallet connect(ConnectRequest req);
+    BindingLiquidSdk connect(ConnectRequest req);
 };
 
-interface BindingWallet {
+interface BindingLiquidSdk {
     [Throws=LsSdkError]
     GetInfoResponse get_info(GetInfoRequest req);
 
