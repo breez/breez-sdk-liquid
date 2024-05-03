@@ -8,20 +8,15 @@ import 'frb_generated.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<void> connect(
-        {required String mnemonic,
-        String? dataDir,
-        required Network network,
-        dynamic hint}) =>
-    RustLib.instance.api.connect(
-        mnemonic: mnemonic, dataDir: dataDir, network: network, hint: hint);
+Future<void> connect({required ConnectRequest req, dynamic hint}) =>
+    RustLib.instance.api.connect(req: req, hint: hint);
 
-Future<WalletInfo> getInfo({required bool withScan, dynamic hint}) =>
-    RustLib.instance.api.getInfo(withScan: withScan, hint: hint);
+Future<GetInfoResponse> getInfo({required GetInfoRequest req, dynamic hint}) =>
+    RustLib.instance.api.getInfo(req: req, hint: hint);
 
 Future<PrepareSendResponse> prepareSendPayment(
-        {required String invoice, dynamic hint}) =>
-    RustLib.instance.api.prepareSendPayment(invoice: invoice, hint: hint);
+        {required PrepareSendRequest req, dynamic hint}) =>
+    RustLib.instance.api.prepareSendPayment(req: req, hint: hint);
 
 Future<SendPaymentResponse> sendPayment(
         {required PrepareSendResponse req, dynamic hint}) =>
@@ -49,8 +44,8 @@ Future<void> emptyWalletCache({dynamic hint}) =>
 
 Future<void> backup({dynamic hint}) => RustLib.instance.api.backup(hint: hint);
 
-Future<void> restore({String? backupPath, dynamic hint}) =>
-    RustLib.instance.api.restore(backupPath: backupPath, hint: hint);
+Future<void> restore({required RestoreRequest req, dynamic hint}) =>
+    RustLib.instance.api.restore(req: req, hint: hint);
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::rust_async::RwLock<LBtcReverseRecovery>>
 @sealed

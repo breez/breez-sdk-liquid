@@ -57,29 +57,22 @@ class FlutterBreezLiquidBindings {
 
   void frbgen_breez_liquid_wire_connect(
     int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> data_dir,
-    int network,
+    ffi.Pointer<wire_cst_connect_request> req,
   ) {
     return _frbgen_breez_liquid_wire_connect(
       port_,
-      mnemonic,
-      data_dir,
-      network,
+      req,
     );
   }
 
   late final _frbgen_breez_liquid_wire_connectPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Int32)>>('frbgen_breez_liquid_wire_connect');
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Pointer<wire_cst_connect_request>)>>(
+      'frbgen_breez_liquid_wire_connect');
   late final _frbgen_breez_liquid_wire_connect =
       _frbgen_breez_liquid_wire_connectPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-              ffi.Pointer<wire_cst_list_prim_u_8_strict>, int)>();
+          void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
   void frbgen_breez_liquid_wire_empty_wallet_cache(
     int port_,
@@ -98,20 +91,22 @@ class FlutterBreezLiquidBindings {
 
   void frbgen_breez_liquid_wire_get_info(
     int port_,
-    bool with_scan,
+    ffi.Pointer<wire_cst_get_info_request> req,
   ) {
     return _frbgen_breez_liquid_wire_get_info(
       port_,
-      with_scan,
+      req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire_get_infoPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Bool)>>(
-          'frbgen_breez_liquid_wire_get_info');
+  late final _frbgen_breez_liquid_wire_get_infoPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Pointer<wire_cst_get_info_request>)>>(
+      'frbgen_breez_liquid_wire_get_info');
   late final _frbgen_breez_liquid_wire_get_info =
-      _frbgen_breez_liquid_wire_get_infoPtr
-          .asFunction<void Function(int, bool)>();
+      _frbgen_breez_liquid_wire_get_infoPtr.asFunction<
+          void Function(int, ffi.Pointer<wire_cst_get_info_request>)>();
 
   void frbgen_breez_liquid_wire_list_payments(
     int port_,
@@ -153,22 +148,22 @@ class FlutterBreezLiquidBindings {
 
   void frbgen_breez_liquid_wire_prepare_send_payment(
     int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice,
+    ffi.Pointer<wire_cst_prepare_send_request> req,
   ) {
     return _frbgen_breez_liquid_wire_prepare_send_payment(
       port_,
-      invoice,
+      req,
     );
   }
 
   late final _frbgen_breez_liquid_wire_prepare_send_paymentPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+                  ffi.Int64, ffi.Pointer<wire_cst_prepare_send_request>)>>(
       'frbgen_breez_liquid_wire_prepare_send_payment');
   late final _frbgen_breez_liquid_wire_prepare_send_payment =
       _frbgen_breez_liquid_wire_prepare_send_paymentPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+          void Function(int, ffi.Pointer<wire_cst_prepare_send_request>)>();
 
   void frbgen_breez_liquid_wire_receive_payment(
     int port_,
@@ -208,22 +203,22 @@ class FlutterBreezLiquidBindings {
 
   void frbgen_breez_liquid_wire_restore(
     int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path,
+    ffi.Pointer<wire_cst_restore_request> req,
   ) {
     return _frbgen_breez_liquid_wire_restore(
       port_,
-      backup_path,
+      req,
     );
   }
 
   late final _frbgen_breez_liquid_wire_restorePtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+                  ffi.Int64, ffi.Pointer<wire_cst_restore_request>)>>(
       'frbgen_breez_liquid_wire_restore');
   late final _frbgen_breez_liquid_wire_restore =
       _frbgen_breez_liquid_wire_restorePtr.asFunction<
-          void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+          void Function(int, ffi.Pointer<wire_cst_restore_request>)>();
 
   void frbgen_breez_liquid_wire_send_payment(
     int port_,
@@ -276,6 +271,34 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedrust_asyncRwLockLBtcReverseRecoveryPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  ffi.Pointer<wire_cst_connect_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<wire_cst_connect_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_connect_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_connect_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
+
+  ffi.Pointer<wire_cst_get_info_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_get_info_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<wire_cst_get_info_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_get_info_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
+
   ffi.Pointer<wire_cst_prepare_receive_request>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request();
@@ -306,6 +329,20 @@ class FlutterBreezLiquidBindings {
           .asFunction<
               ffi.Pointer<wire_cst_prepare_receive_response> Function()>();
 
+  ffi.Pointer<wire_cst_prepare_send_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<wire_cst_prepare_send_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_send_request> Function()>();
+
   ffi.Pointer<wire_cst_prepare_send_response>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response();
@@ -319,6 +356,20 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response =
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_response> Function()>();
+
+  ffi.Pointer<wire_cst_restore_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_restore_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_restore_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_restore_requestPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<wire_cst_restore_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_restore_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_restore_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_restore_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_restore_request> Function()>();
 
   ffi.Pointer<ffi.Uint32> frbgen_breez_liquid_cst_new_box_autoadd_u_32(
     int value,
@@ -421,10 +472,27 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external int len;
 }
 
-final class wire_cst_prepare_receive_request extends ffi.Struct {
-  external ffi.Pointer<ffi.Uint64> payer_amount_sat;
+final class wire_cst_connect_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
 
-  external ffi.Pointer<ffi.Uint64> receiver_amount_sat;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> data_dir;
+
+  @ffi.Int32()
+  external int network;
+}
+
+final class wire_cst_get_info_request extends ffi.Struct {
+  @ffi.Bool()
+  external bool with_scan;
+}
+
+final class wire_cst_prepare_receive_request extends ffi.Struct {
+  @ffi.Uint64()
+  external int payer_amount_sat;
+}
+
+final class wire_cst_prepare_send_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -435,6 +503,10 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int fees_sat;
+}
+
+final class wire_cst_restore_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
 final class wire_cst_prepare_send_response extends ffi.Struct {
@@ -475,6 +547,13 @@ final class wire_cst_list_payment extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_cst_get_info_response extends ffi.Struct {
+  @ffi.Uint64()
+  external int balance_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
@@ -518,13 +597,6 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 
 final class wire_cst_send_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
-}
-
-final class wire_cst_wallet_info extends ffi.Struct {
-  @ffi.Uint64()
-  external int balance_sat;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
 
 const double LIQUID_CLAIM_TX_FEERATE = 0.1;
