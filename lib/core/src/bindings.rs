@@ -10,23 +10,23 @@ use crate::{
 
 use super::model::Payment;
 
-static WALLET_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
+static LIQUID_SDK_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
 
 pub fn connect(req: ConnectRequest) -> Result<()> {
     let wallet = Wallet::connect(req)?;
-    WALLET_INSTANCE.get_or_init(|| wallet);
+    LIQUID_SDK_INSTANCE.get_or_init(|| wallet);
     Ok(())
 }
 
 pub fn get_info(req: GetInfoRequest) -> Result<GetInfoResponse> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))?
         .get_info(req)
 }
 
 pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendResponse, PaymentError> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -34,7 +34,7 @@ pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendRespon
 }
 
 pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, PaymentError> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -44,7 +44,7 @@ pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, Pay
 pub fn prepare_receive_payment(
     req: PrepareReceiveRequest,
 ) -> Result<PrepareReceiveResponse, PaymentError> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -54,7 +54,7 @@ pub fn prepare_receive_payment(
 pub fn receive_payment(
     req: PrepareReceiveResponse,
 ) -> Result<ReceivePaymentResponse, PaymentError> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -62,7 +62,7 @@ pub fn receive_payment(
 }
 
 pub fn list_payments(with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -70,7 +70,7 @@ pub fn list_payments(with_scan: bool, include_pending: bool) -> Result<Vec<Payme
 }
 
 pub fn recover_funds(recovery: LBtcReverseRecovery) -> Result<String> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -78,7 +78,7 @@ pub fn recover_funds(recovery: LBtcReverseRecovery) -> Result<String> {
 }
 
 pub fn empty_wallet_cache() -> Result<()> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -86,7 +86,7 @@ pub fn empty_wallet_cache() -> Result<()> {
 }
 
 pub fn backup() -> Result<()> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
@@ -94,7 +94,7 @@ pub fn backup() -> Result<()> {
 }
 
 pub fn restore(req: RestoreRequest) -> Result<()> {
-    WALLET_INSTANCE
+    LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
