@@ -3,7 +3,7 @@ pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 use std::sync::{Arc, OnceLock};
 
 use crate::{
-    error::{LsSdkError, PaymentError},
+    error::*,
     model::*,
     sdk::LiquidSdk,
 };
@@ -29,7 +29,7 @@ pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendRespon
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .prepare_send_payment(req)
 }
 
@@ -37,7 +37,7 @@ pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, Pay
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .send_payment(&req)
 }
 
@@ -47,7 +47,7 @@ pub fn prepare_receive_payment(
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .prepare_receive_payment(&req)
 }
 
@@ -57,7 +57,7 @@ pub fn receive_payment(
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .receive_payment(&req)
 }
 
@@ -65,7 +65,7 @@ pub fn list_payments(with_scan: bool, include_pending: bool) -> Result<Vec<Payme
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .list_payments(with_scan, include_pending)
 }
 
@@ -73,7 +73,7 @@ pub fn recover_funds(recovery: LBtcReverseRecovery) -> Result<String> {
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .recover_funds(&recovery)
 }
 
@@ -81,7 +81,7 @@ pub fn empty_wallet_cache() -> Result<()> {
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .empty_wallet_cache()
 }
 
@@ -89,7 +89,7 @@ pub fn backup() -> Result<()> {
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .backup()
 }
 
@@ -97,6 +97,6 @@ pub fn restore(req: RestoreRequest) -> Result<()> {
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LsSdkError::Generic { err: e.to_string() })?
+        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .restore(req)
 }

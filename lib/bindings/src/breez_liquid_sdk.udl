@@ -1,5 +1,5 @@
 [Error]
-enum LsSdkError {
+enum LiquidSdkError {
     "Generic",
 };
 
@@ -74,12 +74,12 @@ dictionary RestoreRequest {
 };
 
 namespace breez_liquid_sdk {
-    [Throws=LsSdkError]
+    [Throws=LiquidSdkError]
     BindingLiquidSdk connect(ConnectRequest req);
 };
 
 interface BindingLiquidSdk {
-    [Throws=LsSdkError]
+    [Throws=LiquidSdkError]
     GetInfoResponse get_info(GetInfoRequest req);
 
     [Throws=PaymentError]
@@ -94,9 +94,9 @@ interface BindingLiquidSdk {
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
 
-    [Throws=LsSdkError]
+    [Throws=LiquidSdkError]
     void backup();
 
-    [Throws=LsSdkError]
+    [Throws=LiquidSdkError]
     void restore(RestoreRequest req);
 };
