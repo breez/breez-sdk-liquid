@@ -2,7 +2,7 @@ name: scripts
 description: Supporting scripts
 version: 0.0.1
 homepage: https://breez.technology
-repository: https://github.com/breez-sdk/breez-sdk-liquid
+repository: https://github.com/breez/breez-liquid-sdk
 publish_to: none
 
 environment:

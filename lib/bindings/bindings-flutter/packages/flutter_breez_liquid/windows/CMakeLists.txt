@@ -19,7 +19,7 @@ set(LibRoot "${CMAKE_CURRENT_SOURCE_DIR}/${LibraryVersion}")
 set(ArchivePath "${LibRoot}.tar.gz")
 if(NOT EXISTS ${ArchivePath})
   file(DOWNLOAD
-    "https://github.com/breez-sdk/breez-sdk-liquid/releases/download/${LibraryVersion}/other.tar.gz"
+    "https://github.com/breez/breez-liquid-sdk/releases/download/${LibraryVersion}/other.tar.gz"
     ${ArchivePath}
     TLS_VERIFY ON
   )
