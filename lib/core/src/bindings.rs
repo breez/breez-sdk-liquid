@@ -5,16 +5,16 @@ use std::sync::{Arc, OnceLock};
 use crate::{
     error::{LsSdkError, PaymentError},
     model::*,
-    wallet::Wallet,
+    sdk::LiquidSdk,
 };
 
 use super::model::Payment;
 
-static LIQUID_SDK_INSTANCE: OnceLock<Arc<Wallet>> = OnceLock::new();
+static LIQUID_SDK_INSTANCE: OnceLock<Arc<LiquidSdk>> = OnceLock::new();
 
 pub fn connect(req: ConnectRequest) -> Result<()> {
-    let wallet = Wallet::connect(req)?;
-    LIQUID_SDK_INSTANCE.get_or_init(|| wallet);
+    let sdk = LiquidSdk::connect(req)?;
+    LIQUID_SDK_INSTANCE.get_or_init(|| sdk);
     Ok(())
 }
 

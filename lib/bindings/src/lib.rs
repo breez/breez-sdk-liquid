@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use breez_liquid_sdk::{error::*, model::*, wallet::Wallet};
+use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 
 pub fn connect(req: ConnectRequest) -> Result<Arc<BindingWallet>, LsSdkError> {
-    let ln_sdk = Wallet::connect(req)?;
+    let ln_sdk = LiquidSdk::connect(req)?;
     Ok(Arc::from(BindingWallet { ln_sdk }))
 }
 
 pub struct BindingWallet {
-    ln_sdk: Arc<Wallet>,
+    ln_sdk: Arc<LiquidSdk>,
 }
 
 impl BindingWallet {

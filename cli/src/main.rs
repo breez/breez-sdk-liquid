@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, Result};
 use breez_liquid_sdk::{
     model::*,
-    wallet::{Wallet, DEFAULT_DATA_DIR},
+    sdk::{LiquidSdk, DEFAULT_DATA_DIR},
 };
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
@@ -82,7 +82,7 @@ fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let network = args.network.unwrap_or(Network::LiquidTestnet);
-    let wallet = Wallet::connect(ConnectRequest {
+    let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         data_dir: Some(data_dir_str),
         network,
@@ -105,7 +105,7 @@ fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &wallet, cli_res.unwrap());
+                let res = handle_command(rl, &sdk, cli_res.unwrap());
                 show_results(res)?;
             }
             Err(ReadlineError::Interrupted) => {
