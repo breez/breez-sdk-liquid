@@ -1,6 +1,10 @@
+# Dart/Flutter
+**/.dart_tool
+# fenv
+**/.flutter-version
 # Miscellaneous
 .DS_Store
-**/.flutter-version
+.idea/
 
 **/target
 
