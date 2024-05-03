@@ -2,11 +2,7 @@ use anyhow::{anyhow, Result};
 pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 use std::sync::{Arc, OnceLock};
 
-use crate::{
-    error::*,
-    model::*,
-    sdk::LiquidSdk,
-};
+use crate::{error::*, model::*, sdk::LiquidSdk};
 
 use super::model::Payment;
 

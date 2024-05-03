@@ -3,7 +3,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 
-
 pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkError> {
     let ln_sdk = LiquidSdk::connect(req)?;
     Ok(Arc::from(BindingLiquidSdk { sdk: ln_sdk }))
