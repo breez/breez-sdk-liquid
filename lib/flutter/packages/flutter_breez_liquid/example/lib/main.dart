@@ -14,11 +14,12 @@ const String mnemonic = "";
 Future initializeWallet() async {
   assert(mnemonic.isNotEmpty, "Please enter your mnemonic.");
   final dataDir = await getApplicationDocumentsDirectory();
-  await connect(
+  final req = ConnectRequest(
     mnemonic: mnemonic,
     dataDir: dataDir.path,
     network: Network.liquid,
   );
+  await connect(req: req);
 }
 
 class MyApp extends StatefulWidget {
@@ -41,8 +42,12 @@ class _MyAppState extends State<MyApp> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                FutureBuilder<WalletInfo>(
-                  future: getInfo(withScan: false),
+                FutureBuilder<GetInfoResponse>(
+                  future: getInfo(
+                    req: const GetInfoRequest(
+                      withScan: true,
+                    ),
+                  ),
                   initialData: null,
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
@@ -89,9 +94,7 @@ class _MyAppState extends State<MyApp> {
                 const SizedBox(height: 16.0),
                 FutureBuilder<PrepareReceiveResponse>(
                   future: prepareReceivePayment(
-                    req: const PrepareReceiveRequest(
-                      receiverAmountSat: 1000,
-                    ),
+                    req: const PrepareReceiveRequest(payerAmountSat: 1000),
                   ),
                   initialData: null,
                   builder: (context, snapshot) {
