@@ -1,15 +1,18 @@
-# breez_liquid
+# breez_liquid_sdk_workspace
 
+Binding generation & build scripts for Dart/Flutter packages of Breez Liquid SDK.
 
-```dart
-import 'package:breez_liquid/breez_liquid.dart';
+Prerequisites:
+- [just](https://github.com/casey/just) command runner.
+- [Melos](https://github.com/invertase/melos) CLI tool.
 
-final bl = BreezLiquidImpl(dylib);
 ```
-
-## Contributing
-
-Closing issues in [TODO.md](TODO.md) will help make this project grow!
+just clean
+just init
+just gen
+just link
+just build
+``` 
 
 ## License
 
