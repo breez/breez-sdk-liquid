@@ -19,4 +19,4 @@ serde_json = "1.0.115"
 
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits
-secp256k1-zkp = {git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24"}
+secp256k1-zkp = {git = "https://github.com/sanket1729/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}
