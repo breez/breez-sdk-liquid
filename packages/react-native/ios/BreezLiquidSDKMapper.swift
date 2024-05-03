@@ -4,17 +4,17 @@ import Foundation
 enum BreezLiquidSDKMapper {
     static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
         guard let mnemonic = connectRequest["mnemonic"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
         }
         guard let networkTmp = connectRequest["network"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
         }
         let network = try asNetwork(network: networkTmp)
 
         var dataDir: String?
         if hasNonNilKey(data: connectRequest, key: "dataDir") {
             guard let dataDirTmp = connectRequest["dataDir"] as? String else {
-                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "dataDir"))
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "dataDir"))
             }
             dataDir = dataDirTmp
         }
@@ -41,7 +41,7 @@ enum BreezLiquidSDKMapper {
                 var connectRequest = try asConnectRequest(connectRequest: val)
                 list.append(connectRequest)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "ConnectRequest"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "ConnectRequest"))
             }
         }
         return list
@@ -53,7 +53,7 @@ enum BreezLiquidSDKMapper {
 
     static func asGetInfoRequest(getInfoRequest: [String: Any?]) throws -> GetInfoRequest {
         guard let withScan = getInfoRequest["withScan"] as? Bool else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))
         }
 
         return GetInfoRequest(
@@ -73,7 +73,7 @@ enum BreezLiquidSDKMapper {
                 var getInfoRequest = try asGetInfoRequest(getInfoRequest: val)
                 list.append(getInfoRequest)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoRequest"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoRequest"))
             }
         }
         return list
@@ -85,10 +85,10 @@ enum BreezLiquidSDKMapper {
 
     static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
         guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
         }
         guard let pubkey = getInfoResponse["pubkey"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
         }
 
         return GetInfoResponse(
@@ -111,7 +111,7 @@ enum BreezLiquidSDKMapper {
                 var getInfoResponse = try asGetInfoResponse(getInfoResponse: val)
                 list.append(getInfoResponse)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoResponse"))
             }
         }
         return list
@@ -123,7 +123,7 @@ enum BreezLiquidSDKMapper {
 
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
         guard let payerAmountSat = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
         }
 
         return PrepareReceiveRequest(
@@ -143,7 +143,7 @@ enum BreezLiquidSDKMapper {
                 var prepareReceiveRequest = try asPrepareReceiveRequest(prepareReceiveRequest: val)
                 list.append(prepareReceiveRequest)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareReceiveRequest"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PrepareReceiveRequest"))
             }
         }
         return list
@@ -155,13 +155,13 @@ enum BreezLiquidSDKMapper {
 
     static func asPrepareReceiveResponse(prepareReceiveResponse: [String: Any?]) throws -> PrepareReceiveResponse {
         guard let pairHash = prepareReceiveResponse["pairHash"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "pairHash", typeName: "PrepareReceiveResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "pairHash", typeName: "PrepareReceiveResponse"))
         }
         guard let payerAmountSat = prepareReceiveResponse["payerAmountSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveResponse"))
         }
         guard let feesSat = prepareReceiveResponse["feesSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareReceiveResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareReceiveResponse"))
         }
 
         return PrepareReceiveResponse(
@@ -186,7 +186,7 @@ enum BreezLiquidSDKMapper {
                 var prepareReceiveResponse = try asPrepareReceiveResponse(prepareReceiveResponse: val)
                 list.append(prepareReceiveResponse)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareReceiveResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PrepareReceiveResponse"))
             }
         }
         return list
@@ -198,7 +198,7 @@ enum BreezLiquidSDKMapper {
 
     static func asPrepareSendRequest(prepareSendRequest: [String: Any?]) throws -> PrepareSendRequest {
         guard let invoice = prepareSendRequest["invoice"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendRequest"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendRequest"))
         }
 
         return PrepareSendRequest(
@@ -218,7 +218,7 @@ enum BreezLiquidSDKMapper {
                 var prepareSendRequest = try asPrepareSendRequest(prepareSendRequest: val)
                 list.append(prepareSendRequest)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendRequest"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendRequest"))
             }
         }
         return list
@@ -230,22 +230,22 @@ enum BreezLiquidSDKMapper {
 
     static func asPrepareSendResponse(prepareSendResponse: [String: Any?]) throws -> PrepareSendResponse {
         guard let id = prepareSendResponse["id"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "PrepareSendResponse"))
         }
         guard let payerAmountSat = prepareSendResponse["payerAmountSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareSendResponse"))
         }
         guard let receiverAmountSat = prepareSendResponse["receiverAmountSat"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PrepareSendResponse"))
         }
         guard let totalFees = prepareSendResponse["totalFees"] as? UInt64 else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "totalFees", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "totalFees", typeName: "PrepareSendResponse"))
         }
         guard let fundingAddress = prepareSendResponse["fundingAddress"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "fundingAddress", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "fundingAddress", typeName: "PrepareSendResponse"))
         }
         guard let invoice = prepareSendResponse["invoice"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "PrepareSendResponse"))
         }
 
         return PrepareSendResponse(
@@ -276,7 +276,7 @@ enum BreezLiquidSDKMapper {
                 var prepareSendResponse = try asPrepareSendResponse(prepareSendResponse: val)
                 list.append(prepareSendResponse)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PrepareSendResponse"))
             }
         }
         return list
@@ -288,10 +288,10 @@ enum BreezLiquidSDKMapper {
 
     static func asReceivePaymentResponse(receivePaymentResponse: [String: Any?]) throws -> ReceivePaymentResponse {
         guard let id = receivePaymentResponse["id"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "ReceivePaymentResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "ReceivePaymentResponse"))
         }
         guard let invoice = receivePaymentResponse["invoice"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "ReceivePaymentResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "ReceivePaymentResponse"))
         }
 
         return ReceivePaymentResponse(
@@ -314,7 +314,7 @@ enum BreezLiquidSDKMapper {
                 var receivePaymentResponse = try asReceivePaymentResponse(receivePaymentResponse: val)
                 list.append(receivePaymentResponse)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "ReceivePaymentResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "ReceivePaymentResponse"))
             }
         }
         return list
@@ -328,7 +328,7 @@ enum BreezLiquidSDKMapper {
         var backupPath: String?
         if hasNonNilKey(data: restoreRequest, key: "backupPath") {
             guard let backupPathTmp = restoreRequest["backupPath"] as? String else {
-                throw LsSdkError.Generic(message: errUnexpectedValue(fieldName: "backupPath"))
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "backupPath"))
             }
             backupPath = backupPathTmp
         }
@@ -350,7 +350,7 @@ enum BreezLiquidSDKMapper {
                 var restoreRequest = try asRestoreRequest(restoreRequest: val)
                 list.append(restoreRequest)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "RestoreRequest"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "RestoreRequest"))
             }
         }
         return list
@@ -362,7 +362,7 @@ enum BreezLiquidSDKMapper {
 
     static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
         guard let txid = sendPaymentResponse["txid"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "txid", typeName: "SendPaymentResponse"))
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txid", typeName: "SendPaymentResponse"))
         }
 
         return SendPaymentResponse(
@@ -382,7 +382,7 @@ enum BreezLiquidSDKMapper {
                 var sendPaymentResponse = try asSendPaymentResponse(sendPaymentResponse: val)
                 list.append(sendPaymentResponse)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "SendPaymentResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "SendPaymentResponse"))
             }
         }
         return list
@@ -400,7 +400,7 @@ enum BreezLiquidSDKMapper {
         case "liquidTestnet":
             return Network.liquidTestnet
 
-        default: throw LsSdkError.Generic(message: "Invalid variant \(network) for enum Network")
+        default: throw LiquidSdkError.Generic(message: "Invalid variant \(network) for enum Network")
         }
     }
 
@@ -425,7 +425,7 @@ enum BreezLiquidSDKMapper {
                 var network = try asNetwork(network: val)
                 list.append(network)
             } else {
-                throw LsSdkError.Generic(message: errUnexpectedType(typeName: "Network"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Network"))
             }
         }
         return list

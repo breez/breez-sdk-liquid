@@ -48,7 +48,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
             return bindingWallet
         }
         
-        throw LsSdkError.Generic(message: "Not initialized")
+        throw LiquidSdkError.Generic(message: "Not initialized")
     }
     
     {% let obj_interface = "BreezLiquidSDK." -%}
