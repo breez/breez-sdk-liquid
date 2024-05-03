@@ -38,10 +38,12 @@ pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
 pub struct LiquidSdk {
-    signer: SwSigner,
     electrum_url: ElectrumUrl,
     network: Network,
-    wallet: Arc<Mutex<LwkWollet>>,
+    /// LWK Wollet, a watch-only Liquid wallet for this instance
+    lwk_wollet: Arc<Mutex<LwkWollet>>,
+    /// LWK Signer, for signing Liquid transactions
+    lwk_signer: SwSigner,
     active_address: Option<u32>,
     persister: Persister,
     data_dir_path: String,
@@ -69,7 +71,7 @@ impl LiquidSdk {
         let data_dir_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
 
         let lwk_persister = FsPersister::new(&data_dir_path, network.into(), &opts.descriptor)?;
-        let wallet = Arc::new(Mutex::new(LwkWollet::new(
+        let lwk_wollet = Arc::new(Mutex::new(LwkWollet::new(
             elements_network,
             lwk_persister,
             opts.descriptor,
@@ -81,10 +83,10 @@ impl LiquidSdk {
         persister.init()?;
 
         let sdk = Arc::new(LiquidSdk {
-            wallet,
+            lwk_wollet,
             network,
             electrum_url,
-            signer: opts.signer,
+            lwk_signer: opts.signer,
             active_address: None,
             persister,
             data_dir_path,
@@ -233,20 +235,20 @@ impl LiquidSdk {
 
     fn scan(&self) -> Result<(), lwk_wollet::Error> {
         let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
-        let mut wallet = self.wallet.lock().unwrap();
-        full_scan_with_electrum_client(&mut wallet, &mut electrum_client)
+        let mut lwk_wollet = self.lwk_wollet.lock().unwrap();
+        full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)
     }
 
     fn address(&self) -> Result<Address, lwk_wollet::Error> {
-        let wallet = self.wallet.lock().unwrap();
-        Ok(wallet.address(self.active_address)?.address().clone())
+        let lwk_wollet = self.lwk_wollet.lock().unwrap();
+        Ok(lwk_wollet.address(self.active_address)?.address().clone())
     }
 
     fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
         if with_scan {
             self.scan()?;
         }
-        let balance = self.wallet.lock().unwrap().balance()?;
+        let balance = self.lwk_wollet.lock().unwrap().balance()?;
         Ok(balance.values().sum())
     }
 
@@ -255,12 +257,12 @@ impl LiquidSdk {
 
         Ok(GetInfoResponse {
             balance_sat: self.total_balance_sat(req.with_scan)?,
-            pubkey: self.signer.xpub().public_key.to_string(),
+            pubkey: self.lwk_signer.xpub().public_key.to_string(),
         })
     }
 
     fn get_signer(&self) -> SwSigner {
-        self.signer.clone()
+        self.lwk_signer.clone()
     }
 
     fn boltz_client(&self) -> BoltzApiClient {
@@ -288,11 +290,11 @@ impl LiquidSdk {
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
-        let wallet = self.wallet.lock().unwrap();
-        let mut pset = wallet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
+        let lwk_wollet = self.lwk_wollet.lock().unwrap();
+        let mut pset = lwk_wollet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
         let signer = AnySigner::Software(self.get_signer());
         signer.sign(&mut pset)?;
-        Ok(wallet.finalize(&mut pset)?)
+        Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
     pub fn prepare_send_payment(
@@ -392,9 +394,12 @@ impl LiquidSdk {
             network_config,
         )?;
 
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
-            err: "Could not claim: Mnemonic not found".to_string(),
-        })?;
+        let mnemonic = self
+            .lwk_signer
+            .mnemonic()
+            .ok_or(PaymentError::SignerError {
+                err: "Could not claim: Mnemonic not found".to_string(),
+            })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
 
@@ -454,9 +459,12 @@ impl LiquidSdk {
         res: &PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         let client = self.boltz_client();
-        let mnemonic = self.signer.mnemonic().ok_or(PaymentError::SignerError {
-            err: "Could not claim: Mnemonic not found".to_string(),
-        })?;
+        let mnemonic = self
+            .lwk_signer
+            .mnemonic()
+            .ok_or(PaymentError::SignerError {
+                err: "Could not claim: Mnemonic not found".to_string(),
+            })?;
         let swap_key =
             SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
         let lsk = LiquidSwapKey::try_from(swap_key)?;
@@ -509,7 +517,7 @@ impl LiquidSdk {
             self.scan()?;
         }
 
-        let transactions = self.wallet.lock().unwrap().transactions()?;
+        let transactions = self.lwk_wollet.lock().unwrap().transactions()?;
 
         let payment_data = self.persister.get_payment_data()?;
         let mut payments: Vec<Payment> = transactions
