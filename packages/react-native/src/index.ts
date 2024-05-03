@@ -19,8 +19,8 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
 
 export interface ConnectRequest {
     mnemonic: string
-    dataDir?: string
     network: Network
+    dataDir?: string
 }
 
 export interface GetInfoRequest {

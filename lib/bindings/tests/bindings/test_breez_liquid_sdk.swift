@@ -2,7 +2,7 @@ import breez_liquid_sdk
 
 let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
-let connectReq = breez_liquid_sdk.ConnectRequest(mnemonic: mnemonic, dataDir: nil, network: .liquidTestnet);
+let connectReq = breez_liquid_sdk.ConnectRequest(mnemonic: mnemonic, network: .liquidTestnet);
 let sdk = try breez_liquid_sdk.connect(req: connectReq);
 
 let getInfoReq = breez_liquid_sdk.GetInfoRequest(withScan: false);

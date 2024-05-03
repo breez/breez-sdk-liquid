@@ -1,7 +1,7 @@
 try {
     var mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
-    var connectReq = breez_liquid_sdk.ConnectRequest(mnemonic, null, breez_liquid_sdk.Network.LIQUID_TESTNET)
+    var connectReq = breez_liquid_sdk.ConnectRequest(mnemonic, breez_liquid_sdk.Network.LIQUID_TESTNET)
     var sdk = breez_liquid_sdk.connect(connectReq)
 
     var getInfoReq = breez_liquid_sdk.GetInfoRequest(false)
