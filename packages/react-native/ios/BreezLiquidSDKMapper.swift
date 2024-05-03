@@ -6,6 +6,11 @@ enum BreezLiquidSDKMapper {
         guard let mnemonic = connectRequest["mnemonic"] as? String else {
             throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
         }
+        guard let networkTmp = connectRequest["network"] as? String else {
+            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
         var dataDir: String?
         if hasNonNilKey(data: connectRequest, key: "dataDir") {
             guard let dataDirTmp = connectRequest["dataDir"] as? String else {
@@ -13,23 +18,19 @@ enum BreezLiquidSDKMapper {
             }
             dataDir = dataDirTmp
         }
-        guard let networkTmp = connectRequest["network"] as? String else {
-            throw LsSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
-        }
-        let network = try asNetwork(network: networkTmp)
 
         return ConnectRequest(
             mnemonic: mnemonic,
-            dataDir: dataDir,
-            network: network
+            network: network,
+            dataDir: dataDir
         )
     }
 
     static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
         return [
             "mnemonic": connectRequest.mnemonic,
-            "dataDir": connectRequest.dataDir == nil ? nil : connectRequest.dataDir,
             "network": valueOf(network: connectRequest.network),
+            "dataDir": connectRequest.dataDir == nil ? nil : connectRequest.dataDir,
         ]
     }
 

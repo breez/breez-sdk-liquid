@@ -3,10 +3,10 @@ import breez_liquid_sdk
 def test():
     mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
-    connect_req = breez_liquid_sdk.ConnectRequest(mnemonic = mnemonic, data_dir = None, network = breez_liquid_sdk.Network.LIQUID_TESTNET)
+    connect_req = breez_liquid_sdk.ConnectRequest(mnemonic=mnemonic, network=breez_liquid_sdk.Network.LIQUID_TESTNET)
     sdk = breez_liquid_sdk.connect(connect_req)
 
-    get_info_req = breez_liquid_sdk.GetInfoRequest(with_scan = False)
+    get_info_req = breez_liquid_sdk.GetInfoRequest(with_scan=False)
     node_info = sdk.get_info(get_info_req)
 
     print(node_info)

@@ -24,8 +24,8 @@ enum Network {
 
 dictionary ConnectRequest {
     string mnemonic;
-    string? data_dir = null;
     Network network;
+    string? data_dir = null;
 };
 
 dictionary GetInfoRequest {

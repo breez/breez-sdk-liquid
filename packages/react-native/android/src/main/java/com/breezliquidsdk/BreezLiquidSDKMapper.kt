@@ -15,20 +15,20 @@ fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
         return null
     }
     val mnemonic = connectRequest.getString("mnemonic")!!
-    val dataDir = if (hasNonNullKey(connectRequest, "dataDir")) connectRequest.getString("dataDir") else null
     val network = connectRequest.getString("network")?.let { asNetwork(it) }!!
+    val dataDir = if (hasNonNullKey(connectRequest, "dataDir")) connectRequest.getString("dataDir") else null
     return ConnectRequest(
         mnemonic,
-        dataDir,
         network,
+        dataDir,
     )
 }
 
 fun readableMapOf(connectRequest: ConnectRequest): ReadableMap {
     return readableMapOf(
         "mnemonic" to connectRequest.mnemonic,
-        "dataDir" to connectRequest.dataDir,
         "network" to connectRequest.network.name.lowercase(),
+        "dataDir" to connectRequest.dataDir,
     )
 }
 
