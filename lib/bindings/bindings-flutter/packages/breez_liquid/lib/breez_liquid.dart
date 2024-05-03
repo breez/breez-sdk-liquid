@@ -1,4 +1,4 @@
-/// Dart bindings for the Breez Liquid library.
+/// Dart bindings for the Breez Liquid SDK
 library;
 
 export 'src/bindings.dart';
