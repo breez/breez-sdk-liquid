@@ -3,7 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 
-pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LsSdkError> {
+
+pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkError> {
     let ln_sdk = LiquidSdk::connect(req)?;
     Ok(Arc::from(BindingLiquidSdk { sdk: ln_sdk }))
 }
@@ -13,7 +14,7 @@ pub struct BindingLiquidSdk {
 }
 
 impl BindingLiquidSdk {
-    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LsSdkError> {
+    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
         self.sdk.get_info(req).map_err(Into::into)
     }
 
@@ -45,11 +46,11 @@ impl BindingLiquidSdk {
         self.sdk.receive_payment(&req)
     }
 
-    pub fn backup(&self) -> Result<(), LsSdkError> {
+    pub fn backup(&self) -> Result<(), LiquidSdkError> {
         self.sdk.backup().map_err(Into::into)
     }
 
-    pub fn restore(&self, req: RestoreRequest) -> Result<(), LsSdkError> {
+    pub fn restore(&self, req: RestoreRequest) -> Result<(), LiquidSdkError> {
         self.sdk.restore(req).map_err(Into::into)
     }
 }
