@@ -61,7 +61,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
-    ioDirectory: '../../../core/target/release/',
+    ioDirectory: '../../../../core/target/release/',
     webPrefix: 'pkg/',
   );
 }
