@@ -1,0 +1,225 @@
+name: Publish Python Bindings
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      package-version:
+        description: 'version for the python package (MAJOR.MINOR.BUILD)'
+        required: true
+        type: string
+      publish:
+        description: 'value indicating whether to publish to pypi.'
+        required: true
+        type: boolean
+        default: false
+    secrets:
+      PYPI_API_TOKEN:
+        description: 'api token to authenticate to pypi'
+        required: true
+
+jobs:
+  build-macos-wheels:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: Checkout breez-liquid-sdk repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: "Install Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bindings-darwin-universal
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bindings-python
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - name: Clean up downloaded files
+        run: |
+          rm -f lib/bindings/bindings-python/src/breez_liquid_sdk/*.a
+          ls -R lib/bindings/bindings-python
+
+      - name: Update package version
+        if: ${{ inputs.package-version }}
+        working-directory: lib/bindings/bindings-python
+        run: sed -i.bak -e 's/    version=".*",/    version="${{ inputs.package-version }}",/' setup.py
+
+      - name: Install dependencies
+        working-directory: lib/bindings/bindings-python
+        run: pip3 install wheel setuptools
+
+      - name: Build wheel
+        working-directory: lib/bindings/bindings-python
+        run: python3 setup.py bdist_wheel --plat-name macosx_11_0_universal2 --verbose
+
+      - name: List wheel contents
+        working-directory: lib/bindings/bindings-python/dist
+        run: python3 -m zipfile --list *.whl || true
+
+      - name: Archive the wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-wheel-${{ matrix.python }}-macos
+          path: lib/bindings/bindings-python/dist/*.whl
+
+  build-linux-wheels:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: "Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bindings-${{ matrix.arch }}-unknown-linux-gnu
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bindings-python
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - name: Update package version
+        if: ${{ inputs.package-version }}
+        working-directory: lib/bindings/bindings-python
+        run: sed -i.bak -e 's/    version=".*",/    version="${{ inputs.package-version }}",/' setup.py
+
+      - name: Install dependencies
+        working-directory: lib/bindings/bindings-python
+        run: pip3 install wheel setuptools
+
+      - name: "Build wheel"
+        working-directory: lib/bindings/bindings-python
+        run: python3 setup.py bdist_wheel --plat-name manylinux_2_31_${{ matrix.arch }} --verbose
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: python-wheel-${{ matrix.python }}-manylinux_2_31_${{ matrix.arch }}
+          path: lib/bindings/bindings-python/dist/*.whl
+
+  build-windows-wheels:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [win_amd64, win32]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: "Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/download-artifact@v3
+        if: matrix.arch == 'win_amd64'
+        with:
+          name: bindings-x86_64-pc-windows-msvc
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - uses: actions/download-artifact@v3
+        if: matrix.arch == 'win32'
+        with:
+          name: bindings-i686-pc-windows-msvc
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: bindings-python
+          path: lib/bindings/bindings-python/src/breez_liquid_sdk
+
+      - name: Copy VC redistributable DLLs for Windows
+        if: matrix.arch == 'win_amd64'
+        working-directory: lib/bindings/bindings-python/src/breez_liquid_sdk
+        run: |
+          Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\msvcp140.dll') .
+          Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\vcruntime140.dll') .
+          Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x64\*\vcruntime140_1.dll') .
+
+      - name: Copy VC redistributable DLLs for Windows
+        if: matrix.arch == 'win32'
+        working-directory: lib/bindings/bindings-python/src/breez_liquid_sdk
+        run: |
+          Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x86\*\msvcp140.dll') .
+          Copy-Item (vswhere -latest -find 'VC\Redist\MSVC\*\x86\*\vcruntime140.dll') .
+
+      - name: Update package version
+        if: ${{ inputs.package-version }}
+        working-directory: lib/bindings/bindings-python
+        run: (Get-Content setup.py) | Foreach-Object {$_ -replace '    version=".*",', ('    version="${{ inputs.package-version }}",')} | Set-Content setup.py
+
+      - name: Install dependencies
+        working-directory: lib/bindings/bindings-python
+        run: python -m pip install --upgrade pip twine wheel setuptools
+
+      - name: "Build wheel"
+        working-directory: lib/bindings/bindings-python
+        run: python -m setup bdist_wheel --plat-name ${{ matrix.arch }} --verbose
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: python-wheel-${{ matrix.python }}-${{ matrix.arch }}
+          path: lib/bindings/bindings-python/dist/*.whl
+
+  publish-package:
+    runs-on: ubuntu-latest
+    needs: [build-macos-wheels, build-linux-wheels, build-windows-wheels]
+    steps:
+      - name: Checkout breez-sdk repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Download wheels
+        uses: actions/download-artifact@v3
+        with:
+          path: lib/bindings/bindings-python/dist/
+
+      - name: Clean downloaded contents
+        working-directory: lib/bindings/bindings-python
+        run: |
+          find dist -maxdepth 1 ! -path dist ! -name "python-wheel-*" -exec rm -rf {} \;
+          ls -laR dist
+
+      - name: "Publish on PyPI"
+        if: ${{ inputs.publish }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: lib/bindings/bindings-python/dist/*/

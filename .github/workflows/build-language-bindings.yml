@@ -1,0 +1,148 @@
+name: Build Language bindings
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      kotlin:
+        required: false
+        type: boolean
+        default: false
+      swift:
+        required: false
+        type: boolean
+        default: false
+      python:
+        required: false
+        type: boolean
+        default: false
+      csharp:
+        required: false
+        type: boolean
+        default: false
+      golang:
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      kotlin:
+        required: false
+        type: boolean
+        default: false
+      swift:
+        required: false
+        type: boolean
+        default: false
+      python:
+        required: false
+        type: boolean
+        default: false
+      csharp:
+        required: false
+        type: boolean
+        default: false
+      golang:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-language-bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout breez-liquid-sdk repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+  
+      - name: Install rust
+        run: |
+          rustup set auto-self-update disable
+          rustup toolchain install stable --profile minimal
+
+      - name: Build Kotlin binding
+        if: ${{ inputs.kotlin }}
+        working-directory: lib/bindings
+        run: |
+          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --language kotlin -o ffi/kotlin
+  
+      - name: Archive Kotlin binding
+        if: ${{ inputs.kotlin }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-kotlin
+          path: lib/bindings/ffi/kotlin/breez_liquid_sdk/breez_liquid_sdk.kt
+
+      - name: Archive Kotlin multiplatform binding
+        if: ${{ inputs.kotlin }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-kotlin-multiplatform
+          path: lib/bindings/ffi/kmp/*
+      
+      - name: Build Swift binding
+        if: ${{ inputs.swift }}
+        working-directory: lib/bindings
+        run: |
+          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language swift --out-dir bindings-swift/Sources/BreezLiquidSDK
+          mv bindings-swift/Sources/BreezLiquidSDK/breez_liquid_sdk.swift bindings-swift/Sources/BreezLiquidSDK/BreezLiquidSDK.swift
+      
+      - name: Archive Swift binding
+        if: ${{ inputs.swift }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-swift
+          path: lib/bindings/bindings-swift/Sources/BreezLiquidSDK/*
+      
+      - name: Build Python binding
+        if: ${{ inputs.python }}
+        working-directory: lib/bindings
+        run: |
+            cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --language python -o ffi/python
+    
+      - name: Archive Python binding
+        if: ${{ inputs.python }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-python
+          path: lib/bindings/ffi/python/breez_liquid_sdk.py
+
+#      - name: Build C# binding
+#        if: ${{ inputs.csharp }}
+#        working-directory: lib/bindings
+#        run: |
+#          cargo install uniffi-bindgen-cs --git https://github.com/breez/uniffi-bindgen-cs --branch namespace
+#          uniffi-bindgen-cs src/breez_liquid_sdk.udl -o ffi/csharp -c ./uniffi.toml
+#      
+#      - name: Archive C# binding
+#        if: ${{ inputs.csharp }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: bindings-csharp
+#          path: lib/bindings/ffi/csharp/breez_liquid_sdk.cs
+#    
+#      - name: Build golang binding
+#        if: ${{ inputs.golang }}
+#        working-directory: lib/bindings
+#        run: |
+#          cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.1.5+v0.23.0
+#          uniffi-bindgen-go src/breez_liquid_sdk.udl -o ffi/golang -c ./uniffi.toml
+#  
+#      - name: Archive golang binding
+#        if: ${{ inputs.golang }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: bindings-golang
+#          path: lib/bindings/ffi/golang/breez/breez_liquid_sdk/breez_liquid_sdk.*

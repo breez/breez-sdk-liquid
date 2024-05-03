@@ -1,0 +1,116 @@
+name: Build bindings for Darwin
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      use-dummy-binaries:
+        description: 'If true, creates dummy binaries rather than real binaries'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    if: ${{ !inputs.use-dummy-binaries }}
+    runs-on: macOS-latest
+    name: build ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [
+          aarch64-apple-darwin,
+          x86_64-apple-darwin,
+        ]
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with: 
+        ref: ${{ inputs.ref }}
+        repository: ${{ inputs.repository || github.repository }}
+
+    - name: Install rust toolchain
+      run: |
+        rustup set auto-self-update disable
+        rustup toolchain install stable --profile minimal
+        rustup target add ${{ matrix.target }}
+        cargo install cargo-lipo
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: lib
+
+    - name: Build bindings
+      working-directory: lib/bindings
+      run: cargo lipo --release --targets ${{ matrix.target }}
+    
+    - name: Archive release
+      uses: actions/upload-artifact@v3
+      with:
+        name: bindings-${{ matrix.target }}
+        path: |
+          lib/target/${{ matrix.target }}/release/libbreez_liquid_sdk_bindings.dylib
+          lib/target/${{ matrix.target }}/release/libbreez_liquid_sdk_bindings.a
+  
+  merge:
+    runs-on: macOS-latest
+    needs: build
+    name: build darwin-universal
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: bindings-aarch64-apple-darwin
+        path: aarch64-apple-darwin
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: bindings-x86_64-apple-darwin
+        path: x86_64-apple-darwin
+
+    - name: Build Darwin universal
+      run: |
+        mkdir -p darwin-universal
+        lipo -create -output darwin-universal/libbreez_liquid_sdk_bindings.dylib aarch64-apple-darwin/libbreez_liquid_sdk_bindings.dylib x86_64-apple-darwin/libbreez_liquid_sdk_bindings.dylib
+        lipo -create -output darwin-universal/libbreez_liquid_sdk_bindings.a aarch64-apple-darwin/libbreez_liquid_sdk_bindings.a x86_64-apple-darwin/libbreez_liquid_sdk_bindings.a
+
+    - name: Archive release
+      uses: actions/upload-artifact@v3
+      with:
+        name: bindings-darwin-universal
+        path: |
+          darwin-universal/libbreez_liquid_sdk_bindings.dylib
+          darwin-universal/libbreez_liquid_sdk_bindings.a
+
+  build-dummies:
+    if: ${{ inputs.use-dummy-binaries }}
+    runs-on: ubuntu-latest
+    name: build darwin dummies
+    strategy:
+      matrix:
+        target: [
+          aarch64-apple-darwin,
+          x86_64-apple-darwin,
+          darwin-universal
+        ]
+    steps:
+      - name: Build dummy darwin ${{ matrix.target }}
+        run: |
+          touch libbreez_liquid_sdk_bindings.dylib
+          touch libbreez_liquid_sdk_bindings.a
+
+      - name: Upload dummy darwin ${{ matrix.target }} artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-${{ matrix.target }}
+          path: ./*
