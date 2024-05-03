@@ -44,7 +44,7 @@ impl TryFrom<&str> for Network {
 }
 
 #[derive(Debug)]
-pub struct WalletOptions {
+pub struct LiquidSdkOptions {
     pub signer: SwSigner,
     pub network: Network,
     /// Output script descriptor
@@ -60,7 +60,7 @@ pub struct WalletOptions {
     /// If not set, it defaults to a Blockstream instance.
     pub electrum_url: Option<ElectrumUrl>,
 }
-impl WalletOptions {
+impl LiquidSdkOptions {
     pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
         self.electrum_url.clone().unwrap_or({
             let (url, validate_domain, tls) = match &self.network {

@@ -37,7 +37,7 @@ fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asConnectRequest(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -70,7 +70,7 @@ fun asGetInfoRequestList(arr: ReadableArray): List<GetInfoRequest> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asGetInfoRequest(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -107,7 +107,7 @@ fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asGetInfoResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -140,7 +140,7 @@ fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest>
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveRequest(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -181,7 +181,7 @@ fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -214,7 +214,7 @@ fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareSendRequest(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -267,7 +267,7 @@ fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareSendResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -304,7 +304,7 @@ fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -335,7 +335,7 @@ fun asRestoreRequestList(arr: ReadableArray): List<RestoreRequest> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asRestoreRequest(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -368,7 +368,7 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -383,7 +383,7 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     for (value in arr.toArrayList()) {
         when (value) {
             is String -> list.add(asNetwork(value)!!)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
@@ -423,7 +423,7 @@ fun pushToArray(
         null -> array.pushNull()
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))
-        else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
     }
 }
 
@@ -448,7 +448,7 @@ fun pushToMap(
         is ULong -> map.putDouble(key, value.toDouble())
         is Array<*> -> map.putArray(key, readableArrayOf(value.asIterable()))
         is List<*> -> map.putArray(key, readableArrayOf(value))
-        else -> throw LsSdkException.Generic("Unexpected type ${value::class.java.name} for key [$key]")
+        else -> throw LiquidSdkException.Generic("Unexpected type ${value::class.java.name} for key [$key]")
     }
 }
 
@@ -470,7 +470,7 @@ fun asUByteList(arr: ReadableArray): List<UByte> {
             is Double -> list.add(value.toInt().toUByte())
             is Int -> list.add(value.toUByte())
             is UByte -> list.add(value)
-            else -> throw LsSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list

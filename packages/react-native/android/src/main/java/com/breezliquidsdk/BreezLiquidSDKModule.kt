@@ -24,13 +24,13 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         return TAG
     }
 
-    @Throws(LsSdkException::class)
+    @Throws(LiquidSdkException::class)
     fun getBindingWallet(): BindingWallet {
         if (bindingWallet != null) {
             return bindingWallet!!
         }
 
-        throw LsSdkException.Generic("Not initialized")
+        throw LiquidSdkException.Generic("Not initialized")
     }
 
     @ReactMethod
@@ -54,7 +54,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                 var connectRequest =
                     asConnectRequest(
                         req,
-                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                    ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
                 connectRequest.dataDir = connectRequest.dataDir.takeUnless {
                     it.isEmpty()
                 } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
@@ -76,7 +76,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                 val getInfoRequest =
                     asGetInfoRequest(
                         req,
-                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
+                    ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
                 val res = getBindingWallet().getInfo(getInfoRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -94,7 +94,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 val prepareSendRequest =
                     asPrepareSendRequest(req) ?: run {
-                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest"))
+                        throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest"))
                     }
                 val res = getBindingWallet().prepareSendPayment(prepareSendRequest)
                 promise.resolve(readableMapOf(res))
@@ -113,7 +113,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 val prepareSendResponse =
                     asPrepareSendResponse(req) ?: run {
-                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareSendResponse"))
+                        throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareSendResponse"))
                     }
                 val res = getBindingWallet().sendPayment(prepareSendResponse)
                 promise.resolve(readableMapOf(res))
@@ -132,7 +132,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 val prepareReceiveRequest =
                     asPrepareReceiveRequest(req) ?: run {
-                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest"))
+                        throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest"))
                     }
                 val res = getBindingWallet().prepareReceivePayment(prepareReceiveRequest)
                 promise.resolve(readableMapOf(res))
@@ -151,7 +151,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 val prepareReceiveResponse =
                     asPrepareReceiveResponse(req) ?: run {
-                        throw LsSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveResponse"))
+                        throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveResponse"))
                     }
                 val res = getBindingWallet().receivePayment(prepareReceiveResponse)
                 promise.resolve(readableMapOf(res))
@@ -183,7 +183,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                 val restoreRequest =
                     asRestoreRequest(
                         req,
-                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
+                    ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
                 getBindingWallet().restore(restoreRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {

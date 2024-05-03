@@ -11,14 +11,14 @@ macro_rules! ensure_sdk {
 
 // TODO Unify error enum
 #[derive(Debug, thiserror::Error)]
-pub enum LsSdkError {
+pub enum LiquidSdkError {
     #[error("Error: {err}")]
     Generic { err: String },
 }
 
-impl From<anyhow::Error> for LsSdkError {
+impl From<anyhow::Error> for LiquidSdkError {
     fn from(e: Error) -> Self {
-        LsSdkError::Generic { err: e.to_string() }
+        LiquidSdkError::Generic { err: e.to_string() }
     }
 }
 
@@ -102,8 +102,8 @@ impl From<anyhow::Error> for PaymentError {
     }
 }
 
-impl From<LsSdkError> for PaymentError {
-    fn from(err: LsSdkError) -> Self {
+impl From<LiquidSdkError> for PaymentError {
+    fn from(err: LiquidSdkError) -> Self {
         Self::Generic {
             err: err.to_string(),
         }
