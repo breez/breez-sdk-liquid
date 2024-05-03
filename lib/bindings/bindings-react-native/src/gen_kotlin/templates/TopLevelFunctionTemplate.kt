@@ -10,12 +10,12 @@
         {%- if e.is_flat() %}
                 val {{arg.name()|var_name|unquote|temporary}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }})
         {%- else %}
-                val {{arg.name()|var_name|unquote|temporary}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
+                val {{arg.name()|var_name|unquote|temporary}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
         {%- endif %}
     {%- when Type::Optional(_) %}
                 val {{arg.name()|var_name|unquote|temporary}} = {{arg.name()|var_name|unquote}}{{ arg.type_()|rn_convert_type(ci) -}}
     {%- when Type::Record(_) %}
-                val {{arg.type_()|type_name|var_name|unquote}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
+                val {{arg.type_()|type_name|var_name|unquote}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
     {%- else %}
     {%- endmatch %}
 {%- endfor %}

@@ -27,13 +27,13 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         return TAG
     }
 
-    @Throws(LsSdkException::class)
+    @Throws(LiquidSdkException::class)
     fun getBindingWallet(): BindingWallet {
         if (bindingWallet != null) {
             return bindingWallet!!
         }
 
-        throw LsSdkException.Generic("Not initialized")
+        throw LiquidSdkException.Generic("Not initialized")
     }
 
     @ReactMethod
@@ -58,7 +58,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
         executor.execute {
             try {
-                var connectRequest = asConnectRequest(req) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                var connectRequest = asConnectRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
                 connectRequest.dataDir = connectRequest.dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
                 bindingWallet = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
