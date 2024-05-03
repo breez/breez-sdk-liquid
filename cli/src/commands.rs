@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use breez_liquid_sdk::model::*;
-use breez_liquid_sdk::wallet::Wallet;
+use breez_liquid_sdk::sdk::LiquidSdk;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -36,9 +36,9 @@ pub(crate) enum Command {
     },
     /// List incoming and outgoing payments
     ListPayments,
-    /// Get the balance of the currently loaded wallet
+    /// Get the balance and general info of the current instance
     GetInfo,
-    /// Empties the encrypted wallet transaction cache
+    /// Empties the encrypted transaction cache
     EmptyCache,
     /// Backs up the current pending swaps
     Backup,
@@ -91,13 +91,13 @@ macro_rules! wait_confirmation {
 
 pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
-    wallet: &Arc<Wallet>,
+    sdk: &Arc<LiquidSdk>,
     command: Command,
 ) -> Result<String> {
     Ok(match command {
         Command::ReceivePayment { payer_amount_sat } => {
             let prepare_response =
-                wallet.prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })?;
+                sdk.prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })?;
 
             wait_confirmation!(
                 format!(
@@ -107,7 +107,7 @@ pub(crate) fn handle_command(
                 "Payment receive halted"
             );
 
-            let response = wallet.receive_payment(&prepare_response)?;
+            let response = sdk.receive_payment(&prepare_response)?;
             let invoice = response.invoice.clone();
 
             let mut result = command_result!(response);
@@ -117,7 +117,7 @@ pub(crate) fn handle_command(
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response =
-                wallet.prepare_send_payment(PrepareSendRequest { invoice: bolt11 })?;
+                sdk.prepare_send_payment(PrepareSendRequest { invoice: bolt11 })?;
 
             wait_confirmation!(
                 format!(
@@ -128,37 +128,37 @@ pub(crate) fn handle_command(
             );
 
             if let Some(delay) = delay {
-                let wallet_cloned = wallet.clone();
+                let sdk_cloned = sdk.clone();
                 let prepare_cloned = prepare_response.clone();
 
                 thread::spawn(move || {
                     thread::sleep(Duration::from_secs(delay));
-                    wallet_cloned.send_payment(&prepare_cloned).unwrap();
+                    sdk_cloned.send_payment(&prepare_cloned).unwrap();
                 });
                 command_result!(prepare_response)
             } else {
-                let response = wallet.send_payment(&prepare_response)?;
+                let response = sdk.send_payment(&prepare_response)?;
                 command_result!(response)
             }
         }
         Command::GetInfo => {
-            command_result!(wallet.get_info(GetInfoRequest { with_scan: true })?)
+            command_result!(sdk.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
-            let mut payments = wallet.list_payments(true, true)?;
+            let mut payments = sdk.list_payments(true, true)?;
             payments.reverse();
             command_result!(payments)
         }
         Command::EmptyCache => {
-            wallet.empty_wallet_cache()?;
+            sdk.empty_wallet_cache()?;
             command_result!("Cache emptied successfully")
         }
         Command::Backup => {
-            wallet.backup()?;
+            sdk.backup()?;
             command_result!("Backup created successfully!")
         }
         Command::Restore { backup_path } => {
-            wallet.restore(RestoreRequest { backup_path })?;
+            sdk.restore(RestoreRequest { backup_path })?;
             command_result!("Backup restored successfully!")
         }
     })

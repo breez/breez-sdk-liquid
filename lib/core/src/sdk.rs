@@ -37,7 +37,7 @@ pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
-pub struct Wallet {
+pub struct LiquidSdk {
     signer: SwSigner,
     electrum_url: ElectrumUrl,
     network: Network,
@@ -47,13 +47,13 @@ pub struct Wallet {
     data_dir_path: String,
 }
 
-impl Wallet {
-    pub fn connect(req: ConnectRequest) -> Result<Arc<Wallet>> {
+impl LiquidSdk {
+    pub fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let is_mainnet = req.network == Network::Liquid;
         let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
-        let descriptor = Wallet::get_descriptor(&signer, req.network)?;
+        let descriptor = LiquidSdk::get_descriptor(&signer, req.network)?;
 
-        Wallet::new(WalletOptions {
+        LiquidSdk::new(LiquidSdkOptions {
             signer,
             descriptor,
             electrum_url: None,
@@ -62,7 +62,7 @@ impl Wallet {
         })
     }
 
-    fn new(opts: WalletOptions) -> Result<Arc<Self>> {
+    fn new(opts: LiquidSdkOptions) -> Result<Arc<Self>> {
         let network = opts.network;
         let elements_network: ElementsNetwork = opts.network.into();
         let electrum_url = opts.get_electrum_url();
@@ -80,7 +80,7 @@ impl Wallet {
         let persister = Persister::new(&data_dir_path, network)?;
         persister.init()?;
 
-        let wallet = Arc::new(Wallet {
+        let sdk = Arc::new(LiquidSdk {
             wallet,
             network,
             electrum_url,
@@ -90,9 +90,9 @@ impl Wallet {
             data_dir_path,
         });
 
-        Wallet::track_pending_swaps(&wallet)?;
+        LiquidSdk::track_pending_swaps(&sdk)?;
 
-        Ok(wallet)
+        Ok(sdk)
     }
 
     fn get_descriptor(signer: &SwSigner, network: Network) -> Result<WolletDescriptor> {
@@ -108,7 +108,7 @@ impl Wallet {
     }
 
     fn try_resolve_pending_swap(
-        wallet: &Arc<Wallet>,
+        sdk: &Arc<LiquidSdk>,
         client: &BoltzApiClient,
         swap: &OngoingSwap,
     ) -> Result<()> {
@@ -136,8 +136,7 @@ impl Wallet {
                     | RevSwapStates::TransactionFailed
                     | RevSwapStates::TransactionRefunded => {
                         warn!("Cannot claim swap {id}, unrecoverable state: {status}");
-                        wallet
-                            .persister
+                        sdk.persister
                             .resolve_ongoing_swap(id, None)
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
@@ -147,11 +146,10 @@ impl Wallet {
                     }
                 }
 
-                match wallet.try_claim(preimage, redeem_script, blinding_key) {
+                match sdk.try_claim(preimage, redeem_script, blinding_key) {
                     Ok(txid) => {
                         let payer_amount_sat = get_invoice_amount!(invoice);
-                        wallet
-                            .persister
+                        sdk.persister
                             .resolve_ongoing_swap(
                                 id,
                                 Some((txid, PaymentData { payer_amount_sat })),
@@ -161,8 +159,7 @@ impl Wallet {
                     Err(err) => {
                         if let PaymentError::AlreadyClaimed = err {
                             warn!("Funds already claimed");
-                            wallet
-                                .persister
+                            sdk.persister
                                 .resolve_ongoing_swap(id, None)
                                 .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                         }
@@ -193,8 +190,7 @@ impl Wallet {
                         warn!("Cannot positively resolve swap {id}, unrecoverable state: {status}");
 
                         let payer_amount_sat = get_invoice_amount!(invoice);
-                        wallet
-                            .persister
+                        sdk.persister
                             .resolve_ongoing_swap(
                                 id,
                                 Some((txid, PaymentData { payer_amount_sat })),
@@ -211,7 +207,7 @@ impl Wallet {
         Ok(())
     }
 
-    fn track_pending_swaps(self: &Arc<Wallet>) -> Result<()> {
+    fn track_pending_swaps(self: &Arc<LiquidSdk>) -> Result<()> {
         let cloned = self.clone();
         let client = self.boltz_client();
 
@@ -223,7 +219,7 @@ impl Wallet {
             };
 
             for swap in ongoing_swaps {
-                Wallet::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
+                LiquidSdk::try_resolve_pending_swap(&cloned, &client, &swap).unwrap_or_else(|err| {
                     match swap {
                         OngoingSwap::Send { .. } => error!("[Ongoing Send] {err}"),
                         OngoingSwap::Receive { .. } => error!("[Ongoing Receive] {err}"),
@@ -597,7 +593,7 @@ mod tests {
     use tempdir::TempDir;
 
     use crate::model::*;
-    use crate::wallet::{Network, Wallet};
+    use crate::sdk::{LiquidSdk, Network};
 
     const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -612,8 +608,8 @@ mod tests {
         Ok((data_dir, data_dir_str))
     }
 
-    fn list_pending(wallet: &Wallet) -> Result<Vec<Payment>> {
-        let payments = wallet.list_payments(true, true)?;
+    fn list_pending(sdk: &LiquidSdk) -> Result<Vec<Payment>> {
+        let payments = sdk.list_payments(true, true)?;
 
         Ok(payments
             .iter()
@@ -627,15 +623,15 @@ mod tests {
     #[test]
     fn normal_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet = Wallet::connect(ConnectRequest {
+        let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
             data_dir: Some(data_dir_str),
             network: Network::LiquidTestnet,
         })?;
 
         let invoice = "lntb10u1pnqwkjrpp5j8ucv9mgww0ajk95yfpvuq0gg5825s207clrzl5thvtuzfn68h0sdqqcqzzsxqr23srzjqv8clnrfs9keq3zlg589jvzpw87cqh6rjks0f9g2t9tvuvcqgcl45f6pqqqqqfcqqyqqqqlgqqqqqqgq2qsp5jnuprlxrargr6hgnnahl28nvutj3gkmxmmssu8ztfhmmey3gq2ss9qyyssq9ejvcp6frwklf73xvskzdcuhnnw8dmxag6v44pffwqrxznsly4nqedem3p3zhn6u4ln7k79vk6zv55jjljhnac4gnvr677fyhfgn07qp4x6wrq".to_string();
-        breez_wallet.prepare_send_payment(PrepareSendRequest { invoice })?;
-        assert!(!list_pending(&breez_wallet)?.is_empty());
+        sdk.prepare_send_payment(PrepareSendRequest { invoice })?;
+        assert!(!list_pending(&sdk)?.is_empty());
 
         Ok(())
     }
@@ -643,17 +639,17 @@ mod tests {
     #[test]
     fn reverse_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
-        let breez_wallet = Wallet::connect(ConnectRequest {
+        let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
             data_dir: Some(data_dir_str),
             network: Network::LiquidTestnet,
         })?;
 
-        let prepare_response = breez_wallet.prepare_receive_payment(&PrepareReceiveRequest {
+        let prepare_response = sdk.prepare_receive_payment(&PrepareReceiveRequest {
             payer_amount_sat: 1_000,
         })?;
-        breez_wallet.receive_payment(&prepare_response)?;
-        assert!(!list_pending(&breez_wallet)?.is_empty());
+        sdk.receive_payment(&prepare_response)?;
+        assert!(!list_pending(&sdk)?.is_empty());
 
         Ok(())
     }

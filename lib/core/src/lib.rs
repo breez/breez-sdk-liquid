@@ -5,4 +5,4 @@ pub mod error;
 pub mod frb;
 pub mod model;
 pub mod persist;
-pub mod wallet;
+pub mod sdk;
