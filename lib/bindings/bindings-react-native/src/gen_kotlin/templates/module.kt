@@ -50,7 +50,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     {%- endfor %}  
 
     @ReactMethod
-    fun connect(mnemonic: String, dataDir: String, network: String, promise: Promise) {
+    fun connect(req: ReadableMap, promise: Promise) {
         if (bindingWallet != null) {
             promise.reject("Generic", "Already initialized")
             return
@@ -58,9 +58,9 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
         executor.execute {
             try {
-                val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
-                val networkTmp = asNetwork(network)
-                bindingWallet = connect(mnemonic, dataDirTmp, networkTmp)
+                var connectRequest = asConnectRequest(req) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                connectRequest.dataDir = connectRequest.dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
+                bindingWallet = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

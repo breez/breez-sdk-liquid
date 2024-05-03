@@ -41,9 +41,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun connect(
-        mnemonic: String,
-        dataDir: String,
-        network: String,
+        req: ReadableMap,
         promise: Promise,
     ) {
         if (bindingWallet != null) {
@@ -53,9 +51,14 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
         executor.execute {
             try {
-                val dataDirTmp = dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
-                val networkTmp = asNetwork(network)
-                bindingWallet = connect(mnemonic, dataDirTmp, networkTmp)
+                var connectRequest =
+                    asConnectRequest(
+                        req,
+                    ) ?: run { throw LsSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                connectRequest.dataDir = connectRequest.dataDir.takeUnless {
+                    it.isEmpty()
+                } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
+                bindingWallet = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
