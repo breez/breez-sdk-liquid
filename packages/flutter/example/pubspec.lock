@@ -28,7 +28,7 @@ packages:
   breez_liquid:
     dependency: "direct overridden"
     description:
-      path: "../../breez_liquid"
+      path: "../../dart"
       relative: true
     source: path
     version: "0.1.0"
