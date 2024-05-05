@@ -3,6 +3,9 @@ frb_bin := "flutter_rust_bridge_codegen generate"
 
 export CARGO_TERM_COLOR := "always"
 
+default:
+  just --list --unsorted
+
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
