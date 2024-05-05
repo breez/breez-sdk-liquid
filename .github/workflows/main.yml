@@ -136,11 +136,6 @@ jobs:
         run: |
           just ffigen
 
-      - name: Softlink header files
-        working-directory: lib/bindings/bindings-flutter/
-        run: |
-          just link
-
       - name: Static Analysis
         working-directory: lib/bindings/bindings-flutter/
         run: melos analyze

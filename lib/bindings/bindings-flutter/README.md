@@ -10,8 +10,8 @@ Prerequisites:
 just clean
 just init
 just gen
-just link
 just build
+just link
 ``` 
 
 ## License

@@ -11,16 +11,20 @@ frb:
 	dart pub global activate ffi
 	cargo install cargo-xcode
 
-# generate bindings
+# Generate bindings
 gen: codegen && ffigen
 
+# Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	{{frb_bin}}
+	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
+	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
 
+# Generate FFI bindings
 ffigen:
 	cd ../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && cd ..
 
-# builds the local library for testing
+# Builds the local library for testing
 build *args:
 	cargo build --package breez-liquid-sdk --manifest-path ../../core/Cargo.toml --features frb {{args}}
 
@@ -40,15 +44,13 @@ test: test-dart # test-flutter
 test-dart: build
 	melos run test-dart
 
-# softlinks library archives from platform-build to their expected locations
+# Softlinks library archives from platform-build to their expected locations
 link:
 	-ln -sf $(pwd)/platform-build/breez_liquid_sdk.xcframework.zip ../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
 	-ln -sf $(pwd)/platform-build/breez_liquid_sdk.xcframework.zip ../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../packages/flutter/linux/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../packages/flutter/windows/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../packages/flutter/android/{{curr_version}}.tar.gz
-	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
-	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
 
 # (melos)
 test-flutter: build-apple build-android build-other

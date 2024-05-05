@@ -1,1 +1,0 @@
-/Users/erdem/Documents/GitHub/breez-sdk-liquid/lib/bindings/bindings-flutter/breez_liquid_sdk/include/breez_liquid_sdk.h
