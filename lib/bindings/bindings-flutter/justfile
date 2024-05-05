@@ -6,6 +6,14 @@ export CARGO_TERM_COLOR := "always"
 default:
   just --list --unsorted
 
+all:
+	just clean
+	just init
+	just gen
+	just build
+	just link
+	just check
+
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
@@ -72,7 +80,8 @@ clean:
 	melos clean
 
 check:
-	flutter analyze
+	melos analyze
+	melos check-format
 
 # Open melos.yaml
 melos:
