@@ -68,6 +68,6 @@ scripts:
 
   # TODO: deprecate when first version to pub.dev is published
   docs:
-    exec: dart doc -o ../../website/\$MELOS_PACKAGE_NAME
+    exec: dart doc -o website/\$MELOS_PACKAGE_NAME
     packageFilters:
       private: false
