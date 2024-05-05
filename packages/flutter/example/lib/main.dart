@@ -122,13 +122,16 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ),
                         ListTile(
-                          title: Text("Pair Hash: ${prepareReceiveResponse.pairHash}"),
+                          title: Text(
+                              "Pair Hash: ${prepareReceiveResponse.pairHash}"),
                         ),
                         ListTile(
-                          title: Text("Payer Amount: ${prepareReceiveResponse.payerAmountSat} (in sats)"),
+                          title: Text(
+                              "Payer Amount: ${prepareReceiveResponse.payerAmountSat} (in sats)"),
                         ),
                         ListTile(
-                          title: Text("Fees: ${prepareReceiveResponse.feesSat} (in sats)"),
+                          title: Text(
+                              "Fees: ${prepareReceiveResponse.feesSat} (in sats)"),
                         ),
                         const SizedBox(height: 16.0),
                         FutureBuilder<ReceivePaymentResponse>(
@@ -148,23 +151,30 @@ class _MyAppState extends State<MyApp> {
                             }
 
                             final receivePaymentResponse = snapshot.data!;
-                            debugPrint("Invoice ID: ${receivePaymentResponse.id}");
-                            debugPrint("Invoice: ${receivePaymentResponse.invoice}");
+                            debugPrint(
+                                "Invoice ID: ${receivePaymentResponse.id}");
+                            debugPrint(
+                                "Invoice: ${receivePaymentResponse.invoice}");
 
                             return Column(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
                                   child: Text(
                                     "Invoice for receive payment of 1000 sats",
-                                    style: Theme.of(context).textTheme.headlineSmall,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall,
                                   ),
                                 ),
                                 ListTile(
-                                  title: Text("Invoice ID: ${receivePaymentResponse.id}"),
+                                  title: Text(
+                                      "Invoice ID: ${receivePaymentResponse.id}"),
                                 ),
                                 ListTile(
-                                  title: Text("Invoice: ${receivePaymentResponse.invoice}"),
+                                  title: Text(
+                                      "Invoice: ${receivePaymentResponse.invoice}"),
                                 ),
                               ],
                             );

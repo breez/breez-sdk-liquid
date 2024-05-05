@@ -55,15 +55,15 @@ scripts:
       dirExists: integration_test
 
   analyze:
-    exec: flutter analyze .
+    exec: flutter analyze --fatal-infos .
     description: Analyze a specific package in this project.
 
   check-format:
-    exec: dart format --set-exit-if-changed .
+    exec: dart format -o none --set-exit-if-changed -l 80 .
     description: Check the format of a specific package in this project.
 
   format:
-    exec: dart format .
+    exec: dart format -l 80 .
     description: Format a specific package in this project.
 
   # TODO: deprecate when first version to pub.dev is published

@@ -71,12 +71,14 @@ void main(List<String> args) {
 enum Targets {
   linuxArm64('aarch64-unknown-linux-gnu', 'linux-arm64'),
   linuxX64('x86_64-unknown-linux-gnu', 'linux-x64');
+  // TODO: Enable builds for Windows targets
   //windowsArm64('aarch64-pc-windows-msvc', 'windows-arm64', isWindows: true),
   //windowsX64('x86_64-pc-windows-msvc', 'windows-x64', isWindows: true);
 
   final String triple;
   final String flutterIdentifier;
   final bool isWindows;
+  // ignore: unused_element
   const Targets(this.triple, this.flutterIdentifier, {this.isWindows = false});
 
   static Targets get host {

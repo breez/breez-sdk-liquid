@@ -5,7 +5,7 @@ on:
   # Triggers the workflow on push events but only for the "main" branch
   push:
     branches: [ main ]
-  pull_request:    
+  pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -77,6 +77,77 @@ jobs:
           brew update
           brew install kotlin ktlint swiftformat
           make react-native
+
+      - name: Check git status
+        env:
+          GIT_PAGER: cat
+        run: |
+          status=$(git status --porcelain)
+          if [[ -n "$status" ]]; then
+            echo "Git status has changes"
+            echo "$status"
+            git diff
+            exit 1
+          else
+            echo "No changes in git status"
+          fi
+
+  flutter:
+    name: Check Dart/Flutter bindings
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter --version
+
+      - name: Set up just
+        uses: extractions/setup-just@v2
+      
+
+      - name: Set up Melos
+        uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: false
+      
+      - name: Initialize the workspace
+        working-directory: lib/bindings/bindings-flutter/
+        run: |
+          just clean
+          just init
+      
+      - name: Install flutter_rust_bridge_codegen dependencies
+        working-directory: lib/bindings/bindings-flutter/
+        run: just frb
+
+      - name: Generate Dart/Flutter bindings
+        working-directory: lib/bindings/bindings-flutter/
+        continue-on-error: true
+        run: |
+          just codegen
+
+      - name: Generate FFI bindings
+        working-directory: lib/bindings/bindings-flutter/
+        continue-on-error: true
+        run: |
+          just ffigen
+
+      - name: Softlink header files
+        working-directory: lib/bindings/bindings-flutter/
+        run: |
+          just link
+
+      - name: Static Analysis
+        working-directory: lib/bindings/bindings-flutter/
+        run: melos analyze
+
+      - name: Check Formatting
+        working-directory: lib/bindings/bindings-flutter/
+        run: melos check-format
 
       - name: Check git status
         env:
