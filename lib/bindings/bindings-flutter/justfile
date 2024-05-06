@@ -19,7 +19,7 @@ bootstrap frb='true':
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
-	cargo install flutter_rust_bridge_codegen --version 2.0.0-dev.32
+	cargo install flutter_rust_bridge_codegen --version 2.0.0-dev.33
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
