@@ -41,6 +41,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: breez/breez-liquid-sdk-swift
+          ref: main
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
           path: dist

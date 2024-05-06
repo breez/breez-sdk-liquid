@@ -55,7 +55,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asConnectRequest(
                         req,
                     ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
-                connectRequest.dataDir = connectRequest.dataDir.takeUnless {
+                connectRequest.dataDir = connectRequest.dataDir?.takeUnless {
                     it.isEmpty()
                 } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
                 bindingLiquidSdk = connect(connectRequest)

@@ -43,10 +43,10 @@ const App = () => {
                     setSecureItem(MNEMONIC_STORE, mnemonic)
                 }
 
-                await connect(mnemonic, undefined, Network.LIQUID)
+                await connect({mnemonic, network: Network.LIQUID_TESTNET})
                 addLine("connect", null)
 
-                let walletInfo = await getInfo(false)
+                let walletInfo = await getInfo({withScan: false})
                 addLine("getInfo", JSON.stringify(walletInfo))
             } catch (e) {
                 addLine("error", e.toString())

@@ -73,13 +73,13 @@ bindings-kotlin-multiplatform: ios-universal android
 
 	cp -r bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
 
-	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-arm64/
-	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-arm64/
-	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-x64/
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64/
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64/
+	mkdir -p bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64/
 
-	cp ../target/aarch64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-arm64/
-	cp ../target/aarch64-apple-ios-sim/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-arm64/
-	cp ../target/x86_64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/libs/ios-simulator-x64/
+	cp ../target/aarch64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64/
+	cp ../target/aarch64-apple-ios-sim/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64/
+	cp ../target/x86_64-apple-ios/release/libbreez_liquid_sdk_bindings.a bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64/
 	cd bindings-kotlin-multiplatform && ./gradlew :breez-liquid-sdk-kmp:assemble
 
 ## Apple

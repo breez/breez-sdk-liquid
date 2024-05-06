@@ -265,10 +265,26 @@ jobs:
 
   # react native version x.y.z will at runtime require
   # ios and android packages x.y.z being published already.
-  publish-react-native:
+  publish-react-native-no-wait:
     needs:
       - setup
-    if: ${{ needs.setup.outputs.react-native == 'true' }}
+    if: ${{ needs.setup.outputs.swift != 'true' && needs.setup.outputs.react-native == 'true' }}
+    uses: ./.github/workflows/publish-react-native.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      package-version: ${{ needs.setup.outputs.react-native-package-version }}
+      publish: ${{ needs.setup.outputs.publish == 'true' }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # react native version x.y.z will at runtime require
+  # ios and android packages x.y.z being published already.
+  publish-react-native-wait:
+    needs:
+      - setup
+      - publish-swift
+    if: ${{ needs.setup.outputs.swift == 'true' && needs.setup.outputs.react-native == 'true' }}
     uses: ./.github/workflows/publish-react-native.yml
     with:
       repository: ${{ needs.setup.outputs.repository }}
