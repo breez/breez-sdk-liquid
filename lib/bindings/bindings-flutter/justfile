@@ -6,8 +6,10 @@ export CARGO_TERM_COLOR := "always"
 default:
   just --list --unsorted
 
-all:
+# Initializes the workspace
+bootstrap frb='true':
 	just clean
+	@if {{frb}} == true; then just frb; fi
 	just init
 	just gen
 	just build
@@ -48,12 +50,20 @@ build-android profile='release':
 build-other *args:
 	dart scripts/build_other.dart {{args}}
 
-# (melos)
-test: test-dart # test-flutter
+# (melos) Run tests on packages in workspace
+test build='false':
+	just test-dart {{build}}
+# test-flutter {{build}}
 
-# (melos)
-test-dart: build
-	melos run test-dart
+# (melos) Run tests on Dart packages in workspace
+test-dart build='true': 
+	@if {{build}} == true; then just build; fi
+	melos test-dart
+
+# (melos) Run integration tests on Flutter packages in workspace
+#test-flutter build='true':
+#	@if {{build}} == true; then build; fi
+#	melos test-flutter
 
 # Softlinks library archives from platform-build to their expected locations
 link:
@@ -63,22 +73,19 @@ link:
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../packages/flutter/windows/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../packages/flutter/android/{{curr_version}}.tar.gz
 
-# (melos)
-test-flutter: build-apple build-android build-other
-	melos run test-flutter
-
 # (melos) use instead of flutter pub get
 init *args:
 	melos bootstrap {{args}}
 
-# (melos) generate docs
+# (melos) Generate docs for packages in workspace
 docs:
-	melos run docs
+	melos docs
 
-# (melos)
+# (melos) Cleans the current workspace and all its packages of temporary pub & generated Melos IDE files.
 clean:
 	melos clean
 
+# (melos) Analyze & check the format of packages in workspace
 check:
 	melos analyze
 	melos check-format
