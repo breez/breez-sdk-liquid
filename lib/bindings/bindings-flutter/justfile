@@ -3,16 +3,41 @@ frb_bin := "flutter_rust_bridge_codegen generate"
 
 export CARGO_TERM_COLOR := "always"
 
-# generate bindings
+default:
+  just --list --unsorted
+
+# Initializes the workspace
+bootstrap frb='true':
+	just clean
+	@if {{frb}} == true; then just frb; fi
+	just init
+	just gen
+	just build
+	just link
+	just check
+
+# Install flutter_rust_bridge_codegen dependencies
+frb:
+	cargo install cargo-expand
+	cargo install flutter_rust_bridge_codegen --version 2.0.0-dev.33
+	dart pub global activate ffigen
+	dart pub global activate ffi
+	cargo install cargo-xcode
+
+# Generate bindings
 gen: codegen && ffigen
 
+# Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	{{frb_bin}}
+	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
+	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
 
+# Generate FFI bindings
 ffigen:
 	cd ../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && cd ..
 
-# builds the local library for testing
+# Builds the local library for testing
 build *args:
 	cargo build --package breez-liquid-sdk --manifest-path ../../core/Cargo.toml --features frb {{args}}
 
@@ -25,41 +50,46 @@ build-android profile='release':
 build-other *args:
 	dart scripts/build_other.dart {{args}}
 
-# (melos)
-test: test-dart # test-flutter
+# (melos) Run tests on packages in workspace
+test build='false':
+	just test-dart {{build}}
+# test-flutter {{build}}
 
-# (melos)
-test-dart: build
-	melos run test-dart
+# (melos) Run tests on Dart packages in workspace
+test-dart build='true': 
+	@if {{build}} == true; then just build; fi
+	melos test-dart
 
-# softlinks library archives from platform-build to their expected locations
+# (melos) Run integration tests on Flutter packages in workspace
+#test-flutter build='true':
+#	@if {{build}} == true; then build; fi
+#	melos test-flutter
+
+# Softlinks library archives from platform-build to their expected locations
 link:
 	-ln -sf $(pwd)/platform-build/breez_liquid_sdk.xcframework.zip ../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
 	-ln -sf $(pwd)/platform-build/breez_liquid_sdk.xcframework.zip ../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../packages/flutter/linux/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../packages/flutter/windows/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../packages/flutter/android/{{curr_version}}.tar.gz
-	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
-	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
-
-# (melos)
-test-flutter: build-apple build-android build-other
-	melos run test-flutter
 
 # (melos) use instead of flutter pub get
 init *args:
+	dart pub global activate melos
 	melos bootstrap {{args}}
 
-# (melos) generate docs
+# (melos) Generate docs for packages in workspace
 docs:
-	melos run docs
+	melos docs
 
-# (melos)
+# (melos) Cleans the current workspace and all its packages of temporary pub & generated Melos IDE files.
 clean:
 	melos clean
 
+# (melos) Analyze & check the format of packages in workspace
 check:
-	flutter analyze
+	melos analyze
+	melos check-format
 
 # Open melos.yaml
 melos:
