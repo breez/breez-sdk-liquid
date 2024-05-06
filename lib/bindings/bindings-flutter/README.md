@@ -2,17 +2,13 @@
 
 Binding generation & build scripts for Dart/Flutter packages of Breez Liquid SDK.
 
-Prerequisites:
-- [just](https://github.com/casey/just) command runner.
-- [Melos](https://github.com/invertase/melos) CLI tool.
+## Prerequisites
+- [just](https://github.com/casey/just?tab=readme-ov-file#installation) command runner.
 
-```
-just clean
-just init
-just gen
-just build
-just link
-``` 
+## Getting Started
+Run `just bootstrap` to initialize your workspace.
+
+To see all available recipes, run `just`.
 
 ## License
 

@@ -75,6 +75,7 @@ link:
 
 # (melos) use instead of flutter pub get
 init *args:
+	dart pub global activate melos
 	melos bootstrap {{args}}
 
 # (melos) Generate docs for packages in workspace
