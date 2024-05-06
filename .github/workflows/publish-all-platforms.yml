@@ -249,26 +249,11 @@ jobs:
       BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}
       BREEZ_MVN_PASSWORD: ${{ secrets.BREEZ_MVN_PASSWORD }}
   
-#  publish-flutter-no-wait:
+#  publish-flutter:
 #    needs:
 #      - setup
 #      - build-language-bindings
-#    if: ${{ needs.setup.outputs.swift != 'true' && needs.setup.outputs.flutter == 'true' }}
-#    uses: ./.github/workflows/publish-flutter.yml
-#    with:
-#      repository: ${{ needs.setup.outputs.repository }}
-#      ref: ${{ needs.setup.outputs.ref }}
-#      package-version: ${{ needs.setup.outputs.flutter-package-version }}
-#      publish: ${{ needs.setup.outputs.publish == 'true' }}
-#    secrets:
-#      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
-
-#  publish-flutter-wait:
-#    needs:
-#      - setup
-#      - build-language-bindings
-#      - publish-swift
-#    if: ${{ needs.setup.outputs.swift == 'true' && needs.setup.outputs.flutter == 'true' }}
+#    if: ${{ needs.setup.outputs.flutter == 'true' }}
 #    uses: ./.github/workflows/publish-flutter.yml
 #    with:
 #      repository: ${{ needs.setup.outputs.repository }}
