@@ -66,7 +66,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
 
         do {
             var connectRequest = try BreezLiquidSDKMapper.asConnectRequest(connectRequest: req)
-            connectRequest.dataDir = connectRequest.dataDir.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
+            connectRequest.dataDir = connectRequest.dataDir == nil || connectRequest.dataDir!.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
             bindingLiquidSdk = try BreezLiquidSDK.connect(req: connectRequest)
             resolve(["status": "ok"])
         } catch let err {
