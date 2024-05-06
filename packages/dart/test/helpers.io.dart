@@ -29,13 +29,13 @@ extension on String {
 
 String dylibPath(String profile) => Uri.base
     .resolve(p.joinAll([
-      '../../target',
+      '../../lib/target',
       if (Platform.isMacOS && hostTriple.startsWith('aarch64')) hostTriple,
       profile,
       'breez_liquid_sdk'.dylib,
     ]))
     .toFilePath();
 
-Future<void> initApi({String profile = 'debug'}) {
+Future<void> initApi({String profile = 'frb-min'}) {
   return initialize(dylib: ExternalLibrary.open(dylibPath(profile)));
 }
