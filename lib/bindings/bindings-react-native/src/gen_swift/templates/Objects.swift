@@ -3,7 +3,7 @@
 {%- match type_ %}
 {%- when Type::Object ( name ) %}
 {% let obj = ci.get_object_definition(name).unwrap() %}
-{% let obj_interface = "getBindingWallet()." %}
+{% let obj_interface = "getBindingLiquidSdk()." %}
 {%- for func in obj.methods() -%}
 {%- include "TopLevelFunctionTemplate.swift" %}
 {% endfor %}

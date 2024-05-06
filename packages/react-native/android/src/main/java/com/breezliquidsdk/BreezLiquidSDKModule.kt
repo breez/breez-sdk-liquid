@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 
 class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     private lateinit var executor: ExecutorService
-    private var bindingWallet: BindingWallet? = null
+    private var bindingLiquidSdk: BindingLiquidSdk? = null
 
     companion object {
         const val TAG = "RNBreezLiquidSDK"
@@ -25,9 +25,9 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @Throws(LiquidSdkException::class)
-    fun getBindingWallet(): BindingWallet {
-        if (bindingWallet != null) {
-            return bindingWallet!!
+    fun getBindingLiquidSdk(): BindingLiquidSdk {
+        if (bindingLiquidSdk != null) {
+            return bindingLiquidSdk!!
         }
 
         throw LiquidSdkException.Generic("Not initialized")
@@ -44,7 +44,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         req: ReadableMap,
         promise: Promise,
     ) {
-        if (bindingWallet != null) {
+        if (bindingLiquidSdk != null) {
             promise.reject("Generic", "Already initialized")
             return
         }
@@ -58,7 +58,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                 connectRequest.dataDir = connectRequest.dataDir.takeUnless {
                     it.isEmpty()
                 } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
-                bindingWallet = connect(connectRequest)
+                bindingLiquidSdk = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -77,7 +77,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asGetInfoRequest(
                         req,
                     ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
-                val res = getBindingWallet().getInfo(getInfoRequest)
+                val res = getBindingLiquidSdk().getInfo(getInfoRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -96,7 +96,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asPrepareSendRequest(req) ?: run {
                         throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest"))
                     }
-                val res = getBindingWallet().prepareSendPayment(prepareSendRequest)
+                val res = getBindingLiquidSdk().prepareSendPayment(prepareSendRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -115,7 +115,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asPrepareSendResponse(req) ?: run {
                         throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareSendResponse"))
                     }
-                val res = getBindingWallet().sendPayment(prepareSendResponse)
+                val res = getBindingLiquidSdk().sendPayment(prepareSendResponse)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -134,7 +134,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asPrepareReceiveRequest(req) ?: run {
                         throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest"))
                     }
-                val res = getBindingWallet().prepareReceivePayment(prepareReceiveRequest)
+                val res = getBindingLiquidSdk().prepareReceivePayment(prepareReceiveRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -153,7 +153,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asPrepareReceiveResponse(req) ?: run {
                         throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveResponse"))
                     }
-                val res = getBindingWallet().receivePayment(prepareReceiveResponse)
+                val res = getBindingLiquidSdk().receivePayment(prepareReceiveResponse)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -165,7 +165,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     fun backup(promise: Promise) {
         executor.execute {
             try {
-                getBindingWallet().backup()
+                getBindingLiquidSdk().backup()
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -184,7 +184,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asRestoreRequest(
                         req,
                     ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
-                getBindingWallet().restore(restoreRequest)
+                getBindingLiquidSdk().restore(restoreRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

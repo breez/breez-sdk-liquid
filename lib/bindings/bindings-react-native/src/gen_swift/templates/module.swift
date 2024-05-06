@@ -8,7 +8,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     public static var emitter: RCTEventEmitter!
     public static var hasListeners: Bool = false
 
-    private var bindingWallet: BindingWallet!
+    private var bindingLiquidSdk: BindingLiquidSdk!
 
     static var defaultDataDir: URL {
         let applicationDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -43,9 +43,9 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         return false
     }
     
-    func getBindingWallet() throws -> BindingWallet {
-        if bindingWallet != nil {
-            return bindingWallet
+    func getBindingLiquidSdk() throws -> BindingLiquidSdk {
+        if bindingLiquidSdk != nil {
+            return bindingLiquidSdk
         }
         
         throw LiquidSdkError.Generic(message: "Not initialized")
@@ -59,7 +59,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     {%- endfor %}  
     @objc(connect:resolve:reject:)
     func connect(_ req:[String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-        if bindingWallet != nil {
+        if bindingLiquidSdk != nil {
             reject("Generic", "Already initialized", nil)
             return
         }
@@ -67,7 +67,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         do {
             var connectRequest = try BreezLiquidSDKMapper.asConnectRequest(connectRequest: req)
             connectRequest.dataDir = connectRequest.dataDir.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
-            bindingWallet = try BreezLiquidSDK.connect(req: connectRequest)
+            bindingLiquidSdk = try BreezLiquidSDK.connect(req: connectRequest)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
