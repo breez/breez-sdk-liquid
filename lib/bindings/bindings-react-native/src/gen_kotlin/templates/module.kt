@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 
 class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     private lateinit var executor: ExecutorService
-    private var bindingWallet: BindingWallet? = null
+    private var bindingLiquidSdk: BindingLiquidSdk? = null
 
     companion object {
         const val TAG = "RNBreezLiquidSDK"
@@ -28,9 +28,9 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @Throws(LiquidSdkException::class)
-    fun getBindingWallet(): BindingWallet {
-        if (bindingWallet != null) {
-            return bindingWallet!!
+    fun getBindingLiquidSdk(): BindingLiquidSdk {
+        if (bindingLiquidSdk != null) {
+            return bindingLiquidSdk!!
         }
 
         throw LiquidSdkException.Generic("Not initialized")
@@ -51,7 +51,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun connect(req: ReadableMap, promise: Promise) {
-        if (bindingWallet != null) {
+        if (bindingLiquidSdk != null) {
             promise.reject("Generic", "Already initialized")
             return
         }
@@ -60,7 +60,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             try {
                 var connectRequest = asConnectRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
                 connectRequest.dataDir = connectRequest.dataDir.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
-                bindingWallet = connect(connectRequest)
+                bindingLiquidSdk = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
