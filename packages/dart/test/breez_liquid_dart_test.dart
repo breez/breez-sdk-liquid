@@ -9,9 +9,7 @@ void main() {
       await initApi();
     });
 
-    test(
-        "after setting up, getInfo should throw exception with 'Not initialized' message",
-        () async {
+    test("after setting up, getInfo should throw exception with 'Not initialized' message", () async {
       GetInfoRequest req = GetInfoRequest(withScan: true);
       try {
         await getInfo(req: req);
