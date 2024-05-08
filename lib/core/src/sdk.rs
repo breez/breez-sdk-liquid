@@ -33,7 +33,8 @@ use lwk_wollet::{
 };
 
 use crate::{
-    ensure_sdk, error::PaymentError, get_invoice_amount, model::*, persist::Persister, utils,
+    boltz_status_stream::BoltzStatusStream, ensure_sdk, error::PaymentError, get_invoice_amount,
+    model::*, persist::Persister, utils,
 };
 
 /// Claim tx feerate, in sats per vbyte.
@@ -97,7 +98,8 @@ impl LiquidSdk {
             data_dir_path,
         });
 
-        LiquidSdk::track_pending_swaps(&sdk)?;
+        // LiquidSdk::track_pending_swaps(&sdk)?;
+        BoltzStatusStream::track_pending_swaps(sdk.clone())?;
 
         Ok(sdk)
     }
@@ -194,6 +196,7 @@ impl LiquidSdk {
         }
     }
 
+    // TODO Not needed anymore with the event stream
     fn try_resolve_pending_swap(&self, swap: &OngoingSwap) -> Result<()> {
         let client = self.boltz_client();
         let client_v2 = self.boltz_client_v2();
@@ -221,6 +224,7 @@ impl LiquidSdk {
         Ok(())
     }
 
+    // TODO Not needed anymore with the event stream
     fn track_pending_swaps(self: &Arc<LiquidSdk>) -> Result<()> {
         let cloned = self.clone();
         thread::spawn(move || loop {
@@ -245,6 +249,10 @@ impl LiquidSdk {
         });
 
         Ok(())
+    }
+
+    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
+        self.persister.list_ongoing_swaps()
     }
 
     fn scan(&self) -> Result<(), lwk_wollet::Error> {
@@ -288,7 +296,7 @@ impl LiquidSdk {
         BoltzApiClient::new(base_url)
     }
 
-    fn boltz_client_v2(&self) -> BoltzApiClientV2 {
+    pub(crate) fn boltz_client_v2(&self) -> BoltzApiClientV2 {
         let base_url = match self.network {
             Network::LiquidTestnet => BOLTZ_TESTNET_URL_V2,
             Network::Liquid => BOLTZ_MAINNET_URL_V2,
@@ -576,7 +584,9 @@ impl LiquidSdk {
             &our_keys,
             &Preimage::from_str(&ongoing_swap_out.preimage)?,
             Amount::from_sat(ongoing_swap_out.claim_fees_sat),
+            // Enable cooperative claim (Some) or not (None)
             Some((&self.boltz_client_v2(), ongoing_swap_out.id.clone())),
+            // None
         )?;
 
         claim_tx.broadcast(
