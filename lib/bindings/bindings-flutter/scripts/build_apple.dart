@@ -31,9 +31,12 @@ Future<void> mainImpl(List<String> args) async {
   } else if (opts['debug']) {
     profile = 'debug';
     profileArg = '--profile=dev';
-  } else {
-    profile = 'release';
+  } else if (opts['local']) {
+    profile = 'frb';
     profileArg = '--profile=frb';
+  } else {
+    profile = 'frb-min';
+    profileArg = '--profile=frb-min';
   }
 
   print(' Building profile: $profile');
