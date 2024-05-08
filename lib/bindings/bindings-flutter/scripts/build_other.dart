@@ -45,7 +45,7 @@ Future<void> mainImpl(List<String> args) async {
     await run('rustup target add $triple');
     await run('${target.compiler} --target $triple $profileArg', args: compilerOpts);
     await run('mkdir -p $flutterIdentifier');
-    await run('cp ../target/$triple/$profile/${target.libName} $flutterIdentifier/');
+    await run('cp ../../../target/$triple/$profile/${target.libName} $flutterIdentifier/');
   }
 
   final hasLinux = targets.any((target) => !target.isWindows);

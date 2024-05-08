@@ -13,6 +13,7 @@ bootstrap frb='true':
 	just init
 	just gen
 	just build
+	melos build
 	just link
 	just check
 
