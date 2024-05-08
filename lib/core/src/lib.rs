@@ -1,5 +1,6 @@
 #[cfg(feature = "frb")]
 pub mod bindings;
+pub(crate) mod boltz_status_stream;
 pub mod error;
 #[cfg(feature = "frb")]
 pub mod frb;
