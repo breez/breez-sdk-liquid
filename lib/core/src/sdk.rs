@@ -555,6 +555,7 @@ impl LiquidSdk {
     fn try_claim_v2(&self, ongoing_swap_out: &OngoingSwapOut) -> Result<String, PaymentError> {
         debug!("Trying to claim reverse swap {}", ongoing_swap_out.id);
 
+        let electrum_config = ElectrumConfig::default(self.network.into(), None)?;
         let mnemonic = self
             .lwk_signer
             .mnemonic()
@@ -574,11 +575,8 @@ impl LiquidSdk {
         )?;
 
         let claim_address = self.address()?.to_string();
-        let claim_tx = LBtcSwapTxV2::new_claim(
-            swap_script.clone(),
-            claim_address,
-            &ElectrumConfig::default_liquid(),
-        )?;
+        let claim_tx =
+            LBtcSwapTxV2::new_claim(swap_script.clone(), claim_address, &electrum_config)?;
 
         let tx = claim_tx.sign_claim(
             &our_keys,
@@ -589,11 +587,7 @@ impl LiquidSdk {
             // None
         )?;
 
-        claim_tx.broadcast(
-            &tx,
-            &ElectrumConfig::default(self.network.into(), None)?,
-            None,
-        )?;
+        claim_tx.broadcast(&tx, &electrum_config, None)?;
 
         info!("Succesfully broadcasted claim tx {}", tx.txid());
         debug!("Claim Tx {:?}", tx);
