@@ -512,8 +512,10 @@ dependencies = [
  "rusqlite",
  "rusqlite_migration",
  "serde",
+ "serde_json",
  "tempdir",
  "thiserror",
+ "tungstenite",
  "uuid",
 ]
 

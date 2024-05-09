@@ -405,7 +405,9 @@ dependencies = [
  "rusqlite",
  "rusqlite_migration",
  "serde",
+ "serde_json",
  "thiserror",
+ "tungstenite",
 ]
 
 [[package]]

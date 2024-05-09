@@ -23,6 +23,8 @@ thiserror = { workspace = true }
 openssl = { version = "0.10", features = ["vendored"] }
 # TODO Remove once fully migrated to v2 API
 elements = "0.24.1"
+serde_json = "1.0.116"
+tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 
 [dev-dependencies]
 tempdir = "0.3.7"
