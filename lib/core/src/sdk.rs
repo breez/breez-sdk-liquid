@@ -587,7 +587,19 @@ impl LiquidSdk {
             // None
         )?;
 
-        claim_tx.broadcast(&tx, &electrum_config, None)?;
+        // Electrum only broadcasts txs with lowball fees on testnet
+        // For mainnet, we use Boltz to broadcast
+        match self.network {
+            Network::Liquid => {
+                let tx_hex = elements::encode::serialize(&tx).to_lower_hex_string();
+                let response =  self.boltz_client_v2().broadcast_tx(self.network.into(), &tx_hex)?;
+                info!("Claim broadcast response: {response:?}");
+            }
+            Network::LiquidTestnet => {
+                let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+                electrum_client.broadcast(&tx)?;
+            }
+        };
 
         info!("Succesfully broadcasted claim tx {}", tx.txid());
         debug!("Claim Tx {:?}", tx);
