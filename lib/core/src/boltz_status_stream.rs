@@ -1,9 +1,10 @@
 use std::collections::HashSet;
-use std::mem::swap;
+use std::io::ErrorKind;
 use std::net::TcpStream;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::swaps::{
@@ -30,6 +31,15 @@ impl BoltzStatusStream {
             .boltz_client_v2()
             .connect_ws()
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
+
+        // Set underlying TCP stream to nonblocking mode
+        match socket.get_mut() {
+            tungstenite::stream::MaybeTlsStream::Plain(s) => s.set_nonblocking(true)?,
+            tungstenite::stream::MaybeTlsStream::NativeTls(s) => {
+                s.get_mut().set_nonblocking(true)?
+            }
+            _ => Err(anyhow!("Unsupported stream type"))?
+        };
 
         thread::spawn(move || loop {
             let maybe_subscribe_fn =
@@ -151,6 +161,18 @@ impl BoltzStatusStream {
 
                                 // Error related to subscription, like "Unknown swap ID"
                                 boltz_client::swaps::boltzv2::SwapUpdate::Error { .. } => todo!(),
+                            }
+                        }
+                    }
+                    Err(tungstenite::Error::Io(io_err)) => {
+                        match io_err.kind() {
+                            // Calling socket.read() on a non-blocking stream when there is nothing
+                            // to read results in an WouldBlock error. In this case, we do nothing
+                            // and continue the loop.
+                            ErrorKind::WouldBlock => {},
+                            _ => {
+                                error!("Received stream IO error : {io_err:?}");
+                                break;
                             }
                         }
                     }
