@@ -135,7 +135,9 @@ impl LiquidSdk {
                     .resolve_ongoing_swap(id, None)
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
             }
-            RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {
+            // We may be offline, or claiming failued due to other reasons until the swap reached these states
+            // If an ongoing reverse swap is in any of these states, we should be able to claim
+            RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed | RevSwapStates::InvoiceSettled => {
                 match self.try_claim_v2(&ongoing_swap_out) {
                     Ok(txid) => {
                         let payer_amount_sat = get_invoice_amount!(ongoing_swap_out.invoice);
@@ -159,9 +161,6 @@ impl LiquidSdk {
             }
             RevSwapStates::Created | RevSwapStates::MinerFeePaid => {
                 // Too soon to try to claim
-            }
-            RevSwapStates::InvoiceSettled => {
-                // Reverse swap already completed at this point, from our perspective
             }
         }
 
