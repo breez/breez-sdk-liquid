@@ -128,30 +128,37 @@ pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) enum OngoingSwap {
-    Send {
-        id: String,
-        invoice: String,
-        payer_amount_sat: u64,
-        txid: Option<String>,
-    },
-    Receive {
-        id: String,
-        preimage: String,
-        redeem_script: String,
-        blinding_key: String,
-        invoice: String,
-        receiver_amount_sat: u64,
-        claim_fees_sat: u64,
-    },
+    Send(OngoingSwapIn),
+    Receive(OngoingSwapOut),
 }
 impl OngoingSwap {
-    pub(crate) fn id(&self) -> &str {
+    pub(crate) fn id(&self) -> String {
         match &self {
-            OngoingSwap::Send { id, .. } | OngoingSwap::Receive { id, .. } => id,
+            OngoingSwap::Send(OngoingSwapIn { id, .. })
+            | OngoingSwap::Receive(OngoingSwapOut { id, .. }) => id.clone(),
         }
     }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct OngoingSwapIn {
+    pub(crate) id: String,
+    pub(crate) invoice: String,
+    pub(crate) payer_amount_sat: u64,
+    pub(crate) txid: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct OngoingSwapOut {
+    pub(crate) id: String,
+    pub(crate) preimage: String,
+    pub(crate) redeem_script: String,
+    pub(crate) blinding_key: String,
+    pub(crate) invoice: String,
+    pub(crate) receiver_amount_sat: u64,
+    pub(crate) claim_fees_sat: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -177,11 +184,11 @@ pub struct Payment {
 impl From<OngoingSwap> for Payment {
     fn from(swap: OngoingSwap) -> Self {
         match swap {
-            OngoingSwap::Send {
+            OngoingSwap::Send(OngoingSwapIn {
                 invoice,
                 payer_amount_sat,
                 ..
-            } => {
+            }) => {
                 let receiver_amount_sat = get_invoice_amount!(invoice);
                 Payment {
                     id: None,
@@ -192,11 +199,11 @@ impl From<OngoingSwap> for Payment {
                     fees_sat: Some(payer_amount_sat - receiver_amount_sat),
                 }
             }
-            OngoingSwap::Receive {
+            OngoingSwap::Receive(OngoingSwapOut {
                 receiver_amount_sat,
                 invoice,
                 ..
-            } => {
+            }) => {
                 let payer_amount_sat = get_invoice_amount!(invoice);
                 Payment {
                     id: None,

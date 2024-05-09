@@ -1,5 +1,7 @@
 mod backup;
 mod migrations;
+mod swap_in;
+mod swap_out;
 
 use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};
 
@@ -8,7 +10,7 @@ use migrations::current_migrations;
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
-use crate::model::{Network, Network::*, OngoingSwap, PaymentData};
+use crate::model::{Network::*, *};
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
@@ -47,70 +49,6 @@ impl Persister {
         Ok(())
     }
 
-    pub fn insert_or_update_ongoing_swap(&self, swaps: &[OngoingSwap]) -> Result<()> {
-        let con = self.get_connection()?;
-
-        for swap in swaps {
-            match swap {
-                OngoingSwap::Send {
-                    id,
-                    invoice,
-                    payer_amount_sat,
-                    txid,
-                } => {
-                    let mut stmt = con.prepare(
-                        "
-                            INSERT OR REPLACE INTO ongoing_send_swaps (
-                                id,
-                                invoice,
-                                payer_amount_sat,
-                                txid
-                            )
-                            VALUES (?, ?, ?, ?)
-                        ",
-                    )?;
-                    _ = stmt.execute((id, invoice, payer_amount_sat, txid))?
-                }
-                OngoingSwap::Receive {
-                    id,
-                    preimage,
-                    redeem_script,
-                    blinding_key,
-                    invoice,
-                    receiver_amount_sat,
-                    claim_fees_sat,
-                } => {
-                    let mut stmt = con.prepare(
-                        "
-                            INSERT OR REPLACE INTO ongoing_receive_swaps (
-                                id,
-                                preimage,
-                                redeem_script,
-                                blinding_key,
-                                invoice,
-                                receiver_amount_sat,
-                                claim_fees_sat
-                            )
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        ",
-                    )?;
-
-                    _ = stmt.execute((
-                        id,
-                        preimage,
-                        redeem_script,
-                        blinding_key,
-                        invoice,
-                        receiver_amount_sat,
-                        claim_fees_sat,
-                    ))?
-                }
-            }
-        }
-
-        Ok(())
-    }
-
     pub fn resolve_ongoing_swap(
         &self,
         id: &str,
@@ -136,75 +74,19 @@ impl Persister {
         Ok(())
     }
 
-    pub fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
+    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
         let con = self.get_connection()?;
-        let mut ongoing_swaps = self.list_ongoing_send(&con)?;
-        ongoing_swaps.append(&mut self.list_ongoing_receive(&con)?);
-        Ok(ongoing_swaps)
-    }
-
-    fn list_ongoing_send(&self, con: &Connection) -> Result<Vec<OngoingSwap>, rusqlite::Error> {
-        let mut stmt = con.prepare(
-            "
-           SELECT 
-               id,
-               invoice,
-               payer_amount_sat,
-               txid,
-               created_at
-           FROM ongoing_send_swaps
-           ORDER BY created_at
-       ",
-        )?;
-
-        let ongoing_send = stmt
-            .query_map(params![], |row| {
-                Ok(OngoingSwap::Send {
-                    id: row.get(0)?,
-                    invoice: row.get(1)?,
-                    payer_amount_sat: row.get(2)?,
-                    txid: row.get(3)?,
-                })
-            })?
-            .map(|i| i.unwrap())
+        let ongoing_swap_ins: Vec<OngoingSwap> = self
+            .list_ongoing_send(&con, vec![])?
+            .into_iter()
+            .map(OngoingSwap::Send)
             .collect();
-
-        Ok(ongoing_send)
-    }
-
-    fn list_ongoing_receive(&self, con: &Connection) -> Result<Vec<OngoingSwap>, rusqlite::Error> {
-        let mut stmt = con.prepare(
-            "
-            SELECT
-                id,
-                preimage,
-                redeem_script,
-                blinding_key,
-                invoice,
-                receiver_amount_sat,
-                claim_fees_sat,
-                created_at
-            FROM ongoing_receive_swaps
-            ORDER BY created_at
-       ",
-        )?;
-
-        let ongoing_receive = stmt
-            .query_map(params![], |row| {
-                Ok(OngoingSwap::Receive {
-                    id: row.get(0)?,
-                    preimage: row.get(1)?,
-                    redeem_script: row.get(2)?,
-                    blinding_key: row.get(3)?,
-                    invoice: row.get(4)?,
-                    receiver_amount_sat: row.get(5)?,
-                    claim_fees_sat: row.get(6)?,
-                })
-            })?
-            .map(|i| i.unwrap())
+        let ongoing_swap_outs: Vec<OngoingSwap> = self
+            .list_ongoing_receive(&con, vec![])?
+            .into_iter()
+            .map(OngoingSwap::Receive)
             .collect();
-
-        Ok(ongoing_receive)
+        Ok([ongoing_swap_ins, ongoing_swap_outs].concat())
     }
 
     pub fn get_payment_data(&self) -> Result<HashMap<String, PaymentData>> {
