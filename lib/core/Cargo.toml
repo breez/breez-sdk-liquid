@@ -11,7 +11,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "6f45fff8b87c7530c847eb05f018906c48785a6c" }
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "50b93fb7eba043e12a71fd7ddb1e9604a946c21b" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "88a2f30a431952ba1ed94a4a054a5ebbd321320a" }
 flutter_rust_bridge = { version = "=2.0.0-dev.33", features = ["chrono"], optional = true }
 log = "0.4.20"
 lwk_common = "0.3.0"
