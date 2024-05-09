@@ -119,26 +119,30 @@ impl BoltzStatusStream {
                                     if swap_in_ids.lock().unwrap().contains(&update_swap_id) {
                                         // Known OngoingSwapIn / Send swap
 
-                                        let new_state = SubSwapStates::from_str(&update_state_str).map_err(|_| {
-                                            anyhow!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
-                                        }).unwrap();
-                                        let res = sdk.try_handle_submarine_swap_status(
-                                            new_state,
-                                            &update_swap_id,
-                                        );
-                                        info!("OngoingSwapIn / Send try_handle_submarine_swap_status res: {res:?}");
+                                        match SubSwapStates::from_str(&update_state_str) {
+                                            Ok(new_state) => {
+                                                let res = sdk.try_handle_submarine_swap_status(
+                                                    new_state,
+                                                    &update_swap_id,
+                                                );
+                                                info!("OngoingSwapIn / Send try_handle_submarine_swap_status res: {res:?}");
+                                            }
+                                            Err(_) => error!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
+                                        }
                                     } else if swap_out_ids.lock().unwrap().contains(&update_swap_id)
                                     {
                                         // Known OngoingSwapOut / receive swap
 
-                                        let new_state = RevSwapStates::from_str(&update_state_str).map_err(|_| {
-                                            anyhow!("Invalid state for reverse swap {update_swap_id}: {update_state_str}")
-                                        }).unwrap();
-                                        let res = sdk.try_handle_reverse_swap_status(
-                                            new_state,
-                                            &update_swap_id,
-                                        );
-                                        info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                        match RevSwapStates::from_str(&update_state_str) {
+                                            Ok(new_state) => {
+                                                let res = sdk.try_handle_reverse_swap_status(
+                                                    new_state,
+                                                    &update_swap_id,
+                                                );
+                                                info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                            }
+                                            Err(_) => error!("Invalid state for reverse swap {update_swap_id}: {update_state_str}")
+                                        }
                                     } else {
                                         // We got an update for a swap we did not track as ongoing
                                         todo!()
