@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
+use std::mem::swap;
 use std::net::TcpStream;
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 use anyhow::{anyhow, ensure, Result};
@@ -21,25 +22,29 @@ pub(super) struct BoltzStatusStream {
 }
 impl BoltzStatusStream {
     pub(super) fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
+        // Track subscribed swap IDs
+        let swap_in_ids = Arc::new(Mutex::new(HashSet::new()));
+        let swap_out_ids = Arc::new(Mutex::new(HashSet::new()));
+
         let mut socket = sdk
             .boltz_client_v2()
             .connect_ws()
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
 
         thread::spawn(move || loop {
-            // Map of (subscribed swap ID, is_swap_out)
-            let mut subscribed_ids: HashMap<String, bool> = HashMap::new();
+            let maybe_subscribe_fn =
+                |ongoing_swap: &OngoingSwap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>| {
+                    let id = ongoing_swap.id();
 
-            // Initially subscribe to all ongoing swaps
-            match sdk.list_ongoing_swaps() {
-                Ok(initial_ongoing_swaps) => {
-                    info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
+                    let is_ongoing_swap_already_tracked = match ongoing_swap {
+                        OngoingSwap::Send(_) => swap_in_ids.lock().unwrap().contains(&id),
+                        OngoingSwap::Receive(_) => swap_out_ids.lock().unwrap().contains(&id),
+                    };
 
-                    for ongoing_swap in &initial_ongoing_swaps {
-                        let id = &ongoing_swap.id();
-                        info!("Subscribing to status for initial ongoing swap ID {id}");
+                    if !is_ongoing_swap_already_tracked {
+                        info!("Subscribing to status for ongoing swap ID {id}");
 
-                        let subscription = Subscription::new(id);
+                        let subscription = Subscription::new(&id);
                         let subscribe_json = serde_json::to_string(&subscription)
                             .map_err(|e| anyhow!("Invalid subscription msg: {e:?}"))
                             .unwrap();
@@ -48,8 +53,19 @@ impl BoltzStatusStream {
                             .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
                             .unwrap();
 
-                        subscribed_ids
-                            .insert(id.clone(), matches!(ongoing_swap, OngoingSwap::Receive(_)));
+                        match ongoing_swap {
+                            OngoingSwap::Send(_) => swap_in_ids.lock().unwrap().insert(id),
+                            OngoingSwap::Receive(_) => swap_out_ids.lock().unwrap().insert(id),
+                        };
+                    }
+                };
+
+            // Initially subscribe to all ongoing swaps
+            match sdk.list_ongoing_swaps() {
+                Ok(initial_ongoing_swaps) => {
+                    info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
+                    for ongoing_swap in &initial_ongoing_swaps {
+                        maybe_subscribe_fn(ongoing_swap, &mut socket);
                     }
                 }
                 Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
@@ -70,27 +86,8 @@ impl BoltzStatusStream {
                         // Ping (periodic keep-alive), Text (status update)
                         match sdk.list_ongoing_swaps() {
                             Ok(ongoing_swaps) => {
-                                let new_ongoing_swaps: Vec<OngoingSwap> = ongoing_swaps
-                                    .into_iter()
-                                    .filter(|os| !subscribed_ids.contains_key(&os.id()))
-                                    .collect();
-                                for ongoing_swap in &new_ongoing_swaps {
-                                    let id = ongoing_swap.id();
-                                    info!("Subscribing to statuses for ongoing swap ID: {id}");
-
-                                    let subscription = Subscription::new(&id);
-                                    let subscribe_json = serde_json::to_string(&subscription)
-                                        .map_err(|e| anyhow!("Invalid subscription msg: {e:?}"))
-                                        .unwrap();
-                                    socket
-                                        .send(tungstenite::Message::Text(subscribe_json))
-                                        .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
-                                        .unwrap();
-
-                                    subscribed_ids.insert(
-                                        id.clone(),
-                                        matches!(ongoing_swap, OngoingSwap::Receive(_)),
-                                    );
+                                for ongoing_swap in &ongoing_swaps {
+                                    maybe_subscribe_fn(ongoing_swap, &mut socket);
                                 }
                             }
                             Err(e) => error!("Failed to list new ongoing swaps: {e:?}"),
@@ -119,35 +116,32 @@ impl BoltzStatusStream {
                                     let update_swap_id = update.id.clone();
                                     let update_state_str = update.status.clone();
 
-                                    match subscribed_ids.get(&update_swap_id) {
-                                        Some(true) => {
-                                            // Known OngoingSwapOut / receive swap
+                                    if swap_in_ids.lock().unwrap().contains(&update_swap_id) {
+                                        // Known OngoingSwapIn / Send swap
 
-                                            let new_state = RevSwapStates::from_str(&update_state_str).map_err(|_| {
-                                                anyhow!("Invalid state for reverse swap {update_swap_id}: {update_state_str}")
-                                            }).unwrap();
-                                            let res = sdk.try_handle_reverse_swap_status(
-                                                new_state,
-                                                &update_swap_id,
-                                            );
-                                            info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
-                                        }
-                                        Some(false) => {
-                                            // Known OngoingSwapIn / Send swap
+                                        let new_state = SubSwapStates::from_str(&update_state_str).map_err(|_| {
+                                            anyhow!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
+                                        }).unwrap();
+                                        let res = sdk.try_handle_submarine_swap_status(
+                                            new_state,
+                                            &update_swap_id,
+                                        );
+                                        info!("OngoingSwapIn / Send try_handle_submarine_swap_status res: {res:?}");
+                                    } else if swap_out_ids.lock().unwrap().contains(&update_swap_id)
+                                    {
+                                        // Known OngoingSwapOut / receive swap
 
-                                            let new_state = SubSwapStates::from_str(&update_state_str).map_err(|_| {
-                                                anyhow!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
-                                            }).unwrap();
-                                            let res = sdk.try_handle_submarine_swap_status(
-                                                new_state,
-                                                &update_swap_id,
-                                            );
-                                            info!("OngoingSwapIn / Send try_handle_submarine_swap_status res: {res:?}");
-                                        }
-                                        None => {
-                                            // We got an update for a swap we did not track as ongoing
-                                            todo!()
-                                        }
+                                        let new_state = RevSwapStates::from_str(&update_state_str).map_err(|_| {
+                                            anyhow!("Invalid state for reverse swap {update_swap_id}: {update_state_str}")
+                                        }).unwrap();
+                                        let res = sdk.try_handle_reverse_swap_status(
+                                            new_state,
+                                            &update_swap_id,
+                                        );
+                                        info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                    } else {
+                                        // We got an update for a swap we did not track as ongoing
+                                        todo!()
                                     }
                                 }
 
