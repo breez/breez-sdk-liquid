@@ -4,7 +4,6 @@
 // Section: imports
 
 use super::*;
-use crate::bindings::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::transform_result_dco;
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -21,30 +20,6 @@ impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error>
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
         unimplemented!()
-    }
-}
-impl CstDecode<LBtcReverseRecovery> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> LBtcReverseRecovery {
-        CstDecode::<
-            RustOpaqueNom<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>,
-            >,
-        >::cst_decode(self)
-        .rust_auto_opaque_decode_owned()
-    }
-}
-impl
-    CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>,
-    > for usize
-{
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(
-        self,
-    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>
-    {
-        unsafe { decode_rust_opaque_nom(self as _) }
     }
 }
 impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
@@ -183,28 +158,35 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
             2 => crate::error::PaymentError::InsufficientFunds,
             3 => crate::error::PaymentError::AlreadyClaimed,
             4 => {
+                let ans = unsafe { self.kind.Refunded };
+                crate::error::PaymentError::Refunded {
+                    err: ans.err.cst_decode(),
+                    txid: ans.txid.cst_decode(),
+                }
+            }
+            5 => {
                 let ans = unsafe { self.kind.Generic };
                 crate::error::PaymentError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
-            5 => crate::error::PaymentError::InvalidInvoice,
-            6 => crate::error::PaymentError::InvalidPreimage,
-            7 => {
+            6 => crate::error::PaymentError::InvalidInvoice,
+            7 => crate::error::PaymentError::InvalidPreimage,
+            8 => {
                 let ans = unsafe { self.kind.LwkError };
                 crate::error::PaymentError::LwkError {
                     err: ans.err.cst_decode(),
                 }
             }
-            8 => crate::error::PaymentError::PairsNotFound,
-            9 => crate::error::PaymentError::PersistError,
-            10 => {
+            9 => crate::error::PaymentError::PairsNotFound,
+            10 => crate::error::PaymentError::PersistError,
+            11 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            11 => {
+            12 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -487,11 +469,6 @@ pub extern "C" fn frbgen_breez_liquid_wire_receive_payment(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_recover_funds(port_: i64, recovery: usize) {
-    wire_recover_funds_impl(port_, recovery)
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire_restore(port_: i64, req: *mut wire_cst_restore_request) {
     wire_restore_impl(port_, req)
 }
@@ -502,24 +479,6 @@ pub extern "C" fn frbgen_breez_liquid_wire_send_payment(
     req: *mut wire_cst_prepare_send_response,
 ) {
     wire_send_payment_impl(port_, req)
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>::increment_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>::decrement_strong_count(ptr as _);
-    }
 }
 
 #[no_mangle]
@@ -660,11 +619,18 @@ pub struct wire_cst_payment_error {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub union PaymentErrorKind {
+    Refunded: wire_cst_PaymentError_Refunded,
     Generic: wire_cst_PaymentError_Generic,
     LwkError: wire_cst_PaymentError_LwkError,
     SendError: wire_cst_PaymentError_SendError,
     SignerError: wire_cst_PaymentError_SignerError,
     nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_Refunded {
+    err: *mut wire_cst_list_prim_u_8_strict,
+    txid: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

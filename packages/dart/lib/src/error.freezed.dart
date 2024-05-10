@@ -222,6 +222,92 @@ abstract class PaymentError_AlreadyClaimed extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
+  factory _$$PaymentError_RefundedImplCopyWith(
+          _$PaymentError_RefundedImpl value,
+          $Res Function(_$PaymentError_RefundedImpl) then) =
+      __$$PaymentError_RefundedImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String err, String txid});
+}
+
+/// @nodoc
+class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_RefundedImpl>
+    implements _$$PaymentError_RefundedImplCopyWith<$Res> {
+  __$$PaymentError_RefundedImplCopyWithImpl(_$PaymentError_RefundedImpl _value,
+      $Res Function(_$PaymentError_RefundedImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+    Object? txid = null,
+  }) {
+    return _then(_$PaymentError_RefundedImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+      txid: null == txid
+          ? _value.txid
+          : txid // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
+  const _$PaymentError_RefundedImpl({required this.err, required this.txid})
+      : super._();
+
+  @override
+  final String err;
+  @override
+  final String txid;
+
+  @override
+  String toString() {
+    return 'PaymentError.refunded(err: $err, txid: $txid)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_RefundedImpl &&
+            (identical(other.err, err) || other.err == err) &&
+            (identical(other.txid, txid) || other.txid == txid));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, err, txid);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl>
+      get copyWith => __$$PaymentError_RefundedImplCopyWithImpl<
+          _$PaymentError_RefundedImpl>(this, _$identity);
+}
+
+abstract class PaymentError_Refunded extends PaymentError {
+  const factory PaymentError_Refunded(
+      {required final String err,
+      required final String txid}) = _$PaymentError_RefundedImpl;
+  const PaymentError_Refunded._() : super._();
+
+  String get err;
+  String get txid;
+  @JsonKey(ignore: true)
+  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$PaymentError_GenericImplCopyWith<$Res> {
   factory _$$PaymentError_GenericImplCopyWith(_$PaymentError_GenericImpl value,
           $Res Function(_$PaymentError_GenericImpl) then) =

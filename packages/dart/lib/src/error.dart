@@ -18,6 +18,10 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.insufficientFunds() =
       PaymentError_InsufficientFunds;
   const factory PaymentError.alreadyClaimed() = PaymentError_AlreadyClaimed;
+  const factory PaymentError.refunded({
+    required String err,
+    required String txid,
+  }) = PaymentError_Refunded;
   const factory PaymentError.generic({
     required String err,
   }) = PaymentError_Generic;

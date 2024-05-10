@@ -8,15 +8,15 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
+use bip39::rand::Rng;
 use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
         boltz::{RevSwapStates, SubSwapStates},
         boltzv2::*,
-        liquid::{LBtcSwapScript, LBtcSwapTx},
         liquidv2::LBtcSwapTxV2,
     },
-    util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
+    util::secrets::{LiquidSwapKey, Preimage, SwapKey},
     Amount, Bolt11Invoice, Keypair, LBtcSwapScriptV2,
 };
 use elements::hashes::hex::DisplayHex;
@@ -381,6 +381,147 @@ impl LiquidSdk {
         })
     }
 
+    fn broadcast_lowball(
+        &self,
+        client: &BoltzApiClientV2,
+        tx: &Transaction,
+    ) -> Result<String, PaymentError> {
+        let tx_hex = elements::encode::serialize(tx).to_lower_hex_string();
+        let response = client.broadcast_tx(self.network.into(), &tx_hex)?;
+        Ok(response
+            .as_object()
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .get("id")
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .as_str()
+            .ok_or(PaymentError::Generic {
+                err: "Invalid data received from swapper".to_string(),
+            })?
+            .to_string())
+    }
+
+    fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
+        let preimage = Preimage::from_str(preimage)?;
+        let preimage_hash = preimage.sha256.to_string();
+        let invoice =
+            Bolt11Invoice::from_str(&invoice).map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice_payment_hash = invoice.payment_hash();
+
+        (invoice_payment_hash.to_string() == preimage_hash.to_string())
+            .then(|| ())
+            .ok_or(PaymentError::InvalidPreimage)
+    }
+
+    fn new_swap_tx(&self, swap_script: &LBtcSwapScriptV2) -> Result<LBtcSwapTxV2, PaymentError> {
+        let output_address = self.address()?.to_string();
+        let network_config = self.network_config();
+        Ok(LBtcSwapTxV2::new_refund(
+            swap_script.clone(),
+            &output_address,
+            &network_config,
+        )?)
+    }
+
+    fn try_refund(
+        &self,
+        swap_id: &str,
+        swap_script: &LBtcSwapScriptV2,
+        keypair: &Keypair,
+        fees_sat: u64,
+    ) -> Result<String, PaymentError> {
+        let swap_tx = self.new_swap_tx(swap_script)?;
+
+        let client = self.boltz_client_v2();
+        let is_lowball = Some((&client, boltz_client::network::Chain::from(self.network)));
+        match swap_tx.sign_refund(
+            keypair,
+            Amount::from_sat(fees_sat),
+            Some((&client, &swap_id.to_string())),
+        ) {
+            // Try with cooperative refund
+            Ok(tx) => {
+                let txid = swap_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                debug!("Successfully broadcast cooperative refund for swap-in {swap_id}");
+                Ok(txid)
+            }
+            // Try with non-cooperative refund
+            Err(e) => {
+                debug!("Cooperative refund failed: {:?}", e);
+
+                let tx = swap_tx.sign_refund(keypair, Amount::from_sat(fees_sat), None)?;
+                let txid = swap_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                debug!("Successfully broadcast non-cooperative refund for swap-in {swap_id}");
+                Ok(txid)
+            }
+        }
+    }
+
+    fn get_keys(&self, derivation_index: i16) -> Result<Keypair, PaymentError> {
+        let mnemonic = self
+            .lwk_signer
+            .mnemonic()
+            .ok_or(PaymentError::SignerError {
+                err: "Could not claim: Mnemonic not found".to_string(),
+            })?;
+        let swap_key = SwapKey::from_submarine_account(
+            &mnemonic.to_string(),
+            "",
+            self.network.into(),
+            derivation_index as u64,
+        )?;
+        let lsk = LiquidSwapKey::try_from(swap_key)?;
+        Ok(lsk.keypair)
+    }
+
+    fn try_lockup(
+        &self,
+        invoice: &str,
+        create_response: &CreateSubmarineResponse,
+        swap_script: &LBtcSwapScriptV2,
+        keypair: &Keypair,
+    ) -> Result<String, PaymentError> {
+        let client = self.boltz_client_v2();
+        let swap_id = &create_response.id;
+
+        // First try using cooperative submarine
+        {
+            let swap_tx = self.new_swap_tx(swap_script)?;
+
+            let claim_tx_response = client.get_claim_tx_details(dbg!(&swap_id.to_string()))?;
+
+            debug!("Received claim tx details: {:?}", &claim_tx_response);
+
+            Self::verify_payment_hash(&claim_tx_response.preimage, invoice)?;
+
+            let (partial_sig, pub_nonce) =
+                swap_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
+
+            client.post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
+            Ok(String::new())
+        }
+        // Then try non-cooperatively
+        .or_else(|_: PaymentError| {
+            let tx = self.build_tx(
+                None,
+                &create_response.address,
+                create_response.expected_amount,
+            )?;
+
+            let txid = match self.network {
+                Network::Liquid => self.broadcast_lowball(&client, &tx)?,
+                Network::LiquidTestnet => {
+                    let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+                    electrum_client.broadcast(&tx)?.to_string()
+                }
+            };
+            Ok(txid)
+        })
+    }
+
     pub fn send_payment(
         &self,
         req: &PrepareSendResponse,
@@ -399,42 +540,32 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let lwk_wollet = self.lwk_wollet.lock().unwrap();
-        // let our_pubkey = self
-        //     .address()?
-        //     .to_unconfidential()
-        //     .blinding_pubkey
-        //     .ok_or(PaymentError::Generic {
-        //         err: "Could not retrieve wallet pubkey".to_string(),
-        //     })?
-        //     .into();
-        let refund_public_key = lwk_wollet
-            .address(None)?
-            .address()
-            .blinding_pubkey
-            .ok_or(PaymentError::Generic {
-                err: "Could not generate refund pubkey".to_string(),
-            })?
-            .into();
-
-        // Unlock lwk wallet so it can be used to build the tx
-        std::mem::drop(lwk_wollet);
+        let derivation_index: i16 = bip39::rand::thread_rng().gen();
+        let keypair = self.get_keys(derivation_index)?;
+        let refund_public_key = boltz_client::PublicKey {
+            compressed: true,
+            inner: keypair.public_key(),
+        };
 
         let create_response = client.post_swap_req(&CreateSubmarineRequest {
             from: "L-BTC".to_string(),
             to: "BTC".to_string(),
             invoice: req.invoice.to_string(),
-            // TODO: Add refund flow
             refund_public_key,
             // TODO: Add referral id
             referral_id: None,
         })?;
 
-        // let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(&create_response, our_pubkey)?;
-        debug!("Opening WS connection for swap {}", create_response.id);
+        let swap_id = &create_response.id;
+        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
+            &create_response,
+            keypair.public_key().into(),
+        )?;
+
+        debug!("Opening WS connection for swap {}", &swap_id);
 
         let mut socket = client.connect_ws().unwrap();
-        let subscription = Subscription::new(&create_response.id);
+        let subscription = Subscription::new(&swap_id);
         let subscribe_json = serde_json::to_string(&subscription)
             .map_err(|e| anyhow!("Failed to serialize subscription msg: {e:?}"))?;
         socket
@@ -443,7 +574,7 @@ impl LiquidSdk {
 
         self.persister
             .insert_or_update_ongoing_swap_in(OngoingSwapIn {
-                id: create_response.id.clone(),
+                id: swap_id.clone(),
                 invoice: req.invoice.clone(),
                 payer_amount_sat: req.fees_sat + receiver_amount_sat,
                 txid: None,
@@ -452,8 +583,12 @@ impl LiquidSdk {
         let result;
         let mut txid = String::new();
         loop {
-            let Ok(data) = utils::get_swap_status_v2(&mut socket, &create_response.id) else {
-                continue;
+            let data = match utils::get_swap_status_v2(&mut socket, &swap_id) {
+                Ok(data) => data,
+                Err(_) => {
+                    // TODO: close socket if dead, skip EOF errors
+                    continue;
+                }
             };
 
             let state = data
@@ -470,44 +605,21 @@ impl LiquidSdk {
                         "Initiated swap-in: send {} sats to liquid address {}",
                         create_response.expected_amount, create_response.address
                     );
-                    let tx = self.build_tx(
-                        None,
-                        &create_response.address,
-                        create_response.expected_amount,
+
+                    txid = self.try_lockup(
+                        &req.invoice,
+                        &create_response,
+                        &swap_script,
+                        &keypair
                     )?;
 
-                    txid = match self.network {
-                        Network::Liquid => {
-                            let tx_hex = elements::encode::serialize(&tx).to_lower_hex_string();
-                            let response = client.broadcast_tx(self.network.into(), &tx_hex)?;
-                            response
-                                .as_object()
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .get("id")
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .as_str()
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .to_string()
-                        }
-                        Network::LiquidTestnet => {
-                            let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-                            electrum_client.broadcast(&tx)?.to_string()
-                        }
-                    };
-
                     debug!(
-                        "Successfully broadcast lockup transaction for swap {}. Txid: {}",
-                        &create_response.id, &txid
+                        "Successfully broadcast lockup transaction for swap-in {}. Txid: {}",
+                        &swap_id, &txid
                     );
 
                     self.persister.resolve_ongoing_swap(
-                        &create_response.id,
+                        &swap_id,
                         Some((
                             txid.clone(),
                             PaymentData {
@@ -518,7 +630,7 @@ impl LiquidSdk {
 
                     debug!(
                         "Successfully resolved ongoing swap-in {}",
-                        &create_response.id
+                        &swap_id
                     );
                 }
                 // Boltz has detected our lockup
@@ -533,15 +645,23 @@ impl LiquidSdk {
                 // 2. The swap has expired (>24h)
                 // 3. TODO: Lockup failed (we sent too little funds)
                 // We initiate a cooperative refund, and then fallback to a regular one
-                SubSwapStates::InvoiceFailedToPay | SubSwapStates::SwapExpired => {
-                    result = Err(PaymentError::Generic {
-                        err: format!("Payment state is unrecoverable: {}", state.to_string()),
-                    });
+                SubSwapStates::InvoiceFailedToPay | SubSwapStates::SwapExpired
+                    // | SubSwapStates::LockupFailed (needs addition to Boltz crate)
+                    => {
+                    let txid = self.try_refund(
+                        &swap_id,
+                        &swap_script,
+                        &keypair,
+                        // TODO Don't hardcode min broadcast fee
+                        133
+                    )?;
+
+                    result = Err(PaymentError::Refunded { err: format!("Unrecoverable state for swap-in {}: {}", &swap_id, state.to_string()), txid: txid.clone() });
                     break;
                 }
                 _ => debug!(
                     "New state for swap {}: {}",
-                    create_response.id,
+                    swap_id,
                     state.to_string()
                 ),
             };
@@ -766,25 +886,6 @@ impl LiquidSdk {
         }
 
         Ok(payments)
-    }
-
-    pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
-        let script: LBtcSwapScript = recovery.try_into().unwrap();
-        let network_config = self.network_config();
-        debug!("{:?}", script.fetch_utxo(&network_config));
-
-        let tx =
-            LBtcSwapTx::new_claim(script.clone(), self.address()?.to_string(), &network_config)
-                .expect("Expecting valid tx");
-        let keypair: Keypair = recovery.try_into().unwrap();
-        let preimage: Preimage = recovery.try_into().unwrap();
-
-        let signed_tx = tx.sign_claim(&keypair, &preimage, 1_000).unwrap();
-        let txid = tx.broadcast(signed_tx, &network_config).unwrap();
-
-        debug!("Funds recovered successfully! Txid: {txid}");
-
-        Ok(txid)
     }
 
     /// Empties all Liquid Wallet caches for this network type.

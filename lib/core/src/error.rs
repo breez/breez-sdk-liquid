@@ -36,6 +36,9 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("The payment has been refunded. Reason for failure: {err}")]
+    Refunded { err: String, txid: String },
+
     #[error("Generic error: {err}")]
     Generic { err: String },
 
