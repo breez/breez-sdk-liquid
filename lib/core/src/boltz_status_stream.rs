@@ -4,9 +4,8 @@ use std::net::TcpStream;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::{
     boltz::{RevSwapStates, SubSwapStates},
     boltzv2::{Subscription, SwapUpdate},
@@ -38,7 +37,7 @@ impl BoltzStatusStream {
             tungstenite::stream::MaybeTlsStream::NativeTls(s) => {
                 s.get_mut().set_nonblocking(true)?
             }
-            _ => Err(anyhow!("Unsupported stream type"))?
+            _ => Err(anyhow!("Unsupported stream type"))?,
         };
 
         thread::spawn(move || loop {
@@ -118,8 +117,8 @@ impl BoltzStatusStream {
 
                                 // Status update
                                 boltz_client::swaps::boltzv2::SwapUpdate::Update {
-                                    event,
-                                    channel,
+                                    event: _,
+                                    channel: _,
                                     args,
                                 } => {
                                     let update = args.first().unwrap().clone(); // TODO
@@ -169,7 +168,7 @@ impl BoltzStatusStream {
                             // Calling socket.read() on a non-blocking stream when there is nothing
                             // to read results in an WouldBlock error. In this case, we do nothing
                             // and continue the loop.
-                            ErrorKind::WouldBlock => {},
+                            ErrorKind::WouldBlock => {}
                             _ => {
                                 error!("Received stream IO error : {io_err:?}");
                                 break;
