@@ -290,12 +290,14 @@ impl LiquidSdk {
     // }
 
     pub(crate) fn boltz_client_v2(&self) -> BoltzApiClientV2 {
-        let base_url = match self.network {
+        BoltzApiClientV2::new(self.boltz_url_v2())
+    }
+
+    pub(crate) fn boltz_url_v2(&self) -> &str {
+        match self.network {
             Network::LiquidTestnet => BOLTZ_TESTNET_URL_V2,
             Network::Liquid => BOLTZ_MAINNET_URL_V2,
-        };
-
-        BoltzApiClientV2::new(base_url)
+        }
     }
 
     fn network_config(&self) -> ElectrumConfig {
@@ -552,9 +554,8 @@ impl LiquidSdk {
     }
 
     fn try_claim_v2(&self, ongoing_swap_out: &OngoingSwapOut) -> Result<String, PaymentError> {
-        debug!("Trying to claim reverse swap {}", ongoing_swap_out.id);
+        debug!("Trying to claim reverse swap {}", &ongoing_swap_out.id);
 
-        let electrum_config = ElectrumConfig::default(self.network.into(), None)?;
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
@@ -566,8 +567,13 @@ impl LiquidSdk {
         )?;
 
         let claim_address = self.address()?.to_string();
-        let claim_tx =
-            LBtcSwapTxV2::new_claim(swap_script.clone(), claim_address, &electrum_config)?;
+        let claim_tx = LBtcSwapTxV2::new_claim(
+            swap_script,
+            claim_address,
+            &self.network_config(),
+            self.boltz_url_v2().into(),
+            ongoing_swap_out.id.clone(),
+        )?;
 
         let tx = claim_tx.sign_claim(
             &our_keys,
