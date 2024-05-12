@@ -555,15 +555,7 @@ impl LiquidSdk {
         debug!("Trying to claim reverse swap {}", ongoing_swap_out.id);
 
         let electrum_config = ElectrumConfig::default(self.network.into(), None)?;
-        let mnemonic = self
-            .lwk_signer
-            .mnemonic()
-            .ok_or(PaymentError::SignerError {
-                err: "Could not claim: Mnemonic not found".to_string(),
-            })?;
-        let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
-        let lsk = LiquidSwapKey::try_from(swap_key)?;
+        let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
         let swap_response_v2: CreateReverseResponse =
@@ -672,15 +664,7 @@ impl LiquidSdk {
 
         debug!("Creating reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
-        let mnemonic = self
-            .lwk_signer
-            .mnemonic()
-            .ok_or(PaymentError::SignerError {
-                err: "Could not start receive: Mnemonic not found".to_string(),
-            })?;
-        let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
-        let lsk = LiquidSwapKey::try_from(swap_key)?;
+        let lsk = self.get_liquid_swap_key()?;
 
         let preimage = Preimage::new();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
@@ -822,6 +806,20 @@ impl LiquidSdk {
 
     pub fn backup(&self) -> Result<()> {
         self.persister.backup()
+    }
+
+    fn get_liquid_swap_key(&self) -> Result<LiquidSwapKey, PaymentError> {
+        let mnemonic = self
+            .lwk_signer
+            .mnemonic()
+            .ok_or(PaymentError::SignerError {
+                err: "Mnemonic not found".to_string(),
+            })?;
+        let swap_key =
+            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
+        LiquidSwapKey::try_from(swap_key).map_err(|e| PaymentError::SignerError {
+            err: format!("Could not create LiquidSwapKey: {e:?}"),
+        })
     }
 }
 
