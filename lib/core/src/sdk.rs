@@ -692,11 +692,8 @@ impl LiquidSdk {
         let redeem_script = serde_json::to_string(&swap_response_v2).unwrap();
 
         let swap_id = swap_response_v2.id;
-        let invoice = Bolt11Invoice::from_str(&swap_response_v2.invoice).map_err(|_| {
-            boltz_client::error::Error::Protocol(
-                "Boltz response does not contain an invoice.".to_string(),
-            )
-        })?;
+        let invoice = Bolt11Invoice::from_str(&swap_response_v2.invoice)
+            .map_err(|_| PaymentError::InvalidInvoice)?;
         let blinding_str =
             swap_response_v2
                 .blinding_key
