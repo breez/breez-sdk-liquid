@@ -478,7 +478,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/hydra-yse/boltz-rust?rev=fac7573028cd46de5b1097916d43973d7e835460#fac7573028cd46de5b1097916d43973d7e835460"
+source = "git+https://github.com/hydra-yse/boltz-rust?rev=be8395900495e415699a54e15f4bd0bc6d774237#be8395900495e415699a54e15f4bd0bc6d774237"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",

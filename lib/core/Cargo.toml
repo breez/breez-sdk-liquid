@@ -18,7 +18,7 @@ bip39 = { version = "2.0.0", features = ["serde"] }
 # - latest fixes from Boltz (fallback for get_utxos) needed for claiming as soon as lockup tx is seen in mempool (receive case)
 # - latest fixes from Antonio (get reverse swap pairs, necessary structs, etc)
 # https://github.com/ok300/boltz-rust/commits/ok300-combo-boltz-fallback-get-utxos-yse-get-submarine-pairs/
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "fac7573028cd46de5b1097916d43973d7e835460" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "be8395900495e415699a54e15f4bd0bc6d774237" }
 
 flutter_rust_bridge = { version = "=2.0.0-dev.33", features = ["chrono"], optional = true }
 log = "0.4.20"
