@@ -147,6 +147,7 @@ pub(crate) struct OngoingSwapIn {
     pub(crate) id: String,
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
+    pub(crate) swap_response: String,
     pub(crate) txid: Option<String>,
 }
 

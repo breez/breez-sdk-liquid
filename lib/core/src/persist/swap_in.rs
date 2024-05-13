@@ -14,14 +14,16 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
+                swap_response,
                 txid
             )
-            VALUES (?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_in.id,
             swap_in.invoice,
             swap_in.payer_amount_sat,
+            swap_in.swap_response,
             swap_in.txid,
         ))?;
 
@@ -41,6 +43,7 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
+                swap_response,
                 txid,
                 created_at
             FROM ongoing_send_swaps
@@ -64,7 +67,8 @@ impl Persister {
             id: row.get(0)?,
             invoice: row.get(1)?,
             payer_amount_sat: row.get(2)?,
-            txid: row.get(3)?,
+            swap_response: row.get(3)?,
+            txid: row.get(4)?,
         })
     }
 
