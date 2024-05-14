@@ -148,14 +148,17 @@ pub(crate) struct SwapIn {
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) create_response_json: String,
+    /// Persisted only when the lockup tx is successfully broadcasted
     pub(crate) lockup_txid: Option<String>,
+    /// Persisted as soon as claim tx was seen in the mempool
+    pub(crate) claim_txid: Option<String>,
 }
 impl SwapIn {
     pub(crate) fn calculate_status(&self) -> SubmarineSwapStatus {
-        // TODO Store claim txid, so we can tell when submarine swap is complete
-        match self.txid {
-            None => SubmarineSwapStatus::Initial,
-            Some(_) => SubmarineSwapStatus::Pending,
+        match (&self.lockup_txid, &self.claim_txid) {
+            (None, _) => SubmarineSwapStatus::Initial,
+            (Some(_), None) => SubmarineSwapStatus::Pending,
+            (Some(_), Some(_)) => SubmarineSwapStatus::Completed,
         }
     }
 }

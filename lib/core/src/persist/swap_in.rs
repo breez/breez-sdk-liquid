@@ -2,9 +2,42 @@ use crate::model::*;
 use crate::persist::Persister;
 
 use anyhow::Result;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 
 impl Persister {
+    pub(crate) fn set_lockup_txid_for_swap_in(
+        &self,
+        swap_in_id: &str,
+        lockup_txid: &str,
+    ) -> Result<()> {
+        self.get_connection()?.execute(
+            "UPDATE send_swaps SET txid=:lockup_txid WHERE id=:id",
+            named_params! {
+             ":id": swap_in_id,
+             ":lockup_txid": lockup_txid,
+            },
+        )?;
+
+        Ok(())
+    }
+
+    // TODO Store claim txid when claim tx is seen in mempool
+    pub(crate) fn set_claim_txid_for_swap_in(
+        &self,
+        swap_in_id: &str,
+        claim_txid: &str,
+    ) -> Result<()> {
+        self.get_connection()?.execute(
+            "UPDATE send_swaps SET claim_txid=:claim_txid WHERE id=:id",
+            named_params! {
+             ":id": swap_in_id,
+             ":claim_txid": claim_txid,
+            },
+        )?;
+
+        Ok(())
+    }
+
     pub(crate) fn insert_or_update_swap_in(&self, swap_in: SwapIn) -> Result<()> {
         let con = self.get_connection()?;
 
@@ -15,9 +48,10 @@ impl Persister {
                 invoice,
                 payer_amount_sat,
                 create_response_json,
-                lockup_txid
+                lockup_txid,
+                claim_txid
             )
-            VALUES (?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_in.id,
@@ -25,6 +59,7 @@ impl Persister {
             swap_in.payer_amount_sat,
             swap_in.create_response_json,
             swap_in.lockup_txid,
+            swap_in.claim_txid,
         ))?;
 
         Ok(())
@@ -45,6 +80,7 @@ impl Persister {
                 payer_amount_sat,
                 create_response_json,
                 lockup_txid,
+                claim_txid,
                 created_at
             FROM send_swaps
             {where_clause_str}
@@ -66,6 +102,7 @@ impl Persister {
             payer_amount_sat: row.get(2)?,
             create_response_json: row.get(3)?,
             lockup_txid: row.get(4)?,
+            claim_txid: row.get(5)?,
         })
     }
 

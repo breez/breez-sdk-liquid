@@ -601,12 +601,13 @@ impl LiquidSdk {
             .insert_tracked_swap(swap_id, SwapType::Submarine);
 
         self.persister
-            .insert_or_update_ongoing_swap_in(SwapIn {
+            .insert_or_update_swap_in(SwapIn {
                 id: swap_id.clone(),
                 invoice: req.invoice.clone(),
                 payer_amount_sat: req.fees_sat + receiver_amount_sat,
                 create_response_json: create_response_json.clone(),
                 lockup_txid: None,
+                claim_txid: None,
             })?;
 
         let result;
@@ -642,14 +643,7 @@ impl LiquidSdk {
                     };
 
                     lockup_txid = self.lockup_funds(swap_id, &create_response)?;
-                    self.persister
-                        .insert_or_update_ongoing_swap_in(SwapIn {
-                            id: swap_id.clone(),
-                            invoice: req.invoice.clone(),
-                            payer_amount_sat: req.fees_sat + receiver_amount_sat,
-                            create_response_json: create_response_json.clone(),
-                            lockup_txid: Some(lockup_txid.clone()),
-                        })?;
+                    self.persister.set_lockup_txid_for_swap_in(swap_id, &lockup_txid)?;
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
@@ -677,7 +671,6 @@ impl LiquidSdk {
                     self.status_stream
                         .resolve_tracked_swap(swap_id, SwapType::ReverseSubmarine);
 
-                    // TODO: Change lockup txid to claim txid
                     result = Ok(SendPaymentResponse { txid: lockup_txid });
 
                     debug!("Successfully resolved swap-in {swap_id}");
