@@ -50,18 +50,16 @@ impl Persister {
     }
 
     // TODO Rename to mark_as_complete? update_payment_data?
+    // TODO Remove ID field
     pub fn resolve_swap(
         &self,
-        id: &str,
+        _id: &str,
         payment_data: Option<(String, PaymentData)>,
     ) -> Result<()> {
-        let mut con = self.get_connection()?;
-
-        // TODO We should not delete, but instead upadte the status (in DB or dynamically)
-        let tx = con.transaction()?;
-        tx.execute("DELETE FROM send_swaps WHERE id = ?", params![id])?;
-        tx.execute("DELETE FROM receive_swaps WHERE id = ?", params![id])?;
         if let Some((txid, payment_data)) = payment_data {
+            let mut con = self.get_connection()?;
+
+            let tx = con.transaction()?;
             tx.execute(
                 "INSERT INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
               VALUES(?, ?, ?)",
@@ -71,8 +69,8 @@ impl Persister {
                     payment_data.receiver_amount_sat,
                 ),
             )?;
+            tx.commit()?;
         }
-        tx.commit()?;
 
         Ok(())
     }
