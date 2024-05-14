@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use boltz_client::Bolt11Invoice;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::get_invoice_amount;
 
@@ -129,30 +129,52 @@ pub struct RestoreRequest {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum OngoingSwap {
-    Send(OngoingSwapIn),
-    Receive(OngoingSwapOut),
+pub(crate) enum Swap {
+    Send(SwapIn),
+    Receive(SwapOut),
 }
-impl OngoingSwap {
+impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
-            OngoingSwap::Send(OngoingSwapIn { id, .. })
-            | OngoingSwap::Receive(OngoingSwapOut { id, .. }) => id.clone(),
+            Swap::Send(SwapIn { id, .. }) | Swap::Receive(SwapOut { id, .. }) => id.clone(),
         }
     }
 }
 
+/// A submarine swap, used for swap-in (Receive)
 #[derive(Clone, Debug)]
-pub(crate) struct OngoingSwapIn {
+pub(crate) struct SwapIn {
     pub(crate) id: String,
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) create_response_json: String,
     pub(crate) lockup_txid: Option<String>,
 }
+impl SwapIn {
+    pub(crate) fn calculate_status(&self) -> SubmarineSwapStatus {
+        // TODO Store claim txid, so we can tell when submarine swap is complete
+        match self.txid {
+            None => SubmarineSwapStatus::Initial,
+            Some(_) => SubmarineSwapStatus::Pending,
+        }
+    }
+}
 
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum SubmarineSwapStatus {
+    /// The swap was created, but the lockup tx was not broadcast sucecessfully.
+    Initial = 0,
+
+    /// The lockup tx was broadcasted successfully, but the claim tx was not seen in the mempool yet.
+    Pending = 1,
+
+    // TODO Separate between CompletedSeen vs CompletedConfirmed?
+    Completed = 2,
+}
+
+/// A reverse swap, used for swap-out (Send)
 #[derive(Clone, Debug)]
-pub(crate) struct OngoingSwapOut {
+pub(crate) struct SwapOut {
     pub(crate) id: String,
     pub(crate) preimage: String,
     pub(crate) redeem_script: String,
@@ -160,6 +182,21 @@ pub(crate) struct OngoingSwapOut {
     pub(crate) invoice: String,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
+}
+impl SwapOut {
+    pub(crate) fn calculate_status(&self) -> ReverseSwapStatus {
+        // TODO Store claim_txid, decide status based on that
+        ReverseSwapStatus::Pending
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum ReverseSwapStatus {
+    /// Reverse swap created, but lockup tx not yet seen and claim tx not yet broadcasted
+    Pending = 0,
+
+    /// Claim tx was broadcasted
+    Completed = 1,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -182,10 +219,10 @@ pub struct Payment {
     pub invoice: Option<String>,
 }
 
-impl From<OngoingSwap> for Payment {
-    fn from(swap: OngoingSwap) -> Self {
+impl From<Swap> for Payment {
+    fn from(swap: Swap) -> Self {
         match swap {
-            OngoingSwap::Send(OngoingSwapIn {
+            Swap::Send(SwapIn {
                 invoice,
                 payer_amount_sat,
                 ..
@@ -200,7 +237,7 @@ impl From<OngoingSwap> for Payment {
                     fees_sat: Some(payer_amount_sat - receiver_amount_sat),
                 }
             }
-            OngoingSwap::Receive(OngoingSwapOut {
+            Swap::Receive(SwapOut {
                 receiver_amount_sat,
                 invoice,
                 ..

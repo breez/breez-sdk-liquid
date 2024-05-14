@@ -138,7 +138,7 @@ impl LiquidSdk {
         id: &str,
     ) -> Result<()> {
         let con = self.persister.get_connection()?;
-        let ongoing_swap_out = Persister::fetch_ongoing_swap_out(&con, id)?
+        let swap_out = Persister::fetch_swap_out(&con, id)?
             .ok_or(anyhow!("No ongoing swap out found for ID {id}"))?;
 
         match swap_state {
@@ -148,18 +148,18 @@ impl LiquidSdk {
             | RevSwapStates::TransactionRefunded => {
                 warn!("Cannot claim swap {id}, unrecoverable state: {swap_state:?}");
                 self.persister
-                    .resolve_ongoing_swap(id, None)
+                    .resolve_swap(id, None)
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
             }
             // We may be offline, or claiming failued due to other reasons until the swap reached these states
             // If an ongoing reverse swap is in any of these states, we should be able to claim
             RevSwapStates::TransactionMempool
             | RevSwapStates::TransactionConfirmed
-            | RevSwapStates::InvoiceSettled => match self.try_claim_v2(&ongoing_swap_out) {
+            | RevSwapStates::InvoiceSettled => match self.try_claim_v2(&swap_out) {
                 Ok(txid) => {
-                    let payer_amount_sat = get_invoice_amount!(ongoing_swap_out.invoice);
+                    let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
                     self.persister
-                        .resolve_ongoing_swap(
+                        .resolve_swap(
                             id,
                             Some((
                                 txid,
@@ -175,7 +175,7 @@ impl LiquidSdk {
                     if let PaymentError::AlreadyClaimed = err {
                         warn!("Funds already claimed");
                         self.persister
-                            .resolve_ongoing_swap(id, None)
+                            .resolve_swap(id, None)
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
                     warn!("Could not claim swap {id} yet. Err: {err}");
@@ -195,7 +195,7 @@ impl LiquidSdk {
         id: &str,
     ) -> Result<()> {
         let con = self.persister.get_connection()?;
-        let ongoing_swap_in = Persister::fetch_ongoing_swap_in(&con, id)?
+        let ongoing_swap_in = Persister::fetch_swap_in(&con, id)?
             .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
 
         let Some(txid) = ongoing_swap_in.lockup_txid.clone() else {
@@ -213,7 +213,7 @@ impl LiquidSdk {
                     keypair.public_key().into(),
                 ) else {
                     self.persister
-                        .resolve_ongoing_swap(id, None)
+                        .resolve_swap(id, None)
                         .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
 
                     return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
@@ -228,7 +228,7 @@ impl LiquidSdk {
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
 
                 self.persister
-                    .resolve_ongoing_swap(
+                    .resolve_swap(
                         id,
                         Some((
                             txid,
@@ -246,7 +246,7 @@ impl LiquidSdk {
                 warn!("Swap-in {id} has already been claimed. Resolving...");
 
                 self.persister
-                    .resolve_ongoing_swap(
+                    .resolve_swap(
                         id,
                         Some((
                             txid,
@@ -272,7 +272,7 @@ impl LiquidSdk {
                     keypair.public_key().into(),
                 ) else {
                     self.persister
-                        .resolve_ongoing_swap(id, None)
+                        .resolve_swap(id, None)
                         .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
 
                     return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
@@ -284,14 +284,14 @@ impl LiquidSdk {
                 warn!("Swap-in {id} refunded successfully. Txid: {refund_txid}");
 
                 self.persister
-                    .resolve_ongoing_swap(id, None)
+                    .resolve_swap(id, None)
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))
             }
             _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
         }
     }
 
-    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
+    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         self.persister.list_ongoing_swaps()
     }
 
@@ -601,7 +601,7 @@ impl LiquidSdk {
             .insert_tracked_swap(swap_id, SwapType::Submarine);
 
         self.persister
-            .insert_or_update_ongoing_swap_in(OngoingSwapIn {
+            .insert_or_update_ongoing_swap_in(SwapIn {
                 id: swap_id.clone(),
                 invoice: req.invoice.clone(),
                 payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -633,7 +633,7 @@ impl LiquidSdk {
                     // Check that we have not persisted the swap already
                     let con = self.persister.get_connection()?;
 
-                    if let Some(ongoing_swap) = Persister::fetch_ongoing_swap_in(&con, swap_id)
+                    if let Some(ongoing_swap) = Persister::fetch_swap_in(&con, swap_id)
                         .map_err(|_| PaymentError::PersistError)?
                     {
                         if ongoing_swap.lockup_txid.is_some() {
@@ -643,7 +643,7 @@ impl LiquidSdk {
 
                     lockup_txid = self.lockup_funds(swap_id, &create_response)?;
                     self.persister
-                        .insert_or_update_ongoing_swap_in(OngoingSwapIn {
+                        .insert_or_update_ongoing_swap_in(SwapIn {
                             id: swap_id.clone(),
                             invoice: req.invoice.clone(),
                             payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -663,7 +663,7 @@ impl LiquidSdk {
                     )?;
 
                     debug!("Boltz successfully claimed the funds. Resolving swap-in {swap_id}");
-                    self.persister.resolve_ongoing_swap(
+                    self.persister.resolve_swap(
                         swap_id,
                         Some((
                             lockup_txid.clone(),
@@ -714,7 +714,7 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim_v2(&self, ongoing_swap_out: &OngoingSwapOut) -> Result<String, PaymentError> {
+    fn try_claim_v2(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
         debug!("Trying to claim reverse swap {}", &ongoing_swap_out.id);
 
         let lsk = self.get_liquid_swap_key()?;
@@ -873,7 +873,7 @@ impl LiquidSdk {
         };
 
         self.persister
-            .insert_or_update_ongoing_swap_out(OngoingSwapOut {
+            .insert_or_update_swap_out(SwapOut {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,

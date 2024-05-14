@@ -5,7 +5,7 @@ use anyhow::Result;
 use rusqlite::{params, Connection, OptionalExtension, Row};
 
 impl Persister {
-    pub(crate) fn insert_or_update_ongoing_swap_in(&self, swap_in: OngoingSwapIn) -> Result<()> {
+    pub(crate) fn insert_or_update_swap_in(&self, swap_in: SwapIn) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -30,7 +30,7 @@ impl Persister {
         Ok(())
     }
 
-    fn list_ongoing_swap_in_query(where_clauses: Vec<&str>) -> String {
+    fn list_swap_in_query(where_clauses: Vec<&str>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
             where_clause_str = String::from("WHERE ");
@@ -53,17 +53,14 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_ongoing_swap_in(
-        con: &Connection,
-        id: &str,
-    ) -> rusqlite::Result<Option<OngoingSwapIn>> {
-        let query = Self::list_ongoing_swap_in_query(vec!["id = ?1"]);
-        con.query_row(&query, [id], Self::sql_row_to_ongoing_swap_in)
+    pub(crate) fn fetch_swap_in(con: &Connection, id: &str) -> rusqlite::Result<Option<SwapIn>> {
+        let query = Self::list_swap_in_query(vec!["id = ?1"]);
+        con.query_row(&query, [id], Self::sql_row_to_swap_in)
             .optional()
     }
 
-    fn sql_row_to_ongoing_swap_in(row: &Row) -> rusqlite::Result<OngoingSwapIn> {
-        Ok(OngoingSwapIn {
+    fn sql_row_to_swap_in(row: &Row) -> rusqlite::Result<SwapIn> {
+        Ok(SwapIn {
             id: row.get(0)?,
             invoice: row.get(1)?,
             payer_amount_sat: row.get(2)?,
@@ -72,17 +69,31 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_ongoing_send(
+    pub(crate) fn list_send_swaps(
         &self,
         con: &Connection,
         where_clauses: Vec<&str>,
-    ) -> rusqlite::Result<Vec<OngoingSwapIn>> {
-        let query = Self::list_ongoing_swap_in_query(where_clauses);
+    ) -> rusqlite::Result<Vec<SwapIn>> {
+        let query = Self::list_swap_in_query(where_clauses);
         let ongoing_send = con
             .prepare(&query)?
-            .query_map(params![], Self::sql_row_to_ongoing_swap_in)?
+            .query_map(params![], Self::sql_row_to_swap_in)?
             .map(|i| i.unwrap())
             .collect();
         Ok(ongoing_send)
+    }
+
+    pub(crate) fn list_ongoing_send_swaps(
+        &self,
+        con: &Connection,
+    ) -> rusqlite::Result<Vec<SwapIn>> {
+        let swap_ins = self.list_send_swaps(con, vec![])?;
+
+        let filtered: Vec<SwapIn> = swap_ins
+            .into_iter()
+            .filter(|swap| swap.calculate_status() == SubmarineSwapStatus::Pending)
+            .collect();
+
+        Ok(filtered)
     }
 }

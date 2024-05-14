@@ -65,12 +65,12 @@ impl BoltzStatusStream {
 
         thread::spawn(move || loop {
             let maybe_subscribe_fn =
-                |ongoing_swap: &OngoingSwap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>| {
-                    let id = ongoing_swap.id();
+                |swap: &Swap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>| {
+                    let id = swap.id();
 
-                    let is_ongoing_swap_already_tracked = match ongoing_swap {
-                        OngoingSwap::Send(_) => swap_in_ids.lock().unwrap().contains(&id),
-                        OngoingSwap::Receive(_) => swap_out_ids.lock().unwrap().contains(&id),
+                    let is_ongoing_swap_already_tracked = match swap {
+                        Swap::Send(_) => swap_in_ids.lock().unwrap().contains(&id),
+                        Swap::Receive(_) => swap_out_ids.lock().unwrap().contains(&id),
                     };
 
                     if !is_ongoing_swap_already_tracked {
@@ -85,9 +85,9 @@ impl BoltzStatusStream {
                             .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
                             .unwrap();
 
-                        match ongoing_swap {
-                            OngoingSwap::Send(_) => swap_in_ids.lock().unwrap().insert(id),
-                            OngoingSwap::Receive(_) => swap_out_ids.lock().unwrap().insert(id),
+                        match swap {
+                            Swap::Send(_) => swap_in_ids.lock().unwrap().insert(id),
+                            Swap::Receive(_) => swap_out_ids.lock().unwrap().insert(id),
                         };
                     }
                 };

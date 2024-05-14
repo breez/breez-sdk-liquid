@@ -49,19 +49,18 @@ impl Persister {
         Ok(())
     }
 
-    pub fn resolve_ongoing_swap(
+    // TODO Rename to mark_as_complete? update_payment_data?
+    pub fn resolve_swap(
         &self,
         id: &str,
         payment_data: Option<(String, PaymentData)>,
     ) -> Result<()> {
         let mut con = self.get_connection()?;
 
+        // TODO We should not delete, but instead upadte the status (in DB or dynamically)
         let tx = con.transaction()?;
         tx.execute("DELETE FROM send_swaps WHERE id = ?", params![id])?;
-        tx.execute(
-            "DELETE FROM receive_swaps WHERE id = ?",
-            params![id],
-        )?;
+        tx.execute("DELETE FROM receive_swaps WHERE id = ?", params![id])?;
         if let Some((txid, payment_data)) = payment_data {
             tx.execute(
                 "INSERT INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
@@ -78,17 +77,17 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<OngoingSwap>> {
+    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let con = self.get_connection()?;
-        let ongoing_swap_ins: Vec<OngoingSwap> = self
-            .list_ongoing_send(&con, vec![])?
+        let ongoing_swap_ins: Vec<Swap> = self
+            .list_ongoing_send_swaps(&con)?
             .into_iter()
-            .map(OngoingSwap::Send)
+            .map(Swap::Send)
             .collect();
-        let ongoing_swap_outs: Vec<OngoingSwap> = self
-            .list_ongoing_receive(&con, vec![])?
+        let ongoing_swap_outs: Vec<Swap> = self
+            .list_ongoing_receive_swaps(&con)?
             .into_iter()
-            .map(OngoingSwap::Receive)
+            .map(Swap::Receive)
             .collect();
         Ok([ongoing_swap_ins, ongoing_swap_outs].concat())
     }
