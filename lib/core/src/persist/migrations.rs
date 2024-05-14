@@ -14,8 +14,8 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
            id TEXT NOT NULL PRIMARY KEY,
            invoice TEXT NOT NULL,
            payer_amount_sat INTEGER NOT NULL,
-           swap_response TEXT NOT NULL,
-           txid TEXT,
+           create_response_json TEXT NOT NULL,
+           lockup_txid TEXT,
            created_at TEXT DEFAULT CURRENT_TIMESTAMP
        ) STRICT;",
         "CREATE TABLE IF NOT EXISTS payment_data(

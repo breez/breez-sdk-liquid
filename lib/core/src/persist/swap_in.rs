@@ -14,8 +14,8 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
-                swap_response,
-                txid
+                create_response_json,
+                lockup_txid
             )
             VALUES (?, ?, ?, ?, ?)",
         )?;
@@ -23,8 +23,8 @@ impl Persister {
             swap_in.id,
             swap_in.invoice,
             swap_in.payer_amount_sat,
-            swap_in.swap_response,
-            swap_in.txid,
+            swap_in.create_response_json,
+            swap_in.lockup_txid,
         ))?;
 
         Ok(())
@@ -43,8 +43,8 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
-                swap_response,
-                txid,
+                create_response_json,
+                lockup_txid,
                 created_at
             FROM ongoing_send_swaps
             {where_clause_str}
@@ -67,8 +67,8 @@ impl Persister {
             id: row.get(0)?,
             invoice: row.get(1)?,
             payer_amount_sat: row.get(2)?,
-            swap_response: row.get(3)?,
-            txid: row.get(4)?,
+            create_response_json: row.get(3)?,
+            lockup_txid: row.get(4)?,
         })
     }
 
