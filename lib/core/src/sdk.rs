@@ -199,9 +199,7 @@ impl LiquidSdk {
             .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
 
         let Some(txid) = ongoing_swap_in.lockup_txid.clone() else {
-            return Err(anyhow!(
-                "Swap-in {id} has been claimed but no txid is present"
-            ));
+            return Err(anyhow!("Swap-in {id} is pending but no txid is present"));
         };
         let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
         let keypair = self.get_submarine_keys(0)?;
