@@ -185,11 +185,15 @@ pub(crate) struct SwapOut {
     pub(crate) invoice: String,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
+    /// Persisted as soon as claim tx is broadcasted
+    pub(crate) claim_txid: Option<String>,
 }
 impl SwapOut {
     pub(crate) fn calculate_status(&self) -> ReverseSwapStatus {
-        // TODO Store claim_txid, decide status based on that
-        ReverseSwapStatus::Pending
+        match self.claim_txid {
+            None => ReverseSwapStatus::Pending,
+            Some(_) => ReverseSwapStatus::Completed
+        }
     }
 }
 

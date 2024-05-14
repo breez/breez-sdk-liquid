@@ -8,7 +8,8 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             invoice TEXT NOT NULL,
             receiver_amount_sat INTEGER NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            claim_fees_sat INTEGER NOT NULL
+            claim_fees_sat INTEGER NOT NULL,
+            claim_txid TEXT
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS send_swaps(
            id TEXT NOT NULL PRIMARY KEY,

@@ -2,9 +2,25 @@ use crate::model::*;
 use crate::persist::Persister;
 
 use anyhow::Result;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 
 impl Persister {
+    pub(crate) fn set_claim_txid_for_swap_out(
+        &self,
+        swap_out_id: &str,
+        claim_txid: &str,
+    ) -> Result<()> {
+        self.get_connection()?.execute(
+            "UPDATE receive_swaps SET claim_txid=:claim_txid WHERE id=:id",
+            named_params! {
+             ":id": swap_out_id,
+             ":claim_txid": claim_txid,
+            },
+        )?;
+
+        Ok(())
+    }
+
     pub(crate) fn insert_or_update_swap_out(&self, swap_out: SwapOut) -> Result<()> {
         let con = self.get_connection()?;
 
@@ -17,9 +33,10 @@ impl Persister {
                 blinding_key,
                 invoice,
                 receiver_amount_sat,
-                claim_fees_sat
+                claim_fees_sat,
+                claim_txid
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_out.id,
@@ -29,6 +46,7 @@ impl Persister {
             swap_out.invoice,
             swap_out.receiver_amount_sat,
             swap_out.claim_fees_sat,
+            swap_out.claim_txid,
         ))?;
 
         Ok(())
@@ -51,6 +69,7 @@ impl Persister {
                 invoice,
                 receiver_amount_sat,
                 claim_fees_sat,
+                claim_txid,
                 created_at
             FROM receive_swaps
             {where_clause_str}
@@ -74,6 +93,7 @@ impl Persister {
             invoice: row.get(4)?,
             receiver_amount_sat: row.get(5)?,
             claim_fees_sat: row.get(6)?,
+            claim_txid: row.get(7)?,
         })
     }
 

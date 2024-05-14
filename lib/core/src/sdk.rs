@@ -178,7 +178,7 @@ impl LiquidSdk {
                             .resolve_swap(id, None)
                             .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
                     }
-                    warn!("Could not claim swap {id} yet. Err: {err}");
+                    warn!("Could not claim reverse swap {id} yet. Err: {err}");
                 }
             },
             RevSwapStates::Created | RevSwapStates::MinerFeePaid => {
@@ -708,20 +708,25 @@ impl LiquidSdk {
     }
 
     fn try_claim_v2(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
-        debug!("Trying to claim reverse swap {}", &ongoing_swap_out.id);
+        let rev_swap_id = &ongoing_swap_out.id;
+        debug!("Trying to claim reverse swap {rev_swap_id}",);
 
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
         let create_response: CreateReverseResponse =
-            serde_json::from_str(&ongoing_swap_out.redeem_script).unwrap();
+            serde_json::from_str(&ongoing_swap_out.redeem_script).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to deserialize CreateReverseResponse: {e:?}"),
+                }
+            })?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
             our_keys.public_key().into(),
         )?;
 
         let claim_address = self.address()?.to_string();
-        let claim_tx = LBtcSwapTxV2::new_claim(
+        let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
             claim_address,
             &self.network_config(),
@@ -729,20 +734,21 @@ impl LiquidSdk {
             ongoing_swap_out.id.clone(),
         )?;
 
-        let tx = claim_tx.sign_claim(
+        let claim_tx = claim_tx_wrapper.sign_claim(
             &our_keys,
             &Preimage::from_str(&ongoing_swap_out.preimage)?,
             Amount::from_sat(ongoing_swap_out.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
-            Some((&self.boltz_client_v2(), ongoing_swap_out.id.clone())),
+            Some((&self.boltz_client_v2(), rev_swap_id.clone())),
             // None
         )?;
+        let claim_txid = claim_tx.txid().to_string();
 
         // Electrum only broadcasts txs with lowball fees on testnet
         // For mainnet, we use Boltz to broadcast
         match self.network {
             Network::Liquid => {
-                let tx_hex = elements::encode::serialize(&tx).to_lower_hex_string();
+                let tx_hex = elements::encode::serialize(&claim_tx).to_lower_hex_string();
                 let response = self
                     .boltz_client_v2()
                     .broadcast_tx(self.network.into(), &tx_hex)?;
@@ -750,14 +756,18 @@ impl LiquidSdk {
             }
             Network::LiquidTestnet => {
                 let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-                electrum_client.broadcast(&tx)?;
+                electrum_client.broadcast(&claim_tx)?;
             }
         };
 
-        info!("Succesfully broadcasted claim tx {}", tx.txid());
-        debug!("Claim Tx {:?}", tx);
+        // Once successfully broadcasted, we persist the claim txid
+        self.persister
+            .set_claim_txid_for_swap_out(rev_swap_id, &claim_txid)?;
 
-        Ok(tx.txid().to_string())
+        info!("Succesfully broadcasted claim tx {claim_txid} for rev swap {rev_swap_id}");
+        debug!("Claim Tx {:?}", claim_tx);
+
+        Ok(claim_txid)
     }
 
     #[allow(dead_code)]
