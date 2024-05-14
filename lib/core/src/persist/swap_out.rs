@@ -10,7 +10,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            INSERT OR REPLACE INTO ongoing_receive_swaps (
+            INSERT OR REPLACE INTO receive_swaps (
                 id,
                 preimage,
                 redeem_script,
@@ -52,7 +52,7 @@ impl Persister {
                 receiver_amount_sat,
                 claim_fees_sat,
                 created_at
-            FROM ongoing_receive_swaps
+            FROM receive_swaps
             {where_clause_str}
             ORDER BY created_at
         "

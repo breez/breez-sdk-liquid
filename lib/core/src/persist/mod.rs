@@ -57,9 +57,9 @@ impl Persister {
         let mut con = self.get_connection()?;
 
         let tx = con.transaction()?;
-        tx.execute("DELETE FROM ongoing_send_swaps WHERE id = ?", params![id])?;
+        tx.execute("DELETE FROM send_swaps WHERE id = ?", params![id])?;
         tx.execute(
-            "DELETE FROM ongoing_receive_swaps WHERE id = ?",
+            "DELETE FROM receive_swaps WHERE id = ?",
             params![id],
         )?;
         if let Some((txid, payment_data)) = payment_data {

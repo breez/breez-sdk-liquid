@@ -10,7 +10,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            INSERT OR REPLACE INTO ongoing_send_swaps (
+            INSERT OR REPLACE INTO send_swaps (
                 id,
                 invoice,
                 payer_amount_sat,
@@ -46,7 +46,7 @@ impl Persister {
                 create_response_json,
                 lockup_txid,
                 created_at
-            FROM ongoing_send_swaps
+            FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
         "

@@ -1,6 +1,6 @@
 pub(crate) fn current_migrations() -> Vec<&'static str> {
     vec![
-        "CREATE TABLE IF NOT EXISTS ongoing_receive_swaps (
+        "CREATE TABLE IF NOT EXISTS receive_swaps (
             id TEXT NOT NULL PRIMARY KEY,
             preimage TEXT NOT NULL,
             redeem_script TEXT NOT NULL,
@@ -10,7 +10,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             claim_fees_sat INTEGER NOT NULL
         ) STRICT;",
-        "CREATE TABLE IF NOT EXISTS ongoing_send_swaps(
+        "CREATE TABLE IF NOT EXISTS send_swaps(
            id TEXT NOT NULL PRIMARY KEY,
            invoice TEXT NOT NULL,
            payer_amount_sat INTEGER NOT NULL,
