@@ -35,7 +35,7 @@ use crate::{
 
 /// Claim tx feerate, in sats per vbyte.
 /// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
-pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
+pub const LIQUID_CLAIM_TX_FEERATE_MSAT: f32 = 100.0;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
@@ -159,7 +159,16 @@ impl LiquidSdk {
                 Ok(txid) => {
                     let payer_amount_sat = get_invoice_amount!(ongoing_swap_out.invoice);
                     self.persister
-                        .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                        .resolve_ongoing_swap(
+                            id,
+                            Some((
+                                txid,
+                                PaymentData {
+                                    payer_amount_sat,
+                                    receiver_amount_sat: ongoing_swap_out.receiver_amount_sat,
+                                },
+                            )),
+                        )
                         .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
                 }
                 Err(err) => {
@@ -194,7 +203,7 @@ impl LiquidSdk {
                 "Swap-in {id} has been claimed but no txid is present"
             ));
         };
-        let payer_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
+        let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
         let keypair = self.get_submarine_keys(0)?;
         let swap_response: CreateSubmarineResponse =
             serde_json::from_str(&ongoing_swap_in.swap_response)?;
@@ -221,7 +230,16 @@ impl LiquidSdk {
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
 
                 self.persister
-                    .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                    .resolve_ongoing_swap(
+                        id,
+                        Some((
+                            txid,
+                            PaymentData {
+                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
+                                receiver_amount_sat,
+                            },
+                        )),
+                    )
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
 
                 Ok(())
@@ -230,7 +248,16 @@ impl LiquidSdk {
                 warn!("Swap-in {id} has already been claimed. Resolving...");
 
                 self.persister
-                    .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                    .resolve_ongoing_swap(
+                        id,
+                        Some((
+                            txid,
+                            PaymentData {
+                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
+                                receiver_amount_sat,
+                            },
+                        )),
+                    )
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
 
                 warn!("Swap-in {id} resolved successfully");
@@ -434,7 +461,7 @@ impl LiquidSdk {
         Ok(lbtc_pair)
     }
 
-    fn broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
+    fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
         Ok(self
             .build_tx(None, &self.address()?.to_string(), amount_sat)?
             .all_fees()
@@ -455,7 +482,7 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
-        let broadcast_fees_sat = self.broadcast_fee_estimation(receiver_amount_sat)?;
+        let broadcast_fees_sat = self.get_broadcast_fee_estimation(receiver_amount_sat)?;
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
@@ -581,7 +608,7 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
-        let broadcast_fees_sat = self.broadcast_fee_estimation(receiver_amount_sat)?;
+        let broadcast_fees_sat = self.get_broadcast_fee_estimation(receiver_amount_sat)?;
 
         ensure_sdk!(
             req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
@@ -697,6 +724,7 @@ impl LiquidSdk {
                             txid.clone(),
                             PaymentData {
                                 payer_amount_sat: receiver_amount_sat + req.fees_sat,
+                                receiver_amount_sat,
                             },
                         )),
                     )?;
@@ -935,6 +963,7 @@ impl LiquidSdk {
                 let id = tx.txid.to_string();
                 let data = payment_data.get(&id);
                 let amount_sat = tx.balance.values().sum::<i64>();
+                let fees_sat = data.map(|d| d.payer_amount_sat - d.receiver_amount_sat);
 
                 Payment {
                     id: Some(id.clone()),
@@ -945,8 +974,7 @@ impl LiquidSdk {
                         false => PaymentType::Sent,
                     },
                     invoice: None,
-                    fees_sat: data
-                        .map(|d| (amount_sat.abs() - d.payer_amount_sat as i64).unsigned_abs()),
+                    fees_sat,
                 }
             })
             .collect();

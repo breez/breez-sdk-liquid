@@ -20,7 +20,8 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
        ) STRICT;",
         "CREATE TABLE IF NOT EXISTS payment_data(
             id TEXT NOT NULL PRIMARY KEY,
-            payer_amount_sat INTEGER NOT NULL
+            payer_amount_sat INTEGER NOT NULL,
+            receiver_amount_sat INTEGER NOT NULL
         ) STRICT;",
     ]
 }

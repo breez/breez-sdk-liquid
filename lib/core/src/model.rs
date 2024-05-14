@@ -221,6 +221,7 @@ impl From<OngoingSwap> for Payment {
 
 pub(crate) struct PaymentData {
     pub payer_amount_sat: u64,
+    pub receiver_amount_sat: u64,
 }
 
 #[macro_export]

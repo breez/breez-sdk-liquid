@@ -64,9 +64,13 @@ impl Persister {
         )?;
         if let Some((txid, payment_data)) = payment_data {
             tx.execute(
-                "INSERT INTO payment_data(id, payer_amount_sat)
-              VALUES(?, ?)",
-                (txid, payment_data.payer_amount_sat),
+                "INSERT INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
+              VALUES(?, ?, ?)",
+                (
+                    txid,
+                    payment_data.payer_amount_sat,
+                    payment_data.receiver_amount_sat,
+                ),
             )?;
         }
         tx.commit()?;
@@ -94,7 +98,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            SELECT id, payer_amount_sat 
+            SELECT id, payer_amount_sat, receiver_amount_sat
             FROM payment_data
         ",
         )?;
@@ -105,6 +109,7 @@ impl Persister {
                     row.get(0)?,
                     PaymentData {
                         payer_amount_sat: row.get(1)?,
+                        receiver_amount_sat: row.get(2)?,
                     },
                 ))
             })?
