@@ -413,7 +413,6 @@ impl LiquidSdk {
         Ok(invoice)
     }
 
-    #[allow(dead_code)]
     fn validate_submarine_pairs(
         client: &BoltzApiClientV2,
         receiver_amount_sat: u64,
@@ -435,6 +434,14 @@ impl LiquidSdk {
         Ok(lbtc_pair)
     }
 
+    fn broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
+        Ok(self
+            .build_tx(None, &self.address()?.to_string(), amount_sat)?
+            .all_fees()
+            .values()
+            .sum())
+    }
+
     pub fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
@@ -448,31 +455,12 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
+        let broadcast_fees_sat = self.broadcast_fee_estimation(receiver_amount_sat)?;
+
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat: lbtc_pair.fees.total(receiver_amount_sat),
+            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
         })
-    }
-
-    fn broadcast_boltz(&self, tx: &Transaction) -> Result<String, PaymentError> {
-        let tx_hex = elements::encode::serialize(tx).to_lower_hex_string();
-        let response = self
-            .boltz_client_v2()
-            .broadcast_tx(self.network.into(), &tx_hex)?;
-        Ok(response
-            .as_object()
-            .ok_or(PaymentError::Generic {
-                err: "Invalid data received from swapper".to_string(),
-            })?
-            .get("id")
-            .ok_or(PaymentError::Generic {
-                err: "Invalid data received from swapper".to_string(),
-            })?
-            .as_str()
-            .ok_or(PaymentError::Generic {
-                err: "Invalid data received from swapper".to_string(),
-            })?
-            .to_string())
     }
 
     fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
@@ -565,14 +553,19 @@ impl LiquidSdk {
             create_response.expected_amount, create_response.address
         );
 
-        let tx = self.build_tx(
-            Some(0.02),
+        let lockup_tx = self.build_tx(
+            None,
             &create_response.address,
             create_response.expected_amount,
         )?;
-        let txid = self.broadcast_boltz(&tx)?;
-        debug!("Successfully broadcast lockup transaction for swap-in {swap_id}. Txid: {txid}");
-        Ok(txid)
+
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let lockup_txid = electrum_client.broadcast(&lockup_tx)?.to_string();
+
+        debug!(
+            "Successfully broadcast lockup transaction for swap-in {swap_id}. Txid: {lockup_txid}"
+        );
+        Ok(lockup_txid)
     }
 
     pub fn send_payment(
@@ -588,8 +581,10 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
+        let broadcast_fees_sat = self.broadcast_fee_estimation(receiver_amount_sat)?;
+
         ensure_sdk!(
-            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat),
+            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 

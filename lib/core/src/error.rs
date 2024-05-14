@@ -74,6 +74,13 @@ impl From<boltz_client::error::Error> for PaymentError {
 
                 PaymentError::Generic { err: msg }
             }
+            boltz_client::error::Error::HTTP(ureq) => {
+                dbg!(ureq.into_response().unwrap().into_string().unwrap());
+
+                PaymentError::Generic {
+                    err: "Could not contact servers".to_string(),
+                }
+            }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
