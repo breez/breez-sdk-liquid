@@ -526,6 +526,7 @@ dependencies = [
  "anyhow",
  "breez-liquid-sdk",
  "camino",
+ "glob",
  "thiserror",
  "uniffi 0.27.1",
  "uniffi-kotlin-multiplatform",
