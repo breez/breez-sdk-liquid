@@ -73,6 +73,8 @@ typedef struct wire_cst_list_payment {
 
 typedef struct wire_cst_get_info_response {
   uint64_t balance_sat;
+  uint64_t pending_send_sat;
+  uint64_t pending_receive_sat;
   struct wire_cst_list_prim_u_8_strict *pubkey;
 } wire_cst_get_info_response;
 

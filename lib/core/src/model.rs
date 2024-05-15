@@ -116,7 +116,12 @@ pub struct GetInfoRequest {
 
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
+    /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
+    /// Amount that is being used for ongoing Send swaps
+    pub pending_send_sat: u64,
+    /// Incoming amount that is pending from ongoing Receive swaps
+    pub pending_receive_sat: u64,
     pub pubkey: String,
 }
 

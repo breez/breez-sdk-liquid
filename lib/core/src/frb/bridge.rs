@@ -306,9 +306,13 @@ impl SseDecode for crate::model::GetInfoResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_balanceSat = <u64>::sse_decode(deserializer);
+        let mut var_pendingSendSat = <u64>::sse_decode(deserializer);
+        let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
         let mut var_pubkey = <String>::sse_decode(deserializer);
         return crate::model::GetInfoResponse {
             balance_sat: var_balanceSat,
+            pending_send_sat: var_pendingSendSat,
+            pending_receive_sat: var_pendingReceiveSat,
             pubkey: var_pubkey,
         };
     }
@@ -649,6 +653,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::GetInfoResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.balance_sat.into_into_dart().into_dart(),
+            self.pending_send_sat.into_into_dart().into_dart(),
+            self.pending_receive_sat.into_into_dart().into_dart(),
             self.pubkey.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -923,6 +929,8 @@ impl SseEncode for crate::model::GetInfoResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.balance_sat, serializer);
+        <u64>::sse_encode(self.pending_send_sat, serializer);
+        <u64>::sse_encode(self.pending_receive_sat, serializer);
         <String>::sse_encode(self.pubkey, serializer);
     }
 }

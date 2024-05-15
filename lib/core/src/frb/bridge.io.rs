@@ -113,6 +113,8 @@ impl CstDecode<crate::model::GetInfoResponse> for wire_cst_get_info_response {
     fn cst_decode(self) -> crate::model::GetInfoResponse {
         crate::model::GetInfoResponse {
             balance_sat: self.balance_sat.cst_decode(),
+            pending_send_sat: self.pending_send_sat.cst_decode(),
+            pending_receive_sat: self.pending_receive_sat.cst_decode(),
             pubkey: self.pubkey.cst_decode(),
         }
     }
@@ -285,6 +287,8 @@ impl NewWithNullPtr for wire_cst_get_info_response {
     fn new_with_null_ptr() -> Self {
         Self {
             balance_sat: Default::default(),
+            pending_send_sat: Default::default(),
+            pending_receive_sat: Default::default(),
             pubkey: core::ptr::null_mut(),
         }
     }
@@ -586,6 +590,8 @@ pub struct wire_cst_get_info_request {
 #[derive(Clone, Copy)]
 pub struct wire_cst_get_info_response {
     balance_sat: u64,
+    pending_send_sat: u64,
+    pending_receive_sat: u64,
     pubkey: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]

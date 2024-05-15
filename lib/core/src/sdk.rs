@@ -317,8 +317,26 @@ impl LiquidSdk {
     pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         debug!("active_address: {}", self.address()?);
 
+        let mut pending_send_sat = 0;
+        let mut pending_receive_sat = 0;
+        let mut confirmed_sent_sat = 0;
+        let mut confirmed_received_sat = 0;
+
+        // We rely on our payment state (pending or not) instead of the onchain confirmed state,
+        // because our payment state is derived from the swap state
+        for p in self.list_payments(req.with_scan, true)? {
+            match p.payment_type {
+                PaymentType::PendingSend => pending_send_sat += p.amount_sat,
+                PaymentType::PendingReceive => pending_receive_sat += p.amount_sat,
+                PaymentType::Sent => confirmed_sent_sat += p.amount_sat,
+                PaymentType::Received => confirmed_received_sat += p.amount_sat,
+            }
+        }
+
         Ok(GetInfoResponse {
-            balance_sat: self.total_balance_sat(req.with_scan)?,
+            balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
+            pending_send_sat,
+            pending_receive_sat,
             pubkey: self.lwk_signer.xpub().public_key.to_string(),
         })
     }
@@ -915,7 +933,7 @@ impl LiquidSdk {
                             fees_sat,
                         })
                     }
-                    false => None
+                    false => None,
                 }
             })
             .collect();
