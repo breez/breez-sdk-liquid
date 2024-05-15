@@ -416,44 +416,44 @@ impl SseDecode for crate::error::PaymentError {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                return crate::error::PaymentError::AmountOutOfRange;
-            }
-            1 => {
-                return crate::error::PaymentError::InvalidOrExpiredFees;
-            }
-            2 => {
-                return crate::error::PaymentError::InsufficientFunds;
-            }
-            3 => {
                 return crate::error::PaymentError::AlreadyClaimed;
             }
+            1 => {
+                return crate::error::PaymentError::AmountOutOfRange;
+            }
+            2 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::Generic { err: var_err };
+            }
+            3 => {
+                return crate::error::PaymentError::InvalidOrExpiredFees;
+            }
             4 => {
+                return crate::error::PaymentError::InsufficientFunds;
+            }
+            5 => {
+                return crate::error::PaymentError::InvalidInvoice;
+            }
+            6 => {
+                return crate::error::PaymentError::InvalidPreimage;
+            }
+            7 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::LwkError { err: var_err };
+            }
+            8 => {
+                return crate::error::PaymentError::PairsNotFound;
+            }
+            9 => {
+                return crate::error::PaymentError::PersistError;
+            }
+            10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 let mut var_txid = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
                     err: var_err,
                     txid: var_txid,
                 };
-            }
-            5 => {
-                let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::Generic { err: var_err };
-            }
-            6 => {
-                return crate::error::PaymentError::InvalidInvoice;
-            }
-            7 => {
-                return crate::error::PaymentError::InvalidPreimage;
-            }
-            8 => {
-                let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::LwkError { err: var_err };
-            }
-            9 => {
-                return crate::error::PaymentError::PairsNotFound;
-            }
-            10 => {
-                return crate::error::PaymentError::PersistError;
             }
             11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
@@ -701,26 +701,26 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Payment> for crate::model::
 impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::error::PaymentError::AmountOutOfRange => [0.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidOrExpiredFees => [1.into_dart()].into_dart(),
-            crate::error::PaymentError::InsufficientFunds => [2.into_dart()].into_dart(),
-            crate::error::PaymentError::AlreadyClaimed => [3.into_dart()].into_dart(),
+            crate::error::PaymentError::AlreadyClaimed => [0.into_dart()].into_dart(),
+            crate::error::PaymentError::AmountOutOfRange => [1.into_dart()].into_dart(),
+            crate::error::PaymentError::Generic { err } => {
+                [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::error::PaymentError::InvalidOrExpiredFees => [3.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds => [4.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidInvoice => [5.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidPreimage => [6.into_dart()].into_dart(),
+            crate::error::PaymentError::LwkError { err } => {
+                [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
             crate::error::PaymentError::Refunded { err, txid } => [
-                4.into_dart(),
+                10.into_dart(),
                 err.into_into_dart().into_dart(),
                 txid.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::error::PaymentError::Generic { err } => {
-                [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
-            }
-            crate::error::PaymentError::InvalidInvoice => [6.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidPreimage => [7.into_dart()].into_dart(),
-            crate::error::PaymentError::LwkError { err } => {
-                [8.into_dart(), err.into_into_dart().into_dart()].into_dart()
-            }
-            crate::error::PaymentError::PairsNotFound => [9.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [10.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
                 [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
@@ -1016,42 +1016,42 @@ impl SseEncode for crate::error::PaymentError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::error::PaymentError::AmountOutOfRange => {
+            crate::error::PaymentError::AlreadyClaimed => {
                 <i32>::sse_encode(0, serializer);
             }
-            crate::error::PaymentError::InvalidOrExpiredFees => {
+            crate::error::PaymentError::AmountOutOfRange => {
                 <i32>::sse_encode(1, serializer);
             }
-            crate::error::PaymentError::InsufficientFunds => {
+            crate::error::PaymentError::Generic { err } => {
                 <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::AlreadyClaimed => {
+            crate::error::PaymentError::InvalidOrExpiredFees => {
                 <i32>::sse_encode(3, serializer);
             }
-            crate::error::PaymentError::Refunded { err, txid } => {
+            crate::error::PaymentError::InsufficientFunds => {
                 <i32>::sse_encode(4, serializer);
-                <String>::sse_encode(err, serializer);
-                <String>::sse_encode(txid, serializer);
-            }
-            crate::error::PaymentError::Generic { err } => {
-                <i32>::sse_encode(5, serializer);
-                <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::InvalidInvoice => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(5, serializer);
             }
             crate::error::PaymentError::InvalidPreimage => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(6, serializer);
             }
             crate::error::PaymentError::LwkError { err } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::PairsNotFound => {
-                <i32>::sse_encode(9, serializer);
+                <i32>::sse_encode(8, serializer);
             }
             crate::error::PaymentError::PersistError => {
+                <i32>::sse_encode(9, serializer);
+            }
+            crate::error::PaymentError::Refunded { err, txid } => {
                 <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(err, serializer);
+                <String>::sse_encode(txid, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
                 <i32>::sse_encode(11, serializer);

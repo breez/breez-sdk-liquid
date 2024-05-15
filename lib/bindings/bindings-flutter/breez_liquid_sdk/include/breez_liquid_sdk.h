@@ -18,7 +18,7 @@ typedef struct _Dart_Handle* Dart_Handle;
  * Claim tx feerate, in sats per vbyte.
  * Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
  */
-#define LIQUID_CLAIM_TX_FEERATE 0.1
+#define LIQUID_CLAIM_TX_FEERATE_MSAT 100.0
 
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
@@ -76,11 +76,6 @@ typedef struct wire_cst_get_info_response {
   struct wire_cst_list_prim_u_8_strict *pubkey;
 } wire_cst_get_info_response;
 
-typedef struct wire_cst_PaymentError_Refunded {
-  struct wire_cst_list_prim_u_8_strict *err;
-  struct wire_cst_list_prim_u_8_strict *txid;
-} wire_cst_PaymentError_Refunded;
-
 typedef struct wire_cst_PaymentError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_Generic;
@@ -88,6 +83,11 @@ typedef struct wire_cst_PaymentError_Generic {
 typedef struct wire_cst_PaymentError_LwkError {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_LwkError;
+
+typedef struct wire_cst_PaymentError_Refunded {
+  struct wire_cst_list_prim_u_8_strict *err;
+  struct wire_cst_list_prim_u_8_strict *txid;
+} wire_cst_PaymentError_Refunded;
 
 typedef struct wire_cst_PaymentError_SendError {
   struct wire_cst_list_prim_u_8_strict *err;
@@ -98,9 +98,9 @@ typedef struct wire_cst_PaymentError_SignerError {
 } wire_cst_PaymentError_SignerError;
 
 typedef union PaymentErrorKind {
-  struct wire_cst_PaymentError_Refunded Refunded;
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_LwkError LwkError;
+  struct wire_cst_PaymentError_Refunded Refunded;
   struct wire_cst_PaymentError_SendError SendError;
   struct wire_cst_PaymentError_SignerError SignerError;
 } PaymentErrorKind;
