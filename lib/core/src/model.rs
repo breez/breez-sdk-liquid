@@ -192,7 +192,7 @@ impl SwapOut {
     pub(crate) fn calculate_status(&self) -> ReverseSwapStatus {
         match self.claim_txid {
             None => ReverseSwapStatus::Pending,
-            Some(_) => ReverseSwapStatus::Completed
+            Some(_) => ReverseSwapStatus::Completed,
         }
     }
 }

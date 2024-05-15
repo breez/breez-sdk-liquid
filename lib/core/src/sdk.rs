@@ -165,7 +165,7 @@ impl LiquidSdk {
                                 txid,
                                 PaymentData {
                                     payer_amount_sat,
-                                    receiver_amount_sat: ongoing_swap_out.receiver_amount_sat,
+                                    receiver_amount_sat: swap_out.receiver_amount_sat,
                                 },
                             )),
                         )
@@ -600,15 +600,14 @@ impl LiquidSdk {
         self.status_stream
             .insert_tracked_swap(swap_id, SwapType::Submarine);
 
-        self.persister
-            .insert_or_update_swap_in(SwapIn {
-                id: swap_id.clone(),
-                invoice: req.invoice.clone(),
-                payer_amount_sat: req.fees_sat + receiver_amount_sat,
-                create_response_json: create_response_json.clone(),
-                lockup_txid: None,
-                claim_txid: None,
-            })?;
+        self.persister.insert_or_update_swap_in(SwapIn {
+            id: swap_id.clone(),
+            invoice: req.invoice.clone(),
+            payer_amount_sat: req.fees_sat + receiver_amount_sat,
+            create_response_json: create_response_json.clone(),
+            lockup_txid: None,
+            claim_txid: None,
+        })?;
 
         let result;
         let mut lockup_txid = String::new();
@@ -643,7 +642,8 @@ impl LiquidSdk {
                     };
 
                     lockup_txid = self.lockup_funds(swap_id, &create_response)?;
-                    self.persister.set_lockup_txid_for_swap_in(swap_id, &lockup_txid)?;
+                    self.persister
+                        .set_lockup_txid_for_swap_in(swap_id, &lockup_txid)?;
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
@@ -884,6 +884,7 @@ impl LiquidSdk {
                 invoice: invoice.to_string(),
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
+                claim_txid: None,
             })
             .map_err(|_| PaymentError::PersistError)?;
 
