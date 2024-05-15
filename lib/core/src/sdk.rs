@@ -757,9 +757,6 @@ impl LiquidSdk {
         )?;
         let claim_txid = claim_tx.txid().to_string();
 
-        // Before broadcasting the claim tx, we re-sync with LWK, so we have the claim tx inputs
-        self.scan()?;
-
         // Electrum only broadcasts txs with lowball fees on testnet
         // For mainnet, we use Boltz to broadcast
         match self.network {
@@ -771,6 +768,9 @@ impl LiquidSdk {
                 info!("Claim broadcast response: {response:?}");
             }
             Network::LiquidTestnet => {
+                // Before broadcasting the claim tx, we re-sync with LWK, so we have the claim tx inputs
+                self.scan()?;
+
                 let electrum_client = ElectrumClient::new(&self.electrum_url)?;
                 electrum_client.broadcast(&claim_tx)?;
             }
