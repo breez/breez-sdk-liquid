@@ -19,7 +19,6 @@ use crate::model::*;
 use crate::sdk::LiquidSdk;
 
 pub(super) struct BoltzStatusStream {
-    // socket: WebSocket<MaybeTlsStream<TcpStream>>,
     swap_in_ids: Arc<Mutex<HashSet<String>>>,
     swap_out_ids: Arc<Mutex<HashSet<String>>>,
 }
