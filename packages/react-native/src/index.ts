@@ -17,54 +17,49 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
           }
       )
 
-export interface ConnectRequest {
+export type ConnectRequest = {
     mnemonic: string
     network: Network
     dataDir?: string
 }
 
-export interface GetInfoRequest {
+export type GetInfoRequest = {
     withScan: boolean
 }
 
-export interface GetInfoResponse {
+export type GetInfoResponse = {
     balanceSat: number
     pubkey: string
 }
 
-export interface PrepareReceiveRequest {
+export type PrepareReceiveRequest = {
     payerAmountSat: number
 }
 
-export interface PrepareReceiveResponse {
-    pairHash: string
+export type PrepareReceiveResponse = {
     payerAmountSat: number
     feesSat: number
 }
 
-export interface PrepareSendRequest {
+export type PrepareSendRequest = {
     invoice: string
 }
 
-export interface PrepareSendResponse {
-    id: string
-    payerAmountSat: number
-    receiverAmountSat: number
-    totalFees: number
-    fundingAddress: string
+export type PrepareSendResponse = {
     invoice: string
+    feesSat: number
 }
 
-export interface ReceivePaymentResponse {
+export type ReceivePaymentResponse = {
     id: string
     invoice: string
 }
 
-export interface RestoreRequest {
+export type RestoreRequest = {
     backupPath?: string
 }
 
-export interface SendPaymentResponse {
+export type SendPaymentResponse = {
     txid: string
 }
 
