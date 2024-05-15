@@ -173,7 +173,7 @@ pub enum SubmarineSwapStatus {
     /// The lockup tx was broadcasted successfully, but the claim tx was not seen in the mempool yet.
     Pending = 1,
 
-    // TODO Separate between CompletedSeen vs CompletedConfirmed?
+    /// The claim tx has been seen in the mempool.
     Completed = 2,
 }
 
