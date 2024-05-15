@@ -10,16 +10,8 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [dependencies]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
-
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
-#boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "b632238935ad5f5b60435a7fc494ded2f232cf12" }
-
-# Combination of
-# - latest fixes from Boltz (fallback for get_utxos) needed for claiming as soon as lockup tx is seen in mempool (receive case)
-# - latest fixes from Antonio (get reverse swap pairs, necessary structs, etc)
-# https://github.com/ok300/boltz-rust/commits/ok300-combo-boltz-fallback-get-utxos-yse-get-submarine-pairs/
 boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "be8395900495e415699a54e15f4bd0bc6d774237" }
-
 flutter_rust_bridge = { version = "=2.0.0-dev.33", features = ["chrono"], optional = true }
 log = "0.4.20"
 lwk_common = "0.3.0"
