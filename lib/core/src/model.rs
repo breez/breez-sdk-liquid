@@ -147,7 +147,8 @@ pub(crate) struct OngoingSwapIn {
     pub(crate) id: String,
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
-    pub(crate) txid: Option<String>,
+    pub(crate) create_response_json: String,
+    pub(crate) lockup_txid: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -220,6 +221,7 @@ impl From<OngoingSwap> for Payment {
 
 pub(crate) struct PaymentData {
     pub payer_amount_sat: u64,
+    pub receiver_amount_sat: u64,
 }
 
 #[macro_export]

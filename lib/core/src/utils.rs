@@ -40,7 +40,7 @@ pub(crate) fn get_swap_status_v2(
 
                 return match args.first() {
                     Some(update) if update.id == swap_id => {
-                        info!("Got new reverse swap status: {}", update.status);
+                        info!("Got new swap status: {}", update.status);
 
                         Ok(update.status.clone())
                     }

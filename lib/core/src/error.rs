@@ -36,6 +36,9 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("The payment has been refunded. Reason for failure: {err}")]
+    Refunded { err: String, txid: String },
+
     #[error("Generic error: {err}")]
     Generic { err: String },
 
@@ -70,6 +73,13 @@ impl From<boltz_client::error::Error> for PaymentError {
                 }
 
                 PaymentError::Generic { err: msg }
+            }
+            boltz_client::error::Error::HTTP(ureq) => {
+                dbg!(ureq.into_response().unwrap().into_string().unwrap());
+
+                PaymentError::Generic {
+                    err: "Could not contact servers".to_string(),
+                }
             }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),

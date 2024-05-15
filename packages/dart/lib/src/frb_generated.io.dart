@@ -20,22 +20,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     required super.portManager,
   });
 
-  CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_LBtcReverseRecoveryPtr => wire
-          ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
-
-  @protected
-  LBtcReverseRecovery
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          dynamic raw);
-
-  @protected
-  LBtcReverseRecovery
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          dynamic raw);
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -145,20 +131,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
-  int dco_decode_usize(dynamic raw);
-
-  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
-
-  @protected
-  LBtcReverseRecovery
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          SseDeserializer deserializer);
-
-  @protected
-  LBtcReverseRecovery
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          SseDeserializer deserializer);
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -277,9 +250,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_usize(SseDeserializer deserializer);
 
   @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(
@@ -512,43 +482,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 3;
       return;
     }
+    if (apiObj is PaymentError_Refunded) {
+      var pre_err = cst_encode_String(apiObj.err);
+      var pre_txid = cst_encode_String(apiObj.txid);
+      wireObj.tag = 4;
+      wireObj.kind.Refunded.err = pre_err;
+      wireObj.kind.Refunded.txid = pre_txid;
+      return;
+    }
     if (apiObj is PaymentError_Generic) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 4;
+      wireObj.tag = 5;
       wireObj.kind.Generic.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidInvoice) {
-      wireObj.tag = 5;
+      wireObj.tag = 6;
       return;
     }
     if (apiObj is PaymentError_InvalidPreimage) {
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       return;
     }
     if (apiObj is PaymentError_LwkError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       wireObj.kind.LwkError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_PairsNotFound) {
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       return;
     }
     if (apiObj is PaymentError_PersistError) {
-      wireObj.tag = 9;
+      wireObj.tag = 10;
       return;
     }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 10;
+      wireObj.tag = 11;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 11;
+      wireObj.tag = 12;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -602,14 +580,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      LBtcReverseRecovery raw);
-
-  @protected
-  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      LBtcReverseRecovery raw);
-
-  @protected
   bool cst_encode_bool(bool raw);
 
   @protected
@@ -631,21 +601,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_encode_unit(void raw);
 
   @protected
-  int cst_encode_usize(int raw);
-
-  @protected
   void sse_encode_AnyhowException(
       AnyhowException self, SseSerializer serializer);
-
-  @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          LBtcReverseRecovery self, SseSerializer serializer);
-
-  @protected
-  void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-          LBtcReverseRecovery self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -769,9 +726,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_usize(int self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -802,7 +756,7 @@ class RustLibWire implements BaseWire {
       : _lookup = lookup;
 
   void store_dart_post_cobject(
-    int ptr,
+    DartPostCObjectFnType ptr,
   ) {
     return _store_dart_post_cobject(
       ptr,
@@ -810,10 +764,10 @@ class RustLibWire implements BaseWire {
   }
 
   late final _store_dart_post_cobjectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>(
           'store_dart_post_cobject');
-  late final _store_dart_post_cobject =
-      _store_dart_post_cobjectPtr.asFunction<void Function(int)>();
+  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr
+      .asFunction<void Function(DartPostCObjectFnType)>();
 
   void wire_backup(
     int port_,
@@ -880,8 +834,8 @@ class RustLibWire implements BaseWire {
 
   void wire_list_payments(
     int port_,
-    ffi.Pointer<bool> with_scan,
-    ffi.Pointer<bool> include_pending,
+    bool with_scan,
+    bool include_pending,
   ) {
     return _wire_list_payments(
       port_,
@@ -891,11 +845,10 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire_list_paymentsPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<bool>,
-              ffi.Pointer<bool>)>>('frbgen_breez_liquid_wire_list_payments');
-  late final _wire_list_payments = _wire_list_paymentsPtr
-      .asFunction<void Function(int, ffi.Pointer<bool>, ffi.Pointer<bool>)>();
+          ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Bool, ffi.Bool)>>(
+      'frbgen_breez_liquid_wire_list_payments');
+  late final _wire_list_payments =
+      _wire_list_paymentsPtr.asFunction<void Function(int, bool, bool)>();
 
   void wire_prepare_receive_payment(
     int port_,
@@ -953,22 +906,6 @@ class RustLibWire implements BaseWire {
   late final _wire_receive_payment = _wire_receive_paymentPtr.asFunction<
       void Function(int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
-  void wire_recover_funds(
-    int port_,
-    int recovery,
-  ) {
-    return _wire_recover_funds(
-      port_,
-      recovery,
-    );
-  }
-
-  late final _wire_recover_fundsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire_recover_funds');
-  late final _wire_recover_funds =
-      _wire_recover_fundsPtr.asFunction<void Function(int, int)>();
-
   void wire_restore(
     int port_,
     ffi.Pointer<wire_cst_restore_request> req,
@@ -1004,38 +941,6 @@ class RustLibWire implements BaseWire {
       'frbgen_breez_liquid_wire_send_payment');
   late final _wire_send_payment = _wire_send_paymentPtr.asFunction<
       void Function(int, ffi.Pointer<wire_cst_prepare_send_response>)>();
-
-  void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery');
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery');
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<wire_cst_connect_request> cst_new_box_autoadd_connect_request() {
     return _cst_new_box_autoadd_connect_request();
@@ -1193,6 +1098,11 @@ class RustLibWire implements BaseWire {
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 }
 
+typedef DartPostCObjectFnType = ffi.Pointer<
+    ffi.NativeFunction<
+        ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
+typedef DartPort = ffi.Int64;
+
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
 
@@ -1210,10 +1120,9 @@ final class wire_cst_connect_request extends ffi.Struct {
 }
 
 final class wire_cst_get_info_request extends ffi.Struct {
+  @ffi.Bool()
   external bool with_scan;
 }
-
-typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
   @ffi.Uint64()
@@ -1273,6 +1182,12 @@ final class wire_cst_get_info_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
 
+final class wire_cst_PaymentError_Refunded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+}
+
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -1290,6 +1205,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 }
 
 final class PaymentErrorKind extends ffi.Union {
+  external wire_cst_PaymentError_Refunded Refunded;
+
   external wire_cst_PaymentError_Generic Generic;
 
   external wire_cst_PaymentError_LwkError LwkError;
@@ -1317,5 +1234,3 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 }
 
 const double LIQUID_CLAIM_TX_FEERATE = 0.1;
-
-const int LIQUID_MIN_CLAIM_ABSOLUTE_FEES = 134;

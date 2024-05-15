@@ -10,6 +10,7 @@ use boltz_client::swaps::{
     boltz::{RevSwapStates, SubSwapStates},
     boltzv2::{Subscription, SwapUpdate},
 };
+use boltz_client::SwapType;
 use log::{error, info, warn};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{Message, WebSocket};
@@ -19,13 +20,33 @@ use crate::sdk::LiquidSdk;
 
 pub(super) struct BoltzStatusStream {
     // socket: WebSocket<MaybeTlsStream<TcpStream>>,
+    swap_in_ids: Arc<Mutex<HashSet<String>>>,
+    swap_out_ids: Arc<Mutex<HashSet<String>>>,
 }
 impl BoltzStatusStream {
-    pub(super) fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
-        // Track subscribed swap IDs
-        let swap_in_ids = Arc::new(Mutex::new(HashSet::new()));
-        let swap_out_ids = Arc::new(Mutex::new(HashSet::new()));
+    pub(super) fn new() -> Self {
+        BoltzStatusStream {
+            swap_in_ids: Default::default(),
+            swap_out_ids: Default::default(),
+        }
+    }
 
+    pub(super) fn insert_tracked_swap(&self, id: &str, swap_type: SwapType) {
+        match swap_type {
+            SwapType::Submarine => self.swap_in_ids.lock().unwrap().insert(id.to_string()),
+            SwapType::ReverseSubmarine => self.swap_out_ids.lock().unwrap().insert(id.to_string()),
+        };
+    }
+
+    pub(super) fn resolve_tracked_swap(&self, id: &str, swap_type: SwapType) {
+        match swap_type {
+            SwapType::Submarine => self.swap_in_ids.lock().unwrap().remove(id),
+            SwapType::ReverseSubmarine => self.swap_out_ids.lock().unwrap().remove(id),
+        };
+    }
+
+    pub(super) fn track_pending_swaps(&self, sdk: Arc<LiquidSdk>) -> Result<()> {
+        // Track subscribed swap IDs
         let mut socket = sdk
             .boltz_client_v2()
             .connect_ws()
@@ -39,6 +60,9 @@ impl BoltzStatusStream {
             }
             _ => Err(anyhow!("Unsupported stream type"))?,
         };
+
+        let swap_in_ids = self.swap_in_ids.clone();
+        let swap_out_ids = self.swap_out_ids.clone();
 
         thread::spawn(move || loop {
             let maybe_subscribe_fn =
@@ -134,7 +158,7 @@ impl BoltzStatusStream {
                                                     new_state,
                                                     &update_swap_id,
                                                 );
-                                                info!("OngoingSwapIn / Send try_handle_submarine_swap_status res: {res:?}");
+                                                info!("ongoingswapin / send try_handle_submarine_swap_status res: {res:?}");
                                             }
                                             Err(_) => error!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
                                         }

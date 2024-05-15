@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
     str::FromStr,
     sync::{Arc, Mutex},
-    thread,
+    thread::sleep,
     time::Duration,
 };
 
@@ -13,11 +13,10 @@ use boltz_client::{
     swaps::{
         boltz::{RevSwapStates, SubSwapStates},
         boltzv2::*,
-        liquid::{LBtcSwapScript, LBtcSwapTx},
         liquidv2::LBtcSwapTxV2,
     },
-    util::secrets::{LBtcReverseRecovery, LiquidSwapKey, Preimage, SwapKey},
-    Amount, Bolt11Invoice, Keypair, LBtcSwapScriptV2,
+    util::secrets::{LiquidSwapKey, Preimage, SwapKey},
+    Amount, Bolt11Invoice, Keypair, LBtcSwapScriptV2, SwapType,
 };
 use elements::hashes::hex::DisplayHex;
 use log::{debug, info, warn};
@@ -36,7 +35,7 @@ use crate::{
 
 /// Claim tx feerate, in sats per vbyte.
 /// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
-pub const LIQUID_CLAIM_TX_FEERATE: f32 = 0.1;
+pub const LIQUID_CLAIM_TX_FEERATE_MSAT: f32 = 100.0;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
@@ -49,6 +48,7 @@ pub struct LiquidSdk {
     lwk_signer: SwSigner,
     active_address: Option<u32>,
     persister: Persister,
+    status_stream: BoltzStatusStream,
     data_dir_path: String,
 }
 
@@ -85,6 +85,8 @@ impl LiquidSdk {
         let persister = Persister::new(&data_dir_path, network)?;
         persister.init()?;
 
+        let status_stream = BoltzStatusStream::new();
+
         let sdk = Arc::new(LiquidSdk {
             lwk_wollet,
             network,
@@ -93,10 +95,10 @@ impl LiquidSdk {
             active_address: None,
             persister,
             data_dir_path,
+            status_stream,
         });
 
-        // LiquidSdk::track_pending_swaps(&sdk)?;
-        BoltzStatusStream::track_pending_swaps(sdk.clone())?;
+        sdk.status_stream.track_pending_swaps(sdk.clone())?;
 
         Ok(sdk)
     }
@@ -111,6 +113,23 @@ impl LiquidSdk {
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
+    }
+
+    fn get_submarine_keys(&self, derivation_index: i32) -> Result<Keypair, PaymentError> {
+        let mnemonic = self
+            .lwk_signer
+            .mnemonic()
+            .ok_or(PaymentError::SignerError {
+                err: "Could not claim: Mnemonic not found".to_string(),
+            })?;
+        let swap_key = SwapKey::from_submarine_account(
+            &mnemonic.to_string(),
+            "",
+            self.network.into(),
+            derivation_index as u64,
+        )?;
+        let lsk = LiquidSwapKey::try_from(swap_key)?;
+        Ok(lsk.keypair)
     }
 
     pub(crate) fn try_handle_reverse_swap_status(
@@ -140,7 +159,16 @@ impl LiquidSdk {
                 Ok(txid) => {
                     let payer_amount_sat = get_invoice_amount!(ongoing_swap_out.invoice);
                     self.persister
-                        .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                        .resolve_ongoing_swap(
+                            id,
+                            Some((
+                                txid,
+                                PaymentData {
+                                    payer_amount_sat,
+                                    receiver_amount_sat: ongoing_swap_out.receiver_amount_sat,
+                                },
+                            )),
+                        )
                         .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
                 }
                 Err(err) => {
@@ -170,19 +198,93 @@ impl LiquidSdk {
         let ongoing_swap_in = Persister::fetch_ongoing_swap_in(&con, id)?
             .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
 
-        let Some(txid) = ongoing_swap_in.txid.clone() else {
-            return Err(anyhow!("Transaction not broadcast yet for swap {id}"));
+        let Some(txid) = ongoing_swap_in.lockup_txid.clone() else {
+            return Err(anyhow!("Swap-in {id} is pending but no txid is present"));
         };
+        let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
+        let keypair = self.get_submarine_keys(0)?;
+        let create_response: CreateSubmarineResponse =
+            serde_json::from_str(&ongoing_swap_in.create_response_json)?;
 
         match swap_state {
-            SubSwapStates::TransactionClaimed
+            SubSwapStates::TransactionClaimPending => {
+                let Ok(swap_script) = LBtcSwapScriptV2::submarine_from_swap_resp(
+                    &create_response,
+                    keypair.public_key().into(),
+                ) else {
+                    self.persister
+                        .resolve_ongoing_swap(id, None)
+                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+
+                    return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
+                };
+
+                self.post_submarine_claim_details(
+                    id,
+                    &swap_script,
+                    &ongoing_swap_in.invoice,
+                    &keypair,
+                )
+                .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
+
+                self.persister
+                    .resolve_ongoing_swap(
+                        id,
+                        Some((
+                            txid,
+                            PaymentData {
+                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
+                                receiver_amount_sat,
+                            },
+                        )),
+                    )
+                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+
+                Ok(())
+            }
+            SubSwapStates::TransactionClaimed => {
+                warn!("Swap-in {id} has already been claimed. Resolving...");
+
+                self.persister
+                    .resolve_ongoing_swap(
+                        id,
+                        Some((
+                            txid,
+                            PaymentData {
+                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
+                                receiver_amount_sat,
+                            },
+                        )),
+                    )
+                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+
+                warn!("Swap-in {id} resolved successfully");
+                Ok(())
+            }
+            SubSwapStates::TransactionLockupFailed
             | SubSwapStates::InvoiceFailedToPay
             | SubSwapStates::SwapExpired => {
-                warn!("Cannot positively resolve swap {id}, unrecoverable state: {swap_state:?}");
+                warn!("Swap-in {id} is in an unrecoverable state: {swap_state:?}");
 
-                let payer_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
+                // If swap state is unrecoverable, try refunding
+                let Ok(swap_script) = LBtcSwapScriptV2::submarine_from_swap_resp(
+                    &create_response,
+                    keypair.public_key().into(),
+                ) else {
+                    self.persister
+                        .resolve_ongoing_swap(id, None)
+                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+
+                    return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
+                };
+
+                let refund_txid =
+                    self.try_refund(id, &swap_script, &keypair, receiver_amount_sat)?;
+
+                warn!("Swap-in {id} refunded successfully. Txid: {refund_txid}");
+
                 self.persister
-                    .resolve_ongoing_swap(id, Some((txid, PaymentData { payer_amount_sat })))
+                    .resolve_ongoing_swap(id, None)
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))
             }
             _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
@@ -276,10 +378,6 @@ impl LiquidSdk {
         })
     }
 
-    fn get_signer(&self) -> SwSigner {
-        self.lwk_signer.clone()
-    }
-
     // fn boltz_client(&self) -> BoltzApiClient {
     //     let base_url = match self.network {
     //         Network::LiquidTestnet => BOLTZ_TESTNET_URL,
@@ -316,9 +414,10 @@ impl LiquidSdk {
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
+        self.scan()?;
         let lwk_wollet = self.lwk_wollet.lock().unwrap();
         let mut pset = lwk_wollet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
-        let signer = AnySigner::Software(self.get_signer());
+        let signer = AnySigner::Software(self.lwk_signer.clone());
         signer.sign(&mut pset)?;
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
@@ -340,7 +439,6 @@ impl LiquidSdk {
         Ok(invoice)
     }
 
-    #[allow(dead_code)]
     fn validate_submarine_pairs(
         client: &BoltzApiClientV2,
         receiver_amount_sat: u64,
@@ -362,6 +460,14 @@ impl LiquidSdk {
         Ok(lbtc_pair)
     }
 
+    fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
+        Ok(self
+            .build_tx(None, &self.address()?.to_string(), amount_sat)?
+            .all_fees()
+            .values()
+            .sum())
+    }
+
     pub fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
@@ -375,10 +481,119 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
+        let broadcast_fees_sat = self.get_broadcast_fee_estimation(receiver_amount_sat)?;
+
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat: lbtc_pair.fees.total(receiver_amount_sat),
+            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
         })
+    }
+
+    fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
+        let preimage = Preimage::from_str(preimage)?;
+        let preimage_hash = preimage.sha256.to_string();
+        let invoice = Bolt11Invoice::from_str(invoice).map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice_payment_hash = invoice.payment_hash();
+
+        (invoice_payment_hash.to_string() == preimage_hash)
+            .then_some(())
+            .ok_or(PaymentError::InvalidPreimage)
+    }
+
+    fn new_refund_tx(&self, swap_script: &LBtcSwapScriptV2) -> Result<LBtcSwapTxV2, PaymentError> {
+        let wallet = self.lwk_wollet.lock().unwrap();
+        let output_address = wallet.address(Some(0))?.address().to_string();
+        let network_config = self.network_config();
+        Ok(LBtcSwapTxV2::new_refund(
+            swap_script.clone(),
+            &output_address,
+            &network_config,
+        )?)
+    }
+
+    fn try_refund(
+        &self,
+        swap_id: &str,
+        swap_script: &LBtcSwapScriptV2,
+        keypair: &Keypair,
+        amount_sat: u64,
+    ) -> Result<String, PaymentError> {
+        let refund_tx = self.new_refund_tx(swap_script)?;
+
+        let broadcast_fees_sat = Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat)?);
+        let client = self.boltz_client_v2();
+        let is_lowball = Some((&client, boltz_client::network::Chain::from(self.network)));
+
+        match refund_tx.sign_refund(
+            keypair,
+            broadcast_fees_sat,
+            Some((&client, &swap_id.to_string())),
+        ) {
+            // Try with cooperative refund
+            Ok(tx) => {
+                let txid = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                debug!("Successfully broadcast cooperative refund for swap-in {swap_id}");
+                Ok(txid)
+            }
+            // Try with non-cooperative refund
+            Err(e) => {
+                debug!("Cooperative refund failed: {:?}", e);
+                let tx = refund_tx.sign_refund(keypair, broadcast_fees_sat, None)?;
+                let txid = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                debug!("Successfully broadcast non-cooperative refund for swap-in {swap_id}");
+                Ok(txid)
+            }
+        }
+    }
+
+    fn post_submarine_claim_details(
+        &self,
+        swap_id: &str,
+        swap_script: &LBtcSwapScriptV2,
+        invoice: &str,
+        keypair: &Keypair,
+    ) -> Result<(), PaymentError> {
+        debug!("Claim is pending for swap-in {swap_id}. Initiating cooperative claim");
+        let client = self.boltz_client_v2();
+        let refund_tx = self.new_refund_tx(swap_script)?;
+
+        let claim_tx_response = client.get_claim_tx_details(&swap_id.to_string())?;
+
+        debug!("Received claim tx details: {:?}", &claim_tx_response);
+
+        Self::verify_payment_hash(&claim_tx_response.preimage, invoice)?;
+
+        let (partial_sig, pub_nonce) =
+            refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
+
+        client.post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
+        debug!("Successfully sent claim details for swap-in {swap_id}");
+        Ok(())
+    }
+
+    fn lockup_funds(
+        &self,
+        swap_id: &str,
+        create_response: &CreateSubmarineResponse,
+    ) -> Result<String, PaymentError> {
+        debug!(
+            "Initiated swap-in: send {} sats to liquid address {}",
+            create_response.expected_amount, create_response.address
+        );
+
+        let lockup_tx = self.build_tx(
+            None,
+            &create_response.address,
+            create_response.expected_amount,
+        )?;
+
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let lockup_txid = electrum_client.broadcast(&lockup_tx)?.to_string();
+
+        debug!(
+            "Successfully broadcast lockup transaction for swap-in {swap_id}. Txid: {lockup_txid}"
+        );
+        Ok(lockup_txid)
     }
 
     pub fn send_payment(
@@ -394,66 +609,71 @@ impl LiquidSdk {
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
 
+        let broadcast_fees_sat = self.get_broadcast_fee_estimation(receiver_amount_sat)?;
+
         ensure_sdk!(
-            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat),
+            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
-        let lwk_wollet = self.lwk_wollet.lock().unwrap();
-        // let our_pubkey = self
-        //     .address()?
-        //     .to_unconfidential()
-        //     .blinding_pubkey
-        //     .ok_or(PaymentError::Generic {
-        //         err: "Could not retrieve wallet pubkey".to_string(),
-        //     })?
-        //     .into();
-        let refund_public_key = lwk_wollet
-            .address(None)?
-            .address()
-            .blinding_pubkey
-            .ok_or(PaymentError::Generic {
-                err: "Could not generate refund pubkey".to_string(),
-            })?
-            .into();
-
-        // Unlock lwk wallet so it can be used to build the tx
-        std::mem::drop(lwk_wollet);
+        let keypair = self.get_submarine_keys(0)?;
+        let refund_public_key = boltz_client::PublicKey {
+            compressed: true,
+            inner: keypair.public_key(),
+        };
 
         let create_response = client.post_swap_req(&CreateSubmarineRequest {
             from: "L-BTC".to_string(),
             to: "BTC".to_string(),
             invoice: req.invoice.to_string(),
-            // TODO: Add refund flow
             refund_public_key,
+            pair_hash: Some(lbtc_pair.hash),
             // TODO: Add referral id
             referral_id: None,
         })?;
+        let create_response_json =
+            serde_json::to_string(&create_response).map_err(|_| PaymentError::Generic {
+                err: "Could not store swap response locally".to_string(),
+            })?;
 
-        // let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(&create_response, our_pubkey)?;
-        debug!("Opening WS connection for swap {}", create_response.id);
+        let swap_id = &create_response.id;
+        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
+            &create_response,
+            keypair.public_key().into(),
+        )?;
 
-        let mut socket = client.connect_ws().unwrap();
-        let subscription = Subscription::new(&create_response.id);
+        debug!("Opening WS connection for swap {}", &swap_id);
+
+        let mut socket = client.connect_ws()?;
+        let subscription = Subscription::new(swap_id);
         let subscribe_json = serde_json::to_string(&subscription)
             .map_err(|e| anyhow!("Failed to serialize subscription msg: {e:?}"))?;
         socket
             .send(tungstenite::Message::Text(subscribe_json))
             .map_err(|e| anyhow!("Failed to subscribe to websocket updates: {e:?}"))?;
 
+        // We insert the pending send to avoid it being handled by the status stream
+        self.status_stream
+            .insert_tracked_swap(swap_id, SwapType::Submarine);
+
         self.persister
             .insert_or_update_ongoing_swap_in(OngoingSwapIn {
-                id: create_response.id.clone(),
+                id: swap_id.clone(),
                 invoice: req.invoice.clone(),
                 payer_amount_sat: req.fees_sat + receiver_amount_sat,
-                txid: None,
+                create_response_json: create_response_json.clone(),
+                lockup_txid: None,
             })?;
 
         let result;
-        let mut txid = String::new();
+        let mut lockup_txid = String::new();
         loop {
-            let Ok(data) = utils::get_swap_status_v2(&mut socket, &create_response.id) else {
-                continue;
+            let data = match utils::get_swap_status_v2(&mut socket, swap_id) {
+                Ok(data) => data,
+                Err(_) => {
+                    // TODO: close socket if dead, skip EOF errors
+                    continue;
+                }
             };
 
             let state = data
@@ -466,87 +686,84 @@ impl LiquidSdk {
             match state {
                 // Boltz has locked the HTLC, we proceed with locking up the funds
                 SubSwapStates::InvoiceSet => {
-                    debug!(
-                        "Initiated swap-in: send {} sats to liquid address {}",
-                        create_response.expected_amount, create_response.address
-                    );
-                    let tx = self.build_tx(
-                        None,
-                        &create_response.address,
-                        create_response.expected_amount,
-                    )?;
+                    // Check that we have not persisted the swap already
+                    let con = self.persister.get_connection()?;
 
-                    txid = match self.network {
-                        Network::Liquid => {
-                            let tx_hex = elements::encode::serialize(&tx).to_lower_hex_string();
-                            let response = client.broadcast_tx(self.network.into(), &tx_hex)?;
-                            response
-                                .as_object()
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .get("id")
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .as_str()
-                                .ok_or(PaymentError::Generic {
-                                    err: "Invalid data received from swapper".to_string(),
-                                })?
-                                .to_string()
-                        }
-                        Network::LiquidTestnet => {
-                            let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-                            electrum_client.broadcast(&tx)?.to_string()
+                    if let Some(ongoing_swap) = Persister::fetch_ongoing_swap_in(&con, swap_id)
+                        .map_err(|_| PaymentError::PersistError)?
+                    {
+                        if ongoing_swap.lockup_txid.is_some() {
+                            continue;
                         }
                     };
 
-                    debug!(
-                        "Successfully broadcast lockup transaction for swap {}. Txid: {}",
-                        &create_response.id, &txid
-                    );
+                    lockup_txid = self.lockup_funds(swap_id, &create_response)?;
+                    self.persister
+                        .insert_or_update_ongoing_swap_in(OngoingSwapIn {
+                            id: swap_id.clone(),
+                            invoice: req.invoice.clone(),
+                            payer_amount_sat: req.fees_sat + receiver_amount_sat,
+                            create_response_json: create_response_json.clone(),
+                            lockup_txid: Some(lockup_txid.clone()),
+                        })?;
+                }
 
+                // Boltz has detected the lockup in the mempool, we can speed up
+                // the claim by doing so cooperatively
+                SubSwapStates::TransactionClaimPending => {
+                    self.post_submarine_claim_details(
+                        swap_id,
+                        &swap_script,
+                        &req.invoice,
+                        &keypair,
+                    )?;
+
+                    debug!("Boltz successfully claimed the funds. Resolving swap-in {swap_id}");
                     self.persister.resolve_ongoing_swap(
-                        &create_response.id,
+                        swap_id,
                         Some((
-                            txid.clone(),
+                            lockup_txid.clone(),
                             PaymentData {
                                 payer_amount_sat: receiver_amount_sat + req.fees_sat,
+                                receiver_amount_sat,
                             },
                         )),
                     )?;
 
-                    debug!(
-                        "Successfully resolved ongoing swap-in {}",
-                        &create_response.id
-                    );
-                }
-                // Boltz has detected our lockup
-                SubSwapStates::TransactionMempool | SubSwapStates::TransactionConfirmed => {}
-                // Boltz has broadcast the claim to the mempool, resolve with success
-                SubSwapStates::TransactionClaimed => {
-                    result = Ok(SendPaymentResponse { txid });
+                    self.status_stream
+                        .resolve_tracked_swap(swap_id, SwapType::ReverseSubmarine);
+
+                    // TODO: Change lockup txid to claim txid
+                    result = Ok(SendPaymentResponse { txid: lockup_txid });
+
+                    debug!("Successfully resolved swap-in {swap_id}");
                     break;
                 }
+
                 // Either:
                 // 1. Boltz failed to pay
                 // 2. The swap has expired (>24h)
-                // 3. TODO: Lockup failed (we sent too little funds)
+                // 3. Lockup failed (we sent too little funds)
                 // We initiate a cooperative refund, and then fallback to a regular one
-                SubSwapStates::InvoiceFailedToPay | SubSwapStates::SwapExpired => {
-                    result = Err(PaymentError::Generic {
-                        err: format!("Payment state is unrecoverable: {}", state.to_string()),
+                SubSwapStates::InvoiceFailedToPay
+                | SubSwapStates::SwapExpired
+                | SubSwapStates::TransactionLockupFailed => {
+                    let refund_txid =
+                        self.try_refund(swap_id, &swap_script, &keypair, receiver_amount_sat)?;
+
+                    result = Err(PaymentError::Refunded {
+                        err: format!(
+                            "Unrecoverable state for swap-in {swap_id}: {}",
+                            state.to_string()
+                        ),
+                        txid: refund_txid.clone(),
                     });
                     break;
                 }
-                _ => debug!(
-                    "New state for swap {}: {}",
-                    create_response.id,
-                    state.to_string()
-                ),
+                _ => {}
             };
 
-            thread::sleep(Duration::from_millis(500));
+            sleep(Duration::from_millis(500));
         }
 
         socket.close(None).unwrap();
@@ -559,10 +776,10 @@ impl LiquidSdk {
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
-        let swap_response_v2: CreateReverseResponse =
+        let create_response: CreateReverseResponse =
             serde_json::from_str(&ongoing_swap_out.redeem_script).unwrap();
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
-            &swap_response_v2,
+            &create_response,
             our_keys.public_key().into(),
         )?;
 
@@ -686,16 +903,16 @@ impl LiquidSdk {
             address_signature: None,
             referral_id: None,
         };
-        let swap_response_v2 = self.boltz_client_v2().post_reverse_req(v2_req)?;
+        let create_response = self.boltz_client_v2().post_reverse_req(v2_req)?;
 
         // TODO Persisting this in the DB (reusing "redeem_script" field), as we need it later when claiming
-        let redeem_script = serde_json::to_string(&swap_response_v2).unwrap();
+        let redeem_script = serde_json::to_string(&create_response).unwrap();
 
-        let swap_id = swap_response_v2.id;
-        let invoice = Bolt11Invoice::from_str(&swap_response_v2.invoice)
+        let swap_id = create_response.id;
+        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
             .map_err(|_| PaymentError::InvalidInvoice)?;
         let blinding_str =
-            swap_response_v2
+            create_response
                 .blinding_key
                 .ok_or(boltz_client::error::Error::Protocol(
                     "Boltz response does not contain a blinding key.".to_string(),
@@ -743,6 +960,7 @@ impl LiquidSdk {
                 let id = tx.txid.to_string();
                 let data = payment_data.get(&id);
                 let amount_sat = tx.balance.values().sum::<i64>();
+                let fees_sat = data.map(|d| d.payer_amount_sat - d.receiver_amount_sat);
 
                 Payment {
                     id: Some(id.clone()),
@@ -753,8 +971,7 @@ impl LiquidSdk {
                         false => PaymentType::Sent,
                     },
                     invoice: None,
-                    fees_sat: data
-                        .map(|d| (amount_sat.abs() - d.payer_amount_sat as i64).unsigned_abs()),
+                    fees_sat,
                 }
             })
             .collect();
@@ -766,25 +983,6 @@ impl LiquidSdk {
         }
 
         Ok(payments)
-    }
-
-    pub fn recover_funds(&self, recovery: &LBtcReverseRecovery) -> Result<String> {
-        let script: LBtcSwapScript = recovery.try_into().unwrap();
-        let network_config = self.network_config();
-        debug!("{:?}", script.fetch_utxo(&network_config));
-
-        let tx =
-            LBtcSwapTx::new_claim(script.clone(), self.address()?.to_string(), &network_config)
-                .expect("Expecting valid tx");
-        let keypair: Keypair = recovery.try_into().unwrap();
-        let preimage: Preimage = recovery.try_into().unwrap();
-
-        let signed_tx = tx.sign_claim(&keypair, &preimage, 1_000).unwrap();
-        let txid = tx.broadcast(signed_tx, &network_config).unwrap();
-
-        debug!("Funds recovered successfully! Txid: {txid}");
-
-        Ok(txid)
     }
 
     /// Empties all Liquid Wallet caches for this network type.
