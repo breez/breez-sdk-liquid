@@ -21,17 +21,12 @@ impl Persister {
         Ok(())
     }
 
-    // TODO Store claim txid when claim tx is seen in mempool
-    pub(crate) fn set_claim_txid_for_swap_in(
-        &self,
-        swap_in_id: &str,
-        claim_txid: &str,
-    ) -> Result<()> {
+    pub(crate) fn set_claim_tx_seen_for_swap_in(&self, swap_in_id: &str) -> Result<()> {
         self.get_connection()?.execute(
-            "UPDATE send_swaps SET claim_txid=:claim_txid WHERE id=:id",
+            "UPDATE send_swaps SET is_claim_tx_seen=:is_claim_tx_seen WHERE id=:id",
             named_params! {
              ":id": swap_in_id,
-             ":claim_txid": claim_txid,
+             ":is_claim_tx_seen": true,
             },
         )?;
 
@@ -49,7 +44,7 @@ impl Persister {
                 payer_amount_sat,
                 create_response_json,
                 lockup_txid,
-                claim_txid
+                is_claim_tx_seen
             )
             VALUES (?, ?, ?, ?, ?, ?)",
         )?;
@@ -59,7 +54,7 @@ impl Persister {
             swap_in.payer_amount_sat,
             swap_in.create_response_json,
             swap_in.lockup_txid,
-            swap_in.claim_txid,
+            swap_in.is_claim_tx_seen,
         ))?;
 
         Ok(())
@@ -80,7 +75,7 @@ impl Persister {
                 payer_amount_sat,
                 create_response_json,
                 lockup_txid,
-                claim_txid,
+                is_claim_tx_seen,
                 created_at
             FROM send_swaps
             {where_clause_str}
@@ -102,7 +97,7 @@ impl Persister {
             payer_amount_sat: row.get(2)?,
             create_response_json: row.get(3)?,
             lockup_txid: row.get(4)?,
-            claim_txid: row.get(5)?,
+            is_claim_tx_seen: row.get(5)?,
         })
     }
 

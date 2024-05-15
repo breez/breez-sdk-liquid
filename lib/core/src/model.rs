@@ -152,15 +152,15 @@ pub(crate) struct SwapIn {
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcasted
     pub(crate) lockup_txid: Option<String>,
-    /// Persisted as soon as claim tx was seen in the mempool
-    pub(crate) claim_txid: Option<String>,
+    /// Whether or not the claim tx was seen in the mempool
+    pub(crate) is_claim_tx_seen: bool,
 }
 impl SwapIn {
     pub(crate) fn calculate_status(&self) -> SubmarineSwapStatus {
-        match (&self.lockup_txid, &self.claim_txid) {
+        match (&self.lockup_txid, &self.is_claim_tx_seen) {
             (None, _) => SubmarineSwapStatus::Initial,
-            (Some(_), None) => SubmarineSwapStatus::Pending,
-            (Some(_), Some(_)) => SubmarineSwapStatus::Completed,
+            (Some(_), false) => SubmarineSwapStatus::Pending,
+            (Some(_), true) => SubmarineSwapStatus::Completed,
         }
     }
 }

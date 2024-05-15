@@ -586,8 +586,8 @@ impl LiquidSdk {
             referral_id: None,
         })?;
         let create_response_json =
-            serde_json::to_string(&create_response).map_err(|_| PaymentError::Generic {
-                err: "Could not store swap response locally".to_string(),
+            serde_json::to_string(&create_response).map_err(|e| PaymentError::Generic {
+                err: format!("Failed to deserialize CreateReverseResponse: {e:?}"),
             })?;
 
         let swap_id = &create_response.id;
@@ -614,9 +614,9 @@ impl LiquidSdk {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
-            create_response_json: create_response_json.clone(),
+            create_response_json,
             lockup_txid: None,
-            claim_txid: None,
+            is_claim_tx_seen: false,
         })?;
 
         let result;
@@ -659,12 +659,15 @@ impl LiquidSdk {
                 // Boltz has detected the lockup in the mempool, we can speed up
                 // the claim by doing so cooperatively
                 SubSwapStates::TransactionClaimPending => {
+                    // TODO Consolidate try_handle
+
                     self.post_submarine_claim_details(
                         swap_id,
                         &swap_script,
                         &req.invoice,
                         &keypair,
                     )?;
+                    self.persister.set_claim_tx_seen_for_swap_in(swap_id)?;
 
                     debug!("Boltz successfully claimed the funds. Resolving swap-in {swap_id}");
                     self.persister.resolve_swap(
@@ -933,7 +936,7 @@ impl LiquidSdk {
                         match maybe_associated_swap {
                             Some(associated_swap) => {
                                 // Send: a payment is no longer pending when the (Boltz) claim tx is in the mempool
-                                match associated_swap.claim_txid.is_some() {
+                                match associated_swap.is_claim_tx_seen {
                                     true => PaymentType::Sent,
                                     false => PaymentType::PendingSend,
                                 }
