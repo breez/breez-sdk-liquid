@@ -210,18 +210,14 @@ pub enum ReverseSwapStatus {
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum PaymentType {
-    Sent,
-    Received,
-    PendingReceive,
-    PendingSend,
+    Send,
+    Receive,
 }
-impl PaymentType {
-    pub(crate) fn is_pending(&self) -> bool {
-        match &self {
-            Self::Sent | Self::Received => false,
-            Self::PendingSend | Self::PendingReceive => true,
-        }
-    }
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub enum PaymentStatus {
+    Pending,
+    Complete,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -233,7 +229,7 @@ pub struct Payment {
     pub fees_sat: Option<u64>,
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
-
+    pub status: PaymentStatus,
     pub invoice: Option<String>,
 }
 

@@ -92,6 +92,7 @@ class Payment {
   final int amountSat;
   final int? feesSat;
   final PaymentType paymentType;
+  final PaymentStatus status;
   final String? invoice;
 
   const Payment({
@@ -100,6 +101,7 @@ class Payment {
     required this.amountSat,
     this.feesSat,
     required this.paymentType,
+    required this.status,
     this.invoice,
   });
 
@@ -110,6 +112,7 @@ class Payment {
       amountSat.hashCode ^
       feesSat.hashCode ^
       paymentType.hashCode ^
+      status.hashCode ^
       invoice.hashCode;
 
   @override
@@ -122,14 +125,19 @@ class Payment {
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
           paymentType == other.paymentType &&
+          status == other.status &&
           invoice == other.invoice;
 }
 
+enum PaymentStatus {
+  pending,
+  complete,
+  ;
+}
+
 enum PaymentType {
-  sent,
-  received,
-  pendingReceive,
-  pendingSend,
+  send,
+  receive,
   ;
 }
 

@@ -323,10 +323,14 @@ impl LiquidSdk {
         // because our payment state is derived from the swap state
         for p in self.list_payments(req.with_scan, true)? {
             match p.payment_type {
-                PaymentType::PendingSend => pending_send_sat += p.amount_sat,
-                PaymentType::PendingReceive => pending_receive_sat += p.amount_sat,
-                PaymentType::Sent => confirmed_sent_sat += p.amount_sat,
-                PaymentType::Received => confirmed_received_sat += p.amount_sat,
+                PaymentType::Send => match p.status {
+                    PaymentStatus::Pending => pending_send_sat += p.amount_sat,
+                    PaymentStatus::Complete => confirmed_sent_sat += p.amount_sat,
+                },
+                PaymentType::Receive => match p.status {
+                    PaymentStatus::Pending => pending_receive_sat += p.amount_sat,
+                    PaymentStatus::Complete => confirmed_received_sat += p.amount_sat,
+                },
             }
         }
 
@@ -921,7 +925,7 @@ impl LiquidSdk {
                 let is_tx_confirmed = tx.height.is_some();
                 let amount_sat = tx.balance.values().sum::<i64>();
 
-                let payment_type = match amount_sat >= 0 {
+                let (payment_type, payment_status) = match amount_sat >= 0 {
                     // Inbound payment, possibly associated with a swap-out (Receive)
                     true => {
                         // Receive: a payment is no longer pending when (our) claim tx is confirmed
@@ -930,10 +934,11 @@ impl LiquidSdk {
                         // If it is associated with a swap, the tx's status determines the payment type.
                         // If it is not associated with any swap, the tx's status by default determines the payment type.
 
-                        match is_tx_confirmed {
-                            true => PaymentType::Received,
-                            false => PaymentType::PendingReceive,
-                        }
+                        let status = match is_tx_confirmed {
+                            true => PaymentStatus::Complete,
+                            false => PaymentStatus::Pending,
+                        };
+                        (PaymentType::Receive, status)
                     }
 
                     // Outbound payment, possibly associated with a swap-in (Send)
@@ -943,28 +948,30 @@ impl LiquidSdk {
                             |s| matches!(&s.lockup_txid, Some(lockup_txid) if lockup_txid == &txid),
                         );
 
-                        match maybe_associated_swap {
+                        let status = match maybe_associated_swap {
                             Some(associated_swap) => {
                                 // Send: a payment is no longer pending when the (Boltz) claim tx is in the mempool
                                 match associated_swap.is_claim_tx_seen {
-                                    true => PaymentType::Sent,
-                                    false => PaymentType::PendingSend,
+                                    true => PaymentStatus::Complete,
+                                    false => PaymentStatus::Pending,
                                 }
                             }
                             None => match is_tx_confirmed {
-                                true => PaymentType::Sent,
-                                false => PaymentType::PendingSend,
+                                true => PaymentStatus::Complete,
+                                false => PaymentStatus::Pending,
                             },
-                        }
+                        };
+                        (PaymentType::Send, status)
                     }
                 };
 
-                match include_pending || !payment_type.is_pending() {
+                match include_pending || payment_status == PaymentStatus::Complete {
                     true => Some(Payment {
                         id: txid.clone(),
                         timestamp: tx.timestamp,
                         amount_sat: amount_sat.unsigned_abs(),
                         payment_type,
+                        status: payment_status,
                         invoice: None,
                         fees_sat: payment_data
                             .get(&txid)
@@ -1043,9 +1050,7 @@ mod tests {
 
         Ok(payments
             .iter()
-            .filter(|p| {
-                [PaymentType::PendingSend, PaymentType::PendingReceive].contains(&p.payment_type)
-            })
+            .filter(|p| matches!(&p.status, PaymentStatus::Pending))
             .cloned()
             .collect())
     }

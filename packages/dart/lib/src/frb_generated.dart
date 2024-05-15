@@ -474,14 +474,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Payment dco_decode_payment(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return Payment(
       id: dco_decode_String(arr[0]),
       timestamp: dco_decode_opt_box_autoadd_u_32(arr[1]),
       amountSat: dco_decode_u_64(arr[2]),
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
       paymentType: dco_decode_payment_type(arr[4]),
-      invoice: dco_decode_opt_String(arr[5]),
+      status: dco_decode_payment_status(arr[5]),
+      invoice: dco_decode_opt_String(arr[6]),
     );
   }
 
@@ -529,6 +530,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  PaymentStatus dco_decode_payment_status(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PaymentStatus.values[raw as int];
   }
 
   @protected
@@ -811,6 +818,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_paymentType = sse_decode_payment_type(deserializer);
+    var var_status = sse_decode_payment_status(deserializer);
     var var_invoice = sse_decode_opt_String(deserializer);
     return Payment(
         id: var_id,
@@ -818,6 +826,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         amountSat: var_amountSat,
         feesSat: var_feesSat,
         paymentType: var_paymentType,
+        status: var_status,
         invoice: var_invoice);
   }
 
@@ -862,6 +871,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  PaymentStatus sse_decode_payment_status(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PaymentStatus.values[inner];
   }
 
   @protected
@@ -960,6 +976,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int cst_encode_network(Network raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_payment_status(PaymentStatus raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
   }
@@ -1150,6 +1172,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
     sse_encode_payment_type(self.paymentType, serializer);
+    sse_encode_payment_status(self.status, serializer);
     sse_encode_opt_String(self.invoice, serializer);
   }
 
@@ -1190,6 +1213,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(12, serializer);
         sse_encode_String(err, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_payment_status(PaymentStatus self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

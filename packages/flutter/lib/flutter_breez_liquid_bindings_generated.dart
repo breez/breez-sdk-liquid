@@ -423,6 +423,9 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Int32()
   external int payment_type;
 
+  @ffi.Int32()
+  external int status;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 }
 

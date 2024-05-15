@@ -226,14 +226,22 @@ impl CstDecode<crate::model::Network> for i32 {
         }
     }
 }
+impl CstDecode<crate::model::PaymentStatus> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PaymentStatus {
+        match self {
+            0 => crate::model::PaymentStatus::Pending,
+            1 => crate::model::PaymentStatus::Complete,
+            _ => unreachable!("Invalid variant for PaymentStatus: {}", self),
+        }
+    }
+}
 impl CstDecode<crate::model::PaymentType> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PaymentType {
         match self {
-            0 => crate::model::PaymentType::Sent,
-            1 => crate::model::PaymentType::Received,
-            2 => crate::model::PaymentType::PendingReceive,
-            3 => crate::model::PaymentType::PendingSend,
+            0 => crate::model::PaymentType::Send,
+            1 => crate::model::PaymentType::Receive,
             _ => unreachable!("Invalid variant for PaymentType: {}", self),
         }
     }
@@ -402,6 +410,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
+        let mut var_status = <crate::model::PaymentStatus>::sse_decode(deserializer);
         let mut var_invoice = <Option<String>>::sse_decode(deserializer);
         return crate::model::Payment {
             id: var_id,
@@ -409,6 +418,7 @@ impl SseDecode for crate::model::Payment {
             amount_sat: var_amountSat,
             fees_sat: var_feesSat,
             payment_type: var_paymentType,
+            status: var_status,
             invoice: var_invoice,
         };
     }
@@ -474,15 +484,25 @@ impl SseDecode for crate::error::PaymentError {
     }
 }
 
+impl SseDecode for crate::model::PaymentStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::PaymentStatus::Pending,
+            1 => crate::model::PaymentStatus::Complete,
+            _ => unreachable!("Invalid variant for PaymentStatus: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for crate::model::PaymentType {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::model::PaymentType::Sent,
-            1 => crate::model::PaymentType::Received,
-            2 => crate::model::PaymentType::PendingReceive,
-            3 => crate::model::PaymentType::PendingSend,
+            0 => crate::model::PaymentType::Send,
+            1 => crate::model::PaymentType::Receive,
             _ => unreachable!("Invalid variant for PaymentType: {}", inner),
         };
     }
@@ -692,6 +712,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Payment {
             self.amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.payment_type.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
             self.invoice.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -743,13 +764,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::error::PaymentError> for crate::er
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PaymentStatus {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Pending => 0.into_dart(),
+            Self::Complete => 1.into_dart(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentStatus {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentStatus>
+    for crate::model::PaymentStatus
+{
+    fn into_into_dart(self) -> crate::model::PaymentStatus {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PaymentType {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            Self::Sent => 0.into_dart(),
-            Self::Received => 1.into_dart(),
-            Self::PendingReceive => 2.into_dart(),
-            Self::PendingSend => 3.into_dart(),
+            Self::Send => 0.into_dart(),
+            Self::Receive => 1.into_dart(),
         }
     }
 }
@@ -1016,6 +1052,7 @@ impl SseEncode for crate::model::Payment {
         <u64>::sse_encode(self.amount_sat, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
+        <crate::model::PaymentStatus>::sse_encode(self.status, serializer);
         <Option<String>>::sse_encode(self.invoice, serializer);
     }
 }
@@ -1073,15 +1110,29 @@ impl SseEncode for crate::error::PaymentError {
     }
 }
 
+impl SseEncode for crate::model::PaymentStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::PaymentStatus::Pending => 0,
+                crate::model::PaymentStatus::Complete => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::model::PaymentType {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::model::PaymentType::Sent => 0,
-                crate::model::PaymentType::Received => 1,
-                crate::model::PaymentType::PendingReceive => 2,
-                crate::model::PaymentType::PendingSend => 3,
+                crate::model::PaymentType::Send => 0,
+                crate::model::PaymentType::Receive => 1,
                 _ => {
                     unimplemented!("");
                 }
