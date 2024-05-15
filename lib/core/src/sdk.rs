@@ -770,25 +770,6 @@ impl LiquidSdk {
         Ok(claim_txid)
     }
 
-    #[allow(dead_code)]
-    fn validate_reverse_pairs(
-        client: &BoltzApiClientV2,
-        payer_amount_sat: u64,
-    ) -> Result<ReversePair, PaymentError> {
-        let lbtc_pair = client
-            .get_reverse_pairs()?
-            .get_btc_to_lbtc_pair()
-            .ok_or(PaymentError::PairsNotFound)?;
-
-        lbtc_pair.limits.within(payer_amount_sat)?;
-
-        let fees_sat = lbtc_pair.fees.total(payer_amount_sat);
-
-        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
-
-        Ok(lbtc_pair)
-    }
-
     pub fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
