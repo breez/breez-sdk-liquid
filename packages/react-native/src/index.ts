@@ -29,6 +29,8 @@ export interface GetInfoRequest {
 
 export interface GetInfoResponse {
     balanceSat: number
+    pendingSendSat: number
+    pendingReceiveSat: number
     pubkey: string
 }
 
