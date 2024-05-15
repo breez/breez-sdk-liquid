@@ -306,14 +306,6 @@ impl LiquidSdk {
         Ok(lwk_wollet.address(self.active_address)?.address().clone())
     }
 
-    fn total_balance_sat(&self, with_scan: bool) -> Result<u64> {
-        if with_scan {
-            self.scan()?;
-        }
-        let balance = self.lwk_wollet.lock().unwrap().balance()?;
-        Ok(balance.values().sum())
-    }
-
     pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         debug!("active_address: {}", self.address()?);
 
