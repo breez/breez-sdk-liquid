@@ -24,14 +24,20 @@ impl From<anyhow::Error> for LiquidSdkError {
 
 #[derive(thiserror::Error, Debug)]
 pub enum PaymentError {
-    #[error("Invoice amount is out of range")]
-    AmountOutOfRange,
-
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("Invoice amount is out of range")]
+    AmountOutOfRange,
+
     #[error("Generic error: {err}")]
     Generic { err: String },
+
+    #[error("The provided fees have expired")]
+    InvalidOrExpiredFees,
+
+    #[error("Cannot pay: not enough funds")]
+    InsufficientFunds,
 
     #[error("The specified invoice is not valid")]
     InvalidInvoice,
@@ -47,6 +53,9 @@ pub enum PaymentError {
 
     #[error("Could not store the swap details locally")]
     PersistError,
+
+    #[error("The payment has been refunded. Reason for failure: {err}")]
+    Refunded { err: String, txid: String },
 
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },
@@ -64,6 +73,13 @@ impl From<boltz_client::error::Error> for PaymentError {
                 }
 
                 PaymentError::Generic { err: msg }
+            }
+            boltz_client::error::Error::HTTP(ureq) => {
+                dbg!(ureq.into_response().unwrap().into_string().unwrap());
+
+                PaymentError::Generic {
+                    err: "Could not contact servers".to_string(),
+                }
             }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),

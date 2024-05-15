@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-pub(crate) use boltz_client::util::secrets::LBtcReverseRecovery;
 use std::sync::{Arc, OnceLock};
 
 use crate::{error::*, model::*, sdk::LiquidSdk};
@@ -26,7 +25,7 @@ pub fn prepare_send_payment(req: PrepareSendRequest) -> Result<PrepareSendRespon
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
-        .prepare_send_payment(req)
+        .prepare_send_payment(&req)
 }
 
 pub fn send_payment(req: PrepareSendResponse) -> Result<SendPaymentResponse, PaymentError> {
@@ -63,14 +62,6 @@ pub fn list_payments(with_scan: bool, include_pending: bool) -> Result<Vec<Payme
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
         .list_payments(with_scan, include_pending)
-}
-
-pub fn recover_funds(recovery: LBtcReverseRecovery) -> Result<String> {
-    LIQUID_SDK_INSTANCE
-        .get()
-        .ok_or(anyhow!("Not initialized"))
-        .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
-        .recover_funds(&recovery)
 }
 
 pub fn empty_wallet_cache() -> Result<()> {

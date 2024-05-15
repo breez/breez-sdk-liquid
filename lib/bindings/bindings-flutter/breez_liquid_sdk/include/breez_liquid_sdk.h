@@ -15,10 +15,10 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 typedef struct _Dart_Handle* Dart_Handle;
 
 /**
- * Claim tx feerate for Receive, in sats per vbyte.
+ * Claim tx feerate, in sats per vbyte.
  * Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
  */
-#define LIQUID_CLAIM_TX_FEERATE 0.1
+#define LIQUID_CLAIM_TX_FEERATE_MSAT 100.0
 
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
@@ -44,7 +44,6 @@ typedef struct wire_cst_prepare_send_request {
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_response {
-  struct wire_cst_list_prim_u_8_strict *pair_hash;
   uint64_t payer_amount_sat;
   uint64_t fees_sat;
 } wire_cst_prepare_receive_response;
@@ -54,12 +53,8 @@ typedef struct wire_cst_restore_request {
 } wire_cst_restore_request;
 
 typedef struct wire_cst_prepare_send_response {
-  struct wire_cst_list_prim_u_8_strict *id;
-  uint64_t payer_amount_sat;
-  uint64_t receiver_amount_sat;
-  uint64_t total_fees;
-  struct wire_cst_list_prim_u_8_strict *funding_address;
   struct wire_cst_list_prim_u_8_strict *invoice;
+  uint64_t fees_sat;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_payment {
@@ -89,6 +84,11 @@ typedef struct wire_cst_PaymentError_LwkError {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_LwkError;
 
+typedef struct wire_cst_PaymentError_Refunded {
+  struct wire_cst_list_prim_u_8_strict *err;
+  struct wire_cst_list_prim_u_8_strict *txid;
+} wire_cst_PaymentError_Refunded;
+
 typedef struct wire_cst_PaymentError_SendError {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_SendError;
@@ -100,6 +100,7 @@ typedef struct wire_cst_PaymentError_SignerError {
 typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_LwkError LwkError;
+  struct wire_cst_PaymentError_Refunded Refunded;
   struct wire_cst_PaymentError_SendError SendError;
   struct wire_cst_PaymentError_SignerError SignerError;
 } PaymentErrorKind;
@@ -137,16 +138,10 @@ void frbgen_breez_liquid_wire_prepare_send_payment(int64_t port_,
 void frbgen_breez_liquid_wire_receive_payment(int64_t port_,
                                               struct wire_cst_prepare_receive_response *req);
 
-void frbgen_breez_liquid_wire_recover_funds(int64_t port_, uintptr_t recovery);
-
 void frbgen_breez_liquid_wire_restore(int64_t port_, struct wire_cst_restore_request *req);
 
 void frbgen_breez_liquid_wire_send_payment(int64_t port_,
                                            struct wire_cst_prepare_send_response *req);
-
-void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(const void *ptr);
-
-void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(const void *ptr);
 
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
@@ -182,8 +177,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_connect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_empty_wallet_cache);
@@ -192,7 +185,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_prepare_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_prepare_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_receive_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_recover_funds);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_restore);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_send_payment);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);

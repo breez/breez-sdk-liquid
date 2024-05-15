@@ -29,28 +29,9 @@ Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse r
 Future<List<Payment>> listPayments({required bool withScan, required bool includePending, dynamic hint}) =>
     RustLib.instance.api.listPayments(withScan: withScan, includePending: includePending, hint: hint);
 
-Future<String> recoverFunds({required LBtcReverseRecovery recovery, dynamic hint}) =>
-    RustLib.instance.api.recoverFunds(recovery: recovery, hint: hint);
-
 Future<void> emptyWalletCache({dynamic hint}) => RustLib.instance.api.emptyWalletCache(hint: hint);
 
 Future<void> backup({dynamic hint}) => RustLib.instance.api.backup(hint: hint);
 
 Future<void> restore({required RestoreRequest req, dynamic hint}) =>
     RustLib.instance.api.restore(req: req, hint: hint);
-
-// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>
-@sealed
-class LBtcReverseRecovery extends RustOpaque {
-  LBtcReverseRecovery.dcoDecode(List<dynamic> wire) : super.dcoDecode(wire, _kStaticData);
-
-  LBtcReverseRecovery.sseDecode(int ptr, int externalSizeOnNative)
-      : super.sseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_LBtcReverseRecovery,
-    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_LBtcReverseRecovery,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_LBtcReverseRecoveryPtr,
-  );
-}

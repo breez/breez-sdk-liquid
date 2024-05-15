@@ -86,7 +86,6 @@ pub struct PrepareReceiveRequest {
 
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveResponse {
-    pub pair_hash: String,
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
@@ -104,12 +103,8 @@ pub struct PrepareSendRequest {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub id: String,
-    pub payer_amount_sat: u64,
-    pub receiver_amount_sat: u64,
-    pub total_fees: u64,
-    pub funding_address: String,
     pub invoice: String,
+    pub fees_sat: u64,
 }
 
 #[derive(Debug, Serialize)]
@@ -133,23 +128,38 @@ pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) enum OngoingSwap {
-    Send {
-        id: String,
-        funding_address: String,
-        invoice: String,
-        receiver_amount_sat: u64,
-        txid: Option<String>,
-    },
-    Receive {
-        id: String,
-        preimage: String,
-        redeem_script: String,
-        blinding_key: String,
-        invoice: String,
-        receiver_amount_sat: u64,
-    },
+    Send(OngoingSwapIn),
+    Receive(OngoingSwapOut),
+}
+impl OngoingSwap {
+    pub(crate) fn id(&self) -> String {
+        match &self {
+            OngoingSwap::Send(OngoingSwapIn { id, .. })
+            | OngoingSwap::Receive(OngoingSwapOut { id, .. }) => id.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct OngoingSwapIn {
+    pub(crate) id: String,
+    pub(crate) invoice: String,
+    pub(crate) payer_amount_sat: u64,
+    pub(crate) create_response_json: String,
+    pub(crate) lockup_txid: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct OngoingSwapOut {
+    pub(crate) id: String,
+    pub(crate) preimage: String,
+    pub(crate) redeem_script: String,
+    pub(crate) blinding_key: String,
+    pub(crate) invoice: String,
+    pub(crate) receiver_amount_sat: u64,
+    pub(crate) claim_fees_sat: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -169,33 +179,32 @@ pub struct Payment {
     #[serde(rename(serialize = "type"))]
     pub payment_type: PaymentType,
 
-    /// Only for [PaymentType::PendingReceive]
     pub invoice: Option<String>,
 }
 
 impl From<OngoingSwap> for Payment {
     fn from(swap: OngoingSwap) -> Self {
         match swap {
-            OngoingSwap::Send {
+            OngoingSwap::Send(OngoingSwapIn {
                 invoice,
-                receiver_amount_sat,
+                payer_amount_sat,
                 ..
-            } => {
-                let payer_amount_sat = get_invoice_amount!(invoice);
+            }) => {
+                let receiver_amount_sat = get_invoice_amount!(invoice);
                 Payment {
                     id: None,
                     timestamp: None,
                     payment_type: PaymentType::PendingSend,
                     amount_sat: payer_amount_sat,
                     invoice: Some(invoice),
-                    fees_sat: Some(receiver_amount_sat - payer_amount_sat),
+                    fees_sat: Some(payer_amount_sat - receiver_amount_sat),
                 }
             }
-            OngoingSwap::Receive {
+            OngoingSwap::Receive(OngoingSwapOut {
                 receiver_amount_sat,
                 invoice,
                 ..
-            } => {
+            }) => {
                 let payer_amount_sat = get_invoice_amount!(invoice);
                 Payment {
                     id: None,
@@ -212,6 +221,7 @@ impl From<OngoingSwap> for Payment {
 
 pub(crate) struct PaymentData {
     pub payer_amount_sat: u64,
+    pub receiver_amount_sat: u64,
 }
 
 #[macro_export]

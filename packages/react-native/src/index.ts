@@ -37,7 +37,6 @@ export interface PrepareReceiveRequest {
 }
 
 export interface PrepareReceiveResponse {
-    pairHash: string
     payerAmountSat: number
     feesSat: number
 }
@@ -47,12 +46,8 @@ export interface PrepareSendRequest {
 }
 
 export interface PrepareSendResponse {
-    id: string
-    payerAmountSat: number
-    receiverAmountSat: number
-    totalFees: number
-    fundingAddress: string
     invoice: string
+    feesSat: number
 }
 
 export interface ReceivePaymentResponse {

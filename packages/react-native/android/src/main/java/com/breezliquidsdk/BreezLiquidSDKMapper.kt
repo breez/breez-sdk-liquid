@@ -150,7 +150,6 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
     if (!validateMandatoryFields(
             prepareReceiveResponse,
             arrayOf(
-                "pairHash",
                 "payerAmountSat",
                 "feesSat",
             ),
@@ -158,11 +157,9 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
     ) {
         return null
     }
-    val pairHash = prepareReceiveResponse.getString("pairHash")!!
     val payerAmountSat = prepareReceiveResponse.getDouble("payerAmountSat").toULong()
     val feesSat = prepareReceiveResponse.getDouble("feesSat").toULong()
     return PrepareReceiveResponse(
-        pairHash,
         payerAmountSat,
         feesSat,
     )
@@ -170,7 +167,6 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap {
     return readableMapOf(
-        "pairHash" to prepareReceiveResponse.pairHash,
         "payerAmountSat" to prepareReceiveResponse.payerAmountSat,
         "feesSat" to prepareReceiveResponse.feesSat,
     )
@@ -224,41 +220,25 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
     if (!validateMandatoryFields(
             prepareSendResponse,
             arrayOf(
-                "id",
-                "payerAmountSat",
-                "receiverAmountSat",
-                "totalFees",
-                "fundingAddress",
                 "invoice",
+                "feesSat",
             ),
         )
     ) {
         return null
     }
-    val id = prepareSendResponse.getString("id")!!
-    val payerAmountSat = prepareSendResponse.getDouble("payerAmountSat").toULong()
-    val receiverAmountSat = prepareSendResponse.getDouble("receiverAmountSat").toULong()
-    val totalFees = prepareSendResponse.getDouble("totalFees").toULong()
-    val fundingAddress = prepareSendResponse.getString("fundingAddress")!!
     val invoice = prepareSendResponse.getString("invoice")!!
+    val feesSat = prepareSendResponse.getDouble("feesSat").toULong()
     return PrepareSendResponse(
-        id,
-        payerAmountSat,
-        receiverAmountSat,
-        totalFees,
-        fundingAddress,
         invoice,
+        feesSat,
     )
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap {
     return readableMapOf(
-        "id" to prepareSendResponse.id,
-        "payerAmountSat" to prepareSendResponse.payerAmountSat,
-        "receiverAmountSat" to prepareSendResponse.receiverAmountSat,
-        "totalFees" to prepareSendResponse.totalFees,
-        "fundingAddress" to prepareSendResponse.fundingAddress,
         "invoice" to prepareSendResponse.invoice,
+        "feesSat" to prepareSendResponse.feesSat,
     )
 }
 

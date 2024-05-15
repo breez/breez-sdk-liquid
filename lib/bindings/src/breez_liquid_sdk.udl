@@ -5,14 +5,17 @@ enum LiquidSdkError {
 
 [Error]
 enum PaymentError {
-    "AmountOutOfRange",
     "AlreadyClaimed",
+    "AmountOutOfRange",
     "Generic",
+    "InvalidOrExpiredFees",
+    "InsufficientFunds",
     "InvalidInvoice",
     "InvalidPreimage",
     "LwkError",
     "PairsNotFound",
     "PersistError",
+    "Refunded",
     "SendError",
     "SignerError",
 };
@@ -42,12 +45,8 @@ dictionary PrepareSendRequest {
 };
 
 dictionary PrepareSendResponse {
-    string id;
-    u64 payer_amount_sat;
-    u64 receiver_amount_sat;
-    u64 total_fees;
-    string funding_address;
     string invoice;
+    u64 fees_sat;
 };
 
 dictionary SendPaymentResponse {
@@ -59,7 +58,6 @@ dictionary PrepareReceiveRequest {
 };
 
 dictionary PrepareReceiveResponse {
-    string pair_hash;
     u64 payer_amount_sat;
     u64 fees_sat;
 };

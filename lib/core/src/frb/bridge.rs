@@ -19,7 +19,6 @@
 
 // Section: imports
 
-use crate::bindings::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::transform_result_dco;
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -32,7 +31,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.33";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1225779344;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -451265040;
 
 // Section: executor
 
@@ -170,24 +169,6 @@ fn wire_receive_payment_impl(
         },
     )
 }
-fn wire_recover_funds_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    recovery: impl CstDecode<LBtcReverseRecovery>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "recover_funds",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_recovery = recovery.cst_decode();
-            move |context| {
-                transform_result_dco((move || crate::bindings::recover_funds(api_recovery))())
-            }
-        },
-    )
-}
 fn wire_restore_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     req: impl CstDecode<crate::model::RestoreRequest>,
@@ -275,36 +256,10 @@ impl CstDecode<u8> for u8 {
         self
     }
 }
-impl CstDecode<usize> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> usize {
-        self
-    }
-}
 impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         unreachable!("");
-    }
-}
-
-impl SseDecode for LBtcReverseRecovery {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueNom<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>,
-        >>::sse_decode(deserializer);
-        return inner.rust_auto_opaque_decode_owned();
-    }
-}
-
-impl SseDecode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return unsafe { decode_rust_opaque_nom(inner) };
     }
 }
 
@@ -461,36 +416,50 @@ impl SseDecode for crate::error::PaymentError {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                return crate::error::PaymentError::AmountOutOfRange;
+                return crate::error::PaymentError::AlreadyClaimed;
             }
             1 => {
-                return crate::error::PaymentError::AlreadyClaimed;
+                return crate::error::PaymentError::AmountOutOfRange;
             }
             2 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Generic { err: var_err };
             }
             3 => {
-                return crate::error::PaymentError::InvalidInvoice;
+                return crate::error::PaymentError::InvalidOrExpiredFees;
             }
             4 => {
-                return crate::error::PaymentError::InvalidPreimage;
+                return crate::error::PaymentError::InsufficientFunds;
             }
             5 => {
+                return crate::error::PaymentError::InvalidInvoice;
+            }
+            6 => {
+                return crate::error::PaymentError::InvalidPreimage;
+            }
+            7 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::LwkError { err: var_err };
             }
-            6 => {
+            8 => {
                 return crate::error::PaymentError::PairsNotFound;
             }
-            7 => {
+            9 => {
                 return crate::error::PaymentError::PersistError;
             }
-            8 => {
+            10 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                let mut var_txid = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::Refunded {
+                    err: var_err,
+                    txid: var_txid,
+                };
+            }
+            11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            9 => {
+            12 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -528,11 +497,9 @@ impl SseDecode for crate::model::PrepareReceiveRequest {
 impl SseDecode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_pairHash = <String>::sse_decode(deserializer);
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
-            pair_hash: var_pairHash,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
         };
@@ -552,19 +519,11 @@ impl SseDecode for crate::model::PrepareSendRequest {
 impl SseDecode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_id = <String>::sse_decode(deserializer);
-        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_totalFees = <u64>::sse_decode(deserializer);
-        let mut var_fundingAddress = <String>::sse_decode(deserializer);
         let mut var_invoice = <String>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
-            id: var_id,
-            payer_amount_sat: var_payerAmountSat,
-            receiver_amount_sat: var_receiverAmountSat,
-            total_fees: var_totalFees,
-            funding_address: var_fundingAddress,
             invoice: var_invoice,
+            fees_sat: var_feesSat,
         };
     }
 }
@@ -625,13 +584,6 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
-impl SseDecode for usize {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
-    }
-}
-
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -658,24 +610,6 @@ fn pde_ffi_dispatcher_sync_impl(
 }
 
 // Section: rust2dart
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<LBtcReverseRecovery> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<LBtcReverseRecovery>
-{
-}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<LBtcReverseRecovery>> for LBtcReverseRecovery {
-    fn into_into_dart(self) -> FrbWrapper<LBtcReverseRecovery> {
-        self.into()
-    }
-}
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
@@ -767,23 +701,31 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Payment> for crate::model::
 impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::error::PaymentError::AmountOutOfRange => [0.into_dart()].into_dart(),
-            crate::error::PaymentError::AlreadyClaimed => [1.into_dart()].into_dart(),
+            crate::error::PaymentError::AlreadyClaimed => [0.into_dart()].into_dart(),
+            crate::error::PaymentError::AmountOutOfRange => [1.into_dart()].into_dart(),
             crate::error::PaymentError::Generic { err } => {
                 [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidInvoice => [3.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidPreimage => [4.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidOrExpiredFees => [3.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds => [4.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidInvoice => [5.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidPreimage => [6.into_dart()].into_dart(),
             crate::error::PaymentError::LwkError { err } => {
-                [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::PairsNotFound => [6.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [7.into_dart()].into_dart(),
+            crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::Refunded { err, txid } => [
+                10.into_dart(),
+                err.into_into_dart().into_dart(),
+                txid.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [8.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -832,7 +774,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.pair_hash.into_into_dart().into_dart(),
             self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
         ]
@@ -871,12 +812,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareSendRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.id.into_into_dart().into_dart(),
-            self.payer_amount_sat.into_into_dart().into_dart(),
-            self.receiver_amount_sat.into_into_dart().into_dart(),
-            self.total_fees.into_into_dart().into_dart(),
-            self.funding_address.into_into_dart().into_dart(),
             self.invoice.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -949,24 +886,6 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(format!("{:?}", self), serializer);
-    }
-}
-
-impl SseEncode for LBtcReverseRecovery {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
     }
 }
 
@@ -1097,38 +1016,49 @@ impl SseEncode for crate::error::PaymentError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::error::PaymentError::AmountOutOfRange => {
+            crate::error::PaymentError::AlreadyClaimed => {
                 <i32>::sse_encode(0, serializer);
             }
-            crate::error::PaymentError::AlreadyClaimed => {
+            crate::error::PaymentError::AmountOutOfRange => {
                 <i32>::sse_encode(1, serializer);
             }
             crate::error::PaymentError::Generic { err } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidInvoice => {
+            crate::error::PaymentError::InvalidOrExpiredFees => {
                 <i32>::sse_encode(3, serializer);
             }
-            crate::error::PaymentError::InvalidPreimage => {
+            crate::error::PaymentError::InsufficientFunds => {
                 <i32>::sse_encode(4, serializer);
             }
-            crate::error::PaymentError::LwkError { err } => {
+            crate::error::PaymentError::InvalidInvoice => {
                 <i32>::sse_encode(5, serializer);
+            }
+            crate::error::PaymentError::InvalidPreimage => {
+                <i32>::sse_encode(6, serializer);
+            }
+            crate::error::PaymentError::LwkError { err } => {
+                <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::PairsNotFound => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(8, serializer);
             }
             crate::error::PaymentError::PersistError => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(9, serializer);
+            }
+            crate::error::PaymentError::Refunded { err, txid } => {
+                <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(err, serializer);
+                <String>::sse_encode(txid, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(9, serializer);
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(err, serializer);
             }
         }
@@ -1163,7 +1093,6 @@ impl SseEncode for crate::model::PrepareReceiveRequest {
 impl SseEncode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.pair_hash, serializer);
         <u64>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
     }
@@ -1179,12 +1108,8 @@ impl SseEncode for crate::model::PrepareSendRequest {
 impl SseEncode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.id, serializer);
-        <u64>::sse_encode(self.payer_amount_sat, serializer);
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
-        <u64>::sse_encode(self.total_fees, serializer);
-        <String>::sse_encode(self.funding_address, serializer);
         <String>::sse_encode(self.invoice, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
     }
 }
 
@@ -1234,16 +1159,6 @@ impl SseEncode for u8 {
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
-}
-
-impl SseEncode for usize {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer
-            .cursor
-            .write_u64::<NativeEndian>(self as _)
-            .unwrap();
-    }
 }
 
 #[cfg(not(target_family = "wasm"))]

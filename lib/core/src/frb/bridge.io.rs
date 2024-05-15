@@ -4,7 +4,6 @@
 // Section: imports
 
 use super::*;
-use crate::bindings::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::transform_result_dco;
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -21,30 +20,6 @@ impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error>
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
         unimplemented!()
-    }
-}
-impl CstDecode<LBtcReverseRecovery> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> LBtcReverseRecovery {
-        CstDecode::<
-            RustOpaqueNom<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>,
-            >,
-        >::cst_decode(self)
-        .rust_auto_opaque_decode_owned()
-    }
-}
-impl
-    CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>,
-    > for usize
-{
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(
-        self,
-    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>
-    {
-        unsafe { decode_rust_opaque_nom(self as _) }
     }
 }
 impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
@@ -178,31 +153,40 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::error::PaymentError {
         match self.tag {
-            0 => crate::error::PaymentError::AmountOutOfRange,
-            1 => crate::error::PaymentError::AlreadyClaimed,
+            0 => crate::error::PaymentError::AlreadyClaimed,
+            1 => crate::error::PaymentError::AmountOutOfRange,
             2 => {
                 let ans = unsafe { self.kind.Generic };
                 crate::error::PaymentError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
-            3 => crate::error::PaymentError::InvalidInvoice,
-            4 => crate::error::PaymentError::InvalidPreimage,
-            5 => {
+            3 => crate::error::PaymentError::InvalidOrExpiredFees,
+            4 => crate::error::PaymentError::InsufficientFunds,
+            5 => crate::error::PaymentError::InvalidInvoice,
+            6 => crate::error::PaymentError::InvalidPreimage,
+            7 => {
                 let ans = unsafe { self.kind.LwkError };
                 crate::error::PaymentError::LwkError {
                     err: ans.err.cst_decode(),
                 }
             }
-            6 => crate::error::PaymentError::PairsNotFound,
-            7 => crate::error::PaymentError::PersistError,
-            8 => {
+            8 => crate::error::PaymentError::PairsNotFound,
+            9 => crate::error::PaymentError::PersistError,
+            10 => {
+                let ans = unsafe { self.kind.Refunded };
+                crate::error::PaymentError::Refunded {
+                    err: ans.err.cst_decode(),
+                    txid: ans.txid.cst_decode(),
+                }
+            }
+            11 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            9 => {
+            12 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -224,7 +208,6 @@ impl CstDecode<crate::model::PrepareReceiveResponse> for wire_cst_prepare_receiv
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
         crate::model::PrepareReceiveResponse {
-            pair_hash: self.pair_hash.cst_decode(),
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
@@ -242,12 +225,8 @@ impl CstDecode<crate::model::PrepareSendResponse> for wire_cst_prepare_send_resp
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         crate::model::PrepareSendResponse {
-            id: self.id.cst_decode(),
-            payer_amount_sat: self.payer_amount_sat.cst_decode(),
-            receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
-            total_fees: self.total_fees.cst_decode(),
-            funding_address: self.funding_address.cst_decode(),
             invoice: self.invoice.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
         }
     }
 }
@@ -360,7 +339,6 @@ impl Default for wire_cst_prepare_receive_request {
 impl NewWithNullPtr for wire_cst_prepare_receive_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            pair_hash: core::ptr::null_mut(),
             payer_amount_sat: Default::default(),
             fees_sat: Default::default(),
         }
@@ -386,12 +364,8 @@ impl Default for wire_cst_prepare_send_request {
 impl NewWithNullPtr for wire_cst_prepare_send_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            id: core::ptr::null_mut(),
-            payer_amount_sat: Default::default(),
-            receiver_amount_sat: Default::default(),
-            total_fees: Default::default(),
-            funding_address: core::ptr::null_mut(),
             invoice: core::ptr::null_mut(),
+            fees_sat: Default::default(),
         }
     }
 }
@@ -495,11 +469,6 @@ pub extern "C" fn frbgen_breez_liquid_wire_receive_payment(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_recover_funds(port_: i64, recovery: usize) {
-    wire_recover_funds_impl(port_, recovery)
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire_restore(port_: i64, req: *mut wire_cst_restore_request) {
     wire_restore_impl(port_, req)
 }
@@ -510,24 +479,6 @@ pub extern "C" fn frbgen_breez_liquid_wire_send_payment(
     req: *mut wire_cst_prepare_send_response,
 ) {
     wire_send_payment_impl(port_, req)
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>::increment_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<LBtcReverseRecovery>>::decrement_strong_count(ptr as _);
-    }
 }
 
 #[no_mangle]
@@ -670,6 +621,7 @@ pub struct wire_cst_payment_error {
 pub union PaymentErrorKind {
     Generic: wire_cst_PaymentError_Generic,
     LwkError: wire_cst_PaymentError_LwkError,
+    Refunded: wire_cst_PaymentError_Refunded,
     SendError: wire_cst_PaymentError_SendError,
     SignerError: wire_cst_PaymentError_SignerError,
     nil__: (),
@@ -683,6 +635,12 @@ pub struct wire_cst_PaymentError_Generic {
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_LwkError {
     err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_Refunded {
+    err: *mut wire_cst_list_prim_u_8_strict,
+    txid: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -702,7 +660,6 @@ pub struct wire_cst_prepare_receive_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_receive_response {
-    pair_hash: *mut wire_cst_list_prim_u_8_strict,
     payer_amount_sat: u64,
     fees_sat: u64,
 }
@@ -714,12 +671,8 @@ pub struct wire_cst_prepare_send_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_send_response {
-    id: *mut wire_cst_list_prim_u_8_strict,
-    payer_amount_sat: u64,
-    receiver_amount_sat: u64,
-    total_fees: u64,
-    funding_address: *mut wire_cst_list_prim_u_8_strict,
     invoice: *mut wire_cst_list_prim_u_8_strict,
+    fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
