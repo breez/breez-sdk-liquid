@@ -1,5 +1,6 @@
-use anyhow::{anyhow, Result};
 use std::sync::{Arc, OnceLock};
+
+use anyhow::{anyhow, Result};
 
 use crate::{error::*, model::*, sdk::LiquidSdk};
 
