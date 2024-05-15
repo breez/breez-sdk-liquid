@@ -13,6 +13,7 @@ bootstrap frb='true':
 	just init
 	just gen
 	just build
+	melos build
 	just link
 	just check
 
@@ -30,12 +31,13 @@ gen: codegen && ffigen
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	{{frb_bin}}
+	cd ../../../packages/dart/lib/src && dart format -l 110 .
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
 
 # Generate FFI bindings
 ffigen:
-	cd ../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && cd ..
+	cd ../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
 # Builds the local library for testing
 build *args:

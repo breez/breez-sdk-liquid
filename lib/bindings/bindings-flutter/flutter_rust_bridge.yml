@@ -5,4 +5,4 @@ c_output: breez_liquid_sdk/include/breez_liquid_sdk.h
 web: false
 full_dep: true
 add_mod_to_lib: false
-dart_format_line_length: 80
+dart_format_line_length: 110

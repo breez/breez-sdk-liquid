@@ -31,9 +31,12 @@ Future<void> mainImpl(List<String> args) async {
   } else if (opts['debug']) {
     profile = 'debug';
     profileArg = '--profile=dev';
-  } else {
-    profile = 'release';
+  } else if (opts['local']) {
+    profile = 'frb';
     profileArg = '--profile=frb';
+  } else {
+    profile = 'frb-min';
+    profileArg = '--profile=frb-min';
   }
 
   print(' Building profile: $profile');
@@ -71,16 +74,14 @@ Future<void> mainImpl(List<String> args) async {
   for (final target in targets) {
     print(' Building target $target');
     await run('rustup target add $target');
-    await run(
-        'cargo build --package breez-liquid-sdk --target=$target $profileArg');
+    await run('cargo build --package breez-liquid-sdk --target=$target $profileArg');
   }
 
   await run('mkdir -p mac-lipo ios-sim-lipo');
   if (opts['local']) {
     final output = outputs.single;
     final isIos = output.contains('ios');
-    final shouldBuildFramework =
-        observer.hasChanged(output) || !fileExists(frameworkZip);
+    final shouldBuildFramework = observer.hasChanged(output) || !fileExists(frameworkZip);
 
     String lipoOut;
     if (shouldBuildFramework) {
@@ -96,21 +97,16 @@ Future<void> mainImpl(List<String> args) async {
         '-output $framework');
   } else {
     final armIos = '../../../target/aarch64-apple-ios/$profile/$libName';
-    var shouldBuildFramework =
-        !fileExists(frameworkZip) || observer.hasChanged(armIos);
+    var shouldBuildFramework = !fileExists(frameworkZip) || observer.hasChanged(armIos);
     if (!fileExists(iosSimLipo) ||
-        outputs
-            .where((output) => output.contains('ios'))
-            .any(observer.hasChanged)) {
+        outputs.where((output) => output.contains('ios')).any(observer.hasChanged)) {
       shouldBuildFramework = true;
       await run('lipo -create -output $iosSimLipo '
           '../../../target/aarch64-apple-ios-sim/$profile/$libName '
           '../../../target/x86_64-apple-ios/$profile/$libName ');
     }
     if (!fileExists(macLipo) ||
-        outputs
-            .where((output) => output.contains('darwin'))
-            .any(observer.hasChanged)) {
+        outputs.where((output) => output.contains('darwin')).any(observer.hasChanged)) {
       shouldBuildFramework = true;
       await run('lipo -create -output $macLipo '
           '../../../target/aarch64-apple-darwin/$profile/$libName '

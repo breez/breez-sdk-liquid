@@ -43,9 +43,7 @@ class GetInfoRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GetInfoRequest &&
-          runtimeType == other.runtimeType &&
-          withScan == other.withScan;
+      other is GetInfoRequest && runtimeType == other.runtimeType && withScan == other.withScan;
 }
 
 class GetInfoResponse {
@@ -81,6 +79,8 @@ class Payment {
   final int amountSat;
   final int? feesSat;
   final PaymentType paymentType;
+
+  /// Only for [PaymentType::PendingReceive]
   final String? invoice;
 
   const Payment({
@@ -141,22 +141,25 @@ class PrepareReceiveRequest {
 }
 
 class PrepareReceiveResponse {
+  final String pairHash;
   final int payerAmountSat;
   final int feesSat;
 
   const PrepareReceiveResponse({
+    required this.pairHash,
     required this.payerAmountSat,
     required this.feesSat,
   });
 
   @override
-  int get hashCode => payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => pairHash.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveResponse &&
           runtimeType == other.runtimeType &&
+          pairHash == other.pairHash &&
           payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat;
 }
@@ -174,30 +177,46 @@ class PrepareSendRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrepareSendRequest &&
-          runtimeType == other.runtimeType &&
-          invoice == other.invoice;
+      other is PrepareSendRequest && runtimeType == other.runtimeType && invoice == other.invoice;
 }
 
 class PrepareSendResponse {
+  final String id;
+  final int payerAmountSat;
+  final int receiverAmountSat;
+  final int totalFees;
+  final String fundingAddress;
   final String invoice;
-  final int feesSat;
 
   const PrepareSendResponse({
+    required this.id,
+    required this.payerAmountSat,
+    required this.receiverAmountSat,
+    required this.totalFees,
+    required this.fundingAddress,
     required this.invoice,
-    required this.feesSat,
   });
 
   @override
-  int get hashCode => invoice.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      id.hashCode ^
+      payerAmountSat.hashCode ^
+      receiverAmountSat.hashCode ^
+      totalFees.hashCode ^
+      fundingAddress.hashCode ^
+      invoice.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareSendResponse &&
           runtimeType == other.runtimeType &&
-          invoice == other.invoice &&
-          feesSat == other.feesSat;
+          id == other.id &&
+          payerAmountSat == other.payerAmountSat &&
+          receiverAmountSat == other.receiverAmountSat &&
+          totalFees == other.totalFees &&
+          fundingAddress == other.fundingAddress &&
+          invoice == other.invoice;
 }
 
 class ReceivePaymentResponse {
@@ -234,9 +253,7 @@ class RestoreRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RestoreRequest &&
-          runtimeType == other.runtimeType &&
-          backupPath == other.backupPath;
+      other is RestoreRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
 class SendPaymentResponse {
@@ -252,7 +269,5 @@ class SendPaymentResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SendPaymentResponse &&
-          runtimeType == other.runtimeType &&
-          txid == other.txid;
+      other is SendPaymentResponse && runtimeType == other.runtimeType && txid == other.txid;
 }
