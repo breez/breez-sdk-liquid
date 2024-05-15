@@ -757,6 +757,9 @@ impl LiquidSdk {
         )?;
         let claim_txid = claim_tx.txid().to_string();
 
+        // Before broadcasting the claim tx, we re-sync with LWK, so we have the claim tx inputs
+        self.scan()?;
+
         // Electrum only broadcasts txs with lowball fees on testnet
         // For mainnet, we use Boltz to broadcast
         match self.network {
