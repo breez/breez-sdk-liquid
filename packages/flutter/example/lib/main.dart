@@ -106,11 +106,7 @@ class _MyAppState extends State<MyApp> {
                       return const Text('Loading...');
                     }
 
-                    if (snapshot.requireData.pairHash.isEmpty) {
-                      return const Text('No pair hash.');
-                    }
                     final prepareReceiveResponse = snapshot.data!;
-                    debugPrint(prepareReceiveResponse.pairHash);
 
                     return Column(
                       children: [
@@ -120,9 +116,6 @@ class _MyAppState extends State<MyApp> {
                             "Preparing a receive payment of 1000 sats",
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
-                        ),
-                        ListTile(
-                          title: Text("Pair Hash: ${prepareReceiveResponse.pairHash}"),
                         ),
                         ListTile(
                           title: Text("Payer Amount: ${prepareReceiveResponse.payerAmountSat} (in sats)"),
