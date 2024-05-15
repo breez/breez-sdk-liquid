@@ -11,7 +11,7 @@ impl Persister {
         lockup_txid: &str,
     ) -> Result<()> {
         self.get_connection()?.execute(
-            "UPDATE send_swaps SET txid=:lockup_txid WHERE id=:id",
+            "UPDATE send_swaps SET lockup_txid=:lockup_txid WHERE id=:id",
             named_params! {
              ":id": swap_in_id,
              ":lockup_txid": lockup_txid,
