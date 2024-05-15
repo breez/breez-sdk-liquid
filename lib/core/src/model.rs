@@ -158,7 +158,7 @@ pub(crate) struct SwapIn {
 impl SwapIn {
     pub(crate) fn calculate_status(&self) -> SubmarineSwapStatus {
         match (&self.lockup_txid, &self.is_claim_tx_seen) {
-            (None, _) => SubmarineSwapStatus::Initial,
+            (None, _) => SubmarineSwapStatus::Created,
             (Some(_), false) => SubmarineSwapStatus::Pending,
             (Some(_), true) => SubmarineSwapStatus::Completed,
         }
@@ -168,7 +168,7 @@ impl SwapIn {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum SubmarineSwapStatus {
     /// The swap was created, but the lockup tx was not broadcast sucecessfully.
-    Initial = 0,
+    Created = 0,
 
     /// The lockup tx was broadcasted successfully, but the claim tx was not seen in the mempool yet.
     Pending = 1,
