@@ -119,7 +119,7 @@ impl Persister {
 
         let filtered: Vec<SwapOut> = swap_outs
             .into_iter()
-            .filter(|swap| swap.calculate_status() == ReverseSwapStatus::Pending)
+            .filter(|swap| swap.calculate_status() == SwapOutStatus::Pending)
             .collect();
 
         Ok(filtered)

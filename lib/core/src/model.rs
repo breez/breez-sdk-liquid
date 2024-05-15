@@ -143,7 +143,7 @@ impl Swap {
     }
 }
 
-/// A submarine swap, used for swap-in (Receive)
+/// A submarine swap, used for swap-in (Send)
 #[derive(Clone, Debug)]
 pub(crate) struct SwapIn {
     pub(crate) id: String,
@@ -156,17 +156,17 @@ pub(crate) struct SwapIn {
     pub(crate) is_claim_tx_seen: bool,
 }
 impl SwapIn {
-    pub(crate) fn calculate_status(&self) -> SubmarineSwapStatus {
+    pub(crate) fn calculate_status(&self) -> SwapInStatus {
         match (&self.lockup_txid, &self.is_claim_tx_seen) {
-            (None, _) => SubmarineSwapStatus::Created,
-            (Some(_), false) => SubmarineSwapStatus::Pending,
-            (Some(_), true) => SubmarineSwapStatus::Completed,
+            (None, _) => SwapInStatus::Created,
+            (Some(_), false) => SwapInStatus::Pending,
+            (Some(_), true) => SwapInStatus::Completed,
         }
     }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum SubmarineSwapStatus {
+pub enum SwapInStatus {
     /// The swap was created, but the lockup tx was not broadcast sucecessfully.
     Created = 0,
 
@@ -177,7 +177,7 @@ pub enum SubmarineSwapStatus {
     Completed = 2,
 }
 
-/// A reverse swap, used for swap-out (Send)
+/// A reverse swap, used for swap-out (Receive)
 #[derive(Clone, Debug)]
 pub(crate) struct SwapOut {
     pub(crate) id: String,
@@ -191,16 +191,16 @@ pub(crate) struct SwapOut {
     pub(crate) claim_txid: Option<String>,
 }
 impl SwapOut {
-    pub(crate) fn calculate_status(&self) -> ReverseSwapStatus {
+    pub(crate) fn calculate_status(&self) -> SwapOutStatus {
         match self.claim_txid {
-            None => ReverseSwapStatus::Pending,
-            Some(_) => ReverseSwapStatus::Completed,
+            None => SwapOutStatus::Pending,
+            Some(_) => SwapOutStatus::Completed,
         }
     }
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum ReverseSwapStatus {
+pub enum SwapOutStatus {
     /// Reverse swap created, but lockup tx not yet seen and claim tx not yet broadcasted
     Pending = 0,
 

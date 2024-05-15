@@ -123,7 +123,7 @@ impl Persister {
 
         let filtered: Vec<SwapIn> = swap_ins
             .into_iter()
-            .filter(|swap| swap.calculate_status() == SubmarineSwapStatus::Pending)
+            .filter(|swap| swap.calculate_status() == SwapInStatus::Pending)
             .collect();
 
         Ok(filtered)
