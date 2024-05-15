@@ -419,6 +419,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_get_info_response(GetInfoResponse apiObj, wire_cst_get_info_response wireObj) {
     wireObj.balance_sat = cst_encode_u_64(apiObj.balanceSat);
+    wireObj.pending_send_sat = cst_encode_u_64(apiObj.pendingSendSat);
+    wireObj.pending_receive_sat = cst_encode_u_64(apiObj.pendingReceiveSat);
     wireObj.pubkey = cst_encode_String(apiObj.pubkey);
   }
 
@@ -1080,6 +1082,12 @@ final class wire_cst_list_payment extends ffi.Struct {
 final class wire_cst_get_info_response extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
+
+  @ffi.Uint64()
+  external int pending_send_sat;
+
+  @ffi.Uint64()
+  external int pending_receive_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }

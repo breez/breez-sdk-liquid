@@ -419,10 +419,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GetInfoResponse dco_decode_get_info_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return GetInfoResponse(
       balanceSat: dco_decode_u_64(arr[0]),
-      pubkey: dco_decode_String(arr[1]),
+      pendingSendSat: dco_decode_u_64(arr[1]),
+      pendingReceiveSat: dco_decode_u_64(arr[2]),
+      pubkey: dco_decode_String(arr[3]),
     );
   }
 
@@ -726,8 +728,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_balanceSat = sse_decode_u_64(deserializer);
+    var var_pendingSendSat = sse_decode_u_64(deserializer);
+    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
     var var_pubkey = sse_decode_String(deserializer);
-    return GetInfoResponse(balanceSat: var_balanceSat, pubkey: var_pubkey);
+    return GetInfoResponse(
+        balanceSat: var_balanceSat,
+        pendingSendSat: var_pendingSendSat,
+        pendingReceiveSat: var_pendingReceiveSat,
+        pubkey: var_pubkey);
   }
 
   @protected
@@ -1071,6 +1079,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.balanceSat, serializer);
+    sse_encode_u_64(self.pendingSendSat, serializer);
+    sse_encode_u_64(self.pendingReceiveSat, serializer);
     sse_encode_String(self.pubkey, serializer);
   }
 

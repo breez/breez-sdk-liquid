@@ -47,16 +47,26 @@ class GetInfoRequest {
 }
 
 class GetInfoResponse {
+  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
   final int balanceSat;
+
+  /// Amount that is being used for ongoing Send swaps
+  final int pendingSendSat;
+
+  /// Incoming amount that is pending from ongoing Receive swaps
+  final int pendingReceiveSat;
   final String pubkey;
 
   const GetInfoResponse({
     required this.balanceSat,
+    required this.pendingSendSat,
+    required this.pendingReceiveSat,
     required this.pubkey,
   });
 
   @override
-  int get hashCode => balanceSat.hashCode ^ pubkey.hashCode;
+  int get hashCode =>
+      balanceSat.hashCode ^ pendingSendSat.hashCode ^ pendingReceiveSat.hashCode ^ pubkey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -64,6 +74,8 @@ class GetInfoResponse {
       other is GetInfoResponse &&
           runtimeType == other.runtimeType &&
           balanceSat == other.balanceSat &&
+          pendingSendSat == other.pendingSendSat &&
+          pendingReceiveSat == other.pendingReceiveSat &&
           pubkey == other.pubkey;
 }
 
