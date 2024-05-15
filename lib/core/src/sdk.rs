@@ -155,31 +155,36 @@ impl LiquidSdk {
             // If an ongoing reverse swap is in any of these states, we should be able to claim
             RevSwapStates::TransactionMempool
             | RevSwapStates::TransactionConfirmed
-            | RevSwapStates::InvoiceSettled => match self.try_claim_v2(&swap_out) {
-                Ok(txid) => {
-                    let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
-                    self.persister
-                        .resolve_swap(
-                            id,
-                            Some((
-                                txid,
-                                PaymentData {
-                                    payer_amount_sat,
-                                    receiver_amount_sat: swap_out.receiver_amount_sat,
-                                },
-                            )),
-                        )
-                        .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
+            | RevSwapStates::InvoiceSettled => match swap_out.claim_txid {
+                Some(claim_txid) => {
+                    warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_txid}")
                 }
-                Err(err) => {
-                    if let PaymentError::AlreadyClaimed = err {
-                        warn!("Funds already claimed");
+                None => match self.try_claim_v2(&swap_out) {
+                    Ok(txid) => {
+                        let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
                         self.persister
-                            .resolve_swap(id, None)
-                            .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                            .resolve_swap(
+                                id,
+                                Some((
+                                    txid,
+                                    PaymentData {
+                                        payer_amount_sat,
+                                        receiver_amount_sat: swap_out.receiver_amount_sat,
+                                    },
+                                )),
+                            )
+                            .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
                     }
-                    warn!("Could not claim reverse swap {id} yet. Err: {err}");
-                }
+                    Err(err) => {
+                        if let PaymentError::AlreadyClaimed = err {
+                            warn!("Funds already claimed");
+                            self.persister
+                                .resolve_swap(id, None)
+                                .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                        }
+                        warn!("Could not claim reverse swap {id} yet. Err: {err}");
+                    }
+                },
             },
             RevSwapStates::Created | RevSwapStates::MinerFeePaid => {
                 // Too soon to try to claim
@@ -721,6 +726,11 @@ impl LiquidSdk {
     }
 
     fn try_claim_v2(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
+        ensure_sdk!(
+            ongoing_swap_out.claim_txid.is_none(),
+            PaymentError::AlreadyClaimed
+        );
+
         let rev_swap_id = &ongoing_swap_out.id;
         debug!("Trying to claim reverse swap {rev_swap_id}",);
 
@@ -768,9 +778,6 @@ impl LiquidSdk {
                 info!("Claim broadcast response: {response:?}");
             }
             Network::LiquidTestnet => {
-                // Before broadcasting the claim tx, we re-sync with LWK, so we have the claim tx inputs
-                self.scan()?;
-
                 let electrum_client = ElectrumClient::new(&self.electrum_url)?;
                 electrum_client.broadcast(&claim_tx)?;
             }

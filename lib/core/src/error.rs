@@ -67,18 +67,9 @@ pub enum PaymentError {
 impl From<boltz_client::error::Error> for PaymentError {
     fn from(err: boltz_client::error::Error) -> Self {
         match err {
-            boltz_client::error::Error::Protocol(msg) => {
-                if msg == "Could not find utxos for script" {
-                    return PaymentError::AlreadyClaimed;
-                }
-
-                PaymentError::Generic { err: msg }
-            }
-            boltz_client::error::Error::HTTP(e) => {
-                PaymentError::Generic {
-                    err: format!("Could not contact servers: {e:?}")
-                }
-            }
+            boltz_client::error::Error::HTTP(e) => PaymentError::Generic {
+                err: format!("Could not contact servers: {e:?}"),
+            },
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
