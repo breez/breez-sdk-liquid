@@ -1,11 +1,8 @@
 use anyhow::anyhow;
 use boltz_client::network::Chain;
-use boltz_client::Bolt11Invoice;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use serde::{Deserialize, Serialize};
-
-use crate::get_invoice_amount;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
@@ -216,7 +213,8 @@ pub enum PaymentType {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Payment {
-    pub id: Option<String>,
+    /// The txid of the transaction
+    pub id: String,
     pub timestamp: Option<u32>,
     pub amount_sat: u64,
     pub fees_sat: Option<u64>,
@@ -224,43 +222,6 @@ pub struct Payment {
     pub payment_type: PaymentType,
 
     pub invoice: Option<String>,
-}
-
-impl From<Swap> for Payment {
-    fn from(swap: Swap) -> Self {
-        match swap {
-            Swap::Send(SwapIn {
-                invoice,
-                payer_amount_sat,
-                ..
-            }) => {
-                let receiver_amount_sat = get_invoice_amount!(invoice);
-                Payment {
-                    id: None,
-                    timestamp: None,
-                    payment_type: PaymentType::PendingSend,
-                    amount_sat: payer_amount_sat,
-                    invoice: Some(invoice),
-                    fees_sat: Some(payer_amount_sat - receiver_amount_sat),
-                }
-            }
-            Swap::Receive(SwapOut {
-                receiver_amount_sat,
-                invoice,
-                ..
-            }) => {
-                let payer_amount_sat = get_invoice_amount!(invoice);
-                Payment {
-                    id: None,
-                    timestamp: None,
-                    payment_type: PaymentType::PendingReceive,
-                    amount_sat: receiver_amount_sat,
-                    invoice: Some(invoice),
-                    fees_sat: Some(payer_amount_sat - receiver_amount_sat),
-                }
-            }
-        }
-    }
 }
 
 pub(crate) struct PaymentData {

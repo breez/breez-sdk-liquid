@@ -393,7 +393,7 @@ impl SseDecode for Option<u64> {
 impl SseDecode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_id = <Option<String>>::sse_decode(deserializer);
+        let mut var_id = <String>::sse_decode(deserializer);
         let mut var_timestamp = <Option<u32>>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
@@ -1003,7 +1003,7 @@ impl SseEncode for Option<u64> {
 impl SseEncode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<String>>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.id, serializer);
         <Option<u32>>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);

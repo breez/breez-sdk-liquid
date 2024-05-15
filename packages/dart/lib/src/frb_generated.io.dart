@@ -424,7 +424,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
-    wireObj.id = cst_encode_opt_String(apiObj.id);
+    wireObj.id = cst_encode_String(apiObj.id);
     wireObj.timestamp = cst_encode_opt_box_autoadd_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
     wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);

@@ -74,7 +74,8 @@ enum Network {
 }
 
 class Payment {
-  final String? id;
+  /// The txid of the transaction
+  final String id;
   final int? timestamp;
   final int amountSat;
   final int? feesSat;
@@ -82,7 +83,7 @@ class Payment {
   final String? invoice;
 
   const Payment({
-    this.id,
+    required this.id,
     this.timestamp,
     required this.amountSat,
     this.feesSat,

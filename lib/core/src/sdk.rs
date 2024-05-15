@@ -875,6 +875,10 @@ impl LiquidSdk {
         })
     }
 
+    /// ## Arguments
+    ///
+    /// - `with_scan`: Rescan the onchain wallet before listing the payments.
+    /// - `include_pending`: Includes the onchain transactions that are not yet confirmed.
     pub fn list_payments(&self, with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
         if with_scan {
             self.scan()?;
@@ -883,33 +887,38 @@ impl LiquidSdk {
         let transactions = self.lwk_wollet.lock().unwrap().transactions()?;
 
         let payment_data = self.persister.get_payment_data()?;
-        let mut payments: Vec<Payment> = transactions
+        let payments: Vec<Payment> = transactions
             .iter()
-            .map(|tx| {
-                let id = tx.txid.to_string();
-                let data = payment_data.get(&id);
-                let amount_sat = tx.balance.values().sum::<i64>();
-                let fees_sat = data.map(|d| d.payer_amount_sat - d.receiver_amount_sat);
+            .filter_map(|tx| {
+                let is_pending = tx.height.is_none();
+                let is_included = !is_pending || include_pending;
 
-                Payment {
-                    id: Some(id.clone()),
-                    timestamp: tx.timestamp,
-                    amount_sat: amount_sat.unsigned_abs(),
-                    payment_type: match amount_sat >= 0 {
-                        true => PaymentType::Received,
-                        false => PaymentType::Sent,
-                    },
-                    invoice: None,
-                    fees_sat,
+                match is_included {
+                    true => {
+                        let txid = tx.txid.to_string();
+                        let amount_sat = tx.balance.values().sum::<i64>();
+                        let fees_sat = payment_data
+                            .get(&txid)
+                            .map(|d| d.payer_amount_sat - d.receiver_amount_sat);
+
+                        Some(Payment {
+                            id: txid,
+                            timestamp: tx.timestamp,
+                            amount_sat: amount_sat.unsigned_abs(),
+                            payment_type: match (amount_sat >= 0, is_pending) {
+                                (true, false) => PaymentType::Received,
+                                (true, true) => PaymentType::PendingReceive,
+                                (false, false) => PaymentType::Sent,
+                                (false, true) => PaymentType::PendingSend,
+                            },
+                            invoice: None,
+                            fees_sat,
+                        })
+                    }
+                    false => None
                 }
             })
             .collect();
-
-        if include_pending {
-            for swap in self.persister.list_ongoing_swaps()? {
-                payments.insert(0, swap.into());
-            }
-        }
 
         Ok(payments)
     }

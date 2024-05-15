@@ -474,7 +474,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return Payment(
-      id: dco_decode_opt_String(arr[0]),
+      id: dco_decode_String(arr[0]),
       timestamp: dco_decode_opt_box_autoadd_u_32(arr[1]),
       amountSat: dco_decode_u_64(arr[2]),
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
@@ -798,7 +798,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_id = sse_decode_opt_String(deserializer);
+    var var_id = sse_decode_String(deserializer);
     var var_timestamp = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -1135,7 +1135,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_opt_String(self.id, serializer);
+    sse_encode_String(self.id, serializer);
     sse_encode_opt_box_autoadd_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
