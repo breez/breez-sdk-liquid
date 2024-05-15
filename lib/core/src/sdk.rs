@@ -885,46 +885,78 @@ impl LiquidSdk {
         })
     }
 
+    /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
+    ///
     /// ## Arguments
     ///
     /// - `with_scan`: Rescan the onchain wallet before listing the payments.
-    /// - `include_pending`: Includes the onchain transactions that are not yet confirmed.
+    /// - `include_pending`: Includes the payments that are still pending.
     pub fn list_payments(&self, with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
         if with_scan {
             self.scan()?;
         }
-
         let transactions = self.lwk_wollet.lock().unwrap().transactions()?;
 
+        let con = self.persister.get_connection()?;
+        let send_swaps = self.persister.list_send_swaps(&con, vec![])?;
         let payment_data = self.persister.get_payment_data()?;
+
         let payments: Vec<Payment> = transactions
             .iter()
             .filter_map(|tx| {
-                let is_pending = tx.height.is_none();
-                let is_included = !is_pending || include_pending;
+                let txid = tx.txid.to_string();
+                let is_tx_confirmed = tx.height.is_some();
+                let amount_sat = tx.balance.values().sum::<i64>();
 
-                match is_included {
+                let payment_type = match amount_sat >= 0 {
+                    // Inbound payment, possibly associated with a swap-out (Receive)
                     true => {
-                        let txid = tx.txid.to_string();
-                        let amount_sat = tx.balance.values().sum::<i64>();
-                        let fees_sat = payment_data
-                            .get(&txid)
-                            .map(|d| d.payer_amount_sat - d.receiver_amount_sat);
+                        // Receive: a payment is no longer pending when (our) claim tx is confirmed
 
-                        Some(Payment {
-                            id: txid,
-                            timestamp: tx.timestamp,
-                            amount_sat: amount_sat.unsigned_abs(),
-                            payment_type: match (amount_sat >= 0, is_pending) {
-                                (true, false) => PaymentType::Received,
-                                (true, true) => PaymentType::PendingReceive,
-                                (false, false) => PaymentType::Sent,
-                                (false, true) => PaymentType::PendingSend,
-                            },
-                            invoice: None,
-                            fees_sat,
-                        })
+                        // This tx can be associated with a swap-out if the swap's claim_tx == tx.
+                        // If it is associated with a swap, the tx's status determines the payment type.
+                        // If it is not associated with any swap, the tx's status by default determines the payment type.
+
+                        match is_tx_confirmed {
+                            true => PaymentType::Received,
+                            false => PaymentType::PendingReceive,
+                        }
                     }
+
+                    // Outbound payment, possibly associated with a swap-in (Send)
+                    false => {
+                        // This tx can be associated with a swap-in if the swap's lockup_tx == tx
+                        let maybe_associated_swap = send_swaps.iter().find(
+                            |s| matches!(&s.lockup_txid, Some(lockup_txid) if lockup_txid == &txid),
+                        );
+
+                        match maybe_associated_swap {
+                            Some(associated_swap) => {
+                                // Send: a payment is no longer pending when the (Boltz) claim tx is in the mempool
+                                match associated_swap.claim_txid.is_some() {
+                                    true => PaymentType::Sent,
+                                    false => PaymentType::PendingSend,
+                                }
+                            }
+                            None => match is_tx_confirmed {
+                                true => PaymentType::Sent,
+                                false => PaymentType::PendingSend,
+                            },
+                        }
+                    }
+                };
+
+                match include_pending || !payment_type.is_pending() {
+                    true => Some(Payment {
+                        id: txid.clone(),
+                        timestamp: tx.timestamp,
+                        amount_sat: amount_sat.unsigned_abs(),
+                        payment_type,
+                        invoice: None,
+                        fees_sat: payment_data
+                            .get(&txid)
+                            .map(|d| d.payer_amount_sat - d.receiver_amount_sat),
+                    }),
                     false => None,
                 }
             })

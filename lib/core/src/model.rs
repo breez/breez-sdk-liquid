@@ -215,6 +215,14 @@ pub enum PaymentType {
     PendingReceive,
     PendingSend,
 }
+impl PaymentType {
+    pub(crate) fn is_pending(&self) -> bool {
+        match &self {
+            Self::Sent | Self::Received => false,
+            Self::PendingSend | Self::PendingReceive => true,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Payment {
