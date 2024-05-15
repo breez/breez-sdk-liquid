@@ -164,22 +164,6 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_wire_receive_payment = _frbgen_breez_liquid_wire_receive_paymentPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
-  void frbgen_breez_liquid_wire_recover_funds(
-    int port_,
-    int recovery,
-  ) {
-    return _frbgen_breez_liquid_wire_recover_funds(
-      port_,
-      recovery,
-    );
-  }
-
-  late final _frbgen_breez_liquid_wire_recover_fundsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire_recover_funds');
-  late final _frbgen_breez_liquid_wire_recover_funds =
-      _frbgen_breez_liquid_wire_recover_fundsPtr.asFunction<void Function(int, int)>();
-
   void frbgen_breez_liquid_wire_restore(
     int port_,
     ffi.Pointer<wire_cst_restore_request> req,
@@ -211,38 +195,6 @@ class FlutterBreezLiquidBindings {
           'frbgen_breez_liquid_wire_send_payment');
   late final _frbgen_breez_liquid_wire_send_payment = _frbgen_breez_liquid_wire_send_paymentPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_prepare_send_response>)>();
-
-  void
-      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      ptr,
-    );
-  }
-
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery');
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery =
-      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery(
-      ptr,
-    );
-  }
-
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery');
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecovery =
-      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLBtcReverseRecoveryPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
@@ -440,8 +392,6 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pair_hash;
-
   @ffi.Uint64()
   external int payer_amount_sat;
 
@@ -454,20 +404,10 @@ final class wire_cst_restore_request extends ffi.Struct {
 }
 
 final class wire_cst_prepare_send_response extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
-
-  @ffi.Uint64()
-  external int payer_amount_sat;
-
-  @ffi.Uint64()
-  external int receiver_amount_sat;
-
-  @ffi.Uint64()
-  external int total_fees;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> funding_address;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+
+  @ffi.Uint64()
+  external int fees_sat;
 }
 
 final class wire_cst_payment extends ffi.Struct {
@@ -508,6 +448,12 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_Refunded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+}
+
 final class wire_cst_PaymentError_SendError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -520,6 +466,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_Generic Generic;
 
   external wire_cst_PaymentError_LwkError LwkError;
+
+  external wire_cst_PaymentError_Refunded Refunded;
 
   external wire_cst_PaymentError_SendError SendError;
 
@@ -543,4 +491,4 @@ final class wire_cst_send_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
 }
 
-const double LIQUID_CLAIM_TX_FEERATE = 0.1;
+const double LIQUID_CLAIM_TX_FEERATE_MSAT = 100.0;
