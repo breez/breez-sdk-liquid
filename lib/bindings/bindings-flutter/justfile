@@ -7,14 +7,14 @@ default:
   just --list --unsorted
 
 # Initializes the workspace
-bootstrap frb='true':
+bootstrap frb='true' build='false':
 	just clean
 	@if {{frb}} == true; then just frb; fi
 	just init
 	just gen
-	just build
-	melos build
-	just link
+	@if {{build}} == true; then just build; fi
+	@if {{build}} == true; then melos build; fi
+	@if {{build}} == true; then just link; fi
 	just check
 
 # Install flutter_rust_bridge_codegen dependencies
