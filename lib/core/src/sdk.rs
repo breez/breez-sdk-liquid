@@ -153,44 +153,47 @@ impl LiquidSdk {
                     .resolve_swap(id, None)
                     .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
             }
-            // We may be offline, or claiming failued due to other reasons until the swap reached these states
-            // If an ongoing reverse swap is in any of these states, we should be able to claim
+            // The lockup tx is in the mempool and we accept 0-conf => try to claim
+            // TODO Add 0-conf preconditions check: https://github.com/breez/breez-liquid-sdk/issues/187
             RevSwapStates::TransactionMempool
-            | RevSwapStates::TransactionConfirmed
-            | RevSwapStates::InvoiceSettled => match swap_out.claim_txid {
-                Some(claim_txid) => {
-                    warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_txid}")
-                }
-                None => match self.try_claim_v2(&swap_out) {
-                    Ok(txid) => {
-                        let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
-                        self.persister
-                            .resolve_swap(
-                                id,
-                                Some((
-                                    txid,
-                                    PaymentData {
-                                        payer_amount_sat,
-                                        receiver_amount_sat: swap_out.receiver_amount_sat,
-                                    },
-                                )),
-                            )
-                            .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
+            // The lockup tx is confirmed => try to claim
+            | RevSwapStates::TransactionConfirmed => {
+                match swap_out.claim_txid {
+                    Some(claim_txid) => {
+                        warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_txid}")
                     }
-                    Err(err) => {
-                        if let PaymentError::AlreadyClaimed = err {
-                            warn!("Funds already claimed");
+                    None => match self.try_claim_v2(&swap_out) {
+                        Ok(txid) => {
+                            let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
                             self.persister
-                                .resolve_swap(id, None)
-                                .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                                .resolve_swap(
+                                    id,
+                                    Some((
+                                        txid,
+                                        PaymentData {
+                                            payer_amount_sat,
+                                            receiver_amount_sat: swap_out.receiver_amount_sat,
+                                        },
+                                    )),
+                                )
+                                .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
                         }
-                        warn!("Could not claim reverse swap {id} yet. Err: {err}");
-                    }
-                },
-            },
-            RevSwapStates::Created | RevSwapStates::MinerFeePaid => {
-                // Too soon to try to claim
+                        Err(err) => {
+                            if let PaymentError::AlreadyClaimed = err {
+                                warn!("Funds already claimed");
+                                self.persister.resolve_swap(id, None).map_err(|_| {
+                                    anyhow!("Could not resolve swap {id} in database")
+                                })?;
+                            }
+                            warn!("Could not claim reverse swap {id} yet. Err: {err}");
+                        }
+                    },
+                }
             }
+            // Too soon to try to claim
+            RevSwapStates::Created | RevSwapStates::MinerFeePaid => {}
+            // Swap completed successfully (HODL invoice settled), the claim already happened
+            RevSwapStates::InvoiceSettled => {}
         }
 
         Ok(())
@@ -785,23 +788,12 @@ impl LiquidSdk {
             Some((&self.boltz_client_v2(), rev_swap_id.clone())),
             // None
         )?;
-        let claim_txid = claim_tx.txid().to_string();
 
-        // Electrum only broadcasts txs with lowball fees on testnet
-        // For mainnet, we use Boltz to broadcast
-        match self.network {
-            Network::Liquid => {
-                let tx_hex = elements::encode::serialize(&claim_tx).to_lower_hex_string();
-                let response = self
-                    .boltz_client_v2()
-                    .broadcast_tx(self.network.into(), &tx_hex)?;
-                info!("Claim broadcast response: {response:?}");
-            }
-            Network::LiquidTestnet => {
-                let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-                electrum_client.broadcast(&claim_tx)?;
-            }
-        };
+        let claim_txid = claim_tx_wrapper.broadcast(
+            &claim_tx,
+            &self.network_config(),
+            Some((&self.boltz_client_v2(), self.network.into())),
+        )?;
 
         // Once successfully broadcasted, we persist the claim txid
         self.persister
