@@ -61,7 +61,7 @@ impl Persister {
 
             let tx = con.transaction()?;
             tx.execute(
-                "INSERT INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
+                "INSERT OR REPLACE INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
               VALUES(?, ?, ?)",
                 (
                     txid,
