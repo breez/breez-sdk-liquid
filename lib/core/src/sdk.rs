@@ -16,7 +16,7 @@ use boltz_client::{
         liquidv2::LBtcSwapTxV2,
     },
     util::secrets::{LiquidSwapKey, Preimage, SwapKey},
-    Amount, Bolt11Invoice, Keypair, LBtcSwapScriptV2, SwapType,
+    Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2, SwapType,
 };
 use elements::hashes::hex::DisplayHex;
 use log::{debug, info, warn};
@@ -137,6 +137,8 @@ impl LiquidSdk {
         swap_state: RevSwapStates,
         id: &str,
     ) -> Result<()> {
+        info!("Handling reverse swap transition to {swap_state:?} for swap {id}");
+
         let con = self.persister.get_connection()?;
         let swap_out = Persister::fetch_swap_out(&con, id)?
             .ok_or(anyhow!("No ongoing swap out found for ID {id}"))?;
@@ -199,6 +201,8 @@ impl LiquidSdk {
         swap_state: SubSwapStates,
         id: &str,
     ) -> Result<()> {
+        info!("Handling submarine swap transition to {swap_state:?} for swap {id}");
+
         let con = self.persister.get_connection()?;
         let ongoing_swap_in = Persister::fetch_swap_in(&con, id)?
             .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
@@ -371,7 +375,19 @@ impl LiquidSdk {
     ) -> Result<Transaction, PaymentError> {
         self.scan()?;
         let lwk_wollet = self.lwk_wollet.lock().unwrap();
-        let mut pset = lwk_wollet.send_lbtc(amount_sat, recipient_address, fee_rate)?;
+        let mut pset = lwk_wollet::TxBuilder::new(self.network.into())
+            .add_lbtc_recipient(
+                &ElementsAddress::from_str(recipient_address).map_err(|e| {
+                    PaymentError::Generic {
+                        err: format!(
+                            "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
+                        ),
+                    }
+                })?,
+                amount_sat,
+            )?
+            .fee_rate(fee_rate)
+            .finish(&lwk_wollet)?;
         let signer = AnySigner::Software(self.lwk_signer.clone());
         signer.sign(&mut pset)?;
         Ok(lwk_wollet.finalize(&mut pset)?)
