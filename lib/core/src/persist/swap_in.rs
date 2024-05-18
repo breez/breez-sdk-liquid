@@ -42,19 +42,23 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
+                receiver_amount_sat,
                 create_response_json,
                 lockup_txid,
-                is_claim_tx_seen
+                is_claim_tx_seen,
+                created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_in.id,
             swap_in.invoice,
             swap_in.payer_amount_sat,
+            swap_in.receiver_amount_sat,
             swap_in.create_response_json,
             swap_in.lockup_txid,
             swap_in.is_claim_tx_seen,
+            swap_in.created_at,
         ))?;
 
         Ok(())
@@ -73,6 +77,7 @@ impl Persister {
                 id,
                 invoice,
                 payer_amount_sat,
+                receiver_amount_sat,
                 create_response_json,
                 lockup_txid,
                 is_claim_tx_seen,
@@ -95,9 +100,11 @@ impl Persister {
             id: row.get(0)?,
             invoice: row.get(1)?,
             payer_amount_sat: row.get(2)?,
-            create_response_json: row.get(3)?,
-            lockup_txid: row.get(4)?,
-            is_claim_tx_seen: row.get(5)?,
+            receiver_amount_sat: row.get(3)?,
+            create_response_json: row.get(4)?,
+            lockup_txid: row.get(5)?,
+            is_claim_tx_seen: row.get(6)?,
+            created_at: row.get(7)?,
         })
     }
 
@@ -123,7 +130,7 @@ impl Persister {
 
         let filtered: Vec<SwapIn> = swap_ins
             .into_iter()
-            .filter(|swap| swap.calculate_status() == SwapInStatus::Pending)
+            .filter(|swap| swap.calculate_status() != SwapInStatus::Completed)
             .collect();
 
         Ok(filtered)

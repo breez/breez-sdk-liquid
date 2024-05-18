@@ -1,4 +1,5 @@
 use std::net::TcpStream;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::swaps::boltzv2::SwapUpdate;
@@ -64,4 +65,11 @@ pub(crate) fn get_swap_status_v2(
             }
         }
     }
+}
+
+pub(crate) fn now() -> u32 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u32
 }

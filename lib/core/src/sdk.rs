@@ -161,13 +161,16 @@ impl LiquidSdk {
                     }
                     None => match self.try_claim_v2(&swap_out) {
                         Ok(txid) => {
-                            let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
+                            // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
+                            // This makes the tx known to the SDK (get_info, list_payments) instantly
                             self.persister
                                 .insert_or_update_payment(
-                                    PaymentData {
-                                        id: txid,
-                                        payer_amount_sat,
-                                        receiver_amount_sat: swap_out.receiver_amount_sat,
+                                    PaymentTxData {
+                                        txid,
+                                        timestamp: None,
+                                        amount_sat: swap_out.receiver_amount_sat,
+                                        payment_type: PaymentType::Receive,
+                                        status: PaymentStatus::Pending,
                                     }
                                 )?;
                         }
@@ -224,10 +227,14 @@ impl LiquidSdk {
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
 
-                self.persister.insert_or_update_payment(PaymentData {
-                    id: txid,
-                    payer_amount_sat: ongoing_swap_in.payer_amount_sat,
-                    receiver_amount_sat,
+                // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
+                // This makes the tx known to the SDK (get_info, list_payments) instantly
+                self.persister.insert_or_update_payment(PaymentTxData {
+                    txid,
+                    timestamp: None,
+                    amount_sat: ongoing_swap_in.payer_amount_sat,
+                    payment_type: PaymentType::Send,
+                    status: PaymentStatus::Pending,
                 })?;
 
                 Ok(())
@@ -282,17 +289,15 @@ impl LiquidSdk {
         let mut confirmed_sent_sat = 0;
         let mut confirmed_received_sat = 0;
 
-        // We rely on our payment state (pending or not) instead of the onchain confirmed state,
-        // because our payment state is derived from the swap state
         for p in self.list_payments(req.with_scan, true)? {
-            match p.payment_type {
+            match p.tx.payment_type {
                 PaymentType::Send => match p.status {
-                    PaymentStatus::Pending => pending_send_sat += p.amount_sat,
-                    PaymentStatus::Complete => confirmed_sent_sat += p.amount_sat,
+                    PaymentStatus::Pending => pending_send_sat += p.tx.amount_sat,
+                    PaymentStatus::Complete => confirmed_sent_sat += p.tx.amount_sat,
                 },
                 PaymentType::Receive => match p.status {
-                    PaymentStatus::Pending => pending_receive_sat += p.amount_sat,
-                    PaymentStatus::Complete => confirmed_received_sat += p.amount_sat,
+                    PaymentStatus::Pending => pending_receive_sat += p.tx.amount_sat,
+                    PaymentStatus::Complete => confirmed_received_sat += p.tx.amount_sat,
                 },
             }
         }
@@ -598,9 +603,11 @@ impl LiquidSdk {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
+            receiver_amount_sat,
             create_response_json,
             lockup_txid: None,
             is_claim_tx_seen: false,
+            created_at: utils::now(),
         })?;
 
         let result;
@@ -651,14 +658,8 @@ impl LiquidSdk {
                         &req.invoice,
                         &keypair,
                     )?;
+                    debug!("Boltz successfully claimed the funds");
                     self.persister.set_claim_tx_seen_for_swap_in(swap_id)?;
-
-                    debug!("Boltz successfully claimed the funds. Resolving swap-in {swap_id}");
-                    self.persister.insert_or_update_payment(PaymentData {
-                        id: lockup_txid.clone(),
-                        payer_amount_sat: receiver_amount_sat + req.fees_sat,
-                        receiver_amount_sat,
-                    })?;
 
                     self.status_stream
                         .resolve_tracked_swap(swap_id, SwapType::ReverseSubmarine);
@@ -849,9 +850,12 @@ impl LiquidSdk {
                 blinding_key: blinding_str,
                 redeem_script,
                 invoice: invoice.to_string(),
+                payer_amount_sat,
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_txid: None,
+                created_at: utils::now(),
+                is_claim_tx_confirmed: false,
             })
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -861,86 +865,49 @@ impl LiquidSdk {
         })
     }
 
+    // TODO When to best do this? On every list_payments / get_info? In background thread?
+    /// This method fetches the onchain tx data using the LWK wollet. For every wallet tx, it
+    /// inserts or updates a corresponding entry in our Payments table.
+    fn reconcile_payments_with_onchain(&self, with_scan: bool) -> Result<()> {
+        if with_scan {
+            self.scan()?;
+        }
+
+        for tx in self.lwk_wollet.lock().unwrap().transactions()? {
+            let txid = tx.txid.to_string();
+            let is_tx_confirmed = tx.height.is_some();
+            let amount_sat = tx.balance.values().sum::<i64>();
+
+            self.persister.insert_or_update_payment(PaymentTxData {
+                txid,
+                timestamp: tx.timestamp,
+                amount_sat: amount_sat.unsigned_abs(),
+                payment_type: match amount_sat >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                },
+                status: match is_tx_confirmed {
+                    true => PaymentStatus::Complete,
+                    false => PaymentStatus::Pending,
+                },
+            })?;
+        }
+
+        Ok(())
+    }
+
     /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
     ///
     /// ## Arguments
     ///
     /// - `with_scan`: Rescan the onchain wallet before listing the payments.
     /// - `include_pending`: Includes the payments that are still pending.
-    pub fn list_payments(&self, with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
-        if with_scan {
-            self.scan()?;
-        }
-        let transactions = self.lwk_wollet.lock().unwrap().transactions()?;
+    pub fn list_payments(&self, with_scan: bool, _include_pending: bool) -> Result<Vec<Payment>> {
+        // TODO Remove include_pending ?
+        self.reconcile_payments_with_onchain(with_scan)?;
 
-        let con = self.persister.get_connection()?;
-        let send_swaps = self.persister.list_send_swaps(&con, vec![])?;
-        let payment_data = self.persister.get_payment_data()?;
-
-        let payments: Vec<Payment> = transactions
-            .iter()
-            .filter_map(|tx| {
-                let txid = tx.txid.to_string();
-                let is_tx_confirmed = tx.height.is_some();
-                let amount_sat = tx.balance.values().sum::<i64>();
-
-                let (payment_type, payment_status) = match amount_sat >= 0 {
-                    // Inbound payment, possibly associated with a swap-out (Receive)
-                    true => {
-                        // Receive: a payment is no longer pending when (our) claim tx is confirmed
-
-                        // This tx can be associated with a swap-out if the swap's claim_tx == tx.
-                        // If it is associated with a swap, the tx's status determines the payment type.
-                        // If it is not associated with any swap, the tx's status by default determines the payment type.
-
-                        let status = match is_tx_confirmed {
-                            true => PaymentStatus::Complete,
-                            false => PaymentStatus::Pending,
-                        };
-                        (PaymentType::Receive, status)
-                    }
-
-                    // Outbound payment, possibly associated with a swap-in (Send)
-                    false => {
-                        // This tx can be associated with a swap-in if the swap's lockup_tx == tx
-                        let maybe_associated_swap = send_swaps.iter().find(
-                            |s| matches!(&s.lockup_txid, Some(lockup_txid) if lockup_txid == &txid),
-                        );
-
-                        let status = match maybe_associated_swap {
-                            Some(associated_swap) => {
-                                // Send: a payment is no longer pending when the (Boltz) claim tx is in the mempool
-                                match associated_swap.is_claim_tx_seen {
-                                    true => PaymentStatus::Complete,
-                                    false => PaymentStatus::Pending,
-                                }
-                            }
-                            None => match is_tx_confirmed {
-                                true => PaymentStatus::Complete,
-                                false => PaymentStatus::Pending,
-                            },
-                        };
-                        (PaymentType::Send, status)
-                    }
-                };
-
-                match include_pending || payment_status == PaymentStatus::Complete {
-                    true => Some(Payment {
-                        id: txid.clone(),
-                        timestamp: tx.timestamp,
-                        amount_sat: amount_sat.unsigned_abs(),
-                        payment_type,
-                        status: payment_status,
-                        invoice: None,
-                        fees_sat: payment_data
-                            .get(&txid)
-                            .map(|d| d.payer_amount_sat - d.receiver_amount_sat),
-                    }),
-                    false => None,
-                }
-            })
-            .collect();
-
+        let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
+        payments.sort_by_key(|p| p.timestamp);
         Ok(payments)
     }
 

@@ -32,11 +32,13 @@ impl Persister {
                 redeem_script,
                 blinding_key,
                 invoice,
+                payer_amount_sat,
                 receiver_amount_sat,
+                created_at,
                 claim_fees_sat,
                 claim_txid
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_out.id,
@@ -44,7 +46,9 @@ impl Persister {
             swap_out.redeem_script,
             swap_out.blinding_key,
             swap_out.invoice,
+            swap_out.payer_amount_sat,
             swap_out.receiver_amount_sat,
+            swap_out.created_at,
             swap_out.claim_fees_sat,
             swap_out.claim_txid,
         ))?;
@@ -62,18 +66,22 @@ impl Persister {
         format!(
             "
             SELECT
-                id,
-                preimage,
-                redeem_script,
-                blinding_key,
-                invoice,
-                receiver_amount_sat,
-                claim_fees_sat,
-                claim_txid,
-                created_at
-            FROM receive_swaps
+                rs.id,
+                rs.preimage,
+                rs.redeem_script,
+                rs.blinding_key,
+                rs.invoice,
+                rs.payer_amount_sat,
+                rs.receiver_amount_sat,
+                rs.claim_fees_sat,
+                rs.claim_txid,
+                rs.created_at,
+                ptx.status
+            FROM receive_swaps AS rs
+            LEFT JOIN payment_tx_data AS ptx
+                ON ptx.txid = rs.claim_txid
             {where_clause_str}
-            ORDER BY created_at
+            ORDER BY rs.created_at
         "
         )
     }
@@ -85,15 +93,25 @@ impl Persister {
     }
 
     fn sql_row_to_swap_out(row: &Row) -> rusqlite::Result<SwapOut> {
+        let maybe_payment_status: Option<PaymentStatus> = row.get(10)?;
         Ok(SwapOut {
             id: row.get(0)?,
             preimage: row.get(1)?,
             redeem_script: row.get(2)?,
             blinding_key: row.get(3)?,
             invoice: row.get(4)?,
-            receiver_amount_sat: row.get(5)?,
-            claim_fees_sat: row.get(6)?,
-            claim_txid: row.get(7)?,
+            payer_amount_sat: row.get(5)?,
+            receiver_amount_sat: row.get(6)?,
+            claim_fees_sat: row.get(7)?,
+            claim_txid: row.get(8)?,
+            created_at: row.get(9)?,
+            is_claim_tx_confirmed: match maybe_payment_status {
+                Some(payment_status) => match payment_status {
+                    PaymentStatus::Pending => false,
+                    PaymentStatus::Complete => true,
+                },
+                None => false,
+            },
         })
     }
 
@@ -119,7 +137,7 @@ impl Persister {
 
         let filtered: Vec<SwapOut> = swap_outs
             .into_iter()
-            .filter(|swap| swap.calculate_status() == SwapOutStatus::Pending)
+            .filter(|swap| swap.calculate_status() != SwapOutStatus::Completed)
             .collect();
 
         Ok(filtered)

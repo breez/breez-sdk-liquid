@@ -218,6 +218,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr
           .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
 
+  ffi.Pointer<wire_cst_payment_swap_data> frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_payment_swap_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data =
+      _frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_dataPtr
+          .asFunction<ffi.Pointer<wire_cst_payment_swap_data> Function()>();
+
   ffi.Pointer<wire_cst_prepare_receive_request>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request();
@@ -410,8 +421,16 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external int fees_sat;
 }
 
-final class wire_cst_payment extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+final class wire_cst_payment_swap_data extends ffi.Struct {
+  @ffi.Uint32()
+  external int created_at;
+
+  @ffi.Int32()
+  external int status;
+}
+
+final class wire_cst_payment_tx_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
 
   external ffi.Pointer<ffi.Uint32> timestamp;
 
@@ -427,6 +446,17 @@ final class wire_cst_payment extends ffi.Struct {
   external int status;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+}
+
+final class wire_cst_payment extends ffi.Struct {
+  external wire_cst_payment_tx_data tx;
+
+  external ffi.Pointer<wire_cst_payment_swap_data> swap;
+
+  external ffi.Pointer<ffi.Uint32> timestamp;
+
+  @ffi.Int32()
+  external int status;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {

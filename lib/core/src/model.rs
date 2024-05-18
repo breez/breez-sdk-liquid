@@ -2,6 +2,8 @@ use anyhow::anyhow;
 use boltz_client::network::Chain;
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
+use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
+use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
@@ -149,11 +151,13 @@ pub(crate) struct SwapIn {
     pub(crate) id: String,
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
+    pub(crate) receiver_amount_sat: u64,
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcasted
     pub(crate) lockup_txid: Option<String>,
     /// Whether or not the claim tx was seen in the mempool
     pub(crate) is_claim_tx_seen: bool,
+    pub(crate) created_at: u32,
 }
 impl SwapIn {
     pub(crate) fn calculate_status(&self) -> SwapInStatus {
@@ -168,13 +172,13 @@ impl SwapIn {
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum SwapInStatus {
     /// The swap was created, but the lockup tx was not broadcast sucecessfully.
-    Created = 0,
+    Created,
 
     /// The lockup tx was broadcasted successfully, but the claim tx was not seen in the mempool yet.
-    Pending = 1,
+    Pending,
 
     /// The claim tx has been seen in the mempool.
-    Completed = 2,
+    Completed,
 }
 
 /// A reverse swap, used for swap-out (Receive)
@@ -185,58 +189,148 @@ pub(crate) struct SwapOut {
     pub(crate) redeem_script: String,
     pub(crate) blinding_key: String,
     pub(crate) invoice: String,
+    /// The amount of the invoice
+    pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as claim tx is broadcasted
     pub(crate) claim_txid: Option<String>,
+    pub(crate) created_at: u32,
+
+    /// Whether or not the claim tx is confirmed.
+    ///
+    /// This is a derived field (e.g. reflects data from the payments table, is not persisted when
+    /// the swap is inserted or updated)
+    pub(crate) is_claim_tx_confirmed: bool,
 }
 impl SwapOut {
     pub(crate) fn calculate_status(&self) -> SwapOutStatus {
         match self.claim_txid {
-            None => SwapOutStatus::Pending,
-            Some(_) => SwapOutStatus::Completed,
+            None => SwapOutStatus::Created,
+            Some(_) => match self.is_claim_tx_confirmed {
+                false => SwapOutStatus::Pending,
+                true => SwapOutStatus::Completed,
+            },
         }
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum SwapOutStatus {
-    /// Reverse swap created, but lockup tx not yet seen and claim tx not yet broadcasted
-    Pending = 0,
+    /// Reverse swap was created, but the claim tx was not yet broadcasted
+    Created,
 
-    /// Claim tx was broadcasted
-    Completed = 1,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub enum PaymentType {
-    Send,
-    Receive,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub enum PaymentStatus {
+    /// The claim tx was broadcasted
     Pending,
-    Complete,
+
+    /// The claim tx is confirmed
+    Completed,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+pub enum PaymentType {
+    Receive = 0,
+    Send = 1,
+}
+impl ToSql for PaymentType {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
+    }
+}
+impl FromSql for PaymentType {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Integer(i) => match i as u8 {
+                0 => Ok(PaymentType::Receive),
+                1 => Ok(PaymentType::Send),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+pub enum PaymentStatus {
+    Pending = 0,
+    Complete = 1,
+}
+impl ToSql for PaymentStatus {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
+    }
+}
+impl FromSql for PaymentStatus {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Integer(i) => match i as u8 {
+                0 => Ok(PaymentStatus::Pending),
+                1 => Ok(PaymentStatus::Complete),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct Payment {
+pub struct PaymentTxData {
     /// The txid of the transaction
-    pub id: String,
+    pub txid: String,
+
+    /// The point in time when the underlying tx was included in a block.
     pub timestamp: Option<u32>,
+
+    /// The onchain tx amount.
+    ///
+    /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
     pub amount_sat: u64,
-    pub fees_sat: Option<u64>,
-    #[serde(rename(serialize = "type"))]
+
     pub payment_type: PaymentType,
+
+    /// Onchain tx status
     pub status: PaymentStatus,
-    pub invoice: Option<String>,
 }
 
-pub(crate) struct PaymentData {
-    pub id: String,
+#[derive(Debug, Copy, Clone, Serialize)]
+pub struct PaymentSwapData {
+    /// Swap creation timestamp
+    pub created_at: u32,
+
+    /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
+
+    /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
+
+    /// Payment status derived from the swap status
+    pub status: PaymentStatus,
+}
+
+/// Represents an SDK payment.
+///
+/// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
+#[derive(Debug, Clone, Serialize)]
+pub struct Payment {
+    /// Details from the underlying tx
+    pub tx: PaymentTxData,
+
+    /// Data from the associated swap, if available
+    pub swap: Option<PaymentSwapData>,
+
+    /// Composite timestamp that can be used for sorting or displaying the payment.
+    ///
+    /// If this payment has an associated swap, it is the swap creation time.
+    ///
+    /// Otherwise, the point in time when the underlying tx was included in a block.
+    pub timestamp: Option<u32>,
+
+    /// Composite status representing the overall status of the payment.
+    ///
+    /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
+    ///
+    /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
+    pub status: PaymentStatus,
 }
 
 #[macro_export]

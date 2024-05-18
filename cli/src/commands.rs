@@ -145,8 +145,7 @@ pub(crate) fn handle_command(
             command_result!(sdk.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
-            let mut payments = sdk.list_payments(true, true)?;
-            payments.reverse();
+            let payments = sdk.list_payments(true, true)?;
             command_result!(payments)
         }
         Command::EmptyCache => {

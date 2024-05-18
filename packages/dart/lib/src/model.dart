@@ -85,48 +85,49 @@ enum Network {
   ;
 }
 
+/// Represents an SDK payment.
+///
+/// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 class Payment {
-  /// The txid of the transaction
-  final String id;
+  /// Details from the underlying tx
+  final PaymentTxData tx;
+
+  /// Data from the associated swap, if available
+  final PaymentSwapData? swap;
+
+  /// Composite timestamp that can be used for sorting or displaying the payment.
+  ///
+  /// If this payment has an associated swap, it is the swap creation time.
+  ///
+  /// Otherwise, the point in time when the underlying tx was included in a block.
   final int? timestamp;
-  final int amountSat;
-  final int? feesSat;
-  final PaymentType paymentType;
+
+  /// Composite status representing the overall status of the payment.
+  ///
+  /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
+  ///
+  /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
   final PaymentStatus status;
-  final String? invoice;
 
   const Payment({
-    required this.id,
+    required this.tx,
+    this.swap,
     this.timestamp,
-    required this.amountSat,
-    this.feesSat,
-    required this.paymentType,
     required this.status,
-    this.invoice,
   });
 
   @override
-  int get hashCode =>
-      id.hashCode ^
-      timestamp.hashCode ^
-      amountSat.hashCode ^
-      feesSat.hashCode ^
-      paymentType.hashCode ^
-      status.hashCode ^
-      invoice.hashCode;
+  int get hashCode => tx.hashCode ^ swap.hashCode ^ timestamp.hashCode ^ status.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Payment &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
+          tx == other.tx &&
+          swap == other.swap &&
           timestamp == other.timestamp &&
-          amountSat == other.amountSat &&
-          feesSat == other.feesSat &&
-          paymentType == other.paymentType &&
-          status == other.status &&
-          invoice == other.invoice;
+          status == other.status;
 }
 
 enum PaymentStatus {
@@ -135,9 +136,84 @@ enum PaymentStatus {
   ;
 }
 
+class PaymentSwapData {
+  /// Swap creation timestamp
+  final int createdAt;
+
+  /// Amount sent by the swap payer
+  final int payerAmountSat;
+
+  /// Amount received by the swap receiver
+  final int receiverAmountSat;
+
+  /// Payment status derived from the swap status
+  final PaymentStatus status;
+
+  const PaymentSwapData({
+    required this.createdAt,
+    required this.payerAmountSat,
+    required this.receiverAmountSat,
+    required this.status,
+  });
+
+  @override
+  int get hashCode =>
+      createdAt.hashCode ^ payerAmountSat.hashCode ^ receiverAmountSat.hashCode ^ status.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PaymentSwapData &&
+          runtimeType == other.runtimeType &&
+          createdAt == other.createdAt &&
+          payerAmountSat == other.payerAmountSat &&
+          receiverAmountSat == other.receiverAmountSat &&
+          status == other.status;
+}
+
+class PaymentTxData {
+  /// The txid of the transaction
+  final String txid;
+
+  /// The point in time when the underlying tx was included in a block.
+  final int? timestamp;
+
+  /// The onchain tx amount.
+  ///
+  /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
+  final int amountSat;
+  final PaymentType paymentType;
+
+  /// Onchain tx status
+  final PaymentStatus status;
+
+  const PaymentTxData({
+    required this.txid,
+    this.timestamp,
+    required this.amountSat,
+    required this.paymentType,
+    required this.status,
+  });
+
+  @override
+  int get hashCode =>
+      txid.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ paymentType.hashCode ^ status.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PaymentTxData &&
+          runtimeType == other.runtimeType &&
+          txid == other.txid &&
+          timestamp == other.timestamp &&
+          amountSat == other.amountSat &&
+          paymentType == other.paymentType &&
+          status == other.status;
+}
+
 enum PaymentType {
-  send,
   receive,
+  send,
   ;
 }
 

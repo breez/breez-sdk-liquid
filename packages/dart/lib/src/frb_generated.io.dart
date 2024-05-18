@@ -36,6 +36,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GetInfoRequest dco_decode_box_autoadd_get_info_request(dynamic raw);
 
   @protected
+  PaymentSwapData dco_decode_box_autoadd_payment_swap_data(dynamic raw);
+
+  @protected
   PrepareReceiveRequest dco_decode_box_autoadd_prepare_receive_request(dynamic raw);
 
   @protected
@@ -52,9 +55,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
-
-  @protected
-  int dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
   ConnectRequest dco_decode_connect_request(dynamic raw);
@@ -81,10 +81,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
-  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+  PaymentSwapData? dco_decode_opt_box_autoadd_payment_swap_data(dynamic raw);
 
   @protected
-  int? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
   Payment dco_decode_payment(dynamic raw);
@@ -94,6 +94,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PaymentStatus dco_decode_payment_status(dynamic raw);
+
+  @protected
+  PaymentSwapData dco_decode_payment_swap_data(dynamic raw);
+
+  @protected
+  PaymentTxData dco_decode_payment_tx_data(dynamic raw);
 
   @protected
   PaymentType dco_decode_payment_type(dynamic raw);
@@ -147,6 +153,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   GetInfoRequest sse_decode_box_autoadd_get_info_request(SseDeserializer deserializer);
 
   @protected
+  PaymentSwapData sse_decode_box_autoadd_payment_swap_data(SseDeserializer deserializer);
+
+  @protected
   PrepareReceiveRequest sse_decode_box_autoadd_prepare_receive_request(SseDeserializer deserializer);
 
   @protected
@@ -163,9 +172,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
@@ -192,10 +198,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
-  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+  PaymentSwapData? sse_decode_opt_box_autoadd_payment_swap_data(SseDeserializer deserializer);
 
   @protected
-  int? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer);
@@ -205,6 +211,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PaymentStatus sse_decode_payment_status(SseDeserializer deserializer);
+
+  @protected
+  PaymentSwapData sse_decode_payment_swap_data(SseDeserializer deserializer);
+
+  @protected
+  PaymentTxData sse_decode_payment_tx_data(SseDeserializer deserializer);
 
   @protected
   PaymentType sse_decode_payment_type(SseDeserializer deserializer);
@@ -271,6 +283,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_payment_swap_data> cst_encode_box_autoadd_payment_swap_data(PaymentSwapData raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_payment_swap_data();
+    cst_api_fill_to_wire_payment_swap_data(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_prepare_receive_request> cst_encode_box_autoadd_prepare_receive_request(
       PrepareReceiveRequest raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -321,12 +341,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<ffi.Uint64> cst_encode_box_autoadd_u_64(int raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return wire.cst_new_box_autoadd_u_64(cst_encode_u_64(raw));
-  }
-
-  @protected
   ffi.Pointer<wire_cst_list_payment> cst_encode_list_payment(List<Payment> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_payment(raw.length);
@@ -351,15 +365,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
+  ffi.Pointer<wire_cst_payment_swap_data> cst_encode_opt_box_autoadd_payment_swap_data(PaymentSwapData? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_payment_swap_data(raw);
   }
 
   @protected
-  ffi.Pointer<ffi.Uint64> cst_encode_opt_box_autoadd_u_64(int? raw) {
+  ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_64(raw);
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
   }
 
   @protected
@@ -378,6 +392,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_box_autoadd_get_info_request(
       GetInfoRequest apiObj, ffi.Pointer<wire_cst_get_info_request> wireObj) {
     cst_api_fill_to_wire_get_info_request(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_payment_swap_data(
+      PaymentSwapData apiObj, ffi.Pointer<wire_cst_payment_swap_data> wireObj) {
+    cst_api_fill_to_wire_payment_swap_data(apiObj, wireObj.ref);
   }
 
   @protected
@@ -432,13 +452,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
-    wireObj.id = cst_encode_String(apiObj.id);
+    cst_api_fill_to_wire_payment_tx_data(apiObj.tx, wireObj.tx);
+    wireObj.swap = cst_encode_opt_box_autoadd_payment_swap_data(apiObj.swap);
     wireObj.timestamp = cst_encode_opt_box_autoadd_u_32(apiObj.timestamp);
-    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
-    wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
-    wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
     wireObj.status = cst_encode_payment_status(apiObj.status);
-    wireObj.invoice = cst_encode_opt_String(apiObj.invoice);
   }
 
   @protected
@@ -507,6 +524,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
+  }
+
+  @protected
+  void cst_api_fill_to_wire_payment_swap_data(PaymentSwapData apiObj, wire_cst_payment_swap_data wireObj) {
+    wireObj.created_at = cst_encode_u_32(apiObj.createdAt);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
+    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
+    wireObj.status = cst_encode_payment_status(apiObj.status);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_payment_tx_data(PaymentTxData apiObj, wire_cst_payment_tx_data wireObj) {
+    wireObj.txid = cst_encode_String(apiObj.txid);
+    wireObj.timestamp = cst_encode_opt_box_autoadd_u_32(apiObj.timestamp);
+    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
+    wireObj.status = cst_encode_payment_status(apiObj.status);
   }
 
   @protected
@@ -593,6 +627,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_get_info_request(GetInfoRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_payment_swap_data(PaymentSwapData self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_prepare_receive_request(PrepareReceiveRequest self, SseSerializer serializer);
 
   @protected
@@ -609,9 +646,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_u_64(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
@@ -638,10 +672,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+  void sse_encode_opt_box_autoadd_payment_swap_data(PaymentSwapData? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_u_64(int? self, SseSerializer serializer);
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer);
@@ -651,6 +685,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_payment_status(PaymentStatus self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_payment_swap_data(PaymentSwapData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_payment_tx_data(PaymentTxData self, SseSerializer serializer);
 
   @protected
   void sse_encode_payment_type(PaymentType self, SseSerializer serializer);
@@ -897,6 +937,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_get_info_request = _cst_new_box_autoadd_get_info_requestPtr
       .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
 
+  ffi.Pointer<wire_cst_payment_swap_data> cst_new_box_autoadd_payment_swap_data() {
+    return _cst_new_box_autoadd_payment_swap_data();
+  }
+
+  late final _cst_new_box_autoadd_payment_swap_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_payment_swap_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data');
+  late final _cst_new_box_autoadd_payment_swap_data = _cst_new_box_autoadd_payment_swap_dataPtr
+      .asFunction<ffi.Pointer<wire_cst_payment_swap_data> Function()>();
+
   ffi.Pointer<wire_cst_prepare_receive_request> cst_new_box_autoadd_prepare_receive_request() {
     return _cst_new_box_autoadd_prepare_receive_request();
   }
@@ -960,20 +1010,6 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
   late final _cst_new_box_autoadd_u_32 =
       _cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
-
-  ffi.Pointer<ffi.Uint64> cst_new_box_autoadd_u_64(
-    int value,
-  ) {
-    return _cst_new_box_autoadd_u_64(
-      value,
-    );
-  }
-
-  late final _cst_new_box_autoadd_u_64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint64> Function(ffi.Uint64)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_u_64');
-  late final _cst_new_box_autoadd_u_64 =
-      _cst_new_box_autoadd_u_64Ptr.asFunction<ffi.Pointer<ffi.Uint64> Function(int)>();
 
   ffi.Pointer<wire_cst_list_payment> cst_new_list_payment(
     int len,
@@ -1069,23 +1105,44 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external int fees_sat;
 }
 
-final class wire_cst_payment extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+final class wire_cst_payment_swap_data extends ffi.Struct {
+  @ffi.Uint32()
+  external int created_at;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
+
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+
+  @ffi.Int32()
+  external int status;
+}
+
+final class wire_cst_payment_tx_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
 
   external ffi.Pointer<ffi.Uint32> timestamp;
 
   @ffi.Uint64()
   external int amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> fees_sat;
-
   @ffi.Int32()
   external int payment_type;
 
   @ffi.Int32()
   external int status;
+}
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+final class wire_cst_payment extends ffi.Struct {
+  external wire_cst_payment_tx_data tx;
+
+  external ffi.Pointer<wire_cst_payment_swap_data> swap;
+
+  external ffi.Pointer<ffi.Uint32> timestamp;
+
+  @ffi.Int32()
+  external int status;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {
