@@ -18,8 +18,7 @@ use boltz_client::{
     util::secrets::{LiquidSwapKey, Preimage, SwapKey},
     Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2, SwapType,
 };
-use elements::hashes::hex::DisplayHex;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
@@ -148,10 +147,8 @@ impl LiquidSdk {
             | RevSwapStates::InvoiceExpired
             | RevSwapStates::TransactionFailed
             | RevSwapStates::TransactionRefunded => {
-                warn!("Cannot claim swap {id}, unrecoverable state: {swap_state:?}");
-                self.persister
-                    .resolve_swap(id, None)
-                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                error!("Cannot claim swap {id}, unrecoverable state: {swap_state:?}");
+                // TODO Update swap state, not payment state
             }
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // TODO Add 0-conf preconditions check: https://github.com/breez/breez-liquid-sdk/issues/187
@@ -166,26 +163,19 @@ impl LiquidSdk {
                         Ok(txid) => {
                             let payer_amount_sat = get_invoice_amount!(swap_out.invoice);
                             self.persister
-                                .resolve_swap(
-                                    id,
-                                    Some((
-                                        txid,
-                                        PaymentData {
-                                            payer_amount_sat,
-                                            receiver_amount_sat: swap_out.receiver_amount_sat,
-                                        },
-                                    )),
-                                )
-                                .map_err(|e| anyhow!("Could not resolve swap {id}: {e}"))?;
+                                .insert_or_update_payment(
+                                    PaymentData {
+                                        id: txid,
+                                        payer_amount_sat,
+                                        receiver_amount_sat: swap_out.receiver_amount_sat,
+                                    }
+                                )?;
                         }
                         Err(err) => {
                             if let PaymentError::AlreadyClaimed = err {
                                 warn!("Funds already claimed");
-                                self.persister.resolve_swap(id, None).map_err(|_| {
-                                    anyhow!("Could not resolve swap {id} in database")
-                                })?;
                             }
-                            warn!("Could not claim reverse swap {id} yet. Err: {err}");
+                            error!("Claim reverse swap {id} failed: {err}");
                         }
                     },
                 }
@@ -220,16 +210,11 @@ impl LiquidSdk {
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
-                let Ok(swap_script) = LBtcSwapScriptV2::submarine_from_swap_resp(
+                let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
                     &create_response,
                     keypair.public_key().into(),
-                ) else {
-                    self.persister
-                        .resolve_swap(id, None)
-                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
-
-                    return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
-                };
+                )
+                .map_err(|e| anyhow!("Could not rebuild refund details for swap-in {id}: {e:?}"))?;
 
                 self.post_submarine_claim_details(
                     id,
@@ -239,38 +224,16 @@ impl LiquidSdk {
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
 
-                self.persister
-                    .resolve_swap(
-                        id,
-                        Some((
-                            txid,
-                            PaymentData {
-                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
-                                receiver_amount_sat,
-                            },
-                        )),
-                    )
-                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
+                self.persister.insert_or_update_payment(PaymentData {
+                    id: txid,
+                    payer_amount_sat: ongoing_swap_in.payer_amount_sat,
+                    receiver_amount_sat,
+                })?;
 
                 Ok(())
             }
             SubSwapStates::TransactionClaimed => {
-                warn!("Swap-in {id} has already been claimed. Resolving...");
-
-                self.persister
-                    .resolve_swap(
-                        id,
-                        Some((
-                            txid,
-                            PaymentData {
-                                payer_amount_sat: ongoing_swap_in.payer_amount_sat,
-                                receiver_amount_sat,
-                            },
-                        )),
-                    )
-                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
-
-                warn!("Swap-in {id} resolved successfully");
+                warn!("Swap-in {id} has already been claimed");
                 Ok(())
             }
             SubSwapStates::TransactionLockupFailed
@@ -279,25 +242,18 @@ impl LiquidSdk {
                 warn!("Swap-in {id} is in an unrecoverable state: {swap_state:?}");
 
                 // If swap state is unrecoverable, try refunding
-                let Ok(swap_script) = LBtcSwapScriptV2::submarine_from_swap_resp(
+                let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
                     &create_response,
                     keypair.public_key().into(),
-                ) else {
-                    self.persister
-                        .resolve_swap(id, None)
-                        .map_err(|_| anyhow!("Could not resolve swap {id} in database"))?;
-
-                    return Err(anyhow!("Could not rebuild refund details for swap-in {id}"));
-                };
+                )
+                .map_err(|e| anyhow!("Could not rebuild refund details for swap-in {id}: {e:?}"))?;
 
                 let refund_txid =
                     self.try_refund(id, &swap_script, &keypair, receiver_amount_sat)?;
+                info!("Swap-in {id} refunded successfully. Txid: {refund_txid}");
 
-                warn!("Swap-in {id} refunded successfully. Txid: {refund_txid}");
-
-                self.persister
-                    .resolve_swap(id, None)
-                    .map_err(|_| anyhow!("Could not resolve swap {id} in database"))
+                // TODO Update swap state: persist refund txid
+                Ok(())
             }
             _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
         }
@@ -698,16 +654,11 @@ impl LiquidSdk {
                     self.persister.set_claim_tx_seen_for_swap_in(swap_id)?;
 
                     debug!("Boltz successfully claimed the funds. Resolving swap-in {swap_id}");
-                    self.persister.resolve_swap(
-                        swap_id,
-                        Some((
-                            lockup_txid.clone(),
-                            PaymentData {
-                                payer_amount_sat: receiver_amount_sat + req.fees_sat,
-                                receiver_amount_sat,
-                            },
-                        )),
-                    )?;
+                    self.persister.insert_or_update_payment(PaymentData {
+                        id: lockup_txid.clone(),
+                        payer_amount_sat: receiver_amount_sat + req.fees_sat,
+                        receiver_amount_sat,
+                    })?;
 
                     self.status_stream
                         .resolve_tracked_swap(swap_id, SwapType::ReverseSubmarine);

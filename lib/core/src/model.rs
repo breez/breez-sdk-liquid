@@ -234,6 +234,7 @@ pub struct Payment {
 }
 
 pub(crate) struct PaymentData {
+    pub id: String,
     pub payer_amount_sat: u64,
     pub receiver_amount_sat: u64,
 }

@@ -49,28 +49,20 @@ impl Persister {
         Ok(())
     }
 
-    // TODO Rename to mark_as_complete? update_payment_data?
-    // TODO Remove ID field
-    pub fn resolve_swap(
-        &self,
-        _id: &str,
-        payment_data: Option<(String, PaymentData)>,
-    ) -> Result<()> {
-        if let Some((txid, payment_data)) = payment_data {
-            let mut con = self.get_connection()?;
+    pub(crate) fn insert_or_update_payment(&self, payment_data: PaymentData) -> Result<()> {
+        let mut con = self.get_connection()?;
 
-            let tx = con.transaction()?;
-            tx.execute(
-                "INSERT OR REPLACE INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
+        let tx = con.transaction()?;
+        tx.execute(
+            "INSERT OR REPLACE INTO payment_data(id, payer_amount_sat, receiver_amount_sat)
               VALUES(?, ?, ?)",
-                (
-                    txid,
-                    payment_data.payer_amount_sat,
-                    payment_data.receiver_amount_sat,
-                ),
-            )?;
-            tx.commit()?;
-        }
+            (
+                payment_data.id,
+                payment_data.payer_amount_sat,
+                payment_data.receiver_amount_sat,
+            ),
+        )?;
+        tx.commit()?;
 
         Ok(())
     }
@@ -105,6 +97,7 @@ impl Persister {
                 Ok((
                     row.get(0)?,
                     PaymentData {
+                        id: row.get(0)?,
                         payer_amount_sat: row.get(1)?,
                         receiver_amount_sat: row.get(2)?,
                     },
