@@ -514,7 +514,6 @@ dependencies = [
  "anyhow",
  "bip39",
  "boltz-client",
- "elements",
  "flutter_rust_bridge",
  "glob",
  "log",
