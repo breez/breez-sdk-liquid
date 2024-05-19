@@ -685,9 +685,9 @@ dependencies = [
 
 [[package]]
 name = "elements-miniscript"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73842aeed05c6d62a985672f651914080e6f1cedced5ea194405f5b5f838f6dd"
+checksum = "cd2c9c3a0acd5a30061dc5f1859b816ef01d320da66d074d9e23aad40e7a7eba"
 dependencies = [
  "bitcoin 0.31.2",
  "elements",
@@ -973,6 +973,15 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
+]
+
+[[package]]
+name = "fxhash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
+dependencies = [
+ "byteorder",
 ]
 
 [[package]]
@@ -1373,9 +1382,9 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 
 [[package]]
 name = "lwk_common"
-version = "0.4.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6dd33b4c28e609a7ddfe1bb53e267a528668341520e6f20e36491eacc9cdadd"
+checksum = "451ed06b50b1bb76d6a910c36039a687f891868bd199c110e78529cc2e1cf634"
 dependencies = [
  "base64 0.21.7",
  "elements",
@@ -1388,9 +1397,9 @@ dependencies = [
 
 [[package]]
 name = "lwk_jade"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb883e6971605fd9ceb5e58c8b2218bc3959cd26001ab1c3833eba86fb999c9c"
+checksum = "fbe9d86bbe7584ff7081760b4476a47e2c1621a05dd9ad880c3ed5d46da1059b"
 dependencies = [
  "elements",
  "elements-miniscript",
@@ -1409,13 +1418,12 @@ dependencies = [
 
 [[package]]
 name = "lwk_signer"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13626b025e0ddb5cbc0c8bac14b22218e310a7a26e234f3a09aab892790ff2c1"
+checksum = "06cab7a342823207e9a3f05ed2564547bbddf13fd61de75d2d5e1ef5bc45b241"
 dependencies = [
  "base64 0.13.1",
  "bip39",
- "elements",
  "elements-miniscript",
  "lwk_common",
  "lwk_jade",
@@ -1424,15 +1432,17 @@ dependencies = [
 
 [[package]]
 name = "lwk_wollet"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2a4d72c41a67584ebe62a7708e06704e8d084fff16764d646be015d1c9737ca"
+checksum = "4690a5a99097790e2411ae4a91ccf655a3d3e58610415e12a781dca9389930cb"
 dependencies = [
  "aes-gcm-siv",
+ "base64 0.21.7",
  "bip39",
  "electrum-client",
  "elements",
  "elements-miniscript",
+ "fxhash",
  "idna 0.4.0",
  "lwk_common",
  "once_cell",
