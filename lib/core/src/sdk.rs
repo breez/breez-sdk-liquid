@@ -866,9 +866,9 @@ impl LiquidSdk {
     }
 
     // TODO When to best do this? On every list_payments / get_info? In background thread?
-    /// This method fetches the onchain tx data using the LWK wollet. For every wallet tx, it
-    /// inserts or updates a corresponding entry in our Payments table.
-    fn reconcile_payments_with_onchain(&self, with_scan: bool) -> Result<()> {
+    /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
+    /// it inserts or updates a corresponding entry in our Payments table.
+    fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         if with_scan {
             self.scan()?;
         }
@@ -904,7 +904,7 @@ impl LiquidSdk {
     /// - `include_pending`: Includes the payments that are still pending.
     pub fn list_payments(&self, with_scan: bool, _include_pending: bool) -> Result<Vec<Payment>> {
         // TODO Remove include_pending ?
-        self.reconcile_payments_with_onchain(with_scan)?;
+        self.sync_payments_with_chain_data(with_scan)?;
 
         let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
         payments.sort_by_key(|p| p.timestamp);
