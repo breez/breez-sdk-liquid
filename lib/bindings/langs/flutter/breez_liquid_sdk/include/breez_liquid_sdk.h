@@ -58,7 +58,7 @@ typedef struct wire_cst_prepare_send_response {
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_payment {
-  struct wire_cst_list_prim_u_8_strict *txid;
+  struct wire_cst_list_prim_u_8_strict *tx_id;
   struct wire_cst_list_prim_u_8_strict *swap_id;
   uint32_t timestamp;
   uint64_t amount_sat;
@@ -89,7 +89,7 @@ typedef struct wire_cst_PaymentError_LwkError {
 
 typedef struct wire_cst_PaymentError_Refunded {
   struct wire_cst_list_prim_u_8_strict *err;
-  struct wire_cst_list_prim_u_8_strict *txid;
+  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_PaymentError_Refunded;
 
 typedef struct wire_cst_PaymentError_SendError {

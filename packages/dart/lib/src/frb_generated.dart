@@ -464,7 +464,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return Payment(
-      txid: dco_decode_String(arr[0]),
+      txId: dco_decode_String(arr[0]),
       swapId: dco_decode_opt_String(arr[1]),
       timestamp: dco_decode_u_32(arr[2]),
       amountSat: dco_decode_u_64(arr[3]),
@@ -505,7 +505,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 10:
         return PaymentError_Refunded(
           err: dco_decode_String(raw[1]),
-          txid: dco_decode_String(raw[2]),
+          refundTxId: dco_decode_String(raw[2]),
         );
       case 11:
         return PaymentError_SendError(
@@ -784,7 +784,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_txid = sse_decode_String(deserializer);
+    var var_txId = sse_decode_String(deserializer);
     var var_swapId = sse_decode_opt_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
@@ -792,7 +792,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentType = sse_decode_payment_type(deserializer);
     var var_status = sse_decode_payment_status(deserializer);
     return Payment(
-        txid: var_txid,
+        txId: var_txId,
         swapId: var_swapId,
         timestamp: var_timestamp,
         amountSat: var_amountSat,
@@ -831,8 +831,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentError_PersistError();
       case 10:
         var var_err = sse_decode_String(deserializer);
-        var var_txid = sse_decode_String(deserializer);
-        return PaymentError_Refunded(err: var_err, txid: var_txid);
+        var var_refundTxId = sse_decode_String(deserializer);
+        return PaymentError_Refunded(err: var_err, refundTxId: var_refundTxId);
       case 11:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_SendError(err: var_err);
@@ -1122,7 +1122,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.txid, serializer);
+    sse_encode_String(self.txId, serializer);
     sse_encode_opt_String(self.swapId, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
@@ -1157,10 +1157,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(8, serializer);
       case PaymentError_PersistError():
         sse_encode_i_32(9, serializer);
-      case PaymentError_Refunded(err: final err, txid: final txid):
+      case PaymentError_Refunded(err: final err, refundTxId: final refundTxId):
         sse_encode_i_32(10, serializer);
         sse_encode_String(err, serializer);
-        sse_encode_String(txid, serializer);
+        sse_encode_String(refundTxId, serializer);
       case PaymentError_SendError(err: final err):
         sse_encode_i_32(11, serializer);
         sse_encode_String(err, serializer);

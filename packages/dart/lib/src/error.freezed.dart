@@ -511,7 +511,7 @@ abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
           _$PaymentError_RefundedImpl value, $Res Function(_$PaymentError_RefundedImpl) then) =
       __$$PaymentError_RefundedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String err, String txid});
+  $Res call({String err, String refundTxId});
 }
 
 /// @nodoc
@@ -526,16 +526,16 @@ class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? err = null,
-    Object? txid = null,
+    Object? refundTxId = null,
   }) {
     return _then(_$PaymentError_RefundedImpl(
       err: null == err
           ? _value.err
           : err // ignore: cast_nullable_to_non_nullable
               as String,
-      txid: null == txid
-          ? _value.txid
-          : txid // ignore: cast_nullable_to_non_nullable
+      refundTxId: null == refundTxId
+          ? _value.refundTxId
+          : refundTxId // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -544,16 +544,16 @@ class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
-  const _$PaymentError_RefundedImpl({required this.err, required this.txid}) : super._();
+  const _$PaymentError_RefundedImpl({required this.err, required this.refundTxId}) : super._();
 
   @override
   final String err;
   @override
-  final String txid;
+  final String refundTxId;
 
   @override
   String toString() {
-    return 'PaymentError.refunded(err: $err, txid: $txid)';
+    return 'PaymentError.refunded(err: $err, refundTxId: $refundTxId)';
   }
 
   @override
@@ -562,11 +562,11 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
         (other.runtimeType == runtimeType &&
             other is _$PaymentError_RefundedImpl &&
             (identical(other.err, err) || other.err == err) &&
-            (identical(other.txid, txid) || other.txid == txid));
+            (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, err, txid);
+  int get hashCode => Object.hash(runtimeType, err, refundTxId);
 
   @JsonKey(ignore: true)
   @override
@@ -576,12 +576,12 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
 }
 
 abstract class PaymentError_Refunded extends PaymentError {
-  const factory PaymentError_Refunded({required final String err, required final String txid}) =
+  const factory PaymentError_Refunded({required final String err, required final String refundTxId}) =
       _$PaymentError_RefundedImpl;
   const PaymentError_Refunded._() : super._();
 
   String get err;
-  String get txid;
+  String get refundTxId;
   @JsonKey(ignore: true)
   _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
       throw _privateConstructorUsedError;

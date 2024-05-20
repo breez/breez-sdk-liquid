@@ -408,7 +408,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
-    wireObj.txid = cst_encode_String(apiObj.txid);
+    wireObj.tx_id = cst_encode_String(apiObj.txId);
     wireObj.swap_id = cst_encode_opt_String(apiObj.swapId);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
@@ -465,10 +465,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
-      var pre_txid = cst_encode_String(apiObj.txid);
+      var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
       wireObj.tag = 10;
       wireObj.kind.Refunded.err = pre_err;
-      wireObj.kind.Refunded.txid = pre_txid;
+      wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
     if (apiObj is PaymentError_SendError) {
@@ -1026,7 +1026,7 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 }
 
 final class wire_cst_payment extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> tx_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
@@ -1076,7 +1076,7 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
 final class wire_cst_PaymentError_Refunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
 
 final class wire_cst_PaymentError_SendError extends ffi.Struct {

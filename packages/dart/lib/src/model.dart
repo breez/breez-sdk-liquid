@@ -89,25 +89,39 @@ enum Network {
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 class Payment {
-  /// The txid of the transaction
-  final String txid;
+  /// The tx ID of the onchain transaction
+  final String txId;
+
+  /// The swap ID, if any swap is associated with this payment
   final String? swapId;
 
-  /// The point in time when the underlying tx was included in a block.
+  /// Composite timestamp that can be used for sorting or displaying the payment.
+  ///
+  /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
+  /// in time when the underlying tx was included in a block. If there is no associated swap
+  /// available and the underlying tx is not yet confirmed, the value is `now()`.
   final int timestamp;
 
-  /// The onchain tx amount.
+  /// The payment amount, which corresponds to the onchain tx amount.
   ///
   /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
   final int amountSat;
+
+  /// If a swap is associated with this payment, this represents the total fees paid by the
+  /// sender. In other words, it's the delta between the amount that was sent and the amount
+  /// received.
   final int? feesSat;
   final PaymentType paymentType;
 
-  /// Onchain tx status
+  /// Composite status representing the overall status of the payment.
+  ///
+  /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
+  ///
+  /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
   final PaymentStatus status;
 
   const Payment({
-    required this.txid,
+    required this.txId,
     this.swapId,
     required this.timestamp,
     required this.amountSat,
@@ -118,7 +132,7 @@ class Payment {
 
   @override
   int get hashCode =>
-      txid.hashCode ^
+      txId.hashCode ^
       swapId.hashCode ^
       timestamp.hashCode ^
       amountSat.hashCode ^
@@ -131,7 +145,7 @@ class Payment {
       identical(this, other) ||
       other is Payment &&
           runtimeType == other.runtimeType &&
-          txid == other.txid &&
+          txId == other.txId &&
           swapId == other.swapId &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&

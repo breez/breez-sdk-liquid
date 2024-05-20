@@ -136,7 +136,7 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Payment {
         crate::model::Payment {
-            tx_id: self.txid.cst_decode(),
+            tx_id: self.tx_id.cst_decode(),
             swap_id: self.swap_id.cst_decode(),
             timestamp: self.timestamp.cst_decode(),
             amount_sat: self.amount_sat.cst_decode(),
@@ -174,7 +174,7 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
-                    refund_tx_id: ans.txid.cst_decode(),
+                    refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
             11 => {
@@ -296,7 +296,7 @@ impl Default for wire_cst_get_info_response {
 impl NewWithNullPtr for wire_cst_payment {
     fn new_with_null_ptr() -> Self {
         Self {
-            txid: core::ptr::null_mut(),
+            tx_id: core::ptr::null_mut(),
             swap_id: core::ptr::null_mut(),
             timestamp: Default::default(),
             amount_sat: Default::default(),
@@ -600,7 +600,7 @@ pub struct wire_cst_list_prim_u_8_strict {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_payment {
-    txid: *mut wire_cst_list_prim_u_8_strict,
+    tx_id: *mut wire_cst_list_prim_u_8_strict,
     swap_id: *mut wire_cst_list_prim_u_8_strict,
     timestamp: u32,
     amount_sat: u64,
@@ -638,7 +638,7 @@ pub struct wire_cst_PaymentError_LwkError {
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_Refunded {
     err: *mut wire_cst_list_prim_u_8_strict,
-    txid: *mut wire_cst_list_prim_u_8_strict,
+    refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

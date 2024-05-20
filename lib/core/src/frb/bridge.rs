@@ -394,7 +394,7 @@ impl SseDecode for Option<u64> {
 impl SseDecode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_txid = <String>::sse_decode(deserializer);
+        let mut var_txId = <String>::sse_decode(deserializer);
         let mut var_swapId = <Option<String>>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
@@ -402,7 +402,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
         let mut var_status = <crate::model::PaymentStatus>::sse_decode(deserializer);
         return crate::model::Payment {
-            tx_id: var_txid,
+            tx_id: var_txId,
             swap_id: var_swapId,
             timestamp: var_timestamp,
             amount_sat: var_amountSat,
@@ -452,10 +452,10 @@ impl SseDecode for crate::error::PaymentError {
             }
             10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                let mut var_txid = <String>::sse_decode(deserializer);
+                let mut var_refundTxId = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
                     err: var_err,
-                    refund_tx_id: var_txid,
+                    refund_tx_id: var_refundTxId,
                 };
             }
             11 => {
@@ -731,13 +731,10 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             }
             crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
             crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
-            crate::error::PaymentError::Refunded {
-                err,
-                refund_tx_id: txid,
-            } => [
+            crate::error::PaymentError::Refunded { err, refund_tx_id } => [
                 10.into_dart(),
                 err.into_into_dart().into_dart(),
-                txid.into_into_dart().into_dart(),
+                refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::error::PaymentError::SendError { err } => {
@@ -1075,13 +1072,10 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(9, serializer);
             }
-            crate::error::PaymentError::Refunded {
-                err,
-                refund_tx_id: txid,
-            } => {
+            crate::error::PaymentError::Refunded { err, refund_tx_id } => {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
-                <String>::sse_encode(txid, serializer);
+                <String>::sse_encode(refund_tx_id, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
                 <i32>::sse_encode(11, serializer);
