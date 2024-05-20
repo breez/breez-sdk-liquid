@@ -57,25 +57,13 @@ typedef struct wire_cst_prepare_send_response {
   uint64_t fees_sat;
 } wire_cst_prepare_send_response;
 
-typedef struct wire_cst_payment_swap_data {
-  uint32_t created_at;
-  uint64_t payer_amount_sat;
-  uint64_t receiver_amount_sat;
-  int32_t status;
-} wire_cst_payment_swap_data;
-
-typedef struct wire_cst_payment_tx_data {
-  struct wire_cst_list_prim_u_8_strict *txid;
-  uint32_t *timestamp;
-  uint64_t amount_sat;
-  int32_t payment_type;
-  int32_t status;
-} wire_cst_payment_tx_data;
-
 typedef struct wire_cst_payment {
-  struct wire_cst_payment_tx_data tx;
-  struct wire_cst_payment_swap_data *swap;
-  uint32_t *timestamp;
+  struct wire_cst_list_prim_u_8_strict *txid;
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+  uint32_t timestamp;
+  uint64_t amount_sat;
+  uint64_t *fees_sat;
+  int32_t payment_type;
   int32_t status;
 } wire_cst_payment;
 
@@ -162,8 +150,6 @@ struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect
 
 struct wire_cst_get_info_request *frbgen_breez_liquid_cst_new_box_autoadd_get_info_request(void);
 
-struct wire_cst_payment_swap_data *frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data(void);
-
 struct wire_cst_prepare_receive_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(void);
 
 struct wire_cst_prepare_receive_response *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response(void);
@@ -174,7 +160,7 @@ struct wire_cst_prepare_send_response *frbgen_breez_liquid_cst_new_box_autoadd_p
 
 struct wire_cst_restore_request *frbgen_breez_liquid_cst_new_box_autoadd_restore_request(void);
 
-uint32_t *frbgen_breez_liquid_cst_new_box_autoadd_u_32(uint32_t value);
+uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
@@ -183,13 +169,12 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_info_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment_swap_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire_backup);

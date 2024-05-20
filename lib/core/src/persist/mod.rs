@@ -11,6 +11,7 @@ use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
 
 use crate::model::{Network::*, *};
+use crate::utils;
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
@@ -55,7 +56,7 @@ impl Persister {
         let tx = con.transaction()?;
         tx.execute(
             "INSERT OR REPLACE INTO payment_tx_data (
-           txid,
+           tx_id,
            timestamp,
            amount_sat,
            payment_type,
@@ -64,7 +65,7 @@ impl Persister {
         VALUES (?, ?, ?, ?, ?)
         ",
             (
-                ptx.txid,
+                ptx.tx_id,
                 ptx.timestamp,
                 ptx.amount_sat,
                 ptx.payment_type,
@@ -98,47 +99,52 @@ impl Persister {
         let mut stmt = con.prepare(
             "
             SELECT
-                ptx.txid,
+                ptx.tx_id,
                 ptx.timestamp,
                 ptx.amount_sat,
                 ptx.payment_type,
                 ptx.status,
+                rs.id,
                 rs.created_at,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
+                ss.id,
                 ss.created_at,
                 ss.payer_amount_sat,
                 ss.receiver_amount_sat,
                 ss.is_claim_tx_seen
             FROM payment_tx_data AS ptx
             LEFT JOIN receive_swaps AS rs
-                ON ptx.txid = rs.claim_txid
+                ON ptx.tx_id = rs.claim_tx_id
             LEFT JOIN send_swaps AS ss
-                ON ptx.txid = ss.lockup_txid
+                ON ptx.tx_id = ss.lockup_tx_id
         ",
         )?;
 
         let data = stmt
             .query_map(params![], |row| {
                 let tx = PaymentTxData {
-                    txid: row.get(0)?,
+                    tx_id: row.get(0)?,
                     timestamp: row.get(1)?,
                     amount_sat: row.get(2)?,
                     payment_type: row.get(3)?,
                     status: row.get(4)?,
                 };
 
-                let maybe_receive_swap_created_at: Option<u32> = row.get(5)?;
-                let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(6)?;
-                let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(7)?;
-                let maybe_send_swap_created_at: Option<u32> = row.get(8)?;
-                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(9)?;
-                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(10)?;
-                let maybe_send_swap_is_claim_tx_seen: Option<bool> = row.get(11)?;
+                let maybe_receive_swap_id: Option<String> = row.get(5)?;
+                let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
+                let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
+                let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
+                let maybe_send_swap_id: Option<String> = row.get(9)?;
+                let maybe_send_swap_created_at: Option<u32> = row.get(10)?;
+                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(11)?;
+                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(12)?;
+                let maybe_send_swap_is_claim_tx_seen: Option<bool> = row.get(13)?;
 
-                let swap = match maybe_receive_swap_created_at {
-                    Some(receive_swap_created_at) => Some(PaymentSwapData {
-                        created_at: receive_swap_created_at,
+                let swap = match maybe_receive_swap_id {
+                    Some(receive_swap_id) => Some(PaymentSwapData {
+                        swap_id: receive_swap_id,
+                        created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                         payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
                         receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
 
@@ -148,8 +154,9 @@ impl Persister {
                         status: tx.status,
                     }),
                     None => {
-                        maybe_send_swap_created_at.map(|send_swap_created_at| PaymentSwapData {
-                            created_at: send_swap_created_at,
+                        maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
+                            swap_id: send_swap_id,
+                            created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                             payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                             receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
 
@@ -170,21 +177,7 @@ impl Persister {
                     }
                 };
 
-                Ok((
-                    tx.txid.clone(),
-                    Payment {
-                        tx: tx.clone(),
-                        swap,
-                        timestamp: match swap {
-                            Some(swap) => Some(swap.created_at),
-                            None => tx.timestamp,
-                        },
-                        status: match swap {
-                            Some(swap) => swap.status,
-                            None => tx.status,
-                        },
-                    },
-                ))
+                Ok((tx.tx_id.clone(), Payment::from(tx, swap)))
             })?
             .map(|i| i.unwrap())
             .collect();

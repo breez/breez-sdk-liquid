@@ -380,22 +380,11 @@ impl SseDecode for Option<String> {
     }
 }
 
-impl SseDecode for Option<crate::model::PaymentSwapData> {
+impl SseDecode for Option<u64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<crate::model::PaymentSwapData>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
-impl SseDecode for Option<u32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<u32>::sse_decode(deserializer));
+            return Some(<u64>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -405,14 +394,20 @@ impl SseDecode for Option<u32> {
 impl SseDecode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_tx = <crate::model::PaymentTxData>::sse_decode(deserializer);
-        let mut var_swap = <Option<crate::model::PaymentSwapData>>::sse_decode(deserializer);
-        let mut var_timestamp = <Option<u32>>::sse_decode(deserializer);
+        let mut var_txid = <String>::sse_decode(deserializer);
+        let mut var_swapId = <Option<String>>::sse_decode(deserializer);
+        let mut var_timestamp = <u32>::sse_decode(deserializer);
+        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
         let mut var_status = <crate::model::PaymentStatus>::sse_decode(deserializer);
         return crate::model::Payment {
-            tx: var_tx,
-            swap: var_swap,
+            tx_id: var_txid,
+            swap_id: var_swapId,
             timestamp: var_timestamp,
+            amount_sat: var_amountSat,
+            fees_sat: var_feesSat,
+            payment_type: var_paymentType,
             status: var_status,
         };
     }
@@ -460,7 +455,7 @@ impl SseDecode for crate::error::PaymentError {
                 let mut var_txid = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
                     err: var_err,
-                    txid: var_txid,
+                    refund_tx_id: var_txid,
                 };
             }
             11 => {
@@ -486,40 +481,6 @@ impl SseDecode for crate::model::PaymentStatus {
             0 => crate::model::PaymentStatus::Pending,
             1 => crate::model::PaymentStatus::Complete,
             _ => unreachable!("Invalid variant for PaymentStatus: {}", inner),
-        };
-    }
-}
-
-impl SseDecode for crate::model::PaymentSwapData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_createdAt = <u32>::sse_decode(deserializer);
-        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_status = <crate::model::PaymentStatus>::sse_decode(deserializer);
-        return crate::model::PaymentSwapData {
-            created_at: var_createdAt,
-            payer_amount_sat: var_payerAmountSat,
-            receiver_amount_sat: var_receiverAmountSat,
-            status: var_status,
-        };
-    }
-}
-
-impl SseDecode for crate::model::PaymentTxData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_txid = <String>::sse_decode(deserializer);
-        let mut var_timestamp = <Option<u32>>::sse_decode(deserializer);
-        let mut var_amountSat = <u64>::sse_decode(deserializer);
-        let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
-        let mut var_status = <crate::model::PaymentStatus>::sse_decode(deserializer);
-        return crate::model::PaymentTxData {
-            txid: var_txid,
-            timestamp: var_timestamp,
-            amount_sat: var_amountSat,
-            payment_type: var_paymentType,
-            status: var_status,
         };
     }
 }
@@ -735,9 +696,12 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Network> for crate::model::
 impl flutter_rust_bridge::IntoDart for crate::model::Payment {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.tx.into_into_dart().into_dart(),
-            self.swap.into_into_dart().into_dart(),
+            self.tx_id.into_into_dart().into_dart(),
+            self.swap_id.into_into_dart().into_dart(),
             self.timestamp.into_into_dart().into_dart(),
+            self.amount_sat.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
+            self.payment_type.into_into_dart().into_dart(),
             self.status.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -767,7 +731,10 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             }
             crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
             crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
-            crate::error::PaymentError::Refunded { err, txid } => [
+            crate::error::PaymentError::Refunded {
+                err,
+                refund_tx_id: txid,
+            } => [
                 10.into_dart(),
                 err.into_into_dart().into_dart(),
                 txid.into_into_dart().into_dart(),
@@ -802,47 +769,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentStatus>
     for crate::model::PaymentStatus
 {
     fn into_into_dart(self) -> crate::model::PaymentStatus {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PaymentSwapData {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.created_at.into_into_dart().into_dart(),
-            self.payer_amount_sat.into_into_dart().into_dart(),
-            self.receiver_amount_sat.into_into_dart().into_dart(),
-            self.status.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentSwapData {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentSwapData>
-    for crate::model::PaymentSwapData
-{
-    fn into_into_dart(self) -> crate::model::PaymentSwapData {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PaymentTxData {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.txid.into_into_dart().into_dart(),
-            self.timestamp.into_into_dart().into_dart(),
-            self.amount_sat.into_into_dart().into_dart(),
-            self.payment_type.into_into_dart().into_dart(),
-            self.status.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentTxData {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentTxData>
-    for crate::model::PaymentTxData
-{
-    fn into_into_dart(self) -> crate::model::PaymentTxData {
         self
     }
 }
@@ -1090,22 +1016,12 @@ impl SseEncode for Option<String> {
     }
 }
 
-impl SseEncode for Option<crate::model::PaymentSwapData> {
+impl SseEncode for Option<u64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
-            <crate::model::PaymentSwapData>::sse_encode(value, serializer);
-        }
-    }
-}
-
-impl SseEncode for Option<u32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <u32>::sse_encode(value, serializer);
+            <u64>::sse_encode(value, serializer);
         }
     }
 }
@@ -1113,9 +1029,12 @@ impl SseEncode for Option<u32> {
 impl SseEncode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::model::PaymentTxData>::sse_encode(self.tx, serializer);
-        <Option<crate::model::PaymentSwapData>>::sse_encode(self.swap, serializer);
-        <Option<u32>>::sse_encode(self.timestamp, serializer);
+        <String>::sse_encode(self.tx_id, serializer);
+        <Option<String>>::sse_encode(self.swap_id, serializer);
+        <u32>::sse_encode(self.timestamp, serializer);
+        <u64>::sse_encode(self.amount_sat, serializer);
+        <Option<u64>>::sse_encode(self.fees_sat, serializer);
+        <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
         <crate::model::PaymentStatus>::sse_encode(self.status, serializer);
     }
 }
@@ -1156,7 +1075,10 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(9, serializer);
             }
-            crate::error::PaymentError::Refunded { err, txid } => {
+            crate::error::PaymentError::Refunded {
+                err,
+                refund_tx_id: txid,
+            } => {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(txid, serializer);
@@ -1186,27 +1108,6 @@ impl SseEncode for crate::model::PaymentStatus {
             },
             serializer,
         );
-    }
-}
-
-impl SseEncode for crate::model::PaymentSwapData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.created_at, serializer);
-        <u64>::sse_encode(self.payer_amount_sat, serializer);
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
-        <crate::model::PaymentStatus>::sse_encode(self.status, serializer);
-    }
-}
-
-impl SseEncode for crate::model::PaymentTxData {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.txid, serializer);
-        <Option<u32>>::sse_encode(self.timestamp, serializer);
-        <u64>::sse_encode(self.amount_sat, serializer);
-        <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
-        <crate::model::PaymentStatus>::sse_encode(self.status, serializer);
     }
 }
 

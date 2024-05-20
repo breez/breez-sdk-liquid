@@ -5,16 +5,16 @@ use anyhow::Result;
 use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 
 impl Persister {
-    pub(crate) fn set_lockup_txid_for_swap_in(
+    pub(crate) fn set_lockup_tx_id_for_swap_in(
         &self,
         swap_in_id: &str,
-        lockup_txid: &str,
+        lockup_tx_id: &str,
     ) -> Result<()> {
         self.get_connection()?.execute(
-            "UPDATE send_swaps SET lockup_txid=:lockup_txid WHERE id=:id",
+            "UPDATE send_swaps SET lockup_tx_id=:lockup_tx_id WHERE id=:id",
             named_params! {
              ":id": swap_in_id,
-             ":lockup_txid": lockup_txid,
+             ":lockup_tx_id": lockup_tx_id,
             },
         )?;
 
@@ -44,7 +44,7 @@ impl Persister {
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
-                lockup_txid,
+                lockup_tx_id,
                 is_claim_tx_seen,
                 created_at
             )
@@ -56,7 +56,7 @@ impl Persister {
             swap_in.payer_amount_sat,
             swap_in.receiver_amount_sat,
             swap_in.create_response_json,
-            swap_in.lockup_txid,
+            swap_in.lockup_tx_id,
             swap_in.is_claim_tx_seen,
             swap_in.created_at,
         ))?;
@@ -79,7 +79,7 @@ impl Persister {
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
-                lockup_txid,
+                lockup_tx_id,
                 is_claim_tx_seen,
                 created_at
             FROM send_swaps
@@ -102,7 +102,7 @@ impl Persister {
             payer_amount_sat: row.get(2)?,
             receiver_amount_sat: row.get(3)?,
             create_response_json: row.get(4)?,
-            lockup_txid: row.get(5)?,
+            lockup_tx_id: row.get(5)?,
             is_claim_tx_seen: row.get(6)?,
             created_at: row.get(7)?,
         })

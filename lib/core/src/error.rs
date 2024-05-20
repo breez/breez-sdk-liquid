@@ -55,7 +55,7 @@ pub enum PaymentError {
     PersistError,
 
     #[error("The payment has been refunded. Reason for failure: {err}")]
-    Refunded { err: String, txid: String },
+    Refunded { err: String, refund_tx_id: String },
 
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },

@@ -6,6 +6,8 @@ use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRe
 use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
+use crate::utils;
+
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
     Liquid,
@@ -154,14 +156,14 @@ pub(crate) struct SwapIn {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcasted
-    pub(crate) lockup_txid: Option<String>,
+    pub(crate) lockup_tx_id: Option<String>,
     /// Whether or not the claim tx was seen in the mempool
     pub(crate) is_claim_tx_seen: bool,
     pub(crate) created_at: u32,
 }
 impl SwapIn {
     pub(crate) fn calculate_status(&self) -> SwapInStatus {
-        match (&self.lockup_txid, &self.is_claim_tx_seen) {
+        match (&self.lockup_tx_id, &self.is_claim_tx_seen) {
             (None, _) => SwapInStatus::Created,
             (Some(_), false) => SwapInStatus::Pending,
             (Some(_), true) => SwapInStatus::Completed,
@@ -194,7 +196,7 @@ pub(crate) struct SwapOut {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as claim tx is broadcasted
-    pub(crate) claim_txid: Option<String>,
+    pub(crate) claim_tx_id: Option<String>,
     pub(crate) created_at: u32,
 
     /// Whether or not the claim tx is confirmed.
@@ -205,7 +207,7 @@ pub(crate) struct SwapOut {
 }
 impl SwapOut {
     pub(crate) fn calculate_status(&self) -> SwapOutStatus {
-        match self.claim_txid {
+        match self.claim_tx_id {
             None => SwapOutStatus::Created,
             Some(_) => match self.is_claim_tx_confirmed {
                 false => SwapOutStatus::Pending,
@@ -275,8 +277,8 @@ impl FromSql for PaymentStatus {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct PaymentTxData {
-    /// The txid of the transaction
-    pub txid: String,
+    /// The tx ID of the transaction
+    pub tx_id: String,
 
     /// The point in time when the underlying tx was included in a block.
     pub timestamp: Option<u32>,
@@ -292,8 +294,10 @@ pub struct PaymentTxData {
     pub status: PaymentStatus,
 }
 
-#[derive(Debug, Copy, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct PaymentSwapData {
+    pub swap_id: String,
+
     /// Swap creation timestamp
     pub created_at: u32,
 
@@ -312,18 +316,30 @@ pub struct PaymentSwapData {
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 #[derive(Debug, Clone, Serialize)]
 pub struct Payment {
-    /// Details from the underlying tx
-    pub tx: PaymentTxData,
+    /// The tx ID of the onchain transaction
+    pub tx_id: String,
 
-    /// Data from the associated swap, if available
-    pub swap: Option<PaymentSwapData>,
+    /// The swap ID, if any swap is associated with this payment
+    pub swap_id: Option<String>,
 
     /// Composite timestamp that can be used for sorting or displaying the payment.
     ///
-    /// If this payment has an associated swap, it is the swap creation time.
+    /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
+    /// in time when the underlying tx was included in a block. If there is no associated swap
+    /// available and the underlying tx is not yet confirmed, the value is `now()`.
+    pub timestamp: u32,
+
+    /// The payment amount, which corresponds to the onchain tx amount.
     ///
-    /// Otherwise, the point in time when the underlying tx was included in a block.
-    pub timestamp: Option<u32>,
+    /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
+    pub amount_sat: u64,
+
+    /// If a swap is associated with this payment, this represents the total fees paid by the
+    /// sender. In other words, it's the delta between the amount that was sent and the amount
+    /// received.
+    pub fees_sat: Option<u64>,
+
+    pub payment_type: PaymentType,
 
     /// Composite status representing the overall status of the payment.
     ///
@@ -331,6 +347,27 @@ pub struct Payment {
     ///
     /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
     pub status: PaymentStatus,
+}
+impl Payment {
+    pub(crate) fn from(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
+        Payment {
+            tx_id: tx.tx_id,
+            swap_id: swap.as_ref().map(|s| s.swap_id.clone()),
+            timestamp: match swap {
+                Some(ref swap) => swap.created_at,
+                None => tx.timestamp.unwrap_or(utils::now()),
+            },
+            amount_sat: tx.amount_sat,
+            fees_sat: swap
+                .as_ref()
+                .map(|s| s.payer_amount_sat - s.receiver_amount_sat),
+            payment_type: tx.payment_type,
+            status: match swap {
+                Some(swap) => swap.status,
+                None => tx.status,
+            },
+        }
+    }
 }
 
 #[macro_export]

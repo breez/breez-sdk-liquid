@@ -5,16 +5,16 @@ use anyhow::Result;
 use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 
 impl Persister {
-    pub(crate) fn set_claim_txid_for_swap_out(
+    pub(crate) fn set_claim_tx_id_for_swap_out(
         &self,
         swap_out_id: &str,
-        claim_txid: &str,
+        claim_tx_id: &str,
     ) -> Result<()> {
         self.get_connection()?.execute(
-            "UPDATE receive_swaps SET claim_txid=:claim_txid WHERE id=:id",
+            "UPDATE receive_swaps SET claim_tx_id=:claim_tx_id WHERE id=:id",
             named_params! {
              ":id": swap_out_id,
-             ":claim_txid": claim_txid,
+             ":claim_tx_id": claim_tx_id,
             },
         )?;
 
@@ -36,7 +36,7 @@ impl Persister {
                 receiver_amount_sat,
                 created_at,
                 claim_fees_sat,
-                claim_txid
+                claim_tx_id
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
@@ -50,7 +50,7 @@ impl Persister {
             swap_out.receiver_amount_sat,
             swap_out.created_at,
             swap_out.claim_fees_sat,
-            swap_out.claim_txid,
+            swap_out.claim_tx_id,
         ))?;
 
         Ok(())
@@ -74,12 +74,12 @@ impl Persister {
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
-                rs.claim_txid,
+                rs.claim_tx_id,
                 rs.created_at,
                 ptx.status
             FROM receive_swaps AS rs
             LEFT JOIN payment_tx_data AS ptx
-                ON ptx.txid = rs.claim_txid
+                ON ptx.tx_id = rs.claim_tx_id
             {where_clause_str}
             ORDER BY rs.created_at
         "
@@ -103,7 +103,7 @@ impl Persister {
             payer_amount_sat: row.get(5)?,
             receiver_amount_sat: row.get(6)?,
             claim_fees_sat: row.get(7)?,
-            claim_txid: row.get(8)?,
+            claim_tx_id: row.get(8)?,
             created_at: row.get(9)?,
             is_claim_tx_confirmed: match maybe_payment_status {
                 Some(payment_status) => match payment_status {
