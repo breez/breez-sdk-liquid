@@ -55,13 +55,15 @@ impl LiquidSdk {
         let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
         let descriptor = LiquidSdk::get_descriptor(&signer, req.network)?;
 
-        LiquidSdk::new(LiquidSdkOptions {
+        let sdk = LiquidSdk::new(LiquidSdkOptions {
             signer,
             descriptor,
             electrum_url: None,
             data_dir_path: req.data_dir,
             network: req.network,
-        })
+        })?;
+        sdk.sync()?;
+        Ok(sdk)
     }
 
     fn new(opts: LiquidSdkOptions) -> Result<Arc<Self>> {
