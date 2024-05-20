@@ -158,25 +158,10 @@ impl LiquidSdk {
                         warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_txid}")
                     }
                     None => match self.try_claim(&swap_out) {
-                        Ok(txid) => {
-                            // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
-                            // This makes the tx known to the SDK (get_info, list_payments) instantly
-                            self.persister
-                                .insert_or_update_payment(
-                                    PaymentTxData {
-                                        txid,
-                                        timestamp: None,
-                                        amount_sat: swap_out.receiver_amount_sat,
-                                        payment_type: PaymentType::Receive,
-                                        status: PaymentStatus::Pending,
-                                    }
-                                )?;
-                        }
-                        Err(err) => {
-                            if let PaymentError::AlreadyClaimed = err {
-                                warn!("Funds already claimed");
-                            }
-                            error!("Claim reverse swap {id} failed: {err}");
+                        Ok(()) => {}
+                        Err(err) => match err {
+                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for reverse swap {id}"),
+                            _ => error!("Claim reverse swap {id} failed: {err}")
                         }
                     },
                 }
@@ -699,7 +684,7 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
+    fn try_claim(&self, ongoing_swap_out: &SwapOut) -> Result<(), PaymentError> {
         ensure_sdk!(
             ongoing_swap_out.claim_txid.is_none(),
             PaymentError::AlreadyClaimed
@@ -745,15 +730,24 @@ impl LiquidSdk {
             &self.network_config(),
             Some((&self.boltz_client_v2(), self.network.into())),
         )?;
+        info!("Succesfully broadcasted claim tx {claim_txid} for rev swap {rev_swap_id}");
+        debug!("Claim Tx {:?}", claim_tx);
 
         // Once successfully broadcasted, we persist the claim txid
         self.persister
             .set_claim_txid_for_swap_out(rev_swap_id, &claim_txid)?;
 
-        info!("Succesfully broadcasted claim tx {claim_txid} for rev swap {rev_swap_id}");
-        debug!("Claim Tx {:?}", claim_tx);
+        // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        self.persister.insert_or_update_payment(PaymentTxData {
+            txid: claim_txid,
+            timestamp: None,
+            amount_sat: ongoing_swap_out.receiver_amount_sat,
+            payment_type: PaymentType::Receive,
+            status: PaymentStatus::Pending,
+        })?;
 
-        Ok(claim_txid)
+        Ok(())
     }
 
     pub fn prepare_receive_payment(
