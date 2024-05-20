@@ -4,8 +4,6 @@ use std::{
     path::PathBuf,
     str::FromStr,
     sync::{Arc, Mutex},
-    thread::sleep,
-    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -28,6 +26,7 @@ use lwk_wollet::{
     Wollet as LwkWollet, WolletDescriptor,
 };
 
+use crate::boltz_status_stream::set_stream_nonblocking;
 use crate::{
     boltz_status_stream::BoltzStatusStream, ensure_sdk, error::PaymentError, get_invoice_amount,
     model::*, persist::Persister, utils,
@@ -47,7 +46,6 @@ pub struct LiquidSdk {
     /// LWK Signer, for signing Liquid transactions
     lwk_signer: SwSigner,
     persister: Persister,
-    status_stream: BoltzStatusStream,
     data_dir_path: String,
 }
 
@@ -84,8 +82,6 @@ impl LiquidSdk {
         let persister = Persister::new(&data_dir_path, network)?;
         persister.init()?;
 
-        let status_stream = BoltzStatusStream::new();
-
         let sdk = Arc::new(LiquidSdk {
             lwk_wollet,
             network,
@@ -93,10 +89,9 @@ impl LiquidSdk {
             lwk_signer: opts.signer,
             persister,
             data_dir_path,
-            status_stream,
         });
 
-        sdk.status_stream.track_pending_swaps(sdk.clone())?;
+        BoltzStatusStream::track_pending_swaps(sdk.clone())?;
 
         Ok(sdk)
     }
@@ -525,11 +520,8 @@ impl LiquidSdk {
         &self,
         req: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let invoice = self.validate_invoice(&req.invoice)?;
-        let receiver_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::AmountOutOfRange)?
-            / 1000;
+        self.validate_invoice(&req.invoice)?;
+        let receiver_amount_sat = get_invoice_amount!(req.invoice);
 
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
@@ -551,7 +543,6 @@ impl LiquidSdk {
             invoice: req.invoice.to_string(),
             refund_public_key,
             pair_hash: Some(lbtc_pair.hash),
-            // TODO: Add referral id
             referral_id: None,
         })?;
         let create_response_json =
@@ -568,9 +559,10 @@ impl LiquidSdk {
         // TODO Register for events from background thread (special status updates for this swap)
         // TODO sync before handling new state
 
-        debug!("Opening WS connection for swap {}", &swap_id);
-
+        debug!("Opening WS connection for swap {swap_id}");
         let mut socket = client.connect_ws()?;
+        set_stream_nonblocking(socket.get_mut())?;
+
         let subscription = Subscription::new(swap_id);
         let subscribe_json = serde_json::to_string(&subscription)
             .map_err(|e| anyhow!("Failed to serialize subscription msg: {e:?}"))?;
@@ -578,9 +570,9 @@ impl LiquidSdk {
             .send(tungstenite::Message::Text(subscribe_json))
             .map_err(|e| anyhow!("Failed to subscribe to websocket updates: {e:?}"))?;
 
-        // We insert the pending send to avoid it being handled by the status stream
-        self.status_stream
-            .insert_tracked_swap(swap_id, SwapType::Submarine);
+        // TODO Marking it as tracked does not avoid it being handled in the status stream loop
+        // We mark the pending send as already tracked to avoid it being handled by the status stream
+        BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
         self.persister.insert_or_update_swap_in(SwapIn {
             id: swap_id.clone(),
@@ -633,7 +625,7 @@ impl LiquidSdk {
                 // Boltz has detected the lockup in the mempool, we can speed up
                 // the claim by doing so cooperatively
                 SubSwapStates::TransactionClaimPending => {
-                    // TODO Consolidate try_handle
+                    // TODO Consolidate status handling: merge with and reuse try_handle_submarine_swap_status
 
                     self.post_submarine_claim_details(
                         swap_id,
@@ -644,8 +636,7 @@ impl LiquidSdk {
                     debug!("Boltz successfully claimed the funds");
                     self.persister.set_claim_tx_seen_for_swap_in(swap_id)?;
 
-                    self.status_stream
-                        .resolve_tracked_swap(swap_id, SwapType::ReverseSubmarine);
+                    BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::ReverseSubmarine);
 
                     result = Ok(SendPaymentResponse { txid: lockup_tx_id });
 
@@ -675,8 +666,6 @@ impl LiquidSdk {
                 }
                 _ => {}
             };
-
-            sleep(Duration::from_millis(500));
         }
 
         socket.close(None).unwrap();

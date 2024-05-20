@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::io::ErrorKind;
 use std::net::TcpStream;
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 
 use anyhow::{anyhow, Result};
@@ -18,86 +18,62 @@ use tungstenite::{Message, WebSocket};
 use crate::model::*;
 use crate::sdk::LiquidSdk;
 
-pub(super) struct BoltzStatusStream {
-    swap_in_ids: Arc<Mutex<HashSet<String>>>,
-    swap_out_ids: Arc<Mutex<HashSet<String>>>,
+static SWAP_IN_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
+static SWAP_OUT_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
+
+fn swap_in_ids() -> &'static Arc<Mutex<HashSet<String>>> {
+    let swap_in_ids = Default::default();
+    SWAP_IN_IDS.get_or_init(|| swap_in_ids)
 }
+
+fn swap_out_ids() -> &'static Arc<Mutex<HashSet<String>>> {
+    let swap_out_ids = Default::default();
+    SWAP_OUT_IDS.get_or_init(|| swap_out_ids)
+}
+
+/// Set underlying TCP stream to nonblocking mode.
+///
+/// This allows us to `read()` without blocking.
+pub(crate) fn set_stream_nonblocking(stream: &mut MaybeTlsStream<TcpStream>) -> Result<()> {
+    match stream {
+        tungstenite::stream::MaybeTlsStream::Plain(s) => s.set_nonblocking(true)?,
+        tungstenite::stream::MaybeTlsStream::NativeTls(s) => s.get_mut().set_nonblocking(true)?,
+        _ => Err(anyhow!("Unsupported stream type"))?,
+    };
+    Ok(())
+}
+
+pub(super) struct BoltzStatusStream {}
 impl BoltzStatusStream {
-    pub(super) fn new() -> Self {
-        BoltzStatusStream {
-            swap_in_ids: Default::default(),
-            swap_out_ids: Default::default(),
-        }
-    }
-
-    pub(super) fn insert_tracked_swap(&self, id: &str, swap_type: SwapType) {
+    pub(super) fn mark_swap_as_tracked(id: &str, swap_type: SwapType) {
         match swap_type {
-            SwapType::Submarine => self.swap_in_ids.lock().unwrap().insert(id.to_string()),
-            SwapType::ReverseSubmarine => self.swap_out_ids.lock().unwrap().insert(id.to_string()),
+            SwapType::Submarine => swap_in_ids().lock().unwrap().insert(id.to_string()),
+            SwapType::ReverseSubmarine => swap_out_ids().lock().unwrap().insert(id.to_string()),
         };
     }
 
-    pub(super) fn resolve_tracked_swap(&self, id: &str, swap_type: SwapType) {
+    pub(super) fn unmark_swap_as_tracked(id: &str, swap_type: SwapType) {
         match swap_type {
-            SwapType::Submarine => self.swap_in_ids.lock().unwrap().remove(id),
-            SwapType::ReverseSubmarine => self.swap_out_ids.lock().unwrap().remove(id),
+            SwapType::Submarine => swap_in_ids().lock().unwrap().remove(id),
+            SwapType::ReverseSubmarine => swap_out_ids().lock().unwrap().remove(id),
         };
     }
 
-    pub(super) fn track_pending_swaps(&self, sdk: Arc<LiquidSdk>) -> Result<()> {
+    pub(super) fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
         // Track subscribed swap IDs
         let mut socket = sdk
             .boltz_client_v2()
             .connect_ws()
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
-
-        // Set underlying TCP stream to nonblocking mode
-        match socket.get_mut() {
-            tungstenite::stream::MaybeTlsStream::Plain(s) => s.set_nonblocking(true)?,
-            tungstenite::stream::MaybeTlsStream::NativeTls(s) => {
-                s.get_mut().set_nonblocking(true)?
-            }
-            _ => Err(anyhow!("Unsupported stream type"))?,
-        };
-
-        let swap_in_ids = self.swap_in_ids.clone();
-        let swap_out_ids = self.swap_out_ids.clone();
+        set_stream_nonblocking(socket.get_mut())?;
 
         thread::spawn(move || loop {
-            let maybe_subscribe_fn =
-                |swap: &Swap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>| {
-                    let id = swap.id();
-
-                    let is_ongoing_swap_already_tracked = match swap {
-                        Swap::Send(_) => swap_in_ids.lock().unwrap().contains(&id),
-                        Swap::Receive(_) => swap_out_ids.lock().unwrap().contains(&id),
-                    };
-
-                    if !is_ongoing_swap_already_tracked {
-                        info!("Subscribing to status for ongoing swap ID {id}");
-
-                        let subscription = Subscription::new(&id);
-                        let subscribe_json = serde_json::to_string(&subscription)
-                            .map_err(|e| anyhow!("Invalid subscription msg: {e:?}"))
-                            .unwrap();
-                        socket
-                            .send(tungstenite::Message::Text(subscribe_json))
-                            .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
-                            .unwrap();
-
-                        match swap {
-                            Swap::Send(_) => swap_in_ids.lock().unwrap().insert(id),
-                            Swap::Receive(_) => swap_out_ids.lock().unwrap().insert(id),
-                        };
-                    }
-                };
-
             // Initially subscribe to all ongoing swaps
             match sdk.list_ongoing_swaps() {
                 Ok(initial_ongoing_swaps) => {
                     info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
                     for ongoing_swap in &initial_ongoing_swaps {
-                        maybe_subscribe_fn(ongoing_swap, &mut socket);
+                        Self::maybe_subscribe_fn(ongoing_swap, &mut socket);
                     }
                 }
                 Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
@@ -119,7 +95,7 @@ impl BoltzStatusStream {
                         match sdk.list_ongoing_swaps() {
                             Ok(ongoing_swaps) => {
                                 for ongoing_swap in &ongoing_swaps {
-                                    maybe_subscribe_fn(ongoing_swap, &mut socket);
+                                    Self::maybe_subscribe_fn(ongoing_swap, &mut socket);
                                 }
                             }
                             Err(e) => error!("Failed to list new ongoing swaps: {e:?}"),
@@ -148,7 +124,7 @@ impl BoltzStatusStream {
                                     let update_swap_id = update.id.clone();
                                     let update_state_str = update.status.clone();
 
-                                    if swap_in_ids.lock().unwrap().contains(&update_swap_id) {
+                                    if Self::is_tracked_swap_in(&update_swap_id) {
                                         // Known OngoingSwapIn / Send swap
 
                                         match SubSwapStates::from_str(&update_state_str) {
@@ -157,12 +133,11 @@ impl BoltzStatusStream {
                                                     new_state,
                                                     &update_swap_id,
                                                 );
-                                                info!("ongoingswapin / send try_handle_submarine_swap_status res: {res:?}");
+                                                info!("OngoingSwapIn / send try_handle_submarine_swap_status res: {res:?}");
                                             }
                                             Err(_) => error!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
                                         }
-                                    } else if swap_out_ids.lock().unwrap().contains(&update_swap_id)
-                                    {
+                                    } else if Self::is_tracked_swap_out(&update_swap_id) {
                                         // Known OngoingSwapOut / receive swap
 
                                         match RevSwapStates::from_str(&update_state_str) {
@@ -207,5 +182,39 @@ impl BoltzStatusStream {
         });
 
         Ok(())
+    }
+
+    fn is_tracked_swap_in(id: &str) -> bool {
+        swap_in_ids().lock().unwrap().contains(id)
+    }
+
+    fn is_tracked_swap_out(id: &str) -> bool {
+        swap_out_ids().lock().unwrap().contains(id)
+    }
+
+    fn maybe_subscribe_fn(swap: &Swap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>) {
+        let id = swap.id();
+        let is_ongoing_swap_already_tracked = match swap {
+            Swap::Send(_) => Self::is_tracked_swap_in(&id),
+            Swap::Receive(_) => Self::is_tracked_swap_out(&id),
+        };
+
+        if !is_ongoing_swap_already_tracked {
+            info!("Subscribing to status for ongoing swap ID {id}");
+
+            let subscription = Subscription::new(&id);
+            let subscribe_json = serde_json::to_string(&subscription)
+                .map_err(|e| anyhow!("Invalid subscription msg: {e:?}"))
+                .unwrap();
+            socket
+                .send(tungstenite::Message::Text(subscribe_json))
+                .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
+                .unwrap();
+
+            match swap {
+                Swap::Send(_) => Self::mark_swap_as_tracked(&id, SwapType::Submarine),
+                Swap::Receive(_) => Self::mark_swap_as_tracked(&id, SwapType::ReverseSubmarine),
+            };
+        }
     }
 }
