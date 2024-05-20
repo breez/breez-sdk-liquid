@@ -1,3 +1,4 @@
+use std::time::Instant;
 use std::{
     fs,
     path::PathBuf,
@@ -23,8 +24,8 @@ use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::{Address, Transaction},
-    full_scan_with_electrum_client, BlockchainBackend, ElectrumClient, ElectrumUrl,
-    ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
+    BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
+    Wollet as LwkWollet, WolletDescriptor,
 };
 
 use crate::{
@@ -134,6 +135,8 @@ impl LiquidSdk {
         swap_state: RevSwapStates,
         id: &str,
     ) -> Result<()> {
+        self.sync()?;
+
         info!("Handling reverse swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
@@ -180,6 +183,8 @@ impl LiquidSdk {
         swap_state: SubSwapStates,
         id: &str,
     ) -> Result<()> {
+        self.sync()?;
+
         info!("Handling submarine swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
@@ -253,12 +258,6 @@ impl LiquidSdk {
         self.persister.list_ongoing_swaps()
     }
 
-    fn scan(&self) -> Result<(), lwk_wollet::Error> {
-        let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
-        let mut lwk_wollet = self.lwk_wollet.lock().unwrap();
-        full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)
-    }
-
     /// Gets the next unused onchain Liquid address
     fn next_unused_address(&self) -> Result<Address, lwk_wollet::Error> {
         let lwk_wollet = self.lwk_wollet.lock().unwrap();
@@ -321,7 +320,6 @@ impl LiquidSdk {
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
-        self.scan()?;
         let lwk_wollet = self.lwk_wollet.lock().unwrap();
         let mut pset = lwk_wollet::TxBuilder::new(self.network.into())
             .add_lbtc_recipient(
@@ -535,9 +533,7 @@ impl LiquidSdk {
 
         let client = self.boltz_client_v2();
         let lbtc_pair = Self::validate_submarine_pairs(&client, receiver_amount_sat)?;
-
         let broadcast_fees_sat = self.get_broadcast_fee_estimation(receiver_amount_sat)?;
-
         ensure_sdk!(
             req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
             PaymentError::InvalidOrExpiredFees
@@ -568,6 +564,9 @@ impl LiquidSdk {
             &create_response,
             keypair.public_key().into(),
         )?;
+
+        // TODO Register for events from background thread (special status updates for this swap)
+        // TODO sync before handling new state
 
         debug!("Opening WS connection for swap {}", &swap_id);
 
@@ -858,12 +857,13 @@ impl LiquidSdk {
         })
     }
 
-    // TODO When to best do this? On every list_payments / get_info? In background thread?
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         if with_scan {
-            self.scan()?;
+            let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
+            let mut lwk_wollet = self.lwk_wollet.lock().unwrap();
+            lwk_wollet::full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)?;
         }
 
         for tx in self.lwk_wollet.lock().unwrap().transactions()? {
@@ -922,6 +922,16 @@ impl LiquidSdk {
             None => self.persister.get_backup_path(),
         };
         self.persister.restore_from_backup(backup_path)
+    }
+
+    /// Synchronize the DB with mempool and onchain data
+    pub fn sync(&self) -> Result<()> {
+        let t0 = Instant::now();
+        self.sync_payments_with_chain_data(true)?;
+        let duration_ms = Instant::now().duration_since(t0).as_millis();
+        info!("Synchronized with mempool and onchain data (t = {duration_ms} ms)");
+
+        Ok(())
     }
 
     pub fn backup(&self) -> Result<()> {

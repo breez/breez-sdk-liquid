@@ -100,6 +100,10 @@ export const receivePayment = async (req: PrepareReceiveResponse): Promise<Recei
     return response
 }
 
+export const sync = async (): Promise<void> => {
+    await BreezLiquidSDK.sync()
+}
+
 export const backup = async (): Promise<void> => {
     await BreezLiquidSDK.backup()
 }

@@ -123,6 +123,16 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(sync:reject:)
+    func sync(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try getBindingLiquidSdk().sync()
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(backup:reject:)
     func backup(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

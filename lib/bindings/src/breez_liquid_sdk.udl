@@ -95,6 +95,9 @@ interface BindingLiquidSdk {
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
 
     [Throws=LiquidSdkError]
+    void sync();
+
+    [Throws=LiquidSdkError]
     void backup();
 
     [Throws=LiquidSdkError]
