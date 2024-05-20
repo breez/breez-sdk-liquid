@@ -45,7 +45,6 @@ pub struct LiquidSdk {
     lwk_wollet: Arc<Mutex<LwkWollet>>,
     /// LWK Signer, for signing Liquid transactions
     lwk_signer: SwSigner,
-    active_address: Option<u32>,
     persister: Persister,
     status_stream: BoltzStatusStream,
     data_dir_path: String,
@@ -91,7 +90,6 @@ impl LiquidSdk {
             network,
             electrum_url,
             lwk_signer: opts.signer,
-            active_address: None,
             persister,
             data_dir_path,
             status_stream,
@@ -276,13 +274,14 @@ impl LiquidSdk {
         full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)
     }
 
-    fn address(&self) -> Result<Address, lwk_wollet::Error> {
+    /// Gets the next unused onchain Liquid address
+    fn next_unused_address(&self) -> Result<Address, lwk_wollet::Error> {
         let lwk_wollet = self.lwk_wollet.lock().unwrap();
-        Ok(lwk_wollet.address(self.active_address)?.address().clone())
+        Ok(lwk_wollet.address(None)?.address().clone())
     }
 
     pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
-        debug!("active_address: {}", self.address()?);
+        debug!("next_unused_address: {}", self.next_unused_address()?);
 
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
@@ -723,7 +722,7 @@ impl LiquidSdk {
             our_keys.public_key().into(),
         )?;
 
-        let claim_address = self.address()?.to_string();
+        let claim_address = self.next_unused_address()?.to_string();
         let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
             claim_address,
