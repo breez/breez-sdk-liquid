@@ -556,9 +556,6 @@ impl LiquidSdk {
             keypair.public_key().into(),
         )?;
 
-        // TODO Register for events from background thread (special status updates for this swap)
-        // TODO sync before handling new state
-
         debug!("Opening WS connection for swap {swap_id}");
         let mut socket = client.connect_ws()?;
         set_stream_nonblocking(socket.get_mut())?;
@@ -595,12 +592,14 @@ impl LiquidSdk {
                     continue;
                 }
             };
-
             let state = data
                 .parse::<SubSwapStates>()
                 .map_err(|_| PaymentError::Generic {
                     err: "Invalid state received from swapper".to_string(),
                 })?;
+
+            // Sync before handling new state
+            self.sync()?;
 
             // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
             match state {
