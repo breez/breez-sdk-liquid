@@ -71,7 +71,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<GetInfoResponse> getInfo({required GetInfoRequest req, dynamic hint});
 
-  Future<List<Payment>> listPayments({required bool withScan, required bool includePending, dynamic hint});
+  Future<List<Payment>> listPayments({dynamic hint});
 
   Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req, dynamic hint});
 
@@ -183,19 +183,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<Payment>> listPayments({required bool withScan, required bool includePending, dynamic hint}) {
+  Future<List<Payment>> listPayments({dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
-        var arg0 = cst_encode_bool(withScan);
-        var arg1 = cst_encode_bool(includePending);
-        return wire.wire_list_payments(port_, arg0, arg1);
+        return wire.wire_list_payments(port_);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_list_payment,
         decodeErrorData: dco_decode_AnyhowException,
       ),
       constMeta: kListPaymentsConstMeta,
-      argValues: [withScan, includePending],
+      argValues: [],
       apiImpl: this,
       hint: hint,
     ));
@@ -203,7 +201,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kListPaymentsConstMeta => const TaskConstMeta(
         debugName: "list_payments",
-        argNames: ["withScan", "includePending"],
+        argNames: [],
       );
 
   @override

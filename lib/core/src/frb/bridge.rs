@@ -93,26 +93,14 @@ fn wire_get_info_impl(
         },
     )
 }
-fn wire_list_payments_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    with_scan: impl CstDecode<bool>,
-    include_pending: impl CstDecode<bool>,
-) {
+fn wire_list_payments_impl(port_: flutter_rust_bridge::for_generated::MessagePort) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "list_payments",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
-        move || {
-            let api_with_scan = with_scan.cst_decode();
-            let api_include_pending = include_pending.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    crate::bindings::list_payments(api_with_scan, api_include_pending)
-                })())
-            }
-        },
+        move || move |context| transform_result_dco((move || crate::bindings::list_payments())()),
     )
 }
 fn wire_prepare_receive_payment_impl(

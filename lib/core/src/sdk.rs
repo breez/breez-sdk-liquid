@@ -264,12 +264,16 @@ impl LiquidSdk {
     pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         debug!("next_unused_address: {}", self.next_unused_address()?);
 
+        if req.with_scan {
+            self.sync()?;
+        }
+
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
         let mut confirmed_sent_sat = 0;
         let mut confirmed_received_sat = 0;
 
-        for p in self.list_payments(req.with_scan, true)? {
+        for p in self.list_payments()? {
             match p.payment_type {
                 PaymentType::Send => match p.status {
                     PaymentStatus::Pending => pending_send_sat += p.amount_sat,
@@ -880,15 +884,7 @@ impl LiquidSdk {
     }
 
     /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
-    ///
-    /// ## Arguments
-    ///
-    /// - `with_scan`: Rescan the onchain wallet before listing the payments.
-    /// - `include_pending`: Includes the payments that are still pending.
-    pub fn list_payments(&self, with_scan: bool, _include_pending: bool) -> Result<Vec<Payment>> {
-        // TODO Remove include_pending ?
-        self.sync_payments_with_chain_data(with_scan)?;
-
+    pub fn list_payments(&self) -> Result<Vec<Payment>> {
         let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
         payments.sort_by_key(|p| p.timestamp);
         Ok(payments)
@@ -965,7 +961,7 @@ mod tests {
     }
 
     fn list_pending(sdk: &LiquidSdk) -> Result<Vec<Payment>> {
-        let payments = sdk.list_payments(true, true)?;
+        let payments = sdk.list_payments()?;
 
         Ok(payments
             .iter()

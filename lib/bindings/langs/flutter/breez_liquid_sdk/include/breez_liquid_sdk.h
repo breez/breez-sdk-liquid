@@ -130,7 +130,7 @@ void frbgen_breez_liquid_wire_empty_wallet_cache(int64_t port_);
 
 void frbgen_breez_liquid_wire_get_info(int64_t port_, struct wire_cst_get_info_request *req);
 
-void frbgen_breez_liquid_wire_list_payments(int64_t port_, bool with_scan, bool include_pending);
+void frbgen_breez_liquid_wire_list_payments(int64_t port_);
 
 void frbgen_breez_liquid_wire_prepare_receive_payment(int64_t port_,
                                                       struct wire_cst_prepare_receive_request *req);

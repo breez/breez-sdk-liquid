@@ -436,12 +436,8 @@ pub extern "C" fn frbgen_breez_liquid_wire_get_info(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_list_payments(
-    port_: i64,
-    with_scan: bool,
-    include_pending: bool,
-) {
-    wire_list_payments_impl(port_, with_scan, include_pending)
+pub extern "C" fn frbgen_breez_liquid_wire_list_payments(port_: i64) {
+    wire_list_payments_impl(port_)
 }
 
 #[no_mangle]

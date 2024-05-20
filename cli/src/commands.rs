@@ -145,7 +145,7 @@ pub(crate) fn handle_command(
             command_result!(sdk.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
-            let payments = sdk.list_payments(true, true)?;
+            let payments = sdk.list_payments()?;
             command_result!(payments)
         }
         Command::EmptyCache => {

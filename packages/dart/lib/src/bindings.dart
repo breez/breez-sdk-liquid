@@ -26,8 +26,7 @@ Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveReq
 Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req, dynamic hint}) =>
     RustLib.instance.api.receivePayment(req: req, hint: hint);
 
-Future<List<Payment>> listPayments({required bool withScan, required bool includePending, dynamic hint}) =>
-    RustLib.instance.api.listPayments(withScan: withScan, includePending: includePending, hint: hint);
+Future<List<Payment>> listPayments({dynamic hint}) => RustLib.instance.api.listPayments(hint: hint);
 
 Future<void> emptyWalletCache({dynamic hint}) => RustLib.instance.api.emptyWalletCache(hint: hint);
 

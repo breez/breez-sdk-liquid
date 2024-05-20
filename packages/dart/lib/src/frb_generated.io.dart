@@ -752,20 +752,15 @@ class RustLibWire implements BaseWire {
 
   void wire_list_payments(
     int port_,
-    bool with_scan,
-    bool include_pending,
   ) {
     return _wire_list_payments(
       port_,
-      with_scan,
-      include_pending,
     );
   }
 
   late final _wire_list_paymentsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Bool, ffi.Bool)>>(
-          'frbgen_breez_liquid_wire_list_payments');
-  late final _wire_list_payments = _wire_list_paymentsPtr.asFunction<void Function(int, bool, bool)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('frbgen_breez_liquid_wire_list_payments');
+  late final _wire_list_payments = _wire_list_paymentsPtr.asFunction<void Function(int)>();
 
   void wire_prepare_receive_payment(
     int port_,
