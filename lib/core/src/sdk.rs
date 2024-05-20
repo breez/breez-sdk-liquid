@@ -159,7 +159,7 @@ impl LiquidSdk {
                     Some(claim_txid) => {
                         warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_txid}")
                     }
-                    None => match self.try_claim_v2(&swap_out) {
+                    None => match self.try_claim(&swap_out) {
                         Ok(txid) => {
                             // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
                             // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -700,7 +700,7 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim_v2(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
+    fn try_claim(&self, ongoing_swap_out: &SwapOut) -> Result<String, PaymentError> {
         ensure_sdk!(
             ongoing_swap_out.claim_txid.is_none(),
             PaymentError::AlreadyClaimed
