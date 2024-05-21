@@ -22,7 +22,7 @@ lto = true
 [workspace]
 members = [
     "bindings",
-    "bindings/bindings-react-native",
+    "bindings/react-native",
     "core",
 ]
 resolver = "2"

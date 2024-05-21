@@ -96,15 +96,15 @@ jobs:
         if: ${{ inputs.swift }}
         working-directory: lib/bindings
         run: |
-          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language swift --out-dir bindings-swift/Sources/BreezLiquidSDK
-          mv bindings-swift/Sources/BreezLiquidSDK/breez_liquid_sdk.swift bindings-swift/Sources/BreezLiquidSDK/BreezLiquidSDK.swift
+          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_liquid_sdk.udl --no-format --language swift --out-dir swift/Sources/BreezLiquidSDK
+          mv swift/Sources/BreezLiquidSDK/breez_liquid_sdk.swift swift/Sources/BreezLiquidSDK/BreezLiquidSDK.swift
       
       - name: Archive Swift binding
         if: ${{ inputs.swift }}
         uses: actions/upload-artifact@v3
         with:
           name: bindings-swift
-          path: lib/bindings/bindings-swift/Sources/BreezLiquidSDK/*
+          path: lib/bindings/swift/Sources/BreezLiquidSDK/*
       
       - name: Build Python binding
         if: ${{ inputs.python }}
