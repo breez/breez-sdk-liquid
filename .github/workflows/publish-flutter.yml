@@ -53,19 +53,19 @@ jobs:
           rm -r ios
           rm -r android
           rm -r lib
-          cp -r ../build/lib/bindings/flutter/ios .
+          cp -r ../build/lib/bindings/langs/flutter/ios .
           mv ios/breez_liquid_sdk.podspec.production ios/breez_liquid_sdk.podspec
-          cp -r ../build/lib/bindings/flutter/android .
-          mv android/build.gradle.production android/build.gradle
-          cp -r ../build/lib/bindings/flutter/lib .
-          cp ../build/lib/bindings/flutter/pubspec.yaml .
-          cp ../build/lib/bindings/flutter/pubspec.lock .
+          cp -r ../build/lib/bindings/langs/flutter/android .
+          mv langs/android/build.gradle.production langs/android/build.gradle
+          cp -r ../build/lib/bindings/langs/flutter/lib .
+          cp ../build/lib/bindings/langs/flutter/pubspec.yaml .
+          cp ../build/lib/bindings/langs/flutter/pubspec.lock .
 
       - name: Copy docs
         working-directory: dist
         run: |
-          cp ../build/lib/bindings/flutter/README.pub.md README.md || true
-          cp ../build/lib/bindings/flutter/CHANGELOG.md . || true
+          cp ../build/lib/bindings/langs/flutter/README.pub.md README.md || true
+          cp ../build/lib/bindings/langs/flutter/CHANGELOG.md . || true
 
       - uses: actions/download-artifact@v3
         with:
@@ -76,10 +76,10 @@ jobs:
         working-directory: dist
         run: |
           sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
-          sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
+          sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" langs/android/build.gradle
           sed -i.bak -e "s/^tag_version = .*/tag_version = '${{ inputs.package-version }}'/" ios/breez_liquid_sdk.podspec
           rm pubspec.yaml.bak
-          rm android/build.gradle.bak
+          rm langs/android/build.gradle.bak
           rm ios/breez_liquid_sdk.podspec.bak
 
       - name: Archive flutter release
