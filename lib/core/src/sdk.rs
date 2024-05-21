@@ -551,13 +551,13 @@ impl LiquidSdk {
             pair_hash: Some(lbtc_pair.hash),
             referral_id: None,
         })?;
-        let create_response_json = SwapIn::from_boltz_struct_to_json(&create_response)?;
 
         let swap_id = &create_response.id;
         let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
             &create_response,
             keypair.public_key().into(),
         )?;
+        let create_response_json = SwapIn::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         debug!("Opening WS connection for swap {swap_id}");
         let mut socket = client.connect_ws()?;
@@ -797,17 +797,10 @@ impl LiquidSdk {
             referral_id: None,
         };
         let create_response = self.boltz_client_v2().post_reverse_req(v2_req)?;
-        let create_response_json = SwapOut::from_boltz_struct_to_json(&create_response)?;
 
-        let swap_id = create_response.id;
+        let swap_id = create_response.id.clone();
         let invoice = Bolt11Invoice::from_str(&create_response.invoice)
             .map_err(|_| PaymentError::InvalidInvoice)?;
-        let blinding_str =
-            create_response
-                .blinding_key
-                .ok_or(boltz_client::error::Error::Protocol(
-                    "Boltz response does not contain a blinding key.".to_string(),
-                ))?;
         let payer_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::InvalidInvoice)?
@@ -819,11 +812,12 @@ impl LiquidSdk {
             return Err(PaymentError::InvalidInvoice);
         };
 
+        let create_response_json =
+            SwapOut::from_boltz_struct_to_json(&create_response, &swap_id, &invoice.to_string())?;
         self.persister
             .insert_or_update_swap_out(SwapOut {
                 id: swap_id.clone(),
                 preimage: preimage_str,
-                blinding_key: blinding_str,
                 create_response_json,
                 invoice: invoice.to_string(),
                 payer_amount_sat,

@@ -3,6 +3,7 @@ use boltz_client::swaps::boltzv2::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
+use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::Persister;
@@ -142,43 +143,35 @@ impl Persister {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct InternalCreateSubmarineResponse {
-    accept_zero_conf: bool,
-    address: String,
-    bip21: String,
-    claim_public_key: String,
-    expected_amount: u64,
-    id: String,
-    swap_tree: InternalSwapTree,
-    blinding_key: Option<String>,
+    pub(crate) accept_zero_conf: bool,
+    pub(crate) address: String,
+    pub(crate) bip21: String,
+    pub(crate) claim_public_key: String,
+    pub(crate) expected_amount: u64,
+    pub(crate) swap_tree: InternalSwapTree,
+    pub(crate) blinding_key: Option<String>,
 }
 impl InternalCreateSubmarineResponse {
-    pub(crate) fn convert_from_boltz(
+    pub(crate) fn try_convert_from_boltz(
         boltz_create_response: &CreateSubmarineResponse,
-    ) -> InternalCreateSubmarineResponse {
-        InternalCreateSubmarineResponse {
+        expected_swap_id: &str,
+    ) -> Result<InternalCreateSubmarineResponse, PaymentError> {
+        // Do not store the CreateResponse fields that are already stored separately
+        // Before skipping them, ensure they match the separately stored ones
+        ensure_sdk!(
+            boltz_create_response.id == expected_swap_id,
+            PaymentError::PersistError
+        );
+
+        let res = InternalCreateSubmarineResponse {
             accept_zero_conf: boltz_create_response.accept_zero_conf,
             address: boltz_create_response.address.clone(),
             bip21: boltz_create_response.bip21.clone(),
             claim_public_key: boltz_create_response.claim_public_key.to_string(),
             expected_amount: boltz_create_response.expected_amount,
-            id: boltz_create_response.id.clone(),
             swap_tree: boltz_create_response.swap_tree.clone().into(),
             blinding_key: boltz_create_response.blinding_key.clone(),
-        }
-    }
-
-    pub(crate) fn convert_to_boltz(&self) -> Result<CreateSubmarineResponse, PaymentError> {
-        let res = CreateSubmarineResponse {
-            accept_zero_conf: self.accept_zero_conf,
-            address: self.address.clone(),
-            bip21: self.bip21.clone(),
-            claim_public_key: crate::utils::json_to_pubkey(&self.claim_public_key)?,
-            expected_amount: self.expected_amount,
-            id: self.id.clone(),
-            swap_tree: self.swap_tree.clone().into(),
-            blinding_key: self.blinding_key.clone(),
         };
-
         Ok(res)
     }
 }

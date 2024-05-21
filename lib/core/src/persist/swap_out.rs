@@ -1,3 +1,4 @@
+use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::Persister;
@@ -33,7 +34,6 @@ impl Persister {
                 id,
                 preimage,
                 create_response_json,
-                blinding_key,
                 invoice,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -41,13 +41,12 @@ impl Persister {
                 claim_fees_sat,
                 claim_tx_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             swap_out.id,
             swap_out.preimage,
             swap_out.create_response_json,
-            swap_out.blinding_key,
             swap_out.invoice,
             swap_out.payer_amount_sat,
             swap_out.receiver_amount_sat,
@@ -72,7 +71,6 @@ impl Persister {
                 rs.id,
                 rs.preimage,
                 rs.create_response_json,
-                rs.blinding_key,
                 rs.invoice,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -96,18 +94,17 @@ impl Persister {
     }
 
     fn sql_row_to_swap_out(row: &Row) -> rusqlite::Result<SwapOut> {
-        let maybe_payment_status: Option<PaymentStatus> = row.get(10)?;
+        let maybe_payment_status: Option<PaymentStatus> = row.get(9)?;
         Ok(SwapOut {
             id: row.get(0)?,
             preimage: row.get(1)?,
             create_response_json: row.get(2)?,
-            blinding_key: row.get(3)?,
-            invoice: row.get(4)?,
-            payer_amount_sat: row.get(5)?,
-            receiver_amount_sat: row.get(6)?,
-            claim_fees_sat: row.get(7)?,
-            claim_tx_id: row.get(8)?,
-            created_at: row.get(9)?,
+            invoice: row.get(3)?,
+            payer_amount_sat: row.get(4)?,
+            receiver_amount_sat: row.get(5)?,
+            claim_fees_sat: row.get(6)?,
+            claim_tx_id: row.get(7)?,
+            created_at: row.get(8)?,
             is_claim_tx_confirmed: match maybe_payment_status {
                 Some(payment_status) => match payment_status {
                     PaymentStatus::Pending => false,
@@ -149,8 +146,6 @@ impl Persister {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct InternalCreateReverseResponse {
-    pub id: String,
-    pub invoice: String,
     pub swap_tree: InternalSwapTree,
     pub lockup_address: String,
     pub refund_public_key: String,
@@ -159,31 +154,30 @@ pub(crate) struct InternalCreateReverseResponse {
     pub blinding_key: Option<String>,
 }
 impl InternalCreateReverseResponse {
-    pub(crate) fn convert_from_boltz(boltz_create_response: &CreateReverseResponse) -> Self {
-        InternalCreateReverseResponse {
-            id: boltz_create_response.id.clone(),
-            invoice: boltz_create_response.invoice.clone(),
+    pub(crate) fn try_convert_from_boltz(
+        boltz_create_response: &CreateReverseResponse,
+        expected_swap_id: &str,
+        expected_invoice: &str,
+    ) -> Result<Self, PaymentError> {
+        // Do not store the CreateResponse fields that are already stored separately
+        // Before skipping them, ensure they match the separately stored ones
+        ensure_sdk!(
+            boltz_create_response.id == expected_swap_id,
+            PaymentError::PersistError
+        );
+        ensure_sdk!(
+            boltz_create_response.invoice == expected_invoice,
+            PaymentError::PersistError
+        );
+
+        let res = InternalCreateReverseResponse {
             swap_tree: boltz_create_response.swap_tree.clone().into(),
             lockup_address: boltz_create_response.lockup_address.clone(),
             refund_public_key: boltz_create_response.refund_public_key.to_string(),
             timeout_block_height: boltz_create_response.timeout_block_height,
             onchain_amount: boltz_create_response.onchain_amount,
             blinding_key: boltz_create_response.blinding_key.clone(),
-        }
-    }
-
-    pub(crate) fn convert_to_boltz(&self) -> Result<CreateReverseResponse, PaymentError> {
-        let res = CreateReverseResponse {
-            id: self.id.clone(),
-            invoice: self.invoice.clone(),
-            swap_tree: self.swap_tree.clone().into(),
-            lockup_address: self.lockup_address.clone(),
-            refund_public_key: crate::utils::json_to_pubkey(&self.refund_public_key)?,
-            timeout_block_height: self.timeout_block_height,
-            onchain_amount: self.onchain_amount,
-            blinding_key: self.blinding_key.clone(),
         };
-
         Ok(res)
     }
 }

@@ -184,16 +184,31 @@ impl SwapIn {
                     err: format!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}"),
                 }
             })?;
-        internal_create_response.convert_to_boltz()
+
+        let res = CreateSubmarineResponse {
+            id: self.id.clone(),
+            accept_zero_conf: internal_create_response.accept_zero_conf,
+            address: internal_create_response.address.clone(),
+            bip21: internal_create_response.bip21.clone(),
+            claim_public_key: crate::utils::json_to_pubkey(
+                &internal_create_response.claim_public_key,
+            )?,
+            expected_amount: internal_create_response.expected_amount,
+            swap_tree: internal_create_response.swap_tree.clone().into(),
+            blinding_key: internal_create_response.blinding_key.clone(),
+        };
+        Ok(res)
     }
 
     pub(crate) fn from_boltz_struct_to_json(
         create_response: &CreateSubmarineResponse,
+        expected_swap_id: &str,
     ) -> Result<String, PaymentError> {
         let internal_create_response =
-            crate::persist::swap_in::InternalCreateSubmarineResponse::convert_from_boltz(
+            crate::persist::swap_in::InternalCreateSubmarineResponse::try_convert_from_boltz(
                 create_response,
-            );
+                expected_swap_id,
+            )?;
 
         let create_response_json =
             serde_json::to_string(&internal_create_response).map_err(|e| {
@@ -225,7 +240,6 @@ pub(crate) struct SwapOut {
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::swap_out::InternalCreateReverseResponse]
     pub(crate) create_response_json: String,
-    pub(crate) blinding_key: String,
     pub(crate) invoice: String,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
@@ -259,16 +273,33 @@ impl SwapOut {
                     err: format!("Failed to deserialize InternalCreateReverseResponse: {e:?}"),
                 }
             })?;
-        internal_create_response.convert_to_boltz()
+
+        let res = CreateReverseResponse {
+            id: self.id.clone(),
+            invoice: self.invoice.clone(),
+            swap_tree: internal_create_response.swap_tree.clone().into(),
+            lockup_address: internal_create_response.lockup_address.clone(),
+            refund_public_key: crate::utils::json_to_pubkey(
+                &internal_create_response.refund_public_key,
+            )?,
+            timeout_block_height: internal_create_response.timeout_block_height,
+            onchain_amount: internal_create_response.onchain_amount,
+            blinding_key: internal_create_response.blinding_key.clone(),
+        };
+        Ok(res)
     }
 
     pub(crate) fn from_boltz_struct_to_json(
         create_response: &CreateReverseResponse,
+        expected_swap_id: &str,
+        expected_invoice: &str,
     ) -> Result<String, PaymentError> {
         let internal_create_response =
-            crate::persist::swap_out::InternalCreateReverseResponse::convert_from_boltz(
+            crate::persist::swap_out::InternalCreateReverseResponse::try_convert_from_boltz(
                 create_response,
-            );
+                expected_swap_id,
+                expected_invoice,
+            )?;
 
         let create_response_json =
             serde_json::to_string(&internal_create_response).map_err(|e| {
