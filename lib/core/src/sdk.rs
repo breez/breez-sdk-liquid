@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Instant;
 use std::{
     fs,
@@ -157,9 +158,10 @@ impl LiquidSdk {
             | RevSwapStates::InvoiceExpired
             | RevSwapStates::TransactionFailed
             | RevSwapStates::TransactionRefunded => {
-                error!("Cannot claim swap {id}, unrecoverable state: {swap_state:?}");
-                // TODO Update swap state, not payment state
+                error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
+                self.persister.set_receive_swap_status_failed(id)?;
             }
+
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // TODO Add 0-conf preconditions check: https://github.com/breez/breez-liquid-sdk/issues/187
             RevSwapStates::TransactionMempool
@@ -178,8 +180,10 @@ impl LiquidSdk {
                     },
                 }
             }
+
             // Too soon to try to claim
             RevSwapStates::Created | RevSwapStates::MinerFeePaid => {}
+
             // Swap completed successfully (HODL invoice settled), the claim already happened
             RevSwapStates::InvoiceSettled => {}
         }
@@ -231,15 +235,17 @@ impl LiquidSdk {
                     timestamp: None,
                     amount_sat: ongoing_swap_in.payer_amount_sat,
                     payment_type: PaymentType::Send,
-                    status: PaymentStatus::Pending,
+                    is_confirmed: false,
                 })?;
 
                 Ok(())
             }
+
             SubSwapStates::TransactionClaimed => {
                 warn!("Swap-in {id} has already been claimed");
                 Ok(())
             }
+
             SubSwapStates::TransactionLockupFailed
             | SubSwapStates::InvoiceFailedToPay
             | SubSwapStates::SwapExpired => {
@@ -254,9 +260,10 @@ impl LiquidSdk {
 
                 let refund_tx_id =
                     self.try_refund(id, &swap_script, &keypair, receiver_amount_sat)?;
-                info!("Swap-in {id} refunded successfully. Tx id: {refund_tx_id}");
+                info!("Broadcast refund tx for Swap-in {id}. Tx id: {refund_tx_id}");
+                self.persister
+                    .set_send_swap_status_pending_refund(id, &refund_tx_id)?;
 
-                // TODO Update swap state: persist refund txid
                 Ok(())
             }
             _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
@@ -288,12 +295,14 @@ impl LiquidSdk {
         for p in self.list_payments()? {
             match p.payment_type {
                 PaymentType::Send => match p.status {
-                    PaymentStatus::Pending => pending_send_sat += p.amount_sat,
-                    PaymentStatus::Complete => confirmed_sent_sat += p.amount_sat,
+                    PaymentState::Complete => confirmed_sent_sat += p.amount_sat,
+                    PaymentState::Failed => {}
+                    _ => pending_send_sat += p.amount_sat,
                 },
                 PaymentType::Receive => match p.status {
-                    PaymentStatus::Pending => pending_receive_sat += p.amount_sat,
-                    PaymentStatus::Complete => confirmed_received_sat += p.amount_sat,
+                    PaymentState::Complete => confirmed_received_sat += p.amount_sat,
+                    PaymentState::Failed => {}
+                    _ => pending_receive_sat += p.amount_sat,
                 },
             }
         }
@@ -586,15 +595,16 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
-        self.persister.insert_or_update_swap_in(SwapIn {
+        self.persister.insert_swap_in(SwapIn {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
             receiver_amount_sat,
             create_response_json,
             lockup_tx_id: None,
-            is_claim_tx_seen: false,
+            refund_tx_id: None,
             created_at: utils::now(),
+            state: PaymentState::Created,
         })?;
 
         let result;
@@ -633,7 +643,7 @@ impl LiquidSdk {
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response)?;
                     self.persister
-                        .set_lockup_tx_id_for_swap_in(swap_id, &lockup_tx_id)?;
+                        .set_send_swap_status_pending_successful(swap_id, &lockup_tx_id)?;
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
@@ -648,7 +658,7 @@ impl LiquidSdk {
                         &keypair,
                     )?;
                     debug!("Boltz successfully claimed the funds");
-                    self.persister.set_claim_tx_seen_for_swap_in(swap_id)?;
+                    self.persister.set_send_swap_status_complete(swap_id)?;
 
                     BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::ReverseSubmarine);
 
@@ -727,12 +737,11 @@ impl LiquidSdk {
             &self.network_config(),
             Some((&self.boltz_client_v2(), self.network.into())),
         )?;
-        info!("Succesfully broadcasted claim tx {claim_tx_id} for rev swap {rev_swap_id}");
+        info!("Successfully broadcast claim tx {claim_tx_id} for rev swap {rev_swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
 
-        // Once successfully broadcasted, we persist the claim txid
         self.persister
-            .set_claim_tx_id_for_swap_out(rev_swap_id, &claim_tx_id)?;
+            .set_receive_swap_status_pending(rev_swap_id, Some(claim_tx_id.clone()))?;
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -741,7 +750,7 @@ impl LiquidSdk {
             timestamp: None,
             amount_sat: ongoing_swap_out.receiver_amount_sat,
             payment_type: PaymentType::Receive,
-            status: PaymentStatus::Pending,
+            is_confirmed: false,
         })?;
 
         Ok(())
@@ -827,7 +836,7 @@ impl LiquidSdk {
         let create_response_json =
             SwapOut::from_boltz_struct_to_json(&create_response, &swap_id, &invoice.to_string())?;
         self.persister
-            .insert_or_update_swap_out(SwapOut {
+            .insert_swap_out(SwapOut {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -837,7 +846,7 @@ impl LiquidSdk {
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 created_at: utils::now(),
-                is_claim_tx_confirmed: false,
+                state: PaymentState::Created,
             })
             .map_err(|_| PaymentError::PersistError)?;
 
@@ -856,10 +865,28 @@ impl LiquidSdk {
             lwk_wollet::full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)?;
         }
 
+        let con = self.persister.get_connection()?;
+        let pending_receive_swaps_by_claim_tx_id: HashMap<String, SwapOut> = self
+            .persister
+            .list_pending_receive_swaps_by_claim_tx_id(&con)?;
+        let pending_send_swaps_by_refund_tx_id: HashMap<String, SwapIn> = self
+            .persister
+            .list_pending_send_swaps_by_refund_tx_id(&con)?;
+
         for tx in self.lwk_wollet.lock().unwrap().transactions()? {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
+
+            // Transition the swaps whose state depends on this tx being confirmed
+            if is_tx_confirmed {
+                if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
+                    self.persister.set_receive_swap_status_complete(&swap.id)?;
+                }
+                if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
+                    self.persister.set_send_swap_status_failed(&swap.id)?;
+                }
+            }
 
             self.persister.insert_or_update_payment(PaymentTxData {
                 tx_id,
@@ -869,10 +896,7 @@ impl LiquidSdk {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,
                 },
-                status: match is_tx_confirmed {
-                    true => PaymentStatus::Complete,
-                    false => PaymentStatus::Pending,
-                },
+                is_confirmed: is_tx_confirmed,
             })?;
         }
 

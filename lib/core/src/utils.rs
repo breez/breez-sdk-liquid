@@ -2,11 +2,14 @@ use std::net::TcpStream;
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::error::PaymentError;
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::swaps::boltzv2::SwapUpdate;
 use log::{error, info};
 use tungstenite::{stream::MaybeTlsStream, WebSocket};
+
+use crate::ensure_sdk;
+use crate::error::PaymentError;
+use crate::model::PaymentState;
 
 /// Fetch the swap status using the websocket endpoint
 pub(crate) fn get_swap_status_v2(
@@ -80,4 +83,18 @@ pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, Paym
     boltz_client::PublicKey::from_str(json).map_err(|e| PaymentError::Generic {
         err: format!("Failed to deserialize PublicKey: {e:?}"),
     })
+}
+
+pub(crate) fn validate_swap_state(
+    s: &PaymentState,
+    valid_states: &[PaymentState],
+) -> Result<(), PaymentError> {
+    let is_valid_previous_state = valid_states.contains(s);
+    ensure_sdk!(
+        is_valid_previous_state,
+        PaymentError::Generic {
+            err: format!("Invalid swap state: {s:?}")
+        }
+    );
+    Ok(())
 }

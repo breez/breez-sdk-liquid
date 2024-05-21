@@ -160,21 +160,14 @@ pub(crate) struct SwapIn {
     pub(crate) receiver_amount_sat: u64,
     /// JSON representation of [crate::persist::swap_in::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
-    /// Persisted only when the lockup tx is successfully broadcasted
+    /// Persisted only when the lockup tx is successfully broadcast
     pub(crate) lockup_tx_id: Option<String>,
-    /// Whether or not the claim tx was seen in the mempool
-    pub(crate) is_claim_tx_seen: bool,
+    /// Persisted as soon as a refund tx is broadcast
+    pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
+    pub(crate) state: PaymentState,
 }
 impl SwapIn {
-    pub(crate) fn calculate_status(&self) -> SwapInStatus {
-        match (&self.lockup_tx_id, &self.is_claim_tx_seen) {
-            (None, _) => SwapInStatus::Created,
-            (Some(_), false) => SwapInStatus::Pending,
-            (Some(_), true) => SwapInStatus::Completed,
-        }
-    }
-
     pub(crate) fn get_boltz_create_response(
         &self,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
@@ -221,18 +214,6 @@ impl SwapIn {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum SwapInStatus {
-    /// The swap was created, but the lockup tx was not broadcast sucecessfully.
-    Created,
-
-    /// The lockup tx was broadcasted successfully, but the claim tx was not seen in the mempool yet.
-    Pending,
-
-    /// The claim tx has been seen in the mempool.
-    Completed,
-}
-
 /// A reverse swap, used for swap-out (Receive)
 #[derive(Clone, Debug)]
 pub(crate) struct SwapOut {
@@ -245,27 +226,12 @@ pub(crate) struct SwapOut {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
-    /// Persisted as soon as claim tx is broadcasted
+    /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
     pub(crate) created_at: u32,
-
-    /// Whether or not the claim tx is confirmed.
-    ///
-    /// This is a derived field (e.g. reflects data from the payments table, is not persisted when
-    /// the swap is inserted or updated)
-    pub(crate) is_claim_tx_confirmed: bool,
+    pub(crate) state: PaymentState,
 }
 impl SwapOut {
-    pub(crate) fn calculate_status(&self) -> SwapOutStatus {
-        match self.claim_tx_id {
-            None => SwapOutStatus::Created,
-            Some(_) => match self.is_claim_tx_confirmed {
-                false => SwapOutStatus::Pending,
-                true => SwapOutStatus::Completed,
-            },
-        }
-    }
-
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
         let internal_create_response: crate::persist::swap_out::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
@@ -312,16 +278,31 @@ impl SwapOut {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum SwapOutStatus {
-    /// Reverse swap was created, but the claim tx was not yet broadcasted
-    Created,
-
-    /// The claim tx was broadcasted
-    Pending,
-
-    /// The claim tx is confirmed
-    Completed,
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+pub enum PaymentState {
+    Created = 0,
+    Pending = 1,
+    Complete = 2,
+    Failed = 3,
+}
+impl ToSql for PaymentState {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
+    }
+}
+impl FromSql for PaymentState {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Integer(i) => match i as u8 {
+                0 => Ok(PaymentState::Created),
+                1 => Ok(PaymentState::Pending),
+                2 => Ok(PaymentState::Complete),
+                3 => Ok(PaymentState::Failed),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
@@ -386,7 +367,7 @@ pub struct PaymentTxData {
     pub payment_type: PaymentType,
 
     /// Onchain tx status
-    pub status: PaymentStatus,
+    pub is_confirmed: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -403,7 +384,7 @@ pub struct PaymentSwapData {
     pub receiver_amount_sat: u64,
 
     /// Payment status derived from the swap status
-    pub status: PaymentStatus,
+    pub status: PaymentState,
 }
 
 /// Represents an SDK payment.
@@ -441,7 +422,7 @@ pub struct Payment {
     /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
     ///
     /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
-    pub status: PaymentStatus,
+    pub status: PaymentState,
 }
 impl Payment {
     pub(crate) fn from(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
@@ -459,7 +440,10 @@ impl Payment {
             payment_type: tx.payment_type,
             status: match swap {
                 Some(swap) => swap.status,
-                None => tx.status,
+                None => match tx.is_confirmed {
+                    true => PaymentState::Complete,
+                    false => PaymentState::Pending,
+                },
             },
         }
     }

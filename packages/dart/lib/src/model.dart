@@ -85,6 +85,14 @@ enum Network {
   ;
 }
 
+enum NewSwapState {
+  created,
+  pending,
+  complete,
+  failed,
+  ;
+}
+
 /// Represents an SDK payment.
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
@@ -118,7 +126,7 @@ class Payment {
   /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
   ///
   /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
-  final PaymentStatus status;
+  final NewSwapState status;
 
   const Payment({
     required this.txId,
@@ -152,12 +160,6 @@ class Payment {
           feesSat == other.feesSat &&
           paymentType == other.paymentType &&
           status == other.status;
-}
-
-enum PaymentStatus {
-  pending,
-  complete,
-  ;
 }
 
 enum PaymentType {

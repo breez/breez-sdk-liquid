@@ -60,7 +60,7 @@ impl Persister {
            timestamp,
            amount_sat,
            payment_type,
-           status
+           is_confirmed
         )
         VALUES (?, ?, ?, ?, ?)
         ",
@@ -69,7 +69,7 @@ impl Persister {
                 ptx.timestamp,
                 ptx.amount_sat,
                 ptx.payment_type,
-                ptx.status,
+                ptx.is_confirmed,
             ),
         )?;
         tx.commit()?;
@@ -95,6 +95,7 @@ impl Persister {
     pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
         let con = self.get_connection()?;
 
+        // TODO For refund txs, do not create a new Payment
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
         let mut stmt = con.prepare(
             "
@@ -103,16 +104,17 @@ impl Persister {
                 ptx.timestamp,
                 ptx.amount_sat,
                 ptx.payment_type,
-                ptx.status,
+                ptx.is_confirmed,
                 rs.id,
                 rs.created_at,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
+                rs.state,
                 ss.id,
                 ss.created_at,
                 ss.payer_amount_sat,
                 ss.receiver_amount_sat,
-                ss.is_claim_tx_seen
+                ss.state
             FROM payment_tx_data AS ptx
             LEFT JOIN receive_swaps AS rs
                 ON ptx.tx_id = rs.claim_tx_id
@@ -128,18 +130,19 @@ impl Persister {
                     timestamp: row.get(1)?,
                     amount_sat: row.get(2)?,
                     payment_type: row.get(3)?,
-                    status: row.get(4)?,
+                    is_confirmed: row.get(4)?,
                 };
 
                 let maybe_receive_swap_id: Option<String> = row.get(5)?;
                 let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
                 let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
                 let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
-                let maybe_send_swap_id: Option<String> = row.get(9)?;
-                let maybe_send_swap_created_at: Option<u32> = row.get(10)?;
-                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(11)?;
-                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(12)?;
-                let maybe_send_swap_is_claim_tx_seen: Option<bool> = row.get(13)?;
+                let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
+                let maybe_send_swap_id: Option<String> = row.get(10)?;
+                let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
+                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(12)?;
+                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(13)?;
+                let maybe_send_swap_state: Option<PaymentState> = row.get(14)?;
 
                 let swap = match maybe_receive_swap_id {
                     Some(receive_swap_id) => Some(PaymentSwapData {
@@ -147,34 +150,15 @@ impl Persister {
                         created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                         payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
                         receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
-
-                        // Receive: payment changes to
-                        // - Pending when the claim tx is broadcast
-                        // - Complete when the claim tx is confirmed
-                        status: tx.status,
+                        status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
                     }),
-                    None => {
-                        maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
-                            swap_id: send_swap_id,
-                            created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
-                            payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
-                            receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
-
-                            // Send: payment changes to
-                            // - Pending when we broadcast the lockup tx
-                            // - Complete when we see the claim tx in the mempool
-                            status: match maybe_send_swap_is_claim_tx_seen {
-                                Some(send_swap_is_claim_tx_seen) => {
-                                    match send_swap_is_claim_tx_seen {
-                                        true => PaymentStatus::Complete,
-                                        false => PaymentStatus::Pending,
-                                    }
-                                }
-                                // Pending is the default in this situation, as this tx is the lockup tx
-                                None => PaymentStatus::Pending,
-                            },
-                        })
-                    }
+                    None => maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
+                        swap_id: send_swap_id,
+                        created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
+                        payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
+                        receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
+                        status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
+                    }),
                 };
 
                 Ok((tx.tx_id.clone(), Payment::from(tx, swap)))
