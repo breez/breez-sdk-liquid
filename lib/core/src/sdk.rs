@@ -4,6 +4,8 @@ use std::{
     path::PathBuf,
     str::FromStr,
     sync::{Arc, Mutex},
+    thread,
+    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -62,7 +64,19 @@ impl LiquidSdk {
             data_dir_path: req.data_dir,
             network: req.network,
         })?;
+
+        BoltzStatusStream::track_pending_swaps(sdk.clone())?;
+
+        // Periodically run sync() in the background
+        let sdk_clone = sdk.clone();
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_secs(30));
+            _ = sdk_clone.sync();
+        });
+
+        // Initial sync() before returning the instance
         sdk.sync()?;
+
         Ok(sdk)
     }
 
@@ -92,8 +106,6 @@ impl LiquidSdk {
             persister,
             data_dir_path,
         });
-
-        BoltzStatusStream::track_pending_swaps(sdk.clone())?;
 
         Ok(sdk)
     }
