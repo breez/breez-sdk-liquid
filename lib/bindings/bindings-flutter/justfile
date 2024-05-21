@@ -79,6 +79,7 @@ link:
 init *args:
 	dart pub global activate melos
 	melos bootstrap {{args}}
+	melos pub-upgrade
 
 # (melos) Generate docs for packages in workspace
 docs:
