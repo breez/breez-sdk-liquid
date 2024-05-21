@@ -66,6 +66,10 @@ scripts:
     exec: dart format -l 110 .
     description: Format a specific package in this project.
 
+  pub-upgrade:
+    exec: dart pub upgrade
+    description: Update all the dependencies to the latest compatible versions in this project.
+
   # TODO: deprecate when first version to pub.dev is published
   docs:
     exec: dart doc -o website/\$MELOS_PACKAGE_NAME
