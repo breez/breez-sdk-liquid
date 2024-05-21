@@ -3,7 +3,7 @@
 - `lib`: [lib/README.md](lib/core/README.md)
 - `cli`: [cli/README.md](cli/README.md)
 - Bindings
-  - `python`: [lib/bindings/bindings-python/README.md]()
+  - `python`: [lib/bindings/README.md]()
 
 ## Roadmap
 - [x] Send/Recieve Lightning payments

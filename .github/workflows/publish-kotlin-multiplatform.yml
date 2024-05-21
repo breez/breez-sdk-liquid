@@ -45,35 +45,35 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: bindings-android-jniLibs
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/jniLibs
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/jniLibs
 
       - uses: actions/download-artifact@v3
         with:
           name: bindings-kotlin-multiplatform
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/src
 
       - name: Copy jvmMain
         working-directory: lib/bindings
         run: |
-          cp -r bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
+          cp -r kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
 
       - uses: actions/download-artifact@v3
         with:
           name: bindings-aarch64-apple-ios
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64
 
       - uses: actions/download-artifact@v3
         with:
           name: bindings-aarch64-apple-ios-sim
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64
 
       - uses: actions/download-artifact@v3
         with:
           name: bindings-x86_64-apple-ios
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64
 
       - name: Build Kotlin Multiplatform project
-        working-directory: lib/bindings/bindings-kotlin-multiplatform
+        working-directory: lib/bindings/kotlin-multiplatform
         env:
           ORG_GRADLE_PROJECT_libraryVersion: ${{ inputs.package-version || '0.0.1' }}
         run: ./gradlew :breez-liquid-sdk-kmp:assemble
@@ -82,11 +82,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: kotlin-multiplatform-release.aar
-          path: lib/bindings/bindings-kotlin-multiplatform/breez-liquid-sdk-kmp/build/outputs/aar/breez-liquid-sdk-kmp-release.aar
+          path: lib/bindings/kotlin-multiplatform/breez-liquid-sdk-kmp/build/outputs/aar/breez-liquid-sdk-kmp-release.aar
         
       - name: Publish artifacts
         if: ${{ inputs.publish }}
-        working-directory: lib/bindings/bindings-kotlin-multiplatform
+        working-directory: lib/bindings/kotlin-multiplatform
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}

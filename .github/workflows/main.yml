@@ -115,33 +115,33 @@ jobs:
           run-bootstrap: false
       
       - name: Initialize the workspace
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         run: |
           just clean
           just init
       
       - name: Install flutter_rust_bridge_codegen dependencies
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         run: just frb
 
       - name: Generate Dart/Flutter bindings
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         continue-on-error: true
         run: |
           just codegen
 
       - name: Generate FFI bindings
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         continue-on-error: true
         run: |
           just ffigen
 
       - name: Static Analysis
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         run: melos analyze
 
       - name: Check Formatting
-        working-directory: lib/bindings/bindings-flutter/
+        working-directory: lib/bindings/flutter/
         run: melos check-format
 
       - name: Check git status
