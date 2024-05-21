@@ -19,7 +19,7 @@ zig_build () {
     rustup target add "$TARGET"
     cargo zigbuild --package breez-liquid-sdk --target "$TARGET" --profile $PROFILE
     mkdir "$PLATFORM_NAME"
-    cp "../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
+    cp "../../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
 }
 
 win_build () {
@@ -30,7 +30,7 @@ win_build () {
     rustup target add "$TARGET"
     cargo xwin build --package breez-liquid-sdk --target "$TARGET" --profile $PROFILE
     mkdir "$PLATFORM_NAME"
-    cp "../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
+    cp "../../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
 }
 
 PROFILE=frb-min

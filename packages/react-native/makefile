@@ -10,9 +10,9 @@ all: android ios react-native
 
 react-native:
 	make -C ../../lib/bindings react-native
-	cp -r ../../lib/bindings/react-native/android/* android/
-	cp -r ../../lib/bindings/react-native/ios/* ios/
-	cp -r ../../lib/bindings/react-native/ts/src/* src/
+	cp -r ../../lib/bindings/langs/react-native/android/* android/
+	cp -r ../../lib/bindings/langs/react-native/ios/* ios/
+	cp -r ../../lib/bindings/langs/react-native/ts/src/* src/
 
 android-make:
 	make -C ../../lib/bindings android
@@ -35,7 +35,7 @@ ios-make:
 
 ios-copy:
 	rm -rf ios/bindings-swift
-	cp -r ../../lib/bindings/swift ios/bindings-swift
+	cp -r ../../lib/bindings/langs/swift ios/bindings-swift
 	rm -f ios/bindings-swift/Package.swift
 
 ios: ios-make ios-copy

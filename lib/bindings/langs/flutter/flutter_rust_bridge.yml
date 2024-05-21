@@ -1,6 +1,6 @@
-rust_input: ../../core/src/bindings.rs
-dart_output: ../../../packages/dart/lib/src
-rust_output: ../../core/src/frb/bridge.rs
+rust_input: ../../../core/src/bindings.rs
+dart_output: ../../../../packages/dart/lib/src
+rust_output: ../../../core/src/frb/bridge.rs
 c_output: breez_liquid_sdk/include/breez_liquid_sdk.h
 web: false
 full_dep: true

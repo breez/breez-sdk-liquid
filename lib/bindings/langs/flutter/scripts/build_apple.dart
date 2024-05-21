@@ -68,7 +68,7 @@ Future<void> mainImpl(List<String> args) async {
   Directory.current = buildDir;
 
   final outputs = targets.map((target) {
-    return observer.mark('../../../target/$target/$profile/$libName');
+    return observer.mark('../../../../target/$target/$profile/$libName');
   }).toList();
 
   for (final target in targets) {
@@ -96,21 +96,21 @@ Future<void> mainImpl(List<String> args) async {
         '-library $lipoOut -headers $headers '
         '-output $framework');
   } else {
-    final armIos = '../../../target/aarch64-apple-ios/$profile/$libName';
+    final armIos = '../../../../target/aarch64-apple-ios/$profile/$libName';
     var shouldBuildFramework = !fileExists(frameworkZip) || observer.hasChanged(armIos);
     if (!fileExists(iosSimLipo) ||
         outputs.where((output) => output.contains('ios')).any(observer.hasChanged)) {
       shouldBuildFramework = true;
       await run('lipo -create -output $iosSimLipo '
-          '../../../target/aarch64-apple-ios-sim/$profile/$libName '
-          '../../../target/x86_64-apple-ios/$profile/$libName ');
+          '../../../../target/aarch64-apple-ios-sim/$profile/$libName '
+          '../../../../target/x86_64-apple-ios/$profile/$libName ');
     }
     if (!fileExists(macLipo) ||
         outputs.where((output) => output.contains('darwin')).any(observer.hasChanged)) {
       shouldBuildFramework = true;
       await run('lipo -create -output $macLipo '
-          '../../../target/aarch64-apple-darwin/$profile/$libName '
-          '../../../target/x86_64-apple-darwin/$profile/$libName');
+          '../../../../target/aarch64-apple-darwin/$profile/$libName '
+          '../../../../target/x86_64-apple-darwin/$profile/$libName');
     }
     if (shouldBuildFramework) {
       await run('xcodebuild -create-xcframework '

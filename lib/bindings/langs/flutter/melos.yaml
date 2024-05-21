@@ -10,10 +10,10 @@ ignore:
 commands:
   bootstrap:
     hooks:
-      post: cargo check --manifest-path ../../core/Cargo.toml --features frb 
+      post: cargo check --manifest-path ../../../core/Cargo.toml --features frb 
   clean:
     hooks:
-      pre: cargo clean --manifest-path ../../core/Cargo.toml --features frb 
+      pre: cargo clean --manifest-path ../../../core/Cargo.toml --features frb 
   version:
     hooks:
       preCommit: bash scripts/version.sh
