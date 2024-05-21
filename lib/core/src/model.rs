@@ -1,11 +1,15 @@
 use anyhow::anyhow;
 use boltz_client::network::Chain;
+use boltz_client::swaps::boltzv2::{
+    CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
+};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
+use crate::error::PaymentError;
 use crate::utils;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
@@ -154,6 +158,7 @@ pub(crate) struct SwapIn {
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    /// JSON representation of [crate::persist::swap_in::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcasted
     pub(crate) lockup_tx_id: Option<String>,
@@ -168,6 +173,36 @@ impl SwapIn {
             (Some(_), false) => SwapInStatus::Pending,
             (Some(_), true) => SwapInStatus::Completed,
         }
+    }
+
+    pub(crate) fn get_boltz_create_response(
+        &self,
+    ) -> Result<CreateSubmarineResponse, PaymentError> {
+        let internal_create_response: crate::persist::swap_in::InternalCreateSubmarineResponse =
+            serde_json::from_str(&self.create_response_json).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}"),
+                }
+            })?;
+        internal_create_response.convert_to_boltz()
+    }
+
+    pub(crate) fn from_boltz_struct_to_json(
+        create_response: &CreateSubmarineResponse,
+    ) -> Result<String, PaymentError> {
+        let internal_create_response =
+            crate::persist::swap_in::InternalCreateSubmarineResponse::convert_from_boltz(
+                create_response,
+            );
+
+        let create_response_json =
+            serde_json::to_string(&internal_create_response).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to serialize InternalCreateSubmarineResponse: {e:?}"),
+                }
+            })?;
+
+        Ok(create_response_json)
     }
 }
 
@@ -188,6 +223,7 @@ pub enum SwapInStatus {
 pub(crate) struct SwapOut {
     pub(crate) id: String,
     pub(crate) preimage: String,
+    /// JSON representation of [crate::persist::swap_out::InternalCreateReverseResponse]
     pub(crate) create_response_json: String,
     pub(crate) blinding_key: String,
     pub(crate) invoice: String,
@@ -214,6 +250,34 @@ impl SwapOut {
                 true => SwapOutStatus::Completed,
             },
         }
+    }
+
+    pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
+        let internal_create_response: crate::persist::swap_out::InternalCreateReverseResponse =
+            serde_json::from_str(&self.create_response_json).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to deserialize InternalCreateReverseResponse: {e:?}"),
+                }
+            })?;
+        internal_create_response.convert_to_boltz()
+    }
+
+    pub(crate) fn from_boltz_struct_to_json(
+        create_response: &CreateReverseResponse,
+    ) -> Result<String, PaymentError> {
+        let internal_create_response =
+            crate::persist::swap_out::InternalCreateReverseResponse::convert_from_boltz(
+                create_response,
+            );
+
+        let create_response_json =
+            serde_json::to_string(&internal_create_response).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to serialize InternalCreateReverseResponse: {e:?}"),
+                }
+            })?;
+
+        Ok(create_response_json)
     }
 }
 
@@ -366,6 +430,50 @@ impl Payment {
                 Some(swap) => swap.status,
                 None => tx.status,
             },
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct InternalLeaf {
+    pub output: String,
+    pub version: u8,
+}
+impl From<InternalLeaf> for Leaf {
+    fn from(value: InternalLeaf) -> Self {
+        Leaf {
+            output: value.output,
+            version: value.version,
+        }
+    }
+}
+impl From<Leaf> for InternalLeaf {
+    fn from(value: Leaf) -> Self {
+        InternalLeaf {
+            output: value.output,
+            version: value.version,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(super) struct InternalSwapTree {
+    claim_leaf: InternalLeaf,
+    refund_leaf: InternalLeaf,
+}
+impl From<InternalSwapTree> for SwapTree {
+    fn from(value: InternalSwapTree) -> Self {
+        SwapTree {
+            claim_leaf: value.claim_leaf.into(),
+            refund_leaf: value.refund_leaf.into(),
+        }
+    }
+}
+impl From<SwapTree> for InternalSwapTree {
+    fn from(value: SwapTree) -> Self {
+        InternalSwapTree {
+            claim_leaf: value.claim_leaf.into(),
+            refund_leaf: value.refund_leaf.into(),
         }
     }
 }

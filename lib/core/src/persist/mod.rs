@@ -1,7 +1,7 @@
 mod backup;
 mod migrations;
-mod swap_in;
-mod swap_out;
+pub(crate) mod swap_in;
+pub(crate) mod swap_out;
 
 use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};
 

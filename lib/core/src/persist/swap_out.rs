@@ -1,8 +1,11 @@
+use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::Persister;
 
 use anyhow::Result;
+use boltz_client::swaps::boltzv2::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
+use serde::{Deserialize, Serialize};
 
 impl Persister {
     pub(crate) fn set_claim_tx_id_for_swap_out(
@@ -141,5 +144,46 @@ impl Persister {
             .collect();
 
         Ok(filtered)
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct InternalCreateReverseResponse {
+    pub id: String,
+    pub invoice: String,
+    pub swap_tree: InternalSwapTree,
+    pub lockup_address: String,
+    pub refund_public_key: String,
+    pub timeout_block_height: u32,
+    pub onchain_amount: u32,
+    pub blinding_key: Option<String>,
+}
+impl InternalCreateReverseResponse {
+    pub(crate) fn convert_from_boltz(boltz_create_response: &CreateReverseResponse) -> Self {
+        InternalCreateReverseResponse {
+            id: boltz_create_response.id.clone(),
+            invoice: boltz_create_response.invoice.clone(),
+            swap_tree: boltz_create_response.swap_tree.clone().into(),
+            lockup_address: boltz_create_response.lockup_address.clone(),
+            refund_public_key: boltz_create_response.refund_public_key.to_string(),
+            timeout_block_height: boltz_create_response.timeout_block_height,
+            onchain_amount: boltz_create_response.onchain_amount,
+            blinding_key: boltz_create_response.blinding_key.clone(),
+        }
+    }
+
+    pub(crate) fn convert_to_boltz(&self) -> Result<CreateReverseResponse, PaymentError> {
+        let res = CreateReverseResponse {
+            id: self.id.clone(),
+            invoice: self.invoice.clone(),
+            swap_tree: self.swap_tree.clone().into(),
+            lockup_address: self.lockup_address.clone(),
+            refund_public_key: crate::utils::json_to_pubkey(&self.refund_public_key)?,
+            timeout_block_height: self.timeout_block_height,
+            onchain_amount: self.onchain_amount,
+            blinding_key: self.blinding_key.clone(),
+        };
+
+        Ok(res)
     }
 }

@@ -187,14 +187,14 @@ impl LiquidSdk {
         let con = self.persister.get_connection()?;
         let ongoing_swap_in = Persister::fetch_swap_in(&con, id)?
             .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
+        let create_response: CreateSubmarineResponse =
+            ongoing_swap_in.get_boltz_create_response()?;
 
         let lockup_tx_id = ongoing_swap_in.lockup_tx_id.ok_or(anyhow!(
             "Swap-in {id} is pending but no lockup txid is present"
         ))?;
         let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
         let keypair = self.get_submarine_keys(0)?;
-        let create_response: CreateSubmarineResponse =
-            serde_json::from_str(&ongoing_swap_in.create_response_json)?;
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
@@ -551,10 +551,7 @@ impl LiquidSdk {
             pair_hash: Some(lbtc_pair.hash),
             referral_id: None,
         })?;
-        let create_response_json =
-            serde_json::to_string(&create_response).map_err(|e| PaymentError::Generic {
-                err: format!("Failed to deserialize CreateReverseResponse: {e:?}"),
-            })?;
+        let create_response_json = SwapIn::from_boltz_struct_to_json(&create_response)?;
 
         let swap_id = &create_response.id;
         let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
@@ -689,12 +686,7 @@ impl LiquidSdk {
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
-        let create_response: CreateReverseResponse =
-            serde_json::from_str(&ongoing_swap_out.create_response_json).map_err(|e| {
-                PaymentError::Generic {
-                    err: format!("Failed to deserialize CreateReverseResponse: {e:?}"),
-                }
-            })?;
+        let create_response = ongoing_swap_out.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
             our_keys.public_key().into(),
@@ -805,10 +797,7 @@ impl LiquidSdk {
             referral_id: None,
         };
         let create_response = self.boltz_client_v2().post_reverse_req(v2_req)?;
-        let create_response_json =
-            serde_json::to_string(&create_response).map_err(|e| PaymentError::Generic {
-                err: format!("Failed to serialize CreateReverseResponse: {e:?}"),
-            })?;
+        let create_response_json = SwapOut::from_boltz_struct_to_json(&create_response)?;
 
         let swap_id = create_response.id;
         let invoice = Bolt11Invoice::from_str(&create_response.invoice)

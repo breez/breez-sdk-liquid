@@ -1,6 +1,8 @@
 use std::net::TcpStream;
+use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::error::PaymentError;
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::swaps::boltzv2::SwapUpdate;
 use log::{error, info};
@@ -72,4 +74,10 @@ pub(crate) fn now() -> u32 {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs() as u32
+}
+
+pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, PaymentError> {
+    boltz_client::PublicKey::from_str(json).map_err(|e| PaymentError::Generic {
+        err: format!("Failed to deserialize PublicKey: {e:?}"),
+    })
 }
