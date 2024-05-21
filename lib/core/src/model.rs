@@ -188,7 +188,7 @@ pub enum SwapInStatus {
 pub(crate) struct SwapOut {
     pub(crate) id: String,
     pub(crate) preimage: String,
-    pub(crate) redeem_script: String,
+    pub(crate) create_response_json: String,
     pub(crate) blinding_key: String,
     pub(crate) invoice: String,
     /// The amount of the invoice

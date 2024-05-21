@@ -29,7 +29,7 @@ impl Persister {
             INSERT OR REPLACE INTO receive_swaps (
                 id,
                 preimage,
-                redeem_script,
+                create_response_json,
                 blinding_key,
                 invoice,
                 payer_amount_sat,
@@ -43,7 +43,7 @@ impl Persister {
         _ = stmt.execute((
             swap_out.id,
             swap_out.preimage,
-            swap_out.redeem_script,
+            swap_out.create_response_json,
             swap_out.blinding_key,
             swap_out.invoice,
             swap_out.payer_amount_sat,
@@ -68,7 +68,7 @@ impl Persister {
             SELECT
                 rs.id,
                 rs.preimage,
-                rs.redeem_script,
+                rs.create_response_json,
                 rs.blinding_key,
                 rs.invoice,
                 rs.payer_amount_sat,
@@ -97,7 +97,7 @@ impl Persister {
         Ok(SwapOut {
             id: row.get(0)?,
             preimage: row.get(1)?,
-            redeem_script: row.get(2)?,
+            create_response_json: row.get(2)?,
             blinding_key: row.get(3)?,
             invoice: row.get(4)?,
             payer_amount_sat: row.get(5)?,

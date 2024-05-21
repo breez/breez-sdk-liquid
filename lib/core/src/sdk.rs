@@ -690,7 +690,7 @@ impl LiquidSdk {
         let our_keys = lsk.keypair;
 
         let create_response: CreateReverseResponse =
-            serde_json::from_str(&ongoing_swap_out.redeem_script).map_err(|e| {
+            serde_json::from_str(&ongoing_swap_out.create_response_json).map_err(|e| {
                 PaymentError::Generic {
                     err: format!("Failed to deserialize CreateReverseResponse: {e:?}"),
                 }
@@ -805,9 +805,10 @@ impl LiquidSdk {
             referral_id: None,
         };
         let create_response = self.boltz_client_v2().post_reverse_req(v2_req)?;
-
-        // TODO Persisting this in the DB (reusing "redeem_script" field), as we need it later when claiming
-        let redeem_script = serde_json::to_string(&create_response).unwrap();
+        let create_response_json =
+            serde_json::to_string(&create_response).map_err(|e| PaymentError::Generic {
+                err: format!("Failed to serialize CreateReverseResponse: {e:?}"),
+            })?;
 
         let swap_id = create_response.id;
         let invoice = Bolt11Invoice::from_str(&create_response.invoice)
@@ -834,7 +835,7 @@ impl LiquidSdk {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 blinding_key: blinding_str,
-                redeem_script,
+                create_response_json,
                 invoice: invoice.to_string(),
                 payer_amount_sat,
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
