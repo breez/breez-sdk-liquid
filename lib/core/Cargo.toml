@@ -7,6 +7,10 @@ version.workspace = true
 name = "breez_liquid_sdk"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+[features]
+default = ["frb"]
+frb = ["dep:flutter_rust_bridge"]
+
 [dependencies]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
@@ -31,6 +35,6 @@ elements = "0.24.1"
 tempdir = "0.3.7"
 uuid = { version = "1.8.0", features = ["v4"] }
 
-[features]
-default = ["frb"]
-frb = ["dep:flutter_rust_bridge"]
+[build-dependencies]
+anyhow = { version = "1.0.79", features = ["backtrace"] }
+glob = "0.3.1"
