@@ -504,6 +504,7 @@ dependencies = [
  "boltz-client",
  "elements",
  "flutter_rust_bridge",
+ "glob",
  "log",
  "lwk_common",
  "lwk_signer",
