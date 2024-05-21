@@ -979,7 +979,7 @@ impl LiquidSdk {
     }
 
     /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
-    pub fn list_payments(&self) -> Result<Vec<Payment>> {
+    pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
         payments.sort_by_key(|p| p.timestamp);
         Ok(payments)

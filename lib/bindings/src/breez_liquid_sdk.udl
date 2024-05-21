@@ -73,6 +73,26 @@ dictionary RestoreRequest {
     string? backup_path = null;
 };
 
+dictionary Payment {
+    string tx_id;
+    string? swap_id = null;
+    u32 timestamp;
+    u64 amount_sat;
+    u64? fees_sat = null;
+    PaymentType payment_type;
+    PaymentStatus status;
+};
+
+enum PaymentType {
+    "Receive",
+    "Send",
+};
+
+enum PaymentStatus {
+    "Pending",
+    "Complete",
+};
+
 namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     BindingLiquidSdk connect(ConnectRequest req);
@@ -93,6 +113,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=PaymentError]
+    sequence<Payment> list_payments();
 
     [Throws=LiquidSdkError]
     void sync();

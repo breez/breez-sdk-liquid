@@ -58,11 +58,11 @@ pub fn receive_payment(
 }
 
 pub fn list_payments() -> Result<Vec<Payment>> {
-    LIQUID_SDK_INSTANCE
+    Ok(LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
-        .list_payments()
+        .list_payments()?)
 }
 
 pub fn empty_wallet_cache() -> Result<()> {
