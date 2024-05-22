@@ -2,15 +2,13 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use boltz_client::swaps::boltzv2::CreateSubmarineResponse;
-use log::info;
-use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
+use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::Persister;
-use crate::utils::validate_swap_state;
 
 impl Persister {
     pub(crate) fn insert_swap_in(&self, swap_in: SwapIn) -> Result<()> {
@@ -152,130 +150,6 @@ impl Persister {
             })
             .collect();
         Ok(res)
-    }
-
-    /// This is the status when our lockup tx was broadcast.
-    pub(crate) fn set_send_swap_status_pending_successful(
-        &self,
-        swap_id: &str,
-        lockup_tx_id: &str,
-    ) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to Pending (successful)");
-
-        let con = self.get_connection()?;
-        let swap = Self::fetch_swap_in(&con, swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
-            })?;
-
-        validate_swap_state(&swap.state, &[PaymentState::Created])?;
-        con.execute(
-            "UPDATE send_swaps
-            SET
-                lockup_tx_id=:lockup_tx_id,
-                state=:state
-            WHERE
-                id=:id",
-            named_params! {
-             ":id": swap_id,
-             ":lockup_tx_id": lockup_tx_id,
-             ":state": PaymentState::Pending,
-            },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
-    }
-
-    /// This is the status when a refund was initiated and our refund tx was broadcast.
-    pub(crate) fn set_send_swap_status_pending_refund(
-        &self,
-        swap_id: &str,
-        refund_tx_id: &str,
-    ) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to Pending (failed)");
-
-        let con = self.get_connection()?;
-        let swap = Self::fetch_swap_in(&con, swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
-            })?;
-
-        validate_swap_state(&swap.state, &[PaymentState::Created])?;
-        con.execute(
-            "UPDATE send_swaps
-            SET
-                refund_tx_id=:refund_tx_id,
-                state=:state
-            WHERE
-                id=:id",
-            named_params! {
-             ":id": swap_id,
-             ":refund_tx_id": refund_tx_id,
-             ":state": PaymentState::Pending,
-            },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
-    }
-
-    /// This is the status when the claim tx is broadcast and we see it in the mempool.
-    pub(crate) fn set_send_swap_status_complete(&self, swap_id: &str) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to Complete");
-
-        let con = self.get_connection()?;
-        let swap = Self::fetch_swap_in(&con, swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
-            })?;
-
-        validate_swap_state(&swap.state, &[PaymentState::Created, PaymentState::Pending])?;
-        con.execute(
-            "UPDATE send_swaps
-            SET
-                state=:state
-            WHERE
-                id=:id",
-            named_params! {
-             ":id": swap_id,
-             ":state": PaymentState::Complete,
-            },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
-    }
-
-    /// This is the status when a swap refund was initiated and the refund tx is confirmed.
-    pub(crate) fn set_send_swap_status_failed(&self, swap_id: &str) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to Failed");
-
-        let con = self.get_connection()?;
-        let swap = Self::fetch_swap_in(&con, swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
-            })?;
-
-        validate_swap_state(&swap.state, &[PaymentState::Created, PaymentState::Pending])?;
-        con.execute(
-            "UPDATE send_swaps
-            SET
-                state=:state
-            WHERE
-                id=:id",
-            named_params! {
-             ":id": swap_id,
-             ":state": PaymentState::Complete,
-            },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
     }
 }
 

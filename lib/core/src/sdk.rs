@@ -28,8 +28,10 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
+use rusqlite::named_params;
 
 use crate::boltz_status_stream::set_stream_nonblocking;
+use crate::model::PaymentState::*;
 use crate::{
     boltz_status_stream::BoltzStatusStream, ensure_sdk, error::PaymentError, get_invoice_amount,
     model::*, persist::Persister, utils,
@@ -140,6 +142,124 @@ impl LiquidSdk {
         Ok(lsk.keypair)
     }
 
+    fn validate_state_transition(
+        from_state: PaymentState,
+        to_state: PaymentState,
+    ) -> Result<(), PaymentError> {
+        match (from_state, to_state) {
+            (_, Created) => Err(PaymentError::Generic {
+                err: "Cannot transition to Created state".to_string(),
+            }),
+
+            (Created | Pending, Pending) => Ok(()),
+            (Complete | Failed, Pending) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Pending state"),
+            }),
+
+            (Created | Pending, Complete) => Ok(()),
+            (Complete | Failed, Complete) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Complete state"),
+            }),
+
+            (_, Failed) => Ok(()),
+        }
+    }
+
+    /// Transitions a Receive swap to a new state
+    pub(crate) fn try_handle_receive_swap_update(
+        &self,
+        swap_id: &str,
+        to_state: PaymentState,
+        claim_tx_id: Option<&str>,
+    ) -> Result<(), PaymentError> {
+        info!(
+            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?})"
+        );
+
+        let con = self.persister.get_connection()?;
+        let swap = Persister::fetch_swap_out(&con, swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Swap Out not found {swap_id}"),
+            })?;
+
+        Self::validate_state_transition(swap.state, to_state)?;
+
+        // Do not overwrite claim_tx_id
+        con.execute(
+            "UPDATE receive_swaps
+            SET
+                claim_tx_id =
+                    CASE
+                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
+                        ELSE claim_tx_id
+                    END,
+
+                state = :state
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": swap_id,
+                ":claim_tx_id": claim_tx_id,
+                ":state": to_state,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+
+        Ok(())
+    }
+
+    /// Transitions a Send swap to a new state
+    pub(crate) fn try_handle_send_swap_update(
+        &self,
+        swap_id: &str,
+        to_state: PaymentState,
+        lockup_tx_id: Option<&str>,
+        refund_tx_id: Option<&str>,
+    ) -> Result<(), PaymentError> {
+        info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
+
+        let con = self.persister.get_connection()?;
+        let swap = Persister::fetch_swap_in(&con, swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Swap In not found {swap_id}"),
+            })?;
+
+        Self::validate_state_transition(swap.state, to_state)?;
+
+        // Do not overwrite lockup_tx_id, refund_tx_id
+        con.execute(
+            "UPDATE send_swaps
+            SET
+                lockup_tx_id =
+                    CASE
+                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
+                        ELSE lockup_tx_id
+                    END,
+
+                refund_tx_id =
+                    CASE
+                        WHEN refund_tx_id IS NULL THEN :refund_tx_id
+                        ELSE refund_tx_id
+                    END,
+
+                state=:state
+            WHERE
+                id = :id",
+            named_params! {
+             ":id": swap_id,
+             ":lockup_tx_id": lockup_tx_id,
+             ":refund_tx_id": refund_tx_id,
+             ":state": to_state,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+
+        Ok(())
+    }
+
+    /// Handles status updates from Boltz for Receive swaps
     pub(crate) fn try_handle_reverse_swap_status(
         &self,
         swap_state: RevSwapStates,
@@ -159,7 +279,7 @@ impl LiquidSdk {
             | RevSwapStates::TransactionFailed
             | RevSwapStates::TransactionRefunded => {
                 error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                self.persister.set_receive_swap_status_failed(id)?;
+                self.try_handle_receive_swap_update(id, Failed, None)?;
             }
 
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
@@ -191,6 +311,7 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Handles status updates from Boltz for Send swaps
     pub(crate) fn try_handle_submarine_swap_status(
         &self,
         swap_state: SubSwapStates,
@@ -261,8 +382,7 @@ impl LiquidSdk {
                 let refund_tx_id =
                     self.try_refund(id, &swap_script, &keypair, receiver_amount_sat)?;
                 info!("Broadcast refund tx for Swap-in {id}. Tx id: {refund_tx_id}");
-                self.persister
-                    .set_send_swap_status_pending_refund(id, &refund_tx_id)?;
+                self.try_handle_send_swap_update(id, Pending, None, Some(&refund_tx_id))?;
 
                 Ok(())
             }
@@ -642,8 +762,7 @@ impl LiquidSdk {
                     };
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response)?;
-                    self.persister
-                        .set_send_swap_status_pending_successful(swap_id, &lockup_tx_id)?;
+                    self.try_handle_send_swap_update(swap_id, Pending, Some(&lockup_tx_id), None)?;
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
@@ -658,7 +777,7 @@ impl LiquidSdk {
                         &keypair,
                     )?;
                     debug!("Boltz successfully claimed the funds");
-                    self.persister.set_send_swap_status_complete(swap_id)?;
+                    self.try_handle_send_swap_update(swap_id, Complete, None, None)?;
 
                     BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::ReverseSubmarine);
 
@@ -740,8 +859,7 @@ impl LiquidSdk {
         info!("Successfully broadcast claim tx {claim_tx_id} for rev swap {rev_swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
 
-        self.persister
-            .set_receive_swap_status_pending(rev_swap_id, Some(claim_tx_id.clone()))?;
+        self.try_handle_receive_swap_update(rev_swap_id, Pending, Some(&claim_tx_id))?;
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -881,10 +999,10 @@ impl LiquidSdk {
             // Transition the swaps whose state depends on this tx being confirmed
             if is_tx_confirmed {
                 if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
-                    self.persister.set_receive_swap_status_complete(&swap.id)?;
+                    self.try_handle_receive_swap_update(&swap.id, Complete, None)?;
                 }
                 if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
-                    self.persister.set_send_swap_status_failed(&swap.id)?;
+                    self.try_handle_send_swap_update(&swap.id, Failed, None, None)?;
                 }
             }
 
