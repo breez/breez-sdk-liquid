@@ -348,6 +348,7 @@ impl LiquidSdk {
                     &keypair,
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
+                self.try_handle_send_swap_update(id, Complete, None, None)?;
 
                 // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
                 // This makes the tx known to the SDK (get_info, list_payments) instantly
