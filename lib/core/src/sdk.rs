@@ -282,14 +282,15 @@ impl LiquidSdk {
         let create_response: CreateSubmarineResponse =
             ongoing_swap_in.get_boltz_create_response()?;
 
-        let lockup_tx_id = ongoing_swap_in.lockup_tx_id.ok_or(anyhow!(
-            "Swap-in {id} is pending but no lockup txid is present"
-        ))?;
         let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
         let keypair = self.get_submarine_keys(0)?;
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
+                let lockup_tx_id = ongoing_swap_in.lockup_tx_id.ok_or(anyhow!(
+                    "Swap-in {id} is pending but no lockup txid is present"
+                ))?;
+
                 let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
                     &create_response,
                     keypair.public_key().into(),
@@ -319,7 +320,9 @@ impl LiquidSdk {
             }
 
             SubSwapStates::TransactionClaimed => {
-                warn!("Swap-in {id} has already been claimed");
+                warn!("Swap-in {id} has already been claimed, marking it as Complete");
+                // If app was stopped after broadcasting the claim but before we transitioned to Complete
+                self.try_handle_send_swap_update(id, Complete, None, None)?;
                 Ok(())
             }
 
