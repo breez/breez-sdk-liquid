@@ -103,61 +103,59 @@ impl BoltzStatusStream {
 
                         // We parse and handle any Text websocket messages, which are likely status updates
                         if msg.is_text() {
-                            let response: SwapUpdate = serde_json::from_str(&msg.to_string())
-                                .map_err(|e| anyhow!("WS response is invalid SwapUpdate: {e:?}"))
-                                .unwrap();
-                            info!("Received update : {response:?}");
+                            info!("Received text msg (status update) : {msg:?}");
 
-                            match response {
+                            match serde_json::from_str::<SwapUpdate>(&msg.to_string()) {
                                 // Subscription confirmation
-                                boltz_client::swaps::boltzv2::SwapUpdate::Subscription {
-                                    ..
-                                } => {}
+                                Ok(SwapUpdate::Subscription { .. }) => {}
 
-                                // Status update
-                                boltz_client::swaps::boltzv2::SwapUpdate::Update {
+                                // Status update(s)
+                                Ok(SwapUpdate::Update {
                                     event: _,
                                     channel: _,
                                     args,
-                                } => {
-                                    let update = args.first().unwrap().clone(); // TODO
-                                    let update_swap_id = update.id.clone();
-                                    let update_state_str = update.status.clone();
+                                }) => {
+                                    for boltz_client::swaps::boltzv2::Update { id, status } in args
+                                    {
+                                        if Self::is_tracked_swap_in(&id) {
+                                            // Known OngoingSwapIn / Send swap
 
-                                    if Self::is_tracked_swap_in(&update_swap_id) {
-                                        // Known OngoingSwapIn / Send swap
-
-                                        match SubSwapStates::from_str(&update_state_str) {
-                                            Ok(new_state) => {
-                                                let res = sdk.try_handle_submarine_swap_status(
-                                                    new_state,
-                                                    &update_swap_id,
-                                                );
-                                                info!("OngoingSwapIn / send try_handle_submarine_swap_status res: {res:?}");
+                                            match SubSwapStates::from_str(&status) {
+                                                Ok(new_state) => {
+                                                    let res = sdk.try_handle_submarine_swap_status(
+                                                        new_state,
+                                                        &id,
+                                                    );
+                                                    info!("OngoingSwapIn / send try_handle_submarine_swap_status res: {res:?}");
+                                                }
+                                                Err(_) => error!("Received invalid SubSwapState for swap {id}: {status}")
                                             }
-                                            Err(_) => error!("Invalid state for submarine swap {update_swap_id}: {update_state_str}")
-                                        }
-                                    } else if Self::is_tracked_swap_out(&update_swap_id) {
-                                        // Known OngoingSwapOut / receive swap
+                                        } else if Self::is_tracked_swap_out(&id) {
+                                            // Known OngoingSwapOut / receive swap
 
-                                        match RevSwapStates::from_str(&update_state_str) {
-                                            Ok(new_state) => {
-                                                let res = sdk.try_handle_reverse_swap_status(
-                                                    new_state,
-                                                    &update_swap_id,
-                                                );
-                                                info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                            match RevSwapStates::from_str(&status) {
+                                                Ok(new_state) => {
+                                                    let res = sdk.try_handle_reverse_swap_status(
+                                                        new_state, &id,
+                                                    );
+                                                    info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                                }
+                                                Err(_) => error!("Received invalid RevSwapState for swap {id}: {status}"),
                                             }
-                                            Err(_) => error!("Invalid state for reverse swap {update_swap_id}: {update_state_str}")
+                                        } else {
+                                            warn!("Received a status update for swap {id}, which is not tracked as ongoing")
                                         }
-                                    } else {
-                                        // We got an update for a swap we did not track as ongoing
-                                        todo!()
                                     }
                                 }
 
                                 // Error related to subscription, like "Unknown swap ID"
-                                boltz_client::swaps::boltzv2::SwapUpdate::Error { .. } => todo!(),
+                                Ok(SwapUpdate::Error {
+                                    event: _,
+                                    channel: _,
+                                    args,
+                                }) => error!("Received a status update error: {args:?}"),
+
+                                Err(e) => warn!("WS response is invalid SwapUpdate: {e:?}"),
                             }
                         }
                     }
