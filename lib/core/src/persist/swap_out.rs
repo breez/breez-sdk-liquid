@@ -7,7 +7,7 @@ use crate::persist::Persister;
 
 use anyhow::Result;
 use boltz_client::swaps::boltzv2::CreateReverseResponse;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
 impl Persister {
@@ -154,6 +154,37 @@ impl Persister {
             })
             .collect();
         Ok(res)
+    }
+
+    pub(crate) fn try_handle_receive_swap_update(
+        &self,
+        con: &Connection,
+        swap_id: &str,
+        to_state: PaymentState,
+        claim_tx_id: Option<&str>,
+    ) -> Result<(), PaymentError> {
+        // Do not overwrite claim_tx_id
+        con.execute(
+            "UPDATE receive_swaps
+            SET
+                claim_tx_id =
+                    CASE
+                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
+                        ELSE claim_tx_id
+                    END,
+
+                state = :state
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": swap_id,
+                ":claim_tx_id": claim_tx_id,
+                ":state": to_state,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+
+        Ok(())
     }
 }
 

@@ -28,7 +28,6 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
-use rusqlite::named_params;
 
 use crate::boltz_status_stream::set_stream_nonblocking;
 use crate::model::PaymentState::*;
@@ -184,29 +183,8 @@ impl LiquidSdk {
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
-
-        // Do not overwrite claim_tx_id
-        con.execute(
-            "UPDATE receive_swaps
-            SET
-                claim_tx_id =
-                    CASE
-                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
-                        ELSE claim_tx_id
-                    END,
-
-                state = :state
-            WHERE
-                id = :id",
-            named_params! {
-                ":id": swap_id,
-                ":claim_tx_id": claim_tx_id,
-                ":state": to_state,
-            },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
+        self.persister
+            .try_handle_receive_swap_update(&con, swap_id, to_state, claim_tx_id)
     }
 
     /// Transitions a Send swap to a new state
@@ -227,36 +205,13 @@ impl LiquidSdk {
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
-
-        // Do not overwrite lockup_tx_id, refund_tx_id
-        con.execute(
-            "UPDATE send_swaps
-            SET
-                lockup_tx_id =
-                    CASE
-                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
-                        ELSE lockup_tx_id
-                    END,
-
-                refund_tx_id =
-                    CASE
-                        WHEN refund_tx_id IS NULL THEN :refund_tx_id
-                        ELSE refund_tx_id
-                    END,
-
-                state=:state
-            WHERE
-                id = :id",
-            named_params! {
-             ":id": swap_id,
-             ":lockup_tx_id": lockup_tx_id,
-             ":refund_tx_id": refund_tx_id,
-             ":state": to_state,
-            },
+        self.persister.try_handle_send_swap_update(
+            &con,
+            swap_id,
+            to_state,
+            lockup_tx_id,
+            refund_tx_id,
         )
-        .map_err(|_| PaymentError::PersistError)?;
-
-        Ok(())
     }
 
     /// Handles status updates from Boltz for Receive swaps

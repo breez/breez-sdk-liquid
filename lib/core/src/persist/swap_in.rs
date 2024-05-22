@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use boltz_client::swaps::boltzv2::CreateSubmarineResponse;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
 use crate::ensure_sdk;
@@ -150,6 +150,45 @@ impl Persister {
             })
             .collect();
         Ok(res)
+    }
+
+    pub(crate) fn try_handle_send_swap_update(
+        &self,
+        con: &Connection,
+        swap_id: &str,
+        to_state: PaymentState,
+        lockup_tx_id: Option<&str>,
+        refund_tx_id: Option<&str>,
+    ) -> Result<(), PaymentError> {
+        // Do not overwrite lockup_tx_id, refund_tx_id
+        con.execute(
+            "UPDATE send_swaps
+            SET
+                lockup_tx_id =
+                    CASE
+                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
+                        ELSE lockup_tx_id
+                    END,
+
+                refund_tx_id =
+                    CASE
+                        WHEN refund_tx_id IS NULL THEN :refund_tx_id
+                        ELSE refund_tx_id
+                    END,
+
+                state=:state
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": swap_id,
+                ":lockup_tx_id": lockup_tx_id,
+                ":refund_tx_id": refund_tx_id,
+                ":state": to_state,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+
+        Ok(())
     }
 }
 
