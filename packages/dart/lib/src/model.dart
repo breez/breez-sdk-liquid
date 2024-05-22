@@ -85,14 +85,6 @@ enum Network {
   ;
 }
 
-enum NewSwapState {
-  created,
-  pending,
-  complete,
-  failed,
-  ;
-}
-
 /// Represents an SDK payment.
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
@@ -126,7 +118,7 @@ class Payment {
   /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
   ///
   /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
-  final NewSwapState status;
+  final PaymentState status;
 
   const Payment({
     required this.txId,
@@ -160,6 +152,54 @@ class Payment {
           feesSat == other.feesSat &&
           paymentType == other.paymentType &&
           status == other.status;
+}
+
+enum PaymentState {
+  created,
+
+  /// ## Receive Swaps
+  ///
+  /// Covers the cases when
+  /// - the lockup tx is seen in the mempool or
+  /// - our claim tx is broadcast
+  ///
+  /// When the claim tx is broadcast, `claim_tx_id` is set in the swap.
+  ///
+  /// ## Send Swaps
+  ///
+  /// Covers the cases when
+  /// - our lockup tx was broadcast or
+  /// - a refund was initiated and our refund tx was broadcast
+  ///
+  /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
+  ///
+  /// ## No swap data available
+  ///
+  /// If no associated swap is found, this indicates the underlying tx is not confirmed yet.
+  pending,
+
+  /// ## Receive Swaps
+  ///
+  /// Covers the case when the claim tx is confirmed.
+  ///
+  /// ## Send Swaps
+  ///
+  /// This is the status when the claim tx is broadcast and we see it in the mempool.
+  ///
+  /// ## No swap data available
+  ///
+  /// If no associated swap is found, this indicates the underlying tx is confirmed.
+  complete,
+
+  /// ## Receive Swaps
+  ///
+  /// This is the status when the swap failed for any reason and the Receive could not complete.
+  ///
+  /// ## Send Swaps
+  ///
+  /// This is the status when a swap refund was initiated and the refund tx is confirmed.
+  failed,
+  ;
 }
 
 enum PaymentType {
