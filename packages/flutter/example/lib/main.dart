@@ -5,13 +5,13 @@ import 'package:path_provider/path_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initialize();
-  await initializeWallet();
-  runApp(const MyApp());
+  BindingLiquidSdk liquidSDK = await initializeWallet();
+  runApp(MyApp(liquidSDK));
 }
 
 const String mnemonic = "";
 
-Future initializeWallet() async {
+Future<BindingLiquidSdk> initializeWallet() async {
   assert(mnemonic.isNotEmpty, "Please enter your mnemonic.");
   final dataDir = await getApplicationDocumentsDirectory();
   final req = ConnectRequest(
@@ -19,11 +19,13 @@ Future initializeWallet() async {
     dataDir: dataDir.path,
     network: Network.liquid,
   );
-  await connect(req: req);
+  return await connect(req: req);
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final BindingLiquidSdk liquidSDK;
+
+  const MyApp(this.liquidSDK, {super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -43,7 +45,7 @@ class _MyAppState extends State<MyApp> {
             child: Column(
               children: [
                 FutureBuilder<GetInfoResponse>(
-                  future: getInfo(
+                  future: widget.liquidSDK.getInfo(
                     req: const GetInfoRequest(
                       withScan: true,
                     ),
@@ -93,7 +95,7 @@ class _MyAppState extends State<MyApp> {
                 ),
                 const SizedBox(height: 16.0),
                 FutureBuilder<PrepareReceiveResponse>(
-                  future: prepareReceivePayment(
+                  future: widget.liquidSDK.prepareReceivePayment(
                     req: const PrepareReceiveRequest(payerAmountSat: 1000),
                   ),
                   initialData: null,
@@ -125,7 +127,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                         const SizedBox(height: 16.0),
                         FutureBuilder<ReceivePaymentResponse>(
-                          future: receivePayment(req: prepareReceiveResponse),
+                          future: widget.liquidSDK.receivePayment(req: prepareReceiveResponse),
                           initialData: null,
                           builder: (context, snapshot) {
                             if (snapshot.hasError) {
