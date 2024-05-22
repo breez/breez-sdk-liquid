@@ -58,12 +58,13 @@ typedef struct wire_cst_prepare_send_response {
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_payment {
-  struct wire_cst_list_prim_u_8_strict *id;
-  uint32_t *timestamp;
+  struct wire_cst_list_prim_u_8_strict *tx_id;
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+  uint32_t timestamp;
   uint64_t amount_sat;
   uint64_t *fees_sat;
   int32_t payment_type;
-  struct wire_cst_list_prim_u_8_strict *invoice;
+  int32_t status;
 } wire_cst_payment;
 
 typedef struct wire_cst_list_payment {
@@ -73,6 +74,8 @@ typedef struct wire_cst_list_payment {
 
 typedef struct wire_cst_get_info_response {
   uint64_t balance_sat;
+  uint64_t pending_send_sat;
+  uint64_t pending_receive_sat;
   struct wire_cst_list_prim_u_8_strict *pubkey;
 } wire_cst_get_info_response;
 
@@ -86,7 +89,7 @@ typedef struct wire_cst_PaymentError_LwkError {
 
 typedef struct wire_cst_PaymentError_Refunded {
   struct wire_cst_list_prim_u_8_strict *err;
-  struct wire_cst_list_prim_u_8_strict *txid;
+  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_PaymentError_Refunded;
 
 typedef struct wire_cst_PaymentError_SendError {
@@ -127,7 +130,7 @@ void frbgen_breez_liquid_wire_empty_wallet_cache(int64_t port_);
 
 void frbgen_breez_liquid_wire_get_info(int64_t port_, struct wire_cst_get_info_request *req);
 
-void frbgen_breez_liquid_wire_list_payments(int64_t port_, bool with_scan, bool include_pending);
+void frbgen_breez_liquid_wire_list_payments(int64_t port_);
 
 void frbgen_breez_liquid_wire_prepare_receive_payment(int64_t port_,
                                                       struct wire_cst_prepare_receive_request *req);
@@ -157,8 +160,6 @@ struct wire_cst_prepare_send_response *frbgen_breez_liquid_cst_new_box_autoadd_p
 
 struct wire_cst_restore_request *frbgen_breez_liquid_cst_new_box_autoadd_restore_request(void);
 
-uint32_t *frbgen_breez_liquid_cst_new_box_autoadd_u_32(uint32_t value);
-
 uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
@@ -173,7 +174,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);

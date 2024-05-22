@@ -276,20 +276,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_restore_requestPtr
           .asFunction<ffi.Pointer<wire_cst_restore_request> Function()>();
 
-  ffi.Pointer<ffi.Uint32> frbgen_breez_liquid_cst_new_box_autoadd_u_32(
-    int value,
-  ) {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_u_32(
-      value,
-    );
-  }
-
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32 =
-      _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
-
   ffi.Pointer<ffi.Uint64> frbgen_breez_liquid_cst_new_box_autoadd_u_64(
     int value,
   ) {
@@ -411,9 +397,12 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 }
 
 final class wire_cst_payment extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> tx_id;
 
-  external ffi.Pointer<ffi.Uint32> timestamp;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  @ffi.Uint32()
+  external int timestamp;
 
   @ffi.Uint64()
   external int amount_sat;
@@ -423,7 +412,8 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Int32()
   external int payment_type;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+  @ffi.Int32()
+  external int status;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {
@@ -436,6 +426,12 @@ final class wire_cst_list_payment extends ffi.Struct {
 final class wire_cst_get_info_response extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
+
+  @ffi.Uint64()
+  external int pending_send_sat;
+
+  @ffi.Uint64()
+  external int pending_receive_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
@@ -451,7 +447,7 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
 final class wire_cst_PaymentError_Refunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
 
 final class wire_cst_PaymentError_SendError extends ffi.Struct {

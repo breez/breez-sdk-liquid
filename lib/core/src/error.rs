@@ -55,7 +55,7 @@ pub enum PaymentError {
     PersistError,
 
     #[error("The payment has been refunded. Reason for failure: {err}")]
-    Refunded { err: String, txid: String },
+    Refunded { err: String, refund_tx_id: String },
 
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },
@@ -67,20 +67,9 @@ pub enum PaymentError {
 impl From<boltz_client::error::Error> for PaymentError {
     fn from(err: boltz_client::error::Error) -> Self {
         match err {
-            boltz_client::error::Error::Protocol(msg) => {
-                if msg == "Could not find utxos for script" {
-                    return PaymentError::AlreadyClaimed;
-                }
-
-                PaymentError::Generic { err: msg }
-            }
-            boltz_client::error::Error::HTTP(ureq) => {
-                dbg!(ureq.into_response().unwrap().into_string().unwrap());
-
-                PaymentError::Generic {
-                    err: "Could not contact servers".to_string(),
-                }
-            }
+            boltz_client::error::Error::HTTP(e) => PaymentError::Generic {
+                err: format!("Could not contact servers: {e:?}"),
+            },
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },

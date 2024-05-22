@@ -78,12 +78,6 @@ impl CstDecode<crate::model::RestoreRequest> for *mut wire_cst_restore_request {
         CstDecode::<crate::model::RestoreRequest>::cst_decode(*wrap).into()
     }
 }
-impl CstDecode<u32> for *mut u32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> u32 {
-        unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
-    }
-}
 impl CstDecode<u64> for *mut u64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u64 {
@@ -113,6 +107,8 @@ impl CstDecode<crate::model::GetInfoResponse> for wire_cst_get_info_response {
     fn cst_decode(self) -> crate::model::GetInfoResponse {
         crate::model::GetInfoResponse {
             balance_sat: self.balance_sat.cst_decode(),
+            pending_send_sat: self.pending_send_sat.cst_decode(),
+            pending_receive_sat: self.pending_receive_sat.cst_decode(),
             pubkey: self.pubkey.cst_decode(),
         }
     }
@@ -140,12 +136,13 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Payment {
         crate::model::Payment {
-            id: self.id.cst_decode(),
+            tx_id: self.tx_id.cst_decode(),
+            swap_id: self.swap_id.cst_decode(),
             timestamp: self.timestamp.cst_decode(),
             amount_sat: self.amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
             payment_type: self.payment_type.cst_decode(),
-            invoice: self.invoice.cst_decode(),
+            status: self.status.cst_decode(),
         }
     }
 }
@@ -177,7 +174,7 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
-                    txid: ans.txid.cst_decode(),
+                    refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
             11 => {
@@ -285,6 +282,8 @@ impl NewWithNullPtr for wire_cst_get_info_response {
     fn new_with_null_ptr() -> Self {
         Self {
             balance_sat: Default::default(),
+            pending_send_sat: Default::default(),
+            pending_receive_sat: Default::default(),
             pubkey: core::ptr::null_mut(),
         }
     }
@@ -297,12 +296,13 @@ impl Default for wire_cst_get_info_response {
 impl NewWithNullPtr for wire_cst_payment {
     fn new_with_null_ptr() -> Self {
         Self {
-            id: core::ptr::null_mut(),
-            timestamp: core::ptr::null_mut(),
+            tx_id: core::ptr::null_mut(),
+            swap_id: core::ptr::null_mut(),
+            timestamp: Default::default(),
             amount_sat: Default::default(),
             fees_sat: core::ptr::null_mut(),
             payment_type: Default::default(),
-            invoice: core::ptr::null_mut(),
+            status: Default::default(),
         }
     }
 }
@@ -436,12 +436,8 @@ pub extern "C" fn frbgen_breez_liquid_wire_get_info(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire_list_payments(
-    port_: i64,
-    with_scan: bool,
-    include_pending: bool,
-) {
-    wire_list_payments_impl(port_, with_scan, include_pending)
+pub extern "C" fn frbgen_breez_liquid_wire_list_payments(port_: i64) {
+    wire_list_payments_impl(port_)
 }
 
 #[no_mangle]
@@ -538,11 +534,6 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_restore_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
-    flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_64(value: u64) -> *mut u64 {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
@@ -586,6 +577,8 @@ pub struct wire_cst_get_info_request {
 #[derive(Clone, Copy)]
 pub struct wire_cst_get_info_response {
     balance_sat: u64,
+    pending_send_sat: u64,
+    pending_receive_sat: u64,
     pubkey: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
@@ -603,12 +596,13 @@ pub struct wire_cst_list_prim_u_8_strict {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_payment {
-    id: *mut wire_cst_list_prim_u_8_strict,
-    timestamp: *mut u32,
+    tx_id: *mut wire_cst_list_prim_u_8_strict,
+    swap_id: *mut wire_cst_list_prim_u_8_strict,
+    timestamp: u32,
     amount_sat: u64,
     fees_sat: *mut u64,
     payment_type: i32,
-    invoice: *mut wire_cst_list_prim_u_8_strict,
+    status: i32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -640,7 +634,7 @@ pub struct wire_cst_PaymentError_LwkError {
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_Refunded {
     err: *mut wire_cst_list_prim_u_8_strict,
-    txid: *mut wire_cst_list_prim_u_8_strict,
+    refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

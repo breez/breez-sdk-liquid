@@ -28,7 +28,7 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.persistError() = PaymentError_PersistError;
   const factory PaymentError.refunded({
     required String err,
-    required String txid,
+    required String refundTxId,
   }) = PaymentError_Refunded;
   const factory PaymentError.sendError({
     required String err,

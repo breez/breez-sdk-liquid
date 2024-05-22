@@ -81,6 +81,8 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
             getInfoResponse,
             arrayOf(
                 "balanceSat",
+                "pendingSendSat",
+                "pendingReceiveSat",
                 "pubkey",
             ),
         )
@@ -88,9 +90,13 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
         return null
     }
     val balanceSat = getInfoResponse.getDouble("balanceSat").toULong()
+    val pendingSendSat = getInfoResponse.getDouble("pendingSendSat").toULong()
+    val pendingReceiveSat = getInfoResponse.getDouble("pendingReceiveSat").toULong()
     val pubkey = getInfoResponse.getString("pubkey")!!
     return GetInfoResponse(
         balanceSat,
+        pendingSendSat,
+        pendingReceiveSat,
         pubkey,
     )
 }
@@ -98,6 +104,8 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
 fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap {
     return readableMapOf(
         "balanceSat" to getInfoResponse.balanceSat,
+        "pendingSendSat" to getInfoResponse.pendingSendSat,
+        "pendingReceiveSat" to getInfoResponse.pendingReceiveSat,
         "pubkey" to getInfoResponse.pubkey,
     )
 }

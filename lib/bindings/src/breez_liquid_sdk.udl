@@ -37,6 +37,8 @@ dictionary GetInfoRequest {
 
 dictionary GetInfoResponse {
     u64 balance_sat;
+    u64 pending_send_sat;
+    u64 pending_receive_sat;
     string pubkey;
 };
 
@@ -91,6 +93,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=LiquidSdkError]
+    void sync();
 
     [Throws=LiquidSdkError]
     void backup();

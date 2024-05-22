@@ -57,12 +57,12 @@ pub fn receive_payment(
         .receive_payment(&req)
 }
 
-pub fn list_payments(with_scan: bool, include_pending: bool) -> Result<Vec<Payment>> {
+pub fn list_payments() -> Result<Vec<Payment>> {
     LIQUID_SDK_INSTANCE
         .get()
         .ok_or(anyhow!("Not initialized"))
         .map_err(|e| LiquidSdkError::Generic { err: e.to_string() })?
-        .list_payments(with_scan, include_pending)
+        .list_payments()
 }
 
 pub fn empty_wallet_cache() -> Result<()> {

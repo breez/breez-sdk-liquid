@@ -1,9 +1,13 @@
 use std::net::TcpStream;
+use std::str::FromStr;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::swaps::boltzv2::SwapUpdate;
 use log::{error, info};
 use tungstenite::{stream::MaybeTlsStream, WebSocket};
+
+use crate::error::PaymentError;
 
 /// Fetch the swap status using the websocket endpoint
 pub(crate) fn get_swap_status_v2(
@@ -64,4 +68,17 @@ pub(crate) fn get_swap_status_v2(
             }
         }
     }
+}
+
+pub(crate) fn now() -> u32 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as u32
+}
+
+pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, PaymentError> {
+    boltz_client::PublicKey::from_str(json).map_err(|e| PaymentError::Generic {
+        err: format!("Failed to deserialize PublicKey: {e:?}"),
+    })
 }

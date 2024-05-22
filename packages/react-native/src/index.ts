@@ -29,6 +29,8 @@ export interface GetInfoRequest {
 
 export interface GetInfoResponse {
     balanceSat: number
+    pendingSendSat: number
+    pendingReceiveSat: number
     pubkey: string
 }
 
@@ -96,6 +98,10 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
     return response
+}
+
+export const sync = async (): Promise<void> => {
+    await BreezLiquidSDK.sync()
 }
 
 export const backup = async (): Promise<void> => {

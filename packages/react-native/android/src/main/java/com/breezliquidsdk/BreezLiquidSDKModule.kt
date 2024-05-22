@@ -162,6 +162,18 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
+    fun sync(promise: Promise) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().sync()
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun backup(promise: Promise) {
         executor.execute {
             try {

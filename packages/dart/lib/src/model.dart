@@ -47,16 +47,26 @@ class GetInfoRequest {
 }
 
 class GetInfoResponse {
+  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
   final int balanceSat;
+
+  /// Amount that is being used for ongoing Send swaps
+  final int pendingSendSat;
+
+  /// Incoming amount that is pending from ongoing Receive swaps
+  final int pendingReceiveSat;
   final String pubkey;
 
   const GetInfoResponse({
     required this.balanceSat,
+    required this.pendingSendSat,
+    required this.pendingReceiveSat,
     required this.pubkey,
   });
 
   @override
-  int get hashCode => balanceSat.hashCode ^ pubkey.hashCode;
+  int get hashCode =>
+      balanceSat.hashCode ^ pendingSendSat.hashCode ^ pendingReceiveSat.hashCode ^ pubkey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -64,6 +74,8 @@ class GetInfoResponse {
       other is GetInfoResponse &&
           runtimeType == other.runtimeType &&
           balanceSat == other.balanceSat &&
+          pendingSendSat == other.pendingSendSat &&
+          pendingReceiveSat == other.pendingReceiveSat &&
           pubkey == other.pubkey;
 }
 
@@ -73,50 +85,86 @@ enum Network {
   ;
 }
 
+enum NewSwapState {
+  created,
+  pending,
+  complete,
+  failed,
+  ;
+}
+
+/// Represents an SDK payment.
+///
+/// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 class Payment {
-  final String? id;
-  final int? timestamp;
+  /// The tx ID of the onchain transaction
+  final String txId;
+
+  /// The swap ID, if any swap is associated with this payment
+  final String? swapId;
+
+  /// Composite timestamp that can be used for sorting or displaying the payment.
+  ///
+  /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
+  /// in time when the underlying tx was included in a block. If there is no associated swap
+  /// available and the underlying tx is not yet confirmed, the value is `now()`.
+  final int timestamp;
+
+  /// The payment amount, which corresponds to the onchain tx amount.
+  ///
+  /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
   final int amountSat;
+
+  /// If a swap is associated with this payment, this represents the total fees paid by the
+  /// sender. In other words, it's the delta between the amount that was sent and the amount
+  /// received.
   final int? feesSat;
   final PaymentType paymentType;
-  final String? invoice;
+
+  /// Composite status representing the overall status of the payment.
+  ///
+  /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
+  ///
+  /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
+  final NewSwapState status;
 
   const Payment({
-    this.id,
-    this.timestamp,
+    required this.txId,
+    this.swapId,
+    required this.timestamp,
     required this.amountSat,
     this.feesSat,
     required this.paymentType,
-    this.invoice,
+    required this.status,
   });
 
   @override
   int get hashCode =>
-      id.hashCode ^
+      txId.hashCode ^
+      swapId.hashCode ^
       timestamp.hashCode ^
       amountSat.hashCode ^
       feesSat.hashCode ^
       paymentType.hashCode ^
-      invoice.hashCode;
+      status.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Payment &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
+          txId == other.txId &&
+          swapId == other.swapId &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
           paymentType == other.paymentType &&
-          invoice == other.invoice;
+          status == other.status;
 }
 
 enum PaymentType {
-  sent,
-  received,
-  pendingReceive,
-  pendingSend,
+  receive,
+  send,
   ;
 }
 
