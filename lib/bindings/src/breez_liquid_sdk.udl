@@ -80,7 +80,7 @@ dictionary Payment {
     u64 amount_sat;
     u64? fees_sat = null;
     PaymentType payment_type;
-    PaymentStatus status;
+    PaymentState status;
 };
 
 enum PaymentType {
@@ -88,9 +88,11 @@ enum PaymentType {
     "Send",
 };
 
-enum PaymentStatus {
+enum PaymentState {
+    "Created",
     "Pending",
     "Complete",
+    "Failed",
 };
 
 namespace breez_liquid_sdk {
