@@ -319,9 +319,8 @@ impl LiquidSdk {
             }
 
             SubSwapStates::TransactionClaimed => {
-                warn!("Swap-in {id} has already been claimed, marking it as Complete");
-                // If app was stopped after broadcasting the claim but before we transitioned to Complete
-                self.try_handle_send_swap_update(id, Complete, None, None)?;
+                warn!("Swap-in {id} has already been claimed");
+                // TODO Verify preimage, or check that lockup funds are spent
                 Ok(())
             }
 
