@@ -304,7 +304,6 @@ impl LiquidSdk {
                     &keypair,
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
-                self.try_handle_send_swap_update(id, Complete, None, None)?;
 
                 // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
                 // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -588,6 +587,8 @@ impl LiquidSdk {
         debug!("Received claim tx details: {:?}", &claim_tx_response);
 
         Self::verify_payment_hash(&claim_tx_response.preimage, invoice)?;
+        // After we confirm the preimage is correct, we mark this as complete
+        self.try_handle_send_swap_update(swap_id, Complete, None, None)?;
 
         let (partial_sig, pub_nonce) =
             refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
@@ -735,7 +736,6 @@ impl LiquidSdk {
                         &keypair,
                     )?;
                     debug!("Boltz successfully claimed the funds");
-                    self.try_handle_send_swap_update(swap_id, Complete, None, None)?;
 
                     BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::ReverseSubmarine);
 
