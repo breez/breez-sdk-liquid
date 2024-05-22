@@ -200,21 +200,16 @@ impl BoltzStatusStream {
         };
 
         if !is_ongoing_swap_already_tracked {
-            info!("Subscribing to status for ongoing swap ID {id}");
+            info!("Subscribing to status updates for ongoing swap ID {id}");
 
             let subscription = Subscription::new(&id);
-            let subscribe_json = serde_json::to_string(&subscription)
-                .map_err(|e| anyhow!("Invalid subscription msg: {e:?}"))
-                .unwrap();
-            socket
-                .send(tungstenite::Message::Text(subscribe_json))
-                .map_err(|e| anyhow!("Failed to subscribe to {id}: {e:?}"))
-                .unwrap();
-
-            match swap {
-                Swap::Send(_) => Self::mark_swap_as_tracked(&id, SwapType::Submarine),
-                Swap::Receive(_) => Self::mark_swap_as_tracked(&id, SwapType::ReverseSubmarine),
-            };
+            match serde_json::to_string(&subscription) {
+                Ok(subscribe_json) => match socket.send(Message::Text(subscribe_json)) {
+                    Ok(_) => Self::mark_swap_as_tracked(&id, swap.swap_type()),
+                    Err(e) => error!("Failed to subscribe to {id}: {e:?}"),
+                },
+                Err(e) => error!("Invalid subscription msg: {e:?}"),
+            }
         }
     }
 }
