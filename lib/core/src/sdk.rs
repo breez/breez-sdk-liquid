@@ -711,7 +711,6 @@ impl LiquidSdk {
             .send(tungstenite::Message::Text(subscribe_json))
             .map_err(|e| anyhow!("Failed to subscribe to websocket updates: {e:?}"))?;
 
-        // TODO Marking it as tracked does not avoid it being handled in the status stream loop
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
