@@ -31,6 +31,9 @@ class BindingLiquidSdk extends RustOpaque {
   Future<GetInfoResponse> getInfo({required GetInfoRequest req, dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(that: this, req: req, hint: hint);
 
+  Future<List<Payment>> listPayments({dynamic hint}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkListPayments(that: this, hint: hint);
+
   Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req, dynamic hint}) =>
       RustLib.instance.api
           .crateBindingsBindingLiquidSdkPrepareReceivePayment(that: this, req: req, hint: hint);
