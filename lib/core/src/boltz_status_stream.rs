@@ -4,6 +4,7 @@ use std::net::TcpStream;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
+use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Result};
 use boltz_client::swaps::{
@@ -11,7 +12,7 @@ use boltz_client::swaps::{
     boltzv2::{Subscription, SwapUpdate},
 };
 use boltz_client::SwapType;
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{Message, WebSocket};
 
@@ -59,14 +60,23 @@ impl BoltzStatusStream {
         };
     }
 
-    pub(super) fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
-        // Track subscribed swap IDs
+    fn connect(sdk: Arc<LiquidSdk>) -> Result<WebSocket<MaybeTlsStream<TcpStream>>> {
         let mut socket = sdk
             .boltz_client_v2()
             .connect_ws()
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
         set_stream_nonblocking(socket.get_mut())?;
+        Ok(socket)
+    }
 
+    pub(super) fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
+        let mut socket = Self::connect(sdk.clone())?;
+
+        let reconnect_delay = Duration::from_secs(15);
+        let keep_alive_ping_interval = Duration::from_secs(15);
+        let mut keep_alive_last_ping_ts = Instant::now();
+
+        // Outer loop: reconnects in case the connection is lost
         thread::spawn(move || loop {
             // Initially subscribe to all ongoing swaps
             match sdk.list_ongoing_swaps() {
@@ -79,7 +89,20 @@ impl BoltzStatusStream {
                 Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
             }
 
+            // Inner loop: iterates over incoming messages and handles them
             loop {
+                // Decide if we send a keep-alive ping or not
+                if Instant::now()
+                    .duration_since(keep_alive_last_ping_ts)
+                    .gt(&keep_alive_ping_interval)
+                {
+                    match socket.send(Message::Ping(vec![])) {
+                        Ok(_) => debug!("Sent keep-alive ping"),
+                        Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
+                    }
+                    keep_alive_last_ping_ts = Instant::now();
+                }
+
                 match &socket.read() {
                     Ok(Message::Close(_)) => {
                         warn!("Received close msg, exiting socket loop");
@@ -170,6 +193,22 @@ impl BoltzStatusStream {
                                 break;
                             }
                         }
+                    }
+                    Err(tungstenite::Error::AlreadyClosed) => {
+                        thread::sleep(reconnect_delay);
+                        info!("Re-connecting...");
+                        match Self::connect(sdk.clone()) {
+                            Ok(new_socket) => {
+                                socket = new_socket;
+                                info!("Re-connected to WS stream");
+
+                                // Clear monitored swaps, so on re-connect we re-subscribe to them
+                                swap_in_ids().lock().unwrap().clear();
+                                swap_out_ids().lock().unwrap().clear();
+                            }
+                            Err(e) => warn!("Failed to re-connected to WS stream: {e:}"),
+                        };
+                        break;
                     }
                     Err(e) => {
                         error!("Received stream error : {e:?}");
