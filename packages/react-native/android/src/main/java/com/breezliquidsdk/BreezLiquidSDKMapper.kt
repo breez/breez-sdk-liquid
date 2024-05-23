@@ -121,6 +121,61 @@ fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
     return list
 }
 
+fun asPayment(payment: ReadableMap): Payment? {
+    if (!validateMandatoryFields(
+            payment,
+            arrayOf(
+                "txId",
+                "timestamp",
+                "amountSat",
+                "paymentType",
+                "status",
+            ),
+        )
+    ) {
+        return null
+    }
+    val txId = payment.getString("txId")!!
+    val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
+    val timestamp = payment.getInt("timestamp").toUInt()
+    val amountSat = payment.getDouble("amountSat").toULong()
+    val feesSat = if (hasNonNullKey(payment, "feesSat")) payment.getDouble("feesSat").toULong() else null
+    val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
+    val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    return Payment(
+        txId,
+        swapId,
+        timestamp,
+        amountSat,
+        feesSat,
+        paymentType,
+        status,
+    )
+}
+
+fun readableMapOf(payment: Payment): ReadableMap {
+    return readableMapOf(
+        "txId" to payment.txId,
+        "swapId" to payment.swapId,
+        "timestamp" to payment.timestamp,
+        "amountSat" to payment.amountSat,
+        "feesSat" to payment.feesSat,
+        "paymentType" to payment.paymentType.name.lowercase(),
+        "status" to payment.status.name.lowercase(),
+    )
+}
+
+fun asPaymentList(arr: ReadableArray): List<Payment> {
+    val list = ArrayList<Payment>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPayment(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveRequest? {
     if (!validateMandatoryFields(
             prepareReceiveRequest,
@@ -377,6 +432,36 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     return list
 }
 
+fun asPaymentState(type: String): PaymentState {
+    return PaymentState.valueOf(camelToUpperSnakeCase(type))
+}
+
+fun asPaymentStateList(arr: ReadableArray): List<PaymentState> {
+    val list = ArrayList<PaymentState>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is String -> list.add(asPaymentState(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPaymentType(type: String): PaymentType {
+    return PaymentType.valueOf(camelToUpperSnakeCase(type))
+}
+
+fun asPaymentTypeList(arr: ReadableArray): List<PaymentType> {
+    val list = ArrayList<PaymentType>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is String -> list.add(asPaymentType(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun readableMapOf(vararg values: Pair<String, *>): ReadableMap {
     val map = Arguments.createMap()
     for ((key, value) in values) {
@@ -409,6 +494,7 @@ fun pushToArray(
 ) {
     when (value) {
         null -> array.pushNull()
+        is Payment -> array.pushMap(readableMapOf(value))
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))
         else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))

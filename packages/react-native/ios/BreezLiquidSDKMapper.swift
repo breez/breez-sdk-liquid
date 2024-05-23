@@ -131,6 +131,80 @@ enum BreezLiquidSDKMapper {
         return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
     }
 
+    static func asPayment(payment: [String: Any?]) throws -> Payment {
+        guard let txId = payment["txId"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txId", typeName: "Payment"))
+        }
+        var swapId: String?
+        if hasNonNilKey(data: payment, key: "swapId") {
+            guard let swapIdTmp = payment["swapId"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "swapId"))
+            }
+            swapId = swapIdTmp
+        }
+        guard let timestamp = payment["timestamp"] as? UInt32 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "Payment"))
+        }
+        guard let amountSat = payment["amountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "Payment"))
+        }
+        var feesSat: UInt64?
+        if hasNonNilKey(data: payment, key: "feesSat") {
+            guard let feesSatTmp = payment["feesSat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "feesSat"))
+            }
+            feesSat = feesSatTmp
+        }
+        guard let paymentTypeTmp = payment["paymentType"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentType", typeName: "Payment"))
+        }
+        let paymentType = try asPaymentType(paymentType: paymentTypeTmp)
+
+        guard let statusTmp = payment["status"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "status", typeName: "Payment"))
+        }
+        let status = try asPaymentState(paymentState: statusTmp)
+
+        return Payment(
+            txId: txId,
+            swapId: swapId,
+            timestamp: timestamp,
+            amountSat: amountSat,
+            feesSat: feesSat,
+            paymentType: paymentType,
+            status: status
+        )
+    }
+
+    static func dictionaryOf(payment: Payment) -> [String: Any?] {
+        return [
+            "txId": payment.txId,
+            "swapId": payment.swapId == nil ? nil : payment.swapId,
+            "timestamp": payment.timestamp,
+            "amountSat": payment.amountSat,
+            "feesSat": payment.feesSat == nil ? nil : payment.feesSat,
+            "paymentType": valueOf(paymentType: payment.paymentType),
+            "status": valueOf(paymentState: payment.status),
+        ]
+    }
+
+    static func asPaymentList(arr: [Any]) throws -> [Payment] {
+        var list = [Payment]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var payment = try asPayment(payment: val)
+                list.append(payment)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Payment"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(paymentList: [Payment]) -> [Any] {
+        return paymentList.map { v -> [String: Any?] in dictionaryOf(payment: v) }
+    }
+
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
         guard let payerAmountSat = prepareReceiveRequest["payerAmountSat"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareReceiveRequest"))
@@ -411,6 +485,96 @@ enum BreezLiquidSDKMapper {
                 list.append(network)
             } else {
                 throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Network"))
+            }
+        }
+        return list
+    }
+
+    static func asPaymentState(paymentState: String) throws -> PaymentState {
+        switch paymentState {
+        case "created":
+            return PaymentState.created
+
+        case "pending":
+            return PaymentState.pending
+
+        case "complete":
+            return PaymentState.complete
+
+        case "failed":
+            return PaymentState.failed
+
+        default: throw LiquidSdkError.Generic(message: "Invalid variant \(paymentState) for enum PaymentState")
+        }
+    }
+
+    static func valueOf(paymentState: PaymentState) -> String {
+        switch paymentState {
+        case .created:
+            return "created"
+
+        case .pending:
+            return "pending"
+
+        case .complete:
+            return "complete"
+
+        case .failed:
+            return "failed"
+        }
+    }
+
+    static func arrayOf(paymentStateList: [PaymentState]) -> [String] {
+        return paymentStateList.map { v -> String in valueOf(paymentState: v) }
+    }
+
+    static func asPaymentStateList(arr: [Any]) throws -> [PaymentState] {
+        var list = [PaymentState]()
+        for value in arr {
+            if let val = value as? String {
+                var paymentState = try asPaymentState(paymentState: val)
+                list.append(paymentState)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PaymentState"))
+            }
+        }
+        return list
+    }
+
+    static func asPaymentType(paymentType: String) throws -> PaymentType {
+        switch paymentType {
+        case "receive":
+            return PaymentType.receive
+
+        case "send":
+            return PaymentType.send
+
+        default: throw LiquidSdkError.Generic(message: "Invalid variant \(paymentType) for enum PaymentType")
+        }
+    }
+
+    static func valueOf(paymentType: PaymentType) -> String {
+        switch paymentType {
+        case .receive:
+            return "receive"
+
+        case .send:
+            return "send"
+        }
+    }
+
+    static func arrayOf(paymentTypeList: [PaymentType]) -> [String] {
+        return paymentTypeList.map { v -> String in valueOf(paymentType: v) }
+    }
+
+    static func asPaymentTypeList(arr: [Any]) throws -> [PaymentType] {
+        var list = [PaymentType]()
+        for value in arr {
+            if let val = value as? String {
+                var paymentType = try asPaymentType(paymentType: val)
+                list.append(paymentType)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PaymentType"))
             }
         }
         return list

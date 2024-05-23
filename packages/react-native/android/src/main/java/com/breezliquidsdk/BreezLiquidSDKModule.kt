@@ -162,6 +162,18 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
+    fun listPayments(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().listPayments()
+                promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun sync(promise: Promise) {
         executor.execute {
             try {
