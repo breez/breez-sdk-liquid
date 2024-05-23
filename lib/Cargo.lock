@@ -1632,8 +1632,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23e38fe0faf119f2cf6fb95f4ed3712ce694a1ec791e1c419097f4cbeb49a83e"
+source = "git+https://github.com/ok300/lwk?branch=ok300-history-fields-public#57ff57e30bbd3561562f61cf5b278bc6a6d716cd"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.21.7",

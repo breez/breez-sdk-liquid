@@ -23,6 +23,9 @@ use boltz_client::{
 use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
+use lwk_wollet::bitcoin::Witness;
+use lwk_wollet::elements::hex::ToHex;
+use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
@@ -299,7 +302,7 @@ impl LiquidSdk {
                 )
                 .map_err(|e| anyhow!("Could not rebuild refund details for swap-in {id}: {e:?}"))?;
 
-                self.post_submarine_claim_details(
+                self.cooperate_send_swap_claim(
                     id,
                     &swap_script,
                     &ongoing_send_swap.invoice,
@@ -322,7 +325,16 @@ impl LiquidSdk {
 
             SubSwapStates::TransactionClaimed => {
                 warn!("Swap-in {id} has already been claimed");
-                // TODO Verify preimage, or check that lockup funds are spent
+
+                let preimage = match self.boltz_client_v2().get_claim_tx_details(&id.to_string()) {
+                    Ok(claim_tx_details) => claim_tx_details.preimage,
+                    Err(_) => {
+                        warn!("Failed to get cooperative claim tx details, checking for non-cooperative claim tx onchain");
+                        self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?
+                    }
+                };
+
+                self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)?;
                 Ok(())
             }
 
@@ -572,7 +584,20 @@ impl LiquidSdk {
         }
     }
 
-    fn post_submarine_claim_details(
+    /// Check if the provided preimage matches our invoice. If so, mark the Send payment as [Complete].
+    fn validate_send_swap_preimage(
+        &self,
+        swap_id: &str,
+        invoice: &str,
+        preimage: &str,
+    ) -> Result<(), PaymentError> {
+        Self::verify_payment_hash(preimage, invoice)?;
+        info!("Preimage is valid for Send Swap {swap_id}");
+        self.try_handle_send_swap_update(swap_id, Complete, Some(preimage), None, None)
+    }
+
+    /// Interact with Boltz to assist in them doing a cooperative claim
+    fn cooperate_send_swap_claim(
         &self,
         swap_id: &str,
         swap_script: &LBtcSwapScriptV2,
@@ -584,18 +609,9 @@ impl LiquidSdk {
         let refund_tx = self.new_refund_tx(swap_script)?;
 
         let claim_tx_response = client.get_claim_tx_details(&swap_id.to_string())?;
-
         debug!("Received claim tx details: {:?}", &claim_tx_response);
 
-        Self::verify_payment_hash(&claim_tx_response.preimage, invoice)?;
-        // After we confirm the preimage is correct, we mark this as complete
-        self.try_handle_send_swap_update(
-            swap_id,
-            Complete,
-            Some(&claim_tx_response.preimage),
-            None,
-            None,
-        )?;
+        self.validate_send_swap_preimage(swap_id, invoice, &claim_tx_response.preimage)?;
 
         let (partial_sig, pub_nonce) =
             refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
@@ -742,12 +758,7 @@ impl LiquidSdk {
                 SubSwapStates::TransactionClaimPending => {
                     // TODO Consolidate status handling: merge with and reuse try_handle_send_swap_boltz_status
 
-                    self.post_submarine_claim_details(
-                        swap_id,
-                        &swap_script,
-                        &req.invoice,
-                        &keypair,
-                    )?;
+                    self.cooperate_send_swap_claim(swap_id, &swap_script, &req.invoice, &keypair)?;
                     debug!("Boltz successfully claimed the funds");
 
                     BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::Submarine);
@@ -993,6 +1004,75 @@ impl LiquidSdk {
         }
 
         Ok(())
+    }
+
+    fn get_preimage_from_script_path_claim_spend(
+        &self,
+        swap: &SendSwap,
+    ) -> Result<String, PaymentError> {
+        info!("Retrieving preimage from non-cooperative claim tx");
+
+        let id = &swap.id;
+        let keypair = self.get_submarine_keys(0)?;
+        let create_response = swap.get_boltz_create_response()?;
+        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+
+        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
+            &create_response,
+            keypair.public_key().into(),
+        )?;
+        let swap_script_pk = swap_script.to_address(self.network.into())?.script_pubkey();
+        debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
+
+        // Get tx history of the swap script (lockup address)
+        let history: Vec<_> = electrum_client
+            .get_scripts_history(&[&swap_script_pk])?
+            .into_iter()
+            .flatten()
+            .collect();
+
+        // We expect at most 2 txs: lockup and maybe the claim
+        ensure_sdk!(
+            history.len() <= 2,
+            PaymentError::Generic {
+                err: "Lockup address history for Send Swap {id} has more than 2 txs".to_string()
+            }
+        );
+
+        match history.get(1) {
+            None => Err(PaymentError::Generic {
+                err: format!("Send Swap {id} has no claim tx"),
+            }),
+            Some(claim_tx_entry) => {
+                let claim_tx_id = claim_tx_entry.txid;
+                debug!("Send Swap {id} has claim tx {claim_tx_id}");
+
+                let claim_tx = electrum_client
+                    .get_transactions(&[claim_tx_id])
+                    .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
+                    .first()
+                    .cloned()
+                    .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
+
+                let input = claim_tx
+                    .input
+                    .first()
+                    .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
+
+                let script_witness_bytes = input.clone().witness.script_witness;
+                let script_witness = Witness::from(script_witness_bytes);
+
+                let preimage_bytes = script_witness
+                    .nth(1)
+                    .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
+                let preimage = sha256::Hash::from_slice(preimage_bytes)
+                    .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
+                let preimage_hex = preimage.to_hex();
+                debug!("Found Send Swap {id} claim tx preimage: {preimage_hex}");
+
+                Ok(preimage_hex)
+            }
+        }
     }
 
     /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
