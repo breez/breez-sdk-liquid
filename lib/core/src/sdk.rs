@@ -199,10 +199,10 @@ impl LiquidSdk {
         info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
 
         let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_swap_in(&con, swap_id)
+        let swap = Persister::fetch_send_swap(&con, swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
+                err: format!("Send Swap not found {swap_id}"),
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
@@ -279,17 +279,17 @@ impl LiquidSdk {
         info!("Handling submarine swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
-        let ongoing_swap_in = Persister::fetch_swap_in(&con, id)?
-            .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
+        let ongoing_send_swap = Persister::fetch_send_swap(&con, id)?
+            .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
         let create_response: CreateSubmarineResponse =
-            ongoing_swap_in.get_boltz_create_response()?;
+            ongoing_send_swap.get_boltz_create_response()?;
 
-        let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
+        let receiver_amount_sat = get_invoice_amount!(ongoing_send_swap.invoice);
         let keypair = self.get_submarine_keys(0)?;
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
-                let lockup_tx_id = ongoing_swap_in.lockup_tx_id.ok_or(anyhow!(
+                let lockup_tx_id = ongoing_send_swap.lockup_tx_id.ok_or(anyhow!(
                     "Swap-in {id} is pending but no lockup txid is present"
                 ))?;
 
@@ -302,7 +302,7 @@ impl LiquidSdk {
                 self.post_submarine_claim_details(
                     id,
                     &swap_script,
-                    &ongoing_swap_in.invoice,
+                    &ongoing_send_swap.invoice,
                     &keypair,
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
@@ -312,7 +312,7 @@ impl LiquidSdk {
                 self.persister.insert_or_update_payment(PaymentTxData {
                     tx_id: lockup_tx_id,
                     timestamp: None,
-                    amount_sat: ongoing_swap_in.payer_amount_sat,
+                    amount_sat: ongoing_send_swap.payer_amount_sat,
                     payment_type: PaymentType::Send,
                     is_confirmed: false,
                 })?;
@@ -681,7 +681,7 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
-        self.persister.insert_swap_in(SendSwap {
+        self.persister.insert_send_swap(SendSwap {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -719,7 +719,7 @@ impl LiquidSdk {
                     // Check that we have not persisted the swap already
                     let con = self.persister.get_connection()?;
 
-                    if let Some(ongoing_swap) = Persister::fetch_swap_in(&con, swap_id)
+                    if let Some(ongoing_swap) = Persister::fetch_send_swap(&con, swap_id)
                         .map_err(|_| PaymentError::PersistError)?
                     {
                         if ongoing_swap.lockup_tx_id.is_some() {

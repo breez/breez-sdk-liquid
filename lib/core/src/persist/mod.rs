@@ -79,17 +79,17 @@ impl Persister {
 
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let con = self.get_connection()?;
-        let ongoing_swap_ins: Vec<Swap> = self
+        let ongoing_send_swaps: Vec<Swap> = self
             .list_ongoing_send_swaps(&con)?
             .into_iter()
             .map(Swap::Send)
             .collect();
-        let ongoing_swap_outs: Vec<Swap> = self
+        let ongoing_receive_swaps: Vec<Swap> = self
             .list_ongoing_receive_swaps(&con)?
             .into_iter()
             .map(Swap::Receive)
             .collect();
-        Ok([ongoing_swap_ins, ongoing_swap_outs].concat())
+        Ok([ongoing_send_swaps, ongoing_receive_swaps].concat())
     }
 
     pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {

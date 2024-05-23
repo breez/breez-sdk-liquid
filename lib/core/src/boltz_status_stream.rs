@@ -19,17 +19,17 @@ use tungstenite::{Message, WebSocket};
 use crate::model::*;
 use crate::sdk::LiquidSdk;
 
-static SWAP_IN_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
-static SWAP_OUT_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
+static SEND_SWAP_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
+static RECEIVE_SWAP_IDS: OnceLock<Arc<Mutex<HashSet<String>>>> = OnceLock::new();
 
-fn swap_in_ids() -> &'static Arc<Mutex<HashSet<String>>> {
-    let swap_in_ids = Default::default();
-    SWAP_IN_IDS.get_or_init(|| swap_in_ids)
+fn send_swap_ids() -> &'static Arc<Mutex<HashSet<String>>> {
+    let send_swap_ids = Default::default();
+    SEND_SWAP_IDS.get_or_init(|| send_swap_ids)
 }
 
-fn swap_out_ids() -> &'static Arc<Mutex<HashSet<String>>> {
-    let swap_out_ids = Default::default();
-    SWAP_OUT_IDS.get_or_init(|| swap_out_ids)
+fn receive_swap_ids() -> &'static Arc<Mutex<HashSet<String>>> {
+    let receive_swap_ids = Default::default();
+    RECEIVE_SWAP_IDS.get_or_init(|| receive_swap_ids)
 }
 
 /// Set underlying TCP stream to nonblocking mode.
@@ -48,15 +48,15 @@ pub(super) struct BoltzStatusStream {}
 impl BoltzStatusStream {
     pub(super) fn mark_swap_as_tracked(id: &str, swap_type: SwapType) {
         match swap_type {
-            SwapType::Submarine => swap_in_ids().lock().unwrap().insert(id.to_string()),
-            SwapType::ReverseSubmarine => swap_out_ids().lock().unwrap().insert(id.to_string()),
+            SwapType::Submarine => send_swap_ids().lock().unwrap().insert(id.to_string()),
+            SwapType::ReverseSubmarine => receive_swap_ids().lock().unwrap().insert(id.to_string()),
         };
     }
 
     pub(super) fn unmark_swap_as_tracked(id: &str, swap_type: SwapType) {
         match swap_type {
-            SwapType::Submarine => swap_in_ids().lock().unwrap().remove(id),
-            SwapType::ReverseSubmarine => swap_out_ids().lock().unwrap().remove(id),
+            SwapType::Submarine => send_swap_ids().lock().unwrap().remove(id),
+            SwapType::ReverseSubmarine => receive_swap_ids().lock().unwrap().remove(id),
         };
     }
 
@@ -140,16 +140,14 @@ impl BoltzStatusStream {
                                 }) => {
                                     for boltz_client::swaps::boltzv2::Update { id, status } in args
                                     {
-                                        if Self::is_tracked_swap_in(&id) {
-                                            // Known OngoingSwapIn / Send swap
-
+                                        if Self::is_tracked_send_swap(&id) {
                                             match SubSwapStates::from_str(&status) {
                                                 Ok(new_state) => {
                                                     let res = sdk.try_handle_submarine_swap_status(
                                                         new_state,
                                                         &id,
                                                     );
-                                                    info!("OngoingSwapIn / send try_handle_submarine_swap_status res: {res:?}");
+                                                    info!("OngoingSendSwap / send try_handle_submarine_swap_status res: {res:?}");
                                                 }
                                                 Err(_) => error!("Received invalid SubSwapState for swap {id}: {status}")
                                             }
@@ -203,8 +201,8 @@ impl BoltzStatusStream {
                                 info!("Re-connected to WS stream");
 
                                 // Clear monitored swaps, so on re-connect we re-subscribe to them
-                                swap_in_ids().lock().unwrap().clear();
-                                swap_out_ids().lock().unwrap().clear();
+                                send_swap_ids().lock().unwrap().clear();
+                                receive_swap_ids().lock().unwrap().clear();
                             }
                             Err(e) => warn!("Failed to re-connected to WS stream: {e:}"),
                         };
@@ -221,18 +219,18 @@ impl BoltzStatusStream {
         Ok(())
     }
 
-    fn is_tracked_swap_in(id: &str) -> bool {
-        swap_in_ids().lock().unwrap().contains(id)
+    fn is_tracked_send_swap(id: &str) -> bool {
+        send_swap_ids().lock().unwrap().contains(id)
     }
 
     fn is_tracked_swap_out(id: &str) -> bool {
-        swap_out_ids().lock().unwrap().contains(id)
+        receive_swap_ids().lock().unwrap().contains(id)
     }
 
     fn maybe_subscribe_fn(swap: &Swap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>) {
         let id = swap.id();
         let is_ongoing_swap_already_tracked = match swap {
-            Swap::Send(_) => Self::is_tracked_swap_in(&id),
+            Swap::Send(_) => Self::is_tracked_send_swap(&id),
             Swap::Receive(_) => Self::is_tracked_swap_out(&id),
         };
 

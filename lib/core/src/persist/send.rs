@@ -11,7 +11,7 @@ use crate::model::*;
 use crate::persist::Persister;
 
 impl Persister {
-    pub(crate) fn insert_swap_in(&self, swap_in: SendSwap) -> Result<()> {
+    pub(crate) fn insert_send_swap(&self, send_swap: SendSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -30,21 +30,21 @@ impl Persister {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
-            swap_in.id,
-            swap_in.invoice,
-            swap_in.payer_amount_sat,
-            swap_in.receiver_amount_sat,
-            swap_in.create_response_json,
-            swap_in.lockup_tx_id,
-            swap_in.refund_tx_id,
-            swap_in.created_at,
-            swap_in.state,
+            send_swap.id,
+            send_swap.invoice,
+            send_swap.payer_amount_sat,
+            send_swap.receiver_amount_sat,
+            send_swap.create_response_json,
+            send_swap.lockup_tx_id,
+            send_swap.refund_tx_id,
+            send_swap.created_at,
+            send_swap.state,
         ))?;
 
         Ok(())
     }
 
-    fn list_swap_in_query(where_clauses: Vec<String>) -> String {
+    fn list_send_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
             where_clause_str = String::from("WHERE ");
@@ -70,13 +70,16 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_swap_in(con: &Connection, id: &str) -> rusqlite::Result<Option<SendSwap>> {
-        let query = Self::list_swap_in_query(vec!["id = ?1".to_string()]);
-        con.query_row(&query, [id], Self::sql_row_to_swap_in)
+    pub(crate) fn fetch_send_swap(
+        con: &Connection,
+        id: &str,
+    ) -> rusqlite::Result<Option<SendSwap>> {
+        let query = Self::list_send_swaps_query(vec!["id = ?1".to_string()]);
+        con.query_row(&query, [id], Self::sql_row_to_send_swap)
             .optional()
     }
 
-    fn sql_row_to_swap_in(row: &Row) -> rusqlite::Result<SendSwap> {
+    fn sql_row_to_send_swap(row: &Row) -> rusqlite::Result<SendSwap> {
         Ok(SendSwap {
             id: row.get(0)?,
             invoice: row.get(1)?,
@@ -95,10 +98,10 @@ impl Persister {
         con: &Connection,
         where_clauses: Vec<String>,
     ) -> rusqlite::Result<Vec<SendSwap>> {
-        let query = Self::list_swap_in_query(where_clauses);
+        let query = Self::list_send_swaps_query(where_clauses);
         let ongoing_send = con
             .prepare(&query)?
-            .query_map(params![], Self::sql_row_to_swap_in)?
+            .query_map(params![], Self::sql_row_to_send_swap)?
             .map(|i| i.unwrap())
             .collect();
         Ok(ongoing_send)
@@ -125,16 +128,16 @@ impl Persister {
         &self,
         con: &Connection,
     ) -> rusqlite::Result<Vec<SendSwap>> {
-        let query = Self::list_swap_in_query(vec!["state = ?1".to_string()]);
+        let query = Self::list_send_swaps_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
-            .query_map(params![PaymentState::Pending], Self::sql_row_to_swap_in)?
+            .query_map(params![PaymentState::Pending], Self::sql_row_to_send_swap)?
             .map(|i| i.unwrap())
             .collect();
         Ok(res)
     }
 
-    /// Pending swap ins, indexed by refund tx id
+    /// Pending Send swaps, indexed by refund tx id
     pub(crate) fn list_pending_send_swaps_by_refund_tx_id(
         &self,
         con: &Connection,
@@ -142,11 +145,11 @@ impl Persister {
         let res: HashMap<String, SendSwap> = self
             .list_pending_send_swaps(con)?
             .iter()
-            .filter_map(|pending_swap_in| {
-                pending_swap_in
+            .filter_map(|pending_send_swap| {
+                pending_send_swap
                     .refund_tx_id
                     .as_ref()
-                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_swap_in.clone()))
+                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_send_swap.clone()))
             })
             .collect();
         Ok(res)
