@@ -736,7 +736,7 @@ impl LiquidSdk {
                     )?;
                     debug!("Boltz successfully claimed the funds");
 
-                    BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::ReverseSubmarine);
+                    BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::Submarine);
 
                     result = Ok(SendPaymentResponse { txid: lockup_tx_id });
 
