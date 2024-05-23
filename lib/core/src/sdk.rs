@@ -176,10 +176,10 @@ impl LiquidSdk {
         );
 
         let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_swap_out(&con, swap_id)
+        let swap = Persister::fetch_receive_swap(&con, swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap Out not found {swap_id}"),
+                err: format!("Receive Swap not found {swap_id}"),
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
@@ -227,8 +227,8 @@ impl LiquidSdk {
         info!("Handling reverse swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
-        let swap_out = Persister::fetch_swap_out(&con, id)?
-            .ok_or(anyhow!("No ongoing swap out found for ID {id}"))?;
+        let receive_swap = Persister::fetch_receive_swap(&con, id)?
+            .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
         match swap_state {
             RevSwapStates::SwapExpired
@@ -244,11 +244,11 @@ impl LiquidSdk {
             RevSwapStates::TransactionMempool
             // The lockup tx is confirmed => try to claim
             | RevSwapStates::TransactionConfirmed => {
-                match swap_out.claim_tx_id {
+                match receive_swap.claim_tx_id {
                     Some(claim_tx_id) => {
                         warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_tx_id}")
                     }
-                    None => match self.try_claim(&swap_out) {
+                    None => match self.try_claim(&receive_swap) {
                         Ok(()) => {}
                         Err(err) => match err {
                             PaymentError::AlreadyClaimed => warn!("Funds already claimed for reverse swap {id}"),
@@ -786,19 +786,19 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim(&self, ongoing_swap_out: &ReceiveSwap) -> Result<(), PaymentError> {
+    fn try_claim(&self, ongoing_receive_swap: &ReceiveSwap) -> Result<(), PaymentError> {
         ensure_sdk!(
-            ongoing_swap_out.claim_tx_id.is_none(),
+            ongoing_receive_swap.claim_tx_id.is_none(),
             PaymentError::AlreadyClaimed
         );
 
-        let rev_swap_id = &ongoing_swap_out.id;
+        let rev_swap_id = &ongoing_receive_swap.id;
         debug!("Trying to claim reverse swap {rev_swap_id}",);
 
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
-        let create_response = ongoing_swap_out.get_boltz_create_response()?;
+        let create_response = ongoing_receive_swap.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
             our_keys.public_key().into(),
@@ -810,13 +810,13 @@ impl LiquidSdk {
             claim_address,
             &self.network_config(),
             self.boltz_url_v2().into(),
-            ongoing_swap_out.id.clone(),
+            ongoing_receive_swap.id.clone(),
         )?;
 
         let claim_tx = claim_tx_wrapper.sign_claim(
             &our_keys,
-            &Preimage::from_str(&ongoing_swap_out.preimage)?,
-            Amount::from_sat(ongoing_swap_out.claim_fees_sat),
+            &Preimage::from_str(&ongoing_receive_swap.preimage)?,
+            Amount::from_sat(ongoing_receive_swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
             Some((&self.boltz_client_v2(), rev_swap_id.clone())),
             // None
@@ -837,7 +837,7 @@ impl LiquidSdk {
         self.persister.insert_or_update_payment(PaymentTxData {
             tx_id: claim_tx_id,
             timestamp: None,
-            amount_sat: ongoing_swap_out.receiver_amount_sat,
+            amount_sat: ongoing_receive_swap.receiver_amount_sat,
             payment_type: PaymentType::Receive,
             is_confirmed: false,
         })?;
@@ -928,7 +928,7 @@ impl LiquidSdk {
             &invoice.to_string(),
         )?;
         self.persister
-            .insert_swap_out(ReceiveSwap {
+            .insert_receive_swap(ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,

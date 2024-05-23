@@ -151,15 +151,13 @@ impl BoltzStatusStream {
                                                 }
                                                 Err(_) => error!("Received invalid SubSwapState for swap {id}: {status}")
                                             }
-                                        } else if Self::is_tracked_swap_out(&id) {
-                                            // Known OngoingSwapOut / receive swap
-
+                                        } else if Self::is_tracked_receive_swap(&id) {
                                             match RevSwapStates::from_str(&status) {
                                                 Ok(new_state) => {
                                                     let res = sdk.try_handle_reverse_swap_status(
                                                         new_state, &id,
                                                     );
-                                                    info!("OngoingSwapOut / receive try_handle_reverse_swap_status res: {res:?}");
+                                                    info!("OngoingReceiveSwap / receive try_handle_reverse_swap_status res: {res:?}");
                                                 }
                                                 Err(_) => error!("Received invalid RevSwapState for swap {id}: {status}"),
                                             }
@@ -223,7 +221,7 @@ impl BoltzStatusStream {
         send_swap_ids().lock().unwrap().contains(id)
     }
 
-    fn is_tracked_swap_out(id: &str) -> bool {
+    fn is_tracked_receive_swap(id: &str) -> bool {
         receive_swap_ids().lock().unwrap().contains(id)
     }
 
@@ -231,7 +229,7 @@ impl BoltzStatusStream {
         let id = swap.id();
         let is_ongoing_swap_already_tracked = match swap {
             Swap::Send(_) => Self::is_tracked_send_swap(&id),
-            Swap::Receive(_) => Self::is_tracked_swap_out(&id),
+            Swap::Receive(_) => Self::is_tracked_receive_swap(&id),
         };
 
         if !is_ongoing_swap_already_tracked {
