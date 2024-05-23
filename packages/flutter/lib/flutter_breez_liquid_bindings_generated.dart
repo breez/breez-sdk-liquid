@@ -192,6 +192,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_send_response>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__connect(
     int port_,
     ffi.Pointer<wire_cst_connect_request> req,

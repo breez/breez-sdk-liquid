@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.35';
 
   @override
-  int get rustContentHash => -913565329;
+  int get rustContentHash => 2052012510;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -85,6 +85,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment(
       {required BindingLiquidSdk that, required PrepareSendResponse req, dynamic hint});
+
+  Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that, dynamic hint});
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint});
 
@@ -314,6 +316,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkSendPaymentConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_send_payment",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_sync(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkSyncConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkSyncConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_sync",
+        argNames: ["that"],
       );
 
   @override

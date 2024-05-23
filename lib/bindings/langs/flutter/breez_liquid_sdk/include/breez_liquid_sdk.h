@@ -166,6 +166,9 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(in
                                                                               uintptr_t that,
                                                                               struct wire_cst_prepare_send_response *req);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(int64_t port_,
+                                                                      uintptr_t that);
+
 void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
                                                         struct wire_cst_connect_request *req);
 
@@ -214,6 +217,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;
