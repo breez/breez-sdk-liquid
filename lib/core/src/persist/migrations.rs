@@ -22,7 +22,8 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             lockup_tx_id TEXT,
             refund_tx_id TEXT,
             created_at INTEGER NOT NULL,
-            state INTEGER NOT NULL
+            state INTEGER NOT NULL,
+            refund_private_key TEXT NOT NULL
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS payment_tx_data (
             tx_id TEXT NOT NULL PRIMARY KEY,

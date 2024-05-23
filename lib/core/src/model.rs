@@ -174,6 +174,7 @@ pub(crate) struct SendSwap {
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
+    pub(crate) refund_private_key: String,
 }
 impl SendSwap {
     pub(crate) fn get_boltz_create_response(

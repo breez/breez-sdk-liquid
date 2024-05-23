@@ -25,9 +25,10 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                refund_private_key
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             send_swap.id,
@@ -39,6 +40,7 @@ impl Persister {
             send_swap.refund_tx_id,
             send_swap.created_at,
             send_swap.state,
+            send_swap.refund_private_key,
         ))?;
 
         Ok(())
@@ -62,7 +64,8 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                refund_private_key
             FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -90,6 +93,7 @@ impl Persister {
             refund_tx_id: row.get(6)?,
             created_at: row.get(7)?,
             state: row.get(8)?,
+            refund_private_key: row.get(9)?,
         })
     }
 
