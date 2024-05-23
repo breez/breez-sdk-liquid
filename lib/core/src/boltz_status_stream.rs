@@ -143,23 +143,23 @@ impl BoltzStatusStream {
                                         if Self::is_tracked_send_swap(&id) {
                                             match SubSwapStates::from_str(&status) {
                                                 Ok(new_state) => {
-                                                    let res = sdk.try_handle_submarine_swap_status(
+                                                    let res = sdk.try_handle_send_swap_boltz_status(
                                                         new_state,
                                                         &id,
                                                     );
-                                                    info!("OngoingSendSwap / send try_handle_submarine_swap_status res: {res:?}");
+                                                    info!("Handled new Send Swap status from Boltz, result: {res:?}");
                                                 }
-                                                Err(_) => error!("Received invalid SubSwapState for swap {id}: {status}")
+                                                Err(_) => error!("Received invalid SubSwapState for Send Swap {id}: {status}")
                                             }
                                         } else if Self::is_tracked_receive_swap(&id) {
                                             match RevSwapStates::from_str(&status) {
                                                 Ok(new_state) => {
-                                                    let res = sdk.try_handle_reverse_swap_status(
+                                                    let res = sdk.try_handle_receive_swap_boltz_status(
                                                         new_state, &id,
                                                     );
-                                                    info!("OngoingReceiveSwap / receive try_handle_reverse_swap_status res: {res:?}");
+                                                    info!("Handled new Receive Swap status from Boltz, result: {res:?}");
                                                 }
-                                                Err(_) => error!("Received invalid RevSwapState for swap {id}: {status}"),
+                                                Err(_) => error!("Received invalid RevSwapState for Receive Swap {id}: {status}"),
                                             }
                                         } else {
                                             warn!("Received a status update for swap {id}, which is not tracked as ongoing")

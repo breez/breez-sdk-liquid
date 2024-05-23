@@ -217,14 +217,14 @@ impl LiquidSdk {
     }
 
     /// Handles status updates from Boltz for Receive swaps
-    pub(crate) fn try_handle_reverse_swap_status(
+    pub(crate) fn try_handle_receive_swap_boltz_status(
         &self,
         swap_state: RevSwapStates,
         id: &str,
     ) -> Result<()> {
         self.sync()?;
 
-        info!("Handling reverse swap transition to {swap_state:?} for swap {id}");
+        info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
         let receive_swap = Persister::fetch_receive_swap(&con, id)?
@@ -246,13 +246,13 @@ impl LiquidSdk {
             | RevSwapStates::TransactionConfirmed => {
                 match receive_swap.claim_tx_id {
                     Some(claim_tx_id) => {
-                        warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_tx_id}")
+                        warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => match self.try_claim(&receive_swap) {
                         Ok(()) => {}
                         Err(err) => match err {
-                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for reverse swap {id}"),
-                            _ => error!("Claim reverse swap {id} failed: {err}")
+                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
+                            _ => error!("Claim for Receive Swap {id} failed: {err}")
                         }
                     },
                 }
@@ -269,14 +269,14 @@ impl LiquidSdk {
     }
 
     /// Handles status updates from Boltz for Send swaps
-    pub(crate) fn try_handle_submarine_swap_status(
+    pub(crate) fn try_handle_send_swap_boltz_status(
         &self,
         swap_state: SubSwapStates,
         id: &str,
     ) -> Result<()> {
         self.sync()?;
 
-        info!("Handling submarine swap transition to {swap_state:?} for swap {id}");
+        info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
         let ongoing_send_swap = Persister::fetch_send_swap(&con, id)?
@@ -345,7 +345,7 @@ impl LiquidSdk {
 
                 Ok(())
             }
-            _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
+            _ => Err(anyhow!("New state for Send Swap {id}: {swap_state:?}")),
         }
     }
 
@@ -740,7 +740,7 @@ impl LiquidSdk {
                 // Boltz has detected the lockup in the mempool, we can speed up
                 // the claim by doing so cooperatively
                 SubSwapStates::TransactionClaimPending => {
-                    // TODO Consolidate status handling: merge with and reuse try_handle_submarine_swap_status
+                    // TODO Consolidate status handling: merge with and reuse try_handle_send_swap_boltz_status
 
                     self.post_submarine_claim_details(
                         swap_id,
@@ -793,7 +793,7 @@ impl LiquidSdk {
         );
 
         let rev_swap_id = &ongoing_receive_swap.id;
-        debug!("Trying to claim reverse swap {rev_swap_id}",);
+        debug!("Trying to claim Receive Swap {rev_swap_id}",);
 
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
@@ -865,7 +865,7 @@ impl LiquidSdk {
             .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
-        debug!("Preparing reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+        debug!("Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         Ok(PrepareReceiveResponse {
             payer_amount_sat,
@@ -888,7 +888,7 @@ impl LiquidSdk {
         let new_fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
-        debug!("Creating reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+        debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         let lsk = self.get_liquid_swap_key()?;
 
