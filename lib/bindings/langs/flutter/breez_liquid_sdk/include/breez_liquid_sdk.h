@@ -63,6 +63,7 @@ typedef struct wire_cst_payment {
   uint32_t timestamp;
   uint64_t amount_sat;
   uint64_t *fees_sat;
+  struct wire_cst_list_prim_u_8_strict *preimage;
   int32_t payment_type;
   int32_t status;
 } wire_cst_payment;

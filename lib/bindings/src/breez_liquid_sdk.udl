@@ -79,6 +79,7 @@ dictionary Payment {
     u32 timestamp;
     u64 amount_sat;
     u64? fees_sat = null;
+    string? preimage = null;
     PaymentType payment_type;
     PaymentState status;
 };
