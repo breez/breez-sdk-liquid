@@ -87,6 +87,6 @@ enum Targets {
     return values.firstWhere((target) => target.triple == host);
   }
 
-  String get compiler => isWindows ? 'cargo xwin build' : 'cargo zigbuild';
+  String get compiler => isWindows ? 'cargo xwin build --package breez-liquid-sdk' : 'cargo zigbuild --package breez-liquid-sdk';
   String get libName => isWindows ? windowsLibName : linuxLibName;
 }
