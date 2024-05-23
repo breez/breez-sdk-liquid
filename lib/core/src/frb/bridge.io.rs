@@ -529,6 +529,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_se
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_sync_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
     port_: i64,
     req: *mut wire_cst_connect_request,

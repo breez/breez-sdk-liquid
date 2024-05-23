@@ -48,6 +48,10 @@ impl BindingLiquidSdk {
         self.sdk.list_payments()
     }
 
+    pub fn sync(&self) -> Result<(), LiquidSdkError> {
+        self.sdk.sync().map_err(Into::into)
+    }
+
     pub fn backup(&self) -> Result<(), LiquidSdkError> {
         self.sdk.backup().map_err(Into::into)
     }
