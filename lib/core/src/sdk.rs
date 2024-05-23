@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::mpsc;
 use std::time::Instant;
 use std::{
     fs,
@@ -645,8 +646,29 @@ impl LiquidSdk {
     }
 
     pub fn send_payment(
-        &self,
+        self: &Arc<LiquidSdk>,
         req: &PrepareSendResponse,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        let (tx, rx) = mpsc::channel();
+
+        let req = req.clone();
+        let sdk = self.clone();
+        thread::spawn(move || {
+            let res = sdk.send_payment_inner(req);
+            _ = tx.send(res);
+        });
+
+        let timeout_duration = Duration::from_secs(10);
+        rx.recv_timeout(timeout_duration)
+            .map_err(|_| PaymentError::Generic {
+                err: "Send Payment is taking longer than expected. Use list_payments to monitor when it's Complete.".to_string()
+            })?
+    }
+
+    /// Blocking method that only returns when the cooperative claim is broadcast (Payment is complete)
+    fn send_payment_inner(
+        &self,
+        req: PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
@@ -800,7 +822,7 @@ impl LiquidSdk {
             };
         }
 
-        socket.close(None).unwrap();
+        _ = socket.close(None);
         result
     }
 
