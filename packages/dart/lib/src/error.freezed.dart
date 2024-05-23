@@ -15,6 +15,121 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
+mixin _$LiquidSdkError {
+  String get err => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $LiquidSdkErrorCopyWith<LiquidSdkError> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $LiquidSdkErrorCopyWith<$Res> {
+  factory $LiquidSdkErrorCopyWith(LiquidSdkError value, $Res Function(LiquidSdkError) then) =
+      _$LiquidSdkErrorCopyWithImpl<$Res, LiquidSdkError>;
+  @useResult
+  $Res call({String err});
+}
+
+/// @nodoc
+class _$LiquidSdkErrorCopyWithImpl<$Res, $Val extends LiquidSdkError>
+    implements $LiquidSdkErrorCopyWith<$Res> {
+  _$LiquidSdkErrorCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_value.copyWith(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$LiquidSdkError_GenericImplCopyWith<$Res> implements $LiquidSdkErrorCopyWith<$Res> {
+  factory _$$LiquidSdkError_GenericImplCopyWith(
+          _$LiquidSdkError_GenericImpl value, $Res Function(_$LiquidSdkError_GenericImpl) then) =
+      __$$LiquidSdkError_GenericImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String err});
+}
+
+/// @nodoc
+class __$$LiquidSdkError_GenericImplCopyWithImpl<$Res>
+    extends _$LiquidSdkErrorCopyWithImpl<$Res, _$LiquidSdkError_GenericImpl>
+    implements _$$LiquidSdkError_GenericImplCopyWith<$Res> {
+  __$$LiquidSdkError_GenericImplCopyWithImpl(
+      _$LiquidSdkError_GenericImpl _value, $Res Function(_$LiquidSdkError_GenericImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_$LiquidSdkError_GenericImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LiquidSdkError_GenericImpl extends LiquidSdkError_Generic {
+  const _$LiquidSdkError_GenericImpl({required this.err}) : super._();
+
+  @override
+  final String err;
+
+  @override
+  String toString() {
+    return 'LiquidSdkError.generic(err: $err)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LiquidSdkError_GenericImpl &&
+            (identical(other.err, err) || other.err == err));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, err);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
+      __$$LiquidSdkError_GenericImplCopyWithImpl<_$LiquidSdkError_GenericImpl>(this, _$identity);
+}
+
+abstract class LiquidSdkError_Generic extends LiquidSdkError {
+  const factory LiquidSdkError_Generic({required final String err}) = _$LiquidSdkError_GenericImpl;
+  const LiquidSdkError_Generic._() : super._();
+
+  @override
+  String get err;
+  @override
+  @JsonKey(ignore: true)
+  _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$PaymentError {}
 
 /// @nodoc
