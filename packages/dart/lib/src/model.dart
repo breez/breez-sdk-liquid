@@ -5,6 +5,8 @@
 
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'model.freezed.dart';
 
 class ConnectRequest {
   final String mnemonic;
@@ -77,6 +79,30 @@ class GetInfoResponse {
           pendingSendSat == other.pendingSendSat &&
           pendingReceiveSat == other.pendingReceiveSat &&
           pubkey == other.pubkey;
+}
+
+@freezed
+sealed class LiquidSdkEvent with _$LiquidSdkEvent {
+  const LiquidSdkEvent._();
+
+  const factory LiquidSdkEvent.paymentFailed({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentFailed;
+  const factory LiquidSdkEvent.paymentPending({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentPending;
+  const factory LiquidSdkEvent.paymentRefunded({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentRefunded;
+  const factory LiquidSdkEvent.paymentRefundPending({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentRefundPending;
+  const factory LiquidSdkEvent.paymentSucceed({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentSucceed;
+  const factory LiquidSdkEvent.paymentWaitingConfirmation({
+    required Payment details,
+  }) = LiquidSdkEvent_PaymentWaitingConfirmation;
 }
 
 enum Network {

@@ -49,7 +49,23 @@ impl TryFrom<&str> for Network {
     }
 }
 
-#[derive(Debug)]
+/// Trait that can be used to react to various [LiquidSdkEvent]s emitted by the SDK.
+pub trait EventListener: Send + Sync {
+    fn on_event(&self, e: LiquidSdkEvent);
+}
+
+/// Event emitted by the SDK. To listen for and react to these events, use an [EventListener] when
+/// initializing the [LiquidSdk].
+#[derive(Clone, Debug, PartialEq)]
+pub enum LiquidSdkEvent {
+    PaymentFailed { details: Payment },
+    PaymentPending { details: Payment },
+    PaymentRefunded { details: Payment },
+    PaymentRefundPending { details: Payment },
+    PaymentSucceed { details: Payment },
+    PaymentWaitingConfirmation { details: Payment },
+}
+
 pub struct LiquidSdkOptions {
     pub signer: SwSigner,
     pub network: Network,
@@ -66,6 +82,7 @@ pub struct LiquidSdkOptions {
     /// If not set, it defaults to a Blockstream instance.
     pub electrum_url: Option<ElectrumUrl>,
 }
+
 impl LiquidSdkOptions {
     pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
         self.electrum_url.clone().unwrap_or({
@@ -440,7 +457,7 @@ pub struct PaymentSwapData {
 /// Represents an SDK payment.
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Payment {
     /// The tx ID of the onchain transaction
     pub tx_id: String,

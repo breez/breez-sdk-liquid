@@ -1,5 +1,7 @@
 use anyhow::Error;
 
+pub type LiquidSdkResult<T, E = LiquidSdkError> = Result<T, E>;
+
 #[macro_export]
 macro_rules! ensure_sdk {
     ($cond:expr, $err:expr) => {
