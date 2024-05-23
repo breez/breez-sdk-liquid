@@ -166,7 +166,7 @@ pub(crate) struct SwapIn {
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
-    /// JSON representation of [crate::persist::swap_in::InternalCreateSubmarineResponse]
+    /// JSON representation of [crate::persist::send::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcast
     pub(crate) lockup_tx_id: Option<String>,
@@ -179,7 +179,7 @@ impl SwapIn {
     pub(crate) fn get_boltz_create_response(
         &self,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
-        let internal_create_response: crate::persist::swap_in::InternalCreateSubmarineResponse =
+        let internal_create_response: crate::persist::send::InternalCreateSubmarineResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
                 PaymentError::Generic {
                     err: format!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}"),
@@ -206,7 +206,7 @@ impl SwapIn {
         expected_swap_id: &str,
     ) -> Result<String, PaymentError> {
         let internal_create_response =
-            crate::persist::swap_in::InternalCreateSubmarineResponse::try_convert_from_boltz(
+            crate::persist::send::InternalCreateSubmarineResponse::try_convert_from_boltz(
                 create_response,
                 expected_swap_id,
             )?;
@@ -227,7 +227,7 @@ impl SwapIn {
 pub(crate) struct SwapOut {
     pub(crate) id: String,
     pub(crate) preimage: String,
-    /// JSON representation of [crate::persist::swap_out::InternalCreateReverseResponse]
+    /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]
     pub(crate) create_response_json: String,
     pub(crate) invoice: String,
     /// The amount of the invoice
@@ -241,7 +241,7 @@ pub(crate) struct SwapOut {
 }
 impl SwapOut {
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
-        let internal_create_response: crate::persist::swap_out::InternalCreateReverseResponse =
+        let internal_create_response: crate::persist::receive::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
                 PaymentError::Generic {
                     err: format!("Failed to deserialize InternalCreateReverseResponse: {e:?}"),
@@ -269,7 +269,7 @@ impl SwapOut {
         expected_invoice: &str,
     ) -> Result<String, PaymentError> {
         let internal_create_response =
-            crate::persist::swap_out::InternalCreateReverseResponse::try_convert_from_boltz(
+            crate::persist::receive::InternalCreateReverseResponse::try_convert_from_boltz(
                 create_response,
                 expected_swap_id,
                 expected_invoice,
