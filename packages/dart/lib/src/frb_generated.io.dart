@@ -75,9 +75,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Network dco_decode_network(dynamic raw);
 
   @protected
-  NewSwapState dco_decode_new_swap_state(dynamic raw);
-
-  @protected
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
@@ -88,6 +85,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PaymentError dco_decode_payment_error(dynamic raw);
+
+  @protected
+  PaymentState dco_decode_payment_state(dynamic raw);
 
   @protected
   PaymentType dco_decode_payment_type(dynamic raw);
@@ -180,9 +180,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Network sse_decode_network(SseDeserializer deserializer);
 
   @protected
-  NewSwapState sse_decode_new_swap_state(SseDeserializer deserializer);
-
-  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
@@ -193,6 +190,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PaymentError sse_decode_payment_error(SseDeserializer deserializer);
+
+  @protected
+  PaymentState sse_decode_payment_state(SseDeserializer deserializer);
 
   @protected
   PaymentType sse_decode_payment_type(SseDeserializer deserializer);
@@ -414,7 +414,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
     wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
     wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
-    wireObj.status = cst_encode_new_swap_state(apiObj.status);
+    wireObj.status = cst_encode_payment_state(apiObj.status);
   }
 
   @protected
@@ -539,7 +539,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_network(Network raw);
 
   @protected
-  int cst_encode_new_swap_state(NewSwapState raw);
+  int cst_encode_payment_state(PaymentState raw);
 
   @protected
   int cst_encode_payment_type(PaymentType raw);
@@ -608,9 +608,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_network(Network self, SseSerializer serializer);
 
   @protected
-  void sse_encode_new_swap_state(NewSwapState self, SseSerializer serializer);
-
-  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
@@ -621,6 +618,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_payment_error(PaymentError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_payment_state(PaymentState self, SseSerializer serializer);
 
   @protected
   void sse_encode_payment_type(PaymentType self, SseSerializer serializer);

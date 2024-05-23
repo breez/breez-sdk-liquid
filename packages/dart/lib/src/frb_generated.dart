@@ -445,12 +445,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  NewSwapState dco_decode_new_swap_state(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return NewSwapState.values[raw as int];
-  }
-
-  @protected
   String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_String(raw);
@@ -474,7 +468,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       amountSat: dco_decode_u_64(arr[3]),
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
       paymentType: dco_decode_payment_type(arr[5]),
-      status: dco_decode_new_swap_state(arr[6]),
+      status: dco_decode_payment_state(arr[6]),
     );
   }
 
@@ -522,6 +516,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  PaymentState dco_decode_payment_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PaymentState.values[raw as int];
   }
 
   @protected
@@ -758,13 +758,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  NewSwapState sse_decode_new_swap_state(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return NewSwapState.values[inner];
-  }
-
-  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -795,7 +788,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_paymentType = sse_decode_payment_type(deserializer);
-    var var_status = sse_decode_new_swap_state(deserializer);
+    var var_status = sse_decode_payment_state(deserializer);
     return Payment(
         txId: var_txId,
         swapId: var_swapId,
@@ -847,6 +840,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  PaymentState sse_decode_payment_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PaymentState.values[inner];
   }
 
   @protected
@@ -950,7 +950,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int cst_encode_new_swap_state(NewSwapState raw) {
+  int cst_encode_payment_state(PaymentState raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
   }
@@ -1098,12 +1098,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_new_swap_state(NewSwapState self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1132,7 +1126,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
     sse_encode_payment_type(self.paymentType, serializer);
-    sse_encode_new_swap_state(self.status, serializer);
+    sse_encode_payment_state(self.status, serializer);
   }
 
   @protected
@@ -1172,6 +1166,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(12, serializer);
         sse_encode_String(err, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_payment_state(PaymentState self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

@@ -222,7 +222,7 @@ impl CstDecode<crate::model::PaymentState> for i32 {
             1 => crate::model::PaymentState::Pending,
             2 => crate::model::PaymentState::Complete,
             3 => crate::model::PaymentState::Failed,
-            _ => unreachable!("Invalid variant for NewSwapState: {}", self),
+            _ => unreachable!("Invalid variant for PaymentState: {}", self),
         }
     }
 }
@@ -359,20 +359,6 @@ impl SseDecode for crate::model::Network {
     }
 }
 
-impl SseDecode for crate::model::PaymentState {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crate::model::PaymentState::Created,
-            1 => crate::model::PaymentState::Pending,
-            2 => crate::model::PaymentState::Complete,
-            3 => crate::model::PaymentState::Failed,
-            _ => unreachable!("Invalid variant for NewSwapState: {}", inner),
-        };
-    }
-}
-
 impl SseDecode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -474,6 +460,20 @@ impl SseDecode for crate::error::PaymentError {
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseDecode for crate::model::PaymentState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::PaymentState::Created,
+            1 => crate::model::PaymentState::Pending,
+            2 => crate::model::PaymentState::Complete,
+            3 => crate::model::PaymentState::Failed,
+            _ => unreachable!("Invalid variant for PaymentState: {}", inner),
+        };
     }
 }
 
@@ -685,23 +685,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Network> for crate::model::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::Created => 0.into_dart(),
-            Self::Pending => 1.into_dart(),
-            Self::Complete => 2.into_dart(),
-            Self::Failed => 3.into_dart(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentState {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentState> for crate::model::PaymentState {
-    fn into_into_dart(self) -> crate::model::PaymentState {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Payment {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -758,6 +741,23 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::error::PaymentError {}
 impl flutter_rust_bridge::IntoIntoDart<crate::error::PaymentError> for crate::error::PaymentError {
     fn into_into_dart(self) -> crate::error::PaymentError {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Created => 0.into_dart(),
+            Self::Pending => 1.into_dart(),
+            Self::Complete => 2.into_dart(),
+            Self::Failed => 3.into_dart(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentState {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentState> for crate::model::PaymentState {
+    fn into_into_dart(self) -> crate::model::PaymentState {
         self
     }
 }
@@ -995,24 +995,6 @@ impl SseEncode for crate::model::Network {
     }
 }
 
-impl SseEncode for crate::model::PaymentState {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crate::model::PaymentState::Created => 0,
-                crate::model::PaymentState::Pending => 1,
-                crate::model::PaymentState::Complete => 2,
-                crate::model::PaymentState::Failed => 3,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1096,6 +1078,24 @@ impl SseEncode for crate::error::PaymentError {
                 <String>::sse_encode(err, serializer);
             }
         }
+    }
+}
+
+impl SseEncode for crate::model::PaymentState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::PaymentState::Created => 0,
+                crate::model::PaymentState::Pending => 1,
+                crate::model::PaymentState::Complete => 2,
+                crate::model::PaymentState::Failed => 3,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 

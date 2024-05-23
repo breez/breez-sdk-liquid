@@ -98,21 +98,16 @@ class FlutterBreezLiquidBindings {
 
   void frbgen_breez_liquid_wire_list_payments(
     int port_,
-    bool with_scan,
-    bool include_pending,
   ) {
     return _frbgen_breez_liquid_wire_list_payments(
       port_,
-      with_scan,
-      include_pending,
     );
   }
 
   late final _frbgen_breez_liquid_wire_list_paymentsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Bool, ffi.Bool)>>(
-          'frbgen_breez_liquid_wire_list_payments');
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('frbgen_breez_liquid_wire_list_payments');
   late final _frbgen_breez_liquid_wire_list_payments =
-      _frbgen_breez_liquid_wire_list_paymentsPtr.asFunction<void Function(int, bool, bool)>();
+      _frbgen_breez_liquid_wire_list_paymentsPtr.asFunction<void Function(int)>();
 
   void frbgen_breez_liquid_wire_prepare_receive_payment(
     int port_,
