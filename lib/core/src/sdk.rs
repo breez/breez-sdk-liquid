@@ -192,6 +192,7 @@ impl LiquidSdk {
         &self,
         swap_id: &str,
         to_state: PaymentState,
+        preimage: Option<&str>,
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
@@ -209,6 +210,7 @@ impl LiquidSdk {
             &con,
             swap_id,
             to_state,
+            preimage,
             lockup_tx_id,
             refund_tx_id,
         )
@@ -339,7 +341,7 @@ impl LiquidSdk {
                 let refund_tx_id =
                     self.try_refund(id, &swap_script, &keypair, receiver_amount_sat)?;
                 info!("Broadcast refund tx for Swap-in {id}. Tx id: {refund_tx_id}");
-                self.try_handle_send_swap_update(id, Pending, None, Some(&refund_tx_id))?;
+                self.try_handle_send_swap_update(id, Pending, None, None, Some(&refund_tx_id))?;
 
                 Ok(())
             }
@@ -587,7 +589,13 @@ impl LiquidSdk {
 
         Self::verify_payment_hash(&claim_tx_response.preimage, invoice)?;
         // After we confirm the preimage is correct, we mark this as complete
-        self.try_handle_send_swap_update(swap_id, Complete, None, None)?;
+        self.try_handle_send_swap_update(
+            swap_id,
+            Complete,
+            Some(&claim_tx_response.preimage),
+            None,
+            None,
+        )?;
 
         let (partial_sig, pub_nonce) =
             refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
@@ -720,7 +728,13 @@ impl LiquidSdk {
                     };
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response)?;
-                    self.try_handle_send_swap_update(swap_id, Pending, Some(&lockup_tx_id), None)?;
+                    self.try_handle_send_swap_update(
+                        swap_id,
+                        Pending,
+                        None,
+                        Some(&lockup_tx_id),
+                        None,
+                    )?;
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
@@ -962,7 +976,7 @@ impl LiquidSdk {
                     self.try_handle_receive_swap_update(&swap.id, Complete, None)?;
                 }
                 if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
-                    self.try_handle_send_swap_update(&swap.id, Failed, None, None)?;
+                    self.try_handle_send_swap_update(&swap.id, Failed, None, None, None)?;
                 }
             }
 

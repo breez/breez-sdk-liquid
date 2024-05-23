@@ -40,6 +40,7 @@ export interface Payment {
     timestamp: number
     amountSat: number
     feesSat?: number
+    preimage?: string
     paymentType: PaymentType
     status: PaymentState
 }

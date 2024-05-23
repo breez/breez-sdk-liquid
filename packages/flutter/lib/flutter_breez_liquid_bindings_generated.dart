@@ -454,6 +454,8 @@ final class wire_cst_payment extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
+
   @ffi.Int32()
   external int payment_type;
 

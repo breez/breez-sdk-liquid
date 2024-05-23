@@ -111,6 +111,9 @@ class Payment {
   /// sender. In other words, it's the delta between the amount that was sent and the amount
   /// received.
   final int? feesSat;
+
+  /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+  final String? preimage;
   final PaymentType paymentType;
 
   /// Composite status representing the overall status of the payment.
@@ -126,6 +129,7 @@ class Payment {
     required this.timestamp,
     required this.amountSat,
     this.feesSat,
+    this.preimage,
     required this.paymentType,
     required this.status,
   });
@@ -137,6 +141,7 @@ class Payment {
       timestamp.hashCode ^
       amountSat.hashCode ^
       feesSat.hashCode ^
+      preimage.hashCode ^
       paymentType.hashCode ^
       status.hashCode;
 
@@ -150,6 +155,7 @@ class Payment {
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
+          preimage == other.preimage &&
           paymentType == other.paymentType &&
           status == other.status;
 }
