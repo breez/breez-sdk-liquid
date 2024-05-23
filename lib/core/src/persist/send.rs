@@ -11,7 +11,7 @@ use crate::model::*;
 use crate::persist::Persister;
 
 impl Persister {
-    pub(crate) fn insert_swap_in(&self, swap_in: SwapIn) -> Result<()> {
+    pub(crate) fn insert_swap_in(&self, swap_in: SendSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -70,14 +70,14 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_swap_in(con: &Connection, id: &str) -> rusqlite::Result<Option<SwapIn>> {
+    pub(crate) fn fetch_swap_in(con: &Connection, id: &str) -> rusqlite::Result<Option<SendSwap>> {
         let query = Self::list_swap_in_query(vec!["id = ?1".to_string()]);
         con.query_row(&query, [id], Self::sql_row_to_swap_in)
             .optional()
     }
 
-    fn sql_row_to_swap_in(row: &Row) -> rusqlite::Result<SwapIn> {
-        Ok(SwapIn {
+    fn sql_row_to_swap_in(row: &Row) -> rusqlite::Result<SendSwap> {
+        Ok(SendSwap {
             id: row.get(0)?,
             invoice: row.get(1)?,
             payer_amount_sat: row.get(2)?,
@@ -94,7 +94,7 @@ impl Persister {
         &self,
         con: &Connection,
         where_clauses: Vec<String>,
-    ) -> rusqlite::Result<Vec<SwapIn>> {
+    ) -> rusqlite::Result<Vec<SendSwap>> {
         let query = Self::list_swap_in_query(where_clauses);
         let ongoing_send = con
             .prepare(&query)?
@@ -107,7 +107,7 @@ impl Persister {
     pub(crate) fn list_ongoing_send_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapIn>> {
+    ) -> rusqlite::Result<Vec<SendSwap>> {
         let mut where_clause: Vec<String> = Vec::new();
         where_clause.push(format!(
             "state in ({})",
@@ -124,7 +124,7 @@ impl Persister {
     pub(crate) fn list_pending_send_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapIn>> {
+    ) -> rusqlite::Result<Vec<SendSwap>> {
         let query = Self::list_swap_in_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
@@ -138,8 +138,8 @@ impl Persister {
     pub(crate) fn list_pending_send_swaps_by_refund_tx_id(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<HashMap<String, SwapIn>> {
-        let res: HashMap<String, SwapIn> = self
+    ) -> rusqlite::Result<HashMap<String, SendSwap>> {
+        let res: HashMap<String, SendSwap> = self
             .list_pending_send_swaps(con)?
             .iter()
             .filter_map(|pending_swap_in| {

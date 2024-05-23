@@ -665,7 +665,7 @@ impl LiquidSdk {
             &create_response,
             keypair.public_key().into(),
         )?;
-        let create_response_json = SwapIn::from_boltz_struct_to_json(&create_response, swap_id)?;
+        let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         debug!("Opening WS connection for swap {swap_id}");
         let mut socket = client.connect_ws()?;
@@ -681,7 +681,7 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
-        self.persister.insert_swap_in(SwapIn {
+        self.persister.insert_swap_in(SendSwap {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -786,7 +786,7 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim(&self, ongoing_swap_out: &SwapOut) -> Result<(), PaymentError> {
+    fn try_claim(&self, ongoing_swap_out: &ReceiveSwap) -> Result<(), PaymentError> {
         ensure_sdk!(
             ongoing_swap_out.claim_tx_id.is_none(),
             PaymentError::AlreadyClaimed
@@ -922,10 +922,13 @@ impl LiquidSdk {
             return Err(PaymentError::InvalidInvoice);
         };
 
-        let create_response_json =
-            SwapOut::from_boltz_struct_to_json(&create_response, &swap_id, &invoice.to_string())?;
+        let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
+            &create_response,
+            &swap_id,
+            &invoice.to_string(),
+        )?;
         self.persister
-            .insert_swap_out(SwapOut {
+            .insert_swap_out(ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -955,10 +958,10 @@ impl LiquidSdk {
         }
 
         let con = self.persister.get_connection()?;
-        let pending_receive_swaps_by_claim_tx_id: HashMap<String, SwapOut> = self
+        let pending_receive_swaps_by_claim_tx_id: HashMap<String, ReceiveSwap> = self
             .persister
             .list_pending_receive_swaps_by_claim_tx_id(&con)?;
-        let pending_send_swaps_by_refund_tx_id: HashMap<String, SwapIn> = self
+        let pending_send_swaps_by_refund_tx_id: HashMap<String, SendSwap> = self
             .persister
             .list_pending_send_swaps_by_refund_tx_id(&con)?;
 

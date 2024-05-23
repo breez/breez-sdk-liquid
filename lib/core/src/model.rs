@@ -141,13 +141,13 @@ pub struct RestoreRequest {
 
 #[derive(Clone, Debug)]
 pub(crate) enum Swap {
-    Send(SwapIn),
-    Receive(SwapOut),
+    Send(SendSwap),
+    Receive(ReceiveSwap),
 }
 impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
-            Swap::Send(SwapIn { id, .. }) | Swap::Receive(SwapOut { id, .. }) => id.clone(),
+            Swap::Send(SendSwap { id, .. }) | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
         }
     }
 
@@ -159,9 +159,9 @@ impl Swap {
     }
 }
 
-/// A submarine swap, used for swap-in (Send)
+/// A submarine swap, used for Send
 #[derive(Clone, Debug)]
-pub(crate) struct SwapIn {
+pub(crate) struct SendSwap {
     pub(crate) id: String,
     pub(crate) invoice: String,
     pub(crate) payer_amount_sat: u64,
@@ -175,7 +175,7 @@ pub(crate) struct SwapIn {
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
-impl SwapIn {
+impl SendSwap {
     pub(crate) fn get_boltz_create_response(
         &self,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
@@ -222,9 +222,9 @@ impl SwapIn {
     }
 }
 
-/// A reverse swap, used for swap-out (Receive)
+/// A reverse swap, used for Receive
 #[derive(Clone, Debug)]
-pub(crate) struct SwapOut {
+pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]
@@ -239,7 +239,7 @@ pub(crate) struct SwapOut {
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
-impl SwapOut {
+impl ReceiveSwap {
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
         let internal_create_response: crate::persist::receive::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {

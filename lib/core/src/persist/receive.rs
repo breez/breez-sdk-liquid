@@ -11,7 +11,7 @@ use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
 impl Persister {
-    pub(crate) fn insert_swap_out(&self, swap_out: SwapOut) -> Result<()> {
+    pub(crate) fn insert_swap_out(&self, swap_out: ReceiveSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -73,14 +73,17 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_swap_out(con: &Connection, id: &str) -> rusqlite::Result<Option<SwapOut>> {
+    pub(crate) fn fetch_swap_out(
+        con: &Connection,
+        id: &str,
+    ) -> rusqlite::Result<Option<ReceiveSwap>> {
         let query = Self::list_swap_out_query(vec!["id = ?1".to_string()]);
         con.query_row(&query, [id], Self::sql_row_to_swap_out)
             .optional()
     }
 
-    fn sql_row_to_swap_out(row: &Row) -> rusqlite::Result<SwapOut> {
-        Ok(SwapOut {
+    fn sql_row_to_swap_out(row: &Row) -> rusqlite::Result<ReceiveSwap> {
+        Ok(ReceiveSwap {
             id: row.get(0)?,
             preimage: row.get(1)?,
             create_response_json: row.get(2)?,
@@ -98,7 +101,7 @@ impl Persister {
         &self,
         con: &Connection,
         where_clauses: Vec<String>,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
         let query = Self::list_swap_out_query(where_clauses);
         let ongoing_receive = con
             .prepare(&query)?
@@ -111,7 +114,7 @@ impl Persister {
     pub(crate) fn list_ongoing_receive_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
         let mut where_clause: Vec<String> = Vec::new();
         where_clause.push(format!(
             "state in ({})",
@@ -128,7 +131,7 @@ impl Persister {
     pub(crate) fn list_pending_receive_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
         let query = Self::list_swap_out_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
@@ -142,7 +145,7 @@ impl Persister {
     pub(crate) fn list_pending_receive_swaps_by_claim_tx_id(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<HashMap<String, SwapOut>> {
+    ) -> rusqlite::Result<HashMap<String, ReceiveSwap>> {
         let res = self
             .list_pending_receive_swaps(con)?
             .iter()
