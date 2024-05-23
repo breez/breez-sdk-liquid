@@ -34,6 +34,16 @@ export interface GetInfoResponse {
     pubkey: string
 }
 
+export interface Payment {
+    txId: string
+    swapId?: string
+    timestamp: number
+    amountSat: number
+    feesSat?: number
+    paymentType: PaymentType
+    status: PaymentState
+}
+
 export interface PrepareReceiveRequest {
     payerAmountSat: number
 }
@@ -70,6 +80,18 @@ export enum Network {
     LIQUID_TESTNET = "liquidTestnet"
 }
 
+export enum PaymentState {
+    CREATED = "created",
+    PENDING = "pending",
+    COMPLETE = "complete",
+    FAILED = "failed"
+}
+
+export enum PaymentType {
+    RECEIVE = "receive",
+    SEND = "send"
+}
+
 export const connect = async (req: ConnectRequest): Promise<void> => {
     const response = await BreezLiquidSDK.connect(req)
     return response
@@ -97,6 +119,11 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
+    return response
+}
+
+export const listPayments = async (): Promise<Payment[]> => {
+    const response = await BreezLiquidSDK.listPayments()
     return response
 }
 

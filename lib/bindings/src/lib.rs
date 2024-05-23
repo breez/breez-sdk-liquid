@@ -45,6 +45,10 @@ impl BindingLiquidSdk {
         self.sdk.receive_payment(&req)
     }
 
+    pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
+        self.sdk.list_payments()
+    }
+
     pub fn sync(&self) -> Result<(), LiquidSdkError> {
         self.sdk.sync().map_err(Into::into)
     }
