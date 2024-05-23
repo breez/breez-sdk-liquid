@@ -792,8 +792,8 @@ impl LiquidSdk {
             PaymentError::AlreadyClaimed
         );
 
-        let rev_swap_id = &ongoing_receive_swap.id;
-        debug!("Trying to claim Receive Swap {rev_swap_id}",);
+        let swap_id = &ongoing_receive_swap.id;
+        debug!("Trying to claim Receive Swap {swap_id}",);
 
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
@@ -818,7 +818,7 @@ impl LiquidSdk {
             &Preimage::from_str(&ongoing_receive_swap.preimage)?,
             Amount::from_sat(ongoing_receive_swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
-            Some((&self.boltz_client_v2(), rev_swap_id.clone())),
+            Some((&self.boltz_client_v2(), swap_id.clone())),
             // None
         )?;
 
@@ -827,10 +827,10 @@ impl LiquidSdk {
             &self.network_config(),
             Some((&self.boltz_client_v2(), self.network.into())),
         )?;
-        info!("Successfully broadcast claim tx {claim_tx_id} for rev swap {rev_swap_id}");
+        info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
 
-        self.try_handle_receive_swap_update(rev_swap_id, Pending, Some(&claim_tx_id))?;
+        self.try_handle_receive_swap_update(swap_id, Pending, Some(&claim_tx_id))?;
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
