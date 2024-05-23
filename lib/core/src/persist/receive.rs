@@ -11,7 +11,7 @@ use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
 use serde::{Deserialize, Serialize};
 
 impl Persister {
-    pub(crate) fn insert_swap_out(&self, swap_out: SwapOut) -> Result<()> {
+    pub(crate) fn insert_receive_swap(&self, receive_swap: ReceiveSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -31,22 +31,22 @@ impl Persister {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
-            swap_out.id,
-            swap_out.preimage,
-            swap_out.create_response_json,
-            swap_out.invoice,
-            swap_out.payer_amount_sat,
-            swap_out.receiver_amount_sat,
-            swap_out.created_at,
-            swap_out.claim_fees_sat,
-            swap_out.claim_tx_id,
-            swap_out.state,
+            receive_swap.id,
+            receive_swap.preimage,
+            receive_swap.create_response_json,
+            receive_swap.invoice,
+            receive_swap.payer_amount_sat,
+            receive_swap.receiver_amount_sat,
+            receive_swap.created_at,
+            receive_swap.claim_fees_sat,
+            receive_swap.claim_tx_id,
+            receive_swap.state,
         ))?;
 
         Ok(())
     }
 
-    fn list_swap_out_query(where_clauses: Vec<String>) -> String {
+    fn list_receive_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
             where_clause_str = String::from("WHERE ");
@@ -73,14 +73,17 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_swap_out(con: &Connection, id: &str) -> rusqlite::Result<Option<SwapOut>> {
-        let query = Self::list_swap_out_query(vec!["id = ?1".to_string()]);
-        con.query_row(&query, [id], Self::sql_row_to_swap_out)
+    pub(crate) fn fetch_receive_swap(
+        con: &Connection,
+        id: &str,
+    ) -> rusqlite::Result<Option<ReceiveSwap>> {
+        let query = Self::list_receive_swaps_query(vec!["id = ?1".to_string()]);
+        con.query_row(&query, [id], Self::sql_row_to_receive_swap)
             .optional()
     }
 
-    fn sql_row_to_swap_out(row: &Row) -> rusqlite::Result<SwapOut> {
-        Ok(SwapOut {
+    fn sql_row_to_receive_swap(row: &Row) -> rusqlite::Result<ReceiveSwap> {
+        Ok(ReceiveSwap {
             id: row.get(0)?,
             preimage: row.get(1)?,
             create_response_json: row.get(2)?,
@@ -98,11 +101,11 @@ impl Persister {
         &self,
         con: &Connection,
         where_clauses: Vec<String>,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
-        let query = Self::list_swap_out_query(where_clauses);
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
+        let query = Self::list_receive_swaps_query(where_clauses);
         let ongoing_receive = con
             .prepare(&query)?
-            .query_map(params![], Self::sql_row_to_swap_out)?
+            .query_map(params![], Self::sql_row_to_receive_swap)?
             .map(|i| i.unwrap())
             .collect();
         Ok(ongoing_receive)
@@ -111,7 +114,7 @@ impl Persister {
     pub(crate) fn list_ongoing_receive_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
         let mut where_clause: Vec<String> = Vec::new();
         where_clause.push(format!(
             "state in ({})",
@@ -128,29 +131,32 @@ impl Persister {
     pub(crate) fn list_pending_receive_swaps(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<SwapOut>> {
-        let query = Self::list_swap_out_query(vec!["state = ?1".to_string()]);
+    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
+        let query = Self::list_receive_swaps_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
-            .query_map(params![PaymentState::Pending], Self::sql_row_to_swap_out)?
+            .query_map(
+                params![PaymentState::Pending],
+                Self::sql_row_to_receive_swap,
+            )?
             .map(|i| i.unwrap())
             .collect();
         Ok(res)
     }
 
-    /// Pending swap outs, indexed by claim_tx_id
+    /// Pending Receive Swaps, indexed by claim_tx_id
     pub(crate) fn list_pending_receive_swaps_by_claim_tx_id(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<HashMap<String, SwapOut>> {
+    ) -> rusqlite::Result<HashMap<String, ReceiveSwap>> {
         let res = self
             .list_pending_receive_swaps(con)?
             .iter()
-            .filter_map(|pending_swap_out| {
-                pending_swap_out
+            .filter_map(|pending_receive_swap| {
+                pending_receive_swap
                     .claim_tx_id
                     .as_ref()
-                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_swap_out.clone()))
+                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_receive_swap.clone()))
             })
             .collect();
         Ok(res)

@@ -176,10 +176,10 @@ impl LiquidSdk {
         );
 
         let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_swap_out(&con, swap_id)
+        let swap = Persister::fetch_receive_swap(&con, swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap Out not found {swap_id}"),
+                err: format!("Receive Swap not found {swap_id}"),
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
@@ -198,10 +198,10 @@ impl LiquidSdk {
         info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
 
         let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_swap_in(&con, swap_id)
+        let swap = Persister::fetch_send_swap(&con, swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap In not found {swap_id}"),
+                err: format!("Send Swap not found {swap_id}"),
             })?;
 
         Self::validate_state_transition(swap.state, to_state)?;
@@ -215,18 +215,18 @@ impl LiquidSdk {
     }
 
     /// Handles status updates from Boltz for Receive swaps
-    pub(crate) fn try_handle_reverse_swap_status(
+    pub(crate) fn try_handle_receive_swap_boltz_status(
         &self,
         swap_state: RevSwapStates,
         id: &str,
     ) -> Result<()> {
         self.sync()?;
 
-        info!("Handling reverse swap transition to {swap_state:?} for swap {id}");
+        info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
-        let swap_out = Persister::fetch_swap_out(&con, id)?
-            .ok_or(anyhow!("No ongoing swap out found for ID {id}"))?;
+        let receive_swap = Persister::fetch_receive_swap(&con, id)?
+            .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
         match swap_state {
             RevSwapStates::SwapExpired
@@ -242,15 +242,15 @@ impl LiquidSdk {
             RevSwapStates::TransactionMempool
             // The lockup tx is confirmed => try to claim
             | RevSwapStates::TransactionConfirmed => {
-                match swap_out.claim_tx_id {
+                match receive_swap.claim_tx_id {
                     Some(claim_tx_id) => {
-                        warn!("Claim tx for reverse swap {id} was already broadcast: txid {claim_tx_id}")
+                        warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
-                    None => match self.try_claim(&swap_out) {
+                    None => match self.try_claim(&receive_swap) {
                         Ok(()) => {}
                         Err(err) => match err {
-                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for reverse swap {id}"),
-                            _ => error!("Claim reverse swap {id} failed: {err}")
+                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
+                            _ => error!("Claim for Receive Swap {id} failed: {err}")
                         }
                     },
                 }
@@ -267,27 +267,27 @@ impl LiquidSdk {
     }
 
     /// Handles status updates from Boltz for Send swaps
-    pub(crate) fn try_handle_submarine_swap_status(
+    pub(crate) fn try_handle_send_swap_boltz_status(
         &self,
         swap_state: SubSwapStates,
         id: &str,
     ) -> Result<()> {
         self.sync()?;
 
-        info!("Handling submarine swap transition to {swap_state:?} for swap {id}");
+        info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
         let con = self.persister.get_connection()?;
-        let ongoing_swap_in = Persister::fetch_swap_in(&con, id)?
-            .ok_or(anyhow!("No ongoing swap in found for ID {id}"))?;
+        let ongoing_send_swap = Persister::fetch_send_swap(&con, id)?
+            .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
         let create_response: CreateSubmarineResponse =
-            ongoing_swap_in.get_boltz_create_response()?;
+            ongoing_send_swap.get_boltz_create_response()?;
 
-        let receiver_amount_sat = get_invoice_amount!(ongoing_swap_in.invoice);
+        let receiver_amount_sat = get_invoice_amount!(ongoing_send_swap.invoice);
         let keypair = self.get_submarine_keys(0)?;
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
-                let lockup_tx_id = ongoing_swap_in.lockup_tx_id.ok_or(anyhow!(
+                let lockup_tx_id = ongoing_send_swap.lockup_tx_id.ok_or(anyhow!(
                     "Swap-in {id} is pending but no lockup txid is present"
                 ))?;
 
@@ -300,7 +300,7 @@ impl LiquidSdk {
                 self.post_submarine_claim_details(
                     id,
                     &swap_script,
-                    &ongoing_swap_in.invoice,
+                    &ongoing_send_swap.invoice,
                     &keypair,
                 )
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
@@ -310,7 +310,7 @@ impl LiquidSdk {
                 self.persister.insert_or_update_payment(PaymentTxData {
                     tx_id: lockup_tx_id,
                     timestamp: None,
-                    amount_sat: ongoing_swap_in.payer_amount_sat,
+                    amount_sat: ongoing_send_swap.payer_amount_sat,
                     payment_type: PaymentType::Send,
                     is_confirmed: false,
                 })?;
@@ -343,7 +343,7 @@ impl LiquidSdk {
 
                 Ok(())
             }
-            _ => Err(anyhow!("New state for submarine swap {id}: {swap_state:?}")),
+            _ => Err(anyhow!("New state for Send Swap {id}: {swap_state:?}")),
         }
     }
 
@@ -657,7 +657,7 @@ impl LiquidSdk {
             &create_response,
             keypair.public_key().into(),
         )?;
-        let create_response_json = SwapIn::from_boltz_struct_to_json(&create_response, swap_id)?;
+        let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         debug!("Opening WS connection for swap {swap_id}");
         let mut socket = client.connect_ws()?;
@@ -673,7 +673,7 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
-        self.persister.insert_swap_in(SwapIn {
+        self.persister.insert_send_swap(SendSwap {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -711,7 +711,7 @@ impl LiquidSdk {
                     // Check that we have not persisted the swap already
                     let con = self.persister.get_connection()?;
 
-                    if let Some(ongoing_swap) = Persister::fetch_swap_in(&con, swap_id)
+                    if let Some(ongoing_swap) = Persister::fetch_send_swap(&con, swap_id)
                         .map_err(|_| PaymentError::PersistError)?
                     {
                         if ongoing_swap.lockup_tx_id.is_some() {
@@ -726,7 +726,7 @@ impl LiquidSdk {
                 // Boltz has detected the lockup in the mempool, we can speed up
                 // the claim by doing so cooperatively
                 SubSwapStates::TransactionClaimPending => {
-                    // TODO Consolidate status handling: merge with and reuse try_handle_submarine_swap_status
+                    // TODO Consolidate status handling: merge with and reuse try_handle_send_swap_boltz_status
 
                     self.post_submarine_claim_details(
                         swap_id,
@@ -772,19 +772,19 @@ impl LiquidSdk {
         result
     }
 
-    fn try_claim(&self, ongoing_swap_out: &SwapOut) -> Result<(), PaymentError> {
+    fn try_claim(&self, ongoing_receive_swap: &ReceiveSwap) -> Result<(), PaymentError> {
         ensure_sdk!(
-            ongoing_swap_out.claim_tx_id.is_none(),
+            ongoing_receive_swap.claim_tx_id.is_none(),
             PaymentError::AlreadyClaimed
         );
 
-        let rev_swap_id = &ongoing_swap_out.id;
-        debug!("Trying to claim reverse swap {rev_swap_id}",);
+        let swap_id = &ongoing_receive_swap.id;
+        debug!("Trying to claim Receive Swap {swap_id}",);
 
         let lsk = self.get_liquid_swap_key()?;
         let our_keys = lsk.keypair;
 
-        let create_response = ongoing_swap_out.get_boltz_create_response()?;
+        let create_response = ongoing_receive_swap.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
             our_keys.public_key().into(),
@@ -796,15 +796,15 @@ impl LiquidSdk {
             claim_address,
             &self.network_config(),
             self.boltz_url_v2().into(),
-            ongoing_swap_out.id.clone(),
+            ongoing_receive_swap.id.clone(),
         )?;
 
         let claim_tx = claim_tx_wrapper.sign_claim(
             &our_keys,
-            &Preimage::from_str(&ongoing_swap_out.preimage)?,
-            Amount::from_sat(ongoing_swap_out.claim_fees_sat),
+            &Preimage::from_str(&ongoing_receive_swap.preimage)?,
+            Amount::from_sat(ongoing_receive_swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
-            Some((&self.boltz_client_v2(), rev_swap_id.clone())),
+            Some((&self.boltz_client_v2(), swap_id.clone())),
             // None
         )?;
 
@@ -813,17 +813,17 @@ impl LiquidSdk {
             &self.network_config(),
             Some((&self.boltz_client_v2(), self.network.into())),
         )?;
-        info!("Successfully broadcast claim tx {claim_tx_id} for rev swap {rev_swap_id}");
+        info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
 
-        self.try_handle_receive_swap_update(rev_swap_id, Pending, Some(&claim_tx_id))?;
+        self.try_handle_receive_swap_update(swap_id, Pending, Some(&claim_tx_id))?;
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         self.persister.insert_or_update_payment(PaymentTxData {
             tx_id: claim_tx_id,
             timestamp: None,
-            amount_sat: ongoing_swap_out.receiver_amount_sat,
+            amount_sat: ongoing_receive_swap.receiver_amount_sat,
             payment_type: PaymentType::Receive,
             is_confirmed: false,
         })?;
@@ -851,7 +851,7 @@ impl LiquidSdk {
             .within(payer_amount_sat)
             .map_err(|_| PaymentError::AmountOutOfRange)?;
 
-        debug!("Preparing reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+        debug!("Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         Ok(PrepareReceiveResponse {
             payer_amount_sat,
@@ -874,7 +874,7 @@ impl LiquidSdk {
         let new_fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
-        debug!("Creating reverse swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+        debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         let lsk = self.get_liquid_swap_key()?;
 
@@ -908,10 +908,13 @@ impl LiquidSdk {
             return Err(PaymentError::InvalidInvoice);
         };
 
-        let create_response_json =
-            SwapOut::from_boltz_struct_to_json(&create_response, &swap_id, &invoice.to_string())?;
+        let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
+            &create_response,
+            &swap_id,
+            &invoice.to_string(),
+        )?;
         self.persister
-            .insert_swap_out(SwapOut {
+            .insert_receive_swap(ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -941,10 +944,10 @@ impl LiquidSdk {
         }
 
         let con = self.persister.get_connection()?;
-        let pending_receive_swaps_by_claim_tx_id: HashMap<String, SwapOut> = self
+        let pending_receive_swaps_by_claim_tx_id: HashMap<String, ReceiveSwap> = self
             .persister
             .list_pending_receive_swaps_by_claim_tx_id(&con)?;
-        let pending_send_swaps_by_refund_tx_id: HashMap<String, SwapIn> = self
+        let pending_send_swaps_by_refund_tx_id: HashMap<String, SendSwap> = self
             .persister
             .list_pending_send_swaps_by_refund_tx_id(&con)?;
 
