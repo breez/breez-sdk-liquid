@@ -425,6 +425,8 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
+    pub preimage: Option<String>,
+
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
 
@@ -463,6 +465,9 @@ pub struct Payment {
     /// received.
     pub fees_sat: Option<u64>,
 
+    /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+    pub preimage: Option<String>,
+
     pub payment_type: PaymentType,
 
     /// Composite status representing the overall status of the payment.
@@ -485,6 +490,7 @@ impl Payment {
             fees_sat: swap
                 .as_ref()
                 .map(|s| s.payer_amount_sat - s.receiver_amount_sat),
+            preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
             payment_type: tx.payment_type,
             status: match swap {
                 Some(swap) => swap.status,

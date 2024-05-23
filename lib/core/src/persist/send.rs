@@ -160,13 +160,20 @@ impl Persister {
         con: &Connection,
         swap_id: &str,
         to_state: PaymentState,
+        preimage: Option<&str>,
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite lockup_tx_id, refund_tx_id
+        // Do not overwrite preimage, lockup_tx_id, refund_tx_id
         con.execute(
             "UPDATE send_swaps
             SET
+                preimage =
+                    CASE
+                        WHEN preimage IS NULL THEN :preimage
+                        ELSE preimage
+                    END,
+
                 lockup_tx_id =
                     CASE
                         WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
@@ -179,11 +186,12 @@ impl Persister {
                         ELSE refund_tx_id
                     END,
 
-                state=:state
+                state = :state
             WHERE
                 id = :id",
             named_params! {
                 ":id": swap_id,
+                ":preimage": preimage,
                 ":lockup_tx_id": lockup_tx_id,
                 ":refund_tx_id": refund_tx_id,
                 ":state": to_state,
