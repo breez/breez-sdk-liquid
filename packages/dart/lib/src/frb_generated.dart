@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.35';
 
   @override
-  int get rustContentHash => 2052012510;
+  int get rustContentHash => 1284301568;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -64,6 +64,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<void> crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, dynamic hint});
+
+  Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint});
 
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo(
       {required BindingLiquidSdk that, required GetInfoRequest req, dynamic hint});
@@ -127,6 +129,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkBackupConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_backup",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_empty_wallet_cache",
         argNames: ["that"],
       );
 
