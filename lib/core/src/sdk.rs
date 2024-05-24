@@ -362,13 +362,23 @@ impl LiquidSdk {
         for p in self.list_payments()? {
             match p.payment_type {
                 PaymentType::Send => match p.status {
-                    PaymentState::Complete => confirmed_sent_sat += p.amount_sat,
-                    PaymentState::Failed => {}
-                    _ => pending_send_sat += p.amount_sat,
+                    Complete => confirmed_sent_sat += p.amount_sat,
+                    Failed => {
+                        confirmed_sent_sat += p.amount_sat;
+                        confirmed_received_sat += p.refund_tx_amount_sat.unwrap_or_default();
+                    }
+                    Pending => match p.refund_tx_amount_sat {
+                        Some(refund_tx_amount_sat) => {
+                            confirmed_sent_sat += p.amount_sat;
+                            pending_receive_sat += refund_tx_amount_sat;
+                        }
+                        None => pending_send_sat += p.amount_sat,
+                    },
+                    Created => pending_send_sat += p.amount_sat,
                 },
                 PaymentType::Receive => match p.status {
-                    PaymentState::Complete => confirmed_received_sat += p.amount_sat,
-                    PaymentState::Failed => {}
+                    Complete => confirmed_received_sat += p.amount_sat,
+                    Failed => {}
                     _ => pending_receive_sat += p.amount_sat,
                 },
             }
