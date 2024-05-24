@@ -54,6 +54,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,

@@ -28,6 +28,9 @@ class BindingLiquidSdk extends RustOpaque {
   Future<void> backup({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, hint: hint);
 
+  Future<void> emptyWalletCache({dynamic hint}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(that: this, hint: hint);
+
   Future<GetInfoResponse> getInfo({required GetInfoRequest req, dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(that: this, req: req, hint: hint);
 
