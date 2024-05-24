@@ -775,7 +775,6 @@ impl LiquidSdk {
                     };
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response)?;
-                    _ = tx_lockup_tx_id.send(lockup_tx_id.clone());
                     self.try_handle_send_swap_update(
                         swap_id,
                         Pending,
@@ -783,6 +782,13 @@ impl LiquidSdk {
                         Some(&lockup_tx_id),
                         None,
                     )?;
+                    _ = tx_lockup_tx_id.send(lockup_tx_id.clone());
+
+                    // If Boltz signals they will wait for the lockup tx to confirm, return early
+                    if !create_response.accept_zero_conf {
+                        BoltzStatusStream::unmark_swap_as_tracked(swap_id, SwapType::Submarine);
+                        return Ok(SendPaymentResponse { txid: lockup_tx_id });
+                    }
                 }
 
                 // Boltz has detected the lockup in the mempool, we can speed up
