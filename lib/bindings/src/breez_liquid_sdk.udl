@@ -69,6 +69,10 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
+dictionary BackupRequest {
+    string? backup_path = null;
+};
+
 dictionary RestoreRequest {
     string? backup_path = null;
 };
@@ -145,7 +149,7 @@ interface BindingLiquidSdk {
     void sync();
 
     [Throws=LiquidSdkError]
-    void backup();
+    void backup(BackupRequest req);
 
     [Throws=LiquidSdkError]
     void restore(RestoreRequest req);

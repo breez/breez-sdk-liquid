@@ -43,7 +43,10 @@ pub(crate) enum Command {
     /// Empties the encrypted transaction cache
     EmptyCache,
     /// Backs up the current pending swaps
-    Backup,
+    Backup {
+        #[arg(short, long)]
+        backup_path: Option<String>,
+    },
     /// Retrieve a list of backups
     Restore {
         #[arg(short, long)]
@@ -159,8 +162,8 @@ pub(crate) async fn handle_command(
             sdk.empty_wallet_cache()?;
             command_result!("Cache emptied successfully")
         }
-        Command::Backup => {
-            sdk.backup()?;
+        Command::Backup { backup_path } => {
+            sdk.backup(BackupRequest { backup_path })?;
             command_result!("Backup created successfully!")
         }
         Command::Restore { backup_path } => {

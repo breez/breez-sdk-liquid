@@ -153,6 +153,12 @@ pub struct GetInfoResponse {
 }
 
 #[derive(Debug, Serialize)]
+pub struct BackupRequest {
+    /// Path to the backup. Defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet
+    pub backup_path: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
 pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }

@@ -1234,14 +1234,6 @@ impl LiquidSdk {
         Ok(())
     }
 
-    pub fn restore(&self, req: RestoreRequest) -> Result<()> {
-        let backup_path = match req.backup_path {
-            Some(p) => PathBuf::from_str(&p)?,
-            None => self.persister.get_backup_path(),
-        };
-        self.persister.restore_from_backup(backup_path)
-    }
-
     /// Synchronize the DB with mempool and onchain data
     pub async fn sync(&self) -> Result<()> {
         let t0 = Instant::now();
@@ -1253,8 +1245,20 @@ impl LiquidSdk {
         Ok(())
     }
 
-    pub fn backup(&self) -> Result<()> {
-        self.persister.backup()
+    pub fn backup(&self, req: BackupRequest) -> Result<()> {
+        let backup_path = req
+            .backup_path
+            .map(PathBuf::from)
+            .unwrap_or(self.persister.get_default_backup_path());
+        self.persister.backup(backup_path)
+    }
+
+    pub fn restore(&self, req: RestoreRequest) -> Result<()> {
+        let backup_path = req
+            .backup_path
+            .map(PathBuf::from)
+            .unwrap_or(self.persister.get_default_backup_path());
+        self.persister.restore_from_backup(backup_path)
     }
 
     fn get_liquid_swap_key(&self) -> Result<LiquidSwapKey, PaymentError> {
