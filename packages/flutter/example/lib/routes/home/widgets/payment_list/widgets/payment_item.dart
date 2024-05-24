@@ -63,7 +63,7 @@ class PaymentItem extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           if (item.feesSat != null) ...[
-            Text("FEE: ${item.feesSat} sats"),
+            Text("FEE: ${item.paymentType == PaymentType.receive ? "-" : ""}${item.feesSat} sats"),
           ]
         ],
       ),
