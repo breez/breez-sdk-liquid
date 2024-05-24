@@ -7,6 +7,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
 
     public static var emitter: RCTEventEmitter!
     public static var hasListeners: Bool = false
+    public static var supportedEvents: [String] = []
 
     private var bindingLiquidSdk: BindingLiquidSdk!
 
@@ -26,8 +27,12 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         TAG
     }
 
+    static func addSupportedEvent(name: String) {
+        RNBreezLiquidSDK.supportedEvents.append(name)
+    }
+
     override func supportedEvents() -> [String]! {
-        return []
+        return RNBreezLiquidSDK.supportedEvents
     }
 
     override func startObserving() {
@@ -62,6 +67,29 @@ class RNBreezLiquidSDK: RCTEventEmitter {
             var connectRequest = try BreezLiquidSDKMapper.asConnectRequest(connectRequest: req)
             connectRequest.dataDir = connectRequest.dataDir == nil || connectRequest.dataDir!.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
             bindingLiquidSdk = try BreezLiquidSDK.connect(req: connectRequest)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(addEventListener:reject:)
+    func addEventListener(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var eventListener = BreezLiquidSDKEventListener()
+            var res = try getBindingLiquidSdk().addEventListener(listener: eventListener)
+
+            eventListener.setId(id: res)
+            resolve(res)
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(removeEventListener:resolve:reject:)
+    func removeEventListener(_ id: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try getBindingLiquidSdk().removeEventListener(id: id)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

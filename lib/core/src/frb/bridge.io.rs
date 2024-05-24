@@ -205,6 +205,7 @@ impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
                     details: ans.details.cst_decode(),
                 }
             }
+            6 => crate::model::LiquidSdkEvent::Synced,
             _ => unreachable!(),
         }
     }

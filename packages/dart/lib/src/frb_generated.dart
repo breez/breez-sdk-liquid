@@ -609,6 +609,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LiquidSdkEvent_PaymentWaitingConfirmation(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
+      case 6:
+        return LiquidSdkEvent_Synced();
       default:
         throw Exception("unreachable");
     }
@@ -992,6 +994,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 5:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
         return LiquidSdkEvent_PaymentWaitingConfirmation(details: var_details);
+      case 6:
+        return LiquidSdkEvent_Synced();
       default:
         throw UnimplementedError('');
     }
@@ -1442,6 +1446,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LiquidSdkEvent_PaymentWaitingConfirmation(details: final details):
         sse_encode_i_32(5, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
+      case LiquidSdkEvent_Synced():
+        sse_encode_i_32(6, serializer);
     }
   }
 

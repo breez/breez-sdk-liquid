@@ -689,6 +689,9 @@ impl SseDecode for crate::model::LiquidSdkEvent {
                     details: var_details,
                 };
             }
+            6 => {
+                return crate::model::LiquidSdkEvent::Synced;
+            }
             _ => {
                 unimplemented!("");
             }
@@ -1106,6 +1109,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::LiquidSdkEvent {
             crate::model::LiquidSdkEvent::PaymentWaitingConfirmation { details } => {
                 [5.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
+            crate::model::LiquidSdkEvent::Synced => [6.into_dart()].into_dart(),
         }
     }
 }
@@ -1467,6 +1471,9 @@ impl SseEncode for crate::model::LiquidSdkEvent {
             crate::model::LiquidSdkEvent::PaymentWaitingConfirmation { details } => {
                 <i32>::sse_encode(5, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::Synced => {
+                <i32>::sse_encode(6, serializer);
             }
         }
     }

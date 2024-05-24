@@ -103,6 +103,7 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const factory LiquidSdkEvent.paymentWaitingConfirmation({
     required Payment details,
   }) = LiquidSdkEvent_PaymentWaitingConfirmation;
+  const factory LiquidSdkEvent.synced() = LiquidSdkEvent_Synced;
 }
 
 enum Network {

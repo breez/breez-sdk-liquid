@@ -524,6 +524,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.PaymentWaitingConfirmation.details = pre_details;
       return;
     }
+    if (apiObj is LiquidSdkEvent_Synced) {
+      wireObj.tag = 6;
+      return;
+    }
   }
 
   @protected

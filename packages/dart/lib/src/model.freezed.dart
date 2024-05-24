@@ -15,19 +15,12 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$LiquidSdkEvent {
-  Payment get details => throw _privateConstructorUsedError;
-
-  @JsonKey(ignore: true)
-  $LiquidSdkEventCopyWith<LiquidSdkEvent> get copyWith => throw _privateConstructorUsedError;
-}
+mixin _$LiquidSdkEvent {}
 
 /// @nodoc
 abstract class $LiquidSdkEventCopyWith<$Res> {
   factory $LiquidSdkEventCopyWith(LiquidSdkEvent value, $Res Function(LiquidSdkEvent) then) =
       _$LiquidSdkEventCopyWithImpl<$Res, LiquidSdkEvent>;
-  @useResult
-  $Res call({Payment details});
 }
 
 /// @nodoc
@@ -39,27 +32,13 @@ class _$LiquidSdkEventCopyWithImpl<$Res, $Val extends LiquidSdkEvent>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? details = null,
-  }) {
-    return _then(_value.copyWith(
-      details: null == details
-          ? _value.details
-          : details // ignore: cast_nullable_to_non_nullable
-              as Payment,
-    ) as $Val);
-  }
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentFailedImplCopyWith<$Res> implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentFailedImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentFailedImplCopyWith(
           _$LiquidSdkEvent_PaymentFailedImpl value, $Res Function(_$LiquidSdkEvent_PaymentFailedImpl) then) =
       __$$LiquidSdkEvent_PaymentFailedImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -122,20 +101,17 @@ abstract class LiquidSdkEvent_PaymentFailed extends LiquidSdkEvent {
       _$LiquidSdkEvent_PaymentFailedImpl;
   const LiquidSdkEvent_PaymentFailed._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentFailedImplCopyWith<_$LiquidSdkEvent_PaymentFailedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentPendingImplCopyWith<$Res> implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentPendingImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentPendingImplCopyWith(_$LiquidSdkEvent_PaymentPendingImpl value,
           $Res Function(_$LiquidSdkEvent_PaymentPendingImpl) then) =
       __$$LiquidSdkEvent_PaymentPendingImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -199,20 +175,17 @@ abstract class LiquidSdkEvent_PaymentPending extends LiquidSdkEvent {
       _$LiquidSdkEvent_PaymentPendingImpl;
   const LiquidSdkEvent_PaymentPending._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentPendingImplCopyWith<_$LiquidSdkEvent_PaymentPendingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentRefundedImplCopyWith<$Res> implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentRefundedImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentRefundedImplCopyWith(_$LiquidSdkEvent_PaymentRefundedImpl value,
           $Res Function(_$LiquidSdkEvent_PaymentRefundedImpl) then) =
       __$$LiquidSdkEvent_PaymentRefundedImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -276,21 +249,17 @@ abstract class LiquidSdkEvent_PaymentRefunded extends LiquidSdkEvent {
       _$LiquidSdkEvent_PaymentRefundedImpl;
   const LiquidSdkEvent_PaymentRefunded._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentRefundedImplCopyWith<_$LiquidSdkEvent_PaymentRefundedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentRefundPendingImplCopyWith<$Res>
-    implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentRefundPendingImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentRefundPendingImplCopyWith(_$LiquidSdkEvent_PaymentRefundPendingImpl value,
           $Res Function(_$LiquidSdkEvent_PaymentRefundPendingImpl) then) =
       __$$LiquidSdkEvent_PaymentRefundPendingImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -355,20 +324,17 @@ abstract class LiquidSdkEvent_PaymentRefundPending extends LiquidSdkEvent {
       _$LiquidSdkEvent_PaymentRefundPendingImpl;
   const LiquidSdkEvent_PaymentRefundPending._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentRefundPendingImplCopyWith<_$LiquidSdkEvent_PaymentRefundPendingImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<$Res> implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentSucceedImplCopyWith(_$LiquidSdkEvent_PaymentSucceedImpl value,
           $Res Function(_$LiquidSdkEvent_PaymentSucceedImpl) then) =
       __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -432,22 +398,18 @@ abstract class LiquidSdkEvent_PaymentSucceed extends LiquidSdkEvent {
       _$LiquidSdkEvent_PaymentSucceedImpl;
   const LiquidSdkEvent_PaymentSucceed._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<_$LiquidSdkEvent_PaymentSucceedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWith<$Res>
-    implements $LiquidSdkEventCopyWith<$Res> {
+abstract class _$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWith<$Res> {
   factory _$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWith(
           _$LiquidSdkEvent_PaymentWaitingConfirmationImpl value,
           $Res Function(_$LiquidSdkEvent_PaymentWaitingConfirmationImpl) then) =
       __$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({Payment details});
 }
@@ -512,10 +474,49 @@ abstract class LiquidSdkEvent_PaymentWaitingConfirmation extends LiquidSdkEvent 
       _$LiquidSdkEvent_PaymentWaitingConfirmationImpl;
   const LiquidSdkEvent_PaymentWaitingConfirmation._() : super._();
 
-  @override
   Payment get details;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWith<_$LiquidSdkEvent_PaymentWaitingConfirmationImpl>
       get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$LiquidSdkEvent_SyncedImplCopyWith<$Res> {
+  factory _$$LiquidSdkEvent_SyncedImplCopyWith(
+          _$LiquidSdkEvent_SyncedImpl value, $Res Function(_$LiquidSdkEvent_SyncedImpl) then) =
+      __$$LiquidSdkEvent_SyncedImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$LiquidSdkEvent_SyncedImplCopyWithImpl<$Res>
+    extends _$LiquidSdkEventCopyWithImpl<$Res, _$LiquidSdkEvent_SyncedImpl>
+    implements _$$LiquidSdkEvent_SyncedImplCopyWith<$Res> {
+  __$$LiquidSdkEvent_SyncedImplCopyWithImpl(
+      _$LiquidSdkEvent_SyncedImpl _value, $Res Function(_$LiquidSdkEvent_SyncedImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$LiquidSdkEvent_SyncedImpl extends LiquidSdkEvent_Synced {
+  const _$LiquidSdkEvent_SyncedImpl() : super._();
+
+  @override
+  String toString() {
+    return 'LiquidSdkEvent.synced()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$LiquidSdkEvent_SyncedImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class LiquidSdkEvent_Synced extends LiquidSdkEvent {
+  const factory LiquidSdkEvent_Synced() = _$LiquidSdkEvent_SyncedImpl;
+  const LiquidSdkEvent_Synced._() : super._();
 }

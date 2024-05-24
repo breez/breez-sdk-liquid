@@ -64,6 +64,7 @@ pub enum LiquidSdkEvent {
     PaymentRefundPending { details: Payment },
     PaymentSucceed { details: Payment },
     PaymentWaitingConfirmation { details: Payment },
+    Synced,
 }
 
 pub struct LiquidSdkOptions {

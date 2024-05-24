@@ -22,7 +22,7 @@ use lwk_wollet::{
 };
 use std::collections::HashMap;
 use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, thread, time::Duration};
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 
 use crate::boltz_status_stream::set_stream_nonblocking;
@@ -74,9 +74,11 @@ impl LiquidSdk {
 
         // Periodically run sync() in the background
         let sdk_clone = sdk.clone();
-        thread::spawn(move || loop {
-            thread::sleep(Duration::from_secs(30));
-            _ = sdk_clone.sync();
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(Duration::from_secs(30)).await;
+                _ = sdk_clone.sync().await;
+            }
         });
 
         // Initial sync() before returning the instance
@@ -445,7 +447,8 @@ impl LiquidSdk {
                 warn!("Swap-in {id} has already been claimed");
                 let preimage =
                     self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
-                self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage).await?;
+                self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)
+                    .await?;
                 Ok(())
             }
 
@@ -1244,6 +1247,7 @@ impl LiquidSdk {
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized with mempool and onchain data (t = {duration_ms} ms)");
 
+        self.notify_event_listeners(LiquidSdkEvent::Synced).await?;
         Ok(())
     }
 

@@ -104,6 +104,7 @@ interface LiquidSdkEvent {
     PaymentRefundPending(Payment details);
     PaymentSucceed(Payment details);
     PaymentWaitingConfirmation(Payment details);
+    Synced();
 };
 
 callback interface EventListener {    
