@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
 };
-use boltz_client::SwapType;
+use boltz_client::{Keypair, SwapType};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -177,6 +177,10 @@ pub(crate) struct SendSwap {
     pub(crate) refund_private_key: String,
 }
 impl SendSwap {
+    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
+    }
+
     pub(crate) fn get_boltz_create_response(
         &self,
     ) -> Result<CreateSubmarineResponse, PaymentError> {

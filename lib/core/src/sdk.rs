@@ -272,7 +272,7 @@ impl LiquidSdk {
             ongoing_send_swap.get_boltz_create_response()?;
 
         let receiver_amount_sat = get_invoice_amount!(ongoing_send_swap.invoice);
-        let keypair = utils::decode_keypair(&ongoing_send_swap.refund_private_key)?;
+        let keypair = ongoing_send_swap.get_refund_keypair()?;
 
         match swap_state {
             SubSwapStates::TransactionClaimPending => {
@@ -1044,7 +1044,7 @@ impl LiquidSdk {
         info!("Retrieving preimage from non-cooperative claim tx");
 
         let id = &swap.id;
-        let keypair = utils::decode_keypair(&swap.refund_private_key)?;
+        let keypair = swap.get_refund_keypair()?;
         let create_response = swap.get_boltz_create_response()?;
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
 
