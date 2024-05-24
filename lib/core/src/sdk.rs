@@ -648,26 +648,37 @@ impl LiquidSdk {
         self: &Arc<LiquidSdk>,
         req: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let (tx, rx) = mpsc::channel();
+        let (tx_blocking, rx_blocking) = mpsc::channel();
+        let (tx_lockup_tx_id, rx_lockup_tx_id) = mpsc::channel();
 
         let req = req.clone();
         let sdk = self.clone();
         thread::spawn(move || {
-            let res = sdk.send_payment_inner(req);
-            _ = tx.send(res);
+            let res = sdk.send_payment_inner(req, tx_lockup_tx_id);
+            _ = tx_blocking.send(res);
         });
 
         let timeout_duration = Duration::from_secs(10);
-        rx.recv_timeout(timeout_duration)
-            .map_err(|_| PaymentError::Generic {
-                err: "Send Payment is taking longer than expected. Use list_payments to monitor when it's Complete.".to_string()
-            })?
+        match rx_blocking.recv_timeout(timeout_duration) {
+            Ok(res) => res,
+            Err(_) => {
+                warn!("Blocking send timed out, trying to return lockup tx id");
+
+                // If on timeout we have the lockup txid available, return it
+                rx_lockup_tx_id.try_recv()
+                    .map(|txid| SendPaymentResponse { txid })
+                    .map_err(|_| PaymentError::Generic {
+                        err: "Send Payment is taking longer than expected and no lockup tx was broadcast".to_string()
+                    })
+            }
+        }
     }
 
     /// Blocking method that only returns when the cooperative claim is broadcast (Payment is complete)
     fn send_payment_inner(
         &self,
         req: PrepareSendResponse,
+        tx_lockup_tx_id: mpsc::Sender<String>,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
@@ -764,6 +775,7 @@ impl LiquidSdk {
                     };
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response)?;
+                    _ = tx_lockup_tx_id.send(lockup_tx_id.clone());
                     self.try_handle_send_swap_update(
                         swap_id,
                         Pending,
