@@ -95,7 +95,6 @@ impl Persister {
     pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
         let con = self.get_connection()?;
 
-        // TODO For refund txs, do not create a new Payment
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
         let mut stmt = con.prepare(
             "
@@ -123,6 +122,8 @@ impl Persister {
                 ON ptx.tx_id = rs.claim_tx_id
             LEFT JOIN send_swaps AS ss
                 ON ptx.tx_id = ss.lockup_tx_id
+            WHERE
+                ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps)
         ",
         )?;
 
