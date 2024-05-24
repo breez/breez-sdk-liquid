@@ -519,8 +519,7 @@ impl LiquidSdk {
         swap_id: &str,
         swap_script: &LBtcSwapScriptV2,
     ) -> Result<LBtcSwapTxV2, PaymentError> {
-        let wallet = self.lwk_wollet.lock().unwrap();
-        let output_address = wallet.address(Some(0))?.address().to_string();
+        let output_address = self.next_unused_address()?.to_string();
         let network_config = self.network_config();
         Ok(LBtcSwapTxV2::new_refund(
             swap_script.clone(),
