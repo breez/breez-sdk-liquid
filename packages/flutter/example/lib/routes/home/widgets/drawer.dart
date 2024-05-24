@@ -44,7 +44,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to create backup. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(content: Text(errMsg));
+                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -67,7 +67,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to restore backup. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(content: Text(errMsg));
+                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -86,7 +86,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to empty wallet cache. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(content: Text(errMsg));
+                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -110,7 +110,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to display mnemonics. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(content: Text(errMsg));
+                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }

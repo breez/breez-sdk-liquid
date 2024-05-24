@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
       final errMsg = "Failed to sync wallet. $e";
       debugPrint(errMsg);
       if (context.mounted) {
-        final snackBar = SnackBar(content: Text(errMsg));
+        final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }

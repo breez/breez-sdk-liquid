@@ -95,7 +95,10 @@ class _SendPaymentDialogState extends State<SendPaymentDialog> {
                           debugPrint(errMsg);
                           if (context.mounted) {
                             Navigator.pop(context);
-                            final snackBar = SnackBar(content: Text(errMsg));
+                            final snackBar = SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              content: Text(errMsg),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(snackBar);
                           }
                         } finally {
@@ -118,7 +121,10 @@ class _SendPaymentDialogState extends State<SendPaymentDialog> {
                           debugPrint(errMsg);
                           if (context.mounted) {
                             Navigator.pop(context);
-                            final snackBar = SnackBar(content: Text(errMsg));
+                            final snackBar = SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              content: Text(errMsg),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(snackBar);
                           }
                         } finally {

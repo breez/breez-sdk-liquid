@@ -11,7 +11,7 @@ class QrActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 32.0),
+      padding: const EdgeInsets.only(top: 32.0, bottom: 0),
       child: FloatingActionButton(
         backgroundColor: Colors.white,
         shape: const StadiumBorder(),

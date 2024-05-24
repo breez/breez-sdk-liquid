@@ -15,10 +15,14 @@ class PaymentItem extends StatelessWidget {
               try {
                 debugPrint("Store payment preimage on clipboard. Preimage: ${item.preimage!}");
                 Clipboard.setData(ClipboardData(text: item.preimage!));
-                const snackBar = SnackBar(content: Text('Copied payment preimage to clipboard.'));
+                const snackBar = SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  content: Text('Copied payment preimage to clipboard.'),
+                );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               } catch (e) {
                 final snackBar = SnackBar(
+                  behavior: SnackBarBehavior.floating,
                   content: Text('Failed to copy payment preimage to clipboard. $e'),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -29,10 +33,14 @@ class PaymentItem extends StatelessWidget {
                   try {
                     debugPrint("Store swap ID on clipboard. Swap ID: ${item.swapId!}");
                     Clipboard.setData(ClipboardData(text: item.swapId!));
-                    const snackBar = SnackBar(content: Text('Copied swap ID to clipboard.'));
+                    const snackBar = SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      content: Text('Copied swap ID to clipboard.'),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   } catch (e) {
                     final snackBar = SnackBar(
+                      behavior: SnackBarBehavior.floating,
                       content: Text('Failed to copy payment preimage to clipboard. $e'),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
