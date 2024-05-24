@@ -467,6 +467,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ba
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,

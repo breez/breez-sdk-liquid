@@ -56,6 +56,10 @@ impl BindingLiquidSdk {
         self.sdk.backup().map_err(Into::into)
     }
 
+    pub fn empty_wallet_cache(&self) -> Result<(), LiquidSdkError> {
+        self.sdk.empty_wallet_cache().map_err(Into::into)
+    }
+
     pub fn restore(&self, req: RestoreRequest) -> Result<(), LiquidSdkError> {
         self.sdk.restore(req).map_err(Into::into)
     }
