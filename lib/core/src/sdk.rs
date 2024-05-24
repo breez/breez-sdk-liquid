@@ -1150,7 +1150,7 @@ mod tests {
 
         Ok(payments
             .iter()
-            .filter(|p| matches!(&p.status, PaymentStatus::Pending))
+            .filter(|p| matches!(&p.status, PaymentState::Pending))
             .cloned()
             .collect())
     }
