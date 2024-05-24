@@ -31,6 +31,10 @@ thiserror = { workspace = true }
 tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 openssl = { version = "0.10", features = ["vendored"] }
 
+# Pin these versions to fix iOS build issues
+security-framework = "=2.10.0"
+security-framework-sys = "=2.10.0"
+
 [dev-dependencies]
 tempdir = "0.3.7"
 uuid = { version = "1.8.0", features = ["v4"] }
