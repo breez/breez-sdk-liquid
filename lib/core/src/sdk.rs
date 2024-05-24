@@ -23,10 +23,6 @@ use boltz_client::{
 use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
-use lwk_wollet::bitcoin::Witness;
-use lwk_wollet::elements::hex::ToHex;
-use lwk_wollet::elements::Txid;
-use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
@@ -788,28 +784,6 @@ impl LiquidSdk {
                         None,
                         Some(&refund_tx_id),
                     )?;
-
-                    // Block until the refund is resolved
-                    let wallet = self.lwk_wollet.lock().unwrap();
-                    let txid =
-                        Txid::from_str(&refund_tx_id).map_err(|_| PaymentError::Generic {
-                            err: "Cannot decode the refund tx id".to_string(),
-                        })?;
-                    std::mem::drop(wallet);
-
-                    loop {
-                        debug!("Waiting for refund tx {refund_tx_id} to be confirmed...");
-                        self.sync()?;
-                        let wallet = self.lwk_wollet.lock().unwrap();
-                        if let Some(tx) = wallet.transaction(&txid)? {
-                            if tx.timestamp.is_some() {
-                                debug!("Refund tx {refund_tx_id} confirmed");
-                                break;
-                            }
-                        }
-                        std::mem::drop(wallet);
-                        thread::sleep(Duration::from_secs(5));
-                    }
 
                     result = Err(PaymentError::Refunded {
                         err: format!(
