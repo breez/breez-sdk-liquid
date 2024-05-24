@@ -15,7 +15,7 @@ frb = ["dep:flutter_rust_bridge"]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "dc0cfa0408f4d7d4ff9409d46a816108574ed0c6" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "c97e8cbaae5b675f6bd3c8a11af7f3d4756a5bfd" }
 flutter_rust_bridge = { version = "=2.0.0-dev.35", features = ["chrono"], optional = true }
 log = "0.4.20"
 lwk_common = "0.5.1"

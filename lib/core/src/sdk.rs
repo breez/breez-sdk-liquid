@@ -577,9 +577,12 @@ impl LiquidSdk {
                     err: format!("Cannot convert current block height to lock time: {e:?}"),
                 })?;
 
-            if locktime_from_height.ge(&swap_script.locktime) {
+            if !locktime_from_height.ge(&swap_script.locktime) {
                 return Err(PaymentError::Generic {
-                    err: "Cannot refund non-cooperatively. Lock time not elapsed yet.".to_string(),
+                    err: format!(
+                        "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
+                        locktime_from_height, swap_script.locktime
+                    )
                 });
             }
 
