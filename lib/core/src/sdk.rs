@@ -20,7 +20,6 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
-use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
@@ -200,17 +199,20 @@ impl LiquidSdk {
             "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?})"
         );
 
-        let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_receive_swap(&con, swap_id)
+        let swap = self
+            .persister
+            .fetch_receive_swap(swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),
             })?;
+        let payment_id = claim_tx_id.map(|c| c.to_string()).or(swap.claim_tx_id);
 
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister
-            .try_handle_receive_swap_update(&con, swap_id, to_state, claim_tx_id)?;
-        Ok(self.emit_payment_updated(swap.claim_tx_id).await?)
+            .try_handle_receive_swap_update(swap_id, to_state, claim_tx_id)?;
+
+        Ok(self.emit_payment_updated(payment_id).await?)
     }
 
     /// Transitions a Send swap to a new state
@@ -224,23 +226,24 @@ impl LiquidSdk {
     ) -> Result<(), PaymentError> {
         info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
 
-        let con = self.persister.get_connection()?;
-        let swap = Persister::fetch_send_swap(&con, swap_id)
+        let swap: SendSwap = self
+            .persister
+            .fetch_send_swap(swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
                 err: format!("Send Swap not found {swap_id}"),
             })?;
+        let payment_id = lockup_tx_id.map(|c| c.to_string()).or(swap.lockup_tx_id);
 
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_send_swap_update(
-            &con,
             swap_id,
             to_state,
             preimage,
             lockup_tx_id,
             refund_tx_id,
         )?;
-        Ok(self.emit_payment_updated(swap.lockup_tx_id).await?)
+        Ok(self.emit_payment_updated(payment_id).await?)
     }
 
     async fn emit_payment_updated(&self, payment_id: Option<String>) -> Result<()> {
@@ -259,8 +262,7 @@ impl LiquidSdk {
                             match payment.swap_id.clone() {
                                 Some(swap_id) => match payment.payment_type {
                                     PaymentType::Receive => {
-                                        let con = self.persister.get_connection()?;
-                                        match Persister::fetch_receive_swap(&con, &swap_id)? {
+                                        match self.persister.fetch_receive_swap(&swap_id)? {
                                             Some(swap) => match swap.claim_tx_id {
                                                 Some(_) => {
                                                     // The claim tx has now been broadcast
@@ -285,8 +287,7 @@ impl LiquidSdk {
                                         }
                                     }
                                     PaymentType::Send => {
-                                        let con = self.persister.get_connection()?;
-                                        match Persister::fetch_send_swap(&con, &swap_id)? {
+                                        match self.persister.fetch_send_swap(&swap_id)? {
                                             Some(swap) => match swap.refund_tx_id {
                                                 Some(_) => {
                                                     // The refund tx has now been broadcast
@@ -348,8 +349,9 @@ impl LiquidSdk {
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
-        let con = self.persister.get_connection()?;
-        let receive_swap = Persister::fetch_receive_swap(&con, id)?
+        let receive_swap = self
+            .persister
+            .fetch_receive_swap(id)?
             .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
         match swap_state {
@@ -400,8 +402,9 @@ impl LiquidSdk {
 
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
-        let con = self.persister.get_connection()?;
-        let ongoing_send_swap = Persister::fetch_send_swap(&con, id)?
+        let ongoing_send_swap = self
+            .persister
+            .fetch_send_swap(id)?
             .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
         let create_response: CreateSubmarineResponse =
             ongoing_send_swap.get_boltz_create_response()?;
@@ -862,9 +865,9 @@ impl LiquidSdk {
                 // Boltz has locked the HTLC, we proceed with locking up the funds
                 SubSwapStates::InvoiceSet => {
                     // Check that we have not persisted the swap already
-                    let con = self.persister.get_connection()?;
-
-                    if let Some(ongoing_swap) = Persister::fetch_send_swap(&con, swap_id)
+                    if let Some(ongoing_swap) = self
+                        .persister
+                        .fetch_send_swap(swap_id)
                         .map_err(|_| PaymentError::PersistError)?
                     {
                         if ongoing_swap.lockup_tx_id.is_some() {
@@ -1104,13 +1107,10 @@ impl LiquidSdk {
             lwk_wollet::full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)?;
         }
 
-        let con = self.persister.get_connection()?;
-        let pending_receive_swaps_by_claim_tx_id: HashMap<String, ReceiveSwap> = self
-            .persister
-            .list_pending_receive_swaps_by_claim_tx_id(&con)?;
-        let pending_send_swaps_by_refund_tx_id: HashMap<String, SendSwap> = self
-            .persister
-            .list_pending_send_swaps_by_refund_tx_id(&con)?;
+        let pending_receive_swaps_by_claim_tx_id =
+            self.persister.list_pending_receive_swaps_by_claim_tx_id()?;
+        let pending_send_swaps_by_refund_tx_id =
+            self.persister.list_pending_send_swaps_by_refund_tx_id()?;
 
         for tx in self.lwk_wollet.lock().await.transactions()? {
             let tx_id = tx.txid.to_string();

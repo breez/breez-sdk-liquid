@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use boltz_client::swaps::boltzv2::CreateSubmarineResponse;
-use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
 use crate::ensure_sdk;
@@ -70,13 +70,12 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_send_swap(
-        con: &Connection,
-        id: &str,
-    ) -> rusqlite::Result<Option<SendSwap>> {
+    pub(crate) fn fetch_send_swap(&self, id: &str) -> Result<Option<SendSwap>> {
+        let con: Connection = self.get_connection()?;
         let query = Self::list_send_swaps_query(vec!["id = ?1".to_string()]);
-        con.query_row(&query, [id], Self::sql_row_to_send_swap)
-            .optional()
+        let res = con.query_row(&query, [id], Self::sql_row_to_send_swap);
+
+        Ok(res.ok())
     }
 
     fn sql_row_to_send_swap(row: &Row) -> rusqlite::Result<SendSwap> {
@@ -124,10 +123,8 @@ impl Persister {
         self.list_send_swaps(con, where_clause)
     }
 
-    pub(crate) fn list_pending_send_swaps(
-        &self,
-        con: &Connection,
-    ) -> rusqlite::Result<Vec<SendSwap>> {
+    pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let con: Connection = self.get_connection()?;
         let query = Self::list_send_swaps_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
@@ -140,10 +137,9 @@ impl Persister {
     /// Pending Send swaps, indexed by refund tx id
     pub(crate) fn list_pending_send_swaps_by_refund_tx_id(
         &self,
-        con: &Connection,
-    ) -> rusqlite::Result<HashMap<String, SendSwap>> {
+    ) -> Result<HashMap<String, SendSwap>> {
         let res: HashMap<String, SendSwap> = self
-            .list_pending_send_swaps(con)?
+            .list_pending_send_swaps()?
             .iter()
             .filter_map(|pending_send_swap| {
                 pending_send_swap
@@ -157,7 +153,6 @@ impl Persister {
 
     pub(crate) fn try_handle_send_swap_update(
         &self,
-        con: &Connection,
         swap_id: &str,
         to_state: PaymentState,
         preimage: Option<&str>,
@@ -165,6 +160,7 @@ impl Persister {
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite preimage, lockup_tx_id, refund_tx_id
+        let con: Connection = self.get_connection()?;
         con.execute(
             "UPDATE send_swaps
             SET

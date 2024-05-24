@@ -170,8 +170,8 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some(&format!("ptx.tx_id = {id}"))),
-                params![],
+                &self.select_payment_query(Some(&format!("ptx.tx_id = ?1"))),
+                params![id],
                 |row| self.sql_row_to_payment(row),
             )
             .optional()?)
