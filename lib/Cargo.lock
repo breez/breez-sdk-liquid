@@ -523,6 +523,8 @@ dependencies = [
  "openssl",
  "rusqlite",
  "rusqlite_migration",
+ "security-framework",
+ "security-framework-sys",
  "serde",
  "serde_json",
  "tempdir",
