@@ -544,7 +544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Payment dco_decode_payment(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return Payment(
       txId: dco_decode_String(arr[0]),
       swapId: dco_decode_opt_String(arr[1]),
@@ -552,8 +552,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       amountSat: dco_decode_u_64(arr[3]),
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
       preimage: dco_decode_opt_String(arr[5]),
-      paymentType: dco_decode_payment_type(arr[6]),
-      status: dco_decode_payment_state(arr[7]),
+      refundTxId: dco_decode_opt_String(arr[6]),
+      refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
+      paymentType: dco_decode_payment_type(arr[8]),
+      status: dco_decode_payment_state(arr[9]),
     );
   }
 
@@ -909,6 +911,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_preimage = sse_decode_opt_String(deserializer);
+    var var_refundTxId = sse_decode_opt_String(deserializer);
+    var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_paymentType = sse_decode_payment_type(deserializer);
     var var_status = sse_decode_payment_state(deserializer);
     return Payment(
@@ -918,6 +922,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         amountSat: var_amountSat,
         feesSat: var_feesSat,
         preimage: var_preimage,
+        refundTxId: var_refundTxId,
+        refundTxAmountSat: var_refundTxAmountSat,
         paymentType: var_paymentType,
         status: var_status);
   }
@@ -1310,6 +1316,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
     sse_encode_opt_String(self.preimage, serializer);
+    sse_encode_opt_String(self.refundTxId, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.refundTxAmountSat, serializer);
     sse_encode_payment_type(self.paymentType, serializer);
     sse_encode_payment_state(self.status, serializer);
   }

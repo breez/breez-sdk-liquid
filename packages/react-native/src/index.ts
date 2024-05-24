@@ -41,6 +41,8 @@ export interface Payment {
     amountSat: number
     feesSat?: number
     preimage?: string
+    refundTxId?: string
+    refundTxAmountSat?: number
     paymentType: PaymentType
     status: PaymentState
 }
