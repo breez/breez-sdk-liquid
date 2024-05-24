@@ -520,15 +520,14 @@ impl LiquidSdk {
         swap_id: &str,
         swap_script: &LBtcSwapScriptV2,
     ) -> Result<LBtcSwapTxV2, PaymentError> {
-        let output_address = self.next_unused_address()?.to_string();
-        let network_config = self.network_config();
-        Ok(LBtcSwapTxV2::new_refund(
+        LBtcSwapTxV2::new_refund(
             swap_script.clone(),
-            &output_address,
-            &network_config,
+            &self.next_unused_address()?.to_string(),
+            &self.network_config(),
             self.boltz_url_v2().to_string(),
             swap_id.to_string(),
-        )?)
+        )
+        .map_err(Into::into)
     }
 
     fn try_refund(
@@ -717,7 +716,7 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
-        self.persister.insert_send_swap(SendSwap {
+        self.persister.insert_send_swap(&SendSwap {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
             payer_amount_sat: req.fees_sat + receiver_amount_sat,
@@ -726,7 +725,7 @@ impl LiquidSdk {
             lockup_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
-            state: PaymentState::Created,
+            state: Created,
             refund_private_key: keypair.display_secret().to_string(),
         })?;
 
@@ -968,7 +967,7 @@ impl LiquidSdk {
             &invoice.to_string(),
         )?;
         self.persister
-            .insert_receive_swap(ReceiveSwap {
+            .insert_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -978,7 +977,7 @@ impl LiquidSdk {
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 created_at: utils::now(),
-                state: PaymentState::Created,
+                state: Created,
             })
             .map_err(|_| PaymentError::PersistError)?;
 
