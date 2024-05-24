@@ -325,15 +325,8 @@ impl LiquidSdk {
 
             SubSwapStates::TransactionClaimed => {
                 warn!("Swap-in {id} has already been claimed");
-
-                let preimage = match self.boltz_client_v2().get_claim_tx_details(&id.to_string()) {
-                    Ok(claim_tx_details) => claim_tx_details.preimage,
-                    Err(_) => {
-                        warn!("Failed to get cooperative claim tx details, checking for non-cooperative claim tx onchain");
-                        self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?
-                    }
-                };
-
+                let preimage =
+                    self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
                 self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)?;
                 Ok(())
             }
