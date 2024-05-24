@@ -25,9 +25,28 @@ class Balance extends StatelessWidget {
         final walletInfo = walletInfoSnapshot.data!;
 
         return Center(
-          child: Text(
-            "${walletInfo.balanceSat} sats",
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.blue),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "${walletInfo.balanceSat} sats",
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.blue),
+              ),
+              if (walletInfo.pendingReceiveSat != 0) ...[
+                Text(
+                  "Pending Receive: ${walletInfo.pendingReceiveSat} sats",
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.blueGrey),
+                ),
+              ],
+              if (walletInfo.pendingSendSat != 0) ...[
+                Text(
+                  "Pending Send: ${walletInfo.pendingSendSat} sats",
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.blueGrey),
+                ),
+              ],
+            ],
           ),
         );
       },
