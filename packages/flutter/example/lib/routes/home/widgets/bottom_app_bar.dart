@@ -47,8 +47,10 @@ class HomePageBottomAppBar extends StatelessWidget {
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder: (context) =>
-                      ReceivePaymentDialog(liquidSDK: liquidSDK, paymentsStream: paymentsStream),
+                  builder: (context) => ReceivePaymentDialog(
+                    liquidSDK: liquidSDK,
+                    paymentsStream: paymentsStream.asBroadcastStream(),
+                  ),
                 );
               },
               child: Text(

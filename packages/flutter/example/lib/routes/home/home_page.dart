@@ -72,13 +72,13 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   height: constraints.maxHeight * 0.3,
                   color: Colors.white,
-                  child: Balance(walletInfoStream: walletInfoStream()),
+                  child: Balance(walletInfoStream: walletInfoStream().asBroadcastStream()),
                 ),
                 Container(
                   height: constraints.maxHeight * 0.7,
                   color: Colors.white,
                   child: PaymentList(
-                    paymentsStream: paymentsStream(),
+                    paymentsStream: paymentsStream().asBroadcastStream(),
                     onRefresh: () async => await _sync(),
                   ),
                 ),
@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: HomePageBottomAppBar(
           liquidSDK: widget.liquidSDK,
-          paymentsStream: paymentsStream(),
+          paymentsStream: paymentsStream().asBroadcastStream(),
         ),
       ),
     );
