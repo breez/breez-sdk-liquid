@@ -10,6 +10,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
+use boltz_client::ToHex;
 use boltz_client::{
     network::electrum::ElectrumConfig,
     swaps::{
@@ -23,6 +24,8 @@ use boltz_client::{
 use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
+use lwk_wollet::bitcoin::Witness;
+use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
