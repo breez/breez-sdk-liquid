@@ -67,6 +67,22 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
+
+    @ReactMethod
+    fun addEventListener(promise: Promise) {
+        executor.execute {
+            try {
+                val emitter = reactApplicationContext.getJSModule(RCTDeviceEventEmitter::class.java)
+                var eventListener = BreezLiquidSDKEventListener(emitter)
+                val res = getBindingLiquidSdk().addEventListener(eventListener)
+
+                eventListener.setId(res)
+                promise.resolve(res)
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
     {%- include "Objects.kt" %}
 }
 

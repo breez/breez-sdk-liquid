@@ -8,7 +8,7 @@
 
 import React, { useState } from "react"
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
-import { Network, getInfo, connect } from "@breeztech/react-native-breez-liquid-sdk"
+import { addEventListener, Network, getInfo, connect, removeEventListener } from "@breeztech/react-native-breez-liquid-sdk"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 
@@ -33,7 +33,13 @@ const App = () => {
         console.log(`${title}${text && text.length > 0 ? ": " + text : ""}`)
     }
 
+    const eventHandler = (e) => {
+        addLine("event", JSON.stringify(e))
+    }
+
     React.useEffect(() => {
+        let listenerId = null
+
         const asyncFn = async () => {
             try {
                 let mnemonic = await getSecureItem(MNEMONIC_STORE)
@@ -43,10 +49,13 @@ const App = () => {
                     setSecureItem(MNEMONIC_STORE, mnemonic)
                 }
 
-                await connect({mnemonic, network: Network.LIQUID_TESTNET})
+                await connect({ mnemonic, network: Network.LIQUID_TESTNET })
                 addLine("connect", null)
 
-                let walletInfo = await getInfo({withScan: false})
+                listenerId = await addEventListener(eventHandler)
+                addLine("addEventListener", listenerId)
+
+                let walletInfo = await getInfo({ withScan: false })
                 addLine("getInfo", JSON.stringify(walletInfo))
             } catch (e) {
                 addLine("error", e.toString())
@@ -55,6 +64,12 @@ const App = () => {
         }
 
         asyncFn()
+
+        return () => {
+            if (listenerId) {
+                removeEventListener(listenerId)
+            }
+        }
     }, [])
 
     return (

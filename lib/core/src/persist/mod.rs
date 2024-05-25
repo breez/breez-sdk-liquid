@@ -7,7 +7,7 @@ use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr}
 
 use anyhow::Result;
 use migrations::current_migrations;
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
 
 use crate::model::{Network::*, *};
@@ -92,12 +92,8 @@ impl Persister {
         Ok([ongoing_send_swaps, ongoing_receive_swaps].concat())
     }
 
-    pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
-        let con = self.get_connection()?;
-
-        // TODO For refund txs, do not create a new Payment
-        // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
-        let mut stmt = con.prepare(
+    fn select_payment_query(&self, where_clause: Option<&str>) -> String {
+        format!(
             "
             SELECT
                 ptx.tx_id,
@@ -121,51 +117,76 @@ impl Persister {
                 ON ptx.tx_id = rs.claim_tx_id
             LEFT JOIN send_swaps AS ss
                 ON ptx.tx_id = ss.lockup_tx_id
-        ",
-        )?;
+            WHERE {}
+            ",
+            where_clause.unwrap_or("true")
+        )
+    }
+
+    fn sql_row_to_payment(&self, row: &Row) -> Result<Payment, rusqlite::Error> {
+        let tx = PaymentTxData {
+            tx_id: row.get(0)?,
+            timestamp: row.get(1)?,
+            amount_sat: row.get(2)?,
+            payment_type: row.get(3)?,
+            is_confirmed: row.get(4)?,
+        };
+
+        let maybe_receive_swap_id: Option<String> = row.get(5)?;
+        let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
+        let maybe_send_swap_id: Option<String> = row.get(10)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(12)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(13)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(14)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(15)?;
+
+        let swap = match maybe_receive_swap_id {
+            Some(receive_swap_id) => Some(PaymentSwapData {
+                swap_id: receive_swap_id,
+                created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
+                preimage: None,
+                payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
+                receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
+                status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
+            }),
+            None => maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
+                swap_id: send_swap_id,
+                created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
+                preimage: maybe_send_swap_preimage,
+                payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
+                receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
+                status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
+            }),
+        };
+
+        Ok(Payment::from(tx, swap))
+    }
+
+    pub fn get_payment(&self, id: String) -> Result<Option<Payment>> {
+        Ok(self
+            .get_connection()?
+            .query_row(
+                &self.select_payment_query(Some(&format!("ptx.tx_id = ?1"))),
+                params![id],
+                |row| self.sql_row_to_payment(row),
+            )
+            .optional()?)
+    }
+
+    pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
+        let con = self.get_connection()?;
+
+        // TODO For refund txs, do not create a new Payment
+        // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
+        let mut stmt = con.prepare(&self.select_payment_query(None))?;
 
         let data = stmt
             .query_map(params![], |row| {
-                let tx = PaymentTxData {
-                    tx_id: row.get(0)?,
-                    timestamp: row.get(1)?,
-                    amount_sat: row.get(2)?,
-                    payment_type: row.get(3)?,
-                    is_confirmed: row.get(4)?,
-                };
-
-                let maybe_receive_swap_id: Option<String> = row.get(5)?;
-                let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
-                let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
-                let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
-                let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
-                let maybe_send_swap_id: Option<String> = row.get(10)?;
-                let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
-                let maybe_send_swap_preimage: Option<String> = row.get(12)?;
-                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(13)?;
-                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(14)?;
-                let maybe_send_swap_state: Option<PaymentState> = row.get(15)?;
-
-                let swap = match maybe_receive_swap_id {
-                    Some(receive_swap_id) => Some(PaymentSwapData {
-                        swap_id: receive_swap_id,
-                        created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
-                        preimage: None,
-                        payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
-                        receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
-                        status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
-                    }),
-                    None => maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
-                        swap_id: send_swap_id,
-                        created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
-                        preimage: maybe_send_swap_preimage,
-                        payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
-                        receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
-                        status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
-                    }),
-                };
-
-                Ok((tx.tx_id.clone(), Payment::from(tx, swap)))
+                self.sql_row_to_payment(row).map(|p| (p.tx_id.clone(), p))
             })?
             .map(|i| i.unwrap())
             .collect();

@@ -33,7 +33,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.35";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1284301568;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 692273053;
 
 // Section: executor
 
@@ -41,6 +41,46 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crate__bindings__BindingLiquidSdk_add_event_listener_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    listener: impl CstDecode<
+        StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_add_event_listener",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_listener = listener.cst_decode();
+            move |context| {
+                transform_result_dco((move || {
+                    let mut api_that_decoded = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(
+                            vec![api_that.rust_auto_opaque_lock_order_info(0, false)],
+                        );
+                    for i in decode_indices_ {
+                        match i {
+                            0 => {
+                                api_that_decoded = Some(api_that.rust_auto_opaque_decode_sync_ref())
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that = api_that_decoded.unwrap();
+                    crate::bindings::BindingLiquidSdk::add_event_listener(&api_that, api_listener)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -520,6 +560,16 @@ impl SseDecode
     }
 }
 
+impl SseDecode
+    for StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
 impl SseDecode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -590,6 +640,57 @@ impl SseDecode for crate::error::LiquidSdkError {
             0 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::LiquidSdkError::Generic { err: var_err };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::model::LiquidSdkEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentFailed {
+                    details: var_details,
+                };
+            }
+            1 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentPending {
+                    details: var_details,
+                };
+            }
+            2 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentRefunded {
+                    details: var_details,
+                };
+            }
+            3 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentRefundPending {
+                    details: var_details,
+                };
+            }
+            4 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentSucceed {
+                    details: var_details,
+                };
+            }
+            5 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::LiquidSdkEvent::PaymentWaitingConfirmation {
+                    details: var_details,
+                };
+            }
+            6 => {
+                return crate::model::LiquidSdkEvent::Synced;
             }
             _ => {
                 unimplemented!("");
@@ -987,6 +1088,40 @@ impl flutter_rust_bridge::IntoIntoDart<crate::error::LiquidSdkError>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LiquidSdkEvent {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::LiquidSdkEvent::PaymentFailed { details } => {
+                [0.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::PaymentPending { details } => {
+                [1.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::PaymentRefunded { details } => {
+                [2.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::PaymentRefundPending { details } => {
+                [3.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::PaymentSucceed { details } => {
+                [4.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::PaymentWaitingConfirmation { details } => {
+                [5.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::LiquidSdkEvent::Synced => [6.into_dart()].into_dart(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LiquidSdkEvent {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkEvent>
+    for crate::model::LiquidSdkEvent
+{
+    fn into_into_dart(self) -> crate::model::LiquidSdkEvent {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Network {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -1241,6 +1376,15 @@ impl SseEncode
     }
 }
 
+impl SseEncode
+    for StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
 impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1295,6 +1439,41 @@ impl SseEncode for crate::error::LiquidSdkError {
             crate::error::LiquidSdkError::Generic { err } => {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(err, serializer);
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::model::LiquidSdkEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::LiquidSdkEvent::PaymentFailed { details } => {
+                <i32>::sse_encode(0, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::PaymentPending { details } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::PaymentRefunded { details } => {
+                <i32>::sse_encode(2, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::PaymentRefundPending { details } => {
+                <i32>::sse_encode(3, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::PaymentSucceed { details } => {
+                <i32>::sse_encode(4, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::PaymentWaitingConfirmation { details } => {
+                <i32>::sse_encode(5, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::LiquidSdkEvent::Synced => {
+                <i32>::sse_encode(6, serializer);
             }
         }
     }

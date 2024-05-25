@@ -2,6 +2,7 @@ package com.breezliquidsdk
 
 import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
+import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -59,6 +60,37 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     it.isEmpty()
                 } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
                 bindingLiquidSdk = connect(connectRequest)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun addEventListener(promise: Promise) {
+        executor.execute {
+            try {
+                val emitter = reactApplicationContext.getJSModule(RCTDeviceEventEmitter::class.java)
+                var eventListener = BreezLiquidSDKEventListener(emitter)
+                val res = getBindingLiquidSdk().addEventListener(eventListener)
+
+                eventListener.setId(res)
+                promise.resolve(res)
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun removeEventListener(
+        id: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().removeEventListener(id)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

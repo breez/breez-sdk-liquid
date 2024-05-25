@@ -39,6 +39,20 @@ impl
         unsafe { decode_rust_opaque_nom(self as _) }
     }
 }
+impl
+    CstDecode<
+        StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>,
+    > for *mut wire_cst_list_prim_u_8_strict
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(
+        self,
+    ) -> StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
+    {
+        let raw: String = self.cst_decode();
+        StreamSink::deserialize(raw)
+    }
+}
 impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> String {
@@ -58,6 +72,13 @@ impl CstDecode<crate::model::GetInfoRequest> for *mut wire_cst_get_info_request 
     fn cst_decode(self) -> crate::model::GetInfoRequest {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::GetInfoRequest>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::Payment> for *mut wire_cst_payment {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::Payment {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
@@ -140,6 +161,51 @@ impl CstDecode<crate::error::LiquidSdkError> for wire_cst_liquid_sdk_error {
                     err: ans.err.cst_decode(),
                 }
             }
+            _ => unreachable!(),
+        }
+    }
+}
+impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::LiquidSdkEvent {
+        match self.tag {
+            0 => {
+                let ans = unsafe { self.kind.PaymentFailed };
+                crate::model::LiquidSdkEvent::PaymentFailed {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            1 => {
+                let ans = unsafe { self.kind.PaymentPending };
+                crate::model::LiquidSdkEvent::PaymentPending {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            2 => {
+                let ans = unsafe { self.kind.PaymentRefunded };
+                crate::model::LiquidSdkEvent::PaymentRefunded {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            3 => {
+                let ans = unsafe { self.kind.PaymentRefundPending };
+                crate::model::LiquidSdkEvent::PaymentRefundPending {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            4 => {
+                let ans = unsafe { self.kind.PaymentSucceed };
+                crate::model::LiquidSdkEvent::PaymentSucceed {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            5 => {
+                let ans = unsafe { self.kind.PaymentWaitingConfirmation };
+                crate::model::LiquidSdkEvent::PaymentWaitingConfirmation {
+                    details: ans.details.cst_decode(),
+                }
+            }
+            6 => crate::model::LiquidSdkEvent::Synced,
             _ => unreachable!(),
         }
     }
@@ -338,6 +404,19 @@ impl Default for wire_cst_liquid_sdk_error {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_liquid_sdk_event {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: LiquidSdkEventKind { nil__: () },
+        }
+    }
+}
+impl Default for wire_cst_liquid_sdk_event {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_payment {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -456,6 +535,15 @@ impl Default for wire_cst_send_payment_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
+    port_: i64,
+    that: usize,
+    listener: *mut wire_cst_list_prim_u_8_strict,
+) {
+    wire__crate__bindings__BindingLiquidSdk_add_event_listener_impl(port_, that, listener)
 }
 
 #[no_mangle]
@@ -587,6 +675,11 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_get_info_request(
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
 ) -> *mut wire_cst_prepare_receive_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -690,6 +783,53 @@ pub union LiquidSdkErrorKind {
 #[derive(Clone, Copy)]
 pub struct wire_cst_LiquidSdkError_Generic {
     err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_liquid_sdk_event {
+    tag: i32,
+    kind: LiquidSdkEventKind,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union LiquidSdkEventKind {
+    PaymentFailed: wire_cst_LiquidSdkEvent_PaymentFailed,
+    PaymentPending: wire_cst_LiquidSdkEvent_PaymentPending,
+    PaymentRefunded: wire_cst_LiquidSdkEvent_PaymentRefunded,
+    PaymentRefundPending: wire_cst_LiquidSdkEvent_PaymentRefundPending,
+    PaymentSucceed: wire_cst_LiquidSdkEvent_PaymentSucceed,
+    PaymentWaitingConfirmation: wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation,
+    nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentFailed {
+    details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentPending {
+    details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentRefunded {
+    details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentRefundPending {
+    details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentSucceed {
+    details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation {
+    details: *mut wire_cst_payment,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

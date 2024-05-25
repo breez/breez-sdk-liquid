@@ -552,7 +552,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 9fa78656d705f55b1220151d997e57e2a3f2cde0
-  BreezLiquidSDK: 4bca3771d7dfe9c834dbe26836ffadfe8f283c76
+  BreezLiquidSDK: 287a36ed15beff2b9ba61a869e1868f790b4fa20
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 9cf707e46f9bd90816b7c91b2c1c8b8a2f549527

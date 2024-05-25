@@ -8,6 +8,8 @@ import 'frb_generated.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// The type `BindingEventListener` is not used by any `pub` functions, thus it is ignored.
+
 Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
     RustLib.instance.api.crateBindingsConnect(req: req, hint: hint);
 
@@ -24,6 +26,9 @@ class BindingLiquidSdk extends RustOpaque {
     rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdk,
     rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdkPtr,
   );
+
+  Stream<LiquidSdkEvent> addEventListener({dynamic hint}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(that: this, hint: hint);
 
   Future<void> backup({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, hint: hint);
