@@ -113,16 +113,18 @@ impl Persister {
                 ss.created_at,
                 ss.preimage,
                 ss.refund_tx_id,
-                (SELECT amount_sat FROM payment_tx_data WHERE payment_tx_data.tx_id = ss.refund_tx_id) AS refund_tx_amount_sat,
                 ss.payer_amount_sat,
                 ss.receiver_amount_sat,
-                ss.state
-            FROM payment_tx_data AS ptx
-            LEFT JOIN receive_swaps AS rs
+                ss.state,
+                rtx.amount_sat
+            FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
+            LEFT JOIN receive_swaps AS rs        -- Receive Swap data
                 ON ptx.tx_id = rs.claim_tx_id
-            LEFT JOIN send_swaps AS ss
+            LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
-            WHERE
+            LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
+                ON rtx.tx_id = ss.refund_tx_id
+            WHERE                                -- Filter out refund txs from Payment tx list
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps)
         ",
         )?;
@@ -147,10 +149,10 @@ impl Persister {
                 let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
                 let maybe_send_swap_preimage: Option<String> = row.get(12)?;
                 let maybe_send_swap_refund_tx_id: Option<String> = row.get(13)?;
-                let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(14)?;
-                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(15)?;
-                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(16)?;
-                let maybe_send_swap_state: Option<PaymentState> = row.get(17)?;
+                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(14)?;
+                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(15)?;
+                let maybe_send_swap_state: Option<PaymentState> = row.get(16)?;
+                let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(17)?;
 
                 let swap = match maybe_receive_swap_id {
                     Some(receive_swap_id) => Some(PaymentSwapData {
