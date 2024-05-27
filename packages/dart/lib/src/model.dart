@@ -9,7 +9,10 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
 
 class BackupRequest {
-  /// Path to the backup. Defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet
+  /// Path to the backup.
+  ///
+  /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+  /// The file will be saved in [ConnectRequest]'s `data_dir`.
   final String? backupPath;
 
   const BackupRequest({
