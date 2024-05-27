@@ -122,7 +122,7 @@ impl Persister {
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id = ss.refund_tx_id
             WHERE                                -- Filter out refund txs from Payment tx list
-                ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps)
+                ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
                 AND {}
             ",
             where_clause.unwrap_or("true")
