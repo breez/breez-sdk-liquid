@@ -433,16 +433,6 @@ impl LiquidSdk {
                 .await
                 .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
 
-                // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
-                // This makes the tx known to the SDK (get_info, list_payments) instantly
-                self.persister.insert_or_update_payment(PaymentTxData {
-                    tx_id: lockup_tx_id,
-                    timestamp: None,
-                    amount_sat: ongoing_send_swap.payer_amount_sat,
-                    payment_type: PaymentType::Send,
-                    is_confirmed: false,
-                })?;
-
                 Ok(())
             }
 
@@ -829,10 +819,11 @@ impl LiquidSdk {
         // We mark the pending send as already tracked to avoid it being handled by the status stream
         BoltzStatusStream::mark_swap_as_tracked(swap_id, SwapType::Submarine);
 
+        let payer_amount_sat = req.fees_sat + receiver_amount_sat;
         self.persister.insert_send_swap(SendSwap {
             id: swap_id.clone(),
             invoice: req.invoice.clone(),
-            payer_amount_sat: req.fees_sat + receiver_amount_sat,
+            payer_amount_sat,
             receiver_amount_sat,
             create_response_json,
             lockup_tx_id: None,
@@ -876,6 +867,17 @@ impl LiquidSdk {
                     };
 
                     lockup_tx_id = self.lockup_funds(swap_id, &create_response).await?;
+
+                    // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
+                    // This makes the tx known to the SDK (get_info, list_payments) instantly
+                    self.persister.insert_or_update_payment(PaymentTxData {
+                        tx_id: lockup_tx_id.clone(),
+                        timestamp: None,
+                        amount_sat: payer_amount_sat,
+                        payment_type: PaymentType::Send,
+                        is_confirmed: false,
+                    })?;
+
                     self.try_handle_send_swap_update(
                         swap_id,
                         Pending,
