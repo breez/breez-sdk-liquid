@@ -25,6 +25,7 @@ use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
+use lwk_wollet::elements::{LockTime, LockTime::*};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
@@ -572,12 +573,17 @@ impl LiquidSdk {
         let try_non_cooperative_refund = |e: PaymentError| {
             debug!("Cooperative refund failed: {:?}", e);
             let current_height = self.lwk_wollet.lock().unwrap().tip().height();
-            let locktime_from_height = boltz_client::ElementsLockTime::from_height(current_height)
-                .map_err(|e| PaymentError::Generic {
+            let locktime_from_height =
+                LockTime::from_height(current_height).map_err(|e| PaymentError::Generic {
                     err: format!("Cannot convert current block height to lock time: {e:?}"),
                 })?;
 
-            if !locktime_from_height.ge(&swap_script.locktime) {
+            let is_locktime_satisfied = match (locktime_from_height, swap_script.locktime) {
+                (Blocks(n), Blocks(lock_time)) => n <= lock_time,
+                (Seconds(n), Seconds(lock_time)) => n <= lock_time,
+                _ => false, // Not using the same units
+            };
+            if !is_locktime_satisfied {
                 return Err(PaymentError::Generic {
                     err: format!(
                         "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
