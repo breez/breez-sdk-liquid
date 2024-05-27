@@ -1,8 +1,8 @@
 use std::collections::HashMap;
+use std::sync::RwLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
-use tokio::sync::RwLock;
 
 use crate::model::{EventListener, LiquidSdkEvent};
 
@@ -17,21 +17,21 @@ impl EventManager {
         }
     }
 
-    pub async fn add(&self, listener: Box<dyn EventListener>) -> Result<String> {
+    pub fn add(&self, listener: Box<dyn EventListener>) -> Result<String> {
         let id = format!(
             "{:X}",
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
         );
-        (*self.listeners.write().await).insert(id.clone(), listener);
+        self.listeners.write().unwrap().insert(id.clone(), listener);
         Ok(id)
     }
 
-    pub async fn remove(&self, id: String) {
-        (*self.listeners.write().await).remove(&id);
+    pub fn remove(&self, id: String) {
+        self.listeners.write().unwrap().remove(&id);
     }
 
-    pub async fn notify(&self, e: LiquidSdkEvent) {
-        for listener in (*self.listeners.read().await).values() {
+    pub fn notify(&self, e: LiquidSdkEvent) {
+        for listener in self.listeners.read().unwrap().values() {
             listener.on_event(e.clone());
         }
     }

@@ -53,8 +53,7 @@ impl EventListener for CliEventListener {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     let data_dir_str = args.data_dir.unwrap_or(DEFAULT_DATA_DIR.to_string());
@@ -97,11 +96,8 @@ async fn main() -> Result<()> {
         mnemonic: mnemonic.to_string(),
         data_dir: Some(data_dir_str),
         network,
-    })
-    .await?;
-    let listener_id = sdk
-        .add_event_listener(Box::new(CliEventListener {}))
-        .await?;
+    })?;
+    let listener_id = sdk.add_event_listener(Box::new(CliEventListener {}))?;
 
     let cli_prompt = match network {
         Network::Liquid => "breez-liquid-cli [mainnet]> ",
@@ -120,7 +116,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &sdk, cli_res.unwrap()).await;
+                let res = handle_command(rl, &sdk, cli_res.unwrap());
                 show_results(res)?;
             }
             Err(ReadlineError::Interrupted) => {
@@ -138,6 +134,6 @@ async fn main() -> Result<()> {
         }
     }
 
-    sdk.remove_event_listener(listener_id).await?;
+    sdk.remove_event_listener(listener_id)?;
     rl.save_history(history_file).map_err(|e| anyhow!(e))
 }

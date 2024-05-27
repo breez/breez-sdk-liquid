@@ -1,14 +1,8 @@
-use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
-use anyhow::Result;
-use once_cell::sync::Lazy;
 use std::sync::Arc;
-use tokio::runtime::Runtime;
 
-static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
+use anyhow::Result;
 
-pub(crate) fn rt() -> &'static Runtime {
-    &RT
-}
+use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
 
 struct BindingEventListener {
     stream: StreamSink<LiquidSdkEvent>,
@@ -21,10 +15,8 @@ impl EventListener for BindingEventListener {
 }
 
 pub fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkError> {
-    rt().block_on(async {
-        let ln_sdk = LiquidSdk::connect(req).await?;
-        Ok(BindingLiquidSdk { sdk: ln_sdk })
-    })
+    let ln_sdk = LiquidSdk::connect(req)?;
+    Ok(BindingLiquidSdk { sdk: ln_sdk })
 }
 
 pub struct BindingLiquidSdk {
@@ -33,31 +25,29 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
-        rt().block_on(self.sdk.get_info(req)).map_err(Into::into)
+        self.sdk.get_info(req).map_err(Into::into)
     }
 
     pub fn add_event_listener(
         &self,
         listener: StreamSink<LiquidSdkEvent>,
     ) -> Result<String, LiquidSdkError> {
-        rt().block_on(
-            self.sdk
-                .add_event_listener(Box::new(BindingEventListener { stream: listener })),
-        )
+        self.sdk
+            .add_event_listener(Box::new(BindingEventListener { stream: listener }))
     }
 
     pub fn prepare_send_payment(
         &self,
         req: PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
-        rt().block_on(self.sdk.prepare_send_payment(&req))
+        self.sdk.prepare_send_payment(&req)
     }
 
     pub fn send_payment(
         &self,
         req: PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        rt().block_on(self.sdk.send_payment(&req))
+        self.sdk.send_payment(&req)
     }
 
     pub fn prepare_receive_payment(
@@ -79,7 +69,7 @@ impl BindingLiquidSdk {
     }
 
     pub fn sync(&self) -> Result<(), LiquidSdkError> {
-        rt().block_on(self.sdk.sync()).map_err(Into::into)
+        self.sdk.sync().map_err(Into::into)
     }
 
     pub fn empty_wallet_cache(&self) -> Result<(), LiquidSdkError> {

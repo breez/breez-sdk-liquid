@@ -91,7 +91,7 @@ macro_rules! wait_confirmation {
     };
 }
 
-pub(crate) async fn handle_command(
+pub(crate) fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     sdk: &Arc<LiquidSdk>,
     command: Command,
@@ -118,9 +118,8 @@ pub(crate) async fn handle_command(
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response = sdk
-                .prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })
-                .await?;
+            let prepare_response =
+                sdk.prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })?;
 
             wait_confirmation!(
                 format!(
@@ -134,25 +133,25 @@ pub(crate) async fn handle_command(
                 let sdk_cloned = sdk.clone();
                 let prepare_cloned = prepare_response.clone();
 
-                tokio::spawn(async move {
+                thread::spawn(move || {
                     thread::sleep(Duration::from_secs(delay));
-                    sdk_cloned.send_payment(&prepare_cloned).await.unwrap();
+                    sdk_cloned.send_payment(&prepare_cloned).unwrap();
                 });
                 command_result!(prepare_response)
             } else {
-                let response = sdk.send_payment(&prepare_response).await?;
+                let response = sdk.send_payment(&prepare_response)?;
                 command_result!(response)
             }
         }
         Command::GetInfo => {
-            command_result!(sdk.get_info(GetInfoRequest { with_scan: true }).await?)
+            command_result!(sdk.get_info(GetInfoRequest { with_scan: true })?)
         }
         Command::ListPayments => {
             let payments = sdk.list_payments()?;
             command_result!(payments)
         }
         Command::Sync => {
-            sdk.sync().await?;
+            sdk.sync()?;
             command_result!("Synced successfully")
         }
         Command::EmptyCache => {

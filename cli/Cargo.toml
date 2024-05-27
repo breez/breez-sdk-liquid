@@ -16,7 +16,6 @@ qrcode-rs = { version = "0.1", default-features = false }
 rustyline = { version = "13.0.0", features = ["derive"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
-tokio = { version = "1", features = ["macros"] }
 
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits
