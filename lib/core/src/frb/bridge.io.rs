@@ -60,6 +60,21 @@ impl CstDecode<String> for *mut wire_cst_list_prim_u_8_strict {
         String::from_utf8(vec).unwrap()
     }
 }
+impl CstDecode<crate::model::BackupRequest> for wire_cst_backup_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BackupRequest {
+        crate::model::BackupRequest {
+            backup_path: self.backup_path.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::BackupRequest> for *mut wire_cst_backup_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BackupRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::BackupRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -350,6 +365,18 @@ impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_resp
         }
     }
 }
+impl NewWithNullPtr for wire_cst_backup_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            backup_path: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_backup_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_connect_request {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -550,8 +577,9 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ad
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
     port_: i64,
     that: usize,
+    req: *mut wire_cst_backup_request,
 ) {
-    wire__crate__bindings__BindingLiquidSdk_backup_impl(port_, that)
+    wire__crate__bindings__BindingLiquidSdk_backup_impl(port_, that, req)
 }
 
 #[no_mangle]
@@ -659,6 +687,14 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_backup_request(
+) -> *mut wire_cst_backup_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_backup_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -747,6 +783,11 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
     flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
 }
 
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_backup_request {
+    backup_path: *mut wire_cst_list_prim_u_8_strict,
+}
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_connect_request {

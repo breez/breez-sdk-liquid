@@ -44,7 +44,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  BackupRequest dco_decode_backup_request(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw);
 
   @protected
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
@@ -175,7 +181,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  BackupRequest sse_decode_backup_request(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer);
 
   @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
@@ -300,6 +312,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_backup_request> cst_encode_box_autoadd_backup_request(BackupRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_backup_request();
+    cst_api_fill_to_wire_backup_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_connect_request> cst_encode_box_autoadd_connect_request(ConnectRequest raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_connect_request();
@@ -407,6 +427,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_u_64(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.toInt();
+  }
+
+  @protected
+  void cst_api_fill_to_wire_backup_request(BackupRequest apiObj, wire_cst_backup_request wireObj) {
+    wireObj.backup_path = cst_encode_opt_String(apiObj.backupPath);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_backup_request(
+      BackupRequest apiObj, ffi.Pointer<wire_cst_backup_request> wireObj) {
+    cst_api_fill_to_wire_backup_request(apiObj, wireObj.ref);
   }
 
   @protected
@@ -713,7 +744,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_backup_request(BackupRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
@@ -882,18 +919,22 @@ class RustLibWire implements BaseWire {
   void wire__crate__bindings__BindingLiquidSdk_backup(
     int port_,
     int that,
+    ffi.Pointer<wire_cst_backup_request> req,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_backup(
       port_,
       that,
+      req,
     );
   }
 
-  late final _wire__crate__bindings__BindingLiquidSdk_backupPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
+  late final _wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
   late final _wire__crate__bindings__BindingLiquidSdk_backup =
-      _wire__crate__bindings__BindingLiquidSdk_backupPtr.asFunction<void Function(int, int)>();
+      _wire__crate__bindings__BindingLiquidSdk_backupPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_backup_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int port_,
@@ -1111,6 +1152,16 @@ class RustLibWire implements BaseWire {
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  ffi.Pointer<wire_cst_backup_request> cst_new_box_autoadd_backup_request() {
+    return _cst_new_box_autoadd_backup_request();
+  }
+
+  late final _cst_new_box_autoadd_backup_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_backup_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_backup_request');
+  late final _cst_new_box_autoadd_backup_request =
+      _cst_new_box_autoadd_backup_requestPtr.asFunction<ffi.Pointer<wire_cst_backup_request> Function()>();
+
   ffi.Pointer<wire_cst_connect_request> cst_new_box_autoadd_connect_request() {
     return _cst_new_box_autoadd_connect_request();
   }
@@ -1255,6 +1306,10 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_cst_backup_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
 final class wire_cst_get_info_request extends ffi.Struct {

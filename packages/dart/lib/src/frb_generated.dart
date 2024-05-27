@@ -66,7 +66,8 @@ abstract class RustLibApi extends BaseApi {
   Stream<LiquidSdkEvent> crateBindingsBindingLiquidSdkAddEventListener(
       {required BindingLiquidSdk that, dynamic hint});
 
-  Future<void> crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, dynamic hint});
+  Future<void> crateBindingsBindingLiquidSdkBackup(
+      {required BindingLiquidSdk that, required BackupRequest req, dynamic hint});
 
   Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint});
 
@@ -140,20 +141,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, dynamic hint}) {
+  Future<void> crateBindingsBindingLiquidSdkBackup(
+      {required BindingLiquidSdk that, required BackupRequest req, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        return wire.wire__crate__bindings__BindingLiquidSdk_backup(port_, arg0);
+        var arg1 = cst_encode_box_autoadd_backup_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_backup(port_, arg0, arg1);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_unit,
         decodeErrorData: dco_decode_liquid_sdk_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkBackupConstMeta,
-      argValues: [that],
+      argValues: [that, req],
       apiImpl: this,
       hint: hint,
     ));
@@ -161,7 +164,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkBackupConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_backup",
-        argNames: ["that"],
+        argNames: ["that", "req"],
       );
 
   @override
@@ -468,9 +471,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupRequest dco_decode_backup_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return BackupRequest(
+      backupPath: dco_decode_opt_String(arr[0]),
+    );
+  }
+
+  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_backup_request(raw);
   }
 
   @protected
@@ -861,9 +880,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupRequest sse_decode_backup_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_backupPath = sse_decode_opt_String(deserializer);
+    return BackupRequest(backupPath: var_backupPath);
+  }
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_backup_request(deserializer));
   }
 
   @protected
@@ -1325,9 +1357,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_backup_request(BackupRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.backupPath, serializer);
+  }
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_backup_request(self, serializer);
   }
 
   @protected

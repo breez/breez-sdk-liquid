@@ -60,19 +60,22 @@ class FlutterBreezLiquidBindings {
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
     int port_,
     int that,
+    ffi.Pointer<wire_cst_backup_request> req,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
       port_,
       that,
+      req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr
-          .asFunction<void Function(int, int)>();
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_backup_request>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int port_,
@@ -295,6 +298,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  ffi.Pointer<wire_cst_backup_request> frbgen_breez_liquid_cst_new_box_autoadd_backup_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_backup_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_backup_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_backup_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_backup_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_backup_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_backup_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_backup_request> Function()>();
+
   ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
   }
@@ -462,6 +476,10 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_cst_backup_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
 final class wire_cst_get_info_request extends ffi.Struct {

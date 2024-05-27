@@ -25,6 +25,10 @@ typedef struct wire_cst_list_prim_u_8_strict {
   int32_t len;
 } wire_cst_list_prim_u_8_strict;
 
+typedef struct wire_cst_backup_request {
+  struct wire_cst_list_prim_u_8_strict *backup_path;
+} wire_cst_backup_request;
+
 typedef struct wire_cst_get_info_request {
   bool with_scan;
 } wire_cst_get_info_request;
@@ -179,7 +183,8 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_liste
                                                                                     struct wire_cst_list_prim_u_8_strict *listener);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(int64_t port_,
-                                                                        uintptr_t that);
+                                                                        uintptr_t that,
+                                                                        struct wire_cst_backup_request *req);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(int64_t port_,
                                                                                     uintptr_t that);
@@ -221,6 +226,8 @@ void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust
 
 void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
+struct wire_cst_backup_request *frbgen_breez_liquid_cst_new_box_autoadd_backup_request(void);
+
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
 struct wire_cst_get_info_request *frbgen_breez_liquid_cst_new_box_autoadd_get_info_request(void);
@@ -244,6 +251,7 @@ struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t l
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_info_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment);
