@@ -19,6 +19,10 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
 
 const BreezLiquidSDKEmitter = new NativeEventEmitter(BreezLiquidSDK)
 
+export interface BackupRequest {
+    backupPath?: string
+}
+
 export interface ConnectRequest {
     mnemonic: string
     network: Network
@@ -179,8 +183,8 @@ export const sync = async (): Promise<void> => {
     await BreezLiquidSDK.sync()
 }
 
-export const backup = async (): Promise<void> => {
-    await BreezLiquidSDK.backup()
+export const backup = async (req: BackupRequest): Promise<void> => {
+    await BreezLiquidSDK.backup(req)
 }
 
 export const restore = async (req: RestoreRequest): Promise<void> => {

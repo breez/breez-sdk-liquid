@@ -218,10 +218,17 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
-    fun backup(promise: Promise) {
+    fun backup(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                getBindingLiquidSdk().backup()
+                val backupRequest =
+                    asBackupRequest(
+                        req,
+                    ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "BackupRequest")) }
+                getBindingLiquidSdk().backup(backupRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

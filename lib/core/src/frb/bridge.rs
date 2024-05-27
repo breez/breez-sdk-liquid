@@ -86,6 +86,7 @@ fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
+    req: impl CstDecode<crate::model::BackupRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -95,6 +96,7 @@ fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
         },
         move || {
             let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
             move |context| {
                 transform_result_dco((move || {
                     let mut api_that_decoded = None;
@@ -111,7 +113,7 @@ fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
                         }
                     }
                     let api_that = api_that_decoded.unwrap();
-                    crate::bindings::BindingLiquidSdk::backup(&api_that)
+                    crate::bindings::BindingLiquidSdk::backup(&api_that, api_req)
                 })())
             }
         },
@@ -578,6 +580,16 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for crate::model::BackupRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_backupPath = <Option<String>>::sse_decode(deserializer);
+        return crate::model::BackupRequest {
+            backup_path: var_backupPath,
+        };
+    }
+}
+
 impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1017,6 +1029,20 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<BindingLiquidSdk>> for Binding
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BackupRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.backup_path.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::BackupRequest {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BackupRequest>
+    for crate::model::BackupRequest
+{
+    fn into_into_dart(self) -> crate::model::BackupRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1389,6 +1415,13 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::model::BackupRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.backup_path, serializer);
     }
 }
 

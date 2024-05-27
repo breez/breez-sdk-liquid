@@ -61,7 +61,8 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    backup: (RCTPromiseResolveBlock)resolve
+    backup: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

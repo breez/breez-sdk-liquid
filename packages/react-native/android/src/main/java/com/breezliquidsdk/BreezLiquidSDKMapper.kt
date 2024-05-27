@@ -3,6 +3,37 @@ import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asBackupRequest(backupRequest: ReadableMap): BackupRequest? {
+    if (!validateMandatoryFields(
+            backupRequest,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val backupPath = if (hasNonNullKey(backupRequest, "backupPath")) backupRequest.getString("backupPath") else null
+    return BackupRequest(
+        backupPath,
+    )
+}
+
+fun readableMapOf(backupRequest: BackupRequest): ReadableMap {
+    return readableMapOf(
+        "backupPath" to backupRequest.backupPath,
+    )
+}
+
+fun asBackupRequestList(arr: ReadableArray): List<BackupRequest> {
+    val list = ArrayList<BackupRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBackupRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
     if (!validateMandatoryFields(
             connectRequest,

@@ -8,6 +8,26 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
 
+class BackupRequest {
+  /// Path to the backup.
+  ///
+  /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+  /// The file will be saved in [ConnectRequest]'s `data_dir`.
+  final String? backupPath;
+
+  const BackupRequest({
+    this.backupPath,
+  });
+
+  @override
+  int get hashCode => backupPath.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
+}
+
 class ConnectRequest {
   final String mnemonic;
   final String? dataDir;

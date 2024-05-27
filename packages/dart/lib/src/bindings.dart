@@ -30,8 +30,8 @@ class BindingLiquidSdk extends RustOpaque {
   Stream<LiquidSdkEvent> addEventListener({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(that: this, hint: hint);
 
-  Future<void> backup({dynamic hint}) =>
-      RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, hint: hint);
+  Future<void> backup({required BackupRequest req, dynamic hint}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, req: req, hint: hint);
 
   Future<void> emptyWalletCache({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(that: this, hint: hint);

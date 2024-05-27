@@ -6,27 +6,16 @@ use super::Persister;
 use crate::model::Network;
 
 impl Persister {
-    pub(crate) fn get_backup_path(&self) -> PathBuf {
+    pub(crate) fn get_default_backup_path(&self) -> PathBuf {
         self.main_db_dir.join(match self.network {
             Network::Liquid => "backup.sql",
             Network::LiquidTestnet => "backup-testnet.sql",
         })
     }
 
-    pub(crate) fn backup(&self) -> Result<()> {
+    pub(crate) fn backup(&self, backup_path: PathBuf) -> Result<()> {
         let con = self.get_connection()?;
-
-        let backup_file = match self.network {
-            Network::Liquid => "backup.sql",
-            Network::LiquidTestnet => "backup-testnet.sql",
-        };
-
-        con.backup(
-            rusqlite::DatabaseName::Main,
-            self.main_db_dir.join(backup_file),
-            None,
-        )?;
-
+        con.backup(rusqlite::DatabaseName::Main, backup_path, None)?;
         Ok(())
     }
 

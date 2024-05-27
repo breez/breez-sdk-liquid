@@ -153,6 +153,15 @@ pub struct GetInfoResponse {
 }
 
 #[derive(Debug, Serialize)]
+pub struct BackupRequest {
+    /// Path to the backup.
+    ///
+    /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+    /// The file will be saved in [ConnectRequest]'s `data_dir`.
+    pub backup_path: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
 pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
