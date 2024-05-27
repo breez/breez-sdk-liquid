@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from "react-native"
+import { NativeModules, Platform, NativeEventEmitter } from "react-native"
 
 const LINKING_ERROR =
     `The package 'react-native-breez-liquid-sdk' doesn't seem to be linked. Make sure: \n\n` +
@@ -16,6 +16,8 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
               }
           }
       )
+
+const BreezLiquidSDKEmitter = new NativeEventEmitter(BreezLiquidSDK)
 
 export interface ConnectRequest {
     mnemonic: string
@@ -78,6 +80,38 @@ export interface SendPaymentResponse {
     txid: string
 }
 
+export enum LiquidSdkEventVariant {
+    PAYMENT_FAILED = "paymentFailed",
+    PAYMENT_PENDING = "paymentPending",
+    PAYMENT_REFUNDED = "paymentRefunded",
+    PAYMENT_REFUND_PENDING = "paymentRefundPending",
+    PAYMENT_SUCCEED = "paymentSucceed",
+    PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
+    SYNCED = "synced"
+}
+
+export type LiquidSdkEvent = {
+    type: LiquidSdkEventVariant.PAYMENT_FAILED,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.PAYMENT_PENDING,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.PAYMENT_REFUNDED,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.PAYMENT_REFUND_PENDING,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.PAYMENT_SUCCEED,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.PAYMENT_WAITING_CONFIRMATION,
+    details: Payment
+} | {
+    type: LiquidSdkEventVariant.SYNCED
+}
+
 export enum Network {
     LIQUID = "liquid",
     LIQUID_TESTNET = "liquidTestnet"
@@ -95,9 +129,22 @@ export enum PaymentType {
     SEND = "send"
 }
 
+export type EventListener = (e: LiquidSdkEvent) => void
+
 export const connect = async (req: ConnectRequest): Promise<void> => {
     const response = await BreezLiquidSDK.connect(req)
     return response
+}
+
+export const addEventListener = async (listener: EventListener): Promise<string> => {
+    const response = await BreezLiquidSDK.addEventListener()
+    BreezLiquidSDKEmitter.addListener(`event-${response}`, listener)
+
+    return response
+}
+
+export const removeEventListener = async (id: string): Promise<void> => {
+    await BreezLiquidSDK.removeEventListener(id)
 }
 
 export const getInfo = async (req: GetInfoRequest): Promise<GetInfoResponse> => {

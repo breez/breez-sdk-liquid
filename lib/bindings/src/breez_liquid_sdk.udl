@@ -98,12 +98,33 @@ enum PaymentState {
     "Failed",
 };
 
+[Enum]
+interface LiquidSdkEvent {
+    PaymentFailed(Payment details);
+    PaymentPending(Payment details);
+    PaymentRefunded(Payment details);
+    PaymentRefundPending(Payment details);
+    PaymentSucceed(Payment details);
+    PaymentWaitingConfirmation(Payment details);
+    Synced();
+};
+
+callback interface EventListener {    
+    void on_event(LiquidSdkEvent e);
+};
+
 namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     BindingLiquidSdk connect(ConnectRequest req);
 };
 
 interface BindingLiquidSdk {
+    [Throws=LiquidSdkError]
+    string add_event_listener(EventListener listener);
+
+    [Throws=LiquidSdkError]
+    void remove_event_listener(string id);
+
     [Throws=LiquidSdkError]
     GetInfoResponse get_info(GetInfoRequest req);
 

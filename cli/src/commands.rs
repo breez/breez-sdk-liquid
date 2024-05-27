@@ -38,6 +38,8 @@ pub(crate) enum Command {
     ListPayments,
     /// Get the balance and general info of the current instance
     GetInfo,
+    /// Sync local data with mempool and onchain data
+    Sync,
     /// Empties the encrypted transaction cache
     EmptyCache,
     /// Backs up the current pending swaps
@@ -89,7 +91,7 @@ macro_rules! wait_confirmation {
     };
 }
 
-pub(crate) fn handle_command(
+pub(crate) async fn handle_command(
     _rl: &mut Editor<CliHelper, DefaultHistory>,
     sdk: &Arc<LiquidSdk>,
     command: Command,
@@ -116,8 +118,9 @@ pub(crate) fn handle_command(
             result
         }
         Command::SendPayment { bolt11, delay } => {
-            let prepare_response =
-                sdk.prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })?;
+            let prepare_response = sdk
+                .prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })
+                .await?;
 
             wait_confirmation!(
                 format!(
@@ -131,22 +134,26 @@ pub(crate) fn handle_command(
                 let sdk_cloned = sdk.clone();
                 let prepare_cloned = prepare_response.clone();
 
-                thread::spawn(move || {
+                tokio::spawn(async move {
                     thread::sleep(Duration::from_secs(delay));
-                    sdk_cloned.send_payment(&prepare_cloned).unwrap();
+                    sdk_cloned.send_payment(&prepare_cloned).await.unwrap();
                 });
                 command_result!(prepare_response)
             } else {
-                let response = sdk.send_payment(&prepare_response)?;
+                let response = sdk.send_payment(&prepare_response).await?;
                 command_result!(response)
             }
         }
         Command::GetInfo => {
-            command_result!(sdk.get_info(GetInfoRequest { with_scan: true })?)
+            command_result!(sdk.get_info(GetInfoRequest { with_scan: true }).await?)
         }
         Command::ListPayments => {
             let payments = sdk.list_payments()?;
             command_result!(payments)
+        }
+        Command::Sync => {
+            sdk.sync().await?;
+            command_result!("Synced successfully")
         }
         Command::EmptyCache => {
             sdk.empty_wallet_cache()?;

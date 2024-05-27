@@ -1,1 +1,1 @@
-mod bridge;
+pub(crate) mod bridge;

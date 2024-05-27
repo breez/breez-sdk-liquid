@@ -11,7 +11,6 @@ path = "uniffi-bindgen.rs"
 name = "breez_liquid_sdk_bindings"
 crate-type = ["staticlib", "cdylib", "lib"]
 
-
 [dependencies]
 anyhow = { workspace = true }
 breez-liquid-sdk = { path = "../core" }
@@ -21,6 +20,8 @@ uniffi_bindgen = "0.25.2"
 uniffi-kotlin-multiplatform = { git = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings", rev = "55d51f3abf9819b32bd81756053dcfc10f8d5522" }
 camino = "1.1.1"
 thiserror = { workspace = true }
+tokio = { version = "1", features = ["rt"] }
+once_cell = "*"
 
 [build-dependencies]
 uniffi = { workspace = true, features = [ "build" ] }

@@ -7,7 +7,7 @@ use crate::persist::Persister;
 
 use anyhow::Result;
 use boltz_client::swaps::boltzv2::CreateReverseResponse;
-use rusqlite::{named_params, params, Connection, OptionalExtension, Row};
+use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
 impl Persister {
@@ -73,13 +73,12 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_receive_swap(
-        con: &Connection,
-        id: &str,
-    ) -> rusqlite::Result<Option<ReceiveSwap>> {
+    pub(crate) fn fetch_receive_swap(&self, id: &str) -> Result<Option<ReceiveSwap>> {
+        let con: Connection = self.get_connection()?;
         let query = Self::list_receive_swaps_query(vec!["id = ?1".to_string()]);
-        con.query_row(&query, [id], Self::sql_row_to_receive_swap)
-            .optional()
+        let res = con.query_row(&query, [id], Self::sql_row_to_receive_swap);
+
+        Ok(res.ok())
     }
 
     fn sql_row_to_receive_swap(row: &Row) -> rusqlite::Result<ReceiveSwap> {
@@ -128,10 +127,8 @@ impl Persister {
         self.list_receive_swaps(con, where_clause)
     }
 
-    pub(crate) fn list_pending_receive_swaps(
-        &self,
-        con: &Connection,
-    ) -> rusqlite::Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_pending_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+        let con: Connection = self.get_connection()?;
         let query = Self::list_receive_swaps_query(vec!["state = ?1".to_string()]);
         let res = con
             .prepare(&query)?
@@ -147,10 +144,9 @@ impl Persister {
     /// Pending Receive Swaps, indexed by claim_tx_id
     pub(crate) fn list_pending_receive_swaps_by_claim_tx_id(
         &self,
-        con: &Connection,
-    ) -> rusqlite::Result<HashMap<String, ReceiveSwap>> {
+    ) -> Result<HashMap<String, ReceiveSwap>> {
         let res = self
-            .list_pending_receive_swaps(con)?
+            .list_pending_receive_swaps()?
             .iter()
             .filter_map(|pending_receive_swap| {
                 pending_receive_swap
@@ -164,12 +160,12 @@ impl Persister {
 
     pub(crate) fn try_handle_receive_swap_update(
         &self,
-        con: &Connection,
         swap_id: &str,
         to_state: PaymentState,
         claim_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite claim_tx_id
+        let con: Connection = self.get_connection()?;
         con.execute(
             "UPDATE receive_swaps
             SET

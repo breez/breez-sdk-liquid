@@ -7,7 +7,7 @@ use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr}
 
 use anyhow::Result;
 use migrations::current_migrations;
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
 
 use crate::model::{Network::*, *};
@@ -92,11 +92,8 @@ impl Persister {
         Ok([ongoing_send_swaps, ongoing_receive_swaps].concat())
     }
 
-    pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
-        let con = self.get_connection()?;
-
-        // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
-        let mut stmt = con.prepare(
+    fn select_payment_query(&self, where_clause: Option<&str>) -> String {
+        format!(
             "
             SELECT
                 ptx.tx_id,
@@ -126,18 +123,20 @@ impl Persister {
                 ON rtx.tx_id = ss.refund_tx_id
             WHERE                                -- Filter out refund txs from Payment tx list
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps)
-        ",
-        )?;
+                AND {}
+            ",
+            where_clause.unwrap_or("true")
+        )
+    }
 
-        let data = stmt
-            .query_map(params![], |row| {
-                let tx = PaymentTxData {
-                    tx_id: row.get(0)?,
-                    timestamp: row.get(1)?,
-                    amount_sat: row.get(2)?,
-                    payment_type: row.get(3)?,
-                    is_confirmed: row.get(4)?,
-                };
+    fn sql_row_to_payment(&self, row: &Row) -> Result<Payment, rusqlite::Error> {
+        let tx = PaymentTxData {
+            tx_id: row.get(0)?,
+            timestamp: row.get(1)?,
+            amount_sat: row.get(2)?,
+            payment_type: row.get(3)?,
+            is_confirmed: row.get(4)?,
+        };
 
                 let maybe_receive_swap_id: Option<String> = row.get(5)?;
                 let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
@@ -177,7 +176,30 @@ impl Persister {
                     }),
                 };
 
-                Ok((tx.tx_id.clone(), Payment::from(tx, swap)))
+        Ok(Payment::from(tx, swap))
+    }
+
+    pub fn get_payment(&self, id: String) -> Result<Option<Payment>> {
+        Ok(self
+            .get_connection()?
+            .query_row(
+                &self.select_payment_query(Some(&format!("ptx.tx_id = ?1"))),
+                params![id],
+                |row| self.sql_row_to_payment(row),
+            )
+            .optional()?)
+    }
+
+    pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
+        let con = self.get_connection()?;
+
+        // TODO For refund txs, do not create a new Payment
+        // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
+        let mut stmt = con.prepare(&self.select_payment_query(None))?;
+
+        let data = stmt
+            .query_map(params![], |row| {
+                self.sql_row_to_payment(row).map(|p| (p.tx_id.clone(), p))
             })?
             .map(|i| i.unwrap())
             .collect();

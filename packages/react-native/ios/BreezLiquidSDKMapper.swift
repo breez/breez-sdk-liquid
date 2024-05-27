@@ -478,6 +478,137 @@ enum BreezLiquidSDKMapper {
         return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
     }
 
+    static func asLiquidSdkEvent(liquidSdkEvent: [String: Any?]) throws -> LiquidSdkEvent {
+        let type = liquidSdkEvent["type"] as! String
+        if type == "paymentFailed" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentFailed(details: _details)
+        }
+        if type == "paymentPending" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentPending(details: _details)
+        }
+        if type == "paymentRefunded" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentRefunded(details: _details)
+        }
+        if type == "paymentRefundPending" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentRefundPending(details: _details)
+        }
+        if type == "paymentSucceed" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentSucceed(details: _details)
+        }
+        if type == "paymentWaitingConfirmation" {
+            guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return LiquidSdkEvent.paymentWaitingConfirmation(details: _details)
+        }
+        if type == "synced" {
+            return LiquidSdkEvent.synced
+        }
+
+        throw LiquidSdkError.Generic(message: "Unexpected type \(type) for enum LiquidSdkEvent")
+    }
+
+    static func dictionaryOf(liquidSdkEvent: LiquidSdkEvent) -> [String: Any?] {
+        switch liquidSdkEvent {
+        case let .paymentFailed(
+            details
+        ):
+            return [
+                "type": "paymentFailed",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentPending(
+            details
+        ):
+            return [
+                "type": "paymentPending",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentRefunded(
+            details
+        ):
+            return [
+                "type": "paymentRefunded",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentRefundPending(
+            details
+        ):
+            return [
+                "type": "paymentRefundPending",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentSucceed(
+            details
+        ):
+            return [
+                "type": "paymentSucceed",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentWaitingConfirmation(
+            details
+        ):
+            return [
+                "type": "paymentWaitingConfirmation",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case .synced:
+            return [
+                "type": "synced",
+            ]
+        }
+    }
+
+    static func arrayOf(liquidSdkEventList: [LiquidSdkEvent]) -> [Any] {
+        return liquidSdkEventList.map { v -> [String: Any?] in dictionaryOf(liquidSdkEvent: v) }
+    }
+
+    static func asLiquidSdkEventList(arr: [Any]) throws -> [LiquidSdkEvent] {
+        var list = [LiquidSdkEvent]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var liquidSdkEvent = try asLiquidSdkEvent(liquidSdkEvent: val)
+                list.append(liquidSdkEvent)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LiquidSdkEvent"))
+            }
+        }
+        return list
+    }
+
     static func asNetwork(network: String) throws -> Network {
         switch network {
         case "liquid":

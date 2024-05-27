@@ -1,0 +1,108 @@
+import 'package:bip39/bip39.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_breez_liquid/flutter_breez_liquid.dart';
+import 'package:flutter_breez_liquid_example/routes/connect/restore_page.dart';
+import 'package:flutter_breez_liquid_example/routes/home/home_page.dart';
+import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
+import 'package:path_provider/path_provider.dart';
+
+class ConnectPage extends StatefulWidget {
+  final CredentialsManager credentialsManager;
+  const ConnectPage({super.key, required this.credentialsManager});
+
+  @override
+  State<ConnectPage> createState() => _ConnectPageState();
+}
+
+class _ConnectPageState extends State<ConnectPage> {
+  bool connecting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Breez Liquid SDK Demo'),
+          foregroundColor: Colors.blue,
+        ),
+        body: Center(
+          child: connecting
+              ? const CircularProgressIndicator(color: Colors.blue)
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: SizedBox(
+                        width: 200,
+                        child: ElevatedButton(
+                          child: const Text("Create new wallet"),
+                          onPressed: () async {
+                            await createWallet();
+                          },
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: SizedBox(
+                        width: 200,
+                        child: ElevatedButton(
+                          child: const Text("Restore from backup"),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (BuildContext context) {
+                                  return RestorePage(
+                                    onRestore: (mnemonic) async {
+                                      return await createWallet(mnemonic: mnemonic);
+                                    },
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Future<Null> createWallet({String? mnemonic}) async {
+    final walletMnemonic = mnemonic ??= generateMnemonic(strength: 128);
+    debugPrint("${mnemonic.isEmpty ? "Creating" : "Restoring"} wallet with $walletMnemonic");
+    return await initializeWallet(mnemonic: walletMnemonic).then(
+      (liquidSDK) async {
+        await widget.credentialsManager.storeMnemonic(mnemonic: walletMnemonic).then((_) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) => HomePage(
+                liquidSDK: liquidSDK,
+                credentialsManager: widget.credentialsManager,
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  Future<BindingLiquidSdk> initializeWallet({
+    required String mnemonic,
+    Network network = Network.liquid,
+  }) async {
+    final dataDir = await getApplicationDocumentsDirectory();
+    final req = ConnectRequest(
+      mnemonic: mnemonic,
+      dataDir: dataDir.path,
+      network: network,
+    );
+    return await connect(req: req);
+  }
+}

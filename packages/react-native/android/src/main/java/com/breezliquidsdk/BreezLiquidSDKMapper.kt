@@ -426,6 +426,78 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     return list
 }
 
+fun asLiquidSdkEvent(liquidSdkEvent: ReadableMap): LiquidSdkEvent? {
+    val type = liquidSdkEvent.getString("type")
+
+    if (type == "paymentFailed") {
+        return LiquidSdkEvent.PaymentFailed(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "paymentPending") {
+        return LiquidSdkEvent.PaymentPending(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "paymentRefunded") {
+        return LiquidSdkEvent.PaymentRefunded(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "paymentRefundPending") {
+        return LiquidSdkEvent.PaymentRefundPending(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "paymentSucceed") {
+        return LiquidSdkEvent.PaymentSucceed(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "paymentWaitingConfirmation") {
+        return LiquidSdkEvent.PaymentWaitingConfirmation(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    }
+    if (type == "synced") {
+        return LiquidSdkEvent.Synced
+    }
+    return null
+}
+
+fun readableMapOf(liquidSdkEvent: LiquidSdkEvent): ReadableMap? {
+    val map = Arguments.createMap()
+    when (liquidSdkEvent) {
+        is LiquidSdkEvent.PaymentFailed -> {
+            pushToMap(map, "type", "paymentFailed")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.PaymentPending -> {
+            pushToMap(map, "type", "paymentPending")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.PaymentRefunded -> {
+            pushToMap(map, "type", "paymentRefunded")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.PaymentRefundPending -> {
+            pushToMap(map, "type", "paymentRefundPending")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.PaymentSucceed -> {
+            pushToMap(map, "type", "paymentSucceed")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.PaymentWaitingConfirmation -> {
+            pushToMap(map, "type", "paymentWaitingConfirmation")
+            pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
+        }
+        is LiquidSdkEvent.Synced -> {
+            pushToMap(map, "type", "synced")
+        }
+    }
+    return map
+}
+
+fun asLiquidSdkEventList(arr: ReadableArray): List<LiquidSdkEvent> {
+    val list = ArrayList<LiquidSdkEvent>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLiquidSdkEvent(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asNetwork(type: String): Network {
     return Network.valueOf(camelToUpperSnakeCase(type))
 }
