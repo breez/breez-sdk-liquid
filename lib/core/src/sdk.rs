@@ -652,7 +652,7 @@ impl LiquidSdk {
         broadcast_fees_sat: Amount,
         is_lowball: Option<(&BoltzApiClientV2, Chain)>,
     ) -> Result<String, PaymentError> {
-        debug!("Initiating cooperative refund for Send Swap {}", &swap.id);
+        info!("Initiating cooperative refund for Send Swap {}", &swap.id);
         let tx = refund_tx.sign_refund(
             &swap.get_refund_keypair()?,
             broadcast_fees_sat,
@@ -660,7 +660,7 @@ impl LiquidSdk {
         )?;
 
         let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
-        debug!(
+        info!(
             "Successfully broadcast cooperative refund for Send Swap {}",
             &swap.id
         );
@@ -675,7 +675,7 @@ impl LiquidSdk {
         broadcast_fees_sat: Amount,
         is_lowball: Option<(&BoltzApiClientV2, Chain)>,
     ) -> Result<String, PaymentError> {
-        debug!(
+        info!(
             "Initiating non-cooperative refund for Send Swap {}",
             &swap.id
         );
@@ -703,7 +703,7 @@ impl LiquidSdk {
 
         let tx = refund_tx.sign_refund(&swap.get_refund_keypair()?, broadcast_fees_sat, None)?;
         let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
-        debug!(
+        info!(
             "Successfully broadcast non-cooperative refund for swap-in {}",
             swap.id
         );
@@ -734,7 +734,7 @@ impl LiquidSdk {
         {
             Ok(res) => Ok(res),
             Err(e) => {
-                debug!("Cooperative refund failed: {:?}", e);
+                warn!("Cooperative refund failed: {:?}", e);
                 self.try_refund_non_cooperative(
                     swap,
                     &swap_script,
