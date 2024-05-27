@@ -2,6 +2,42 @@ import BreezLiquidSDK
 import Foundation
 
 enum BreezLiquidSDKMapper {
+    static func asBackupRequest(backupRequest: [String: Any?]) throws -> BackupRequest {
+        var backupPath: String?
+        if hasNonNilKey(data: backupRequest, key: "backupPath") {
+            guard let backupPathTmp = backupRequest["backupPath"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "backupPath"))
+            }
+            backupPath = backupPathTmp
+        }
+
+        return BackupRequest(
+            backupPath: backupPath)
+    }
+
+    static func dictionaryOf(backupRequest: BackupRequest) -> [String: Any?] {
+        return [
+            "backupPath": backupRequest.backupPath == nil ? nil : backupRequest.backupPath,
+        ]
+    }
+
+    static func asBackupRequestList(arr: [Any]) throws -> [BackupRequest] {
+        var list = [BackupRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var backupRequest = try asBackupRequest(backupRequest: val)
+                list.append(backupRequest)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "BackupRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(backupRequestList: [BackupRequest]) -> [Any] {
+        return backupRequestList.map { v -> [String: Any?] in dictionaryOf(backupRequest: v) }
+    }
+
     static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
         guard let mnemonic = connectRequest["mnemonic"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))

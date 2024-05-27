@@ -171,10 +171,11 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
-    @objc(backup:reject:)
-    func backup(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(backup:resolve:reject:)
+    func backup(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            try getBindingLiquidSdk().backup()
+            let backupRequest = try BreezLiquidSDKMapper.asBackupRequest(backupRequest: req)
+            try getBindingLiquidSdk().backup(req: backupRequest)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
