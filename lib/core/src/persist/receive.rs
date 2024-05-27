@@ -11,7 +11,7 @@ use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
 impl Persister {
-    pub(crate) fn insert_receive_swap(&self, receive_swap: ReceiveSwap) -> Result<()> {
+    pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -31,16 +31,16 @@ impl Persister {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
-            receive_swap.id,
-            receive_swap.preimage,
-            receive_swap.create_response_json,
-            receive_swap.invoice,
-            receive_swap.payer_amount_sat,
-            receive_swap.receiver_amount_sat,
-            receive_swap.created_at,
-            receive_swap.claim_fees_sat,
-            receive_swap.claim_tx_id,
-            receive_swap.state,
+            &receive_swap.id,
+            &receive_swap.preimage,
+            &receive_swap.create_response_json,
+            &receive_swap.invoice,
+            &receive_swap.payer_amount_sat,
+            &receive_swap.receiver_amount_sat,
+            &receive_swap.created_at,
+            &receive_swap.claim_fees_sat,
+            &receive_swap.claim_tx_id,
+            &receive_swap.state,
         ))?;
 
         Ok(())

@@ -11,7 +11,7 @@ use crate::model::*;
 use crate::persist::Persister;
 
 impl Persister {
-    pub(crate) fn insert_send_swap(&self, send_swap: SendSwap) -> Result<()> {
+    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -31,16 +31,16 @@ impl Persister {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
-            send_swap.id,
-            send_swap.invoice,
-            send_swap.payer_amount_sat,
-            send_swap.receiver_amount_sat,
-            send_swap.create_response_json,
-            send_swap.refund_private_key,
-            send_swap.lockup_tx_id,
-            send_swap.refund_tx_id,
-            send_swap.created_at,
-            send_swap.state,
+            &send_swap.id,
+            &send_swap.invoice,
+            &send_swap.payer_amount_sat,
+            &send_swap.receiver_amount_sat,
+            &send_swap.create_response_json,
+            &send_swap.refund_private_key,
+            &send_swap.lockup_tx_id,
+            &send_swap.refund_tx_id,
+            &send_swap.created_at,
+            &send_swap.state,
         ))?;
 
         Ok(())

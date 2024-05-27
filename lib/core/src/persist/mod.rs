@@ -138,43 +138,43 @@ impl Persister {
             is_confirmed: row.get(4)?,
         };
 
-                let maybe_receive_swap_id: Option<String> = row.get(5)?;
-                let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
-                let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
-                let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
-                let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
+        let maybe_receive_swap_id: Option<String> = row.get(5)?;
+        let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
 
-                let maybe_send_swap_id: Option<String> = row.get(10)?;
-                let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
-                let maybe_send_swap_preimage: Option<String> = row.get(12)?;
-                let maybe_send_swap_refund_tx_id: Option<String> = row.get(13)?;
-                let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(14)?;
-                let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(15)?;
-                let maybe_send_swap_state: Option<PaymentState> = row.get(16)?;
-                let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(17)?;
+        let maybe_send_swap_id: Option<String> = row.get(10)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(12)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(13)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(14)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(15)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(16)?;
+        let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(17)?;
 
-                let swap = match maybe_receive_swap_id {
-                    Some(receive_swap_id) => Some(PaymentSwapData {
-                        swap_id: receive_swap_id,
-                        created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
-                        preimage: None,
-                        payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
-                        receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
-                        refund_tx_id: None,
-                        refund_tx_amount_sat: None,
-                        status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
-                    }),
-                    None => maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
-                        swap_id: send_swap_id,
-                        created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
-                        preimage: maybe_send_swap_preimage,
-                        payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
-                        receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
-                        refund_tx_id: maybe_send_swap_refund_tx_id,
-                        refund_tx_amount_sat: maybe_send_swap_refund_tx_amount_sat,
-                        status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
-                    }),
-                };
+        let swap = match maybe_receive_swap_id {
+            Some(receive_swap_id) => Some(PaymentSwapData {
+                swap_id: receive_swap_id,
+                created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
+                preimage: None,
+                payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
+                receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
+                refund_tx_id: None,
+                refund_tx_amount_sat: None,
+                status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
+            }),
+            None => maybe_send_swap_id.map(|send_swap_id| PaymentSwapData {
+                swap_id: send_swap_id,
+                created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
+                preimage: maybe_send_swap_preimage,
+                payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
+                receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
+                refund_tx_id: maybe_send_swap_refund_tx_id,
+                refund_tx_amount_sat: maybe_send_swap_refund_tx_amount_sat,
+                status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
+            }),
+        };
 
         Ok(Payment::from(tx, swap))
     }
