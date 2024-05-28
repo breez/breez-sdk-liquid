@@ -120,14 +120,13 @@ impl LiquidSdk {
     /// Internal method. Should only be called once per instance.
     /// Should only be called as part of [LiquidSdk::connect].
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
-        self.ensure_is_not_started().await?;
+        let mut is_started = self.is_started.write().await;
+        ensure_sdk!(!*is_started, LiquidSdkError::AlreadyStarted);
 
         let start_ts = Instant::now();
-        {
-            let mut started = self.is_started.write().await;
-            self.start_background_tasks().await?;
-            *started = true;
-        } // Drop write lock before trying to read in sync() below
+        self.start_background_tasks().await?;
+        *is_started = true;
+        drop(is_started);  // Drop write lock before trying to read in sync() below
 
         self.sync().await?; // Initial sync() before returning the instance
         let start_duration = start_ts.elapsed();
@@ -166,12 +165,6 @@ impl LiquidSdk {
     async fn ensure_is_started(&self) -> LiquidSdkResult<()> {
         let is_started = self.is_started.read().await;
         ensure_sdk!(*is_started, LiquidSdkError::NotStarted);
-        Ok(())
-    }
-
-    async fn ensure_is_not_started(&self) -> LiquidSdkResult<()> {
-        let is_started = self.is_started.read().await;
-        ensure_sdk!(!*is_started, LiquidSdkError::AlreadyStarted);
         Ok(())
     }
 
