@@ -515,6 +515,7 @@ dependencies = [
  "bip39",
  "boltz-client",
  "flutter_rust_bridge",
+ "futures-util",
  "glob",
  "log",
  "lwk_common",
@@ -531,7 +532,8 @@ dependencies = [
  "tempdir",
  "thiserror",
  "tokio",
- "tungstenite",
+ "tokio-tungstenite",
+ "url",
  "uuid",
 ]
 
@@ -2816,6 +2818,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-native-tls"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
+dependencies = [
+ "native-tls",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-rustls"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2824,6 +2836,20 @@ dependencies = [
  "rustls 0.22.4",
  "rustls-pki-types",
  "tokio",
+]
+
+[[package]]
+name = "tokio-tungstenite"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c83b561d025642014097b66e6c1bb422783339e0909e4429cde4749d1990bc38"
+dependencies = [
+ "futures-util",
+ "log",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+ "tungstenite",
 ]
 
 [[package]]
