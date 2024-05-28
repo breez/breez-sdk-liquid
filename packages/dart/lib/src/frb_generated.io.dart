@@ -515,10 +515,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_liquid_sdk_error(LiquidSdkError apiObj, wire_cst_liquid_sdk_error wireObj) {
+    if (apiObj is LiquidSdkError_AlreadyStarted) {
+      wireObj.tag = 0;
+      return;
+    }
     if (apiObj is LiquidSdkError_Generic) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 0;
+      wireObj.tag = 1;
       wireObj.kind.Generic.err = pre_err;
+      return;
+    }
+    if (apiObj is LiquidSdkError_NotStarted) {
+      wireObj.tag = 2;
       return;
     }
   }

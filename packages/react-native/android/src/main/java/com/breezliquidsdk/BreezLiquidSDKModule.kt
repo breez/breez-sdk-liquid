@@ -254,4 +254,16 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
+
+    @ReactMethod
+    fun disconnect(promise: Promise) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().disconnect()
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

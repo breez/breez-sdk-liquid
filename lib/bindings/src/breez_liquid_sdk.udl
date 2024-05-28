@@ -1,6 +1,8 @@
 [Error]
 enum LiquidSdkError {
+    "AlreadyStarted",
     "Generic",
+    "NotStarted",
 };
 
 [Error]
@@ -155,4 +157,7 @@ interface BindingLiquidSdk {
 
     [Throws=LiquidSdkError]
     void restore(RestoreRequest req);
+
+    [Throws=LiquidSdkError]
+    void disconnect();
 };

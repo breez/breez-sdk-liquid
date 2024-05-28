@@ -14,8 +14,14 @@ macro_rules! ensure_sdk {
 // TODO Unify error enum
 #[derive(Debug, thiserror::Error)]
 pub enum LiquidSdkError {
+    #[error("Liquid SDK instance is already running")]
+    AlreadyStarted,
+
     #[error("Error: {err}")]
     Generic { err: String },
+
+    #[error("Liquid SDK instance is not running")]
+    NotStarted,
 }
 
 impl From<anyhow::Error> for LiquidSdkError {

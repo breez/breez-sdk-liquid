@@ -25,10 +25,13 @@ use lwk_wollet::{
 };
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-use tokio::{net::TcpStream, sync::Mutex};
+use tokio::sync::{mpsc, watch, Mutex, RwLock};
+use tokio::{net::TcpStream};
 use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
+use crate::boltz_status_stream::set_stream_nonblocking;
+use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
 use crate::{
     boltz_status_stream::BoltzStatusStream,
@@ -57,6 +60,9 @@ pub struct LiquidSdk {
     persister: Persister,
     data_dir_path: String,
     event_manager: EventManager,
+    is_started: RwLock<bool>,
+    shutdown_sender: watch::Sender<()>,
+    shutdown_receiver: watch::Receiver<()>,
 }
 
 impl LiquidSdk {
@@ -72,20 +78,7 @@ impl LiquidSdk {
             data_dir_path: req.data_dir,
             network: req.network,
         })?;
-
-        BoltzStatusStream::track_pending_swaps(sdk.clone()).await?;
-
-        // Periodically run sync() in the background
-        let sdk_clone = sdk.clone();
-        tokio::spawn(async move {
-            loop {
-                tokio::time::sleep(Duration::from_secs(30)).await;
-                _ = sdk_clone.sync().await;
-            }
-        });
-
-        // Initial sync() before returning the instance
-        sdk.sync().await?;
+        sdk.start().await?;
 
         Ok(sdk)
     }
@@ -97,11 +90,7 @@ impl LiquidSdk {
         let data_dir_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
 
         let lwk_persister = FsPersister::new(&data_dir_path, network.into(), &opts.descriptor)?;
-        let lwk_wollet = Arc::new(Mutex::new(LwkWollet::new(
-            elements_network,
-            lwk_persister,
-            opts.descriptor,
-        )?));
+        let lwk_wollet = LwkWollet::new(elements_network, lwk_persister, opts.descriptor)?;
 
         fs::create_dir_all(&data_dir_path)?;
 
@@ -109,18 +98,104 @@ impl LiquidSdk {
         persister.init()?;
 
         let event_manager = EventManager::new();
+        let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
         let sdk = Arc::new(LiquidSdk {
-            lwk_wollet,
+            lwk_wollet: Arc::new(Mutex::new(lwk_wollet)),
             network,
             electrum_url,
             lwk_signer: opts.signer,
             persister,
             data_dir_path,
             event_manager,
+            is_started: RwLock::new(false),
+            shutdown_sender,
+            shutdown_receiver,
         });
 
         Ok(sdk)
+    }
+
+    /// Starts an SDK instance.
+    ///
+    /// Internal method. Should only be called once per instance.
+    /// Should only be called as part of [LiquidSdk::connect].
+    async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
+        self.ensure_is_not_started().await?;
+
+        let start_ts = Instant::now();
+        {
+            let mut started = self.is_started.write().await;
+            self.start_background_tasks().await?;
+            *started = true;
+        } // Drop write lock before trying to read in sync() below
+
+        self.sync().await?; // Initial sync() before returning the instance
+        let start_duration = start_ts.elapsed();
+        info!("Liquid SDK initialized in: {start_duration:?}");
+
+        Ok(())
+    }
+
+    /// Starts background tasks.
+    ///
+    /// Internal method. Should only be used as part of [LiquidSdk::start].
+    async fn start_background_tasks(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
+        let (status_stream_tx, status_stream_rx) = mpsc::channel(1);
+        let (periodic_sync_tx, mut periodic_sync_rx) = mpsc::channel(1);
+
+        // Periodically run sync() in the background
+        let sdk_clone = self.clone();
+        tokio::spawn(async move {
+            loop {
+                if periodic_sync_rx.try_recv().is_ok() {
+                    info!("Received shutdown signal, exiting periodic sync loop");
+                    return;
+                }
+
+                tokio::time::sleep(Duration::from_secs(30)).await;
+                _ = sdk_clone.sync().await;
+            }
+        });
+
+        BoltzStatusStream::track_pending_swaps(self.clone(), status_stream_rx).await?;
+
+        let mut shutdown_receiver = self.shutdown_receiver.clone();
+        tokio::spawn(async move {
+            _ = shutdown_receiver.changed().await;
+            debug!("Received shutdown signal");
+
+            _ = status_stream_tx.send(()).await;
+            _ = periodic_sync_tx.send(()).await;
+        });
+
+        Ok(())
+    }
+
+    async fn ensure_is_started(&self) -> LiquidSdkResult<()> {
+        let is_started = self.is_started.read().await;
+        ensure_sdk!(*is_started, LiquidSdkError::NotStarted);
+        Ok(())
+    }
+
+    async fn ensure_is_not_started(&self) -> LiquidSdkResult<()> {
+        let is_started = self.is_started.read().await;
+        ensure_sdk!(!*is_started, LiquidSdkError::AlreadyStarted);
+        Ok(())
+    }
+
+    /// Trigger the stopping of background threads for this SDK instance.
+    pub async fn disconnect(&self) -> LiquidSdkResult<()> {
+        self.ensure_is_started().await?;
+
+        let mut is_started = self.is_started.write().await;
+        self.shutdown_sender
+            .send(())
+            .map_err(|e| LiquidSdkError::Generic {
+                err: format!("Shutdown failed: {e}"),
+            })?;
+        *is_started = false;
+        Ok(())
     }
 
     async fn notify_event_listeners(&self, e: LiquidSdkEvent) -> Result<()> {
@@ -452,8 +527,9 @@ impl LiquidSdk {
     }
 
     pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
-        debug!("next_unused_address: {}", self.next_unused_address().await?);
+        self.ensure_is_started().await?;
 
+        debug!("next_unused_address: {}", self.next_unused_address().await?);
         if req.with_scan {
             self.sync().await?;
         }
@@ -463,7 +539,7 @@ impl LiquidSdk {
         let mut confirmed_sent_sat = 0;
         let mut confirmed_received_sat = 0;
 
-        for p in self.list_payments()? {
+        for p in self.list_payments().await? {
             match p.payment_type {
                 PaymentType::Send => match p.status {
                     Complete => confirmed_sent_sat += p.amount_sat,
@@ -611,6 +687,8 @@ impl LiquidSdk {
         &self,
         req: &PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
         let invoice = self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = invoice
             .amount_milli_satoshis()
@@ -829,6 +907,8 @@ impl LiquidSdk {
         &self,
         req: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
         self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
 
@@ -1059,10 +1139,12 @@ impl LiquidSdk {
         Ok(())
     }
 
-    pub fn prepare_receive_payment(
+    pub async fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
         let reverse_pair = self
             .boltz_client_v2()
             .get_reverse_pairs()?
@@ -1087,10 +1169,12 @@ impl LiquidSdk {
         })
     }
 
-    pub fn receive_payment(
+    pub async fn receive_payment(
         &self,
         req: &PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
         let payer_amount_sat = req.payer_amount_sat;
         let fees_sat = req.fees_sat;
 
@@ -1278,7 +1362,9 @@ impl LiquidSdk {
     }
 
     /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
-    pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
+    pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
+        self.ensure_is_started().await?;
+
         let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
         payments.sort_by_key(|p| p.timestamp);
         Ok(payments)
@@ -1297,7 +1383,9 @@ impl LiquidSdk {
     }
 
     /// Synchronize the DB with mempool and onchain data
-    pub async fn sync(&self) -> Result<()> {
+    pub async fn sync(&self) -> LiquidSdkResult<()> {
+        self.ensure_is_started().await?;
+
         let t0 = Instant::now();
         self.sync_payments_with_chain_data(true).await?;
         let duration_ms = Instant::now().duration_since(t0).as_millis();

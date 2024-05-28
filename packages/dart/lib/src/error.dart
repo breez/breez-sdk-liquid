@@ -12,9 +12,11 @@ part 'error.freezed.dart';
 sealed class LiquidSdkError with _$LiquidSdkError implements FrbException {
   const LiquidSdkError._();
 
+  const factory LiquidSdkError.alreadyStarted() = LiquidSdkError_AlreadyStarted;
   const factory LiquidSdkError.generic({
     required String err,
   }) = LiquidSdkError_Generic;
+  const factory LiquidSdkError.notStarted() = LiquidSdkError_NotStarted;
 }
 
 @freezed

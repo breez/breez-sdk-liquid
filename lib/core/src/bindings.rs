@@ -64,18 +64,18 @@ impl BindingLiquidSdk {
         &self,
         req: PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
-        self.sdk.prepare_receive_payment(&req)
+        rt().block_on(self.sdk.prepare_receive_payment(&req))
     }
 
     pub fn receive_payment(
         &self,
         req: PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
-        self.sdk.receive_payment(&req)
+        rt().block_on(self.sdk.receive_payment(&req))
     }
 
     pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
-        self.sdk.list_payments()
+        rt().block_on(self.sdk.list_payments())
     }
 
     pub fn sync(&self) -> Result<(), LiquidSdkError> {

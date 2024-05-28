@@ -478,8 +478,14 @@ impl SseDecode for crate::error::LiquidSdkError {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
+                return crate::error::LiquidSdkError::AlreadyStarted;
+            }
+            1 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::LiquidSdkError::Generic { err: var_err };
+            }
+            2 => {
+                return crate::error::LiquidSdkError::NotStarted;
             }
             _ => {
                 unimplemented!("");
@@ -931,9 +937,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoResponse>
 impl flutter_rust_bridge::IntoDart for crate::error::LiquidSdkError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
+            crate::error::LiquidSdkError::AlreadyStarted => [0.into_dart()].into_dart(),
             crate::error::LiquidSdkError::Generic { err } => {
-                [0.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [1.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
+            crate::error::LiquidSdkError::NotStarted => [2.into_dart()].into_dart(),
         }
     }
 }
@@ -1303,9 +1311,15 @@ impl SseEncode for crate::error::LiquidSdkError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::error::LiquidSdkError::Generic { err } => {
+            crate::error::LiquidSdkError::AlreadyStarted => {
                 <i32>::sse_encode(0, serializer);
+            }
+            crate::error::LiquidSdkError::Generic { err } => {
+                <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(err, serializer);
+            }
+            crate::error::LiquidSdkError::NotStarted => {
+                <i32>::sse_encode(2, serializer);
             }
         }
     }

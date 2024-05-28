@@ -592,9 +592,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
+        return LiquidSdkError_AlreadyStarted();
+      case 1:
         return LiquidSdkError_Generic(
           err: dco_decode_String(raw[1]),
         );
+      case 2:
+        return LiquidSdkError_NotStarted();
       default:
         throw Exception("unreachable");
     }
@@ -997,8 +1001,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
+        return LiquidSdkError_AlreadyStarted();
+      case 1:
         var var_err = sse_decode_String(deserializer);
         return LiquidSdkError_Generic(err: var_err);
+      case 2:
+        return LiquidSdkError_NotStarted();
       default:
         throw UnimplementedError('');
     }
@@ -1462,9 +1470,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_liquid_sdk_error(LiquidSdkError self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
-      case LiquidSdkError_Generic(err: final err):
+      case LiquidSdkError_AlreadyStarted():
         sse_encode_i_32(0, serializer);
+      case LiquidSdkError_Generic(err: final err):
+        sse_encode_i_32(1, serializer);
         sse_encode_String(err, serializer);
+      case LiquidSdkError_NotStarted():
+        sse_encode_i_32(2, serializer);
     }
   }
 
