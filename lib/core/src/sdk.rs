@@ -147,13 +147,15 @@ impl LiquidSdk {
         let sdk_clone = self.clone();
         tokio::spawn(async move {
             loop {
-                if periodic_sync_rx.try_recv().is_ok() {
-                    info!("Received shutdown signal, exiting periodic sync loop");
-                    return;
+                tokio::select! {
+                    _ = tokio::time::sleep(Duration::from_secs(30)) => {
+                         _ = sdk_clone.sync().await;
+                    }
+                    _ = periodic_sync_rx.recv() => {
+                        info!("Received shutdown signal, exiting periodic sync loop");
+                        return;
+                    }
                 }
-
-                tokio::time::sleep(Duration::from_secs(30)).await;
-                _ = sdk_clone.sync().await;
             }
         });
 
