@@ -15,7 +15,7 @@ frb = ["dep:flutter_rust_bridge"]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
-boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-breez-latest-05-21" }
+boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-breez-latest-05-27" }
 flutter_rust_bridge = { version = "=2.0.0-dev.35", features = ["chrono"], optional = true }
 log = "0.4.20"
 lwk_common = "0.5.1"

@@ -11,7 +11,7 @@ use crate::model::*;
 use crate::persist::Persister;
 
 impl Persister {
-    pub(crate) fn insert_send_swap(&self, send_swap: SendSwap) -> Result<()> {
+    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
         let con = self.get_connection()?;
 
         let mut stmt = con.prepare(
@@ -22,23 +22,25 @@ impl Persister {
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
+                refund_private_key,
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
-            send_swap.id,
-            send_swap.invoice,
-            send_swap.payer_amount_sat,
-            send_swap.receiver_amount_sat,
-            send_swap.create_response_json,
-            send_swap.lockup_tx_id,
-            send_swap.refund_tx_id,
-            send_swap.created_at,
-            send_swap.state,
+            &send_swap.id,
+            &send_swap.invoice,
+            &send_swap.payer_amount_sat,
+            &send_swap.receiver_amount_sat,
+            &send_swap.create_response_json,
+            &send_swap.refund_private_key,
+            &send_swap.lockup_tx_id,
+            &send_swap.refund_tx_id,
+            &send_swap.created_at,
+            &send_swap.state,
         ))?;
 
         Ok(())
@@ -59,6 +61,7 @@ impl Persister {
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
+                refund_private_key,
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
@@ -85,10 +88,11 @@ impl Persister {
             payer_amount_sat: row.get(2)?,
             receiver_amount_sat: row.get(3)?,
             create_response_json: row.get(4)?,
-            lockup_tx_id: row.get(5)?,
-            refund_tx_id: row.get(6)?,
-            created_at: row.get(7)?,
-            state: row.get(8)?,
+            refund_private_key: row.get(5)?,
+            lockup_tx_id: row.get(6)?,
+            refund_tx_id: row.get(7)?,
+            created_at: row.get(8)?,
+            state: row.get(9)?,
         })
     }
 

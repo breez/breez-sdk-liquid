@@ -254,6 +254,8 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
             amount_sat: self.amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
             preimage: self.preimage.cst_decode(),
+            refund_tx_id: self.refund_tx_id.cst_decode(),
+            refund_tx_amount_sat: self.refund_tx_amount_sat.cst_decode(),
             payment_type: self.payment_type.cst_decode(),
             status: self.status.cst_decode(),
         }
@@ -453,6 +455,8 @@ impl NewWithNullPtr for wire_cst_payment {
             amount_sat: Default::default(),
             fees_sat: core::ptr::null_mut(),
             preimage: core::ptr::null_mut(),
+            refund_tx_id: core::ptr::null_mut(),
+            refund_tx_amount_sat: core::ptr::null_mut(),
             payment_type: Default::default(),
             status: Default::default(),
         }
@@ -893,6 +897,8 @@ pub struct wire_cst_payment {
     amount_sat: u64,
     fees_sat: *mut u64,
     preimage: *mut wire_cst_list_prim_u_8_strict,
+    refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
+    refund_tx_amount_sat: *mut u64,
     payment_type: i32,
     status: i32,
 }

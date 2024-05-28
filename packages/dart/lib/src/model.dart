@@ -161,6 +161,12 @@ class Payment {
 
   /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
   final String? preimage;
+
+  /// For a Send swap which was refunded, this is the refund tx id
+  final String? refundTxId;
+
+  /// For a Send swap which was refunded, this is the refund amount
+  final int? refundTxAmountSat;
   final PaymentType paymentType;
 
   /// Composite status representing the overall status of the payment.
@@ -177,6 +183,8 @@ class Payment {
     required this.amountSat,
     this.feesSat,
     this.preimage,
+    this.refundTxId,
+    this.refundTxAmountSat,
     required this.paymentType,
     required this.status,
   });
@@ -189,6 +197,8 @@ class Payment {
       amountSat.hashCode ^
       feesSat.hashCode ^
       preimage.hashCode ^
+      refundTxId.hashCode ^
+      refundTxAmountSat.hashCode ^
       paymentType.hashCode ^
       status.hashCode;
 
@@ -203,6 +213,8 @@ class Payment {
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
           preimage == other.preimage &&
+          refundTxId == other.refundTxId &&
+          refundTxAmountSat == other.refundTxAmountSat &&
           paymentType == other.paymentType &&
           status == other.status;
 }

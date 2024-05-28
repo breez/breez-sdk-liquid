@@ -44,11 +44,13 @@ pub(crate) fn get_swap_status_v2(
 
                 return match args.first() {
                     Some(update) if update.id == swap_id => {
-                        info!("Got new swap status: {}", update.status);
+                        info!("Got new swap status for {swap_id}: {}", update.status);
 
                         Ok(update.status.clone())
                     }
-                    Some(update) => Err(anyhow!("WS reply has wrong swap ID {update:?}")),
+                    Some(update) => Err(anyhow!(
+                        "WS reply has wrong swap ID {update:?}. Should be {swap_id}"
+                    )),
                     None => Err(anyhow!("WS reply contains no update")),
                 };
             }
@@ -64,7 +66,9 @@ pub(crate) fn get_swap_status_v2(
                 for e in &args {
                     error!("Got error: {} for swap: {}", e.error, e.id);
                 }
-                return Err(anyhow!("Got SwapUpdate errors: {args:?}"));
+                return Err(anyhow!(
+                    "Got SwapUpdate errors for swap {swap_id}: {args:?}"
+                ));
             }
         }
     }
@@ -81,4 +85,17 @@ pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, Paym
     boltz_client::PublicKey::from_str(json).map_err(|e| PaymentError::Generic {
         err: format!("Failed to deserialize PublicKey: {e:?}"),
     })
+}
+
+pub(crate) fn generate_keypair() -> boltz_client::Keypair {
+    let secp = boltz_client::Secp256k1::new();
+    let mut rng = bip39::rand::rngs::OsRng;
+    let secret_key = lwk_wollet::secp256k1::SecretKey::new(&mut rng);
+    boltz_client::Keypair::from_secret_key(&secp, &secret_key)
+}
+
+pub(crate) fn decode_keypair(secret_key: &str) -> Result<boltz_client::Keypair, lwk_wollet::Error> {
+    let secp = boltz_client::Secp256k1::new();
+    let secret_key = lwk_wollet::secp256k1::SecretKey::from_str(secret_key)?;
+    Ok(boltz_client::Keypair::from_secret_key(&secp, &secret_key))
 }

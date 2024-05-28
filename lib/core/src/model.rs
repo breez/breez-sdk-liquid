@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
 };
-use boltz_client::SwapType;
+use boltz_client::{Keypair, SwapType};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -201,8 +201,13 @@ pub(crate) struct SendSwap {
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
+    pub(crate) refund_private_key: String,
 }
 impl SendSwap {
+    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
+    }
+
     pub(crate) fn get_boltz_create_response(
         &self,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
@@ -460,6 +465,9 @@ pub struct PaymentSwapData {
     /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
 
+    pub refund_tx_id: Option<String>,
+    pub refund_tx_amount_sat: Option<u64>,
+
     /// Payment status derived from the swap status
     pub status: PaymentState,
 }
@@ -495,6 +503,12 @@ pub struct Payment {
     /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
     pub preimage: Option<String>,
 
+    /// For a Send swap which was refunded, this is the refund tx id
+    pub refund_tx_id: Option<String>,
+
+    /// For a Send swap which was refunded, this is the refund amount
+    pub refund_tx_amount_sat: Option<u64>,
+
     pub payment_type: PaymentType,
 
     /// Composite status representing the overall status of the payment.
@@ -518,6 +532,8 @@ impl Payment {
                 .as_ref()
                 .map(|s| s.payer_amount_sat - s.receiver_amount_sat),
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
+            refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
+            refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,
             status: match swap {
                 Some(swap) => swap.status,
