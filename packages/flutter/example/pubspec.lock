@@ -152,10 +152,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_rust_bridge
-      sha256: "915d48099928282c80f7f13ad7b9bbf5808bd3c2a1ec3dc76a749aefde3025ae"
+      sha256: efb018e387c5e844095e35e9d6c6bd1610c49f25de109f4988b7c45aeca60a9a
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0-dev.35"
+    version: "2.0.0-dev.36"
   flutter_secure_storage:
     dependency: "direct main"
     description:

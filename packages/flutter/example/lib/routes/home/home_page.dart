@@ -5,7 +5,6 @@ import 'package:flutter_breez_liquid/flutter_breez_liquid.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/balance.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/bottom_app_bar.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/drawer.dart';
-import 'package:flutter_breez_liquid_example/routes/home/widgets/mnemonics_dialog.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/payment_list/payment_list.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/qr_scan_action_button.dart';
 import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
@@ -61,7 +60,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-          actions: [],
+          actions: const [],
         ),
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
