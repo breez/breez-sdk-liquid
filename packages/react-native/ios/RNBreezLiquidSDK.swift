@@ -56,6 +56,16 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         throw LiquidSdkError.Generic(message: "Not initialized")
     }
 
+    @objc(setLogStream:resolve:reject:)
+    func setLogStream(_ logStream: LogStream, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try BreezLiquidSDK.setLogStream(logStream: logStream)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(connect:resolve:reject:)
     func connect(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         if bindingLiquidSdk != nil {

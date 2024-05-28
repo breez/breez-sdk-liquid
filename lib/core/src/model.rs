@@ -546,6 +546,13 @@ impl Payment {
     }
 }
 
+/// Internal SDK log entry
+#[derive(Clone, Debug)]
+pub struct LogEntry {
+    pub line: String,
+    pub level: String,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct InternalLeaf {
     pub output: String,

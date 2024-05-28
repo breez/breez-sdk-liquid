@@ -547,6 +547,7 @@ dependencies = [
  "breez-liquid-sdk",
  "camino",
  "glob",
+ "log",
  "once_cell",
  "thiserror",
  "tokio",

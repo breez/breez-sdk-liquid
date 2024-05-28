@@ -1,14 +1,56 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use log::{Metadata, Record};
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
-use once_cell::sync::Lazy;
+use breez_liquid_sdk::sdk::LogStream;
+use once_cell::sync::{Lazy, OnceCell};
 use tokio::runtime::Runtime;
+use uniffi::deps::log::{Level, LevelFilter};
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
 fn rt() -> &'static Runtime {
     &RT
+}
+
+static LOG_INIT: OnceCell<bool> = OnceCell::new();
+
+struct BindingLogger {
+    log_stream: Box<dyn LogStream>,
+}
+
+impl BindingLogger {
+    fn init(log_stream: Box<dyn LogStream>) {
+        let binding_logger = BindingLogger { log_stream };
+        log::set_boxed_logger(Box::new(binding_logger)).unwrap();
+        log::set_max_level(LevelFilter::Trace);
+    }
+}
+
+impl log::Log for BindingLogger {
+    fn enabled(&self, m: &Metadata) -> bool {
+        // ignore the internal uniffi log to prevent infinite loop.
+        return m.level() <= Level::Trace && *m.target() != *"breez_liquid_sdk::breez_liquid_sdk_bindings";
+    }
+
+    fn log(&self, record: &Record) {
+        self.log_stream.log(LogEntry {
+            line: record.args().to_string(),
+            level: record.level().as_str().to_string(),
+        });
+    }
+    fn flush(&self) {}
+}
+
+
+/// If used, this must be called before `connect`
+pub fn set_log_stream(log_stream: Box<dyn LogStream>) -> Result<(), LiquidSdkError> {
+    LOG_INIT.set(true).map_err(|_| LiquidSdkError::Generic {
+        err: "Log stream already created".into(),
+    })?;
+    BindingLogger::init(log_stream);
+    Ok(())
 }
 
 pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkError> {

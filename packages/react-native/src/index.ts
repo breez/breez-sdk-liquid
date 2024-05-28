@@ -40,6 +40,11 @@ export interface GetInfoResponse {
     pubkey: string
 }
 
+export interface LogEntry {
+    line: string
+    level: string
+}
+
 export interface Payment {
     txId: string
     swapId?: string
@@ -146,6 +151,10 @@ export const addEventListener = async (listener: EventListener): Promise<string>
 
     return response
 }
+export const setLogStream = async (logStream: LogStream): Promise<void> => {
+    await BreezLiquidSDK.setLogStream(logStream)
+}
+
 
 export const removeEventListener = async (id: string): Promise<void> => {
     await BreezLiquidSDK.removeEventListener(id)

@@ -1437,6 +1437,10 @@ impl log::Log for GlobalSdkLogger {
     fn flush(&self) {}
 }
 
+pub trait LogStream: Send + Sync {
+    fn log(&self, l: LogEntry);
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;

@@ -167,6 +167,44 @@ enum BreezLiquidSDKMapper {
         return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
     }
 
+    static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
+        guard let line = logEntry["line"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "line", typeName: "LogEntry"))
+        }
+        guard let level = logEntry["level"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "level", typeName: "LogEntry"))
+        }
+
+        return LogEntry(
+            line: line,
+            level: level
+        )
+    }
+
+    static func dictionaryOf(logEntry: LogEntry) -> [String: Any?] {
+        return [
+            "line": logEntry.line,
+            "level": logEntry.level,
+        ]
+    }
+
+    static func asLogEntryList(arr: [Any]) throws -> [LogEntry] {
+        var list = [LogEntry]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var logEntry = try asLogEntry(logEntry: val)
+                list.append(logEntry)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LogEntry"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(logEntryList: [LogEntry]) -> [Any] {
+        return logEntryList.map { v -> [String: Any?] in dictionaryOf(logEntry: v) }
+    }
+
     static func asPayment(payment: [String: Any?]) throws -> Payment {
         guard let txId = payment["txId"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txId", typeName: "Payment"))
