@@ -11,6 +11,7 @@ use boltz_client::{
     util::secrets::{LiquidSwapKey, Preimage, SwapKey},
     Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2, SwapType,
 };
+use futures_util::SinkExt;
 use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
@@ -24,9 +25,10 @@ use lwk_wollet::{
 };
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-use tokio::sync::Mutex;
+use tokio::{net::TcpStream, sync::Mutex};
+use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
+use url::Url;
 
-use crate::boltz_status_stream::set_stream_nonblocking;
 use crate::model::PaymentState::*;
 use crate::{
     boltz_status_stream::BoltzStatusStream,
@@ -505,6 +507,16 @@ impl LiquidSdk {
         }
     }
 
+    pub(crate) async fn get_boltz_ws_stream(
+        &self,
+    ) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
+        let base_url = self.boltz_url_v2().replace("http", "ws") + "/ws";
+        let (socket, _) = connect_async(Url::parse(&base_url)?)
+            .await
+            .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
+        Ok(socket)
+    }
+
     fn network_config(&self) -> ElectrumConfig {
         ElectrumConfig::new(
             self.network.into(),
@@ -853,14 +865,14 @@ impl LiquidSdk {
         let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         debug!("Opening WS connection for swap {swap_id}");
-        let mut socket = client.connect_ws()?;
-        set_stream_nonblocking(socket.get_mut())?;
+        let mut ws_stream = self.get_boltz_ws_stream().await?;
 
         let subscription = Subscription::new(swap_id);
         let subscribe_json = serde_json::to_string(&subscription)
             .map_err(|e| anyhow!("Failed to serialize subscription msg: {e:?}"))?;
-        socket
+        ws_stream
             .send(tungstenite::Message::Text(subscribe_json))
+            .await
             .map_err(|e| anyhow!("Failed to subscribe to websocket updates: {e:?}"))?;
 
         // We mark the pending send as already tracked to avoid it being handled by the status stream
@@ -884,13 +896,7 @@ impl LiquidSdk {
         let result;
         let mut lockup_tx_id = String::new();
         loop {
-            let data = match utils::get_swap_status_v2(&mut socket, swap_id) {
-                Ok(data) => data,
-                Err(_) => {
-                    // TODO: close socket if dead, skip EOF errors
-                    continue;
-                }
-            };
+            let data = utils::get_swap_status_v2(&mut ws_stream, swap_id).await?;
             let state = data
                 .parse::<SubSwapStates>()
                 .map_err(|_| PaymentError::Generic {
@@ -986,7 +992,7 @@ impl LiquidSdk {
             };
         }
 
-        socket.close(None).unwrap();
+        let _ = ws_stream.close(None).await;
         result
     }
 

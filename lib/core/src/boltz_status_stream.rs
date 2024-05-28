@@ -1,20 +1,20 @@
 use std::collections::HashSet;
-use std::io::ErrorKind;
-use std::net::TcpStream;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex, OnceLock};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use boltz_client::swaps::{
     boltz::{RevSwapStates, SubSwapStates},
     boltzv2::{Subscription, SwapUpdate},
 };
 use boltz_client::SwapType;
+use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::{Message, WebSocket};
+use tokio::net::TcpStream;
+use tokio::time::MissedTickBehavior;
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 
 use crate::model::*;
 use crate::sdk::LiquidSdk;
@@ -30,18 +30,6 @@ fn send_swap_ids() -> &'static Arc<Mutex<HashSet<String>>> {
 fn receive_swap_ids() -> &'static Arc<Mutex<HashSet<String>>> {
     let receive_swap_ids = Default::default();
     RECEIVE_SWAP_IDS.get_or_init(|| receive_swap_ids)
-}
-
-/// Set underlying TCP stream to nonblocking mode.
-///
-/// This allows us to `read()` without blocking.
-pub(crate) fn set_stream_nonblocking(stream: &mut MaybeTlsStream<TcpStream>) -> Result<()> {
-    match stream {
-        tungstenite::stream::MaybeTlsStream::Plain(s) => s.set_nonblocking(true)?,
-        tungstenite::stream::MaybeTlsStream::NativeTls(s) => s.get_mut().set_nonblocking(true)?,
-        _ => Err(anyhow!("Unsupported stream type"))?,
-    };
-    Ok(())
 }
 
 pub(super) struct BoltzStatusStream {}
@@ -60,158 +48,135 @@ impl BoltzStatusStream {
         };
     }
 
-    fn connect(sdk: Arc<LiquidSdk>) -> Result<WebSocket<MaybeTlsStream<TcpStream>>> {
-        let mut socket = sdk
-            .boltz_client_v2()
-            .connect_ws()
-            .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
-        set_stream_nonblocking(socket.get_mut())?;
-        Ok(socket)
-    }
-
     pub(super) async fn track_pending_swaps(sdk: Arc<LiquidSdk>) -> Result<()> {
-        let mut socket = Self::connect(sdk.clone())?;
-
-        let reconnect_delay = Duration::from_secs(15);
         let keep_alive_ping_interval = Duration::from_secs(15);
-        let mut keep_alive_last_ping_ts = Instant::now();
+        let reconnect_delay = Duration::from_secs(2);
 
-        // Outer loop: reconnects in case the connection is lost
         tokio::spawn(async move {
             loop {
-                // Initially subscribe to all ongoing swaps
-                match sdk.list_ongoing_swaps() {
-                    Ok(initial_ongoing_swaps) => {
-                        info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
-                        for ongoing_swap in &initial_ongoing_swaps {
-                            Self::maybe_subscribe_fn(ongoing_swap, &mut socket);
-                        }
-                    }
-                    Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
-                }
-
-                // Inner loop: iterates over incoming messages and handles them
-                loop {
-                    // Decide if we send a keep-alive ping or not
-                    if Instant::now()
-                        .duration_since(keep_alive_last_ping_ts)
-                        .gt(&keep_alive_ping_interval)
-                    {
-                        match socket.send(Message::Ping(vec![])) {
-                            Ok(_) => debug!("Sent keep-alive ping"),
-                            Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
-                        }
-                        keep_alive_last_ping_ts = Instant::now();
-                    }
-
-                    match &socket.read() {
-                        Ok(Message::Close(_)) => {
-                            warn!("Received close msg, exiting socket loop");
-                            break;
-                        }
-                        Ok(msg) => {
-                            info!("Received msg : {msg:?}");
-
-                            // Each time socket.read() returns, we have the opportunity to socket.send().
-                            // We use this window to subscribe to any new ongoing swaps.
-                            // This happens on any non-close socket messages, in particular:
-                            // Ping (periodic keep-alive), Text (status update)
-                            match sdk.list_ongoing_swaps() {
-                                Ok(ongoing_swaps) => {
-                                    for ongoing_swap in &ongoing_swaps {
-                                        Self::maybe_subscribe_fn(ongoing_swap, &mut socket);
-                                    }
+                debug!("Start of ws stream loop");
+                match sdk.get_boltz_ws_stream().await {
+                    Ok(mut ws_stream) => {
+                        // Initially subscribe to all ongoing swaps
+                        match sdk.list_ongoing_swaps() {
+                            Ok(initial_ongoing_swaps) => {
+                                info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
+                                for ongoing_swap in &initial_ongoing_swaps {
+                                    Self::maybe_subscribe_fn(ongoing_swap, &mut ws_stream).await;
                                 }
-                                Err(e) => error!("Failed to list new ongoing swaps: {e:?}"),
                             }
+                            Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
+                        }
 
-                            // We parse and handle any Text websocket messages, which are likely status updates
-                            if msg.is_text() {
-                                info!("Received text msg (status update) : {msg:?}");
+                        let mut interval = tokio::time::interval(keep_alive_ping_interval);
+                        interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
-                                match serde_json::from_str::<SwapUpdate>(&msg.to_string()) {
-                                    // Subscription confirmation
-                                    Ok(SwapUpdate::Subscription { .. }) => {}
+                        loop {
+                            tokio::select! {
+                                _ = interval.tick() => {
+                                    match ws_stream.send(Message::Ping(vec![])).await {
+                                        Ok(_) => debug!("Sent keep-alive ping"),
+                                        Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
+                                    }
+                                },
+                                maybe_next = ws_stream.next() => match maybe_next {
+                                    Some(msg) => match msg {
+                                        Ok(Message::Close(_)) => {
+                                            warn!("Received close msg, exiting socket loop");
+                                            // Clear monitored swaps, so on re-connect we re-subscribe to them
+                                            send_swap_ids().lock().unwrap().clear();
+                                            receive_swap_ids().lock().unwrap().clear();
 
-                                    // Status update(s)
-                                    Ok(SwapUpdate::Update {
-                                        event: _,
-                                        channel: _,
-                                        args,
-                                    }) => {
-                                        for boltz_client::swaps::boltzv2::Update { id, status } in
-                                            args
-                                        {
-                                            if Self::is_tracked_send_swap(&id) {
-                                                match SubSwapStates::from_str(&status) {
-                                                    Ok(new_state) => {
-                                                        let res = sdk.try_handle_send_swap_boltz_status(
-                                                            new_state,
-                                                            &id,
-                                                        ).await;
-                                                        info!("Handled new Send Swap status from Boltz, result: {res:?}");
+                                            tokio::time::sleep(reconnect_delay).await;
+                                            break;
+                                        },
+                                        Ok(msg) => {
+                                            info!("Received msg: {msg:?}");
+
+                                            // Each time socket.read() returns, we have the opportunity to socket.send().
+                                            // We use this window to subscribe to any new ongoing swaps.
+                                            // This happens on any non-close socket messages, in particular:
+                                            // Ping (periodic keep-alive), Text (status update)
+                                            match sdk.list_ongoing_swaps() {
+                                                Ok(ongoing_swaps) => {
+                                                    for ongoing_swap in &ongoing_swaps {
+                                                        Self::maybe_subscribe_fn(ongoing_swap, &mut ws_stream).await;
                                                     }
-                                                    Err(_) => error!("Received invalid SubSwapState for Send Swap {id}: {status}")
                                                 }
-                                            } else if Self::is_tracked_receive_swap(&id) {
-                                                match RevSwapStates::from_str(&status) {
-                                                    Ok(new_state) => {
-                                                        let res = sdk.try_handle_receive_swap_boltz_status(
-                                                            new_state, &id,
-                                                        ).await;
-                                                        info!("Handled new Receive Swap status from Boltz, result: {res:?}");
-                                                    }
-                                                    Err(_) => error!("Received invalid RevSwapState for Receive Swap {id}: {status}"),
-                                                }
-                                            } else {
-                                                warn!("Received a status update for swap {id}, which is not tracked as ongoing")
+                                                Err(e) => error!("Failed to list new ongoing swaps: {e:?}"),
                                             }
+
+                                            if msg.is_text() {
+                                                match serde_json::from_str::<SwapUpdate>(&msg.to_string()) {
+                                                    // Subscription confirmation
+                                                    Ok(SwapUpdate::Subscription { .. }) => {}
+
+                                                    // Status update(s)
+                                                    Ok(SwapUpdate::Update {
+                                                        event: _,
+                                                        channel: _,
+                                                        args,
+                                                    }) => {
+                                                        for boltz_client::swaps::boltzv2::Update { id, status } in
+                                                            args
+                                                        {
+                                                            if Self::is_tracked_send_swap(&id) {
+                                                                match SubSwapStates::from_str(&status) {
+                                                                    Ok(new_state) => {
+                                                                        let res = sdk.try_handle_send_swap_boltz_status(
+                                                                            new_state,
+                                                                            &id,
+                                                                        ).await;
+                                                                        info!("Handled new Send Swap status from Boltz, result: {res:?}");
+                                                                    }
+                                                                    Err(_) => error!("Received invalid SubSwapState for Send Swap {id}: {status}")
+                                                                }
+                                                            } else if Self::is_tracked_receive_swap(&id) {
+                                                                match RevSwapStates::from_str(&status) {
+                                                                    Ok(new_state) => {
+                                                                        let res = sdk.try_handle_receive_swap_boltz_status(
+                                                                            new_state, &id,
+                                                                        ).await;
+                                                                        info!("Handled new Receive Swap status from Boltz, result: {res:?}");
+                                                                    }
+                                                                    Err(_) => error!("Received invalid RevSwapState for Receive Swap {id}: {status}"),
+                                                                }
+                                                            } else {
+                                                                warn!("Received a status update for swap {id}, which is not tracked as ongoing")
+                                                            }
+                                                        }
+                                                    }
+
+                                                    // Error related to subscription, like "Unknown swap ID"
+                                                    Ok(SwapUpdate::Error {
+                                                        event: _,
+                                                        channel: _,
+                                                        args,
+                                                    }) => error!("Received a status update error: {args:?}"),
+
+                                                    Err(e) => warn!("WS response is invalid SwapUpdate: {e:?}"),
+                                                }
+                                            }
+                                        },
+                                        Err(e) => {
+                                            error!("Received stream error: {e:?}");
+                                            let _ = ws_stream.close(None).await;
+                                            break;
                                         }
-                                    }
-
-                                    // Error related to subscription, like "Unknown swap ID"
-                                    Ok(SwapUpdate::Error {
-                                        event: _,
-                                        channel: _,
-                                        args,
-                                    }) => error!("Received a status update error: {args:?}"),
-
-                                    Err(e) => warn!("WS response is invalid SwapUpdate: {e:?}"),
+                                    },
+                                    None => {
+                                        warn!("Received nothing from the stream");
+                                        let _ = ws_stream.close(None).await;
+                                        tokio::time::sleep(reconnect_delay).await;
+                                        break;
+                                    },
                                 }
                             }
                         }
-                        Err(tungstenite::Error::Io(io_err)) => {
-                            match io_err.kind() {
-                                // Calling socket.read() on a non-blocking stream when there is nothing
-                                // to read results in an WouldBlock error. In this case, we do nothing
-                                // and continue the loop.
-                                ErrorKind::WouldBlock => {}
-                                _ => {
-                                    error!("Received stream IO error : {io_err:?}");
-                                    break;
-                                }
-                            }
-                        }
-                        Err(tungstenite::Error::AlreadyClosed) => {
-                            thread::sleep(reconnect_delay);
-                            info!("Re-connecting...");
-                            match Self::connect(sdk.clone()) {
-                                Ok(new_socket) => {
-                                    socket = new_socket;
-                                    info!("Re-connected to WS stream");
-
-                                    // Clear monitored swaps, so on re-connect we re-subscribe to them
-                                    send_swap_ids().lock().unwrap().clear();
-                                    receive_swap_ids().lock().unwrap().clear();
-                                }
-                                Err(e) => warn!("Failed to re-connected to WS stream: {e:}"),
-                            };
-                            break;
-                        }
-                        Err(e) => {
-                            error!("Received stream error : {e:?}");
-                            break;
-                        }
+                    }
+                    Err(e) => {
+                        warn!("Error connecting to stream: {e}");
+                        tokio::time::sleep(reconnect_delay).await;
                     }
                 }
             }
@@ -228,7 +193,10 @@ impl BoltzStatusStream {
         receive_swap_ids().lock().unwrap().contains(id)
     }
 
-    fn maybe_subscribe_fn(swap: &Swap, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>) {
+    async fn maybe_subscribe_fn(
+        swap: &Swap,
+        ws_stream: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
+    ) {
         let id = swap.id();
         let is_ongoing_swap_already_tracked = match swap {
             Swap::Send(_) => Self::is_tracked_send_swap(&id),
@@ -240,7 +208,7 @@ impl BoltzStatusStream {
 
             let subscription = Subscription::new(&id);
             match serde_json::to_string(&subscription) {
-                Ok(subscribe_json) => match socket.send(Message::Text(subscribe_json)) {
+                Ok(subscribe_json) => match ws_stream.send(Message::Text(subscribe_json)).await {
                     Ok(_) => Self::mark_swap_as_tracked(&id, swap.swap_type()),
                     Err(e) => error!("Failed to subscribe to {id}: {e:?}"),
                 },
