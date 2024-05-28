@@ -1,3 +1,8 @@
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::time::Instant;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+
 use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::ToHex;
@@ -11,8 +16,9 @@ use boltz_client::{
     util::secrets::{LiquidSwapKey, Preimage, SwapKey},
     Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2, SwapType,
 };
+use chrono::Local;
 use futures_util::SinkExt;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, warn, LevelFilter, Metadata, Record};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
@@ -23,8 +29,6 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::{net::TcpStream, sync::Mutex};
 use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use url::Url;
@@ -1336,6 +1340,101 @@ impl LiquidSdk {
             err: format!("Could not create LiquidSwapKey: {e:?}"),
         })
     }
+
+    /// Configures a global SDK logger that will log to file and will forward log events to
+    /// an optional application-specific logger.
+    ///
+    /// If called, it should be called before any SDK methods (for example, before `connect`).
+    ///
+    /// It must be called only once in the application lifecycle. Alternatively, If the application
+    /// already uses a globally-registered logger, this method shouldn't be called at all.
+    ///
+    /// ### Arguments
+    ///
+    /// - `log_dir`: Location where the the SDK log file will be created. The directory must already exist.
+    ///
+    /// - `app_logger`: Optional application logger.
+    ///
+    /// If the application is to use it's own logger, but would also like the SDK to log SDK-specific
+    /// log output to a file in the configured `log_dir`, then do not register the
+    /// app-specific logger as a global logger and instead call this method with the app logger as an arg.
+    ///
+    /// ### Errors
+    ///
+    /// An error is thrown if the log file cannot be created in the working directory.
+    ///
+    /// An error is thrown if a global logger is already configured.
+    pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
+        let target_log_file = Box::new(
+            OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(format!("{log_dir}/sdk.log"))
+                .map_err(|e| anyhow!("Can't create log file: {e}"))?,
+        );
+        let logger = env_logger::Builder::new()
+            .target(env_logger::Target::Pipe(target_log_file))
+            .parse_filters(
+                r#"
+                debug,
+                breez_liquid_sdk=debug,
+                electrum_client::raw_client=warn,
+                lwk_wollet=info,
+                rustls=warn,
+                rustyline=warn,
+                tungstenite=warn
+            "#,
+            )
+            .format(|buf, record| {
+                writeln!(
+                    buf,
+                    "[{} {} {}:{}] {}",
+                    Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                    record.level(),
+                    record.module_path().unwrap_or("unknown"),
+                    record.line().unwrap_or(0),
+                    record.args()
+                )
+            })
+            .build();
+
+        let global_logger = GlobalSdkLogger {
+            logger,
+            log_listener: app_logger,
+        };
+
+        log::set_boxed_logger(Box::new(global_logger))
+            .map_err(|e| anyhow!("Failed to set global logger: {e}"))?;
+        log::set_max_level(LevelFilter::Trace);
+
+        Ok(())
+    }
+}
+
+struct GlobalSdkLogger {
+    /// SDK internal logger, which logs to file
+    logger: env_logger::Logger,
+    /// Optional external log listener, that can receive a stream of log statements
+    log_listener: Option<Box<dyn log::Log>>,
+}
+impl log::Log for GlobalSdkLogger {
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= log::Level::Trace
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            self.logger.log(record);
+
+            if let Some(s) = &self.log_listener.as_ref() {
+                if s.enabled(record.metadata()) {
+                    s.log(record);
+                }
+            }
+        }
+    }
+
+    fn flush(&self) {}
 }
 
 #[cfg(test)]
