@@ -25,8 +25,8 @@ use lwk_wollet::{
 };
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-use tokio::sync::{mpsc, watch, Mutex, RwLock};
-use tokio::{net::TcpStream};
+use tokio::net::TcpStream;
+use tokio::sync::{watch, Mutex, RwLock};
 use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
@@ -140,18 +140,16 @@ impl LiquidSdk {
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
-        let (status_stream_tx, status_stream_rx) = mpsc::channel(1);
-        let (periodic_sync_tx, mut periodic_sync_rx) = mpsc::channel(1);
-
         // Periodically run sync() in the background
         let sdk_clone = self.clone();
+        let mut shutdown_rx_sync_loop = self.shutdown_receiver.clone();
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     _ = tokio::time::sleep(Duration::from_secs(30)) => {
                          _ = sdk_clone.sync().await;
                     }
-                    _ = periodic_sync_rx.recv() => {
+                    _ = shutdown_rx_sync_loop.changed() => {
                         info!("Received shutdown signal, exiting periodic sync loop");
                         return;
                     }
@@ -159,16 +157,8 @@ impl LiquidSdk {
             }
         });
 
-        BoltzStatusStream::track_pending_swaps(self.clone(), status_stream_rx).await?;
-
-        let mut shutdown_receiver = self.shutdown_receiver.clone();
-        tokio::spawn(async move {
-            _ = shutdown_receiver.changed().await;
-            debug!("Received shutdown signal");
-
-            _ = status_stream_tx.send(()).await;
-            _ = periodic_sync_tx.send(()).await;
-        });
+        let shutdown_rx_status_stream = self.shutdown_receiver.clone();
+        BoltzStatusStream::track_pending_swaps(self.clone(), shutdown_rx_status_stream).await?;
 
         Ok(())
     }
