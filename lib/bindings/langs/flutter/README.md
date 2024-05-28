@@ -27,7 +27,8 @@ If you would like to build your binaries (for Flutter devices) locally in additi
     - Need to run `brew install llvm` on macOS since Apple's llvm doesn't have it
 
 ## Getting Started
-Run `just bootstrap` to initialize your workspace.
+Run `just bootstrap true true` to initialize your workspace.
+First parameter installs frb dependencies, second parameter builds the libraries.
 
 To see all available recipes, run `just`.
 
