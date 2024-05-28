@@ -1346,22 +1346,24 @@ impl LiquidSdk {
             Some(key) => key.serialize().to_hex(),
             None => invoice.recover_payee_pub_key().serialize().to_hex(),
         };
+        let description = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        };
+        let timestamp = invoice
+            .timestamp()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| PaymentError::InvalidInvoice)?
+            .as_secs();
 
         let res = LNInvoice {
             bolt11: input.to_string(),
             network: invoice.currency().try_into()?,
             payee_pubkey,
             payment_hash: invoice.payment_hash().to_hex(),
-            description: match invoice.description() {
-                Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-                Bolt11InvoiceDescription::Hash(_) => None,
-            },
+            description,
             amount_msat: invoice.amount_milli_satoshis(),
-            timestamp: invoice
-                .timestamp()
-                .duration_since(UNIX_EPOCH)
-                .map_err(|_| PaymentError::InvalidInvoice)?
-                .as_secs(),
+            timestamp,
             expiry: invoice.expiry_time().as_secs(),
         };
         Ok(res)
