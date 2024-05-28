@@ -104,6 +104,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  LNInvoice dco_decode_ln_invoice(dynamic raw);
+
+  @protected
   Network dco_decode_network(dynamic raw);
 
   @protected
@@ -239,6 +242,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer);
 
   @protected
   Network sse_decode_network(SseDeserializer deserializer);
@@ -568,6 +574,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_ln_invoice(LNInvoice apiObj, wire_cst_ln_invoice wireObj) {
+    wireObj.bolt11 = cst_encode_String(apiObj.bolt11);
+    wireObj.network = cst_encode_network(apiObj.network);
+    wireObj.payee_pubkey = cst_encode_String(apiObj.payeePubkey);
+    wireObj.payment_hash = cst_encode_String(apiObj.paymentHash);
+    wireObj.description = cst_encode_opt_String(apiObj.description);
+    wireObj.amount_msat = cst_encode_opt_box_autoadd_u_64(apiObj.amountMsat);
+    wireObj.timestamp = cst_encode_u_64(apiObj.timestamp);
+    wireObj.expiry = cst_encode_u_64(apiObj.expiry);
+  }
+
+  @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
     wireObj.tx_id = cst_encode_String(apiObj.txId);
     wireObj.swap_id = cst_encode_opt_String(apiObj.swapId);
@@ -807,6 +825,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer);
 
   @protected
   void sse_encode_network(Network self, SseSerializer serializer);
@@ -1124,6 +1145,22 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__connect');
   late final _wire__crate__bindings__connect = _wire__crate__bindings__connectPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
+
+  void wire__crate__bindings__parse_invoice(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
+  ) {
+    return _wire__crate__bindings__parse_invoice(
+      port_,
+      input,
+    );
+  }
+
+  late final _wire__crate__bindings__parse_invoicePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__parse_invoice');
+  late final _wire__crate__bindings__parse_invoice = _wire__crate__bindings__parse_invoicePtr
+      .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void
       rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
@@ -1463,6 +1500,27 @@ final class wire_cst_liquid_sdk_event extends ffi.Struct {
   external int tag;
 
   external LiquidSdkEventKind kind;
+}
+
+final class wire_cst_ln_invoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  @ffi.Int32()
+  external int network;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payee_pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> amount_msat;
+
+  @ffi.Uint64()
+  external int timestamp;
+
+  @ffi.Uint64()
+  external int expiry;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

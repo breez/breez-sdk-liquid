@@ -21,8 +21,8 @@ enum PaymentError {
 };
 
 enum Network {
-    "Liquid",
-    "LiquidTestnet",
+    "Mainnet",
+    "Testnet",
 };
 
 dictionary ConnectRequest {
@@ -77,6 +77,17 @@ dictionary RestoreRequest {
     string? backup_path = null;
 };
 
+dictionary LNInvoice {
+    string bolt11;
+    Network network;
+    string payee_pubkey;
+    string payment_hash;
+    string? description;
+    u64? amount_msat;
+    u64 timestamp;
+    u64 expiry;
+};
+
 dictionary Payment {
     string tx_id;
     string? swap_id = null;
@@ -120,6 +131,9 @@ callback interface EventListener {
 namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     BindingLiquidSdk connect(ConnectRequest req);
+
+    [Throws=PaymentError]
+    LNInvoice parse_invoice(string invoice);
 };
 
 interface BindingLiquidSdk {

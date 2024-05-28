@@ -266,6 +266,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__connectPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+      port_,
+      input,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__parse_invoice');
+  late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoice =
+      _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr
+          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void
       frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ffi.Pointer<ffi.Void> ptr,
@@ -628,6 +645,27 @@ final class wire_cst_liquid_sdk_event extends ffi.Struct {
   external int tag;
 
   external LiquidSdkEventKind kind;
+}
+
+final class wire_cst_ln_invoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  @ffi.Int32()
+  external int network;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payee_pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> amount_msat;
+
+  @ffi.Uint64()
+  external int timestamp;
+
+  @ffi.Uint64()
+  external int expiry;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

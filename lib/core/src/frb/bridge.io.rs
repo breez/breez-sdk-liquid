@@ -245,6 +245,21 @@ impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
         }
     }
 }
+impl CstDecode<crate::model::LNInvoice> for wire_cst_ln_invoice {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::LNInvoice {
+        crate::model::LNInvoice {
+            bolt11: self.bolt11.cst_decode(),
+            network: self.network.cst_decode(),
+            payee_pubkey: self.payee_pubkey.cst_decode(),
+            payment_hash: self.payment_hash.cst_decode(),
+            description: self.description.cst_decode(),
+            amount_msat: self.amount_msat.cst_decode(),
+            timestamp: self.timestamp.cst_decode(),
+            expiry: self.expiry.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::Payment> for wire_cst_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Payment {
@@ -443,6 +458,25 @@ impl NewWithNullPtr for wire_cst_liquid_sdk_event {
     }
 }
 impl Default for wire_cst_liquid_sdk_event {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_ln_invoice {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            bolt11: core::ptr::null_mut(),
+            network: Default::default(),
+            payee_pubkey: core::ptr::null_mut(),
+            payment_hash: core::ptr::null_mut(),
+            description: core::ptr::null_mut(),
+            amount_msat: core::ptr::null_mut(),
+            timestamp: Default::default(),
+            expiry: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_ln_invoice {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -674,6 +708,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+    port_: i64,
+    input: *mut wire_cst_list_prim_u_8_strict,
+) {
+    wire__crate__bindings__parse_invoice_impl(port_, input)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ptr: *const std::ffi::c_void,
 ) {
@@ -888,6 +930,18 @@ pub struct wire_cst_list_payment {
 pub struct wire_cst_list_prim_u_8_strict {
     ptr: *mut u8,
     len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_ln_invoice {
+    bolt11: *mut wire_cst_list_prim_u_8_strict,
+    network: i32,
+    payee_pubkey: *mut wire_cst_list_prim_u_8_strict,
+    payment_hash: *mut wire_cst_list_prim_u_8_strict,
+    description: *mut wire_cst_list_prim_u_8_strict,
+    amount_msat: *mut u64,
+    timestamp: u64,
+    expiry: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

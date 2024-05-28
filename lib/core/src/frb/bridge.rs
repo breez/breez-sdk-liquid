@@ -34,7 +34,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.36";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 692273053;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1793807346;
 
 // Section: executor
 
@@ -299,6 +299,24 @@ fn wire__crate__bindings__connect_impl(
         },
     )
 }
+fn wire__crate__bindings__parse_invoice_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    input: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "parse_invoice",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_input = input.cst_decode();
+            move |context| {
+                transform_result_dco((move || crate::bindings::parse_invoice(api_input))())
+            }
+        },
+    )
+}
 
 // Section: dart2rust
 
@@ -318,8 +336,8 @@ impl CstDecode<crate::model::Network> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Network {
         match self {
-            0 => crate::model::Network::Liquid,
-            1 => crate::model::Network::LiquidTestnet,
+            0 => crate::model::Network::Mainnet,
+            1 => crate::model::Network::Testnet,
             _ => unreachable!("Invalid variant for Network: {}", self),
         }
     }
@@ -563,13 +581,37 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for crate::model::LNInvoice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_bolt11 = <String>::sse_decode(deserializer);
+        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_payeePubkey = <String>::sse_decode(deserializer);
+        let mut var_paymentHash = <String>::sse_decode(deserializer);
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_amountMsat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_timestamp = <u64>::sse_decode(deserializer);
+        let mut var_expiry = <u64>::sse_decode(deserializer);
+        return crate::model::LNInvoice {
+            bolt11: var_bolt11,
+            network: var_network,
+            payee_pubkey: var_payeePubkey,
+            payment_hash: var_paymentHash,
+            description: var_description,
+            amount_msat: var_amountMsat,
+            timestamp: var_timestamp,
+            expiry: var_expiry,
+        };
+    }
+}
+
 impl SseDecode for crate::model::Network {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::model::Network::Liquid,
-            1 => crate::model::Network::LiquidTestnet,
+            0 => crate::model::Network::Mainnet,
+            1 => crate::model::Network::Testnet,
             _ => unreachable!("Invalid variant for Network: {}", inner),
         };
     }
@@ -980,11 +1022,33 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkEvent>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LNInvoice {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.bolt11.into_into_dart().into_dart(),
+            self.network.into_into_dart().into_dart(),
+            self.payee_pubkey.into_into_dart().into_dart(),
+            self.payment_hash.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
+            self.amount_msat.into_into_dart().into_dart(),
+            self.timestamp.into_into_dart().into_dart(),
+            self.expiry.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LNInvoice {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LNInvoice> for crate::model::LNInvoice {
+    fn into_into_dart(self) -> crate::model::LNInvoice {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Network {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            Self::Liquid => 0.into_dart(),
-            Self::LiquidTestnet => 1.into_dart(),
+            Self::Mainnet => 0.into_dart(),
+            Self::Testnet => 1.into_dart(),
         }
     }
 }
@@ -1366,13 +1430,27 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for crate::model::LNInvoice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.bolt11, serializer);
+        <crate::model::Network>::sse_encode(self.network, serializer);
+        <String>::sse_encode(self.payee_pubkey, serializer);
+        <String>::sse_encode(self.payment_hash, serializer);
+        <Option<String>>::sse_encode(self.description, serializer);
+        <Option<u64>>::sse_encode(self.amount_msat, serializer);
+        <u64>::sse_encode(self.timestamp, serializer);
+        <u64>::sse_encode(self.expiry, serializer);
+    }
+}
+
 impl SseEncode for crate::model::Network {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::model::Network::Liquid => 0,
-                crate::model::Network::LiquidTestnet => 1,
+                crate::model::Network::Mainnet => 0,
+                crate::model::Network::Testnet => 1,
                 _ => {
                     unimplemented!("");
                 }

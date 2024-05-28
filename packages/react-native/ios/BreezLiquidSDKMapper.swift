@@ -167,6 +167,84 @@ enum BreezLiquidSDKMapper {
         return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
     }
 
+    static func asLnInvoice(lnInvoice: [String: Any?]) throws -> LnInvoice {
+        guard let bolt11 = lnInvoice["bolt11"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "bolt11", typeName: "LnInvoice"))
+        }
+        guard let networkTmp = lnInvoice["network"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "LnInvoice"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        guard let payeePubkey = lnInvoice["payeePubkey"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payeePubkey", typeName: "LnInvoice"))
+        }
+        guard let paymentHash = lnInvoice["paymentHash"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentHash", typeName: "LnInvoice"))
+        }
+        var description: String?
+        if hasNonNilKey(data: lnInvoice, key: "description") {
+            guard let descriptionTmp = lnInvoice["description"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "description"))
+            }
+            description = descriptionTmp
+        }
+        var amountMsat: UInt64?
+        if hasNonNilKey(data: lnInvoice, key: "amountMsat") {
+            guard let amountMsatTmp = lnInvoice["amountMsat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "amountMsat"))
+            }
+            amountMsat = amountMsatTmp
+        }
+        guard let timestamp = lnInvoice["timestamp"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "LnInvoice"))
+        }
+        guard let expiry = lnInvoice["expiry"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "expiry", typeName: "LnInvoice"))
+        }
+
+        return LnInvoice(
+            bolt11: bolt11,
+            network: network,
+            payeePubkey: payeePubkey,
+            paymentHash: paymentHash,
+            description: description,
+            amountMsat: amountMsat,
+            timestamp: timestamp,
+            expiry: expiry
+        )
+    }
+
+    static func dictionaryOf(lnInvoice: LnInvoice) -> [String: Any?] {
+        return [
+            "bolt11": lnInvoice.bolt11,
+            "network": valueOf(network: lnInvoice.network),
+            "payeePubkey": lnInvoice.payeePubkey,
+            "paymentHash": lnInvoice.paymentHash,
+            "description": lnInvoice.description == nil ? nil : lnInvoice.description,
+            "amountMsat": lnInvoice.amountMsat == nil ? nil : lnInvoice.amountMsat,
+            "timestamp": lnInvoice.timestamp,
+            "expiry": lnInvoice.expiry,
+        ]
+    }
+
+    static func asLnInvoiceList(arr: [Any]) throws -> [LnInvoice] {
+        var list = [LnInvoice]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnInvoice = try asLnInvoice(lnInvoice: val)
+                list.append(lnInvoice)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnInvoice"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnInvoiceList: [LnInvoice]) -> [Any] {
+        return lnInvoiceList.map { v -> [String: Any?] in dictionaryOf(lnInvoice: v) }
+    }
+
     static func asPayment(payment: [String: Any?]) throws -> Payment {
         guard let txId = payment["txId"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txId", typeName: "Payment"))
@@ -647,11 +725,11 @@ enum BreezLiquidSDKMapper {
 
     static func asNetwork(network: String) throws -> Network {
         switch network {
-        case "liquid":
-            return Network.liquid
+        case "mainnet":
+            return Network.mainnet
 
-        case "liquidTestnet":
-            return Network.liquidTestnet
+        case "testnet":
+            return Network.testnet
 
         default: throw LiquidSdkError.Generic(message: "Invalid variant \(network) for enum Network")
         }
@@ -659,11 +737,11 @@ enum BreezLiquidSDKMapper {
 
     static func valueOf(network: Network) -> String {
         switch network {
-        case .liquid:
-            return "liquid"
+        case .mainnet:
+            return "mainnet"
 
-        case .liquidTestnet:
-            return "liquidTestnet"
+        case .testnet:
+            return "testnet"
         }
     }
 

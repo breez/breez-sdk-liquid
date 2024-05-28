@@ -152,6 +152,65 @@ fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
     return list
 }
 
+fun asLnInvoice(lnInvoice: ReadableMap): LnInvoice? {
+    if (!validateMandatoryFields(
+            lnInvoice,
+            arrayOf(
+                "bolt11",
+                "network",
+                "payeePubkey",
+                "paymentHash",
+                "timestamp",
+                "expiry",
+            ),
+        )
+    ) {
+        return null
+    }
+    val bolt11 = lnInvoice.getString("bolt11")!!
+    val network = lnInvoice.getString("network")?.let { asNetwork(it) }!!
+    val payeePubkey = lnInvoice.getString("payeePubkey")!!
+    val paymentHash = lnInvoice.getString("paymentHash")!!
+    val description = if (hasNonNullKey(lnInvoice, "description")) lnInvoice.getString("description") else null
+    val amountMsat = if (hasNonNullKey(lnInvoice, "amountMsat")) lnInvoice.getDouble("amountMsat").toULong() else null
+    val timestamp = lnInvoice.getDouble("timestamp").toULong()
+    val expiry = lnInvoice.getDouble("expiry").toULong()
+    return LnInvoice(
+        bolt11,
+        network,
+        payeePubkey,
+        paymentHash,
+        description,
+        amountMsat,
+        timestamp,
+        expiry,
+    )
+}
+
+fun readableMapOf(lnInvoice: LnInvoice): ReadableMap {
+    return readableMapOf(
+        "bolt11" to lnInvoice.bolt11,
+        "network" to lnInvoice.network.name.lowercase(),
+        "payeePubkey" to lnInvoice.payeePubkey,
+        "paymentHash" to lnInvoice.paymentHash,
+        "description" to lnInvoice.description,
+        "amountMsat" to lnInvoice.amountMsat,
+        "timestamp" to lnInvoice.timestamp,
+        "expiry" to lnInvoice.expiry,
+    )
+}
+
+fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
+    val list = ArrayList<LnInvoice>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnInvoice(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPayment(payment: ReadableMap): Payment? {
     if (!validateMandatoryFields(
             payment,

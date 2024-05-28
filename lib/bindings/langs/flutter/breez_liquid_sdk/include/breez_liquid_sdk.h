@@ -137,6 +137,17 @@ typedef struct wire_cst_liquid_sdk_event {
   union LiquidSdkEventKind kind;
 } wire_cst_liquid_sdk_event;
 
+typedef struct wire_cst_ln_invoice {
+  struct wire_cst_list_prim_u_8_strict *bolt11;
+  int32_t network;
+  struct wire_cst_list_prim_u_8_strict *payee_pubkey;
+  struct wire_cst_list_prim_u_8_strict *payment_hash;
+  struct wire_cst_list_prim_u_8_strict *description;
+  uint64_t *amount_msat;
+  uint64_t timestamp;
+  uint64_t expiry;
+} wire_cst_ln_invoice;
+
 typedef struct wire_cst_PaymentError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_Generic;
@@ -224,6 +235,9 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(int64_t po
 void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
                                                         struct wire_cst_connect_request *req);
 
+void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(int64_t port_,
+                                                              struct wire_cst_list_prim_u_8_strict *input);
+
 void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
 void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
@@ -279,6 +293,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;
 }

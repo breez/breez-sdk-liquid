@@ -126,9 +126,60 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const factory LiquidSdkEvent.synced() = LiquidSdkEvent_Synced;
 }
 
+/// Wrapper for a BOLT11 LN invoice
+class LNInvoice {
+  final String bolt11;
+  final Network network;
+  final String payeePubkey;
+  final String paymentHash;
+  final String? description;
+  final BigInt? amountMsat;
+  final BigInt timestamp;
+  final BigInt expiry;
+
+  const LNInvoice({
+    required this.bolt11,
+    required this.network,
+    required this.payeePubkey,
+    required this.paymentHash,
+    this.description,
+    this.amountMsat,
+    required this.timestamp,
+    required this.expiry,
+  });
+
+  @override
+  int get hashCode =>
+      bolt11.hashCode ^
+      network.hashCode ^
+      payeePubkey.hashCode ^
+      paymentHash.hashCode ^
+      description.hashCode ^
+      amountMsat.hashCode ^
+      timestamp.hashCode ^
+      expiry.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LNInvoice &&
+          runtimeType == other.runtimeType &&
+          bolt11 == other.bolt11 &&
+          network == other.network &&
+          payeePubkey == other.payeePubkey &&
+          paymentHash == other.paymentHash &&
+          description == other.description &&
+          amountMsat == other.amountMsat &&
+          timestamp == other.timestamp &&
+          expiry == other.expiry;
+}
+
 enum Network {
-  liquid,
-  liquidTestnet,
+  /// Mainnet Bitcoin and Liquid chains
+  mainnet,
+
+  /// Testnet Bitcoin and Liquid chains
+  testnet,
   ;
 }
 

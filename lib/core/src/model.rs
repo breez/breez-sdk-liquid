@@ -15,15 +15,17 @@ use crate::utils;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
-    Liquid,
-    LiquidTestnet,
+    /// Mainnet Bitcoin and Liquid chains
+    Mainnet,
+    /// Testnet Bitcoin and Liquid chains
+    Testnet,
 }
 
 impl From<Network> for ElementsNetwork {
     fn from(value: Network) -> Self {
         match value {
-            Network::Liquid => ElementsNetwork::Liquid,
-            Network::LiquidTestnet => ElementsNetwork::LiquidTestnet,
+            Network::Mainnet => ElementsNetwork::Liquid,
+            Network::Testnet => ElementsNetwork::LiquidTestnet,
         }
     }
 }
@@ -31,8 +33,8 @@ impl From<Network> for ElementsNetwork {
 impl From<Network> for Chain {
     fn from(value: Network) -> Self {
         match value {
-            Network::Liquid => Chain::Liquid,
-            Network::LiquidTestnet => Chain::LiquidTestnet,
+            Network::Mainnet => Chain::Liquid,
+            Network::Testnet => Chain::LiquidTestnet,
         }
     }
 }
@@ -42,8 +44,22 @@ impl TryFrom<&str> for Network {
 
     fn try_from(value: &str) -> Result<Network, anyhow::Error> {
         match value.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Liquid),
-            "testnet" => Ok(Network::LiquidTestnet),
+            "mainnet" => Ok(Network::Mainnet),
+            "testnet" => Ok(Network::Testnet),
+            _ => Err(anyhow!("Invalid network")),
+        }
+    }
+}
+
+impl TryFrom<boltz_client::lightning_invoice::Currency> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(
+        value: boltz_client::lightning_invoice::Currency,
+    ) -> Result<Network, anyhow::Error> {
+        match value {
+            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(Network::Mainnet),
+            boltz_client::lightning_invoice::Currency::BitcoinTestnet => Ok(Network::Testnet),
             _ => Err(anyhow!("Invalid network")),
         }
     }
@@ -88,8 +104,8 @@ impl LiquidSdkOptions {
     pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
         self.electrum_url.clone().unwrap_or({
             let (url, validate_domain, tls) = match &self.network {
-                Network::Liquid => ("blockstream.info:995", true, true),
-                Network::LiquidTestnet => ("blockstream.info:465", true, true),
+                Network::Mainnet => ("blockstream.info:995", true, true),
+                Network::Testnet => ("blockstream.info:465", true, true),
             };
             ElectrumUrl::new(url, tls, validate_domain)
         })
@@ -544,6 +560,19 @@ impl Payment {
             },
         }
     }
+}
+
+/// Wrapper for a BOLT11 LN invoice
+#[derive(Clone, Debug, PartialEq)]
+pub struct LNInvoice {
+    pub bolt11: String,
+    pub network: Network,
+    pub payee_pubkey: String,
+    pub payment_hash: String,
+    pub description: Option<String>,
+    pub amount_msat: Option<u64>,
+    pub timestamp: u64,
+    pub expiry: u64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
