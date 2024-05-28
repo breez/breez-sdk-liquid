@@ -1,14 +1,7 @@
 use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
 use anyhow::Result;
-use once_cell::sync::Lazy;
+use flutter_rust_bridge::frb;
 use std::sync::Arc;
-use tokio::runtime::Runtime;
-
-static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
-
-pub(crate) fn rt() -> &'static Runtime {
-    &RT
-}
 
 struct BindingEventListener {
     stream: StreamSink<LiquidSdkEvent>,
@@ -20,11 +13,9 @@ impl EventListener for BindingEventListener {
     }
 }
 
-pub fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkError> {
-    rt().block_on(async {
-        let ln_sdk = LiquidSdk::connect(req).await?;
-        Ok(BindingLiquidSdk { sdk: ln_sdk })
-    })
+pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkError> {
+    let ln_sdk = LiquidSdk::connect(req).await?;
+    Ok(BindingLiquidSdk { sdk: ln_sdk })
 }
 
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
@@ -36,69 +27,71 @@ pub struct BindingLiquidSdk {
 }
 
 impl BindingLiquidSdk {
-    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
-        rt().block_on(self.sdk.get_info(req)).map_err(Into::into)
+    pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
+        self.sdk.get_info(req).await.map_err(Into::into)
     }
 
-    pub fn add_event_listener(
+    pub async fn add_event_listener(
         &self,
         listener: StreamSink<LiquidSdkEvent>,
     ) -> Result<String, LiquidSdkError> {
-        rt().block_on(
-            self.sdk
-                .add_event_listener(Box::new(BindingEventListener { stream: listener })),
-        )
+        self.sdk
+            .add_event_listener(Box::new(BindingEventListener { stream: listener }))
+            .await
     }
 
-    pub fn prepare_send_payment(
+    pub async fn prepare_send_payment(
         &self,
         req: PrepareSendRequest,
     ) -> Result<PrepareSendResponse, PaymentError> {
-        rt().block_on(self.sdk.prepare_send_payment(&req))
+        self.sdk.prepare_send_payment(&req).await
     }
 
-    pub fn send_payment(
+    pub async fn send_payment(
         &self,
         req: PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        rt().block_on(self.sdk.send_payment(&req))
+        self.sdk.send_payment(&req).await
     }
 
-    pub fn prepare_receive_payment(
+    pub async fn prepare_receive_payment(
         &self,
         req: PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
-        rt().block_on(self.sdk.prepare_receive_payment(&req))
+        self.sdk.prepare_receive_payment(&req).await
     }
 
-    pub fn receive_payment(
+    pub async fn receive_payment(
         &self,
         req: PrepareReceiveResponse,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
-        rt().block_on(self.sdk.receive_payment(&req))
+        self.sdk.receive_payment(&req).await
     }
 
-    pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
-        rt().block_on(self.sdk.list_payments())
+    pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
+        self.sdk.list_payments().await
     }
 
-    pub fn sync(&self) -> Result<(), LiquidSdkError> {
-        rt().block_on(self.sdk.sync()).map_err(Into::into)
+    pub async fn sync(&self) -> Result<(), LiquidSdkError> {
+        self.sdk.sync().await.map_err(Into::into)
     }
 
+    #[frb(sync)]
     pub fn empty_wallet_cache(&self) -> Result<(), LiquidSdkError> {
         self.sdk.empty_wallet_cache().map_err(Into::into)
     }
 
+    #[frb(sync)]
     pub fn backup(&self, req: BackupRequest) -> Result<(), LiquidSdkError> {
         self.sdk.backup(req).map_err(Into::into)
     }
 
+    #[frb(sync)]
     pub fn restore(&self, req: RestoreRequest) -> Result<(), LiquidSdkError> {
         self.sdk.restore(req).map_err(Into::into)
     }
 
-    pub fn disconnect(&self) -> Result<(), LiquidSdkError> {
-        rt().block_on(self.sdk.disconnect())
+    pub async fn disconnect(&self) -> Result<(), LiquidSdkError> {
+        self.sdk.disconnect().await
     }
 }
