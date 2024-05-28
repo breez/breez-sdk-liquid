@@ -30,7 +30,6 @@ use tokio::{net::TcpStream};
 use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
-use crate::boltz_status_stream::set_stream_nonblocking;
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
 use crate::{
