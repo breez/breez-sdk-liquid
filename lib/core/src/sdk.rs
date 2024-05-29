@@ -128,7 +128,10 @@ impl LiquidSdk {
         *is_started = true;
         drop(is_started); // Drop write lock before trying to read in sync() below
 
-        self.sync().await?; // Initial sync() before returning the instance
+        if matches!(self.list_payments().await, Ok(payments) if payments.is_empty()) {
+            info!("No payments found in DB. Possible first run, sync-ing in foreground");
+            self.sync().await?;
+        }
         let start_duration = start_ts.elapsed();
         info!("Liquid SDK initialized in: {start_duration:?}");
 
