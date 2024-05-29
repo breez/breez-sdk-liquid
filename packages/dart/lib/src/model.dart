@@ -387,17 +387,17 @@ class RestoreRequest {
 }
 
 class SendPaymentResponse {
-  final String txid;
+  final Payment payment;
 
   const SendPaymentResponse({
-    required this.txid,
+    required this.payment,
   });
 
   @override
-  int get hashCode => txid.hashCode;
+  int get hashCode => payment.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SendPaymentResponse && runtimeType == other.runtimeType && txid == other.txid;
+      other is SendPaymentResponse && runtimeType == other.runtimeType && payment == other.payment;
 }

@@ -428,21 +428,21 @@ fun asSendPaymentResponse(sendPaymentResponse: ReadableMap): SendPaymentResponse
     if (!validateMandatoryFields(
             sendPaymentResponse,
             arrayOf(
-                "txid",
+                "payment",
             ),
         )
     ) {
         return null
     }
-    val txid = sendPaymentResponse.getString("txid")!!
+    val payment = sendPaymentResponse.getMap("payment")?.let { asPayment(it) }!!
     return SendPaymentResponse(
-        txid,
+        payment,
     )
 }
 
 fun readableMapOf(sendPaymentResponse: SendPaymentResponse): ReadableMap {
     return readableMapOf(
-        "txid" to sendPaymentResponse.txid,
+        "payment" to readableMapOf(sendPaymentResponse.payment),
     )
 }
 
