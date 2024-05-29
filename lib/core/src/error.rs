@@ -75,14 +75,6 @@ pub enum PaymentError {
     SignerError { err: String },
 }
 
-impl PaymentError {
-    pub(crate) fn generic(err: &str) -> Self {
-        Self::Generic {
-            err: err.to_string(),
-        }
-    }
-}
-
 impl From<boltz_client::error::Error> for PaymentError {
     fn from(err: boltz_client::error::Error) -> Self {
         match err {
