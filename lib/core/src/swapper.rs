@@ -22,12 +22,16 @@ pub const BOLTZ_TESTNET_URL_V2: &str = "https://api.testnet.boltz.exchange/v2";
 pub const BOLTZ_MAINNET_URL_V2: &str = "https://api.boltz.exchange/v2";
 
 pub trait Swapper: Send + Sync {
-    // Send swap
+    /// Create a new send swap
     fn create_send_swap(
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError>;
+
+    /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
+
+    /// Refund a cooperatively send swap  
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,
@@ -35,6 +39,8 @@ pub trait Swapper: Send + Sync {
         broadcast_fees_sat: Amount,
         keypair: &Keypair,
     ) -> Result<String, PaymentError>;
+
+    /// Refund non-cooperatively send swap
     fn refund_send_swap_non_cooperative(
         &self,
         swap: &SendSwap,
@@ -42,6 +48,9 @@ pub trait Swapper: Send + Sync {
         broadcast_fees_sat: Amount,
         output_address: &String,
     ) -> Result<String, PaymentError>;
+
+    /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
+    /// We are helping to use key spend path for cheaper fees.
     fn claim_send_swap_cooperative(
         &self,
         swap: &SendSwap,
@@ -49,12 +58,16 @@ pub trait Swapper: Send + Sync {
         keypair: &Keypair,
     ) -> Result<(), PaymentError>;
 
-    // Receive swap
+    // Create a new receive swap
     fn create_receive_swap(
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError>;
+
+    // Get a reverse pair information
     fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError>;
+
+    /// Claim receive swap. Here the local swapper is the one that claims.
     fn claim_receive_swap(
         &self,
         swap: &ReceiveSwap,
@@ -137,6 +150,7 @@ impl BoltzSwapper {
 }
 
 impl Swapper for BoltzSwapper {
+    /// Create a new send swap
     fn create_send_swap(
         &self,
         req: CreateSubmarineRequest,
@@ -144,49 +158,12 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.post_swap_req(&req)?)
     }
 
-    fn create_receive_swap(
-        &self,
-        req: CreateReverseRequest,
-    ) -> Result<CreateReverseResponse, PaymentError> {
-        Ok(self.client.post_reverse_req(req)?)
-    }
-
-    fn claim_send_swap_cooperative(
-        &self,
-        swap: &SendSwap,
-        invoice: &str,
-        keypair: &Keypair,
-    ) -> Result<(), PaymentError> {
-        let swap_id = &swap.id;
-        debug!("Claim is pending for swap-in {swap_id}. Initiating cooperative claim");
-        let refund_tx = self.new_refund_tx(swap, keypair, &"".into())?;
-
-        let claim_tx_response = self.client.get_claim_tx_details(&swap_id.to_string())?;
-        debug!("Received claim tx details: {:?}", &claim_tx_response);
-
-        self.validate_send_swap_preimage(swap_id, invoice, &claim_tx_response.preimage)?;
-
-        let (partial_sig, pub_nonce) =
-            refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
-
-        self.client
-            .post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
-        debug!("Successfully sent claim details for swap-in {swap_id}");
-        Ok(())
-    }
-
+    /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
         Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
     }
 
-    fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
-        Ok(self.client.get_reverse_pairs()?.get_btc_to_lbtc_pair())
-    }
-
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &String) -> Result<Value, PaymentError> {
-        Ok(self.client.broadcast_tx(chain, tx_hex)?)
-    }
-
+    /// Refund a cooperatively send swap  
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,
@@ -227,6 +204,7 @@ impl Swapper for BoltzSwapper {
         Ok(refund_tx_id.clone())
     }
 
+    /// Refund non-cooperatively send swap
     fn refund_send_swap_non_cooperative(
         &self,
         swap: &SendSwap,
@@ -256,6 +234,46 @@ impl Swapper for BoltzSwapper {
         Ok(refund_tx_id)
     }
 
+    /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
+    /// We are helping to use key spend path for cheaper fees.
+    fn claim_send_swap_cooperative(
+        &self,
+        swap: &SendSwap,
+        invoice: &str,
+        keypair: &Keypair,
+    ) -> Result<(), PaymentError> {
+        let swap_id = &swap.id;
+        debug!("Claim is pending for swap-in {swap_id}. Initiating cooperative claim");
+        let refund_tx = self.new_refund_tx(swap, keypair, &"".into())?;
+
+        let claim_tx_response = self.client.get_claim_tx_details(&swap_id.to_string())?;
+        debug!("Received claim tx details: {:?}", &claim_tx_response);
+
+        self.validate_send_swap_preimage(swap_id, invoice, &claim_tx_response.preimage)?;
+
+        let (partial_sig, pub_nonce) =
+            refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
+
+        self.client
+            .post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
+        debug!("Successfully sent claim details for swap-in {swap_id}");
+        Ok(())
+    }
+
+    // Create a new receive swap
+    fn create_receive_swap(
+        &self,
+        req: CreateReverseRequest,
+    ) -> Result<CreateReverseResponse, PaymentError> {
+        Ok(self.client.post_reverse_req(req)?)
+    }
+
+    // Get a reverse pair information
+    fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
+        Ok(self.client.get_reverse_pairs()?.get_btc_to_lbtc_pair())
+    }
+
+    /// Claim receive swap. Here the local swapper is the one that claims.
     fn claim_receive_swap(
         &self,
         swap: &ReceiveSwap,
@@ -296,5 +314,10 @@ impl Swapper for BoltzSwapper {
         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
         Ok(claim_tx_id)
+    }
+
+    // chain broadcast
+    fn broadcast_tx(&self, chain: Chain, tx_hex: &String) -> Result<Value, PaymentError> {
+        Ok(self.client.broadcast_tx(chain, tx_hex)?)
     }
 }
