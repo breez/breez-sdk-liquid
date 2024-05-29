@@ -51,7 +51,7 @@ impl BoltzStatusStream {
 
     pub(super) async fn track_pending_swaps(
         sdk: Arc<LiquidSdk>,
-        mut shutdown: watch::Receiver<()>,
+        shutdown: watch::Receiver<()>,
     ) -> Result<()> {
         let keep_alive_ping_interval = Duration::from_secs(15);
         let reconnect_delay = Duration::from_secs(2);

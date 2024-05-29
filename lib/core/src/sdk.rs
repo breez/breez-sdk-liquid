@@ -126,7 +126,7 @@ impl LiquidSdk {
         let start_ts = Instant::now();
         self.start_background_tasks().await?;
         *is_started = true;
-        drop(is_started);  // Drop write lock before trying to read in sync() below
+        drop(is_started); // Drop write lock before trying to read in sync() below
 
         self.sync().await?; // Initial sync() before returning the instance
         let start_duration = start_ts.elapsed();
