@@ -121,7 +121,6 @@ impl LiquidSdk {
     /// Should only be called as part of [LiquidSdk::connect].
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         let mut is_started = self.is_started.write().await;
-        ensure_sdk!(!*is_started, LiquidSdkError::AlreadyStarted);
 
         let start_ts = Instant::now();
         self.start_background_tasks().await?;
