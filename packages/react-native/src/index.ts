@@ -46,9 +46,13 @@ export interface LnInvoice {
     payeePubkey: string
     paymentHash: string
     description?: string
+    descriptionHash?: string
     amountMsat?: number
     timestamp: number
     expiry: number
+    routingHints: RouteHint[]
+    paymentSecret: number[]
+    minFinalCltvExpiryDelta: number
 }
 
 export interface Payment {
@@ -89,6 +93,20 @@ export interface ReceivePaymentResponse {
 
 export interface RestoreRequest {
     backupPath?: string
+}
+
+export interface RouteHint {
+    hops: RouteHintHop[]
+}
+
+export interface RouteHintHop {
+    srcNodeId: string
+    shortChannelId: number
+    feesBaseMsat: number
+    feesProportionalMillionths: number
+    cltvExpiryDelta: number
+    htlcMinimumMsat?: number
+    htlcMaximumMsat?: number
 }
 
 export interface SendPaymentResponse {

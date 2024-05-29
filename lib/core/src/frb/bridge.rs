@@ -581,6 +581,30 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Vec<crate::model::RouteHint> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::RouteHint>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::model::RouteHintHop> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::RouteHintHop>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for crate::model::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -589,18 +613,26 @@ impl SseDecode for crate::model::LNInvoice {
         let mut var_payeePubkey = <String>::sse_decode(deserializer);
         let mut var_paymentHash = <String>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_descriptionHash = <Option<String>>::sse_decode(deserializer);
         let mut var_amountMsat = <Option<u64>>::sse_decode(deserializer);
         let mut var_timestamp = <u64>::sse_decode(deserializer);
         let mut var_expiry = <u64>::sse_decode(deserializer);
+        let mut var_routingHints = <Vec<crate::model::RouteHint>>::sse_decode(deserializer);
+        let mut var_paymentSecret = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_minFinalCltvExpiryDelta = <u64>::sse_decode(deserializer);
         return crate::model::LNInvoice {
             bolt11: var_bolt11,
             network: var_network,
             payee_pubkey: var_payeePubkey,
             payment_hash: var_paymentHash,
             description: var_description,
+            description_hash: var_descriptionHash,
             amount_msat: var_amountMsat,
             timestamp: var_timestamp,
             expiry: var_expiry,
+            routing_hints: var_routingHints,
+            payment_secret: var_paymentSecret,
+            min_final_cltv_expiry_delta: var_minFinalCltvExpiryDelta,
         };
     }
 }
@@ -819,6 +851,36 @@ impl SseDecode for crate::model::RestoreRequest {
     }
 }
 
+impl SseDecode for crate::model::RouteHint {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_hops = <Vec<crate::model::RouteHintHop>>::sse_decode(deserializer);
+        return crate::model::RouteHint { hops: var_hops };
+    }
+}
+
+impl SseDecode for crate::model::RouteHintHop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_srcNodeId = <String>::sse_decode(deserializer);
+        let mut var_shortChannelId = <u64>::sse_decode(deserializer);
+        let mut var_feesBaseMsat = <u32>::sse_decode(deserializer);
+        let mut var_feesProportionalMillionths = <u32>::sse_decode(deserializer);
+        let mut var_cltvExpiryDelta = <u64>::sse_decode(deserializer);
+        let mut var_htlcMinimumMsat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_htlcMaximumMsat = <Option<u64>>::sse_decode(deserializer);
+        return crate::model::RouteHintHop {
+            src_node_id: var_srcNodeId,
+            short_channel_id: var_shortChannelId,
+            fees_base_msat: var_feesBaseMsat,
+            fees_proportional_millionths: var_feesProportionalMillionths,
+            cltv_expiry_delta: var_cltvExpiryDelta,
+            htlc_minimum_msat: var_htlcMinimumMsat,
+            htlc_maximum_msat: var_htlcMaximumMsat,
+        };
+    }
+}
+
 impl SseDecode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1030,9 +1092,15 @@ impl flutter_rust_bridge::IntoDart for crate::model::LNInvoice {
             self.payee_pubkey.into_into_dart().into_dart(),
             self.payment_hash.into_into_dart().into_dart(),
             self.description.into_into_dart().into_dart(),
+            self.description_hash.into_into_dart().into_dart(),
             self.amount_msat.into_into_dart().into_dart(),
             self.timestamp.into_into_dart().into_dart(),
             self.expiry.into_into_dart().into_dart(),
+            self.routing_hints.into_into_dart().into_dart(),
+            self.payment_secret.into_into_dart().into_dart(),
+            self.min_final_cltv_expiry_delta
+                .into_into_dart()
+                .into_dart(),
         ]
         .into_dart()
     }
@@ -1265,6 +1333,41 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::RestoreRequest>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::RouteHint {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.hops.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHint {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHint> for crate::model::RouteHint {
+    fn into_into_dart(self) -> crate::model::RouteHint {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::RouteHintHop {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.src_node_id.into_into_dart().into_dart(),
+            self.short_channel_id.into_into_dart().into_dart(),
+            self.fees_base_msat.into_into_dart().into_dart(),
+            self.fees_proportional_millionths
+                .into_into_dart()
+                .into_dart(),
+            self.cltv_expiry_delta.into_into_dart().into_dart(),
+            self.htlc_minimum_msat.into_into_dart().into_dart(),
+            self.htlc_maximum_msat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHintHop {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHintHop> for crate::model::RouteHintHop {
+    fn into_into_dart(self) -> crate::model::RouteHintHop {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.txid.into_into_dart().into_dart()].into_dart()
@@ -1430,6 +1533,26 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Vec<crate::model::RouteHint> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::RouteHint>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::model::RouteHintHop> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::RouteHintHop>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for crate::model::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1438,9 +1561,13 @@ impl SseEncode for crate::model::LNInvoice {
         <String>::sse_encode(self.payee_pubkey, serializer);
         <String>::sse_encode(self.payment_hash, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
+        <Option<String>>::sse_encode(self.description_hash, serializer);
         <Option<u64>>::sse_encode(self.amount_msat, serializer);
         <u64>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.expiry, serializer);
+        <Vec<crate::model::RouteHint>>::sse_encode(self.routing_hints, serializer);
+        <Vec<u8>>::sse_encode(self.payment_secret, serializer);
+        <u64>::sse_encode(self.min_final_cltv_expiry_delta, serializer);
     }
 }
 
@@ -1625,6 +1752,26 @@ impl SseEncode for crate::model::RestoreRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<String>>::sse_encode(self.backup_path, serializer);
+    }
+}
+
+impl SseEncode for crate::model::RouteHint {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::model::RouteHintHop>>::sse_encode(self.hops, serializer);
+    }
+}
+
+impl SseEncode for crate::model::RouteHintHop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.src_node_id, serializer);
+        <u64>::sse_encode(self.short_channel_id, serializer);
+        <u32>::sse_encode(self.fees_base_msat, serializer);
+        <u32>::sse_encode(self.fees_proportional_millionths, serializer);
+        <u64>::sse_encode(self.cltv_expiry_delta, serializer);
+        <Option<u64>>::sse_encode(self.htlc_minimum_msat, serializer);
+        <Option<u64>>::sse_encode(self.htlc_maximum_msat, serializer);
     }
 }
 

@@ -79,6 +79,30 @@ typedef struct wire_cst_list_payment {
   int32_t len;
 } wire_cst_list_payment;
 
+typedef struct wire_cst_route_hint_hop {
+  struct wire_cst_list_prim_u_8_strict *src_node_id;
+  uint64_t short_channel_id;
+  uint32_t fees_base_msat;
+  uint32_t fees_proportional_millionths;
+  uint64_t cltv_expiry_delta;
+  uint64_t *htlc_minimum_msat;
+  uint64_t *htlc_maximum_msat;
+} wire_cst_route_hint_hop;
+
+typedef struct wire_cst_list_route_hint_hop {
+  struct wire_cst_route_hint_hop *ptr;
+  int32_t len;
+} wire_cst_list_route_hint_hop;
+
+typedef struct wire_cst_route_hint {
+  struct wire_cst_list_route_hint_hop *hops;
+} wire_cst_route_hint;
+
+typedef struct wire_cst_list_route_hint {
+  struct wire_cst_route_hint *ptr;
+  int32_t len;
+} wire_cst_list_route_hint;
+
 typedef struct wire_cst_get_info_response {
   uint64_t balance_sat;
   uint64_t pending_send_sat;
@@ -143,9 +167,13 @@ typedef struct wire_cst_ln_invoice {
   struct wire_cst_list_prim_u_8_strict *payee_pubkey;
   struct wire_cst_list_prim_u_8_strict *payment_hash;
   struct wire_cst_list_prim_u_8_strict *description;
+  struct wire_cst_list_prim_u_8_strict *description_hash;
   uint64_t *amount_msat;
   uint64_t timestamp;
   uint64_t expiry;
+  struct wire_cst_list_route_hint *routing_hints;
+  struct wire_cst_list_prim_u_8_strict *payment_secret;
+  uint64_t min_final_cltv_expiry_delta;
 } wire_cst_ln_invoice;
 
 typedef struct wire_cst_PaymentError_Generic {
@@ -265,6 +293,10 @@ uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
+
+struct wire_cst_list_route_hint *frbgen_breez_liquid_cst_new_list_route_hint(int32_t len);
+
+struct wire_cst_list_route_hint_hop *frbgen_breez_liquid_cst_new_list_route_hint_hop(int32_t len);
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
@@ -279,6 +311,8 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);

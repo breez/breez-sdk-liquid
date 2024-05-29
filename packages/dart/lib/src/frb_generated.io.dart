@@ -104,6 +104,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<RouteHint> dco_decode_list_route_hint(dynamic raw);
+
+  @protected
+  List<RouteHintHop> dco_decode_list_route_hint_hop(dynamic raw);
+
+  @protected
   LNInvoice dco_decode_ln_invoice(dynamic raw);
 
   @protected
@@ -144,6 +150,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RestoreRequest dco_decode_restore_request(dynamic raw);
+
+  @protected
+  RouteHint dco_decode_route_hint(dynamic raw);
+
+  @protected
+  RouteHintHop dco_decode_route_hint_hop(dynamic raw);
 
   @protected
   SendPaymentResponse dco_decode_send_payment_response(dynamic raw);
@@ -244,6 +256,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<RouteHint> sse_decode_list_route_hint(SseDeserializer deserializer);
+
+  @protected
+  List<RouteHintHop> sse_decode_list_route_hint_hop(SseDeserializer deserializer);
+
+  @protected
   LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer);
 
   @protected
@@ -284,6 +302,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RestoreRequest sse_decode_restore_request(SseDeserializer deserializer);
+
+  @protected
+  RouteHint sse_decode_route_hint(SseDeserializer deserializer);
+
+  @protected
+  RouteHintHop sse_decode_route_hint_hop(SseDeserializer deserializer);
 
   @protected
   SendPaymentResponse sse_decode_send_payment_response(SseDeserializer deserializer);
@@ -414,6 +438,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_prim_u_8_strict(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_route_hint> cst_encode_list_route_hint(List<RouteHint> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_route_hint(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_route_hint(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_route_hint_hop> cst_encode_list_route_hint_hop(List<RouteHintHop> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_route_hint_hop(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_route_hint_hop(raw[i], ans.ref.ptr[i]);
+    }
     return ans;
   }
 
@@ -580,9 +624,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payee_pubkey = cst_encode_String(apiObj.payeePubkey);
     wireObj.payment_hash = cst_encode_String(apiObj.paymentHash);
     wireObj.description = cst_encode_opt_String(apiObj.description);
+    wireObj.description_hash = cst_encode_opt_String(apiObj.descriptionHash);
     wireObj.amount_msat = cst_encode_opt_box_autoadd_u_64(apiObj.amountMsat);
     wireObj.timestamp = cst_encode_u_64(apiObj.timestamp);
     wireObj.expiry = cst_encode_u_64(apiObj.expiry);
+    wireObj.routing_hints = cst_encode_list_route_hint(apiObj.routingHints);
+    wireObj.payment_secret = cst_encode_list_prim_u_8_strict(apiObj.paymentSecret);
+    wireObj.min_final_cltv_expiry_delta = cst_encode_u_64(apiObj.minFinalCltvExpiryDelta);
   }
 
   @protected
@@ -703,6 +751,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_restore_request(RestoreRequest apiObj, wire_cst_restore_request wireObj) {
     wireObj.backup_path = cst_encode_opt_String(apiObj.backupPath);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_route_hint(RouteHint apiObj, wire_cst_route_hint wireObj) {
+    wireObj.hops = cst_encode_list_route_hint_hop(apiObj.hops);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_route_hint_hop(RouteHintHop apiObj, wire_cst_route_hint_hop wireObj) {
+    wireObj.src_node_id = cst_encode_String(apiObj.srcNodeId);
+    wireObj.short_channel_id = cst_encode_u_64(apiObj.shortChannelId);
+    wireObj.fees_base_msat = cst_encode_u_32(apiObj.feesBaseMsat);
+    wireObj.fees_proportional_millionths = cst_encode_u_32(apiObj.feesProportionalMillionths);
+    wireObj.cltv_expiry_delta = cst_encode_u_64(apiObj.cltvExpiryDelta);
+    wireObj.htlc_minimum_msat = cst_encode_opt_box_autoadd_u_64(apiObj.htlcMinimumMsat);
+    wireObj.htlc_maximum_msat = cst_encode_opt_box_autoadd_u_64(apiObj.htlcMaximumMsat);
   }
 
   @protected
@@ -827,6 +891,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_route_hint(List<RouteHint> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_route_hint_hop(List<RouteHintHop> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer);
 
   @protected
@@ -867,6 +937,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_restore_request(RestoreRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_hint(RouteHint self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_hint_hop(RouteHintHop self, SseSerializer serializer);
 
   @protected
   void sse_encode_send_payment_response(SendPaymentResponse self, SseSerializer serializer);
@@ -1326,6 +1402,34 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_prim_u_8_strict =
       _cst_new_list_prim_u_8_strictPtr.asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_route_hint> cst_new_list_route_hint(
+    int len,
+  ) {
+    return _cst_new_list_route_hint(
+      len,
+    );
+  }
+
+  late final _cst_new_list_route_hintPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_route_hint');
+  late final _cst_new_list_route_hint =
+      _cst_new_list_route_hintPtr.asFunction<ffi.Pointer<wire_cst_list_route_hint> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_route_hint_hop> cst_new_list_route_hint_hop(
+    int len,
+  ) {
+    return _cst_new_list_route_hint_hop(
+      len,
+    );
+  }
+
+  late final _cst_new_list_route_hint_hopPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_route_hint_hop');
+  late final _cst_new_list_route_hint_hop =
+      _cst_new_list_route_hint_hopPtr.asFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(int)>();
+
   int dummy_method_to_enforce_bundling() {
     return _dummy_method_to_enforce_bundling();
   }
@@ -1429,6 +1533,44 @@ final class wire_cst_list_payment extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_route_hint_hop extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
+
+  @ffi.Uint64()
+  external int short_channel_id;
+
+  @ffi.Uint32()
+  external int fees_base_msat;
+
+  @ffi.Uint32()
+  external int fees_proportional_millionths;
+
+  @ffi.Uint64()
+  external int cltv_expiry_delta;
+
+  external ffi.Pointer<ffi.Uint64> htlc_minimum_msat;
+
+  external ffi.Pointer<ffi.Uint64> htlc_maximum_msat;
+}
+
+final class wire_cst_list_route_hint_hop extends ffi.Struct {
+  external ffi.Pointer<wire_cst_route_hint_hop> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_route_hint extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_route_hint_hop> hops;
+}
+
+final class wire_cst_list_route_hint extends ffi.Struct {
+  external ffi.Pointer<wire_cst_route_hint> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_get_info_response extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
@@ -1514,6 +1656,8 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description_hash;
+
   external ffi.Pointer<ffi.Uint64> amount_msat;
 
   @ffi.Uint64()
@@ -1521,6 +1665,13 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
   @ffi.Uint64()
   external int expiry;
+
+  external ffi.Pointer<wire_cst_list_route_hint> routing_hints;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_secret;
+
+  @ffi.Uint64()
+  external int min_final_cltv_expiry_delta;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

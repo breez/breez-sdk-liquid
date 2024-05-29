@@ -245,6 +245,26 @@ impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
         }
     }
 }
+impl CstDecode<Vec<crate::model::RouteHint>> for *mut wire_cst_list_route_hint {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::model::RouteHint> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
+impl CstDecode<Vec<crate::model::RouteHintHop>> for *mut wire_cst_list_route_hint_hop {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::model::RouteHintHop> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
 impl CstDecode<crate::model::LNInvoice> for wire_cst_ln_invoice {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::LNInvoice {
@@ -254,9 +274,13 @@ impl CstDecode<crate::model::LNInvoice> for wire_cst_ln_invoice {
             payee_pubkey: self.payee_pubkey.cst_decode(),
             payment_hash: self.payment_hash.cst_decode(),
             description: self.description.cst_decode(),
+            description_hash: self.description_hash.cst_decode(),
             amount_msat: self.amount_msat.cst_decode(),
             timestamp: self.timestamp.cst_decode(),
             expiry: self.expiry.cst_decode(),
+            routing_hints: self.routing_hints.cst_decode(),
+            payment_secret: self.payment_secret.cst_decode(),
+            min_final_cltv_expiry_delta: self.min_final_cltv_expiry_delta.cst_decode(),
         }
     }
 }
@@ -375,6 +399,28 @@ impl CstDecode<crate::model::RestoreRequest> for wire_cst_restore_request {
         }
     }
 }
+impl CstDecode<crate::model::RouteHint> for wire_cst_route_hint {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::RouteHint {
+        crate::model::RouteHint {
+            hops: self.hops.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::RouteHintHop> for wire_cst_route_hint_hop {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::RouteHintHop {
+        crate::model::RouteHintHop {
+            src_node_id: self.src_node_id.cst_decode(),
+            short_channel_id: self.short_channel_id.cst_decode(),
+            fees_base_msat: self.fees_base_msat.cst_decode(),
+            fees_proportional_millionths: self.fees_proportional_millionths.cst_decode(),
+            cltv_expiry_delta: self.cltv_expiry_delta.cst_decode(),
+            htlc_minimum_msat: self.htlc_minimum_msat.cst_decode(),
+            htlc_maximum_msat: self.htlc_maximum_msat.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_response {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::SendPaymentResponse {
@@ -470,9 +516,13 @@ impl NewWithNullPtr for wire_cst_ln_invoice {
             payee_pubkey: core::ptr::null_mut(),
             payment_hash: core::ptr::null_mut(),
             description: core::ptr::null_mut(),
+            description_hash: core::ptr::null_mut(),
             amount_msat: core::ptr::null_mut(),
             timestamp: Default::default(),
             expiry: Default::default(),
+            routing_hints: core::ptr::null_mut(),
+            payment_secret: core::ptr::null_mut(),
+            min_final_cltv_expiry_delta: Default::default(),
         }
     }
 }
@@ -586,6 +636,36 @@ impl NewWithNullPtr for wire_cst_restore_request {
     }
 }
 impl Default for wire_cst_restore_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_route_hint {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            hops: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_route_hint {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_route_hint_hop {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            src_node_id: core::ptr::null_mut(),
+            short_channel_id: Default::default(),
+            fees_base_msat: Default::default(),
+            fees_proportional_millionths: Default::default(),
+            cltv_expiry_delta: Default::default(),
+            htlc_minimum_msat: core::ptr::null_mut(),
+            htlc_maximum_msat: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_route_hint_hop {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -830,6 +910,34 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
     flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
 }
 
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_route_hint(
+    len: i32,
+) -> *mut wire_cst_list_route_hint {
+    let wrap = wire_cst_list_route_hint {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_route_hint>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_route_hint_hop(
+    len: i32,
+) -> *mut wire_cst_list_route_hint_hop {
+    let wrap = wire_cst_list_route_hint_hop {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_route_hint_hop>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_backup_request {
@@ -933,15 +1041,31 @@ pub struct wire_cst_list_prim_u_8_strict {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_list_route_hint {
+    ptr: *mut wire_cst_route_hint,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_route_hint_hop {
+    ptr: *mut wire_cst_route_hint_hop,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_ln_invoice {
     bolt11: *mut wire_cst_list_prim_u_8_strict,
     network: i32,
     payee_pubkey: *mut wire_cst_list_prim_u_8_strict,
     payment_hash: *mut wire_cst_list_prim_u_8_strict,
     description: *mut wire_cst_list_prim_u_8_strict,
+    description_hash: *mut wire_cst_list_prim_u_8_strict,
     amount_msat: *mut u64,
     timestamp: u64,
     expiry: u64,
+    routing_hints: *mut wire_cst_list_route_hint,
+    payment_secret: *mut wire_cst_list_prim_u_8_strict,
+    min_final_cltv_expiry_delta: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -1031,6 +1155,22 @@ pub struct wire_cst_receive_payment_response {
 #[derive(Clone, Copy)]
 pub struct wire_cst_restore_request {
     backup_path: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_route_hint {
+    hops: *mut wire_cst_list_route_hint_hop,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_route_hint_hop {
+    src_node_id: *mut wire_cst_list_prim_u_8_strict,
+    short_channel_id: u64,
+    fees_base_msat: u32,
+    fees_proportional_millionths: u32,
+    cltv_expiry_delta: u64,
+    htlc_minimum_msat: *mut u64,
+    htlc_maximum_msat: *mut u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

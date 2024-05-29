@@ -133,9 +133,13 @@ class LNInvoice {
   final String payeePubkey;
   final String paymentHash;
   final String? description;
+  final String? descriptionHash;
   final BigInt? amountMsat;
   final BigInt timestamp;
   final BigInt expiry;
+  final List<RouteHint> routingHints;
+  final Uint8List paymentSecret;
+  final BigInt minFinalCltvExpiryDelta;
 
   const LNInvoice({
     required this.bolt11,
@@ -143,9 +147,13 @@ class LNInvoice {
     required this.payeePubkey,
     required this.paymentHash,
     this.description,
+    this.descriptionHash,
     this.amountMsat,
     required this.timestamp,
     required this.expiry,
+    required this.routingHints,
+    required this.paymentSecret,
+    required this.minFinalCltvExpiryDelta,
   });
 
   @override
@@ -155,9 +163,13 @@ class LNInvoice {
       payeePubkey.hashCode ^
       paymentHash.hashCode ^
       description.hashCode ^
+      descriptionHash.hashCode ^
       amountMsat.hashCode ^
       timestamp.hashCode ^
-      expiry.hashCode;
+      expiry.hashCode ^
+      routingHints.hashCode ^
+      paymentSecret.hashCode ^
+      minFinalCltvExpiryDelta.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -169,9 +181,13 @@ class LNInvoice {
           payeePubkey == other.payeePubkey &&
           paymentHash == other.paymentHash &&
           description == other.description &&
+          descriptionHash == other.descriptionHash &&
           amountMsat == other.amountMsat &&
           timestamp == other.timestamp &&
-          expiry == other.expiry;
+          expiry == other.expiry &&
+          routingHints == other.routingHints &&
+          paymentSecret == other.paymentSecret &&
+          minFinalCltvExpiryDelta == other.minFinalCltvExpiryDelta;
 }
 
 enum Network {
@@ -435,6 +451,77 @@ class RestoreRequest {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RestoreRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
+}
+
+/// A route hint for a LN payment
+class RouteHint {
+  final List<RouteHintHop> hops;
+
+  const RouteHint({
+    required this.hops,
+  });
+
+  @override
+  int get hashCode => hops.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is RouteHint && runtimeType == other.runtimeType && hops == other.hops;
+}
+
+/// Details of a specific hop in a larger route hint
+class RouteHintHop {
+  /// The node_id of the non-target end of the route
+  final String srcNodeId;
+
+  /// The short_channel_id of this channel
+  final BigInt shortChannelId;
+
+  /// The fees which must be paid to use this channel
+  final int feesBaseMsat;
+  final int feesProportionalMillionths;
+
+  /// The difference in CLTV values between this node and the next node.
+  final BigInt cltvExpiryDelta;
+
+  /// The minimum value, in msat, which must be relayed to the next hop.
+  final BigInt? htlcMinimumMsat;
+
+  /// The maximum value in msat available for routing with a single HTLC.
+  final BigInt? htlcMaximumMsat;
+
+  const RouteHintHop({
+    required this.srcNodeId,
+    required this.shortChannelId,
+    required this.feesBaseMsat,
+    required this.feesProportionalMillionths,
+    required this.cltvExpiryDelta,
+    this.htlcMinimumMsat,
+    this.htlcMaximumMsat,
+  });
+
+  @override
+  int get hashCode =>
+      srcNodeId.hashCode ^
+      shortChannelId.hashCode ^
+      feesBaseMsat.hashCode ^
+      feesProportionalMillionths.hashCode ^
+      cltvExpiryDelta.hashCode ^
+      htlcMinimumMsat.hashCode ^
+      htlcMaximumMsat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RouteHintHop &&
+          runtimeType == other.runtimeType &&
+          srcNodeId == other.srcNodeId &&
+          shortChannelId == other.shortChannelId &&
+          feesBaseMsat == other.feesBaseMsat &&
+          feesProportionalMillionths == other.feesProportionalMillionths &&
+          cltvExpiryDelta == other.cltvExpiryDelta &&
+          htlcMinimumMsat == other.htlcMinimumMsat &&
+          htlcMaximumMsat == other.htlcMaximumMsat;
 }
 
 class SendPaymentResponse {

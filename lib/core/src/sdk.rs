@@ -1350,11 +1350,16 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
             Bolt11InvoiceDescription::Hash(_) => None,
         };
+        let description_hash = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(_) => None,
+            Bolt11InvoiceDescription::Hash(h) => Some(h.0.to_string()),
+        };
         let timestamp = invoice
             .timestamp()
             .duration_since(UNIX_EPOCH)
             .map_err(|_| PaymentError::InvalidInvoice)?
             .as_secs();
+        let routing_hints = invoice.route_hints().iter().map(RouteHint::from_ldk_hint).collect();
 
         let res = LNInvoice {
             bolt11: input.to_string(),
@@ -1362,9 +1367,13 @@ impl LiquidSdk {
             payee_pubkey,
             payment_hash: invoice.payment_hash().to_hex(),
             description,
+            description_hash,
             amount_msat: invoice.amount_milli_satoshis(),
             timestamp,
             expiry: invoice.expiry_time().as_secs(),
+            routing_hints,
+            payment_secret: invoice.payment_secret().0.to_vec(),
+            min_final_cltv_expiry_delta: invoice.min_final_cltv_expiry_delta(),
         };
         Ok(res)
     }
