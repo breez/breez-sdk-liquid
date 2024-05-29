@@ -2,12 +2,6 @@
 #import <React/RCTEventEmitter.h>
 
 @interface RCT_EXTERN_MODULE(RNBreezLiquidSDK, RCTEventEmitter)
-
-RCT_EXTERN_METHOD(
-    setLogStream: ()logStream
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
   
 RCT_EXTERN_METHOD(
     connect: (NSDictionary*)req
