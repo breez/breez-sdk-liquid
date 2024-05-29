@@ -1359,7 +1359,11 @@ impl LiquidSdk {
             .duration_since(UNIX_EPOCH)
             .map_err(|_| PaymentError::InvalidInvoice)?
             .as_secs();
-        let routing_hints = invoice.route_hints().iter().map(RouteHint::from_ldk_hint).collect();
+        let routing_hints = invoice
+            .route_hints()
+            .iter()
+            .map(RouteHint::from_ldk_hint)
+            .collect();
 
         let res = LNInvoice {
             bolt11: input.to_string(),
