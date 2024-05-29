@@ -33,7 +33,7 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
-use tokio::sync::{watch, Mutex, RwLock};
+use tokio::sync::{mpsc, oneshot, watch, Mutex, RwLock};
 
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
@@ -985,7 +985,7 @@ impl LiquidSdk {
     }
 
     pub async fn send_payment(
-        &self,
+        self: &Arc<LiquidSdk>,
         req: &PrepareSendResponse,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
@@ -1019,6 +1019,7 @@ impl LiquidSdk {
         })?;
 
         let swap_id = &create_response.id;
+        let accept_zero_conf = create_response.accept_zero_conf;
         let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         let payer_amount_sat = req.fees_sat + receiver_amount_sat;
@@ -1035,30 +1036,82 @@ impl LiquidSdk {
             refund_private_key: keypair.display_secret().to_string(),
         };
         self.persister.insert_send_swap(&swap)?;
-
-        let mut events_stream = self.event_manager.subscribe();
         self.status_stream.track_swap_id(swap_id)?;
 
-        loop {
-            match events_stream.recv().await {
-                Ok(LiquidSdkEvent::PaymentFailed { details }) => match details.swap_id {
-                    Some(id) if id == swap.id => {
-                        return Err(PaymentError::SendError {
-                            err: "Payment failed".to_string(),
-                        })
+        self.wait_for_payment(swap.id, accept_zero_conf)
+            .await
+            .map(|payment| SendPaymentResponse { payment })
+    }
+
+    async fn wait_for_payment(
+        self: &Arc<LiquidSdk>,
+        swap_id: String,
+        accept_zero_conf: bool,
+    ) -> Result<Payment, PaymentError> {
+        let cloned = self.clone();
+        // Handles the intermediate payment, used in case the swap requires a confirmation.
+        // This pending payment can be returned in case of timeout.
+        let (intermediate_sender, mut intermediate_receiver) = mpsc::channel(1);
+        // Handles the returnable payment, used for both a zero conf pending swap and completed swap.
+        let (result_sender, result_receiver) = oneshot::channel();
+        // Handled the shutdown signal to exit the event stream loop
+        let (shutdown_sender, mut shutdown_receiver) = watch::channel::<()>(());
+
+        tokio::spawn(async move {
+            let mut events_stream = cloned.event_manager.subscribe();
+
+            loop {
+                tokio::select! {
+                    event = events_stream.recv() => match event {
+                        Ok(LiquidSdkEvent::PaymentPending { details }) => match details.swap_id.clone() {
+                            Some(id) if id == swap_id => match accept_zero_conf {
+                                true => {
+                                    debug!("Received payment pending event with zero-conf accepted");
+                                    let _ = result_sender.send(details);
+                                    break;
+                                }
+                                false => {
+                                    debug!("Received payment pending event, waiting for confirmation");
+                                    let _ = intermediate_sender.send(details).await;
+                                }
+                            },
+                            _ => (),
+                        },
+                        Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone()
+                        {
+                            Some(id) if id == swap_id => {
+                                debug!("Received payment succeed event");
+                                let _ = result_sender.send(details);
+                                break;
+                            }
+                            _ => (),
+                        },
+                        Ok(event) => debug!("Unhandled event: {event:?}"),
+                        Err(e) => debug!("Received error waiting for event: {e:?}"),
+                    },
+                    _ = shutdown_receiver.changed() => {
+                        debug!("Event stream task completed");
+                        break;
                     }
-                    _ => (),
-                },
-                Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone() {
-                    Some(id) if id == swap.id => {
-                        return Ok(SendPaymentResponse { payment: details })
-                    }
-                    _ => (),
-                },
-                Ok(event) => debug!("Unhandled event: {event:?}"),
-                Err(e) => debug!("Received error waiting for event: {e:?}"),
+                }
             }
-        }
+        });
+
+        let res = match tokio::time::timeout(Duration::from_secs(15), result_receiver).await {
+            Ok(Ok(payment)) => Ok(payment),
+            Ok(Err(_)) => {
+                error!("Event stream task dropped sender without sending a message");
+                Err(PaymentError::generic("Payment call interrupted"))
+            }
+            Err(_) => intermediate_receiver
+                .try_recv()
+                .map_err(|_| PaymentError::PaymentTimeout),
+        };
+
+        // Shutdown event stream thread
+        let _ = shutdown_sender.send(());
+
+        res
     }
 
     async fn try_claim(&self, ongoing_receive_swap: &ReceiveSwap) -> Result<(), PaymentError> {

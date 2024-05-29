@@ -59,6 +59,9 @@ pub enum PaymentError {
     #[error("Boltz did not return any pairs from the request")]
     PairsNotFound,
 
+    #[error("The payment timed out")]
+    PaymentTimeout,
+
     #[error("Could not store the swap details locally")]
     PersistError,
 
@@ -70,6 +73,14 @@ pub enum PaymentError {
 
     #[error("Could not sign the transaction: {err}")]
     SignerError { err: String },
+}
+
+impl PaymentError {
+    pub(crate) fn generic(err: &str) -> Self {
+        Self::Generic {
+            err: err.to_string(),
+        }
+    }
 }
 
 impl From<boltz_client::error::Error> for PaymentError {

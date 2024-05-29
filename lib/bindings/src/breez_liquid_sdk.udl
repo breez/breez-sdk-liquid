@@ -16,6 +16,7 @@ enum PaymentError {
     "InvalidPreimage",
     "LwkError",
     "PairsNotFound",
+    "PaymentTimeout",
     "PersistError",
     "Refunded",
     "SendError",
