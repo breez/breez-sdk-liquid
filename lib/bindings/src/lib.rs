@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use log::{Metadata, Record};
-use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 use breez_liquid_sdk::sdk::LogStream;
+use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
+use log::{Metadata, Record};
 use once_cell::sync::{Lazy, OnceCell};
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
@@ -31,7 +31,7 @@ impl BindingLogger {
 impl log::Log for BindingLogger {
     fn enabled(&self, m: &Metadata) -> bool {
         // ignore the internal uniffi log to prevent infinite loop.
-        return m.level() <= Level::Trace && *m.target() != *"breez_liquid_sdk::breez_liquid_sdk_bindings";
+        return m.level() <= Level::Trace && *m.target() != *"breez_liquid_sdk_bindings";
     }
 
     fn log(&self, record: &Record) {
@@ -42,7 +42,6 @@ impl log::Log for BindingLogger {
     }
     fn flush(&self) {}
 }
-
 
 /// If used, this must be called before `connect`
 pub fn set_log_stream(log_stream: Box<dyn LogStream>) -> Result<(), LiquidSdkError> {
