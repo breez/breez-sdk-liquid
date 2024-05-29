@@ -93,4 +93,8 @@ impl BindingLiquidSdk {
     pub fn restore(&self, req: RestoreRequest) -> Result<(), LiquidSdkError> {
         self.sdk.restore(req).map_err(Into::into)
     }
+
+    pub fn disconnect(&self) -> Result<(), LiquidSdkError> {
+        rt().block_on(self.sdk.disconnect())
+    }
 }

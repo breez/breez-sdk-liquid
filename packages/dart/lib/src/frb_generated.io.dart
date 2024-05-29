@@ -949,6 +949,22 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_backupPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_backup_request>)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_disconnect(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_disconnect(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_disconnectPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect');
+  late final _wire__crate__bindings__BindingLiquidSdk_disconnect =
+      _wire__crate__bindings__BindingLiquidSdk_disconnectPtr.asFunction<void Function(int, int)>();
+
   void wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int port_,
     int that,
