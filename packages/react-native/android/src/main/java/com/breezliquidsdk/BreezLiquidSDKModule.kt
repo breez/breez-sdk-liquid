@@ -260,6 +260,7 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         executor.execute {
             try {
                 getBindingLiquidSdk().disconnect()
+                bindingLiquidSdk = null
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
