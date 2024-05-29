@@ -197,6 +197,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     func disconnect(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
             try getBindingLiquidSdk().disconnect()
+            bindingLiquidSdk = nil
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

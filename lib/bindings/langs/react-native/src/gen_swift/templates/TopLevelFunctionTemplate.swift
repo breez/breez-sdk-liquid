@@ -34,6 +34,9 @@
     {%- endmatch %}
 {%- when None %}
             try {{ obj_interface }}{{ func.name()|fn_name|unquote }}({%- call swift::arg_list(func) -%})
+{%- if func.name() == "disconnect" %}
+            bindingLiquidSdk = nil
+{%- endif %}
             resolve(["status": "ok"])     
 {%- endmatch %}
         } catch let err {
