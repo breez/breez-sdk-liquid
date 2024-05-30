@@ -382,8 +382,8 @@ pub enum PaymentState {
     /// ## Send Swaps
     ///
     /// This covers the case when the swap state is still Created and the swap fails to reach the
-    /// Pending state in time. The Cancelled state indicates the lockup tx should never be broadcast.
-    Cancelled = 4,
+    /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+    TimedOut = 4,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -398,7 +398,7 @@ impl FromSql for PaymentState {
                 1 => Ok(PaymentState::Pending),
                 2 => Ok(PaymentState::Complete),
                 3 => Ok(PaymentState::Failed),
-                4 => Ok(PaymentState::Cancelled),
+                4 => Ok(PaymentState::TimedOut),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

@@ -335,8 +335,8 @@ enum PaymentState {
   /// ## Send Swaps
   ///
   /// This covers the case when the swap state is still Created and the swap fails to reach the
-  /// Pending state in time. The Cancelled state indicates the lockup tx should never be broadcast.
-  cancelled,
+  /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+  timedOut,
   ;
 }
 

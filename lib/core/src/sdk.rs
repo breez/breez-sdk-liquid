@@ -265,18 +265,18 @@ impl LiquidSdk {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed | Cancelled, Pending) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed | Cancelled, Complete) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
 
-            (Created, Cancelled) => Ok(()),
-            (_, Cancelled) => Err(PaymentError::Generic {
-                err: format!("Cannot transition from {from_state:?} to Cancelled state"),
+            (Created, TimedOut) => Ok(()),
+            (_, TimedOut) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
             (_, Failed) => Ok(()),
@@ -651,7 +651,7 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
-                    Cancelled => {}
+                    TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
@@ -1065,8 +1065,8 @@ impl LiquidSdk {
                 _ = &mut timeout_fut => match maybe_payment {
                     Some(payment) => return Ok(payment),
                     None => {
-                        debug!("Timeout occured without payment, set swap to cancelled");
-                        self.try_handle_send_swap_update(&swap_id, Cancelled, None, None, None).await?;
+                        debug!("Timeout occured without payment, set swap to timed out");
+                        self.try_handle_send_swap_update(&swap_id, TimedOut, None, None, None).await?;
                         return Err(PaymentError::PaymentTimeout)
                     },
                 },

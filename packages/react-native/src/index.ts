@@ -155,7 +155,7 @@ export enum PaymentState {
     PENDING = "pending",
     COMPLETE = "complete",
     FAILED = "failed",
-    CANCELLED = "cancelled"
+    TIMED_OUT = "timedOut"
 }
 
 export enum PaymentType {

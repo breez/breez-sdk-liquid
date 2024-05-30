@@ -132,7 +132,7 @@ enum PaymentState {
     "Pending",
     "Complete",
     "Failed",
-    "Cancelled",
+    "TimedOut",
 };
 
 [Enum]
