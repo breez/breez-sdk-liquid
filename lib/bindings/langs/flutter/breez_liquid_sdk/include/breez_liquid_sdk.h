@@ -223,15 +223,13 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_liste
                                                                                     uintptr_t that,
                                                                                     struct wire_cst_list_prim_u_8_strict *listener);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(int64_t port_,
-                                                                        uintptr_t that,
-                                                                        struct wire_cst_backup_request *req);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(uintptr_t that,
+                                                                                        struct wire_cst_backup_request *req);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int64_t port_,
                                                                             uintptr_t that);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(int64_t port_,
-                                                                                    uintptr_t that);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that,
@@ -252,9 +250,8 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment
                                                                                  uintptr_t that,
                                                                                  struct wire_cst_prepare_receive_response *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(int64_t port_,
-                                                                         uintptr_t that,
-                                                                         struct wire_cst_restore_request *req);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(uintptr_t that,
+                                                                                         struct wire_cst_restore_request *req);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(int64_t port_,
                                                                               uintptr_t that,

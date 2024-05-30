@@ -66,12 +66,12 @@ abstract class RustLibApi extends BaseApi {
   Stream<LiquidSdkEvent> crateBindingsBindingLiquidSdkAddEventListener(
       {required BindingLiquidSdk that, dynamic hint});
 
-  Future<void> crateBindingsBindingLiquidSdkBackup(
+  void crateBindingsBindingLiquidSdkBackup(
       {required BindingLiquidSdk that, required BackupRequest req, dynamic hint});
 
   Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that, dynamic hint});
 
-  Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint});
+  void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint});
 
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo(
       {required BindingLiquidSdk that, required GetInfoRequest req, dynamic hint});
@@ -88,7 +88,7 @@ abstract class RustLibApi extends BaseApi {
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
       {required BindingLiquidSdk that, required PrepareReceiveResponse req, dynamic hint});
 
-  Future<void> crateBindingsBindingLiquidSdkRestore(
+  void crateBindingsBindingLiquidSdkRestore(
       {required BindingLiquidSdk that, required RestoreRequest req, dynamic hint});
 
   Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment(
@@ -145,15 +145,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateBindingsBindingLiquidSdkBackup(
+  void crateBindingsBindingLiquidSdkBackup(
       {required BindingLiquidSdk that, required BackupRequest req, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
         var arg1 = cst_encode_box_autoadd_backup_request(req);
-        return wire.wire__crate__bindings__BindingLiquidSdk_backup(port_, arg0, arg1);
+        return wire.wire__crate__bindings__BindingLiquidSdk_backup(arg0, arg1);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_unit,
@@ -197,13 +197,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+  void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        return wire.wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(port_, arg0);
+        return wire.wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(arg0);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_unit,
@@ -356,15 +356,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateBindingsBindingLiquidSdkRestore(
+  void crateBindingsBindingLiquidSdkRestore(
       {required BindingLiquidSdk that, required RestoreRequest req, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
         var arg1 = cst_encode_box_autoadd_restore_request(req);
-        return wire.wire__crate__bindings__BindingLiquidSdk_restore(port_, arg0, arg1);
+        return wire.wire__crate__bindings__BindingLiquidSdk_restore(arg0, arg1);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_unit,

@@ -1026,13 +1026,11 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
-  void wire__crate__bindings__BindingLiquidSdk_backup(
-    int port_,
+  WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_backup(
     int that,
     ffi.Pointer<wire_cst_backup_request> req,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_backup(
-      port_,
       that,
       req,
     );
@@ -1040,11 +1038,11 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
           ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
+          .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
   late final _wire__crate__bindings__BindingLiquidSdk_backup =
       _wire__crate__bindings__BindingLiquidSdk_backupPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_backup_request>)>();
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_backup_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_disconnect(
     int port_,
@@ -1062,21 +1060,20 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_disconnect =
       _wire__crate__bindings__BindingLiquidSdk_disconnectPtr.asFunction<void Function(int, int)>();
 
-  void wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
-    int port_,
+  WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int that,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
-      port_,
       that,
     );
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache');
   late final _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
-      _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr.asFunction<void Function(int, int)>();
+      _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
@@ -1174,13 +1171,11 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
-  void wire__crate__bindings__BindingLiquidSdk_restore(
-    int port_,
+  WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_restore(
     int that,
     ffi.Pointer<wire_cst_restore_request> req,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_restore(
-      port_,
       that,
       req,
     );
@@ -1188,11 +1183,11 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_restorePtr = _lookup<
           ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_restore_request>)>>(
+          .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_restore_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore');
   late final _wire__crate__bindings__BindingLiquidSdk_restore =
       _wire__crate__bindings__BindingLiquidSdk_restorePtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_restore_request>)>();
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_restore_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_send_payment(
     int port_,

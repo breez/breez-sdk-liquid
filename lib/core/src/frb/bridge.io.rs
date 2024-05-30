@@ -696,11 +696,10 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ad
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
-    port_: i64,
     that: usize,
     req: *mut wire_cst_backup_request,
-) {
-    wire__crate__bindings__BindingLiquidSdk_backup_impl(port_, that, req)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__BindingLiquidSdk_backup_impl(that, req)
 }
 
 #[no_mangle]
@@ -713,10 +712,9 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_di
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
-    port_: i64,
     that: usize,
-) {
-    wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(port_, that)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(that)
 }
 
 #[no_mangle]
@@ -765,11 +763,10 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
-    port_: i64,
     that: usize,
     req: *mut wire_cst_restore_request,
-) {
-    wire__crate__bindings__BindingLiquidSdk_restore_impl(port_, that, req)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__BindingLiquidSdk_restore_impl(that, req)
 }
 
 #[no_mangle]
