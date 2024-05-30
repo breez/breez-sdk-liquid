@@ -1073,8 +1073,7 @@ impl LiquidSdk {
         self.try_handle_receive_swap_update(swap_id, Pending, None)
             .await?;
 
-        let keypair = utils::decode_keypair(&ongoing_receive_swap.claim_private_key)?;
-
+        let keypair = ongoing_receive_swap.get_claim_keypair()?;
         let create_response = ongoing_receive_swap.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,

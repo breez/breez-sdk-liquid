@@ -282,6 +282,10 @@ pub(crate) struct ReceiveSwap {
     pub(crate) state: PaymentState,
 }
 impl ReceiveSwap {
+    pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
+    }
+
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
         let internal_create_response: crate::persist::receive::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
