@@ -36,6 +36,7 @@ sealed class PaymentError with _$PaymentError implements FrbException {
     required String err,
   }) = PaymentError_LwkError;
   const factory PaymentError.pairsNotFound() = PaymentError_PairsNotFound;
+  const factory PaymentError.paymentTimeout() = PaymentError_PaymentTimeout;
   const factory PaymentError.persistError() = PaymentError_PersistError;
   const factory PaymentError.refunded({
     required String err,

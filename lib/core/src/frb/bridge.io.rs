@@ -326,21 +326,22 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                 }
             }
             8 => crate::error::PaymentError::PairsNotFound,
-            9 => crate::error::PaymentError::PersistError,
-            10 => {
+            9 => crate::error::PaymentError::PaymentTimeout,
+            10 => crate::error::PaymentError::PersistError,
+            11 => {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
                     refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
-            11 => {
+            12 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            12 => {
+            13 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),

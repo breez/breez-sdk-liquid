@@ -1019,6 +1019,7 @@ impl LiquidSdk {
         })?;
 
         let swap_id = &create_response.id;
+        let accept_zero_conf = create_response.accept_zero_conf;
         let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         let payer_amount_sat = req.fees_sat + receiver_amount_sat;
@@ -1035,28 +1036,55 @@ impl LiquidSdk {
             refund_private_key: keypair.display_secret().to_string(),
         };
         self.persister.insert_send_swap(&swap)?;
-
-        let mut events_stream = self.event_manager.subscribe();
         self.status_stream.track_swap_id(swap_id)?;
 
+        self.wait_for_payment(swap.id, accept_zero_conf)
+            .await
+            .map(|payment| SendPaymentResponse { payment })
+    }
+
+    async fn wait_for_payment(
+        &self,
+        swap_id: String,
+        accept_zero_conf: bool,
+    ) -> Result<Payment, PaymentError> {
+        let timeout_fut = tokio::time::sleep(Duration::from_secs(15));
+        tokio::pin!(timeout_fut);
+
+        let mut events_stream = self.event_manager.subscribe();
+        let mut maybe_payment: Option<Payment> = None;
+
         loop {
-            match events_stream.recv().await {
-                Ok(LiquidSdkEvent::PaymentFailed { details }) => match details.swap_id {
-                    Some(id) if id == swap.id => {
-                        return Err(PaymentError::SendError {
-                            err: "Payment failed".to_string(),
-                        })
-                    }
-                    _ => (),
+            tokio::select! {
+                _ = &mut timeout_fut => match maybe_payment {
+                    Some(payment) => return Ok(payment),
+                    None => return Err(PaymentError::PaymentTimeout),
                 },
-                Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone() {
-                    Some(id) if id == swap.id => {
-                        return Ok(SendPaymentResponse { payment: details })
-                    }
-                    _ => (),
-                },
-                Ok(event) => debug!("Unhandled event: {event:?}"),
-                Err(e) => debug!("Received error waiting for event: {e:?}"),
+                event = events_stream.recv() => match event {
+                    Ok(LiquidSdkEvent::PaymentPending { details }) => match details.swap_id.clone() {
+                        Some(id) if id == swap_id => match accept_zero_conf {
+                            true => {
+                                debug!("Received Send Payment pending event with zero-conf accepted");
+                                return Ok(details)
+                            }
+                            false => {
+                                debug!("Received Send Payment pending event, waiting for confirmation");
+                                maybe_payment = Some(details);
+                            }
+                        },
+                        _ => error!("Received Send Payment pending event for payment without swap ID"),
+                    },
+                    Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone()
+                    {
+                        Some(id) if id == swap_id => {
+                            debug!("Received Send Payment succeed event");
+                            return Ok(details);
+                        }
+                        _ => error!("Received Send Payment succeed event for payment without swap ID"),
+                    },
+                    Ok(event) => debug!("Unhandled event: {event:?}"),
+                    Err(e) => debug!("Received error waiting for event: {e:?}"),
+                }
             }
         }
     }
