@@ -138,14 +138,11 @@ impl LiquidSdk {
         let sdk_clone = self.clone();
         let mut shutdown_rx_sync_loop = self.shutdown_receiver.clone();
         tokio::spawn(async move {
-            // Starts with a sync(), so new data is pulled immediately after connect
-            _ = sdk_clone.sync().await;
-
             loop {
+                _ = sdk_clone.sync().await;
+
                 tokio::select! {
-                    _ = tokio::time::sleep(Duration::from_secs(30)) => {
-                         _ = sdk_clone.sync().await;
-                    }
+                    _ = tokio::time::sleep(Duration::from_secs(30)) => {}
                     _ = shutdown_rx_sync_loop.changed() => {
                         info!("Received shutdown signal, exiting periodic sync loop");
                         return;
