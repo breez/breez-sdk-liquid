@@ -19,7 +19,7 @@ use boltz_client::{
         boltzv2::*,
         liquidv2::LBtcSwapTxV2,
     },
-    util::secrets::{LiquidSwapKey, Preimage, SwapKey},
+    util::secrets::Preimage,
     Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2,
 };
 use log::{debug, error, info, warn};
@@ -1073,13 +1073,11 @@ impl LiquidSdk {
         self.try_handle_receive_swap_update(swap_id, Pending, None)
             .await?;
 
-        let lsk = self.get_liquid_swap_key()?;
-        let our_keys = lsk.keypair;
-
+        let keypair = ongoing_receive_swap.get_claim_keypair()?;
         let create_response = ongoing_receive_swap.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
-            our_keys.public_key().into(),
+            keypair.public_key().into(),
         )?;
 
         let claim_address = self.next_unused_address().await?.to_string();
@@ -1092,7 +1090,7 @@ impl LiquidSdk {
         )?;
 
         let claim_tx = claim_tx_wrapper.sign_claim(
-            &our_keys,
+            &keypair,
             &Preimage::from_str(&ongoing_receive_swap.preimage)?,
             Amount::from_sat(ongoing_receive_swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
@@ -1173,7 +1171,7 @@ impl LiquidSdk {
 
         debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
-        let lsk = self.get_liquid_swap_key()?;
+        let keypair = utils::generate_keypair();
 
         let preimage = Preimage::new();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
@@ -1184,7 +1182,7 @@ impl LiquidSdk {
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
-            claim_public_key: lsk.keypair.public_key().into(),
+            claim_public_key: keypair.public_key().into(),
             address: None,
             address_signature: None,
             referral_id: None,
@@ -1215,6 +1213,7 @@ impl LiquidSdk {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
+                claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
                 payer_amount_sat,
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
@@ -1395,20 +1394,6 @@ impl LiquidSdk {
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
         self.persister.restore_from_backup(backup_path)
-    }
-
-    fn get_liquid_swap_key(&self) -> Result<LiquidSwapKey, PaymentError> {
-        let mnemonic = self
-            .lwk_signer
-            .mnemonic()
-            .ok_or(PaymentError::SignerError {
-                err: "Mnemonic not found".to_string(),
-            })?;
-        let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
-        LiquidSwapKey::try_from(swap_key).map_err(|e| PaymentError::SignerError {
-            err: format!("Could not create LiquidSwapKey: {e:?}"),
-        })
     }
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
