@@ -907,6 +907,9 @@ enum BreezLiquidSDKMapper {
         case "failed":
             return PaymentState.failed
 
+        case "cancelled":
+            return PaymentState.cancelled
+
         default: throw LiquidSdkError.Generic(message: "Invalid variant \(paymentState) for enum PaymentState")
         }
     }
@@ -924,6 +927,9 @@ enum BreezLiquidSDKMapper {
 
         case .failed:
             return "failed"
+
+        case .cancelled:
+            return "cancelled"
         }
     }
 

@@ -132,6 +132,7 @@ enum PaymentState {
     "Pending",
     "Complete",
     "Failed",
+    "Cancelled",
 };
 
 [Enum]

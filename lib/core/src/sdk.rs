@@ -265,13 +265,18 @@ impl LiquidSdk {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed, Pending) => Err(PaymentError::Generic {
+            (Complete | Failed | Cancelled, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed, Complete) => Err(PaymentError::Generic {
+            (Complete | Failed | Cancelled, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
+            }),
+
+            (Created, Cancelled) => Ok(()),
+            (_, Cancelled) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Cancelled state"),
             }),
 
             (_, Failed) => Ok(()),
@@ -646,6 +651,7 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
+                    Cancelled => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
@@ -1058,7 +1064,11 @@ impl LiquidSdk {
             tokio::select! {
                 _ = &mut timeout_fut => match maybe_payment {
                     Some(payment) => return Ok(payment),
-                    None => return Err(PaymentError::PaymentTimeout),
+                    None => {
+                        debug!("Timeout occured without payment, set swap to cancelled");
+                        self.try_handle_send_swap_update(&swap_id, Cancelled, None, None, None).await?;
+                        return Err(PaymentError::PaymentTimeout)
+                    },
                 },
                 event = events_stream.recv() => match event {
                     Ok(LiquidSdkEvent::PaymentPending { details }) => match details.swap_id.clone() {
