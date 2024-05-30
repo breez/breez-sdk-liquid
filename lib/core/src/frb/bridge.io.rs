@@ -366,7 +366,7 @@ impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_resp
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::SendPaymentResponse {
         crate::model::SendPaymentResponse {
-            txid: self.txid.cst_decode(),
+            payment: self.payment.cst_decode(),
         }
     }
 }
@@ -561,7 +561,7 @@ impl Default for wire_cst_restore_request {
 impl NewWithNullPtr for wire_cst_send_payment_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            txid: core::ptr::null_mut(),
+            payment: Default::default(),
         }
     }
 }
@@ -991,5 +991,5 @@ pub struct wire_cst_restore_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_send_payment_response {
-    txid: *mut wire_cst_list_prim_u_8_strict,
+    payment: wire_cst_payment,
 }
