@@ -20,6 +20,7 @@ impl Persister {
                 id,
                 preimage,
                 create_response_json,
+                claim_private_key,
                 invoice,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -28,12 +29,13 @@ impl Persister {
                 claim_tx_id,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             &receive_swap.id,
             &receive_swap.preimage,
             &receive_swap.create_response_json,
+            &receive_swap.claim_private_key,
             &receive_swap.invoice,
             &receive_swap.payer_amount_sat,
             &receive_swap.receiver_amount_sat,
@@ -59,6 +61,7 @@ impl Persister {
                 rs.id,
                 rs.preimage,
                 rs.create_response_json,
+                rs.claim_private_key,
                 rs.invoice,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -86,13 +89,14 @@ impl Persister {
             id: row.get(0)?,
             preimage: row.get(1)?,
             create_response_json: row.get(2)?,
-            invoice: row.get(3)?,
-            payer_amount_sat: row.get(4)?,
-            receiver_amount_sat: row.get(5)?,
-            claim_fees_sat: row.get(6)?,
-            claim_tx_id: row.get(7)?,
-            created_at: row.get(8)?,
-            state: row.get(9)?,
+            claim_private_key: row.get(3)?,
+            invoice: row.get(4)?,
+            payer_amount_sat: row.get(5)?,
+            receiver_amount_sat: row.get(6)?,
+            claim_fees_sat: row.get(7)?,
+            claim_tx_id: row.get(8)?,
+            created_at: row.get(9)?,
+            state: row.get(10)?,
         })
     }
 

@@ -270,6 +270,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]
     pub(crate) create_response_json: String,
+    pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,

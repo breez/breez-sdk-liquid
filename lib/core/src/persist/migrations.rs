@@ -4,6 +4,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             id TEXT NOT NULL PRIMARY KEY,
             preimage TEXT NOT NULL,
             create_response_json TEXT NOT NULL,
+            claim_private_key TEXT NOT NULL,
             invoice TEXT NOT NULL,
             payer_amount_sat INTEGER NOT NULL,
             receiver_amount_sat INTEGER NOT NULL,
