@@ -326,7 +326,7 @@ impl LiquidSdk {
 
         let swap: SendSwap = self
             .persister
-            .fetch_send_swap(swap_id)
+            .fetch_send_swap_by_id(swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
                 err: format!("Send Swap not found {swap_id}"),
@@ -385,7 +385,7 @@ impl LiquidSdk {
                                         }
                                     }
                                     PaymentType::Send => {
-                                        match self.persister.fetch_send_swap(&swap_id)? {
+                                        match self.persister.fetch_send_swap_by_id(&swap_id)? {
                                             Some(swap) => match swap.refund_tx_id {
                                                 Some(_) => {
                                                     // The refund tx has now been broadcast
@@ -497,7 +497,7 @@ impl LiquidSdk {
     ) -> Result<()> {
         let ongoing_send_swap = self
             .persister
-            .fetch_send_swap(id)?
+            .fetch_send_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
 
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
@@ -1012,41 +1012,47 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let keypair = utils::generate_keypair();
-        let refund_public_key = boltz_client::PublicKey {
-            compressed: true,
-            inner: keypair.public_key(),
+        let swap = match self.persister.fetch_send_swap_by_invoice(&req.invoice)? {
+            Some(swap) => swap,
+            None => {
+                let keypair = utils::generate_keypair();
+                let refund_public_key = boltz_client::PublicKey {
+                    compressed: true,
+                    inner: keypair.public_key(),
+                };
+
+                let create_response = client.post_swap_req(&CreateSubmarineRequest {
+                    from: "L-BTC".to_string(),
+                    to: "BTC".to_string(),
+                    invoice: req.invoice.to_string(),
+                    refund_public_key,
+                    pair_hash: Some(lbtc_pair.hash),
+                    referral_id: None,
+                })?;
+
+                let swap_id = &create_response.id;
+                let create_response_json =
+                    SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+
+                let payer_amount_sat = req.fees_sat + receiver_amount_sat;
+                let swap = SendSwap {
+                    id: swap_id.clone(),
+                    invoice: req.invoice.clone(),
+                    payer_amount_sat,
+                    receiver_amount_sat,
+                    create_response_json,
+                    lockup_tx_id: None,
+                    refund_tx_id: None,
+                    created_at: utils::now(),
+                    state: PaymentState::Created,
+                    refund_private_key: keypair.display_secret().to_string(),
+                };
+                self.persister.insert_send_swap(&swap)?;
+                swap
+            }
         };
 
-        let create_response = client.post_swap_req(&CreateSubmarineRequest {
-            from: "L-BTC".to_string(),
-            to: "BTC".to_string(),
-            invoice: req.invoice.to_string(),
-            refund_public_key,
-            pair_hash: Some(lbtc_pair.hash),
-            referral_id: None,
-        })?;
-
-        let swap_id = &create_response.id;
-        let accept_zero_conf = create_response.accept_zero_conf;
-        let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
-
-        let payer_amount_sat = req.fees_sat + receiver_amount_sat;
-        let swap = SendSwap {
-            id: swap_id.clone(),
-            invoice: req.invoice.clone(),
-            payer_amount_sat,
-            receiver_amount_sat,
-            create_response_json,
-            lockup_tx_id: None,
-            refund_tx_id: None,
-            created_at: utils::now(),
-            state: PaymentState::Created,
-            refund_private_key: keypair.display_secret().to_string(),
-        };
-        self.persister.insert_send_swap(&swap)?;
-        self.status_stream.track_swap_id(swap_id)?;
-
+        let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
         self.wait_for_payment(swap.id, accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
