@@ -1407,9 +1407,6 @@ impl LiquidSdk {
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
         let invoice = Bolt11Invoice::from_str(input).map_err(|_| PaymentError::InvalidInvoice)?;
-        invoice
-            .check_signature()
-            .map_err(|_| PaymentError::InvalidInvoice)?;
 
         // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
         let payee_pubkey: String = match invoice.payee_pub_key() {
