@@ -152,37 +152,74 @@ fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
     return list
 }
 
-fun asLogEntry(logEntry: ReadableMap): LogEntry? {
+fun asLnInvoice(lnInvoice: ReadableMap): LnInvoice? {
     if (!validateMandatoryFields(
-            logEntry,
+            lnInvoice,
             arrayOf(
-                "line",
-                "level",
+                "bolt11",
+                "network",
+                "payeePubkey",
+                "paymentHash",
+                "timestamp",
+                "expiry",
+                "routingHints",
+                "paymentSecret",
+                "minFinalCltvExpiryDelta",
             ),
         )
     ) {
         return null
     }
-    val line = logEntry.getString("line")!!
-    val level = logEntry.getString("level")!!
-    return LogEntry(
-        line,
-        level,
+    val bolt11 = lnInvoice.getString("bolt11")!!
+    val network = lnInvoice.getString("network")?.let { asNetwork(it) }!!
+    val payeePubkey = lnInvoice.getString("payeePubkey")!!
+    val paymentHash = lnInvoice.getString("paymentHash")!!
+    val description = if (hasNonNullKey(lnInvoice, "description")) lnInvoice.getString("description") else null
+    val descriptionHash = if (hasNonNullKey(lnInvoice, "descriptionHash")) lnInvoice.getString("descriptionHash") else null
+    val amountMsat = if (hasNonNullKey(lnInvoice, "amountMsat")) lnInvoice.getDouble("amountMsat").toULong() else null
+    val timestamp = lnInvoice.getDouble("timestamp").toULong()
+    val expiry = lnInvoice.getDouble("expiry").toULong()
+    val routingHints = lnInvoice.getArray("routingHints")?.let { asRouteHintList(it) }!!
+    val paymentSecret = lnInvoice.getArray("paymentSecret")?.let { asUByteList(it) }!!
+    val minFinalCltvExpiryDelta = lnInvoice.getDouble("minFinalCltvExpiryDelta").toULong()
+    return LnInvoice(
+        bolt11,
+        network,
+        payeePubkey,
+        paymentHash,
+        description,
+        descriptionHash,
+        amountMsat,
+        timestamp,
+        expiry,
+        routingHints,
+        paymentSecret,
+        minFinalCltvExpiryDelta,
     )
 }
 
-fun readableMapOf(logEntry: LogEntry): ReadableMap {
+fun readableMapOf(lnInvoice: LnInvoice): ReadableMap {
     return readableMapOf(
-        "line" to logEntry.line,
-        "level" to logEntry.level,
+        "bolt11" to lnInvoice.bolt11,
+        "network" to lnInvoice.network.name.lowercase(),
+        "payeePubkey" to lnInvoice.payeePubkey,
+        "paymentHash" to lnInvoice.paymentHash,
+        "description" to lnInvoice.description,
+        "descriptionHash" to lnInvoice.descriptionHash,
+        "amountMsat" to lnInvoice.amountMsat,
+        "timestamp" to lnInvoice.timestamp,
+        "expiry" to lnInvoice.expiry,
+        "routingHints" to readableArrayOf(lnInvoice.routingHints),
+        "paymentSecret" to readableArrayOf(lnInvoice.paymentSecret),
+        "minFinalCltvExpiryDelta" to lnInvoice.minFinalCltvExpiryDelta,
     )
 }
 
-fun asLogEntryList(arr: ReadableArray): List<LogEntry> {
-    val list = ArrayList<LogEntry>()
+fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
+    val list = ArrayList<LnInvoice>()
     for (value in arr.toArrayList()) {
         when (value) {
-            is ReadableMap -> list.add(asLogEntry(value)!!)
+            is ReadableMap -> list.add(asLnInvoice(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -461,25 +498,113 @@ fun asRestoreRequestList(arr: ReadableArray): List<RestoreRequest> {
     return list
 }
 
-fun asSendPaymentResponse(sendPaymentResponse: ReadableMap): SendPaymentResponse? {
+fun asRouteHint(routeHint: ReadableMap): RouteHint? {
     if (!validateMandatoryFields(
-            sendPaymentResponse,
+            routeHint,
             arrayOf(
-                "txid",
+                "hops",
             ),
         )
     ) {
         return null
     }
-    val txid = sendPaymentResponse.getString("txid")!!
+    val hops = routeHint.getArray("hops")?.let { asRouteHintHopList(it) }!!
+    return RouteHint(
+        hops,
+    )
+}
+
+fun readableMapOf(routeHint: RouteHint): ReadableMap {
+    return readableMapOf(
+        "hops" to readableArrayOf(routeHint.hops),
+    )
+}
+
+fun asRouteHintList(arr: ReadableArray): List<RouteHint> {
+    val list = ArrayList<RouteHint>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRouteHint(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRouteHintHop(routeHintHop: ReadableMap): RouteHintHop? {
+    if (!validateMandatoryFields(
+            routeHintHop,
+            arrayOf(
+                "srcNodeId",
+                "shortChannelId",
+                "feesBaseMsat",
+                "feesProportionalMillionths",
+                "cltvExpiryDelta",
+            ),
+        )
+    ) {
+        return null
+    }
+    val srcNodeId = routeHintHop.getString("srcNodeId")!!
+    val shortChannelId = routeHintHop.getDouble("shortChannelId").toULong()
+    val feesBaseMsat = routeHintHop.getInt("feesBaseMsat").toUInt()
+    val feesProportionalMillionths = routeHintHop.getInt("feesProportionalMillionths").toUInt()
+    val cltvExpiryDelta = routeHintHop.getDouble("cltvExpiryDelta").toULong()
+    val htlcMinimumMsat = if (hasNonNullKey(routeHintHop, "htlcMinimumMsat")) routeHintHop.getDouble("htlcMinimumMsat").toULong() else null
+    val htlcMaximumMsat = if (hasNonNullKey(routeHintHop, "htlcMaximumMsat")) routeHintHop.getDouble("htlcMaximumMsat").toULong() else null
+    return RouteHintHop(
+        srcNodeId,
+        shortChannelId,
+        feesBaseMsat,
+        feesProportionalMillionths,
+        cltvExpiryDelta,
+        htlcMinimumMsat,
+        htlcMaximumMsat,
+    )
+}
+
+fun readableMapOf(routeHintHop: RouteHintHop): ReadableMap {
+    return readableMapOf(
+        "srcNodeId" to routeHintHop.srcNodeId,
+        "shortChannelId" to routeHintHop.shortChannelId,
+        "feesBaseMsat" to routeHintHop.feesBaseMsat,
+        "feesProportionalMillionths" to routeHintHop.feesProportionalMillionths,
+        "cltvExpiryDelta" to routeHintHop.cltvExpiryDelta,
+        "htlcMinimumMsat" to routeHintHop.htlcMinimumMsat,
+        "htlcMaximumMsat" to routeHintHop.htlcMaximumMsat,
+    )
+}
+
+fun asRouteHintHopList(arr: ReadableArray): List<RouteHintHop> {
+    val list = ArrayList<RouteHintHop>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRouteHintHop(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSendPaymentResponse(sendPaymentResponse: ReadableMap): SendPaymentResponse? {
+    if (!validateMandatoryFields(
+            sendPaymentResponse,
+            arrayOf(
+                "payment",
+            ),
+        )
+    ) {
+        return null
+    }
+    val payment = sendPaymentResponse.getMap("payment")?.let { asPayment(it) }!!
     return SendPaymentResponse(
-        txid,
+        payment,
     )
 }
 
 fun readableMapOf(sendPaymentResponse: SendPaymentResponse): ReadableMap {
     return readableMapOf(
-        "txid" to sendPaymentResponse.txid,
+        "payment" to readableMapOf(sendPaymentResponse.payment),
     )
 }
 
@@ -644,6 +769,9 @@ fun pushToArray(
     when (value) {
         null -> array.pushNull()
         is Payment -> array.pushMap(readableMapOf(value))
+        is RouteHint -> array.pushMap(readableMapOf(value))
+        is RouteHintHop -> array.pushMap(readableMapOf(value))
+        is UByte -> array.pushInt(value.toInt())
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))
         else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))

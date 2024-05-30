@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let network = args.network.unwrap_or(Network::LiquidTestnet);
+    let network = args.network.unwrap_or(Network::Testnet);
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         data_dir: Some(data_dir_str),
@@ -85,8 +85,8 @@ async fn main() -> Result<()> {
         .await?;
 
     let cli_prompt = match network {
-        Network::Liquid => "breez-liquid-cli [mainnet]> ",
-        Network::LiquidTestnet => "breez-liquid-cli [testnet]> ",
+        Network::Mainnet => "breez-liquid-cli [mainnet]> ",
+        Network::Testnet => "breez-liquid-cli [testnet]> ",
     };
 
     loop {

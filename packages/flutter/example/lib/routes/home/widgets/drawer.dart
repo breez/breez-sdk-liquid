@@ -38,7 +38,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
               try {
                 debugPrint("Creating backup.");
                 // TODO: Backup API should return backup file or it's filepath
-                await widget.liquidSDK.backup();
+                widget.liquidSDK.backup(req: const BackupRequest());
                 debugPrint("Created backup.");
               } catch (e) {
                 final errMsg = "Failed to create backup. $e";
@@ -61,7 +61,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 debugPrint("Restoring backup.");
                 // TODO: Select backup file to restore
                 RestoreRequest req = const RestoreRequest();
-                await widget.liquidSDK.restore(req: req);
+                widget.liquidSDK.restore(req: req);
                 debugPrint("Restored backup.");
               } catch (e) {
                 final errMsg = "Failed to restore backup. $e";
@@ -80,7 +80,7 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
             onTap: () async {
               try {
                 debugPrint("Emptying wallet cache.");
-                await widget.liquidSDK.emptyWalletCache();
+                widget.liquidSDK.emptyWalletCache();
                 debugPrint("Emptied wallet cache.");
               } catch (e) {
                 final errMsg = "Failed to empty wallet cache. $e";

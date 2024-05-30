@@ -167,42 +167,108 @@ enum BreezLiquidSDKMapper {
         return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
     }
 
-    static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
-        guard let line = logEntry["line"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "line", typeName: "LogEntry"))
+    static func asLnInvoice(lnInvoice: [String: Any?]) throws -> LnInvoice {
+        guard let bolt11 = lnInvoice["bolt11"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "bolt11", typeName: "LnInvoice"))
         }
-        guard let level = logEntry["level"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "level", typeName: "LogEntry"))
+        guard let networkTmp = lnInvoice["network"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "LnInvoice"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        guard let payeePubkey = lnInvoice["payeePubkey"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payeePubkey", typeName: "LnInvoice"))
+        }
+        guard let paymentHash = lnInvoice["paymentHash"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentHash", typeName: "LnInvoice"))
+        }
+        var description: String?
+        if hasNonNilKey(data: lnInvoice, key: "description") {
+            guard let descriptionTmp = lnInvoice["description"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "description"))
+            }
+            description = descriptionTmp
+        }
+        var descriptionHash: String?
+        if hasNonNilKey(data: lnInvoice, key: "descriptionHash") {
+            guard let descriptionHashTmp = lnInvoice["descriptionHash"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "descriptionHash"))
+            }
+            descriptionHash = descriptionHashTmp
+        }
+        var amountMsat: UInt64?
+        if hasNonNilKey(data: lnInvoice, key: "amountMsat") {
+            guard let amountMsatTmp = lnInvoice["amountMsat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "amountMsat"))
+            }
+            amountMsat = amountMsatTmp
+        }
+        guard let timestamp = lnInvoice["timestamp"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "LnInvoice"))
+        }
+        guard let expiry = lnInvoice["expiry"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "expiry", typeName: "LnInvoice"))
+        }
+        guard let routingHintsTmp = lnInvoice["routingHints"] as? [[String: Any?]] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "routingHints", typeName: "LnInvoice"))
+        }
+        let routingHints = try asRouteHintList(arr: routingHintsTmp)
+
+        guard let paymentSecret = lnInvoice["paymentSecret"] as? [UInt8] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentSecret", typeName: "LnInvoice"))
+        }
+        guard let minFinalCltvExpiryDelta = lnInvoice["minFinalCltvExpiryDelta"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minFinalCltvExpiryDelta", typeName: "LnInvoice"))
         }
 
-        return LogEntry(
-            line: line,
-            level: level
+        return LnInvoice(
+            bolt11: bolt11,
+            network: network,
+            payeePubkey: payeePubkey,
+            paymentHash: paymentHash,
+            description: description,
+            descriptionHash: descriptionHash,
+            amountMsat: amountMsat,
+            timestamp: timestamp,
+            expiry: expiry,
+            routingHints: routingHints,
+            paymentSecret: paymentSecret,
+            minFinalCltvExpiryDelta: minFinalCltvExpiryDelta
         )
     }
 
-    static func dictionaryOf(logEntry: LogEntry) -> [String: Any?] {
+    static func dictionaryOf(lnInvoice: LnInvoice) -> [String: Any?] {
         return [
-            "line": logEntry.line,
-            "level": logEntry.level,
+            "bolt11": lnInvoice.bolt11,
+            "network": valueOf(network: lnInvoice.network),
+            "payeePubkey": lnInvoice.payeePubkey,
+            "paymentHash": lnInvoice.paymentHash,
+            "description": lnInvoice.description == nil ? nil : lnInvoice.description,
+            "descriptionHash": lnInvoice.descriptionHash == nil ? nil : lnInvoice.descriptionHash,
+            "amountMsat": lnInvoice.amountMsat == nil ? nil : lnInvoice.amountMsat,
+            "timestamp": lnInvoice.timestamp,
+            "expiry": lnInvoice.expiry,
+            "routingHints": arrayOf(routeHintList: lnInvoice.routingHints),
+            "paymentSecret": lnInvoice.paymentSecret,
+            "minFinalCltvExpiryDelta": lnInvoice.minFinalCltvExpiryDelta,
         ]
     }
 
-    static func asLogEntryList(arr: [Any]) throws -> [LogEntry] {
-        var list = [LogEntry]()
+    static func asLnInvoiceList(arr: [Any]) throws -> [LnInvoice] {
+        var list = [LnInvoice]()
         for value in arr {
             if let val = value as? [String: Any?] {
-                var logEntry = try asLogEntry(logEntry: val)
-                list.append(logEntry)
+                var lnInvoice = try asLnInvoice(lnInvoice: val)
+                list.append(lnInvoice)
             } else {
-                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LogEntry"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnInvoice"))
             }
         }
         return list
     }
 
-    static func arrayOf(logEntryList: [LogEntry]) -> [Any] {
-        return logEntryList.map { v -> [String: Any?] in dictionaryOf(logEntry: v) }
+    static func arrayOf(lnInvoiceList: [LnInvoice]) -> [Any] {
+        return lnInvoiceList.map { v -> [String: Any?] in dictionaryOf(lnInvoice: v) }
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
@@ -520,18 +586,123 @@ enum BreezLiquidSDKMapper {
         return restoreRequestList.map { v -> [String: Any?] in dictionaryOf(restoreRequest: v) }
     }
 
-    static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
-        guard let txid = sendPaymentResponse["txid"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txid", typeName: "SendPaymentResponse"))
+    static func asRouteHint(routeHint: [String: Any?]) throws -> RouteHint {
+        guard let hopsTmp = routeHint["hops"] as? [[String: Any?]] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "hops", typeName: "RouteHint"))
+        }
+        let hops = try asRouteHintHopList(arr: hopsTmp)
+
+        return RouteHint(
+            hops: hops)
+    }
+
+    static func dictionaryOf(routeHint: RouteHint) -> [String: Any?] {
+        return [
+            "hops": arrayOf(routeHintHopList: routeHint.hops),
+        ]
+    }
+
+    static func asRouteHintList(arr: [Any]) throws -> [RouteHint] {
+        var list = [RouteHint]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var routeHint = try asRouteHint(routeHint: val)
+                list.append(routeHint)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "RouteHint"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(routeHintList: [RouteHint]) -> [Any] {
+        return routeHintList.map { v -> [String: Any?] in dictionaryOf(routeHint: v) }
+    }
+
+    static func asRouteHintHop(routeHintHop: [String: Any?]) throws -> RouteHintHop {
+        guard let srcNodeId = routeHintHop["srcNodeId"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "srcNodeId", typeName: "RouteHintHop"))
+        }
+        guard let shortChannelId = routeHintHop["shortChannelId"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "shortChannelId", typeName: "RouteHintHop"))
+        }
+        guard let feesBaseMsat = routeHintHop["feesBaseMsat"] as? UInt32 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesBaseMsat", typeName: "RouteHintHop"))
+        }
+        guard let feesProportionalMillionths = routeHintHop["feesProportionalMillionths"] as? UInt32 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesProportionalMillionths", typeName: "RouteHintHop"))
+        }
+        guard let cltvExpiryDelta = routeHintHop["cltvExpiryDelta"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "cltvExpiryDelta", typeName: "RouteHintHop"))
+        }
+        var htlcMinimumMsat: UInt64?
+        if hasNonNilKey(data: routeHintHop, key: "htlcMinimumMsat") {
+            guard let htlcMinimumMsatTmp = routeHintHop["htlcMinimumMsat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "htlcMinimumMsat"))
+            }
+            htlcMinimumMsat = htlcMinimumMsatTmp
+        }
+        var htlcMaximumMsat: UInt64?
+        if hasNonNilKey(data: routeHintHop, key: "htlcMaximumMsat") {
+            guard let htlcMaximumMsatTmp = routeHintHop["htlcMaximumMsat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "htlcMaximumMsat"))
+            }
+            htlcMaximumMsat = htlcMaximumMsatTmp
         }
 
+        return RouteHintHop(
+            srcNodeId: srcNodeId,
+            shortChannelId: shortChannelId,
+            feesBaseMsat: feesBaseMsat,
+            feesProportionalMillionths: feesProportionalMillionths,
+            cltvExpiryDelta: cltvExpiryDelta,
+            htlcMinimumMsat: htlcMinimumMsat,
+            htlcMaximumMsat: htlcMaximumMsat
+        )
+    }
+
+    static func dictionaryOf(routeHintHop: RouteHintHop) -> [String: Any?] {
+        return [
+            "srcNodeId": routeHintHop.srcNodeId,
+            "shortChannelId": routeHintHop.shortChannelId,
+            "feesBaseMsat": routeHintHop.feesBaseMsat,
+            "feesProportionalMillionths": routeHintHop.feesProportionalMillionths,
+            "cltvExpiryDelta": routeHintHop.cltvExpiryDelta,
+            "htlcMinimumMsat": routeHintHop.htlcMinimumMsat == nil ? nil : routeHintHop.htlcMinimumMsat,
+            "htlcMaximumMsat": routeHintHop.htlcMaximumMsat == nil ? nil : routeHintHop.htlcMaximumMsat,
+        ]
+    }
+
+    static func asRouteHintHopList(arr: [Any]) throws -> [RouteHintHop] {
+        var list = [RouteHintHop]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var routeHintHop = try asRouteHintHop(routeHintHop: val)
+                list.append(routeHintHop)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "RouteHintHop"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(routeHintHopList: [RouteHintHop]) -> [Any] {
+        return routeHintHopList.map { v -> [String: Any?] in dictionaryOf(routeHintHop: v) }
+    }
+
+    static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
+        guard let paymentTmp = sendPaymentResponse["payment"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payment", typeName: "SendPaymentResponse"))
+        }
+        let payment = try asPayment(payment: paymentTmp)
+
         return SendPaymentResponse(
-            txid: txid)
+            payment: payment)
     }
 
     static func dictionaryOf(sendPaymentResponse: SendPaymentResponse) -> [String: Any?] {
         return [
-            "txid": sendPaymentResponse.txid,
+            "payment": dictionaryOf(payment: sendPaymentResponse.payment),
         ]
     }
 
@@ -685,11 +856,11 @@ enum BreezLiquidSDKMapper {
 
     static func asNetwork(network: String) throws -> Network {
         switch network {
-        case "liquid":
-            return Network.liquid
+        case "mainnet":
+            return Network.mainnet
 
-        case "liquidTestnet":
-            return Network.liquidTestnet
+        case "testnet":
+            return Network.testnet
 
         default: throw LiquidSdkError.Generic(message: "Invalid variant \(network) for enum Network")
         }
@@ -697,11 +868,11 @@ enum BreezLiquidSDKMapper {
 
     static func valueOf(network: Network) -> String {
         switch network {
-        case .liquid:
-            return "liquid"
+        case .mainnet:
+            return "mainnet"
 
-        case .liquidTestnet:
-            return "liquidTestnet"
+        case .testnet:
+            return "testnet"
         }
     }
 

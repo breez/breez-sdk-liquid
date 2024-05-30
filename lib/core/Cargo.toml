@@ -15,7 +15,7 @@ frb = ["dep:flutter_rust_bridge"]
 anyhow = { workspace = true }
 bip39 = { version = "2.0.0", features = ["serde"] }
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
-boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-breez-latest-05-27" }
+boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-breez-latest-05-28" }
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.0.0-dev.36", features = ["chrono"], optional = true }
@@ -33,7 +33,7 @@ thiserror = { workspace = true }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 once_cell = { workspace = true }
 openssl = { version = "0.10", features = ["vendored"] }
-tokio = { version = "1", features = ["rt"] }
+tokio = { version = "1", features = ["rt", "macros"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 

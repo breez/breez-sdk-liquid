@@ -59,6 +59,10 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkEr
     })
 }
 
+pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
+    LiquidSdk::parse_invoice(&input)
+}
+
 pub struct BindingLiquidSdk {
     sdk: Arc<LiquidSdk>,
 }

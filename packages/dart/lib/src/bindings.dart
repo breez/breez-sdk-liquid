@@ -13,6 +13,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
     RustLib.instance.api.crateBindingsConnect(req: req, hint: hint);
 
+Future<LNInvoice> parseInvoice({required String input, dynamic hint}) =>
+    RustLib.instance.api.crateBindingsParseInvoice(input: input, hint: hint);
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
 @sealed
 class BindingLiquidSdk extends RustOpaque {
@@ -30,13 +33,13 @@ class BindingLiquidSdk extends RustOpaque {
   Stream<LiquidSdkEvent> addEventListener({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(that: this, hint: hint);
 
-  Future<void> backup({required BackupRequest req, dynamic hint}) =>
+  void backup({required BackupRequest req, dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, req: req, hint: hint);
 
   Future<void> disconnect({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkDisconnect(that: this, hint: hint);
 
-  Future<void> emptyWalletCache({dynamic hint}) =>
+  void emptyWalletCache({dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(that: this, hint: hint);
 
   Future<GetInfoResponse> getInfo({required GetInfoRequest req, dynamic hint}) =>
@@ -55,7 +58,7 @@ class BindingLiquidSdk extends RustOpaque {
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req, dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req, hint: hint);
 
-  Future<void> restore({required RestoreRequest req, dynamic hint}) =>
+  void restore({required RestoreRequest req, dynamic hint}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkRestore(that: this, req: req, hint: hint);
 
   Future<SendPaymentResponse> sendPayment({required PrepareSendResponse req, dynamic hint}) =>

@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
 };
-use boltz_client::{Keypair, SwapType};
+use boltz_client::{Keypair, ToHex};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -15,15 +15,17 @@ use crate::utils;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
-    Liquid,
-    LiquidTestnet,
+    /// Mainnet Bitcoin and Liquid chains
+    Mainnet,
+    /// Testnet Bitcoin and Liquid chains
+    Testnet,
 }
 
 impl From<Network> for ElementsNetwork {
     fn from(value: Network) -> Self {
         match value {
-            Network::Liquid => ElementsNetwork::Liquid,
-            Network::LiquidTestnet => ElementsNetwork::LiquidTestnet,
+            Network::Mainnet => ElementsNetwork::Liquid,
+            Network::Testnet => ElementsNetwork::LiquidTestnet,
         }
     }
 }
@@ -31,8 +33,8 @@ impl From<Network> for ElementsNetwork {
 impl From<Network> for Chain {
     fn from(value: Network) -> Self {
         match value {
-            Network::Liquid => Chain::Liquid,
-            Network::LiquidTestnet => Chain::LiquidTestnet,
+            Network::Mainnet => Chain::Liquid,
+            Network::Testnet => Chain::LiquidTestnet,
         }
     }
 }
@@ -42,8 +44,22 @@ impl TryFrom<&str> for Network {
 
     fn try_from(value: &str) -> Result<Network, anyhow::Error> {
         match value.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Liquid),
-            "testnet" => Ok(Network::LiquidTestnet),
+            "mainnet" => Ok(Network::Mainnet),
+            "testnet" => Ok(Network::Testnet),
+            _ => Err(anyhow!("Invalid network")),
+        }
+    }
+}
+
+impl TryFrom<boltz_client::lightning_invoice::Currency> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(
+        value: boltz_client::lightning_invoice::Currency,
+    ) -> Result<Network, anyhow::Error> {
+        match value {
+            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(Network::Mainnet),
+            boltz_client::lightning_invoice::Currency::BitcoinTestnet => Ok(Network::Testnet),
             _ => Err(anyhow!("Invalid network")),
         }
     }
@@ -88,8 +104,8 @@ impl LiquidSdkOptions {
     pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
         self.electrum_url.clone().unwrap_or({
             let (url, validate_domain, tls) = match &self.network {
-                Network::Liquid => ("blockstream.info:995", true, true),
-                Network::LiquidTestnet => ("blockstream.info:465", true, true),
+                Network::Mainnet => ("blockstream.info:995", true, true),
+                Network::Testnet => ("blockstream.info:465", true, true),
             };
             ElectrumUrl::new(url, tls, validate_domain)
         })
@@ -133,7 +149,7 @@ pub struct PrepareSendResponse {
 
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
-    pub txid: String,
+    pub payment: Payment,
 }
 
 #[derive(Debug, Serialize)]
@@ -175,13 +191,6 @@ impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
             Swap::Send(SendSwap { id, .. }) | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
-        }
-    }
-
-    pub(crate) fn swap_type(&self) -> SwapType {
-        match &self {
-            Swap::Send(_) => SwapType::Submarine,
-            Swap::Receive(_) => SwapType::ReverseSubmarine,
         }
     }
 }
@@ -551,6 +560,69 @@ impl Payment {
 pub struct LogEntry {
     pub line: String,
     pub level: String,
+}
+
+/// Wrapper for a BOLT11 LN invoice
+#[derive(Clone, Debug, PartialEq)]
+pub struct LNInvoice {
+    pub bolt11: String,
+    pub network: Network,
+    pub payee_pubkey: String,
+    pub payment_hash: String,
+    pub description: Option<String>,
+    pub description_hash: Option<String>,
+    pub amount_msat: Option<u64>,
+    pub timestamp: u64,
+    pub expiry: u64,
+    pub routing_hints: Vec<RouteHint>,
+    pub payment_secret: Vec<u8>,
+    pub min_final_cltv_expiry_delta: u64,
+}
+
+/// A route hint for a LN payment
+#[derive(Clone, Debug, PartialEq)]
+pub struct RouteHint {
+    pub hops: Vec<RouteHintHop>,
+}
+
+impl RouteHint {
+    pub fn from_ldk_hint(hint: &boltz_client::lightning_invoice::RouteHint) -> RouteHint {
+        let mut hops = Vec::new();
+        for hop in hint.0.iter() {
+            let pubkey_res = hop.src_node_id.serialize().to_hex();
+
+            let router_hop = RouteHintHop {
+                src_node_id: pubkey_res,
+                short_channel_id: hop.short_channel_id,
+                fees_base_msat: hop.fees.base_msat,
+                fees_proportional_millionths: hop.fees.proportional_millionths,
+                cltv_expiry_delta: u64::from(hop.cltv_expiry_delta),
+                htlc_minimum_msat: hop.htlc_minimum_msat,
+                htlc_maximum_msat: hop.htlc_maximum_msat,
+            };
+            hops.push(router_hop);
+        }
+        RouteHint { hops }
+    }
+}
+
+/// Details of a specific hop in a larger route hint
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RouteHintHop {
+    /// The node_id of the non-target end of the route
+    pub src_node_id: String,
+    /// The short_channel_id of this channel
+    pub short_channel_id: u64,
+    /// The fees which must be paid to use this channel
+    pub fees_base_msat: u32,
+    pub fees_proportional_millionths: u32,
+
+    /// The difference in CLTV values between this node and the next node.
+    pub cltv_expiry_delta: u64,
+    /// The minimum value, in msat, which must be relayed to the next hop.
+    pub htlc_minimum_msat: Option<u64>,
+    /// The maximum value in msat available for routing with a single HTLC.
+    pub htlc_maximum_msat: Option<u64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

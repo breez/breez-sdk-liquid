@@ -56,6 +56,16 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         throw LiquidSdkError.Generic(message: "Not initialized")
     }
 
+    @objc(parseInvoice:resolve:reject:)
+    func parseInvoice(_ invoice: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try BreezLiquidSDK.parseInvoice(invoice: invoice)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnInvoice: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(connect:resolve:reject:)
     func connect(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         if bindingLiquidSdk != nil {

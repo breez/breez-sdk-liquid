@@ -34,7 +34,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.36";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1552546000;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 84136112;
 
 // Section: executor
 
@@ -51,42 +51,61 @@ fn wire__crate__bindings__BindingLiquidSdk_add_event_listener_impl(
         StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>,
     >,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_add_event_listener", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_listener = listener.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_add_event_listener", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_listener = listener.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::add_event_listener(&api_that, api_listener)
-                    })())
+ crate::bindings::BindingLiquidSdk::add_event_listener(&api_that, api_listener).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
     req: impl CstDecode<crate::model::BackupRequest>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_backup", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
-                        let mut api_that_decoded = None;
-let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
-        for i in decode_indices_ {
-            match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
-                _ => unreachable!(),
-            }
-        }
-        let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::backup(&api_that, api_req)
-                    })())
-                } })
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_backup",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            transform_result_dco((move || {
+                let mut api_that_decoded = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(
+                        vec![
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(
+                                &api_that, 0, false,
+                            ),
+                        ],
+                    );
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_decoded = Some(
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(
+                                &api_that,
+                            ),
+                        ),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that = api_that_decoded.unwrap();
+                crate::bindings::BindingLiquidSdk::backup(&api_that, api_req)
+            })())
+        },
+    )
 }
 fn wire__crate__bindings__BindingLiquidSdk_disconnect_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -94,41 +113,59 @@ fn wire__crate__bindings__BindingLiquidSdk_disconnect_impl(
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_disconnect", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_disconnect", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::disconnect(&api_that)
-                    })())
+ crate::bindings::BindingLiquidSdk::disconnect(&api_that).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_empty_wallet_cache", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
-                        let mut api_that_decoded = None;
-let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
-        for i in decode_indices_ {
-            match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
-                _ => unreachable!(),
-            }
-        }
-        let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::empty_wallet_cache(&api_that)
-                    })())
-                } })
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_empty_wallet_cache",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            transform_result_dco((move || {
+                let mut api_that_decoded = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(
+                        vec![
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(
+                                &api_that, 0, false,
+                            ),
+                        ],
+                    );
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_decoded = Some(
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(
+                                &api_that,
+                            ),
+                        ),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that = api_that_decoded.unwrap();
+                crate::bindings::BindingLiquidSdk::empty_wallet_cache(&api_that)
+            })())
+        },
+    )
 }
 fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -137,19 +174,19 @@ fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
     >,
     req: impl CstDecode<crate::model::GetInfoRequest>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_get_info", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_get_info", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::get_info(&api_that, api_req)
-                    })())
+ crate::bindings::BindingLiquidSdk::get_info(&api_that, api_req).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
@@ -158,19 +195,19 @@ fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_list_payments", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_list_payments", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::list_payments(&api_that)
-                    })())
+ crate::bindings::BindingLiquidSdk::list_payments(&api_that).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment_impl(
@@ -180,19 +217,19 @@ fn wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment_impl(
     >,
     req: impl CstDecode<crate::model::PrepareReceiveRequest>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_prepare_receive_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_prepare_receive_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::prepare_receive_payment(&api_that, api_req)
-                    })())
+ crate::bindings::BindingLiquidSdk::prepare_receive_payment(&api_that, api_req).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_prepare_send_payment_impl(
@@ -202,19 +239,19 @@ fn wire__crate__bindings__BindingLiquidSdk_prepare_send_payment_impl(
     >,
     req: impl CstDecode<crate::model::PrepareSendRequest>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_prepare_send_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_prepare_send_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::prepare_send_payment(&api_that, api_req)
-                    })())
+ crate::bindings::BindingLiquidSdk::prepare_send_payment(&api_that, api_req).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(
@@ -224,42 +261,61 @@ fn wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(
     >,
     req: impl CstDecode<crate::model::PrepareReceiveResponse>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_receive_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_receive_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::receive_payment(&api_that, api_req)
-                    })())
+ crate::bindings::BindingLiquidSdk::receive_payment(&api_that, api_req).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_restore_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
     req: impl CstDecode<crate::model::RestoreRequest>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_restore", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
-                        let mut api_that_decoded = None;
-let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
-        for i in decode_indices_ {
-            match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
-                _ => unreachable!(),
-            }
-        }
-        let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::restore(&api_that, api_req)
-                    })())
-                } })
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_restore",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            transform_result_dco((move || {
+                let mut api_that_decoded = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(
+                        vec![
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(
+                                &api_that, 0, false,
+                            ),
+                        ],
+                    );
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_decoded = Some(
+                            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(
+                                &api_that,
+                            ),
+                        ),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that = api_that_decoded.unwrap();
+                crate::bindings::BindingLiquidSdk::restore(&api_that, api_req)
+            })())
+        },
+    )
 }
 fn wire__crate__bindings__BindingLiquidSdk_send_payment_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -268,19 +324,19 @@ fn wire__crate__bindings__BindingLiquidSdk_send_payment_impl(
     >,
     req: impl CstDecode<crate::model::PrepareSendResponse>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_send_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_send_payment", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode();let api_req = req.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::send_payment(&api_that, api_req)
-                    })())
+ crate::bindings::BindingLiquidSdk::send_payment(&api_that, api_req).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__BindingLiquidSdk_sync_impl(
@@ -289,26 +345,26 @@ fn wire__crate__bindings__BindingLiquidSdk_sync_impl(
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_sync", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context|  {
-                    transform_result_dco((move ||  {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_sync", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context| async move {
+                    transform_result_dco((move || async move {
                         let mut api_that_decoded = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
         for i in decode_indices_ {
             match i {
-                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_async_ref(&api_that).await),
                 _ => unreachable!(),
             }
         }
         let api_that = api_that_decoded.unwrap();
- crate::bindings::BindingLiquidSdk::sync(&api_that)
-                    })())
+ crate::bindings::BindingLiquidSdk::sync(&api_that).await
+                    })().await)
                 } })
 }
 fn wire__crate__bindings__connect_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     req: impl CstDecode<crate::model::ConnectRequest>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "connect",
             port: Some(port_),
@@ -316,7 +372,29 @@ fn wire__crate__bindings__connect_impl(
         },
         move || {
             let api_req = req.cst_decode();
-            move |context| transform_result_dco((move || crate::bindings::connect(api_req))())
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move { crate::bindings::connect(api_req).await })().await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__parse_invoice_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    input: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "parse_invoice",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_input = input.cst_decode();
+            move |context| {
+                transform_result_dco((move || crate::bindings::parse_invoice(api_input))())
+            }
         },
     )
 }
@@ -339,8 +417,8 @@ impl CstDecode<crate::model::Network> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Network {
         match self {
-            0 => crate::model::Network::Liquid,
-            1 => crate::model::Network::LiquidTestnet,
+            0 => crate::model::Network::Mainnet,
+            1 => crate::model::Network::Testnet,
             _ => unreachable!("Invalid variant for Network: {}", self),
         }
     }
@@ -590,13 +668,69 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Vec<crate::model::RouteHint> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::RouteHint>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::model::RouteHintHop> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::RouteHintHop>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for crate::model::LNInvoice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_bolt11 = <String>::sse_decode(deserializer);
+        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_payeePubkey = <String>::sse_decode(deserializer);
+        let mut var_paymentHash = <String>::sse_decode(deserializer);
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_descriptionHash = <Option<String>>::sse_decode(deserializer);
+        let mut var_amountMsat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_timestamp = <u64>::sse_decode(deserializer);
+        let mut var_expiry = <u64>::sse_decode(deserializer);
+        let mut var_routingHints = <Vec<crate::model::RouteHint>>::sse_decode(deserializer);
+        let mut var_paymentSecret = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_minFinalCltvExpiryDelta = <u64>::sse_decode(deserializer);
+        return crate::model::LNInvoice {
+            bolt11: var_bolt11,
+            network: var_network,
+            payee_pubkey: var_payeePubkey,
+            payment_hash: var_paymentHash,
+            description: var_description,
+            description_hash: var_descriptionHash,
+            amount_msat: var_amountMsat,
+            timestamp: var_timestamp,
+            expiry: var_expiry,
+            routing_hints: var_routingHints,
+            payment_secret: var_paymentSecret,
+            min_final_cltv_expiry_delta: var_minFinalCltvExpiryDelta,
+        };
+    }
+}
+
 impl SseDecode for crate::model::Network {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
-            0 => crate::model::Network::Liquid,
-            1 => crate::model::Network::LiquidTestnet,
+            0 => crate::model::Network::Mainnet,
+            1 => crate::model::Network::Testnet,
             _ => unreachable!("Invalid variant for Network: {}", inner),
         };
     }
@@ -804,11 +938,43 @@ impl SseDecode for crate::model::RestoreRequest {
     }
 }
 
+impl SseDecode for crate::model::RouteHint {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_hops = <Vec<crate::model::RouteHintHop>>::sse_decode(deserializer);
+        return crate::model::RouteHint { hops: var_hops };
+    }
+}
+
+impl SseDecode for crate::model::RouteHintHop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_srcNodeId = <String>::sse_decode(deserializer);
+        let mut var_shortChannelId = <u64>::sse_decode(deserializer);
+        let mut var_feesBaseMsat = <u32>::sse_decode(deserializer);
+        let mut var_feesProportionalMillionths = <u32>::sse_decode(deserializer);
+        let mut var_cltvExpiryDelta = <u64>::sse_decode(deserializer);
+        let mut var_htlcMinimumMsat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_htlcMaximumMsat = <Option<u64>>::sse_decode(deserializer);
+        return crate::model::RouteHintHop {
+            src_node_id: var_srcNodeId,
+            short_channel_id: var_shortChannelId,
+            fees_base_msat: var_feesBaseMsat,
+            fees_proportional_millionths: var_feesProportionalMillionths,
+            cltv_expiry_delta: var_cltvExpiryDelta,
+            htlc_minimum_msat: var_htlcMinimumMsat,
+            htlc_maximum_msat: var_htlcMaximumMsat,
+        };
+    }
+}
+
 impl SseDecode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_txid = <String>::sse_decode(deserializer);
-        return crate::model::SendPaymentResponse { txid: var_txid };
+        let mut var_payment = <crate::model::Payment>::sse_decode(deserializer);
+        return crate::model::SendPaymentResponse {
+            payment: var_payment,
+        };
     }
 }
 
@@ -1009,11 +1175,39 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkEvent>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LNInvoice {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.bolt11.into_into_dart().into_dart(),
+            self.network.into_into_dart().into_dart(),
+            self.payee_pubkey.into_into_dart().into_dart(),
+            self.payment_hash.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
+            self.description_hash.into_into_dart().into_dart(),
+            self.amount_msat.into_into_dart().into_dart(),
+            self.timestamp.into_into_dart().into_dart(),
+            self.expiry.into_into_dart().into_dart(),
+            self.routing_hints.into_into_dart().into_dart(),
+            self.payment_secret.into_into_dart().into_dart(),
+            self.min_final_cltv_expiry_delta
+                .into_into_dart()
+                .into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LNInvoice {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LNInvoice> for crate::model::LNInvoice {
+    fn into_into_dart(self) -> crate::model::LNInvoice {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Network {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            Self::Liquid => 0.into_dart(),
-            Self::LiquidTestnet => 1.into_dart(),
+            Self::Mainnet => 0.into_dart(),
+            Self::Testnet => 1.into_dart(),
         }
     }
 }
@@ -1230,9 +1424,44 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::RestoreRequest>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::RouteHint {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.hops.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHint {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHint> for crate::model::RouteHint {
+    fn into_into_dart(self) -> crate::model::RouteHint {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::RouteHintHop {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.src_node_id.into_into_dart().into_dart(),
+            self.short_channel_id.into_into_dart().into_dart(),
+            self.fees_base_msat.into_into_dart().into_dart(),
+            self.fees_proportional_millionths
+                .into_into_dart()
+                .into_dart(),
+            self.cltv_expiry_delta.into_into_dart().into_dart(),
+            self.htlc_minimum_msat.into_into_dart().into_dart(),
+            self.htlc_maximum_msat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHintHop {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHintHop> for crate::model::RouteHintHop {
+    fn into_into_dart(self) -> crate::model::RouteHintHop {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.txid.into_into_dart().into_dart()].into_dart()
+        [self.payment.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -1401,13 +1630,51 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Vec<crate::model::RouteHint> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::RouteHint>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::model::RouteHintHop> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::RouteHintHop>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::model::LNInvoice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.bolt11, serializer);
+        <crate::model::Network>::sse_encode(self.network, serializer);
+        <String>::sse_encode(self.payee_pubkey, serializer);
+        <String>::sse_encode(self.payment_hash, serializer);
+        <Option<String>>::sse_encode(self.description, serializer);
+        <Option<String>>::sse_encode(self.description_hash, serializer);
+        <Option<u64>>::sse_encode(self.amount_msat, serializer);
+        <u64>::sse_encode(self.timestamp, serializer);
+        <u64>::sse_encode(self.expiry, serializer);
+        <Vec<crate::model::RouteHint>>::sse_encode(self.routing_hints, serializer);
+        <Vec<u8>>::sse_encode(self.payment_secret, serializer);
+        <u64>::sse_encode(self.min_final_cltv_expiry_delta, serializer);
+    }
+}
+
 impl SseEncode for crate::model::Network {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(
             match self {
-                crate::model::Network::Liquid => 0,
-                crate::model::Network::LiquidTestnet => 1,
+                crate::model::Network::Mainnet => 0,
+                crate::model::Network::Testnet => 1,
                 _ => {
                     unimplemented!("");
                 }
@@ -1585,10 +1852,30 @@ impl SseEncode for crate::model::RestoreRequest {
     }
 }
 
+impl SseEncode for crate::model::RouteHint {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::model::RouteHintHop>>::sse_encode(self.hops, serializer);
+    }
+}
+
+impl SseEncode for crate::model::RouteHintHop {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.src_node_id, serializer);
+        <u64>::sse_encode(self.short_channel_id, serializer);
+        <u32>::sse_encode(self.fees_base_msat, serializer);
+        <u32>::sse_encode(self.fees_proportional_millionths, serializer);
+        <u64>::sse_encode(self.cltv_expiry_delta, serializer);
+        <Option<u64>>::sse_encode(self.htlc_minimum_msat, serializer);
+        <Option<u64>>::sse_encode(self.htlc_maximum_msat, serializer);
+    }
+}
+
 impl SseEncode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.txid, serializer);
+        <crate::model::Payment>::sse_encode(self.payment, serializer);
     }
 }
 

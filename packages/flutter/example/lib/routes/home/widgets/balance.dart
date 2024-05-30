@@ -19,7 +19,7 @@ class Balance extends StatelessWidget {
           return const Center(child: Text('Loading...'));
         }
 
-        if (walletInfoSnapshot.requireData.balanceSat.isNaN) {
+        if (walletInfoSnapshot.requireData.balanceSat != BigInt.zero) {
           return const Center(child: Text('No balance.'));
         }
         final walletInfo = walletInfoSnapshot.data!;
@@ -34,13 +34,13 @@ class Balance extends StatelessWidget {
                 "${walletInfo.balanceSat} sats",
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Colors.blue),
               ),
-              if (walletInfo.pendingReceiveSat != 0) ...[
+              if (walletInfo.pendingReceiveSat != BigInt.zero) ...[
                 Text(
                   "Pending Receive: ${walletInfo.pendingReceiveSat} sats",
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.blueGrey),
                 ),
               ],
-              if (walletInfo.pendingSendSat != 0) ...[
+              if (walletInfo.pendingSendSat != BigInt.zero) ...[
                 Text(
                   "Pending Send: ${walletInfo.pendingSendSat} sats",
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.blueGrey),

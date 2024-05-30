@@ -41,6 +41,21 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     fun removeListeners(count: Int) {}
 
     @ReactMethod
+    fun parseInvoice(
+        invoice: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = parseInvoice(invoice)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun connect(
         req: ReadableMap,
         promise: Promise,
