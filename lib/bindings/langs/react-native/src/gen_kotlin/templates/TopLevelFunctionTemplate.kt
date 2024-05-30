@@ -31,6 +31,9 @@
     {%- endmatch %}
 {%- when None %}
                 {{ obj_interface }}{{ func.name()|fn_name|unquote }}({%- call kt::arg_list(func) -%})
+{%- if func.name() == "disconnect" %}
+                bindingLiquidSdk = null
+{%- endif %}
                 promise.resolve(readableMapOf("status" to "ok"))
 {%- endmatch %}
             } catch (e: Exception) {

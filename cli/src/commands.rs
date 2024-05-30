@@ -52,6 +52,8 @@ pub(crate) enum Command {
         #[arg(short, long)]
         backup_path: Option<String>,
     },
+    /// Shuts down all background threads of this SDK instance
+    Disconnect,
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -101,8 +103,9 @@ pub(crate) async fn handle_command(
 ) -> Result<String> {
     Ok(match command {
         Command::ReceivePayment { payer_amount_sat } => {
-            let prepare_response =
-                sdk.prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })?;
+            let prepare_response = sdk
+                .prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })
+                .await?;
 
             wait_confirmation!(
                 format!(
@@ -112,7 +115,7 @@ pub(crate) async fn handle_command(
                 "Payment receive halted"
             );
 
-            let response = sdk.receive_payment(&prepare_response)?;
+            let response = sdk.receive_payment(&prepare_response).await?;
             let invoice = response.invoice.clone();
 
             let mut result = command_result!(response);
@@ -151,7 +154,7 @@ pub(crate) async fn handle_command(
             command_result!(sdk.get_info(GetInfoRequest { with_scan: true }).await?)
         }
         Command::ListPayments => {
-            let payments = sdk.list_payments()?;
+            let payments = sdk.list_payments().await?;
             command_result!(payments)
         }
         Command::Sync => {
@@ -169,6 +172,10 @@ pub(crate) async fn handle_command(
         Command::Restore { backup_path } => {
             sdk.restore(RestoreRequest { backup_path })?;
             command_result!("Backup restored successfully!")
+        }
+        Command::Disconnect => {
+            sdk.disconnect().await?;
+            command_result!("Liquid SDK instance disconnected")
         }
     })
 }
