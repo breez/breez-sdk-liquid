@@ -14,8 +14,7 @@ use url::Url;
 
 use crate::persist::Persister;
 
-#[derive(Clone)]
-pub(super) struct BoltzStatusStream {
+pub(crate) struct BoltzStatusStream {
     url: String,
     persister: Arc<Persister>,
     subscription_notifier: broadcast::Sender<String>,
@@ -23,7 +22,7 @@ pub(super) struct BoltzStatusStream {
 }
 
 impl BoltzStatusStream {
-    pub(super) fn new(url: &str, persister: Arc<Persister>) -> Self {
+    pub(crate) fn new(url: &str, persister: Arc<Persister>) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(100);
         let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(100);
 
@@ -35,16 +34,16 @@ impl BoltzStatusStream {
         }
     }
 
-    pub(super) fn track_swap_id(&self, swap_id: &str) -> Result<()> {
+    pub(crate) fn track_swap_id(&self, swap_id: &str) -> Result<()> {
         let _ = self.subscription_notifier.send(swap_id.to_string());
         Ok(())
     }
 
-    pub(super) fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
+    pub(crate) fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
         self.update_notifier.subscribe()
     }
 
-    pub(super) async fn track_pending_swaps(
+    pub(crate) async fn track_pending_swaps(
         self: Arc<BoltzStatusStream>,
         mut shutdown: watch::Receiver<()>,
     ) {
