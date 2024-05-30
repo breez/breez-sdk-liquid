@@ -121,19 +121,12 @@ impl LiquidSdk {
     /// Should only be called as part of [LiquidSdk::connect].
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         let mut is_started = self.is_started.write().await;
-
         let start_ts = Instant::now();
         self.start_background_tasks().await?;
         *is_started = true;
-        drop(is_started); // Drop write lock before trying to read in sync() below
 
-        if matches!(self.list_payments().await, Ok(payments) if payments.is_empty()) {
-            info!("No payments found in DB. Possible first run, sync-ing in foreground");
-            self.sync().await?;
-        }
         let start_duration = start_ts.elapsed();
         info!("Liquid SDK initialized in: {start_duration:?}");
-
         Ok(())
     }
 
