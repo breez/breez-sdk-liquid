@@ -911,8 +911,10 @@ impl SseDecode for crate::model::RouteHintHop {
 impl SseDecode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_txid = <String>::sse_decode(deserializer);
-        return crate::model::SendPaymentResponse { txid: var_txid };
+        let mut var_payment = <crate::model::Payment>::sse_decode(deserializer);
+        return crate::model::SendPaymentResponse {
+            payment: var_payment,
+        };
     }
 }
 
@@ -1399,7 +1401,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHintHop> for crate::mo
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.txid.into_into_dart().into_dart()].into_dart()
+        [self.payment.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -1813,7 +1815,7 @@ impl SseEncode for crate::model::RouteHintHop {
 impl SseEncode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.txid, serializer);
+        <crate::model::Payment>::sse_encode(self.payment, serializer);
     }
 }
 

@@ -691,17 +691,18 @@ enum BreezLiquidSDKMapper {
     }
 
     static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
-        guard let txid = sendPaymentResponse["txid"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txid", typeName: "SendPaymentResponse"))
+        guard let paymentTmp = sendPaymentResponse["payment"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "payment", typeName: "SendPaymentResponse"))
         }
+        let payment = try asPayment(payment: paymentTmp)
 
         return SendPaymentResponse(
-            txid: txid)
+            payment: payment)
     }
 
     static func dictionaryOf(sendPaymentResponse: SendPaymentResponse) -> [String: Any?] {
         return [
-            "txid": sendPaymentResponse.txid,
+            "payment": dictionaryOf(payment: sendPaymentResponse.payment),
         ]
     }
 

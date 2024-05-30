@@ -216,7 +216,7 @@ typedef struct wire_cst_receive_payment_response {
 } wire_cst_receive_payment_response;
 
 typedef struct wire_cst_send_payment_response {
-  struct wire_cst_list_prim_u_8_strict *txid;
+  struct wire_cst_payment payment;
 } wire_cst_send_payment_response;
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(int64_t port_,

@@ -3,7 +3,7 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
 };
-use boltz_client::{Keypair, SwapType, ToHex};
+use boltz_client::{Keypair, ToHex};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -149,7 +149,7 @@ pub struct PrepareSendResponse {
 
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
-    pub txid: String,
+    pub payment: Payment,
 }
 
 #[derive(Debug, Serialize)]
@@ -191,13 +191,6 @@ impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
             Swap::Send(SendSwap { id, .. }) | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
-        }
-    }
-
-    pub(crate) fn swap_type(&self) -> SwapType {
-        match &self {
-            Swap::Send(_) => SwapType::Submarine,
-            Swap::Receive(_) => SwapType::ReverseSubmarine,
         }
     }
 }

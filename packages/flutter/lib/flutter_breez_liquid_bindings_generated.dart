@@ -809,7 +809,7 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 }
 
 final class wire_cst_send_payment_response extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> txid;
+  external wire_cst_payment payment;
 }
 
 const double LIQUID_CLAIM_TX_FEERATE_MSAT = 100.0;

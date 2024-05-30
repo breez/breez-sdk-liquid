@@ -110,7 +110,7 @@ export interface RouteHintHop {
 }
 
 export interface SendPaymentResponse {
-    txid: string
+    payment: Payment
 }
 
 export enum LiquidSdkEventVariant {

@@ -54,7 +54,7 @@ dictionary PrepareSendResponse {
 };
 
 dictionary SendPaymentResponse {
-    string txid;
+    Payment payment;
 };
 
 dictionary PrepareReceiveRequest {

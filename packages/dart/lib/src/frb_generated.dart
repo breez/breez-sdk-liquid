@@ -926,7 +926,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return SendPaymentResponse(
-      txid: dco_decode_String(arr[0]),
+      payment: dco_decode_payment(arr[0]),
     );
   }
 
@@ -1414,8 +1414,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   SendPaymentResponse sse_decode_send_payment_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_txid = sse_decode_String(deserializer);
-    return SendPaymentResponse(txid: var_txid);
+    var var_payment = sse_decode_payment(deserializer);
+    return SendPaymentResponse(payment: var_payment);
   }
 
   @protected
@@ -1902,7 +1902,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_send_payment_response(SendPaymentResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.txid, serializer);
+    sse_encode_payment(self.payment, serializer);
   }
 
   @protected
