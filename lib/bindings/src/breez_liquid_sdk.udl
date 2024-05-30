@@ -23,8 +23,8 @@ enum PaymentError {
 };
 
 enum Network {
-    "Liquid",
-    "LiquidTestnet",
+    "Mainnet",
+    "Testnet",
 };
 
 dictionary ConnectRequest {
@@ -79,6 +79,35 @@ dictionary RestoreRequest {
     string? backup_path = null;
 };
 
+dictionary RouteHint {
+    sequence<RouteHintHop> hops;
+};
+
+dictionary RouteHintHop {
+     string src_node_id;
+     u64 short_channel_id;
+     u32 fees_base_msat;
+     u32 fees_proportional_millionths;
+     u64 cltv_expiry_delta;
+     u64? htlc_minimum_msat;
+     u64? htlc_maximum_msat;
+ };
+
+dictionary LNInvoice {
+    string bolt11;
+    Network network;
+    string payee_pubkey;
+    string payment_hash;
+    string? description;
+    string? description_hash;
+    u64? amount_msat;
+    u64 timestamp;
+    u64 expiry;
+    sequence<RouteHint> routing_hints;
+    sequence<u8> payment_secret;
+    u64 min_final_cltv_expiry_delta;
+};
+
 dictionary Payment {
     string tx_id;
     string? swap_id = null;
@@ -122,6 +151,9 @@ callback interface EventListener {
 namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     BindingLiquidSdk connect(ConnectRequest req);
+
+    [Throws=PaymentError]
+    LNInvoice parse_invoice(string invoice);
 };
 
 interface BindingLiquidSdk {

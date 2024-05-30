@@ -13,6 +13,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
     RustLib.instance.api.crateBindingsConnect(req: req, hint: hint);
 
+Future<LNInvoice> parseInvoice({required String input, dynamic hint}) =>
+    RustLib.instance.api.crateBindingsParseInvoice(input: input, hint: hint);
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
 @sealed
 class BindingLiquidSdk extends RustOpaque {

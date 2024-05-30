@@ -8,8 +8,8 @@ use crate::model::Network;
 impl Persister {
     pub(crate) fn get_default_backup_path(&self) -> PathBuf {
         self.main_db_dir.join(match self.network {
-            Network::Liquid => "backup.sql",
-            Network::LiquidTestnet => "backup-testnet.sql",
+            Network::Mainnet => "backup.sql",
+            Network::Testnet => "backup-testnet.sql",
         })
     }
 

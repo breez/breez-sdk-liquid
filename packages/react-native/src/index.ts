@@ -40,6 +40,21 @@ export interface GetInfoResponse {
     pubkey: string
 }
 
+export interface LnInvoice {
+    bolt11: string
+    network: Network
+    payeePubkey: string
+    paymentHash: string
+    description?: string
+    descriptionHash?: string
+    amountMsat?: number
+    timestamp: number
+    expiry: number
+    routingHints: RouteHint[]
+    paymentSecret: number[]
+    minFinalCltvExpiryDelta: number
+}
+
 export interface Payment {
     txId: string
     swapId?: string
@@ -80,6 +95,20 @@ export interface RestoreRequest {
     backupPath?: string
 }
 
+export interface RouteHint {
+    hops: RouteHintHop[]
+}
+
+export interface RouteHintHop {
+    srcNodeId: string
+    shortChannelId: number
+    feesBaseMsat: number
+    feesProportionalMillionths: number
+    cltvExpiryDelta: number
+    htlcMinimumMsat?: number
+    htlcMaximumMsat?: number
+}
+
 export interface SendPaymentResponse {
     payment: Payment
 }
@@ -117,8 +146,8 @@ export type LiquidSdkEvent = {
 }
 
 export enum Network {
-    LIQUID = "liquid",
-    LIQUID_TESTNET = "liquidTestnet"
+    MAINNET = "mainnet",
+    TESTNET = "testnet"
 }
 
 export enum PaymentState {
@@ -146,6 +175,11 @@ export const addEventListener = async (listener: EventListener): Promise<string>
 
     return response
 }
+export const parseInvoice = async (invoice: string): Promise<LnInvoice> => {
+    const response = await BreezLiquidSDK.parseInvoice(invoice)
+    return response
+}
+
 
 export const removeEventListener = async (id: string): Promise<void> => {
     await BreezLiquidSDK.removeEventListener(id)

@@ -32,8 +32,8 @@ impl Persister {
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
         let db_file = match self.network {
-            Liquid => "storage.sql",
-            LiquidTestnet => "storage-testnet.sql",
+            Mainnet => "storage.sql",
+            Testnet => "storage-testnet.sql",
         };
         Ok(Connection::open(self.main_db_dir.join(db_file))?)
     }

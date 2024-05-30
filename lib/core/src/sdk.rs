@@ -1,7 +1,14 @@
 use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{
+    fs,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, UNIX_EPOCH},
+};
 
 use anyhow::{anyhow, Result};
+use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
@@ -65,7 +72,7 @@ pub struct LiquidSdk {
 
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let is_mainnet = req.network == Network::Liquid;
+        let is_mainnet = req.network == Network::Mainnet;
         let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
         let descriptor = LiquidSdk::get_descriptor(&signer, req.network)?;
 
@@ -155,9 +162,13 @@ impl LiquidSdk {
             }
         });
 
-        self.status_stream.clone().track_pending_swaps(self.shutdown_receiver.clone()).await;
+        self.status_stream
+            .clone()
+            .track_pending_swaps(self.shutdown_receiver.clone())
+            .await;
 
-        self.track_swap_updates(self.shutdown_receiver.clone()).await;
+        self.track_swap_updates(self.shutdown_receiver.clone())
+            .await;
 
         Ok(())
     }
@@ -195,7 +206,7 @@ impl LiquidSdk {
                     update = updates_stream.recv() => match update {
                         Ok(boltzv2::Update { id, status }) => {
                             let _ = cloned.sync().await;
-    
+
                             if let Ok(_) = cloned.try_handle_send_swap_boltz_status(&status, &id).await
                             {
                                 info!("Handled send swap update");
@@ -233,7 +244,7 @@ impl LiquidSdk {
     }
 
     fn get_descriptor(signer: &SwSigner, network: Network) -> Result<WolletDescriptor> {
-        let is_mainnet = network == Network::Liquid;
+        let is_mainnet = network == Network::Mainnet;
         let descriptor_str = singlesig_desc(
             signer,
             Singlesig::Wpkh,
@@ -658,8 +669,8 @@ impl LiquidSdk {
 
     pub(crate) fn boltz_url_v2(network: Network) -> &'static str {
         match network {
-            Network::LiquidTestnet => BOLTZ_TESTNET_URL_V2,
-            Network::Liquid => BOLTZ_MAINNET_URL_V2,
+            Network::Testnet => BOLTZ_TESTNET_URL_V2,
+            Network::Mainnet => BOLTZ_MAINNET_URL_V2,
         }
     }
 
@@ -705,8 +716,8 @@ impl LiquidSdk {
             .map_err(|_| PaymentError::InvalidInvoice)?;
 
         match (invoice.network().to_string().as_str(), self.network) {
-            ("bitcoin", Network::Liquid) => {}
-            ("testnet", Network::LiquidTestnet) => {}
+            ("bitcoin", Network::Mainnet) => {}
+            ("testnet", Network::Testnet) => {}
             _ => return Err(PaymentError::InvalidInvoice),
         }
 
@@ -740,8 +751,8 @@ impl LiquidSdk {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.network {
-            Network::Liquid => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
-            Network::LiquidTestnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
+            Network::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
+            Network::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
         // Create a throw-away tx similar to the lockup tx, in order to estimate fees
@@ -884,8 +895,8 @@ impl LiquidSdk {
             Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
         let client = self.boltz_client_v2();
         let is_lowball = match self.network {
-            Network::Liquid => None,
-            Network::LiquidTestnet => Some((&client, boltz_client::network::Chain::LiquidTestnet)),
+            Network::Mainnet => None,
+            Network::Testnet => Some((&client, boltz_client::network::Chain::LiquidTestnet)),
         };
 
         match self
@@ -1399,6 +1410,54 @@ impl LiquidSdk {
             err: format!("Could not create LiquidSwapKey: {e:?}"),
         })
     }
+
+    pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
+        let input = input
+            .strip_prefix("lightning:")
+            .or(input.strip_prefix("LIGHTNING:"))
+            .unwrap_or(input);
+        let invoice = Bolt11Invoice::from_str(input).map_err(|_| PaymentError::InvalidInvoice)?;
+
+        // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
+        let payee_pubkey: String = match invoice.payee_pub_key() {
+            Some(key) => key.serialize().to_hex(),
+            None => invoice.recover_payee_pub_key().serialize().to_hex(),
+        };
+        let description = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        };
+        let description_hash = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(_) => None,
+            Bolt11InvoiceDescription::Hash(h) => Some(h.0.to_string()),
+        };
+        let timestamp = invoice
+            .timestamp()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|_| PaymentError::InvalidInvoice)?
+            .as_secs();
+        let routing_hints = invoice
+            .route_hints()
+            .iter()
+            .map(RouteHint::from_ldk_hint)
+            .collect();
+
+        let res = LNInvoice {
+            bolt11: input.to_string(),
+            network: invoice.currency().try_into()?,
+            payee_pubkey,
+            payment_hash: invoice.payment_hash().to_hex(),
+            description,
+            description_hash,
+            amount_msat: invoice.amount_milli_satoshis(),
+            timestamp,
+            expiry: invoice.expiry_time().as_secs(),
+            routing_hints,
+            payment_secret: invoice.payment_secret().0.to_vec(),
+            min_final_cltv_expiry_delta: invoice.min_final_cltv_expiry_delta(),
+        };
+        Ok(res)
+    }
 }
 
 #[cfg(test)]
@@ -1438,7 +1497,7 @@ mod tests {
         let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
             data_dir: Some(data_dir_str),
-            network: Network::LiquidTestnet,
+            network: Network::Testnet,
         })
         .await?;
 
@@ -1456,13 +1515,15 @@ mod tests {
         let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
             data_dir: Some(data_dir_str),
-            network: Network::LiquidTestnet,
+            network: Network::Testnet,
         })
         .await?;
 
-        let prepare_response = sdk.prepare_receive_payment(&PrepareReceiveRequest {
-            payer_amount_sat: 1_000,
-        }).await?;
+        let prepare_response = sdk
+            .prepare_receive_payment(&PrepareReceiveRequest {
+                payer_amount_sat: 1_000,
+            })
+            .await?;
         sdk.receive_payment(&prepare_response).await?;
         assert!(!list_pending(&sdk).await?.is_empty());
 
