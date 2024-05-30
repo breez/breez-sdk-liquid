@@ -586,34 +586,36 @@ impl LiquidSdk {
                 | SubSwapStates::InvoiceFailedToPay
                 | SubSwapStates::SwapExpired,
             ) => {
-                // Do not attempt broadcasting a refund if lockup tx was never sent and swap is
-                // unrecoverable. We resolve the payment as failed.
-                if [TimedOut, Created].contains(&ongoing_send_swap.state) {
-                    warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has never been broadcast. Resolving payment as failed.");
-                    self.try_handle_send_swap_update(id, Failed, None, None, None)
-                        .await?;
-                    return Ok(());
-                }
+                match ongoing_send_swap.lockup_tx_id {
+                    Some(_) => match ongoing_send_swap.refund_tx_id {
+                        Some(refund_tx_id) => warn!(
+                            "Refund tx for Send Swap {id} was already broadcast: txid {refund_tx_id}"
+                        ),
+                        None => {
+                            warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has been broadcast. Attempting refund.");
 
-                match ongoing_send_swap.refund_tx_id {
-                    Some(refund_tx_id) => warn!(
-                        "Refund tx for Send Swap {id} was already broadcast: txid {refund_tx_id}"
-                    ),
+                            let refund_tx_id = self.try_refund(&ongoing_send_swap).await?;
+                            info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
+                            self.try_handle_send_swap_update(
+                                id,
+                                Pending,
+                                None,
+                                None,
+                                Some(&refund_tx_id),
+                            )
+                            .await?;
+                        }
+                    },
+                    // Do not attempt broadcasting a refund if lockup tx was never sent and swap is
+                    // unrecoverable. We resolve the payment as failed.
                     None => {
-                        warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has been broadcast. Attempting refund.");
-
-                        let refund_tx_id = self.try_refund(&ongoing_send_swap).await?;
-                        info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
-                        self.try_handle_send_swap_update(
-                            id,
-                            Pending,
-                            None,
-                            None,
-                            Some(&refund_tx_id),
-                        )
-                        .await?;
+                        warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has never been broadcast. Resolving payment as failed.");
+                        self.try_handle_send_swap_update(id, Failed, None, None, None)
+                            .await?;
                     }
+
                 }
+
                 Ok(())
             }
 
