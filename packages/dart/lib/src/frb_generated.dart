@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.36';
 
   @override
-  int get rustContentHash => -1552546000;
+  int get rustContentHash => 84136112;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -97,6 +97,8 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that, dynamic hint});
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint});
+
+  Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint});
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk;
 
@@ -456,6 +458,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: ["req"],
       );
 
+  @override
+  Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_String(input);
+        return wire.wire__crate__bindings__parse_invoice(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_invoice,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsParseInvoiceConstMeta,
+      argValues: [input],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsParseInvoiceConstMeta => const TaskConstMeta(
+        debugName: "parse_invoice",
+        argNames: ["input"],
+      );
+
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
 
@@ -679,6 +704,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<RouteHint> dco_decode_list_route_hint(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_hint).toList();
+  }
+
+  @protected
+  List<RouteHintHop> dco_decode_list_route_hint_hop(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_hint_hop).toList();
+  }
+
+  @protected
+  LNInvoice dco_decode_ln_invoice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return LNInvoice(
+      bolt11: dco_decode_String(arr[0]),
+      network: dco_decode_network(arr[1]),
+      payeePubkey: dco_decode_String(arr[2]),
+      paymentHash: dco_decode_String(arr[3]),
+      description: dco_decode_opt_String(arr[4]),
+      descriptionHash: dco_decode_opt_String(arr[5]),
+      amountMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+      timestamp: dco_decode_u_64(arr[7]),
+      expiry: dco_decode_u_64(arr[8]),
+      routingHints: dco_decode_list_route_hint(arr[9]),
+      paymentSecret: dco_decode_list_prim_u_8_strict(arr[10]),
+      minFinalCltvExpiryDelta: dco_decode_u_64(arr[11]),
+    );
+  }
+
+  @protected
   Network dco_decode_network(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return Network.values[raw as int];
@@ -833,6 +891,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return RestoreRequest(
       backupPath: dco_decode_opt_String(arr[0]),
+    );
+  }
+
+  @protected
+  RouteHint dco_decode_route_hint(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return RouteHint(
+      hops: dco_decode_list_route_hint_hop(arr[0]),
+    );
+  }
+
+  @protected
+  RouteHintHop dco_decode_route_hint_hop(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return RouteHintHop(
+      srcNodeId: dco_decode_String(arr[0]),
+      shortChannelId: dco_decode_u_64(arr[1]),
+      feesBaseMsat: dco_decode_u_32(arr[2]),
+      feesProportionalMillionths: dco_decode_u_32(arr[3]),
+      cltvExpiryDelta: dco_decode_u_64(arr[4]),
+      htlcMinimumMsat: dco_decode_opt_box_autoadd_u_64(arr[5]),
+      htlcMaximumMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),
     );
   }
 
@@ -1090,6 +1174,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<RouteHint> sse_decode_list_route_hint(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RouteHint>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_hint(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<RouteHintHop> sse_decode_list_route_hint_hop(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RouteHintHop>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_hint_hop(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_bolt11 = sse_decode_String(deserializer);
+    var var_network = sse_decode_network(deserializer);
+    var var_payeePubkey = sse_decode_String(deserializer);
+    var var_paymentHash = sse_decode_String(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
+    var var_descriptionHash = sse_decode_opt_String(deserializer);
+    var var_amountMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_timestamp = sse_decode_u_64(deserializer);
+    var var_expiry = sse_decode_u_64(deserializer);
+    var var_routingHints = sse_decode_list_route_hint(deserializer);
+    var var_paymentSecret = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_minFinalCltvExpiryDelta = sse_decode_u_64(deserializer);
+    return LNInvoice(
+        bolt11: var_bolt11,
+        network: var_network,
+        payeePubkey: var_payeePubkey,
+        paymentHash: var_paymentHash,
+        description: var_description,
+        descriptionHash: var_descriptionHash,
+        amountMsat: var_amountMsat,
+        timestamp: var_timestamp,
+        expiry: var_expiry,
+        routingHints: var_routingHints,
+        paymentSecret: var_paymentSecret,
+        minFinalCltvExpiryDelta: var_minFinalCltvExpiryDelta);
+  }
+
+  @protected
   Network sse_decode_network(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
@@ -1244,6 +1382,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_backupPath = sse_decode_opt_String(deserializer);
     return RestoreRequest(backupPath: var_backupPath);
+  }
+
+  @protected
+  RouteHint sse_decode_route_hint(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_hops = sse_decode_list_route_hint_hop(deserializer);
+    return RouteHint(hops: var_hops);
+  }
+
+  @protected
+  RouteHintHop sse_decode_route_hint_hop(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_srcNodeId = sse_decode_String(deserializer);
+    var var_shortChannelId = sse_decode_u_64(deserializer);
+    var var_feesBaseMsat = sse_decode_u_32(deserializer);
+    var var_feesProportionalMillionths = sse_decode_u_32(deserializer);
+    var var_cltvExpiryDelta = sse_decode_u_64(deserializer);
+    var var_htlcMinimumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_htlcMaximumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    return RouteHintHop(
+        srcNodeId: var_srcNodeId,
+        shortChannelId: var_shortChannelId,
+        feesBaseMsat: var_feesBaseMsat,
+        feesProportionalMillionths: var_feesProportionalMillionths,
+        cltvExpiryDelta: var_cltvExpiryDelta,
+        htlcMinimumMsat: var_htlcMinimumMsat,
+        htlcMaximumMsat: var_htlcMaximumMsat);
   }
 
   @protected
@@ -1551,6 +1716,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_route_hint(List<RouteHint> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_hint(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_route_hint_hop(List<RouteHintHop> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_hint_hop(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.bolt11, serializer);
+    sse_encode_network(self.network, serializer);
+    sse_encode_String(self.payeePubkey, serializer);
+    sse_encode_String(self.paymentHash, serializer);
+    sse_encode_opt_String(self.description, serializer);
+    sse_encode_opt_String(self.descriptionHash, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.amountMsat, serializer);
+    sse_encode_u_64(self.timestamp, serializer);
+    sse_encode_u_64(self.expiry, serializer);
+    sse_encode_list_route_hint(self.routingHints, serializer);
+    sse_encode_list_prim_u_8_strict(self.paymentSecret, serializer);
+    sse_encode_u_64(self.minFinalCltvExpiryDelta, serializer);
+  }
+
+  @protected
   void sse_encode_network(Network self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
@@ -1679,6 +1879,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_restore_request(RestoreRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_String(self.backupPath, serializer);
+  }
+
+  @protected
+  void sse_encode_route_hint(RouteHint self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_route_hint_hop(self.hops, serializer);
+  }
+
+  @protected
+  void sse_encode_route_hint_hop(RouteHintHop self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.srcNodeId, serializer);
+    sse_encode_u_64(self.shortChannelId, serializer);
+    sse_encode_u_32(self.feesBaseMsat, serializer);
+    sse_encode_u_32(self.feesProportionalMillionths, serializer);
+    sse_encode_u_64(self.cltvExpiryDelta, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.htlcMinimumMsat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.htlcMaximumMsat, serializer);
   }
 
   @protected
