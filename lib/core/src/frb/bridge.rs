@@ -34,7 +34,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.36";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 692273053;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1552546000;
 
 // Section: executor
 
@@ -85,6 +85,27 @@ let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decod
         }
         let api_that = api_that_decoded.unwrap();
  crate::bindings::BindingLiquidSdk::backup(&api_that, api_req)
+                    })())
+                } })
+}
+fn wire__crate__bindings__BindingLiquidSdk_disconnect_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "BindingLiquidSdk_disconnect", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_that = that.cst_decode(); move |context|  {
+                    transform_result_dco((move ||  {
+                        let mut api_that_decoded = None;
+let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decode_compute_order(vec![flutter_rust_bridge::for_generated::rust_auto_opaque_lock_order_info(&api_that, 0, false)]);
+        for i in decode_indices_ {
+            match i {
+                0 => api_that_decoded = Some(flutter_rust_bridge::for_generated::rust_auto_opaque_decode_sync_ref(&api_that)),
+                _ => unreachable!(),
+            }
+        }
+        let api_that = api_that_decoded.unwrap();
+ crate::bindings::BindingLiquidSdk::disconnect(&api_that)
                     })())
                 } })
 }
@@ -478,8 +499,14 @@ impl SseDecode for crate::error::LiquidSdkError {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
+                return crate::error::LiquidSdkError::AlreadyStarted;
+            }
+            1 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::LiquidSdkError::Generic { err: var_err };
+            }
+            2 => {
+                return crate::error::LiquidSdkError::NotStarted;
             }
             _ => {
                 unimplemented!("");
@@ -931,9 +958,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoResponse>
 impl flutter_rust_bridge::IntoDart for crate::error::LiquidSdkError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
+            crate::error::LiquidSdkError::AlreadyStarted => [0.into_dart()].into_dart(),
             crate::error::LiquidSdkError::Generic { err } => {
-                [0.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [1.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
+            crate::error::LiquidSdkError::NotStarted => [2.into_dart()].into_dart(),
         }
     }
 }
@@ -1303,9 +1332,15 @@ impl SseEncode for crate::error::LiquidSdkError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::error::LiquidSdkError::Generic { err } => {
+            crate::error::LiquidSdkError::AlreadyStarted => {
                 <i32>::sse_encode(0, serializer);
+            }
+            crate::error::LiquidSdkError::Generic { err } => {
+                <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(err, serializer);
+            }
+            crate::error::LiquidSdkError::NotStarted => {
+                <i32>::sse_encode(2, serializer);
             }
         }
     }

@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.36';
 
   @override
-  int get rustContentHash => 692273053;
+  int get rustContentHash => -1552546000;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -68,6 +68,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateBindingsBindingLiquidSdkBackup(
       {required BindingLiquidSdk that, required BackupRequest req, dynamic hint});
+
+  Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that, dynamic hint});
 
   Future<void> crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that, dynamic hint});
 
@@ -165,6 +167,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkBackupConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_backup",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_disconnect(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkDisconnectConstMeta,
+      argValues: [that],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkDisconnectConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_disconnect",
+        argNames: ["that"],
       );
 
   @override
@@ -592,9 +619,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
+        return LiquidSdkError_AlreadyStarted();
+      case 1:
         return LiquidSdkError_Generic(
           err: dco_decode_String(raw[1]),
         );
+      case 2:
+        return LiquidSdkError_NotStarted();
       default:
         throw Exception("unreachable");
     }
@@ -997,8 +1028,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
+        return LiquidSdkError_AlreadyStarted();
+      case 1:
         var var_err = sse_decode_String(deserializer);
         return LiquidSdkError_Generic(err: var_err);
+      case 2:
+        return LiquidSdkError_NotStarted();
       default:
         throw UnimplementedError('');
     }
@@ -1462,9 +1497,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_liquid_sdk_error(LiquidSdkError self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
-      case LiquidSdkError_Generic(err: final err):
+      case LiquidSdkError_AlreadyStarted():
         sse_encode_i_32(0, serializer);
+      case LiquidSdkError_Generic(err: final err):
+        sse_encode_i_32(1, serializer);
         sse_encode_String(err, serializer);
+      case LiquidSdkError_NotStarted():
+        sse_encode_i_32(2, serializer);
     }
   }
 

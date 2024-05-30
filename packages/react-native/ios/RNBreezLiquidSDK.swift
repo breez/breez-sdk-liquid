@@ -193,6 +193,17 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(disconnect:reject:)
+    func disconnect(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try getBindingLiquidSdk().disconnect()
+            bindingLiquidSdk = nil
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

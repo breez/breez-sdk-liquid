@@ -106,10 +106,12 @@ async fn main() -> Result<()> {
             }
             Err(ReadlineError::Interrupted) => {
                 info!("CTRL-C");
+                sdk.disconnect().await?;
                 break;
             }
             Err(ReadlineError::Eof) => {
                 info!("CTRL-D");
+                sdk.disconnect().await?;
                 break;
             }
             Err(err) => {
