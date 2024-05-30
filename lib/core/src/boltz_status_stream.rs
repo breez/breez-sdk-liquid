@@ -51,7 +51,7 @@ impl BoltzStatusStream {
 
     pub(super) async fn track_pending_swaps(
         sdk: Arc<LiquidSdk>,
-        shutdown: watch::Receiver<()>,
+        mut shutdown: watch::Receiver<()>,
     ) -> Result<()> {
         let keep_alive_ping_interval = Duration::from_secs(15);
         let reconnect_delay = Duration::from_secs(2);
@@ -76,23 +76,24 @@ impl BoltzStatusStream {
                         interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
                         loop {
-                            if shutdown.has_changed().is_ok() {
-                                info!("Received shutdown signal, exiting Status Stream loop");
-
-                                // Clear monitored swaps, so on re-connect we re-subscribe to them
-                                send_swap_ids().lock().unwrap().clear();
-                                receive_swap_ids().lock().unwrap().clear();
-
-                                return;
-                            }
-
                             tokio::select! {
+                                _ = shutdown.changed() => {
+                                    info!("Received shutdown signal, exiting Status Stream loop");
+
+                                    // Clear monitored swaps, so on re-connect we re-subscribe to them
+                                    send_swap_ids().lock().unwrap().clear();
+                                    receive_swap_ids().lock().unwrap().clear();
+
+                                    return;
+                                }
+
                                 _ = interval.tick() => {
                                     match ws_stream.send(Message::Ping(vec![])).await {
                                         Ok(_) => debug!("Sent keep-alive ping"),
                                         Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
                                     }
                                 },
+
                                 maybe_next = ws_stream.next() => match maybe_next {
                                     Some(msg) => match msg {
                                         Ok(Message::Close(_)) => {
