@@ -133,6 +133,9 @@ impl LiquidSdk {
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         let mut is_started = self.is_started.write().await;
         let start_ts = Instant::now();
+
+        self.persister
+            .update_send_swaps_by_state(Created, TimedOut)?;
         self.start_background_tasks().await?;
         *is_started = true;
 
