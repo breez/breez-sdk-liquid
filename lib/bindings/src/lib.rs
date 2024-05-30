@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use breez_liquid_sdk::sdk::LogStream;
+use breez_liquid_sdk::logger::LogStream;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 use log::{Metadata, Record};
 use once_cell::sync::{Lazy, OnceCell};

@@ -18,7 +18,7 @@ use boltz_client::{
 };
 use chrono::Local;
 use futures_util::SinkExt;
-use log::{debug, error, info, warn, LevelFilter, Metadata, Record};
+use log::{debug, error, info, warn, LevelFilter};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
@@ -35,6 +35,7 @@ use tokio_tungstenite::{connect_async, tungstenite, MaybeTlsStream, WebSocketStr
 use url::Url;
 
 use crate::error::LiquidSdkError;
+use crate::logger::GlobalSdkLogger;
 use crate::model::PaymentState::*;
 use crate::{
     boltz_status_stream::BoltzStatusStream,
@@ -1476,36 +1477,6 @@ impl LiquidSdk {
 
         Ok(())
     }
-}
-
-struct GlobalSdkLogger {
-    /// SDK internal logger, which logs to file
-    logger: env_logger::Logger,
-    /// Optional external log listener, that can receive a stream of log statements
-    log_listener: Option<Box<dyn log::Log>>,
-}
-impl log::Log for GlobalSdkLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() <= log::Level::Trace
-    }
-
-    fn log(&self, record: &Record) {
-        if self.enabled(record.metadata()) {
-            self.logger.log(record);
-
-            if let Some(s) = &self.log_listener.as_ref() {
-                if s.enabled(record.metadata()) {
-                    s.log(record);
-                }
-            }
-        }
-    }
-
-    fn flush(&self) {}
-}
-
-pub trait LogStream: Send + Sync {
-    fn log(&self, l: LogEntry);
 }
 
 #[cfg(test)]
