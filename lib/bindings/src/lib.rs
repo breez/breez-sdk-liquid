@@ -16,19 +16,19 @@ fn rt() -> &'static Runtime {
 
 static LOG_INIT: OnceCell<bool> = OnceCell::new();
 
-struct BindingLogger {
+struct UniffiBindingLogger {
     log_stream: Box<dyn LogStream>,
 }
 
-impl BindingLogger {
+impl UniffiBindingLogger {
     fn init(log_stream: Box<dyn LogStream>) {
-        let binding_logger = BindingLogger { log_stream };
+        let binding_logger = UniffiBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger)).unwrap();
         log::set_max_level(LevelFilter::Trace);
     }
 }
 
-impl log::Log for BindingLogger {
+impl log::Log for UniffiBindingLogger {
     fn enabled(&self, m: &Metadata) -> bool {
         // ignore the internal uniffi log to prevent infinite loop.
         return m.level() <= Level::Trace && *m.target() != *"breez_liquid_sdk_bindings";
@@ -48,7 +48,7 @@ pub fn set_log_stream(log_stream: Box<dyn LogStream>) -> Result<(), LiquidSdkErr
     LOG_INIT.set(true).map_err(|_| LiquidSdkError::Generic {
         err: "Log stream already created".into(),
     })?;
-    BindingLogger::init(log_stream);
+    UniffiBindingLogger::init(log_stream);
     Ok(())
 }
 
