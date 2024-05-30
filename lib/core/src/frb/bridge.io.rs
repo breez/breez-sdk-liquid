@@ -171,12 +171,14 @@ impl CstDecode<crate::error::LiquidSdkError> for wire_cst_liquid_sdk_error {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::error::LiquidSdkError {
         match self.tag {
-            0 => {
+            0 => crate::error::LiquidSdkError::AlreadyStarted,
+            1 => {
                 let ans = unsafe { self.kind.Generic };
                 crate::error::LiquidSdkError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
+            2 => crate::error::LiquidSdkError::NotStarted,
             _ => unreachable!(),
         }
     }
@@ -699,6 +701,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ba
     req: *mut wire_cst_backup_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_backup_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_disconnect_impl(port_, that)
 }
 
 #[no_mangle]

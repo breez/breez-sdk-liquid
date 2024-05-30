@@ -226,3 +226,7 @@ export const backup = async (req: BackupRequest): Promise<void> => {
 export const restore = async (req: RestoreRequest): Promise<void> => {
     await BreezLiquidSDK.restore(req)
 }
+
+export const disconnect = async (): Promise<void> => {
+    await BreezLiquidSDK.disconnect()
+}

@@ -15,19 +15,12 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$LiquidSdkError {
-  String get err => throw _privateConstructorUsedError;
-
-  @JsonKey(ignore: true)
-  $LiquidSdkErrorCopyWith<LiquidSdkError> get copyWith => throw _privateConstructorUsedError;
-}
+mixin _$LiquidSdkError {}
 
 /// @nodoc
 abstract class $LiquidSdkErrorCopyWith<$Res> {
   factory $LiquidSdkErrorCopyWith(LiquidSdkError value, $Res Function(LiquidSdkError) then) =
       _$LiquidSdkErrorCopyWithImpl<$Res, LiquidSdkError>;
-  @useResult
-  $Res call({String err});
 }
 
 /// @nodoc
@@ -39,27 +32,54 @@ class _$LiquidSdkErrorCopyWithImpl<$Res, $Val extends LiquidSdkError>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_value.copyWith(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkError_GenericImplCopyWith<$Res> implements $LiquidSdkErrorCopyWith<$Res> {
+abstract class _$$LiquidSdkError_AlreadyStartedImplCopyWith<$Res> {
+  factory _$$LiquidSdkError_AlreadyStartedImplCopyWith(_$LiquidSdkError_AlreadyStartedImpl value,
+          $Res Function(_$LiquidSdkError_AlreadyStartedImpl) then) =
+      __$$LiquidSdkError_AlreadyStartedImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$LiquidSdkError_AlreadyStartedImplCopyWithImpl<$Res>
+    extends _$LiquidSdkErrorCopyWithImpl<$Res, _$LiquidSdkError_AlreadyStartedImpl>
+    implements _$$LiquidSdkError_AlreadyStartedImplCopyWith<$Res> {
+  __$$LiquidSdkError_AlreadyStartedImplCopyWithImpl(
+      _$LiquidSdkError_AlreadyStartedImpl _value, $Res Function(_$LiquidSdkError_AlreadyStartedImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$LiquidSdkError_AlreadyStartedImpl extends LiquidSdkError_AlreadyStarted {
+  const _$LiquidSdkError_AlreadyStartedImpl() : super._();
+
+  @override
+  String toString() {
+    return 'LiquidSdkError.alreadyStarted()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$LiquidSdkError_AlreadyStartedImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class LiquidSdkError_AlreadyStarted extends LiquidSdkError {
+  const factory LiquidSdkError_AlreadyStarted() = _$LiquidSdkError_AlreadyStartedImpl;
+  const LiquidSdkError_AlreadyStarted._() : super._();
+}
+
+/// @nodoc
+abstract class _$$LiquidSdkError_GenericImplCopyWith<$Res> {
   factory _$$LiquidSdkError_GenericImplCopyWith(
           _$LiquidSdkError_GenericImpl value, $Res Function(_$LiquidSdkError_GenericImpl) then) =
       __$$LiquidSdkError_GenericImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({String err});
 }
@@ -121,12 +141,51 @@ abstract class LiquidSdkError_Generic extends LiquidSdkError {
   const factory LiquidSdkError_Generic({required final String err}) = _$LiquidSdkError_GenericImpl;
   const LiquidSdkError_Generic._() : super._();
 
-  @override
   String get err;
-  @override
   @JsonKey(ignore: true)
   _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$LiquidSdkError_NotStartedImplCopyWith<$Res> {
+  factory _$$LiquidSdkError_NotStartedImplCopyWith(
+          _$LiquidSdkError_NotStartedImpl value, $Res Function(_$LiquidSdkError_NotStartedImpl) then) =
+      __$$LiquidSdkError_NotStartedImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$LiquidSdkError_NotStartedImplCopyWithImpl<$Res>
+    extends _$LiquidSdkErrorCopyWithImpl<$Res, _$LiquidSdkError_NotStartedImpl>
+    implements _$$LiquidSdkError_NotStartedImplCopyWith<$Res> {
+  __$$LiquidSdkError_NotStartedImplCopyWithImpl(
+      _$LiquidSdkError_NotStartedImpl _value, $Res Function(_$LiquidSdkError_NotStartedImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$LiquidSdkError_NotStartedImpl extends LiquidSdkError_NotStarted {
+  const _$LiquidSdkError_NotStartedImpl() : super._();
+
+  @override
+  String toString() {
+    return 'LiquidSdkError.notStarted()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$LiquidSdkError_NotStartedImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class LiquidSdkError_NotStarted extends LiquidSdkError {
+  const factory LiquidSdkError_NotStarted() = _$LiquidSdkError_NotStartedImpl;
+  const LiquidSdkError_NotStarted._() : super._();
 }
 
 /// @nodoc

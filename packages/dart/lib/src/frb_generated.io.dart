@@ -565,10 +565,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_liquid_sdk_error(LiquidSdkError apiObj, wire_cst_liquid_sdk_error wireObj) {
+    if (apiObj is LiquidSdkError_AlreadyStarted) {
+      wireObj.tag = 0;
+      return;
+    }
     if (apiObj is LiquidSdkError_Generic) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 0;
+      wireObj.tag = 1;
       wireObj.kind.Generic.err = pre_err;
+      return;
+    }
+    if (apiObj is LiquidSdkError_NotStarted) {
+      wireObj.tag = 2;
       return;
     }
   }
@@ -1037,6 +1045,22 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_backup =
       _wire__crate__bindings__BindingLiquidSdk_backupPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_backup_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_disconnect(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_disconnect(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_disconnectPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect');
+  late final _wire__crate__bindings__BindingLiquidSdk_disconnect =
+      _wire__crate__bindings__BindingLiquidSdk_disconnectPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int port_,
