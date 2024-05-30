@@ -1406,6 +1406,10 @@ impl LiquidSdk {
     }
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
+        let input = input
+            .strip_prefix("lightning:")
+            .or(input.strip_prefix("LIGHTNING:"))
+            .unwrap_or(input);
         let invoice = Bolt11Invoice::from_str(input).map_err(|_| PaymentError::InvalidInvoice)?;
 
         // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
