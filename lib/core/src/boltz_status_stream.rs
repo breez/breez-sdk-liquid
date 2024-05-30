@@ -23,8 +23,8 @@ pub(crate) struct BoltzStatusStream {
 
 impl BoltzStatusStream {
     pub(crate) fn new(url: &str, persister: Arc<Persister>) -> Self {
-        let (subscription_notifier, _) = broadcast::channel::<String>(100);
-        let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(100);
+        let (subscription_notifier, _) = broadcast::channel::<String>(30);
+        let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(30);
 
         Self {
             url: url.replace("http", "ws") + "/ws",
