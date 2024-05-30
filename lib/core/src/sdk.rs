@@ -1072,7 +1072,7 @@ impl LiquidSdk {
                                 maybe_payment = Some(details);
                             }
                         },
-                        _ => (),
+                        _ => error!("Received Send Payment pending event for payment without swap ID"),
                     },
                     Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone()
                     {
@@ -1080,7 +1080,7 @@ impl LiquidSdk {
                             debug!("Received Send Payment succeed event");
                             return Ok(details);
                         }
-                        _ => (),
+                        _ => error!("Received Send Payment succeed event for payment without swap ID"),
                     },
                     Ok(event) => debug!("Unhandled event: {event:?}"),
                     Err(e) => debug!("Received error waiting for event: {e:?}"),
