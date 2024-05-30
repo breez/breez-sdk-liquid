@@ -1,10 +1,12 @@
 use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
-use anyhow::Result;
-use once_cell::sync::Lazy;
+use anyhow::{anyhow, Result};
+use once_cell::sync::{Lazy, OnceCell};
 use std::sync::Arc;
+use log::{Level, LevelFilter, Metadata, Record};
 use tokio::runtime::Runtime;
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
+static LOG_INIT: OnceCell<bool> = OnceCell::new();
 
 pub(crate) fn rt() -> &'static Runtime {
     &RT
@@ -20,11 +22,48 @@ impl EventListener for BindingEventListener {
     }
 }
 
+struct BindingLogger {
+    log_stream: StreamSink<LogEntry>,
+}
+
+impl BindingLogger {
+    fn init(log_stream: StreamSink<LogEntry>) {
+        let binding_logger = BindingLogger { log_stream };
+        log::set_boxed_logger(Box::new(binding_logger)).unwrap();
+        log::set_max_level(LevelFilter::Trace);
+    }
+}
+
+impl log::Log for BindingLogger {
+    fn enabled(&self, m: &Metadata) -> bool {
+        m.level() <= Level::Trace
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            self.log_stream.add(LogEntry {
+                line: record.args().to_string(),
+                level: record.level().as_str().to_string(),
+            });
+        }
+    }
+    fn flush(&self) {}
+}
+
 pub fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkError> {
     rt().block_on(async {
         let ln_sdk = LiquidSdk::connect(req).await?;
         Ok(BindingLiquidSdk { sdk: ln_sdk })
     })
+}
+
+/// If used, this must be called before `connect`. It can only be called once.
+pub fn set_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
+    LOG_INIT
+        .set(true)
+        .map_err(|_| anyhow!("Log stream already created"))?;
+    BindingLogger::init(s);
+    Ok(())
 }
 
 pub struct BindingLiquidSdk {
