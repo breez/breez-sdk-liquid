@@ -1,10 +1,7 @@
 mod commands;
 mod persist;
 
-use std::{
-    fs::{self, OpenOptions},
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use breez_liquid_sdk::{
@@ -61,23 +58,7 @@ async fn main() -> Result<()> {
     let data_dir = PathBuf::from(&data_dir_str);
     fs::create_dir_all(&data_dir)?;
 
-    let log_path = args.log_file.unwrap_or(
-        data_dir
-            .join("cli.log")
-            .to_str()
-            .ok_or(anyhow!("Could not create log file"))?
-            .to_string(),
-    );
-    let log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_path)?;
-
-    env_logger::builder()
-        .target(env_logger::Target::Pipe(Box::new(log_file)))
-        .filter(None, log::LevelFilter::Debug)
-        .filter(Some("rustyline"), log::LevelFilter::Warn)
-        .init();
+    LiquidSdk::init_logging(&data_dir_str, None)?;
 
     let persistence = CliPersistence { data_dir };
     let history_file = &persistence.history_file();

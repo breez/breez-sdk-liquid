@@ -10,6 +10,11 @@ RCT_EXTERN_METHOD(
 )
   
 RCT_EXTERN_METHOD(
+    setLogger: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     connect: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject

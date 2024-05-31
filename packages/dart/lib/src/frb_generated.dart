@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.36';
 
   @override
-  int get rustContentHash => 84136112;
+  int get rustContentHash => -532134055;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -95,6 +95,8 @@ abstract class RustLibApi extends BaseApi {
       {required BindingLiquidSdk that, required PrepareSendResponse req, dynamic hint});
 
   Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that, dynamic hint});
+
+  Stream<LogEntry> crateBindingsBreezLogStream({dynamic hint});
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint});
 
@@ -435,6 +437,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Stream<LogEntry> crateBindingsBreezLogStream({dynamic hint}) {
+    final s = RustStreamSink<LogEntry>();
+    unawaited(handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_StreamSink_log_entry_Dco(s);
+        return wire.wire__crate__bindings__breez_log_stream(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCrateBindingsBreezLogStreamConstMeta,
+      argValues: [s],
+      apiImpl: this,
+      hint: hint,
+    )));
+    return s.stream;
+  }
+
+  TaskConstMeta get kCrateBindingsBreezLogStreamConstMeta => const TaskConstMeta(
+        debugName: "breez_log_stream",
+        argNames: ["s"],
+      );
+
+  @override
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -488,6 +515,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
 
   @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AnyhowException(raw as String);
+  }
+
+  @protected
   BindingLiquidSdk
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           dynamic raw) {
@@ -512,6 +545,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<LiquidSdkEvent> dco_decode_StreamSink_liquid_sdk_event_Dco(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Dco(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError();
   }
@@ -733,6 +772,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       routingHints: dco_decode_list_route_hint(arr[9]),
       paymentSecret: dco_decode_list_prim_u_8_strict(arr[10]),
       minFinalCltvExpiryDelta: dco_decode_u_64(arr[11]),
+    );
+  }
+
+  @protected
+  LogEntry dco_decode_log_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LogEntry(
+      line: dco_decode_String(arr[0]),
+      level: dco_decode_String(arr[1]),
     );
   }
 
@@ -963,6 +1013,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_String(deserializer);
+    return AnyhowException(inner);
+  }
+
+  @protected
   BindingLiquidSdk
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer) {
@@ -987,6 +1044,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<LiquidSdkEvent> sse_decode_StreamSink_liquid_sdk_event_Dco(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Dco(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     throw UnimplementedError('Unreachable ()');
   }
@@ -1227,6 +1290,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         routingHints: var_routingHints,
         paymentSecret: var_paymentSecret,
         minFinalCltvExpiryDelta: var_minFinalCltvExpiryDelta);
+  }
+
+  @protected
+  LogEntry sse_decode_log_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_line = sse_decode_String(deserializer);
+    var var_level = sse_decode_String(deserializer);
+    return LogEntry(line: var_line, level: var_level);
   }
 
   @protected
@@ -1524,6 +1595,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
   void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -1551,6 +1628,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(
         self.setupAndSerialize(
             codec: DcoCodec(decodeSuccessData: dco_decode_liquid_sdk_event, decodeErrorData: null)),
+        serializer);
+  }
+
+  @protected
+  void sse_encode_StreamSink_log_entry_Dco(RustStreamSink<LogEntry> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+        self.setupAndSerialize(
+            codec: DcoCodec(decodeSuccessData: dco_decode_log_entry, decodeErrorData: null)),
         serializer);
   }
 
@@ -1752,6 +1838,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_route_hint(self.routingHints, serializer);
     sse_encode_list_prim_u_8_strict(self.paymentSecret, serializer);
     sse_encode_u_64(self.minFinalCltvExpiryDelta, serializer);
+  }
+
+  @protected
+  void sse_encode_log_entry(LogEntry self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.line, serializer);
+    sse_encode_String(self.level, serializer);
   }
 
   @protected

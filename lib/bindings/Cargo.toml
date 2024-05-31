@@ -14,6 +14,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 [dependencies]
 anyhow = { workspace = true }
 breez-liquid-sdk = { path = "../core" }
+log = { workspace = true }
 uniffi = { workspace = true, features = [ "bindgen-tests", "cli" ] }
 # Bindgen used by KMP, version has to match the one supported by KMP
 uniffi_bindgen = "0.25.2"
@@ -21,7 +22,7 @@ uniffi-kotlin-multiplatform = { git = "https://gitlab.com/trixnity/uniffi-kotlin
 camino = "1.1.1"
 thiserror = { workspace = true }
 tokio = { version = "1", features = ["rt"] }
-once_cell = "*"
+once_cell = { workspace = true }
 
 [build-dependencies]
 uniffi = { workspace = true, features = [ "build" ] }

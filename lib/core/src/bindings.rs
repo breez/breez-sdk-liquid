@@ -1,7 +1,12 @@
-use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
+//! Dart / flutter bindings
+
+use std::sync::Arc;
+
 use anyhow::Result;
 use flutter_rust_bridge::frb;
-use std::sync::Arc;
+use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
+
+use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
 
 struct BindingEventListener {
     stream: StreamSink<LiquidSdkEvent>,
@@ -13,9 +18,45 @@ impl EventListener for BindingEventListener {
     }
 }
 
+struct DartBindingLogger {
+    log_stream: StreamSink<LogEntry>,
+}
+
+impl DartBindingLogger {
+    fn init(log_stream: StreamSink<LogEntry>) -> Result<(), SetLoggerError> {
+        let binding_logger: DartBindingLogger = DartBindingLogger { log_stream };
+        log::set_boxed_logger(Box::new(binding_logger))
+            .map(|_| log::set_max_level(LevelFilter::Trace))
+    }
+}
+
+impl log::Log for DartBindingLogger {
+    fn enabled(&self, m: &Metadata) -> bool {
+        m.level() <= Level::Trace
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            let _ = self.log_stream.add(LogEntry {
+                line: record.args().to_string(),
+                level: record.level().as_str().to_string(),
+            });
+        }
+    }
+    fn flush(&self) {}
+}
+
 pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkError> {
     let ln_sdk = LiquidSdk::connect(req).await?;
     Ok(BindingLiquidSdk { sdk: ln_sdk })
+}
+
+/// If used, this must be called before `connect`. It can only be called once.
+pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
+    DartBindingLogger::init(s).map_err(|_| LiquidSdkError::Generic {
+        err: "Log stream already created".into(),
+    })?;
+    Ok(())
 }
 
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {

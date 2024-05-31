@@ -190,6 +190,25 @@ class LNInvoice {
           minFinalCltvExpiryDelta == other.minFinalCltvExpiryDelta;
 }
 
+/// Internal SDK log entry used in the Uniffi and Dart bindings
+class LogEntry {
+  final String line;
+  final String level;
+
+  const LogEntry({
+    required this.line,
+    required this.level,
+  });
+
+  @override
+  int get hashCode => line.hashCode ^ level.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
+}
+
 enum Network {
   /// Mainnet Bitcoin and Liquid chains
   mainnet,

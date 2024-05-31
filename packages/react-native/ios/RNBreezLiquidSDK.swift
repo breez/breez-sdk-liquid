@@ -7,7 +7,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
 
     public static var emitter: RCTEventEmitter!
     public static var hasListeners: Bool = false
-    public static var supportedEvents: [String] = []
+    public static var supportedEvents: [String] = ["breezLiquidSdkLog"]
 
     private var bindingLiquidSdk: BindingLiquidSdk!
 
@@ -61,6 +61,16 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         do {
             var res = try BreezLiquidSDK.parseInvoice(invoice: invoice)
             resolve(BreezLiquidSDKMapper.dictionaryOf(lnInvoice: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(setLogger:reject:)
+    func setLogger(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try BreezLiquidSDK.setLogger(Logger: BreezLiquidSDKLogger())
+            resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
         }

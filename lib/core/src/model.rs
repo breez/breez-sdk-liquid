@@ -567,6 +567,13 @@ impl Payment {
     }
 }
 
+/// Internal SDK log entry used in the Uniffi and Dart bindings
+#[derive(Clone, Debug)]
+pub struct LogEntry {
+    pub line: String,
+    pub level: String,
+}
+
 /// Wrapper for a BOLT11 LN invoice
 #[derive(Clone, Debug, PartialEq)]
 pub struct LNInvoice {

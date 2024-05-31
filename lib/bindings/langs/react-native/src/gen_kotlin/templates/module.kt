@@ -47,7 +47,21 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     {%- if func.name()|ignored_function == false -%}
     {% include "TopLevelFunctionTemplate.kt" %}
     {% endif -%}
-    {%- endfor %}  
+    {%- endfor %}
+    @ReactMethod
+    fun setLogger(promise: Promise) {
+        executor.execute {
+            try {
+                val emitter = reactApplicationContext.getJSModule(RCTDeviceEventEmitter::class.java)
+
+                setLogger(BreezLiquidSDKLogger(emitter))
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 
     @ReactMethod
     fun connect(req: ReadableMap, promise: Promise) {

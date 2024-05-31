@@ -24,6 +24,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr;
 
   @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
+
+  @protected
   BindingLiquidSdk
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           dynamic raw);
@@ -39,6 +42,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<LiquidSdkEvent> dco_decode_StreamSink_liquid_sdk_event_Dco(dynamic raw);
+
+  @protected
+  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Dco(dynamic raw);
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -113,6 +119,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNInvoice dco_decode_ln_invoice(dynamic raw);
 
   @protected
+  LogEntry dco_decode_log_entry(dynamic raw);
+
+  @protected
   Network dco_decode_network(dynamic raw);
 
   @protected
@@ -176,6 +185,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+
+  @protected
   BindingLiquidSdk
       sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer);
@@ -191,6 +203,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<LiquidSdkEvent> sse_decode_StreamSink_liquid_sdk_event_Dco(SseDeserializer deserializer);
+
+  @protected
+  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Dco(SseDeserializer deserializer);
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -265,6 +280,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer);
 
   @protected
+  LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+
+  @protected
   Network sse_decode_network(SseDeserializer deserializer);
 
   @protected
@@ -328,11 +346,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(AnyhowException raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_StreamSink_liquid_sdk_event_Dco(
       RustStreamSink<LiquidSdkEvent> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_String(raw.setupAndSerialize(
         codec: DcoCodec(decodeSuccessData: dco_decode_liquid_sdk_event, decodeErrorData: null)));
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_StreamSink_log_entry_Dco(
+      RustStreamSink<LogEntry> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_String(raw.setupAndSerialize(
+        codec: DcoCodec(decodeSuccessData: dco_decode_log_entry, decodeErrorData: null)));
   }
 
   @protected
@@ -642,6 +674,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_log_entry(LogEntry apiObj, wire_cst_log_entry wireObj) {
+    wireObj.line = cst_encode_String(apiObj.line);
+    wireObj.level = cst_encode_String(apiObj.level);
+  }
+
+  @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
     wireObj.tx_id = cst_encode_String(apiObj.txId);
     wireObj.swap_id = cst_encode_opt_String(apiObj.swapId);
@@ -824,6 +862,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_encode_unit(void raw);
 
   @protected
+  void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
+
+  @protected
   void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer);
 
@@ -838,6 +879,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_liquid_sdk_event_Dco(
       RustStreamSink<LiquidSdkEvent> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_StreamSink_log_entry_Dco(RustStreamSink<LogEntry> self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -910,6 +954,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
 
   @protected
   void sse_encode_network(Network self, SseSerializer serializer);
@@ -1228,6 +1275,22 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
   late final _wire__crate__bindings__BindingLiquidSdk_sync =
       _wire__crate__bindings__BindingLiquidSdk_syncPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__breez_log_stream(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> s,
+  ) {
+    return _wire__crate__bindings__breez_log_stream(
+      port_,
+      s,
+    );
+  }
+
+  late final _wire__crate__bindings__breez_log_streamPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__breez_log_stream');
+  late final _wire__crate__bindings__breez_log_stream = _wire__crate__bindings__breez_log_streamPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void wire__crate__bindings__connect(
     int port_,
@@ -1695,6 +1758,12 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
   @ffi.Uint64()
   external int min_final_cltv_expiry_delta;
+}
+
+final class wire_cst_log_entry extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> line;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> level;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
