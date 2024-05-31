@@ -235,7 +235,7 @@ impl LiquidSdk {
         let cloned = self.clone();
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
-            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            let mut interval = tokio::time::interval(Duration::from_secs(60));
             interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
             loop {
                 tokio::select! {
