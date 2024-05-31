@@ -7,7 +7,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     
     public static var emitter: RCTEventEmitter!
     public static var hasListeners: Bool = false
-    public static var supportedEvents: [String] = []
+    public static var supportedEvents: [String] = ["breezLiquidSdkLog"]
 
     private var bindingLiquidSdk: BindingLiquidSdk!
 
@@ -62,6 +62,16 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     {% include "TopLevelFunctionTemplate.swift" %}
     {% endif -%}
     {%- endfor %}  
+    @objc(setLogStream:reject:)
+    func setLogStream(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+        do {
+            try BreezLiquidSDK.setLogStream(logStream: BreezLiquidSDKLogStream())
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(connect:resolve:reject:)
     func connect(_ req:[String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         if bindingLiquidSdk != nil {

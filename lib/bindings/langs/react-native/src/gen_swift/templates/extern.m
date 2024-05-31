@@ -8,6 +8,11 @@
 {% endif %}
 {%- endfor %}  
 RCT_EXTERN_METHOD(
+    setLogStream: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     connect: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject

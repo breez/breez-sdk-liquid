@@ -1,0 +1,13 @@
+import Foundation
+import BreezLiquidSDK
+
+class BreezLiquidSDKLogStream: LogStream {
+    static let emitterName: String = "breezLiquidSdkLog"
+
+    func log(l: LogEntry) {
+        if RNBreezLiquidSDK.hasListeners {
+            RNBreezLiquidSDK.emitter.sendEvent(withName: BreezLiquidSDKLogStream.emitterName,
+                                         body: BreezLiquidSDKMapper.dictionaryOf(logEntry: l))
+        }
+    }
+}
