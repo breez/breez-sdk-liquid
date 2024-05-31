@@ -1059,10 +1059,10 @@ impl LiquidSdk {
                     refund_private_key: keypair.display_secret().to_string(),
                 };
                 self.persister.insert_send_swap(&swap)?;
-                self.status_stream.track_swap_id(swap_id)?;
                 swap
             }
         };
+        self.status_stream.track_swap_id(&swap.id)?;
 
         let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
         self.wait_for_payment(swap.id, accept_zero_conf)
