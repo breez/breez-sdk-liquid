@@ -66,10 +66,10 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
-    @objc(setLogStream:reject:)
-    func setLogStream(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(setLogger:reject:)
+    func setLogger(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            try BreezLiquidSDK.setLogStream(logStream: BreezLiquidSDKLogStream())
+            try BreezLiquidSDK.setLogger(Logger: BreezLiquidSDKLogger())
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

@@ -1,10 +1,10 @@
 package com.breezliquidsdk
 
 import breez_liquid_sdk.LogEntry
-import breez_liquid_sdk.LogStream
+import breez_liquid_sdk.Logger
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 
-class BreezLiquidSDKLogStream(private val emitter: RCTDeviceEventEmitter) : LogStream {
+class BreezLiquidSDKLogger(private val emitter: RCTDeviceEventEmitter) : Logger {
     companion object {
         var emitterName = "breezLiquidSdkLog"
     }

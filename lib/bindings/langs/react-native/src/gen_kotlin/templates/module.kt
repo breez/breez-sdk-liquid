@@ -49,12 +49,12 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
     {% endif -%}
     {%- endfor %}
     @ReactMethod
-    fun setLogStream(promise: Promise) {
+    fun setLogger(promise: Promise) {
         executor.execute {
             try {
                 val emitter = reactApplicationContext.getJSModule(RCTDeviceEventEmitter::class.java)
 
-                setLogStream(BreezLiquidSDKLogStream(emitter))
+                setLogger(BreezLiquidSDKLogger(emitter))
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 e.printStackTrace()

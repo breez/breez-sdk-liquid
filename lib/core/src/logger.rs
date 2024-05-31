@@ -79,6 +79,6 @@ pub(super) fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>)
     Ok(())
 }
 
-pub trait LogStream: Send + Sync {
+pub trait Logger: Send + Sync {
     fn log(&self, l: LogEntry);
 }

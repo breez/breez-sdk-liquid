@@ -62,10 +62,10 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     {% include "TopLevelFunctionTemplate.swift" %}
     {% endif -%}
     {%- endfor %}  
-    @objc(setLogStream:reject:)
-    func setLogStream(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    @objc(setLogger:reject:)
+    func setLogger(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         do {
-            try BreezLiquidSDK.setLogStream(logStream: BreezLiquidSDKLogStream())
+            try BreezLiquidSDK.setLogger(Logger: BreezLiquidSDKLogger())
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)

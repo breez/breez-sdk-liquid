@@ -150,7 +150,7 @@ callback interface EventListener {
     void on_event(LiquidSdkEvent e);
 };
 
-callback interface LogStream {
+callback interface Logger {
     void log(LogEntry l);
 };
 
@@ -164,7 +164,7 @@ namespace breez_liquid_sdk {
     BindingLiquidSdk connect(ConnectRequest req);
 
     [Throws=LiquidSdkError]
-    void set_log_stream(LogStream log_stream);
+    void set_logger(Logger logger);
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string invoice);

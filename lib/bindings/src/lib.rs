@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use breez_liquid_sdk::logger::LogStream;
+use breez_liquid_sdk::logger::Logger;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
@@ -17,12 +17,12 @@ fn rt() -> &'static Runtime {
 }
 
 struct UniffiBindingLogger {
-    log_stream: Box<dyn LogStream>,
+    logger: Box<dyn Logger>,
 }
 
 impl UniffiBindingLogger {
-    fn init(log_stream: Box<dyn LogStream>) -> Result<(), SetLoggerError> {
-        let binding_logger: UniffiBindingLogger = UniffiBindingLogger { log_stream };
+    fn init(logger: Box<dyn Logger>) -> Result<(), SetLoggerError> {
+        let binding_logger: UniffiBindingLogger = UniffiBindingLogger { logger };
         log::set_boxed_logger(Box::new(binding_logger))
             .map(|_| log::set_max_level(LevelFilter::Trace))
     }
@@ -35,7 +35,7 @@ impl log::Log for UniffiBindingLogger {
     }
 
     fn log(&self, record: &Record) {
-        self.log_stream.log(LogEntry {
+        self.logger.log(LogEntry {
             line: record.args().to_string(),
             level: record.level().as_str().to_string(),
         });
@@ -44,9 +44,9 @@ impl log::Log for UniffiBindingLogger {
 }
 
 /// If used, this must be called before `connect`
-pub fn set_log_stream(log_stream: Box<dyn LogStream>) -> Result<(), LiquidSdkError> {
-    UniffiBindingLogger::init(log_stream).map_err(|_| LiquidSdkError::Generic {
-        err: "Log stream already created".into(),
+pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), LiquidSdkError> {
+    UniffiBindingLogger::init(logger).map_err(|_| LiquidSdkError::Generic {
+        err: "Logger already created".into(),
     })?;
     Ok(())
 }

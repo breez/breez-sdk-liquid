@@ -170,7 +170,7 @@ export enum PaymentType {
 
 export type EventListener = (e: LiquidSdkEvent) => void
 
-export type LogStream = (logEntry: LogEntry) => void
+export type Logger = (logEntry: LogEntry) => void
 
 export const connect = async (req: ConnectRequest): Promise<void> => {
     const response = await BreezLiquidSDK.connect(req)
@@ -184,11 +184,11 @@ export const addEventListener = async (listener: EventListener): Promise<string>
     return response
 }
 
-export const setLogStream = async (logStream: LogStream): Promise<EmitterSubscription> => {
-    const subscription = BreezLiquidSDKEmitter.addListener("breezLiquidSdkLog", logStream)
+export const setLogger = async (logger: Logger): Promise<EmitterSubscription> => {
+    const subscription = BreezLiquidSDKEmitter.addListener("breezLiquidSdkLog", logger)
 
     try {
-        await BreezLiquidSDK.setLogStream()
+        await BreezLiquidSDK.setLogger()
     } catch {}
 
     return subscription
