@@ -607,7 +607,17 @@ impl LiquidSdk {
         );
 
         let swap = match self.persister.fetch_send_swap_by_invoice(&req.invoice)? {
-            Some(swap) => swap,
+            Some(swap) => {
+                if swap.state != TimedOut {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "Cannot attempt send {}: payment state is invalid ({:?})",
+                            swap.id, swap.state
+                        ),
+                    });
+                }
+                swap
+            }
             None => {
                 let keypair = utils::generate_keypair();
                 let refund_public_key = boltz_client::PublicKey {
