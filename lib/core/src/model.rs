@@ -1,9 +1,9 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
 };
-use boltz_client::{Keypair, ToHex};
+use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
 use lwk_signer::SwSigner;
 use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -217,14 +217,10 @@ impl SendSwap {
         utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
     }
 
-    pub(crate) fn get_boltz_create_response(
-        &self,
-    ) -> Result<CreateSubmarineResponse, PaymentError> {
+    pub(crate) fn get_boltz_create_response(&self) -> Result<CreateSubmarineResponse> {
         let internal_create_response: crate::persist::send::InternalCreateSubmarineResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
-                PaymentError::Generic {
-                    err: format!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}"),
-                }
+                anyhow!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}")
             })?;
 
         let res = CreateSubmarineResponse {
@@ -240,6 +236,19 @@ impl SendSwap {
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
+    }
+
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
+        LBtcSwapScriptV2::submarine_from_swap_resp(
+            &self.get_boltz_create_response()?,
+            self.get_refund_keypair()?.public_key().into(),
+        )
+        .map_err(|e| PaymentError::Generic {
+            err: format!(
+                "Failed to create swap script for Send Swap {}: {e:?}",
+                self.id
+            ),
+        })
     }
 
     pub(crate) fn from_boltz_struct_to_json(
