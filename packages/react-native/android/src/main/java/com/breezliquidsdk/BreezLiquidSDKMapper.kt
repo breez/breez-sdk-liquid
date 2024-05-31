@@ -34,32 +34,78 @@ fun asBackupRequestList(arr: ReadableArray): List<BackupRequest> {
     return list
 }
 
-fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
+fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
-            connectRequest,
+            config,
             arrayOf(
-                "mnemonic",
+                "boltzUrl",
+                "electrumUrl",
+                "workingDir",
                 "network",
+                "paymentTimeoutSec",
             ),
         )
     ) {
         return null
     }
-    val mnemonic = connectRequest.getString("mnemonic")!!
-    val network = connectRequest.getString("network")?.let { asNetwork(it) }!!
-    val dataDir = if (hasNonNullKey(connectRequest, "dataDir")) connectRequest.getString("dataDir") else null
-    return ConnectRequest(
-        mnemonic,
+    val boltzUrl = config.getString("boltzUrl")!!
+    val electrumUrl = config.getString("electrumUrl")!!
+    val workingDir = config.getString("workingDir")!!
+    val network = config.getString("network")?.let { asNetwork(it) }!!
+    val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
+    return Config(
+        boltzUrl,
+        electrumUrl,
+        workingDir,
         network,
-        dataDir,
+        paymentTimeoutSec,
+    )
+}
+
+fun readableMapOf(config: Config): ReadableMap {
+    return readableMapOf(
+        "boltzUrl" to config.boltzUrl,
+        "electrumUrl" to config.electrumUrl,
+        "workingDir" to config.workingDir,
+        "network" to config.network.name.lowercase(),
+        "paymentTimeoutSec" to config.paymentTimeoutSec,
+    )
+}
+
+fun asConfigList(arr: ReadableArray): List<Config> {
+    val list = ArrayList<Config>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asConfig(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
+    if (!validateMandatoryFields(
+            connectRequest,
+            arrayOf(
+                "config",
+                "mnemonic",
+            ),
+        )
+    ) {
+        return null
+    }
+    val config = connectRequest.getMap("config")?.let { asConfig(it) }!!
+    val mnemonic = connectRequest.getString("mnemonic")!!
+    return ConnectRequest(
+        config,
+        mnemonic,
     )
 }
 
 fun readableMapOf(connectRequest: ConnectRequest): ReadableMap {
     return readableMapOf(
+        "config" to readableMapOf(connectRequest.config),
         "mnemonic" to connectRequest.mnemonic,
-        "network" to connectRequest.network.name.lowercase(),
-        "dataDir" to connectRequest.dataDir,
     )
 }
 

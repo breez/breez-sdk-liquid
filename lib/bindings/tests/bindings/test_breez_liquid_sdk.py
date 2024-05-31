@@ -8,9 +8,9 @@ class SDKListener(breez_liquid_sdk.EventListener):
 
 def test():
     mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-
-    connect_req = breez_liquid_sdk.ConnectRequest(mnemonic=mnemonic, network=breez_liquid_sdk.Network.LIQUID_TESTNET)
-    sdk = breez_liquid_sdk.connect(connect_req)
+    config = breez_liquid_sdk.default_config(breez_liquid_sdk.Network.TESTNET)
+    connect_request = breez_liquid_sdk.ConnectRequest(config=config, mnemonic=mnemonic)
+    sdk = breez_liquid_sdk.connect(connect_request)
 
     listener_id = sdk.add_event_listener(SDKListener())
 

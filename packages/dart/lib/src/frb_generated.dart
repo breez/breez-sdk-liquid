@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.36';
 
   @override
-  int get rustContentHash => -532134055;
+  int get rustContentHash => 1028270774;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -99,6 +99,8 @@ abstract class RustLibApi extends BaseApi {
   Stream<LogEntry> crateBindingsBreezLogStream({dynamic hint});
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint});
+
+  Future<Config> crateBindingsDefaultConfig({required Network network, dynamic hint});
 
   Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint});
 
@@ -486,6 +488,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<Config> crateBindingsDefaultConfig({required Network network, dynamic hint}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_network(network);
+        return wire.wire__crate__bindings__default_config(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_config,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateBindingsDefaultConfigConstMeta,
+      argValues: [network],
+      apiImpl: this,
+      hint: hint,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsDefaultConfigConstMeta => const TaskConstMeta(
+        debugName: "default_config",
+        argNames: ["network"],
+      );
+
+  @override
   Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -638,14 +663,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Config dco_decode_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return Config(
+      boltzUrl: dco_decode_String(arr[0]),
+      electrumUrl: dco_decode_String(arr[1]),
+      workingDir: dco_decode_String(arr[2]),
+      network: dco_decode_network(arr[3]),
+      paymentTimeoutSec: dco_decode_u_64(arr[4]),
+    );
+  }
+
+  @protected
   ConnectRequest dco_decode_connect_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ConnectRequest(
       mnemonic: dco_decode_String(arr[0]),
-      dataDir: dco_decode_opt_String(arr[1]),
-      network: dco_decode_network(arr[2]),
+      config: dco_decode_config(arr[1]),
     );
   }
 
@@ -1135,12 +1173,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Config sse_decode_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_boltzUrl = sse_decode_String(deserializer);
+    var var_electrumUrl = sse_decode_String(deserializer);
+    var var_workingDir = sse_decode_String(deserializer);
+    var var_network = sse_decode_network(deserializer);
+    var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
+    return Config(
+        boltzUrl: var_boltzUrl,
+        electrumUrl: var_electrumUrl,
+        workingDir: var_workingDir,
+        network: var_network,
+        paymentTimeoutSec: var_paymentTimeoutSec);
+  }
+
+  @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_mnemonic = sse_decode_String(deserializer);
-    var var_dataDir = sse_decode_opt_String(deserializer);
-    var var_network = sse_decode_network(deserializer);
-    return ConnectRequest(mnemonic: var_mnemonic, dataDir: var_dataDir, network: var_network);
+    var var_config = sse_decode_config(deserializer);
+    return ConnectRequest(mnemonic: var_mnemonic, config: var_config);
   }
 
   @protected
@@ -1720,11 +1773,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_config(Config self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.boltzUrl, serializer);
+    sse_encode_String(self.electrumUrl, serializer);
+    sse_encode_String(self.workingDir, serializer);
+    sse_encode_network(self.network, serializer);
+    sse_encode_u_64(self.paymentTimeoutSec, serializer);
+  }
+
+  @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.mnemonic, serializer);
-    sse_encode_opt_String(self.dataDir, serializer);
-    sse_encode_network(self.network, serializer);
+    sse_encode_config(self.config, serializer);
   }
 
   @protected

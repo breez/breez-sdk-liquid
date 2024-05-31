@@ -8,7 +8,7 @@
 
 import React, { useState } from "react"
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
-import { addEventListener, Network, getInfo, connect, removeEventListener } from "@breeztech/react-native-breez-liquid-sdk"
+import { addEventListener, connect, defaultConfig, getInfo, Network, removeEventListener } from "@breeztech/react-native-breez-liquid-sdk"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 
@@ -49,7 +49,10 @@ const App = () => {
                     setSecureItem(MNEMONIC_STORE, mnemonic)
                 }
 
-                await connect({ mnemonic, network: Network.LIQUID_TESTNET })
+                const config = await defaultConfig(Network.TESTNET)
+                addLine("defaultConfig", JSON.stringify(config))
+
+                await connect({ config, mnemonic })
                 addLine("connect", null)
 
                 listenerId = await addEventListener(eventHandler)

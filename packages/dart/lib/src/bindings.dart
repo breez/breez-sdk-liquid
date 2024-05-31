@@ -18,6 +18,9 @@ Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
 Stream<LogEntry> breezLogStream({dynamic hint}) =>
     RustLib.instance.api.crateBindingsBreezLogStream(hint: hint);
 
+Future<Config> defaultConfig({required Network network, dynamic hint}) =>
+    RustLib.instance.api.crateBindingsDefaultConfig(network: network, hint: hint);
+
 Future<LNInvoice> parseInvoice({required String input, dynamic hint}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input, hint: hint);
 
