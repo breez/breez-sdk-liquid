@@ -17,19 +17,19 @@ impl EventListener for BindingEventListener {
     }
 }
 
-struct BindingLogger {
+struct DartBindingLogger {
     log_stream: StreamSink<LogEntry>,
 }
 
-impl BindingLogger {
+impl DartBindingLogger {
     fn init(log_stream: StreamSink<LogEntry>) {
-        let binding_logger = BindingLogger { log_stream };
+        let binding_logger = DartBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger)).unwrap();
         log::set_max_level(LevelFilter::Trace);
     }
 }
 
-impl log::Log for BindingLogger {
+impl log::Log for DartBindingLogger {
     fn enabled(&self, m: &Metadata) -> bool {
         m.level() <= Level::Trace
     }
@@ -55,7 +55,7 @@ pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
     LOG_INIT
         .set(true)
         .map_err(|_| anyhow!("Log stream already created"))?;
-    BindingLogger::init(s);
+    DartBindingLogger::init(s);
     Ok(())
 }
 
