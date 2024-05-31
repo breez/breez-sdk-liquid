@@ -850,17 +850,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 8:
         return PaymentError_PairsNotFound();
       case 9:
-        return PaymentError_PersistError();
+        return PaymentError_PaymentTimeout();
       case 10:
+        return PaymentError_PersistError();
+      case 11:
         return PaymentError_Refunded(
           err: dco_decode_String(raw[1]),
           refundTxId: dco_decode_String(raw[2]),
         );
-      case 11:
+      case 12:
         return PaymentError_SendError(
           err: dco_decode_String(raw[1]),
         );
-      case 12:
+      case 13:
         return PaymentError_SignerError(
           err: dco_decode_String(raw[1]),
         );
@@ -1380,15 +1382,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 8:
         return PaymentError_PairsNotFound();
       case 9:
-        return PaymentError_PersistError();
+        return PaymentError_PaymentTimeout();
       case 10:
+        return PaymentError_PersistError();
+      case 11:
         var var_err = sse_decode_String(deserializer);
         var var_refundTxId = sse_decode_String(deserializer);
         return PaymentError_Refunded(err: var_err, refundTxId: var_refundTxId);
-      case 11:
+      case 12:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_SendError(err: var_err);
-      case 12:
+      case 13:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_SignerError(err: var_err);
       default:
@@ -1908,17 +1912,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(err, serializer);
       case PaymentError_PairsNotFound():
         sse_encode_i_32(8, serializer);
-      case PaymentError_PersistError():
+      case PaymentError_PaymentTimeout():
         sse_encode_i_32(9, serializer);
-      case PaymentError_Refunded(err: final err, refundTxId: final refundTxId):
+      case PaymentError_PersistError():
         sse_encode_i_32(10, serializer);
+      case PaymentError_Refunded(err: final err, refundTxId: final refundTxId):
+        sse_encode_i_32(11, serializer);
         sse_encode_String(err, serializer);
         sse_encode_String(refundTxId, serializer);
       case PaymentError_SendError(err: final err):
-        sse_encode_i_32(11, serializer);
+        sse_encode_i_32(12, serializer);
         sse_encode_String(err, serializer);
       case PaymentError_SignerError(err: final err):
-        sse_encode_i_32(12, serializer);
+        sse_encode_i_32(13, serializer);
         sse_encode_String(err, serializer);
     }
   }

@@ -441,6 +441,7 @@ impl CstDecode<crate::model::PaymentState> for i32 {
             1 => crate::model::PaymentState::Pending,
             2 => crate::model::PaymentState::Complete,
             3 => crate::model::PaymentState::Failed,
+            4 => crate::model::PaymentState::TimedOut,
             _ => unreachable!("Invalid variant for PaymentState: {}", self),
         }
     }
@@ -861,9 +862,12 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::PairsNotFound;
             }
             9 => {
-                return crate::error::PaymentError::PersistError;
+                return crate::error::PaymentError::PaymentTimeout;
             }
             10 => {
+                return crate::error::PaymentError::PersistError;
+            }
+            11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 let mut var_refundTxId = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
@@ -871,11 +875,11 @@ impl SseDecode for crate::error::PaymentError {
                     refund_tx_id: var_refundTxId,
                 };
             }
-            11 => {
+            12 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            12 => {
+            13 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -895,6 +899,7 @@ impl SseDecode for crate::model::PaymentState {
             1 => crate::model::PaymentState::Pending,
             2 => crate::model::PaymentState::Complete,
             3 => crate::model::PaymentState::Failed,
+            4 => crate::model::PaymentState::TimedOut,
             _ => unreachable!("Invalid variant for PaymentState: {}", inner),
         };
     }
@@ -1314,18 +1319,19 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
                 [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::PaymentTimeout => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [10.into_dart()].into_dart(),
             crate::error::PaymentError::Refunded { err, refund_tx_id } => [
-                10.into_dart(),
+                11.into_dart(),
                 err.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [13.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -1344,6 +1350,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
             Self::Pending => 1.into_dart(),
             Self::Complete => 2.into_dart(),
             Self::Failed => 3.into_dart(),
+            Self::TimedOut => 4.into_dart(),
         }
     }
 }
@@ -1833,20 +1840,23 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PairsNotFound => {
                 <i32>::sse_encode(8, serializer);
             }
-            crate::error::PaymentError::PersistError => {
+            crate::error::PaymentError::PaymentTimeout => {
                 <i32>::sse_encode(9, serializer);
             }
-            crate::error::PaymentError::Refunded { err, refund_tx_id } => {
+            crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(10, serializer);
+            }
+            crate::error::PaymentError::Refunded { err, refund_tx_id } => {
+                <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(refund_tx_id, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(11, serializer);
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(12, serializer);
+                <i32>::sse_encode(13, serializer);
                 <String>::sse_encode(err, serializer);
             }
         }
@@ -1862,6 +1872,7 @@ impl SseEncode for crate::model::PaymentState {
                 crate::model::PaymentState::Pending => 1,
                 crate::model::PaymentState::Complete => 2,
                 crate::model::PaymentState::Failed => 3,
+                crate::model::PaymentState::TimedOut => 4,
                 _ => {
                     unimplemented!("");
                 }

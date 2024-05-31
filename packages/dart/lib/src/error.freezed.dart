@@ -639,6 +639,47 @@ abstract class PaymentError_PairsNotFound extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
+  factory _$$PaymentError_PaymentTimeoutImplCopyWith(
+          _$PaymentError_PaymentTimeoutImpl value, $Res Function(_$PaymentError_PaymentTimeoutImpl) then) =
+      __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentTimeoutImpl>
+    implements _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
+  __$$PaymentError_PaymentTimeoutImplCopyWithImpl(
+      _$PaymentError_PaymentTimeoutImpl _value, $Res Function(_$PaymentError_PaymentTimeoutImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_PaymentTimeoutImpl extends PaymentError_PaymentTimeout {
+  const _$PaymentError_PaymentTimeoutImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.paymentTimeout()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PaymentError_PaymentTimeoutImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_PaymentTimeout extends PaymentError {
+  const factory PaymentError_PaymentTimeout() = _$PaymentError_PaymentTimeoutImpl;
+  const PaymentError_PaymentTimeout._() : super._();
+}
+
+/// @nodoc
 abstract class _$$PaymentError_PersistErrorImplCopyWith<$Res> {
   factory _$$PaymentError_PersistErrorImplCopyWith(
           _$PaymentError_PersistErrorImpl value, $Res Function(_$PaymentError_PersistErrorImpl) then) =

@@ -270,6 +270,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]
     pub(crate) create_response_json: String,
+    pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
@@ -281,6 +282,10 @@ pub(crate) struct ReceiveSwap {
     pub(crate) state: PaymentState,
 }
 impl ReceiveSwap {
+    pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
+    }
+
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
         let internal_create_response: crate::persist::receive::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
@@ -373,6 +378,12 @@ pub enum PaymentState {
     ///
     /// This is the status when a swap refund was initiated and the refund tx is confirmed.
     Failed = 3,
+
+    /// ## Send Swaps
+    ///
+    /// This covers the case when the swap state is still Created and the swap fails to reach the
+    /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+    TimedOut = 4,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -387,6 +398,7 @@ impl FromSql for PaymentState {
                 1 => Ok(PaymentState::Pending),
                 2 => Ok(PaymentState::Complete),
                 3 => Ok(PaymentState::Failed),
+                4 => Ok(PaymentState::TimedOut),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

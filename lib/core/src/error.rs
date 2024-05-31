@@ -59,6 +59,9 @@ pub enum PaymentError {
     #[error("Boltz did not return any pairs from the request")]
     PairsNotFound,
 
+    #[error("The payment timed out")]
+    PaymentTimeout,
+
     #[error("Could not store the swap details locally")]
     PersistError,
 

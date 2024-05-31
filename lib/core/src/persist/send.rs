@@ -46,6 +46,29 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn update_send_swaps_by_state(
+        &self,
+        from_state: PaymentState,
+        to_state: PaymentState,
+    ) -> Result<()> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE send_swaps
+            SET
+                state = :to_state
+            WHERE
+                state = :from_state
+            ",
+            named_params! {
+                ":from_state": from_state,
+                ":to_state": to_state,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+
+        Ok(())
+    }
+
     fn list_send_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {

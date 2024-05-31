@@ -19,7 +19,7 @@ use boltz_client::{
         boltzv2::*,
         liquidv2::LBtcSwapTxV2,
     },
-    util::secrets::{LiquidSwapKey, Preimage, SwapKey},
+    util::secrets::Preimage,
     Amount, Bolt11Invoice, ElementsAddress, Keypair, LBtcSwapScriptV2,
 };
 use log::{debug, error, info, warn};
@@ -133,6 +133,9 @@ impl LiquidSdk {
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         let mut is_started = self.is_started.write().await;
         let start_ts = Instant::now();
+
+        self.persister
+            .update_send_swaps_by_state(Created, TimedOut)?;
         self.start_background_tasks().await?;
         *is_started = true;
 
@@ -265,13 +268,18 @@ impl LiquidSdk {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed, Pending) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed, Complete) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
+            }),
+
+            (Created, TimedOut) => Ok(()),
+            (_, TimedOut) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
             (_, Failed) => Ok(()),
@@ -646,6 +654,7 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
+                    TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
@@ -1019,6 +1028,7 @@ impl LiquidSdk {
         })?;
 
         let swap_id = &create_response.id;
+        let accept_zero_conf = create_response.accept_zero_conf;
         let create_response_json = SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         let payer_amount_sat = req.fees_sat + receiver_amount_sat;
@@ -1035,28 +1045,59 @@ impl LiquidSdk {
             refund_private_key: keypair.display_secret().to_string(),
         };
         self.persister.insert_send_swap(&swap)?;
-
-        let mut events_stream = self.event_manager.subscribe();
         self.status_stream.track_swap_id(swap_id)?;
 
+        self.wait_for_payment(swap.id, accept_zero_conf)
+            .await
+            .map(|payment| SendPaymentResponse { payment })
+    }
+
+    async fn wait_for_payment(
+        &self,
+        swap_id: String,
+        accept_zero_conf: bool,
+    ) -> Result<Payment, PaymentError> {
+        let timeout_fut = tokio::time::sleep(Duration::from_secs(15));
+        tokio::pin!(timeout_fut);
+
+        let mut events_stream = self.event_manager.subscribe();
+        let mut maybe_payment: Option<Payment> = None;
+
         loop {
-            match events_stream.recv().await {
-                Ok(LiquidSdkEvent::PaymentFailed { details }) => match details.swap_id {
-                    Some(id) if id == swap.id => {
-                        return Err(PaymentError::SendError {
-                            err: "Payment failed".to_string(),
-                        })
-                    }
-                    _ => (),
+            tokio::select! {
+                _ = &mut timeout_fut => match maybe_payment {
+                    Some(payment) => return Ok(payment),
+                    None => {
+                        debug!("Timeout occured without payment, set swap to timed out");
+                        self.try_handle_send_swap_update(&swap_id, TimedOut, None, None, None).await?;
+                        return Err(PaymentError::PaymentTimeout)
+                    },
                 },
-                Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone() {
-                    Some(id) if id == swap.id => {
-                        return Ok(SendPaymentResponse { payment: details })
-                    }
-                    _ => (),
-                },
-                Ok(event) => debug!("Unhandled event: {event:?}"),
-                Err(e) => debug!("Received error waiting for event: {e:?}"),
+                event = events_stream.recv() => match event {
+                    Ok(LiquidSdkEvent::PaymentPending { details }) => match details.swap_id.clone() {
+                        Some(id) if id == swap_id => match accept_zero_conf {
+                            true => {
+                                debug!("Received Send Payment pending event with zero-conf accepted");
+                                return Ok(details)
+                            }
+                            false => {
+                                debug!("Received Send Payment pending event, waiting for confirmation");
+                                maybe_payment = Some(details);
+                            }
+                        },
+                        _ => error!("Received Send Payment pending event for payment without swap ID"),
+                    },
+                    Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone()
+                    {
+                        Some(id) if id == swap_id => {
+                            debug!("Received Send Payment succeed event");
+                            return Ok(details);
+                        }
+                        _ => error!("Received Send Payment succeed event for payment without swap ID"),
+                    },
+                    Ok(event) => debug!("Unhandled event: {event:?}"),
+                    Err(e) => debug!("Received error waiting for event: {e:?}"),
+                }
             }
         }
     }
@@ -1073,13 +1114,11 @@ impl LiquidSdk {
         self.try_handle_receive_swap_update(swap_id, Pending, None)
             .await?;
 
-        let lsk = self.get_liquid_swap_key()?;
-        let our_keys = lsk.keypair;
-
+        let keypair = ongoing_receive_swap.get_claim_keypair()?;
         let create_response = ongoing_receive_swap.get_boltz_create_response()?;
         let swap_script = LBtcSwapScriptV2::reverse_from_swap_resp(
             &create_response,
-            our_keys.public_key().into(),
+            keypair.public_key().into(),
         )?;
 
         let claim_address = self.next_unused_address().await?.to_string();
@@ -1092,7 +1131,7 @@ impl LiquidSdk {
         )?;
 
         let claim_tx = claim_tx_wrapper.sign_claim(
-            &our_keys,
+            &keypair,
             &Preimage::from_str(&ongoing_receive_swap.preimage)?,
             Amount::from_sat(ongoing_receive_swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
@@ -1173,7 +1212,7 @@ impl LiquidSdk {
 
         debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
-        let lsk = self.get_liquid_swap_key()?;
+        let keypair = utils::generate_keypair();
 
         let preimage = Preimage::new();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
@@ -1184,7 +1223,7 @@ impl LiquidSdk {
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
-            claim_public_key: lsk.keypair.public_key().into(),
+            claim_public_key: keypair.public_key().into(),
             address: None,
             address_signature: None,
             referral_id: None,
@@ -1215,6 +1254,7 @@ impl LiquidSdk {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
+                claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
                 payer_amount_sat,
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
@@ -1395,20 +1435,6 @@ impl LiquidSdk {
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
         self.persister.restore_from_backup(backup_path)
-    }
-
-    fn get_liquid_swap_key(&self) -> Result<LiquidSwapKey, PaymentError> {
-        let mnemonic = self
-            .lwk_signer
-            .mnemonic()
-            .ok_or(PaymentError::SignerError {
-                err: "Mnemonic not found".to_string(),
-            })?;
-        let swap_key =
-            SwapKey::from_reverse_account(&mnemonic.to_string(), "", self.network.into(), 0)?;
-        LiquidSwapKey::try_from(swap_key).map_err(|e| PaymentError::SignerError {
-            err: format!("Could not create LiquidSwapKey: {e:?}"),
-        })
     }
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
