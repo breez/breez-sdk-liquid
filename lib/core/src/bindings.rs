@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use flutter_rust_bridge::frb;
-use log::{Level, LevelFilter, Metadata, Record};
+use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 
 use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
 
@@ -23,14 +23,10 @@ struct DartBindingLogger {
 }
 
 impl DartBindingLogger {
-    fn init(log_stream: StreamSink<LogEntry>) {
-        let binding_logger = DartBindingLogger { log_stream };
+    fn init(log_stream: StreamSink<LogEntry>) -> Result<(), SetLoggerError> {
+        let binding_logger: DartBindingLogger = DartBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger))
             .map(|_| log::set_max_level(LevelFilter::Trace))
-            .map_err(|_| LiquidSdkError::Generic {
-                err: "Log stream already created".into(),
-            })
-            .unwrap();
     }
 }
 
@@ -57,7 +53,9 @@ pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkE
 
 /// If used, this must be called before `connect`. It can only be called once.
 pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
-    DartBindingLogger::init(s);
+    DartBindingLogger::init(s).map_err(|_| LiquidSdkError::Generic {
+        err: "Log stream already created".into(),
+    })?;
     Ok(())
 }
 
