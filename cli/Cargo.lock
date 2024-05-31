@@ -419,7 +419,6 @@ dependencies = [
  "lwk_common",
  "lwk_signer",
  "lwk_wollet",
- "once_cell",
  "openssl",
  "rusqlite",
  "rusqlite_migration",
