@@ -96,10 +96,18 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_send_swap(&self, id: &str) -> Result<Option<SendSwap>> {
+    pub(crate) fn fetch_send_swap_by_id(&self, id: &str) -> Result<Option<SendSwap>> {
         let con: Connection = self.get_connection()?;
         let query = Self::list_send_swaps_query(vec!["id = ?1".to_string()]);
         let res = con.query_row(&query, [id], Self::sql_row_to_send_swap);
+
+        Ok(res.ok())
+    }
+
+    pub(crate) fn fetch_send_swap_by_invoice(&self, invoice: &str) -> Result<Option<SendSwap>> {
+        let con: Connection = self.get_connection()?;
+        let query = Self::list_send_swaps_query(vec!["invoice= ?1".to_string()]);
+        let res = con.query_row(&query, [invoice], Self::sql_row_to_send_swap);
 
         Ok(res.ok())
     }
