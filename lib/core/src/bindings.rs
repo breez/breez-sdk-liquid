@@ -1,15 +1,11 @@
 //! Dart / flutter bindings
 
-use std::sync::Arc;
-
 use anyhow::{anyhow, Result};
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record};
-use once_cell::sync::OnceCell;
 
 use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
-
-static LOG_INIT: OnceCell<bool> = OnceCell::new();
+use std::sync::Arc;
 
 struct BindingEventListener {
     stream: StreamSink<LiquidSdkEvent>,
@@ -28,7 +24,9 @@ struct DartBindingLogger {
 impl DartBindingLogger {
     fn init(log_stream: StreamSink<LogEntry>) {
         let binding_logger = DartBindingLogger { log_stream };
-        log::set_boxed_logger(Box::new(binding_logger)).unwrap();
+        log::set_boxed_logger(Box::new(binding_logger))
+            .map_err(|_| anyhow!("Log stream already created"))
+            .unwrap();
         log::set_max_level(LevelFilter::Trace);
     }
 }
@@ -56,9 +54,6 @@ pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, LiquidSdkE
 
 /// If used, this must be called before `connect`. It can only be called once.
 pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
-    LOG_INIT
-        .set(true)
-        .map_err(|_| anyhow!("Log stream already created"))?;
     DartBindingLogger::init(s);
     Ok(())
 }
