@@ -15,6 +15,14 @@ flutter_rust_bridge::frb_generated_boilerplate_io!();
 
 // Section: dart2rust
 
+impl CstDecode<flutter_rust_bridge::for_generated::anyhow::Error>
+    for *mut wire_cst_list_prim_u_8_strict
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> flutter_rust_bridge::for_generated::anyhow::Error {
+        unimplemented!()
+    }
+}
 impl CstDecode<BindingLiquidSdk> for usize {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> BindingLiquidSdk {
@@ -50,6 +58,17 @@ impl
         self,
     ) -> StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
     {
+        let raw: String = self.cst_decode();
+        StreamSink::deserialize(raw)
+    }
+}
+impl CstDecode<StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec>>
+    for *mut wire_cst_list_prim_u_8_strict
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(
+        self,
+    ) -> StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec> {
         let raw: String = self.cst_decode();
         StreamSink::deserialize(raw)
     }
@@ -283,6 +302,15 @@ impl CstDecode<crate::model::LNInvoice> for wire_cst_ln_invoice {
             routing_hints: self.routing_hints.cst_decode(),
             payment_secret: self.payment_secret.cst_decode(),
             min_final_cltv_expiry_delta: self.min_final_cltv_expiry_delta.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::LogEntry> for wire_cst_log_entry {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::LogEntry {
+        crate::model::LogEntry {
+            line: self.line.cst_decode(),
+            level: self.level.cst_decode(),
         }
     }
 }
@@ -529,6 +557,19 @@ impl NewWithNullPtr for wire_cst_ln_invoice {
     }
 }
 impl Default for wire_cst_ln_invoice {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_log_entry {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            line: core::ptr::null_mut(),
+            level: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_log_entry {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -784,6 +825,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sy
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_sync_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+    port_: i64,
+    s: *mut wire_cst_list_prim_u_8_strict,
+) {
+    wire__crate__bindings__breez_log_stream_impl(port_, s)
 }
 
 #[no_mangle]
@@ -1073,6 +1122,12 @@ pub struct wire_cst_ln_invoice {
     routing_hints: *mut wire_cst_list_route_hint,
     payment_secret: *mut wire_cst_list_prim_u_8_strict,
     min_final_cltv_expiry_delta: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_log_entry {
+    line: *mut wire_cst_list_prim_u_8_strict,
+    level: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

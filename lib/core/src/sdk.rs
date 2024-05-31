@@ -33,9 +33,6 @@ use lwk_wollet::{
     BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
     Wollet as LwkWollet, WolletDescriptor,
 };
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-use tokio::net::TcpStream;
 use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::error::LiquidSdkError;

@@ -34,7 +34,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.36";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 84136112;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -532134055;
 
 // Section: executor
 
@@ -360,6 +360,16 @@ let decode_indices_ = flutter_rust_bridge::for_generated::rust_auto_opaque_decod
                     })().await)
                 } })
 }
+fn wire__crate__bindings__breez_log_stream_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    s: impl CstDecode<StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec>>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "breez_log_stream", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_s = s.cst_decode(); move |context|  {
+                    transform_result_dco((move ||  {
+                         crate::bindings::breez_log_stream(api_s)
+                    })())
+                } })
+}
 fn wire__crate__bindings__connect_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     req: impl CstDecode<crate::model::ConnectRequest>,
@@ -469,6 +479,14 @@ impl CstDecode<usize> for usize {
         self
     }
 }
+impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
+    }
+}
+
 impl SseDecode for BindingLiquidSdk {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -491,6 +509,16 @@ impl SseDecode
 
 impl SseDecode
     for StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
+impl SseDecode
+    for StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -720,6 +748,18 @@ impl SseDecode for crate::model::LNInvoice {
             routing_hints: var_routingHints,
             payment_secret: var_paymentSecret,
             min_final_cltv_expiry_delta: var_minFinalCltvExpiryDelta,
+        };
+    }
+}
+
+impl SseDecode for crate::model::LogEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_line = <String>::sse_decode(deserializer);
+        let mut var_level = <String>::sse_decode(deserializer);
+        return crate::model::LogEntry {
+            line: var_line,
+            level: var_level,
         };
     }
 }
@@ -1203,6 +1243,22 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LNInvoice> for crate::model
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LogEntry {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.line.into_into_dart().into_dart(),
+            self.level.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LogEntry {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LogEntry> for crate::model::LogEntry {
+    fn into_into_dart(self) -> crate::model::LogEntry {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::Network {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -1476,6 +1532,13 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::SendPaymentResponse>
     }
 }
 
+impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(format!("{:?}", self), serializer);
+    }
+}
+
 impl SseEncode for BindingLiquidSdk {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1496,6 +1559,15 @@ impl SseEncode
 
 impl SseEncode
     for StreamSink<crate::model::LiquidSdkEvent, flutter_rust_bridge::for_generated::DcoCodec>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
+impl SseEncode
+    for StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1665,6 +1737,14 @@ impl SseEncode for crate::model::LNInvoice {
         <Vec<crate::model::RouteHint>>::sse_encode(self.routing_hints, serializer);
         <Vec<u8>>::sse_encode(self.payment_secret, serializer);
         <u64>::sse_encode(self.min_final_cltv_expiry_delta, serializer);
+    }
+}
+
+impl SseEncode for crate::model::LogEntry {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.line, serializer);
+        <String>::sse_encode(self.level, serializer);
     }
 }
 

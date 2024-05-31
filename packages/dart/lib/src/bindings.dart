@@ -9,9 +9,14 @@ import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // The type `BindingEventListener` is not used by any `pub` functions, thus it is ignored.
+// The type `BindingLogger` is not used by any `pub` functions, thus it is ignored.
 
 Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
     RustLib.instance.api.crateBindingsConnect(req: req, hint: hint);
+
+/// If used, this must be called before `connect`. It can only be called once.
+Stream<LogEntry> breezLogStream({dynamic hint}) =>
+    RustLib.instance.api.crateBindingsBreezLogStream(hint: hint);
 
 Future<LNInvoice> parseInvoice({required String input, dynamic hint}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input, hint: hint);

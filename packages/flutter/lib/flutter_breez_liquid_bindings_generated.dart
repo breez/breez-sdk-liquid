@@ -260,6 +260,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> s,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+      port_,
+      s,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__breez_log_streamPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__breez_log_stream');
+  late final _frbgen_breez_liquid_wire__crate__bindings__breez_log_stream =
+      _frbgen_breez_liquid_wire__crate__bindings__breez_log_streamPtr
+          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__connect(
     int port_,
     ffi.Pointer<wire_cst_connect_request> req,
@@ -753,6 +770,12 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
   @ffi.Uint64()
   external int min_final_cltv_expiry_delta;
+}
+
+final class wire_cst_log_entry extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> line;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> level;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
