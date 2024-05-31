@@ -190,7 +190,7 @@ class LNInvoice {
           minFinalCltvExpiryDelta == other.minFinalCltvExpiryDelta;
 }
 
-/// Internal SDK log entry
+/// Internal SDK log entry used in the Uniffi and Dart bindings
 class LogEntry {
   final String line;
   final String level;

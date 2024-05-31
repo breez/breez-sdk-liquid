@@ -9,7 +9,7 @@ import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // The type `BindingEventListener` is not used by any `pub` functions, thus it is ignored.
-// The type `BindingLogger` is not used by any `pub` functions, thus it is ignored.
+// The type `DartBindingLogger` is not used by any `pub` functions, thus it is ignored.
 
 Future<BindingLiquidSdk> connect({required ConnectRequest req, dynamic hint}) =>
     RustLib.instance.api.crateBindingsConnect(req: req, hint: hint);
