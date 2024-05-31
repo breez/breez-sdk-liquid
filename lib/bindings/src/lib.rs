@@ -24,11 +24,11 @@ impl UniffiBindingLogger {
     fn init(log_stream: Box<dyn LogStream>) {
         let binding_logger = UniffiBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger))
+            .map(|_| log::set_max_level(LevelFilter::Trace))
             .map_err(|_| LiquidSdkError::Generic {
                 err: "Log stream already created".into(),
             })
             .unwrap();
-        log::set_max_level(LevelFilter::Trace);
     }
 }
 

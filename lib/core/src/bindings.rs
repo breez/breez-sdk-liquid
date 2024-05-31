@@ -1,11 +1,12 @@
 //! Dart / flutter bindings
 
-use anyhow::{anyhow, Result};
+use std::sync::Arc;
+
+use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record};
 
 use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
-use std::sync::Arc;
 
 struct BindingEventListener {
     stream: StreamSink<LiquidSdkEvent>,
@@ -25,9 +26,11 @@ impl DartBindingLogger {
     fn init(log_stream: StreamSink<LogEntry>) {
         let binding_logger = DartBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger))
-            .map_err(|_| anyhow!("Log stream already created"))
+            .map(|_| log::set_max_level(LevelFilter::Trace))
+            .map_err(|_| LiquidSdkError::Generic {
+                err: "Log stream already created".into(),
+            })
             .unwrap();
-        log::set_max_level(LevelFilter::Trace);
     }
 }
 
