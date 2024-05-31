@@ -226,6 +226,43 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     return list
 }
 
+fun asLogEntry(logEntry: ReadableMap): LogEntry? {
+    if (!validateMandatoryFields(
+            logEntry,
+            arrayOf(
+                "line",
+                "level",
+            ),
+        )
+    ) {
+        return null
+    }
+    val line = logEntry.getString("line")!!
+    val level = logEntry.getString("level")!!
+    return LogEntry(
+        line,
+        level,
+    )
+}
+
+fun readableMapOf(logEntry: LogEntry): ReadableMap {
+    return readableMapOf(
+        "line" to logEntry.line,
+        "level" to logEntry.level,
+    )
+}
+
+fun asLogEntryList(arr: ReadableArray): List<LogEntry> {
+    val list = ArrayList<LogEntry>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLogEntry(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPayment(payment: ReadableMap): Payment? {
     if (!validateMandatoryFields(
             payment,
