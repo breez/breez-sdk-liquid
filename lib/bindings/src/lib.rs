@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use breez_liquid_sdk::logger::LogStream;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
-use log::{Metadata, Record};
+use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
@@ -21,14 +21,10 @@ struct UniffiBindingLogger {
 }
 
 impl UniffiBindingLogger {
-    fn init(log_stream: Box<dyn LogStream>) {
-        let binding_logger = UniffiBindingLogger { log_stream };
+    fn init(log_stream: Box<dyn LogStream>) -> Result<(), SetLoggerError> {
+        let binding_logger: UniffiBindingLogger = UniffiBindingLogger { log_stream };
         log::set_boxed_logger(Box::new(binding_logger))
             .map(|_| log::set_max_level(LevelFilter::Trace))
-            .map_err(|_| LiquidSdkError::Generic {
-                err: "Log stream already created".into(),
-            })
-            .unwrap();
     }
 }
 
@@ -49,7 +45,9 @@ impl log::Log for UniffiBindingLogger {
 
 /// If used, this must be called before `connect`
 pub fn set_log_stream(log_stream: Box<dyn LogStream>) -> Result<(), LiquidSdkError> {
-    UniffiBindingLogger::init(log_stream);
+    UniffiBindingLogger::init(log_stream).map_err(|_| LiquidSdkError::Generic {
+        err: "Log stream already created".into(),
+    })?;
     Ok(())
 }
 
