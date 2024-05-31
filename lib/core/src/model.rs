@@ -567,7 +567,7 @@ impl Payment {
     }
 }
 
-/// Internal SDK log entry
+/// Internal SDK log entry used in the Uniffi and Dart bindings
 #[derive(Clone, Debug)]
 pub struct LogEntry {
     pub line: String,

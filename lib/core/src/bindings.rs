@@ -1,9 +1,13 @@
-use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
+//! Dart / flutter bindings
+
+use std::sync::Arc;
+
 use anyhow::{anyhow, Result};
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record};
 use once_cell::sync::OnceCell;
-use std::sync::Arc;
+
+use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
 
 static LOG_INIT: OnceCell<bool> = OnceCell::new();
 

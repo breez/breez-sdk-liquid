@@ -1,3 +1,5 @@
+//! Uniffi bindings
+
 use std::sync::Arc;
 
 use anyhow::Result;
