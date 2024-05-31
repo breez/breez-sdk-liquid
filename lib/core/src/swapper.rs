@@ -13,6 +13,7 @@ use boltz_client::error::Error;
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
 use log::{debug, info};
+use lwk_wollet::elements::{LockTime, LockTime::*};
 use serde_json::Value;
 
 use crate::error::PaymentError;
@@ -37,26 +38,20 @@ pub trait Swapper: Send + Sync {
         swap: &SendSwap,
         output_address: &String,
         broadcast_fees_sat: Amount,
-        keypair: &Keypair,
     ) -> Result<String, PaymentError>;
 
     /// Refund non-cooperatively send swap
     fn refund_send_swap_non_cooperative(
         &self,
         swap: &SendSwap,
-        keypair: &Keypair,
         broadcast_fees_sat: Amount,
         output_address: &String,
+        current_height: u32,
     ) -> Result<String, PaymentError>;
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(
-        &self,
-        swap: &SendSwap,
-        invoice: &str,
-        keypair: &Keypair,
-    ) -> Result<(), PaymentError>;
+    fn claim_send_swap_cooperative(&self, swap: &SendSwap) -> Result<(), PaymentError>;
 
     // Create a new receive swap
     fn create_receive_swap(
@@ -71,7 +66,6 @@ pub trait Swapper: Send + Sync {
     fn claim_receive_swap(
         &self,
         swap: &ReceiveSwap,
-        keypair: &Keypair,
         claim_address: String,
     ) -> Result<String, PaymentError>;
 
@@ -96,8 +90,8 @@ impl BoltzSwapper {
 
     fn boltz_url_v2(network: &Network) -> &'static str {
         match network {
-            Network::LiquidTestnet => BOLTZ_TESTNET_URL_V2,
-            Network::Liquid => BOLTZ_MAINNET_URL_V2,
+            Network::Testnet => BOLTZ_TESTNET_URL_V2,
+            Network::Mainnet => BOLTZ_MAINNET_URL_V2,
         }
     }
 
@@ -169,18 +163,14 @@ impl Swapper for BoltzSwapper {
         swap: &SendSwap,
         output_address: &String,
         broadcast_fees_sat: Amount,
-        keypair: &Keypair,
     ) -> Result<String, PaymentError> {
         info!("Initiating cooperative refund for Send Swap {}", &swap.id);
         let create_response = swap
             .get_boltz_create_response()
             .map_err(|e| Error::Generic(e.to_string()))?;
 
-        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
-            &create_response,
-            keypair.public_key().into(),
-        )?;
-        let refund_tx = self.new_refund_tx(swap, keypair, output_address)?;
+        let refund_keypair = swap.get_refund_keypair()?;
+        let refund_tx = self.new_refund_tx(swap, &refund_keypair, output_address)?;
 
         let cooperative = Some((&self.client, &swap.id));
         let tx = refund_tx.sign_refund(
@@ -191,10 +181,8 @@ impl Swapper for BoltzSwapper {
             cooperative,
         )?;
         let is_lowball = match self.network {
-            Network::Liquid => None,
-            Network::LiquidTestnet => {
-                Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
-            }
+            Network::Mainnet => None,
+            Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
         let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
         info!(
@@ -208,11 +196,39 @@ impl Swapper for BoltzSwapper {
     fn refund_send_swap_non_cooperative(
         &self,
         swap: &SendSwap,
-        keypair: &Keypair,
         broadcast_fees_sat: Amount,
         output_address: &String,
+        current_height: u32,
     ) -> Result<String, PaymentError> {
-        let refund_tx = self.new_refund_tx(swap, keypair, output_address)?;
+        let keypair = swap.get_refund_keypair()?;
+        let create_response = swap
+            .get_boltz_create_response()
+            .map_err(|e| Error::Generic(e.to_string()))?;
+        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
+            &create_response,
+            keypair.public_key().into(),
+        )?;
+        let locktime_from_height =
+            LockTime::from_height(current_height).map_err(|e| PaymentError::Generic {
+                err: format!("Cannot convert current block height to lock time: {e:?}"),
+            })?;
+
+        info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}",  swap_script.locktime);
+        let is_locktime_satisfied = match (locktime_from_height, swap_script.locktime) {
+            (Blocks(n), Blocks(lock_time)) => n >= lock_time,
+            (Seconds(n), Seconds(lock_time)) => n >= lock_time,
+            _ => false, // Not using the same units
+        };
+        if !is_locktime_satisfied {
+            return Err(PaymentError::Generic {
+                err: format!(
+                    "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
+                    locktime_from_height, swap_script.locktime
+                )
+            });
+        }
+
+        let refund_tx = self.new_refund_tx(swap, &keypair, output_address)?;
         let tx = refund_tx.sign_refund(
             &swap
                 .get_refund_keypair()
@@ -221,10 +237,8 @@ impl Swapper for BoltzSwapper {
             None,
         )?;
         let is_lowball = match self.network {
-            Network::Liquid => None,
-            Network::LiquidTestnet => {
-                Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
-            }
+            Network::Mainnet => None,
+            Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
         let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
         info!(
@@ -236,23 +250,18 @@ impl Swapper for BoltzSwapper {
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(
-        &self,
-        swap: &SendSwap,
-        invoice: &str,
-        keypair: &Keypair,
-    ) -> Result<(), PaymentError> {
+    fn claim_send_swap_cooperative(&self, swap: &SendSwap) -> Result<(), PaymentError> {
         let swap_id = &swap.id;
-        debug!("Claim is pending for swap-in {swap_id}. Initiating cooperative claim");
-        let refund_tx = self.new_refund_tx(swap, keypair, &"".into())?;
+        let keypair = swap.get_refund_keypair()?;
+        let refund_tx = self.new_refund_tx(swap, &keypair, &"".into())?;
 
         let claim_tx_response = self.client.get_claim_tx_details(&swap_id.to_string())?;
         debug!("Received claim tx details: {:?}", &claim_tx_response);
 
-        self.validate_send_swap_preimage(swap_id, invoice, &claim_tx_response.preimage)?;
+        self.validate_send_swap_preimage(swap_id, &swap.invoice, &claim_tx_response.preimage)?;
 
         let (partial_sig, pub_nonce) =
-            refund_tx.submarine_partial_sig(keypair, &claim_tx_response)?;
+            refund_tx.submarine_partial_sig(&keypair, &claim_tx_response)?;
 
         self.client
             .post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
@@ -277,9 +286,9 @@ impl Swapper for BoltzSwapper {
     fn claim_receive_swap(
         &self,
         swap: &ReceiveSwap,
-        keypair: &Keypair,
         claim_address: String,
     ) -> Result<String, PaymentError> {
+        let keypair = swap.get_claim_keypair()?;
         let create_response = swap
             .get_boltz_create_response()
             .map_err(|e| Error::Generic(e.to_string()))?;
@@ -298,7 +307,7 @@ impl Swapper for BoltzSwapper {
 
         let cooperative = Some((&self.client, swap.id.clone()));
         let claim_tx = claim_tx_wrapper.sign_claim(
-            keypair,
+            &keypair,
             &Preimage::from_str(&swap.preimage)?,
             Amount::from_sat(swap.claim_fees_sat),
             // Enable cooperative claim (Some) or not (None)
