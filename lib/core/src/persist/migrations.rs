@@ -15,7 +15,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS send_swaps (
             id TEXT NOT NULL PRIMARY KEY,
-            invoice TEXT NOT NULL,
+            invoice TEXT NOT NULL UNIQUE,
             preimage TEXT,
             payer_amount_sat INTEGER NOT NULL,
             receiver_amount_sat INTEGER NOT NULL,
