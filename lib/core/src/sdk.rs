@@ -133,6 +133,9 @@ impl LiquidSdk {
     async fn start(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         let mut is_started = self.is_started.write().await;
         let start_ts = Instant::now();
+
+        self.persister
+            .update_send_swaps_by_state(Created, TimedOut)?;
         self.start_background_tasks().await?;
         *is_started = true;
 
@@ -265,13 +268,18 @@ impl LiquidSdk {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed, Pending) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed, Complete) => Err(PaymentError::Generic {
+            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
+            }),
+
+            (Created, TimedOut) => Ok(()),
+            (_, TimedOut) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
             (_, Failed) => Ok(()),
@@ -646,6 +654,7 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
+                    TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
@@ -1058,7 +1067,11 @@ impl LiquidSdk {
             tokio::select! {
                 _ = &mut timeout_fut => match maybe_payment {
                     Some(payment) => return Ok(payment),
-                    None => return Err(PaymentError::PaymentTimeout),
+                    None => {
+                        debug!("Timeout occured without payment, set swap to timed out");
+                        self.try_handle_send_swap_update(&swap_id, TimedOut, None, None, None).await?;
+                        return Err(PaymentError::PaymentTimeout)
+                    },
                 },
                 event = events_stream.recv() => match event {
                     Ok(LiquidSdkEvent::PaymentPending { details }) => match details.swap_id.clone() {

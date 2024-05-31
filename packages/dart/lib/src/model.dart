@@ -331,6 +331,12 @@ enum PaymentState {
   ///
   /// This is the status when a swap refund was initiated and the refund tx is confirmed.
   failed,
+
+  /// ## Send Swaps
+  ///
+  /// This covers the case when the swap state is still Created and the swap fails to reach the
+  /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+  timedOut,
   ;
 }
 
