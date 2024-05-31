@@ -1059,6 +1059,7 @@ impl LiquidSdk {
                     refund_private_key: keypair.display_secret().to_string(),
                 };
                 self.persister.insert_send_swap(&swap)?;
+                self.status_stream.track_swap_id(swap_id)?;
                 swap
             }
         };
