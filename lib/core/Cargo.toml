@@ -20,8 +20,8 @@ flutter_rust_bridge = { version = "=2.0.0-dev.36", features = ["chrono"], option
 log = "0.4.20"
 lwk_common = "0.5.1"
 lwk_signer = "0.5.1"
-# Switch back to published version once this PR is merged: https://github.com/Blockstream/lwk/pull/34
-lwk_wollet = { git = "https://github.com/ok300/lwk", branch = "ok300-history-fields-public" }
+# Switch back to published version once this PR is merged and included in release: https://github.com/Blockstream/lwk/pull/34 (ETA in v0.5.2)
+lwk_wollet = { git = "https://github.com/Blockstream/lwk", rev = "ffd793d0a1b1122c9bba7de23ccb73033eded98c" }
 #lwk_wollet = "0.5.1"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
