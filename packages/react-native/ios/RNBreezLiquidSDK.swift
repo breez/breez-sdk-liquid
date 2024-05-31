@@ -11,10 +11,15 @@ class RNBreezLiquidSDK: RCTEventEmitter {
 
     private var bindingLiquidSdk: BindingLiquidSdk!
 
-    static var defaultDataDir: URL {
+    static var breezLiquidSdkDirectory: URL {
         let applicationDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let breezLiquidSdkDirectory = applicationDirectory.appendingPathComponent("breezLiquidSdk", isDirectory: true)
 
-        return applicationDirectory.appendingPathComponent("breezLiquidSdk", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: breezLiquidSdkDirectory.path) {
+            try! FileManager.default.createDirectory(atPath: breezLiquidSdkDirectory.path, withIntermediateDirectories: true)
+        }
+
+        return breezLiquidSdkDirectory
     }
 
     override init() {
@@ -56,6 +61,28 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         throw LiquidSdkError.Generic(message: "Not initialized")
     }
 
+    private func ensureWorkingDir(workingDir: String) throws {
+        do {
+            if !FileManager.default.fileExists(atPath: workingDir) {
+                try FileManager.default.createDirectory(atPath: workingDir, withIntermediateDirectories: true)
+            }
+        } catch {
+            throw LiquidSdkError.Generic(message: "Mandatory field workingDir must contain a writable directory")
+        }
+    }
+
+    @objc(defaultConfig:resolve:reject:)
+    func defaultConfig(_ network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let networkTmp = try BreezLiquidSDKMapper.asNetwork(network: network)
+            var res = BreezLiquidSDK.defaultConfig(network: networkTmp)
+            res.workingDir = RNBreezLiquidSDK.breezLiquidSdkDirectory.path
+            resolve(BreezLiquidSDKMapper.dictionaryOf(config: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(parseInvoice:resolve:reject:)
     func parseInvoice(_ invoice: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
@@ -85,7 +112,8 @@ class RNBreezLiquidSDK: RCTEventEmitter {
 
         do {
             var connectRequest = try BreezLiquidSDKMapper.asConnectRequest(connectRequest: req)
-            connectRequest.dataDir = connectRequest.dataDir == nil || connectRequest.dataDir!.isEmpty ? RNBreezLiquidSDK.defaultDataDir.path : connectRequest.dataDir
+            try ensureWorkingDir(workingDir: connectRequest.config.workingDir)
+
             bindingLiquidSdk = try BreezLiquidSDK.connect(req: connectRequest)
             resolve(["status": "ok"])
         } catch let err {

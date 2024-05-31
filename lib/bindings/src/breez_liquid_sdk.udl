@@ -23,15 +23,22 @@ enum PaymentError {
     "SignerError",
 };
 
+dictionary Config {
+    string boltz_url;
+    string electrum_url;
+    string working_dir;
+    Network network;
+    u64 payment_timeout_sec;
+};
+
 enum Network {
     "Mainnet",
     "Testnet",
 };
 
 dictionary ConnectRequest {
+    Config config;
     string mnemonic;
-    Network network;
-    string? data_dir = null;
 };
 
 dictionary GetInfoRequest {
@@ -165,6 +172,8 @@ namespace breez_liquid_sdk {
 
     [Throws=LiquidSdkError]
     void set_logger(Logger logger);
+    
+    Config default_config(Network network);
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string invoice);

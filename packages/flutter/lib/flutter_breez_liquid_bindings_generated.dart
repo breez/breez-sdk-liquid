@@ -294,6 +294,22 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__connectPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__default_config(
+    int port_,
+    int network,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__default_config(
+      port_,
+      network,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__default_configPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__default_config');
+  late final _frbgen_breez_liquid_wire__crate__bindings__default_config =
+      _frbgen_breez_liquid_wire__crate__bindings__default_configPtr.asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
@@ -589,13 +605,24 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external int fees_sat;
 }
 
-final class wire_cst_connect_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+final class wire_cst_config extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> data_dir;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> electrum_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
   @ffi.Int32()
   external int network;
+
+  @ffi.Uint64()
+  external int payment_timeout_sec;
+}
+
+final class wire_cst_connect_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+
+  external wire_cst_config config;
 }
 
 final class wire_cst_payment extends ffi.Struct {

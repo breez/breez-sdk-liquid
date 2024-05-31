@@ -55,10 +55,17 @@ typedef struct wire_cst_prepare_send_response {
   uint64_t fees_sat;
 } wire_cst_prepare_send_response;
 
+typedef struct wire_cst_config {
+  struct wire_cst_list_prim_u_8_strict *boltz_url;
+  struct wire_cst_list_prim_u_8_strict *electrum_url;
+  struct wire_cst_list_prim_u_8_strict *working_dir;
+  int32_t network;
+  uint64_t payment_timeout_sec;
+} wire_cst_config;
+
 typedef struct wire_cst_connect_request {
   struct wire_cst_list_prim_u_8_strict *mnemonic;
-  struct wire_cst_list_prim_u_8_strict *data_dir;
-  int32_t network;
+  struct wire_cst_config config;
 } wire_cst_connect_request;
 
 typedef struct wire_cst_payment {
@@ -271,6 +278,8 @@ void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(int64_t port_,
 void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
                                                         struct wire_cst_connect_request *req);
 
+void frbgen_breez_liquid_wire__crate__bindings__default_config(int64_t port_, int32_t network);
+
 void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(int64_t port_,
                                                               struct wire_cst_list_prim_u_8_strict *input);
 
@@ -337,6 +346,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__breez_log_stream);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__default_config);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;

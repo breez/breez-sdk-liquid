@@ -86,6 +86,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
+  Config dco_decode_config(dynamic raw);
+
+  @protected
   ConnectRequest dco_decode_connect_request(dynamic raw);
 
   @protected
@@ -245,6 +248,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  Config sse_decode_config(SseDeserializer deserializer);
 
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
@@ -576,10 +582,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_config(Config apiObj, wire_cst_config wireObj) {
+    wireObj.boltz_url = cst_encode_String(apiObj.boltzUrl);
+    wireObj.electrum_url = cst_encode_String(apiObj.electrumUrl);
+    wireObj.working_dir = cst_encode_String(apiObj.workingDir);
+    wireObj.network = cst_encode_network(apiObj.network);
+    wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
+  }
+
+  @protected
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
     wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
-    wireObj.data_dir = cst_encode_opt_String(apiObj.dataDir);
-    wireObj.network = cst_encode_network(apiObj.network);
+    cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
   }
 
   @protected
@@ -921,6 +935,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_config(Config self, SseSerializer serializer);
 
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
@@ -1308,6 +1325,22 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__connect = _wire__crate__bindings__connectPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
+  void wire__crate__bindings__default_config(
+    int port_,
+    int network,
+  ) {
+    return _wire__crate__bindings__default_config(
+      port_,
+      network,
+    );
+  }
+
+  late final _wire__crate__bindings__default_configPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__default_config');
+  late final _wire__crate__bindings__default_config =
+      _wire__crate__bindings__default_configPtr.asFunction<void Function(int, int)>();
+
   void wire__crate__bindings__parse_invoice(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
@@ -1577,13 +1610,24 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external int fees_sat;
 }
 
-final class wire_cst_connect_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+final class wire_cst_config extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> data_dir;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> electrum_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
   @ffi.Int32()
   external int network;
+
+  @ffi.Uint64()
+  external int payment_timeout_sec;
+}
+
+final class wire_cst_connect_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+
+  external wire_cst_config config;
 }
 
 final class wire_cst_payment extends ffi.Struct {

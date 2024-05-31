@@ -34,7 +34,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.36";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -532134055;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1028270774;
 
 // Section: executor
 
@@ -390,6 +390,26 @@ fn wire__crate__bindings__connect_impl(
         },
     )
 }
+fn wire__crate__bindings__default_config_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    network: impl CstDecode<crate::model::Network>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "default_config",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_network = network.cst_decode();
+            move |context| {
+                transform_result_dco((move || {
+                    Result::<_, ()>::Ok(crate::bindings::default_config(api_network))
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__bindings__parse_invoice_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     input: impl CstDecode<String>,
@@ -553,16 +573,32 @@ impl SseDecode for bool {
     }
 }
 
+impl SseDecode for crate::model::Config {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_boltzUrl = <String>::sse_decode(deserializer);
+        let mut var_electrumUrl = <String>::sse_decode(deserializer);
+        let mut var_workingDir = <String>::sse_decode(deserializer);
+        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
+        return crate::model::Config {
+            boltz_url: var_boltzUrl,
+            electrum_url: var_electrumUrl,
+            working_dir: var_workingDir,
+            network: var_network,
+            payment_timeout_sec: var_paymentTimeoutSec,
+        };
+    }
+}
+
 impl SseDecode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_mnemonic = <String>::sse_decode(deserializer);
-        let mut var_dataDir = <Option<String>>::sse_decode(deserializer);
-        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_config = <crate::model::Config>::sse_decode(deserializer);
         return crate::model::ConnectRequest {
             mnemonic: var_mnemonic,
-            data_dir: var_dataDir,
-            network: var_network,
+            config: var_config,
         };
     }
 }
@@ -1113,12 +1149,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::BackupRequest>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::Config {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.boltz_url.into_into_dart().into_dart(),
+            self.electrum_url.into_into_dart().into_dart(),
+            self.working_dir.into_into_dart().into_dart(),
+            self.network.into_into_dart().into_dart(),
+            self.payment_timeout_sec.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::Config {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::Config> for crate::model::Config {
+    fn into_into_dart(self) -> crate::model::Config {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.mnemonic.into_into_dart().into_dart(),
-            self.data_dir.into_into_dart().into_dart(),
-            self.network.into_into_dart().into_dart(),
+            self.config.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1603,12 +1657,22 @@ impl SseEncode for bool {
     }
 }
 
+impl SseEncode for crate::model::Config {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.boltz_url, serializer);
+        <String>::sse_encode(self.electrum_url, serializer);
+        <String>::sse_encode(self.working_dir, serializer);
+        <crate::model::Network>::sse_encode(self.network, serializer);
+        <u64>::sse_encode(self.payment_timeout_sec, serializer);
+    }
+}
+
 impl SseEncode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.mnemonic, serializer);
-        <Option<String>>::sse_encode(self.data_dir, serializer);
-        <crate::model::Network>::sse_encode(self.network, serializer);
+        <crate::model::Config>::sse_encode(self.config, serializer);
     }
 }
 

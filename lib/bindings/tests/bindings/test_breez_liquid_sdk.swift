@@ -7,9 +7,9 @@ class SDKListener: EventListener {
 }
 
 let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-
-let connectReq = breez_liquid_sdk.ConnectRequest(mnemonic: mnemonic, network: .liquidTestnet);
-let sdk = try breez_liquid_sdk.connect(req: connectReq);
+let config = breez_liquid_sdk.defaultConfig(network: .testnet);
+let connectRequest = breez_liquid_sdk.ConnectRequest(config: config, mnemonic: mnemonic);
+let sdk = try breez_liquid_sdk.connect(req: connectRequest);
 
 let listenerId = try sdk.addEventListener(listener: SDKListener());
 

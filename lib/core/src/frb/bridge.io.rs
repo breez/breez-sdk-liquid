@@ -157,13 +157,24 @@ impl CstDecode<u64> for *mut u64 {
         unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
     }
 }
+impl CstDecode<crate::model::Config> for wire_cst_config {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::Config {
+        crate::model::Config {
+            boltz_url: self.boltz_url.cst_decode(),
+            electrum_url: self.electrum_url.cst_decode(),
+            working_dir: self.working_dir.cst_decode(),
+            network: self.network.cst_decode(),
+            payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
         crate::model::ConnectRequest {
             mnemonic: self.mnemonic.cst_decode(),
-            data_dir: self.data_dir.cst_decode(),
-            network: self.network.cst_decode(),
+            config: self.config.cst_decode(),
         }
     }
 }
@@ -472,12 +483,27 @@ impl Default for wire_cst_backup_request {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_config {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            boltz_url: core::ptr::null_mut(),
+            electrum_url: core::ptr::null_mut(),
+            working_dir: core::ptr::null_mut(),
+            network: Default::default(),
+            payment_timeout_sec: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_config {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_connect_request {
     fn new_with_null_ptr() -> Self {
         Self {
             mnemonic: core::ptr::null_mut(),
-            data_dir: core::ptr::null_mut(),
-            network: Default::default(),
+            config: Default::default(),
         }
     }
 }
@@ -845,6 +871,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__default_config(
+    port_: i64,
+    network: i32,
+) {
+    wire__crate__bindings__default_config_impl(port_, network)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
     port_: i64,
     input: *mut wire_cst_list_prim_u_8_strict,
@@ -1002,10 +1036,18 @@ pub struct wire_cst_backup_request {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_config {
+    boltz_url: *mut wire_cst_list_prim_u_8_strict,
+    electrum_url: *mut wire_cst_list_prim_u_8_strict,
+    working_dir: *mut wire_cst_list_prim_u_8_strict,
+    network: i32,
+    payment_timeout_sec: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_connect_request {
     mnemonic: *mut wire_cst_list_prim_u_8_strict,
-    data_dir: *mut wire_cst_list_prim_u_8_strict,
-    network: i32,
+    config: wire_cst_config,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

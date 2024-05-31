@@ -38,35 +38,81 @@ enum BreezLiquidSDKMapper {
         return backupRequestList.map { v -> [String: Any?] in dictionaryOf(backupRequest: v) }
     }
 
-    static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
-        guard let mnemonic = connectRequest["mnemonic"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
+    static func asConfig(config: [String: Any?]) throws -> Config {
+        guard let boltzUrl = config["boltzUrl"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "boltzUrl", typeName: "Config"))
         }
-        guard let networkTmp = connectRequest["network"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "ConnectRequest"))
+        guard let electrumUrl = config["electrumUrl"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "electrumUrl", typeName: "Config"))
+        }
+        guard let workingDir = config["workingDir"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "workingDir", typeName: "Config"))
+        }
+        guard let networkTmp = config["network"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "Config"))
         }
         let network = try asNetwork(network: networkTmp)
 
-        var dataDir: String?
-        if hasNonNilKey(data: connectRequest, key: "dataDir") {
-            guard let dataDirTmp = connectRequest["dataDir"] as? String else {
-                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "dataDir"))
+        guard let paymentTimeoutSec = config["paymentTimeoutSec"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentTimeoutSec", typeName: "Config"))
+        }
+
+        return Config(
+            boltzUrl: boltzUrl,
+            electrumUrl: electrumUrl,
+            workingDir: workingDir,
+            network: network,
+            paymentTimeoutSec: paymentTimeoutSec
+        )
+    }
+
+    static func dictionaryOf(config: Config) -> [String: Any?] {
+        return [
+            "boltzUrl": config.boltzUrl,
+            "electrumUrl": config.electrumUrl,
+            "workingDir": config.workingDir,
+            "network": valueOf(network: config.network),
+            "paymentTimeoutSec": config.paymentTimeoutSec,
+        ]
+    }
+
+    static func asConfigList(arr: [Any]) throws -> [Config] {
+        var list = [Config]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var config = try asConfig(config: val)
+                list.append(config)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Config"))
             }
-            dataDir = dataDirTmp
+        }
+        return list
+    }
+
+    static func arrayOf(configList: [Config]) -> [Any] {
+        return configList.map { v -> [String: Any?] in dictionaryOf(config: v) }
+    }
+
+    static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
+        guard let configTmp = connectRequest["config"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "config", typeName: "ConnectRequest"))
+        }
+        let config = try asConfig(config: configTmp)
+
+        guard let mnemonic = connectRequest["mnemonic"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
         }
 
         return ConnectRequest(
-            mnemonic: mnemonic,
-            network: network,
-            dataDir: dataDir
+            config: config,
+            mnemonic: mnemonic
         )
     }
 
     static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
         return [
+            "config": dictionaryOf(config: connectRequest.config),
             "mnemonic": connectRequest.mnemonic,
-            "network": valueOf(network: connectRequest.network),
-            "dataDir": connectRequest.dataDir == nil ? nil : connectRequest.dataDir,
         ]
     }
 
