@@ -1096,14 +1096,22 @@ impl LiquidSdk {
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
+        // Address to be used for a BIP-21 direct payment
+        let mrh_addr = self.next_unused_address().await?;
+
+        // Signature of the claim public key of the SHA256 hash of the address for the direct payment
+        let mrh_addr_str = mrh_addr.to_string();
+        let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
+        let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
+
         let v2_req = CreateReverseRequest {
             invoice_amount: req.payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
-            address: None,
-            address_signature: None,
+            address: Some(mrh_addr_str),
+            address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
