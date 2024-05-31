@@ -36,7 +36,7 @@ pub trait Swapper: Send + Sync {
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,
-        output_address: &String,
+        output_address: &str,
         broadcast_fees_sat: Amount,
     ) -> Result<String, PaymentError>;
 
@@ -45,13 +45,17 @@ pub trait Swapper: Send + Sync {
         &self,
         swap: &SendSwap,
         broadcast_fees_sat: Amount,
-        output_address: &String,
+        output_address: &str,
         current_height: u32,
     ) -> Result<String, PaymentError>;
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(&self, swap: &SendSwap) -> Result<(), PaymentError>;
+    fn claim_send_swap_cooperative(
+        &self,
+        swap: &SendSwap,
+        output_address: &str,
+    ) -> Result<String, PaymentError>;
 
     // Create a new receive swap
     fn create_receive_swap(
@@ -70,7 +74,7 @@ pub trait Swapper: Send + Sync {
     ) -> Result<String, PaymentError>;
 
     // chain broadcast
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &String) -> Result<Value, PaymentError>;
+    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError>;
 }
 
 pub struct BoltzSwapper {
@@ -161,16 +165,12 @@ impl Swapper for BoltzSwapper {
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,
-        output_address: &String,
+        output_address: &str,
         broadcast_fees_sat: Amount,
     ) -> Result<String, PaymentError> {
         info!("Initiating cooperative refund for Send Swap {}", &swap.id);
-        let create_response = swap
-            .get_boltz_create_response()
-            .map_err(|e| Error::Generic(e.to_string()))?;
-
         let refund_keypair = swap.get_refund_keypair()?;
-        let refund_tx = self.new_refund_tx(swap, &refund_keypair, output_address)?;
+        let refund_tx = self.new_refund_tx(swap, &refund_keypair, &output_address.into())?;
 
         let cooperative = Some((&self.client, &swap.id));
         let tx = refund_tx.sign_refund(
@@ -197,7 +197,7 @@ impl Swapper for BoltzSwapper {
         &self,
         swap: &SendSwap,
         broadcast_fees_sat: Amount,
-        output_address: &String,
+        output_address: &str,
         current_height: u32,
     ) -> Result<String, PaymentError> {
         let keypair = swap.get_refund_keypair()?;
@@ -228,7 +228,7 @@ impl Swapper for BoltzSwapper {
             });
         }
 
-        let refund_tx = self.new_refund_tx(swap, &keypair, output_address)?;
+        let refund_tx = self.new_refund_tx(swap, &keypair, &output_address.into())?;
         let tx = refund_tx.sign_refund(
             &swap
                 .get_refund_keypair()
@@ -250,13 +250,17 @@ impl Swapper for BoltzSwapper {
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(&self, swap: &SendSwap) -> Result<(), PaymentError> {
+    fn claim_send_swap_cooperative(
+        &self,
+        swap: &SendSwap,
+        output_address: &str,
+    ) -> Result<String, PaymentError> {
         let swap_id = &swap.id;
         let keypair = swap.get_refund_keypair()?;
-        let refund_tx = self.new_refund_tx(swap, &keypair, &"".into())?;
+        let refund_tx = self.new_refund_tx(swap, &keypair, &output_address.into())?;
 
         let claim_tx_response = self.client.get_claim_tx_details(&swap_id.to_string())?;
-        debug!("Received claim tx details: {:?}", &claim_tx_response);
+        info!("Received claim tx details: {:?}", &claim_tx_response);
 
         self.validate_send_swap_preimage(swap_id, &swap.invoice, &claim_tx_response.preimage)?;
 
@@ -265,8 +269,8 @@ impl Swapper for BoltzSwapper {
 
         self.client
             .post_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
-        debug!("Successfully sent claim details for swap-in {swap_id}");
-        Ok(())
+        info!("Successfully sent claim details for swap-in {swap_id}");
+        Ok(claim_tx_response.preimage)
     }
 
     // Create a new receive swap
@@ -326,7 +330,7 @@ impl Swapper for BoltzSwapper {
     }
 
     // chain broadcast
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &String) -> Result<Value, PaymentError> {
-        Ok(self.client.broadcast_tx(chain, tx_hex)?)
+    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError> {
+        Ok(self.client.broadcast_tx(chain, &tx_hex.into())?)
     }
 }

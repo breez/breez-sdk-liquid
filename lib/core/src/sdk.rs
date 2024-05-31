@@ -9,14 +9,12 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
-use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
 use boltz_client::{
     swaps::{
         boltz::{RevSwapStates, SubSwapStates},
-        boltzv2::*,
-        liquidv2::LBtcSwapTxV2,
+        boltzv2::*,        
     },
     util::secrets::Preimage,
     Amount, Bolt11Invoice, ElementsAddress, LBtcSwapScriptV2,
@@ -204,19 +202,28 @@ impl LiquidSdk {
                 tokio::select! {
                     update = updates_stream.recv() => match update {
                         Ok(boltzv2::Update { id, status }) => {
-                            let _ = cloned.sync().await;
-
-                            if let Ok(_) = cloned.try_handle_send_swap_boltz_status(&status, &id).await
-                            {
-                                info!("Handled send swap update");
-                            } else if let Ok(_) = cloned
-                                .try_handle_receive_swap_boltz_status(&status, &id)
-                                .await
-                            {
-                                info!("Handled receive swap update");
-                            } else {
-                                warn!("Unhandled swap {id}: {status}")
-                            }
+                            let _ = cloned.sync().await;                            
+                            match cloned.persister.fetch_send_swap_by_id(&id) {
+                                Ok(_) => {
+                                  match cloned.try_handle_send_swap_boltz_status(&status, &id).await {
+                                    Ok(_) => info!("Succesfully handled Send Swap {id} update"),
+                                    Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
+                                  }                                  
+                                } 
+                                _ => {
+                                  match cloned.persister.fetch_receive_swap(&id) {
+                                    Ok(Some(_)) => {
+                                      match cloned.try_handle_receive_swap_boltz_status(&status, &id).await {
+                                        Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
+                                        Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")                                        
+                                      }
+                                    }                                  
+                                    _ => {
+                                      error!("Could not find Swap {id}");
+                                    }
+                                  }                                  
+                                }                                
+                            }                                                     
                         }
                         Err(e) => error!("Received stream error: {e:?}"),
                     },
@@ -563,7 +570,7 @@ impl LiquidSdk {
                     ongoing_send_swap.state,
                     ongoing_send_swap.lockup_tx_id.clone(),
                 ) {
-                    (PaymentState::Created, None) => {
+                    (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
                         let create_response = ongoing_send_swap.get_boltz_create_response()?;
                         let lockup_tx_id = self.lockup_funds(id, &create_response).await?;
 
@@ -601,7 +608,10 @@ impl LiquidSdk {
             Ok(SubSwapStates::TransactionClaimPending) => {
                 self.cooperate_send_swap_claim(&ongoing_send_swap)
                     .await
-                    .map_err(|e| anyhow!("Could not post claim details. Err: {e:?}"))?;
+                    .map_err(|e| {
+                        error!("Could not cooperate Send Swap {id} claim: {e}");
+                      anyhow!("Could not post claim details. Err: {e:?}")
+                    })?;
 
                 Ok(())
             }
@@ -612,6 +622,8 @@ impl LiquidSdk {
                     self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
                 self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)
                     .await?;
+                  self.try_handle_send_swap_update(id, Complete, Some(&preimage), None, None)
+                  .await?;
                 Ok(())
             }
 
@@ -729,16 +741,6 @@ impl LiquidSdk {
         }
     }
 
-    fn network_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(
-            self.network.into(),
-            &self.electrum_url.to_string(),
-            true,
-            true,
-            100,
-        )
-    }
-
     async fn build_tx(
         &self,
         fee_rate: Option<f32>,
@@ -854,22 +856,6 @@ impl LiquidSdk {
             .ok_or(PaymentError::InvalidPreimage)
     }
 
-    async fn new_refund_tx(
-        &self,
-        swap_id: &str,
-        swap_script: &LBtcSwapScriptV2,
-    ) -> Result<LBtcSwapTxV2, PaymentError> {
-        let output_address = self.next_unused_address().await?.to_string();
-        let network_config = self.config.get_electrum_config();
-        Ok(LBtcSwapTxV2::new_refund(
-            swap_script.clone(),
-            &output_address,
-            &network_config,
-            self.config.clone().boltz_url,
-            swap_id.to_string(),
-        )?)
-    }
-
     async fn try_refund_non_cooperative(
         &self,
         swap: &SendSwap,
@@ -896,9 +882,7 @@ impl LiquidSdk {
         Ok(refund_tx_id)
     }
 
-    async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let swap_script = swap.get_swap_script()?;
-        let refund_tx = self.new_refund_tx(&swap.id, &swap_script).await?;
+    async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {               
         let amount_sat = get_invoice_amount!(swap.invoice);
         let broadcast_fees_sat =
             Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
@@ -926,8 +910,7 @@ impl LiquidSdk {
     ) -> Result<(), PaymentError> {
         Self::verify_payment_hash(preimage, invoice)?;
         info!("Preimage is valid for Send Swap {swap_id}");
-        self.try_handle_send_swap_update(swap_id, Complete, Some(preimage), None, None)
-            .await
+        Ok(())
     }
 
     /// Interact with Boltz to assist in them doing a cooperative claim
@@ -936,7 +919,10 @@ impl LiquidSdk {
             "Claim is pending for Send Swap {}. Initiating cooperative claim",
             &send_swap.id
         );
-        self.swapper.claim_send_swap_cooperative(send_swap)?;
+        let output_address = self.next_unused_address().await?.to_string();
+        let preimage = self.swapper.claim_send_swap_cooperative(send_swap, &output_address)?;
+        self.try_handle_send_swap_update(&send_swap.id, Complete, Some(&preimage), None, None)
+            .await?;
         Ok(())
     }
 
@@ -1030,6 +1016,7 @@ impl LiquidSdk {
                 swap
             }
         };
+        self.status_stream.track_swap_id(&swap.id)?;
 
         let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
         self.wait_for_payment(swap.id, accept_zero_conf)
@@ -1309,6 +1296,7 @@ impl LiquidSdk {
                     .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
 
                 let script_witness_bytes = input.clone().witness.script_witness;
+                info!("Found Send Swap {id} claim tx witness: {script_witness_bytes:?}");
                 let script_witness = Witness::from(script_witness_bytes);
 
                 let preimage_bytes = script_witness
