@@ -342,6 +342,25 @@ impl ReceiveSwap {
         Ok(res)
     }
 
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
+        let keypair = self.get_claim_keypair()?;
+        let create_response =
+            self.get_boltz_create_response()
+                .map_err(|e| PaymentError::Generic {
+                    err: format!(
+                        "Failed to create swap script for Receive Swap {}: {e:?}",
+                        self.id
+                    ),
+                })?;
+        LBtcSwapScriptV2::reverse_from_swap_resp(&create_response, keypair.public_key().into())
+            .map_err(|e| PaymentError::Generic {
+                err: format!(
+                    "Failed to create swap script for Receive Swap {}: {e:?}",
+                    self.id
+                ),
+            })
+    }
+
     pub(crate) fn from_boltz_struct_to_json(
         create_response: &CreateReverseResponse,
         expected_swap_id: &str,

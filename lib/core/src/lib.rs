@@ -9,4 +9,5 @@ pub mod logger;
 pub mod model;
 pub mod persist;
 pub mod sdk;
+pub(crate) mod swapper;
 pub(crate) mod utils;
