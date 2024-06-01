@@ -20,9 +20,12 @@ use crate::utils;
 pub struct Config {
     pub boltz_url: String,
     pub electrum_url: String,
-    /// Directory in which all SDK files (DB, log) are stored.
+    /// Directory in which all SDK files (DB, log, cache) are stored.
+    ///
+    /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
     pub network: Network,
+    /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
 }
 impl Config {
