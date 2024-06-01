@@ -197,7 +197,7 @@ impl Swapper for BoltzSwapper {
             })?;
 
         info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}",  swap_script.locktime);
-        if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
+        if !utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
             return Err(PaymentError::Generic {
                 err: format!(
                     "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
