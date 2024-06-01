@@ -612,14 +612,27 @@ impl LiquidSdk {
                 Ok(())
             }
 
+            // Boltz announced they successfully broadcast the (cooperative or non-cooperative) claim tx
             Ok(SubSwapStates::TransactionClaimed) => {
                 debug!("Send Swap {id} has been claimed");
-                let preimage =
-                    self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
-                self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)
-                    .await?;
-                self.try_handle_send_swap_update(id, Complete, Some(&preimage), None, None)
-                    .await?;
+
+                match ongoing_send_swap.preimage {
+                    Some(_) => {
+                        debug!("The claim tx was a key path spend (cooperative claim)");
+                        // Preimage was already validated and stored, PaymentSucceeded event emitted,
+                        // when the cooperative claim was handled.
+                    }
+                    None => {
+                        debug!("The claim tx was a script path spend (non-cooperative claim)");
+                        let preimage =
+                            self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
+                        self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)
+                            .await?;
+                        self.try_handle_send_swap_update(id, Complete, Some(&preimage), None, None)
+                            .await?;
+                    }
+                }
+
                 Ok(())
             }
 
@@ -1000,6 +1013,7 @@ impl LiquidSdk {
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: req.invoice.clone(),
+                    preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
                     create_response_json,
