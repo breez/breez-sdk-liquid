@@ -2,6 +2,7 @@ use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
+use lwk_wollet::elements::{LockTime, LockTime::*};
 
 use crate::error::PaymentError;
 
@@ -29,4 +30,12 @@ pub(crate) fn decode_keypair(secret_key: &str) -> Result<boltz_client::Keypair, 
     let secp = boltz_client::Secp256k1::new();
     let secret_key = lwk_wollet::secp256k1::SecretKey::from_str(secret_key)?;
     Ok(boltz_client::Keypair::from_secret_key(&secp, &secret_key))
+}
+
+pub(crate) fn is_locktime_expired(current_locktime: LockTime, expiry_locktime: LockTime) -> bool {
+    match (current_locktime, expiry_locktime) {
+        (Blocks(n), Blocks(lock_time)) => n >= lock_time,
+        (Seconds(n), Seconds(lock_time)) => n >= lock_time,
+        _ => false, // Not using the same units
+    }
 }

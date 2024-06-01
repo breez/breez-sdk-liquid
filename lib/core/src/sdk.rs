@@ -26,7 +26,7 @@ use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
-use lwk_wollet::elements::{LockTime, LockTime::*};
+use lwk_wollet::elements::LockTime;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
@@ -34,6 +34,7 @@ use lwk_wollet::{
     Wollet as LwkWollet, WolletDescriptor,
 };
 use tokio::sync::{watch, Mutex, RwLock};
+use tokio::time::MissedTickBehavior;
 
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
@@ -170,8 +171,8 @@ impl LiquidSdk {
             .track_pending_swaps(self.shutdown_receiver.clone())
             .await;
 
-        self.track_swap_updates(self.shutdown_receiver.clone())
-            .await;
+        self.track_swap_updates().await;
+        self.track_refundable_swaps().await;
 
         Ok(())
     }
@@ -196,16 +197,13 @@ impl LiquidSdk {
         Ok(())
     }
 
-    async fn track_swap_updates(self: &Arc<LiquidSdk>, mut shutdown: watch::Receiver<()>) {
+    async fn track_swap_updates(self: &Arc<LiquidSdk>) {
         let cloned = self.clone();
         tokio::spawn(async move {
+            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             let mut updates_stream = cloned.status_stream.subscribe_swap_updates();
             loop {
                 tokio::select! {
-                    _ = shutdown.changed() => {
-                        info!("Received shutdown signal, exiting swap updates loop");
-                        return;
-                    },
                     update = updates_stream.recv() => match update {
                         Ok(boltzv2::Update { id, status }) => {
                             let _ = cloned.sync().await;
@@ -223,10 +221,61 @@ impl LiquidSdk {
                             }
                         }
                         Err(e) => error!("Received stream error: {e:?}"),
+                    },
+                    _ = shutdown_receiver.changed() => {
+                        info!("Received shutdown signal, exiting swap updates loop");
+                        return;
                     }
                 }
             }
         });
+    }
+
+    async fn track_refundable_swaps(self: &Arc<LiquidSdk>) {
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
+            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        match cloned.persister.list_pending_send_swaps() {
+                            Ok(pending_send_swaps) => {
+                                for swap in pending_send_swaps {
+                                    if let Err(e) = cloned.check_send_swap_expiration(&swap).await {
+                                        error!("Error checking expiration for Send Swap {}: {e:?}", swap.id);
+                                    }
+                                }
+                            }
+                            Err(e) => error!("Error listing pending send swaps: {e:?}"),
+                        }
+                    },
+                    _ = shutdown_receiver.changed() => {
+                        info!("Received shutdown signal, exiting refundable swaps loop");
+                        return;
+                    }
+                }
+            }
+        });
+    }
+
+    async fn check_send_swap_expiration(&self, send_swap: &SendSwap) -> Result<()> {
+        if send_swap.lockup_tx_id.is_some() && send_swap.refund_tx_id.is_none() {
+            let swap_script = send_swap.get_swap_script()?;
+            let current_height = self.lwk_wollet.lock().await.tip().height();
+            let locktime_from_height = LockTime::from_height(current_height)?;
+
+            info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", send_swap.id, swap_script.locktime);
+            if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
+                let id = &send_swap.id;
+                let refund_tx_id = self.try_refund(send_swap).await?;
+                info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
+                self.try_handle_send_swap_update(id, Pending, None, None, Some(&refund_tx_id))
+                    .await?;
+            }
+        }
+        Ok(())
     }
 
     async fn notify_event_listeners(&self, e: LiquidSdkEvent) -> Result<()> {
@@ -547,11 +596,7 @@ impl LiquidSdk {
             // the claim by doing so cooperatively
             Ok(SubSwapStates::TransactionClaimPending) => {
                 let keypair = ongoing_send_swap.get_refund_keypair()?;
-                let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
-                    &ongoing_send_swap.get_boltz_create_response()?,
-                    keypair.public_key().into(),
-                )
-                .map_err(|e| {
+                let swap_script = ongoing_send_swap.get_swap_script().map_err(|e| {
                     anyhow!("Could not rebuild refund details for Send Swap {id}: {e:?}")
                 })?;
 
@@ -878,37 +923,28 @@ impl LiquidSdk {
             })?;
 
         info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}",  swap_script.locktime);
-        let is_locktime_satisfied = match (locktime_from_height, swap_script.locktime) {
-            (Blocks(n), Blocks(lock_time)) => n >= lock_time,
-            (Seconds(n), Seconds(lock_time)) => n >= lock_time,
-            _ => false, // Not using the same units
-        };
-        if !is_locktime_satisfied {
-            return Err(PaymentError::Generic {
+        match utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
+            true => {
+                let tx =
+                    refund_tx.sign_refund(&swap.get_refund_keypair()?, broadcast_fees_sat, None)?;
+                let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                info!(
+                    "Successfully broadcast non-cooperative refund for Send Swap {}",
+                    swap.id
+                );
+                Ok(refund_tx_id)
+            }
+            false => Err(PaymentError::Generic {
                 err: format!(
                     "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
                     locktime_from_height, swap_script.locktime
                 )
-            });
+            })
         }
-
-        let tx = refund_tx.sign_refund(&swap.get_refund_keypair()?, broadcast_fees_sat, None)?;
-        let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
-        info!(
-            "Successfully broadcast non-cooperative refund for Send Swap {}",
-            swap.id
-        );
-        Ok(refund_tx_id)
     }
 
     async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let id = &swap.id;
-        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
-            &swap.get_boltz_create_response()?,
-            swap.get_refund_keypair()?.public_key().into(),
-        )
-        .map_err(|e| anyhow!("Could not rebuild refund details for Send Swap {id}: {e:?}"))?;
-
+        let swap_script = swap.get_swap_script()?;
         let refund_tx = self.new_refund_tx(&swap.id, &swap_script).await?;
         let amount_sat = get_invoice_amount!(swap.invoice);
         let broadcast_fees_sat =
@@ -1342,14 +1378,8 @@ impl LiquidSdk {
         info!("Retrieving preimage from non-cooperative claim tx");
 
         let id = &swap.id;
-        let keypair = swap.get_refund_keypair()?;
-        let create_response = swap.get_boltz_create_response()?;
         let electrum_client = ElectrumClient::new(&self.electrum_url)?;
-
-        let swap_script = LBtcSwapScriptV2::submarine_from_swap_resp(
-            &create_response,
-            keypair.public_key().into(),
-        )?;
+        let swap_script = swap.get_swap_script()?;
         let swap_script_pk = swap_script.to_address(self.network.into())?.script_pubkey();
         debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
 
