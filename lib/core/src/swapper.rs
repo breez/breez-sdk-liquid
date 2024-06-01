@@ -19,9 +19,6 @@ use crate::error::PaymentError;
 use crate::model::{Config, Network, ReceiveSwap, SendSwap};
 use crate::utils;
 
-pub const BOLTZ_TESTNET_URL_V2: &str = "https://api.testnet.boltz.exchange/v2";
-pub const BOLTZ_MAINNET_URL_V2: &str = "https://api.boltz.exchange/v2";
-
 pub trait Swapper: Send + Sync {
     /// Create a new send swap
     fn create_send_swap(
@@ -90,13 +87,6 @@ impl BoltzSwapper {
         }
     }
 
-    fn boltz_url_v2(network: &Network) -> &'static str {
-        match network {
-            Network::Testnet => BOLTZ_TESTNET_URL_V2,
-            Network::Mainnet => BOLTZ_MAINNET_URL_V2,
-        }
-    }
-
     fn new_refund_tx(
         &self,
         swap: &SendSwap,
@@ -108,7 +98,7 @@ impl BoltzSwapper {
             swap_script.clone(),
             output_address,
             &self.config.get_electrum_config(),
-            Self::boltz_url_v2(&self.config.network).to_string(),
+            self.config.boltz_url.clone(),
             swap.id.to_string(),
         )?)
     }
@@ -277,7 +267,7 @@ impl Swapper for BoltzSwapper {
             swap_script,
             claim_address,
             &self.config.get_electrum_config(),
-            BoltzSwapper::boltz_url_v2(&self.config.network).into(),
+            self.config.boltz_url.clone(),
             swap.id.clone(),
         )?;
 
