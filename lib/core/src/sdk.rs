@@ -204,7 +204,7 @@ impl LiquidSdk {
                         Ok(boltzv2::Update { id, status }) => {
                             let _ = cloned.sync().await;                            
                             match cloned.persister.fetch_send_swap_by_id(&id) {
-                                Ok(_) => {
+                                Ok(Some(_)) => {
                                   match cloned.try_handle_send_swap_boltz_status(&status, &id).await {
                                     Ok(_) => info!("Succesfully handled Send Swap {id} update"),
                                     Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
