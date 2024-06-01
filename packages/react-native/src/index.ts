@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from "react-native"
+import { NativeModules, Platform, EmitterSubscription, NativeEventEmitter } from "react-native"
 
 const LINKING_ERROR =
     `The package 'react-native-breez-liquid-sdk' doesn't seem to be linked. Make sure: \n\n` +
@@ -23,10 +23,17 @@ export interface BackupRequest {
     backupPath?: string
 }
 
-export interface ConnectRequest {
-    mnemonic: string
+export interface Config {
+    boltzUrl: string
+    electrumUrl: string
+    workingDir: string
     network: Network
-    dataDir?: string
+    paymentTimeoutSec: number
+}
+
+export interface ConnectRequest {
+    config: Config
+    mnemonic: string
 }
 
 export interface GetInfoRequest {
@@ -193,6 +200,12 @@ export const setLogger = async (logger: Logger): Promise<EmitterSubscription> =>
 
     return subscription
 }
+
+export const defaultConfig = async (network: Network): Promise<Config> => {
+    const response = await BreezLiquidSDK.defaultConfig(network)
+    return response
+}
+
 export const parseInvoice = async (invoice: string): Promise<LnInvoice> => {
     const response = await BreezLiquidSDK.parseInvoice(invoice)
     return response

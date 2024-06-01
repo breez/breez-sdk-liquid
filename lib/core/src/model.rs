@@ -1,17 +1,62 @@
 use anyhow::{anyhow, Result};
+use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
-    CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree,
+    CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree, BOLTZ_MAINNET_URL_V2,
+    BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
 use lwk_signer::SwSigner;
-use lwk_wollet::{ElectrumUrl, ElementsNetwork, WolletDescriptor};
+use lwk_wollet::{ElectrumClient, ElectrumUrl, ElementsNetwork, WolletDescriptor};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
 use crate::error::PaymentError;
 use crate::utils;
+
+/// Configuration for the Liquid SDK
+#[derive(Clone, Debug, Serialize)]
+pub struct Config {
+    pub boltz_url: String,
+    pub electrum_url: String,
+    /// Directory in which all SDK files (DB, log, cache) are stored.
+    ///
+    /// Prefix can be a relative or absolute path to this directory.
+    pub working_dir: String,
+    pub network: Network,
+    /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
+    pub payment_timeout_sec: u64,
+}
+impl Config {
+    pub(crate) fn get_electrum_client(&self) -> Result<ElectrumClient, lwk_wollet::Error> {
+        ElectrumClient::new(&ElectrumUrl::new(&self.electrum_url, true, true))
+    }
+
+    pub(crate) fn get_electrum_config(&self) -> ElectrumConfig {
+        ElectrumConfig::new(self.network.into(), &self.electrum_url, true, true, 100)
+    }
+
+    pub fn mainnet() -> Self {
+        Config {
+            boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
+            electrum_url: "blockstream.info:995".to_string(),
+            working_dir: ".".to_string(),
+            network: Network::Mainnet,
+            payment_timeout_sec: 15,
+        }
+    }
+
+    pub fn testnet() -> Self {
+        Config {
+            boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
+            electrum_url: "blockstream.info:465".to_string(),
+            working_dir: ".".to_string(),
+            network: Network::Testnet,
+            payment_timeout_sec: 15,
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
 pub enum Network {
@@ -84,39 +129,18 @@ pub enum LiquidSdkEvent {
 }
 
 pub struct LiquidSdkOptions {
+    pub config: Config,
     pub signer: SwSigner,
-    pub network: Network,
     /// Output script descriptor
     ///
     /// See <https://github.com/bitcoin/bips/pull/1143>
     pub descriptor: WolletDescriptor,
-    /// Absolute or relative path to the data dir, including the dir name.
-    ///
-    /// If not set, it defaults to [crate::DEFAULT_DATA_DIR].
-    pub data_dir_path: Option<String>,
-    /// Custom Electrum URL. If set, it must match the specified network.
-    ///
-    /// If not set, it defaults to a Blockstream instance.
-    pub electrum_url: Option<ElectrumUrl>,
-}
-
-impl LiquidSdkOptions {
-    pub(crate) fn get_electrum_url(&self) -> ElectrumUrl {
-        self.electrum_url.clone().unwrap_or({
-            let (url, validate_domain, tls) = match &self.network {
-                Network::Mainnet => ("blockstream.info:995", true, true),
-                Network::Testnet => ("blockstream.info:465", true, true),
-            };
-            ElectrumUrl::new(url, tls, validate_domain)
-        })
-    }
 }
 
 #[derive(Debug, Serialize)]
 pub struct ConnectRequest {
     pub mnemonic: String,
-    pub data_dir: Option<String>,
-    pub network: Network,
+    pub config: Config,
 }
 
 #[derive(Debug, Serialize)]

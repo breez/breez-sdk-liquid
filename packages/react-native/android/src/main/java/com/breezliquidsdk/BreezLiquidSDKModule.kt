@@ -3,6 +3,7 @@ package com.breezliquidsdk
 import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
+import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -34,11 +35,43 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         throw LiquidSdkException.Generic("Not initialized")
     }
 
+    @Throws(LiquidSdkException::class)
+    private fun ensureWorkingDir(workingDir: String) {
+        try {
+            val workingDirFile = File(workingDir)
+
+            if (!workingDirFile.exists() && !workingDirFile.mkdirs()) {
+                throw LiquidSdkException.Generic("Mandatory field workingDir must contain a writable directory")
+            }
+        } catch (e: SecurityException) {
+            throw LiquidSdkException.Generic("Mandatory field workingDir must contain a writable directory")
+        }
+    }
+
     @ReactMethod
     fun addListener(eventName: String) {}
 
     @ReactMethod
     fun removeListeners(count: Int) {}
+
+    @ReactMethod
+    fun defaultConfig(
+        network: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val networkTmp = asNetwork(network)
+                val res = defaultConfig(networkTmp)
+                val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezLiquidSdk")
+
+                res.workingDir = workingDir.absolutePath
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 
     @ReactMethod
     fun parseInvoice(
@@ -86,9 +119,9 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
                     asConnectRequest(
                         req,
                     ) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
-                connectRequest.dataDir = connectRequest.dataDir?.takeUnless {
-                    it.isEmpty()
-                } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
+
+                ensureWorkingDir(connectRequest.config.workingDir)
+
                 bindingLiquidSdk = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {

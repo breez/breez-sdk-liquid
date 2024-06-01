@@ -22,6 +22,11 @@
 {%- match func.return_type() -%}
 {%- when Some with (return_type) %}
                 val res = {{ obj_interface }}{{ func.name()|fn_name|unquote }}({%- call kt::arg_list(func) -%})
+{%- if func.name() == "default_config" %}
+                val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezLiquidSdk")
+
+                res.workingDir = workingDir.absolutePath
+{%- endif -%}               
     {%- match return_type %}
     {%- when Type::Optional(inner) %}
         {%- let unboxed = inner.as_ref() %}

@@ -74,10 +74,11 @@ async fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let network = args.network.unwrap_or(Network::Testnet);
+    let mut config = LiquidSdk::default_config(network);
+    config.working_dir = data_dir_str;
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
-        data_dir: Some(data_dir_str),
-        network,
+        config,
     })
     .await?;
     let listener_id = sdk

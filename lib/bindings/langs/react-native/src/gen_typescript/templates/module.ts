@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from "react-native"
+import { NativeModules, Platform, EmitterSubscription, NativeEventEmitter } from "react-native"
 
 const LINKING_ERROR =
     `The package 'react-native-breez-liquid-sdk' doesn't seem to be linked. Make sure: \n\n` +
@@ -20,7 +20,7 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
 const BreezLiquidSDKEmitter = new NativeEventEmitter(BreezLiquidSDK)
 {%- import "macros.ts" as ts %}
 {%- include "Types.ts" %}
-{% include "Helpers.ts" -%}
+{% include "Helpers.ts" %}
 {% for func in ci.function_definitions() %}
 {%- if func.name()|ignored_function == false -%}
 {%- include "TopLevelFunctionTemplate.ts" %}

@@ -13,7 +13,6 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
 use boltz_client::{
-    network::electrum::ElectrumConfig,
     swaps::{
         boltz::{RevSwapStates, SubSwapStates},
         boltzv2::*,
@@ -30,8 +29,7 @@ use lwk_wollet::elements::LockTime;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
     elements::{Address, Transaction},
-    BlockchainBackend, ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister,
-    Wollet as LwkWollet, WolletDescriptor,
+    BlockchainBackend, ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
@@ -56,14 +54,12 @@ pub const LIQUID_CLAIM_TX_FEERATE_MSAT: f32 = 100.0;
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
 pub struct LiquidSdk {
-    electrum_url: ElectrumUrl,
-    network: Network,
+    config: Config,
     /// LWK Wollet, a watch-only Liquid wallet for this instance
     lwk_wollet: Arc<Mutex<LwkWollet>>,
     /// LWK Signer, for signing Liquid transactions
     lwk_signer: SwSigner,
     persister: Arc<Persister>,
-    data_dir_path: String,
     event_manager: Arc<EventManager>,
     status_stream: Arc<BoltzStatusStream>,
     is_started: RwLock<bool>,
@@ -73,16 +69,15 @@ pub struct LiquidSdk {
 
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let is_mainnet = req.network == Network::Mainnet;
+        let config = req.config;
+        let is_mainnet = config.network == Network::Mainnet;
         let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
-        let descriptor = LiquidSdk::get_descriptor(&signer, req.network)?;
+        let descriptor = LiquidSdk::get_descriptor(&signer, config.network)?;
 
         let sdk = LiquidSdk::new(LiquidSdkOptions {
             signer,
             descriptor,
-            electrum_url: None,
-            data_dir_path: req.data_dir,
-            network: req.network,
+            config,
         })?;
         sdk.start().await?;
 
@@ -90,33 +85,30 @@ impl LiquidSdk {
     }
 
     fn new(opts: LiquidSdkOptions) -> Result<Arc<Self>> {
-        let network = opts.network;
-        let elements_network: ElementsNetwork = opts.network.into();
-        let electrum_url = opts.get_electrum_url();
-        let data_dir_path = opts.data_dir_path.unwrap_or(DEFAULT_DATA_DIR.to_string());
+        let config = opts.config;
+        let elements_network: ElementsNetwork = config.network.into();
 
-        let lwk_persister = FsPersister::new(&data_dir_path, network.into(), &opts.descriptor)?;
+        fs::create_dir_all(&config.working_dir)?;
+
+        let lwk_persister = FsPersister::new(
+            config.working_dir.clone(),
+            elements_network,
+            &opts.descriptor,
+        )?;
         let lwk_wollet = LwkWollet::new(elements_network, lwk_persister, opts.descriptor)?;
 
-        fs::create_dir_all(&data_dir_path)?;
-
-        let persister = Arc::new(Persister::new(&data_dir_path, network)?);
+        let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
-        let status_stream = Arc::new(BoltzStatusStream::new(
-            Self::boltz_url_v2(network),
-            persister.clone(),
-        ));
+        let status_stream = Arc::new(BoltzStatusStream::new(&config.boltz_url, persister.clone()));
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
         let sdk = Arc::new(LiquidSdk {
+            config,
             lwk_wollet: Arc::new(Mutex::new(lwk_wollet)),
-            network,
-            electrum_url,
             lwk_signer: opts.signer,
             persister,
-            data_dir_path,
             event_manager,
             status_stream,
             is_started: RwLock::new(false),
@@ -729,24 +721,7 @@ impl LiquidSdk {
     }
 
     pub(crate) fn boltz_client_v2(&self) -> BoltzApiClientV2 {
-        BoltzApiClientV2::new(Self::boltz_url_v2(self.network))
-    }
-
-    pub(crate) fn boltz_url_v2(network: Network) -> &'static str {
-        match network {
-            Network::Testnet => BOLTZ_TESTNET_URL_V2,
-            Network::Mainnet => BOLTZ_MAINNET_URL_V2,
-        }
-    }
-
-    fn network_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(
-            self.network.into(),
-            &self.electrum_url.to_string(),
-            true,
-            true,
-            100,
-        )
+        BoltzApiClientV2::new(&self.config.boltz_url)
     }
 
     async fn build_tx(
@@ -756,7 +731,7 @@ impl LiquidSdk {
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
         let lwk_wollet = self.lwk_wollet.lock().await;
-        let mut pset = lwk_wollet::TxBuilder::new(self.network.into())
+        let mut pset = lwk_wollet::TxBuilder::new(self.config.network.into())
             .add_lbtc_recipient(
                 &ElementsAddress::from_str(recipient_address).map_err(|e| {
                     PaymentError::Generic {
@@ -780,7 +755,7 @@ impl LiquidSdk {
             .parse::<Bolt11Invoice>()
             .map_err(|_| PaymentError::InvalidInvoice)?;
 
-        match (invoice.network().to_string().as_str(), self.network) {
+        match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", Network::Mainnet) => {}
             ("testnet", Network::Testnet) => {}
             _ => return Err(PaymentError::InvalidInvoice),
@@ -815,7 +790,7 @@ impl LiquidSdk {
     async fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
-        let temp_p2tr_addr = match self.network {
+        let temp_p2tr_addr = match self.config.network {
             Network::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
             Network::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
@@ -871,12 +846,12 @@ impl LiquidSdk {
         swap_script: &LBtcSwapScriptV2,
     ) -> Result<LBtcSwapTxV2, PaymentError> {
         let output_address = self.next_unused_address().await?.to_string();
-        let network_config = self.network_config();
+        let network_config = self.config.get_electrum_config();
         Ok(LBtcSwapTxV2::new_refund(
             swap_script.clone(),
             &output_address,
             &network_config,
-            Self::boltz_url_v2(self.network).to_string(),
+            self.config.clone().boltz_url,
             swap_id.to_string(),
         )?)
     }
@@ -895,7 +870,8 @@ impl LiquidSdk {
             Some((&self.boltz_client_v2(), &swap.id)),
         )?;
 
-        let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+        let refund_tx_id =
+            refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
         info!(
             "Successfully broadcast cooperative refund for Send Swap {}",
             &swap.id
@@ -925,9 +901,9 @@ impl LiquidSdk {
         info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}",  swap_script.locktime);
         match utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
             true => {
-                let tx =
-                    refund_tx.sign_refund(&swap.get_refund_keypair()?, broadcast_fees_sat, None)?;
-                let refund_tx_id = refund_tx.broadcast(&tx, &self.network_config(), is_lowball)?;
+                let tx = refund_tx.sign_refund(&swap.get_refund_keypair()?, broadcast_fees_sat, None)?;
+                let refund_tx_id =
+                    refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
                 info!(
                     "Successfully broadcast non-cooperative refund for Send Swap {}",
                     swap.id
@@ -950,7 +926,7 @@ impl LiquidSdk {
         let broadcast_fees_sat =
             Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
         let client = self.boltz_client_v2();
-        let is_lowball = match self.network {
+        let is_lowball = match self.config.network {
             Network::Mainnet => None,
             Network::Testnet => Some((&client, boltz_client::network::Chain::LiquidTestnet)),
         };
@@ -1031,7 +1007,7 @@ impl LiquidSdk {
             )
             .await?;
 
-        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let electrum_client = self.config.get_electrum_client()?;
         let lockup_tx_id = electrum_client.broadcast(&lockup_tx)?.to_string();
 
         debug!(
@@ -1040,6 +1016,13 @@ impl LiquidSdk {
         Ok(lockup_tx_id)
     }
 
+    /// Creates, initiates and starts monitoring the progress of a Send Payment.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// - a [PaymentError::PaymentTimeout], if the payment could not be initiated in this time
+    /// - a [PaymentState::Pending] payment, if the payment could be initiated, but didn't yet
+    /// complete in this time
+    /// - a [PaymentState::Complete] payment, if the payment was successfully completed in this time
     pub async fn send_payment(
         &self,
         req: &PrepareSendResponse,
@@ -1110,7 +1093,7 @@ impl LiquidSdk {
         swap_id: String,
         accept_zero_conf: bool,
     ) -> Result<Payment, PaymentError> {
-        let timeout_fut = tokio::time::sleep(Duration::from_secs(15));
+        let timeout_fut = tokio::time::sleep(Duration::from_secs(self.config.payment_timeout_sec));
         tokio::pin!(timeout_fut);
 
         let mut events_stream = self.event_manager.subscribe();
@@ -1178,8 +1161,8 @@ impl LiquidSdk {
         let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
             claim_address,
-            &self.network_config(),
-            Self::boltz_url_v2(self.network).into(),
+            &self.config.get_electrum_config(),
+            self.config.clone().boltz_url,
             ongoing_receive_swap.id.clone(),
         )?;
 
@@ -1194,8 +1177,8 @@ impl LiquidSdk {
 
         let claim_tx_id = claim_tx_wrapper.broadcast(
             &claim_tx,
-            &self.network_config(),
-            Some((&self.boltz_client_v2(), self.network.into())),
+            &self.config.get_electrum_config(),
+            Some((&self.boltz_client_v2(), self.config.network.into())),
         )?;
         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
         debug!("Claim Tx {:?}", claim_tx);
@@ -1329,7 +1312,7 @@ impl LiquidSdk {
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         if with_scan {
-            let mut electrum_client = ElectrumClient::new(&self.electrum_url)?;
+            let mut electrum_client = self.config.get_electrum_client()?;
             let mut lwk_wollet = self.lwk_wollet.lock().await;
             lwk_wollet::full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)?;
         }
@@ -1378,9 +1361,11 @@ impl LiquidSdk {
         info!("Retrieving preimage from non-cooperative claim tx");
 
         let id = &swap.id;
-        let electrum_client = ElectrumClient::new(&self.electrum_url)?;
+        let electrum_client = self.config.get_electrum_client()?;
         let swap_script = swap.get_swap_script()?;
-        let swap_script_pk = swap_script.to_address(self.network.into())?.script_pubkey();
+        let swap_script_pk = swap_script
+            .to_address(self.config.network.into())?
+            .script_pubkey();
         debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
 
         // Get tx history of the swap script (lockup address)
@@ -1445,8 +1430,8 @@ impl LiquidSdk {
 
     /// Empties all Liquid Wallet caches for this network type.
     pub fn empty_wallet_cache(&self) -> Result<()> {
-        let mut path = PathBuf::from(self.data_dir_path.clone());
-        path.push(Into::<ElementsNetwork>::into(self.network).as_str());
+        let mut path = PathBuf::from(self.config.working_dir.clone());
+        path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
         path.push("enc_cache");
 
         fs::remove_dir_all(&path)?;
@@ -1482,6 +1467,13 @@ impl LiquidSdk {
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
         self.persister.restore_from_backup(backup_path)
+    }
+
+    pub fn default_config(network: Network) -> Config {
+        match network {
+            Network::Mainnet => Config::mainnet(),
+            Network::Testnet => Config::testnet(),
+        }
     }
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
@@ -1566,7 +1558,7 @@ mod tests {
     use tempdir::TempDir;
 
     use crate::model::*;
-    use crate::sdk::{LiquidSdk, Network};
+    use crate::sdk::LiquidSdk;
 
     const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
@@ -1594,10 +1586,11 @@ mod tests {
     #[tokio::test]
     async fn normal_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
+        let mut config = Config::testnet();
+        config.working_dir = data_dir_str;
         let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
-            data_dir: Some(data_dir_str),
-            network: Network::Testnet,
+            config,
         })
         .await?;
 
@@ -1612,10 +1605,11 @@ mod tests {
     #[tokio::test]
     async fn reverse_submarine_swap() -> Result<()> {
         let (_data_dir, data_dir_str) = create_temp_dir()?;
+        let mut config = Config::testnet();
+        config.working_dir = data_dir_str;
         let sdk = LiquidSdk::connect(ConnectRequest {
             mnemonic: TEST_MNEMONIC.to_string(),
-            data_dir: Some(data_dir_str),
-            network: Network::Testnet,
+            config,
         })
         .await?;
 

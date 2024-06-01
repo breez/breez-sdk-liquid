@@ -36,6 +36,19 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         throw LiquidSdkException.Generic("Not initialized")
     }
 
+    @Throws(LiquidSdkException::class)
+    private fun ensureWorkingDir(workingDir: String) {
+        try {
+            val workingDirFile = File(workingDir)
+
+            if (!workingDirFile.exists() && !workingDirFile.mkdirs()) {
+                throw LiquidSdkException.Generic("Mandatory field workingDir must contain a writable directory")
+            }
+        } catch (e: SecurityException) {
+            throw LiquidSdkException.Generic("Mandatory field workingDir must contain a writable directory")
+        }
+    }
+
     @ReactMethod
     fun addListener(eventName: String) {}
 
@@ -73,7 +86,9 @@ class BreezLiquidSDKModule(reactContext: ReactApplicationContext) : ReactContext
         executor.execute {
             try {
                 var connectRequest = asConnectRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
-                connectRequest.dataDir = connectRequest.dataDir?.takeUnless { it.isEmpty() } ?: run { reactApplicationContext.filesDir.toString() + "/breezLiquidSdk" }
+
+                ensureWorkingDir(connectRequest.config.workingDir)
+
                 bindingLiquidSdk = connect(connectRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {

@@ -58,6 +58,10 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkEr
     })
 }
 
+pub fn default_config(network: Network) -> Config {
+    LiquidSdk::default_config(network)
+}
+
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }

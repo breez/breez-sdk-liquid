@@ -28,19 +28,55 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
-class ConnectRequest {
-  final String mnemonic;
-  final String? dataDir;
-  final Network network;
+/// Configuration for the Liquid SDK
+class Config {
+  final String boltzUrl;
+  final String electrumUrl;
 
-  const ConnectRequest({
-    required this.mnemonic,
-    this.dataDir,
+  /// Directory in which all SDK files (DB, log) are stored.
+  final String workingDir;
+  final Network network;
+  final BigInt paymentTimeoutSec;
+
+  const Config({
+    required this.boltzUrl,
+    required this.electrumUrl,
+    required this.workingDir,
     required this.network,
+    required this.paymentTimeoutSec,
   });
 
   @override
-  int get hashCode => mnemonic.hashCode ^ dataDir.hashCode ^ network.hashCode;
+  int get hashCode =>
+      boltzUrl.hashCode ^
+      electrumUrl.hashCode ^
+      workingDir.hashCode ^
+      network.hashCode ^
+      paymentTimeoutSec.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Config &&
+          runtimeType == other.runtimeType &&
+          boltzUrl == other.boltzUrl &&
+          electrumUrl == other.electrumUrl &&
+          workingDir == other.workingDir &&
+          network == other.network &&
+          paymentTimeoutSec == other.paymentTimeoutSec;
+}
+
+class ConnectRequest {
+  final String mnemonic;
+  final Config config;
+
+  const ConnectRequest({
+    required this.mnemonic,
+    required this.config,
+  });
+
+  @override
+  int get hashCode => mnemonic.hashCode ^ config.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -48,8 +84,7 @@ class ConnectRequest {
       other is ConnectRequest &&
           runtimeType == other.runtimeType &&
           mnemonic == other.mnemonic &&
-          dataDir == other.dataDir &&
-          network == other.network;
+          config == other.config;
 }
 
 class GetInfoRequest {
