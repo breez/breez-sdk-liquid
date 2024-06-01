@@ -85,7 +85,7 @@ pub struct BoltzSwapper {
 impl BoltzSwapper {
     pub fn new(config: Config) -> BoltzSwapper {
         BoltzSwapper {
-            client: BoltzApiClientV2::new(BoltzSwapper::boltz_url_v2(&config.network)),
+            client: BoltzApiClientV2::new(&config.boltz_url),
             config,
         }
     }

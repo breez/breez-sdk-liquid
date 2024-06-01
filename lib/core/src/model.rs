@@ -348,14 +348,14 @@ impl ReceiveSwap {
             self.get_boltz_create_response()
                 .map_err(|e| PaymentError::Generic {
                     err: format!(
-                        "Failed to create swap script for Send Swap {}: {e:?}",
+                        "Failed to create swap script for Receive Swap {}: {e:?}",
                         self.id
                     ),
                 })?;
         LBtcSwapScriptV2::reverse_from_swap_resp(&create_response, keypair.public_key().into())
             .map_err(|e| PaymentError::Generic {
                 err: format!(
-                    "Failed to create swap script for Send Swap {}: {e:?}",
+                    "Failed to create swap script for Receive Swap {}: {e:?}",
                     self.id
                 ),
             })
