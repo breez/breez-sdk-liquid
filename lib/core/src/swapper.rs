@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     BoltzApiClientV2, CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
@@ -17,7 +16,7 @@ use lwk_wollet::elements::LockTime;
 use serde_json::Value;
 
 use crate::error::PaymentError;
-use crate::model::{Network, ReceiveSwap, SendSwap};
+use crate::model::{Config, Network, ReceiveSwap, SendSwap};
 use crate::utils;
 
 pub const BOLTZ_TESTNET_URL_V2: &str = "https://api.testnet.boltz.exchange/v2";
@@ -80,16 +79,14 @@ pub trait Swapper: Send + Sync {
 
 pub struct BoltzSwapper {
     client: BoltzApiClientV2,
-    electrum_config: ElectrumConfig,
-    network: Network,
+    config: Config,
 }
 
 impl BoltzSwapper {
-    pub fn new(network: Network, electrum_config: ElectrumConfig) -> BoltzSwapper {
+    pub fn new(config: Config) -> BoltzSwapper {
         BoltzSwapper {
-            client: BoltzApiClientV2::new(BoltzSwapper::boltz_url_v2(&network)),
-            electrum_config,
-            network,
+            client: BoltzApiClientV2::new(BoltzSwapper::boltz_url_v2(&config.network)),
+            config,
         }
     }
 
@@ -110,8 +107,8 @@ impl BoltzSwapper {
         Ok(LBtcSwapTxV2::new_refund(
             swap_script.clone(),
             output_address,
-            &self.electrum_config,
-            Self::boltz_url_v2(&self.network).to_string(),
+            &self.config.get_electrum_config(),
+            Self::boltz_url_v2(&self.config.network).to_string(),
             swap.id.to_string(),
         )?)
     }
@@ -172,11 +169,12 @@ impl Swapper for BoltzSwapper {
             broadcast_fees_sat,
             cooperative,
         )?;
-        let is_lowball = match self.network {
+        let is_lowball = match self.config.network {
             Network::Mainnet => None,
             Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
-        let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
+        let refund_tx_id =
+            refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
         info!(
             "Successfully broadcast cooperative refund for Send Swap {}",
             &swap.id
@@ -216,11 +214,12 @@ impl Swapper for BoltzSwapper {
             broadcast_fees_sat,
             None,
         )?;
-        let is_lowball = match self.network {
+        let is_lowball = match self.config.network {
             Network::Mainnet => None,
             Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
-        let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
+        let refund_tx_id =
+            refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
         info!(
             "Successfully broadcast non-cooperative refund for swap-in {}",
             swap.id
@@ -277,8 +276,8 @@ impl Swapper for BoltzSwapper {
         let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
             claim_address,
-            &self.electrum_config,
-            BoltzSwapper::boltz_url_v2(&self.network).into(),
+            &self.config.get_electrum_config(),
+            BoltzSwapper::boltz_url_v2(&self.config.network).into(),
             swap.id.clone(),
         )?;
 
@@ -294,8 +293,8 @@ impl Swapper for BoltzSwapper {
 
         let claim_tx_id = claim_tx_wrapper.broadcast(
             &claim_tx,
-            &self.electrum_config,
-            Some((&self.client, self.network.into())),
+            &self.config.get_electrum_config(),
+            Some((&self.client, self.config.network.into())),
         )?;
         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
         debug!("Claim Tx {:?}", claim_tx);

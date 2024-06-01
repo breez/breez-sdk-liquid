@@ -103,9 +103,7 @@ impl LiquidSdk {
         let status_stream = Arc::new(BoltzStatusStream::new(&config.boltz_url, persister.clone()));
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let electrum_config = config.get_electrum_config();
-
-        let swapper = Arc::new(BoltzSwapper::new(config.network, electrum_config));
+        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
 
         let sdk = Arc::new(LiquidSdk {
             config,
