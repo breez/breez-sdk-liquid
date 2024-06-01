@@ -17,7 +17,7 @@ use boltz_client::{
         boltzv2::*,        
     },
     util::secrets::Preimage,
-    Amount, Bolt11Invoice, ElementsAddress, LBtcSwapScriptV2,
+    Amount, Bolt11Invoice, ElementsAddress,
 };
 use log::{debug, error, info, warn};
 use lwk_common::{singlesig_desc, Signer, Singlesig};
@@ -732,14 +732,7 @@ impl LiquidSdk {
             pending_receive_sat,
             pubkey: self.lwk_signer.xpub().public_key.to_string(),
         })
-    }
-
-    pub(crate) fn boltz_url_v2(network: Network) -> &'static str {
-        match network {
-            Network::Testnet => BOLTZ_TESTNET_URL_V2,
-            Network::Mainnet => BOLTZ_MAINNET_URL_V2,
-        }
-    }
+    }   
 
     async fn build_tx(
         &self,
