@@ -1671,7 +1671,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.5.1"
-source = "git+https://github.com/ok300/lwk?branch=ok300-history-fields-public#57ff57e30bbd3561562f61cf5b278bc6a6d716cd"
+source = "git+https://github.com/Blockstream/lwk?rev=ffd793d0a1b1122c9bba7de23ccb73033eded98c#ffd793d0a1b1122c9bba7de23ccb73033eded98c"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.21.7",
