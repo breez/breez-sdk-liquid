@@ -1016,6 +1016,13 @@ impl LiquidSdk {
         Ok(lockup_tx_id)
     }
 
+    /// Creates, initiates and starts monitoring the progress of a Send Payment.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// - a [PaymentError::PaymentTimeout], if the payment could not be initiated in this time
+    /// - a [PaymentState::Pending] payment, if the payment could be initiated, but didn't yet
+    /// complete in this time
+    /// - a [PaymentState::Complete] payment, if the payment was successfully completed in this time
     pub async fn send_payment(
         &self,
         req: &PrepareSendResponse,
