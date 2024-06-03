@@ -35,6 +35,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
+async-trait = "0.1.80"
 
 # Pin these versions to fix iOS build issues
 security-framework = "=2.10.0"

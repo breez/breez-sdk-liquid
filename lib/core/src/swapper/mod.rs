@@ -1,9 +1,12 @@
+mod boltz_status_stream;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::Result;
+use async_trait::async_trait;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
-    BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
+    self, BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
     CreateSubmarineRequest, CreateSubmarineResponse, ReversePair, SubmarinePair,
 };
 
@@ -11,13 +14,31 @@ use boltz_client::error::Error;
 
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, LBtcSwapTxV2};
+use boltz_status_stream::BoltzStatusStream;
 use log::{debug, info};
 use lwk_wollet::elements::LockTime;
 use serde_json::Value;
+use tokio::sync::{broadcast, watch};
 
 use crate::error::PaymentError;
 use crate::model::{Config, Network, ReceiveSwap, SendSwap};
 use crate::utils;
+
+#[async_trait]
+pub trait ReconnectHandler: Send + Sync {
+    async fn on_stream_reconnect(&self);
+}
+
+#[async_trait]
+pub trait SwapperStatusStream: Send + Sync {
+    async fn start(
+        self: Arc<Self>,
+        callback: Box<dyn ReconnectHandler>,
+        shutdown: watch::Receiver<()>,
+    );
+    fn track_swap_id(&self, swap_id: &str) -> Result<()>;
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update>;
+}
 
 pub trait Swapper: Send + Sync {
     /// Create a new send swap
@@ -79,6 +100,8 @@ pub trait Swapper: Send + Sync {
     /// Chain broadcast
     #[allow(dead_code)]
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError>;
+
+    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
 }
 
 pub struct BoltzSwapper {
@@ -309,5 +332,9 @@ impl Swapper for BoltzSwapper {
     // chain broadcast
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError> {
         Ok(self.client.broadcast_tx(chain, &tx_hex.into())?)
+    }
+
+    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
+        Box::new(BoltzStatusStream::new(&self.config.boltz_url))
     }
 }

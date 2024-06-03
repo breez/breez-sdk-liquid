@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::swaps::boltzv2::{self, Subscription, SwapUpdate};
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
@@ -12,39 +13,65 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
-use crate::persist::Persister;
+use super::{ReconnectHandler, SwapperStatusStream};
 
 pub(crate) struct BoltzStatusStream {
     url: String,
-    persister: Arc<Persister>,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltzv2::Update>,
 }
 
 impl BoltzStatusStream {
-    pub(crate) fn new(url: &str, persister: Arc<Persister>) -> Self {
+    pub(crate) fn new(url: &str) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(30);
 
         Self {
             url: url.replace("http", "ws") + "/ws",
-            persister,
             subscription_notifier,
             update_notifier,
         }
     }
 
-    pub(crate) fn track_swap_id(&self, swap_id: &str) -> Result<()> {
+    async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
+        let (socket, _) = connect_async(Url::parse(&self.url)?)
+            .await
+            .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
+        Ok(socket)
+    }
+
+    async fn send_subscription(
+        &self,
+        swap_id: String,
+        ws_stream: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
+    ) {
+        info!("Subscribing to status updates for swap ID {swap_id}");
+
+        let subscription = Subscription::new(&swap_id);
+        match serde_json::to_string(&subscription) {
+            Ok(subscribe_json) => match ws_stream.send(Message::Text(subscribe_json)).await {
+                Ok(_) => info!("Subscribed"),
+                Err(e) => error!("Failed to subscribe to {swap_id}: {e:?}"),
+            },
+            Err(e) => error!("Invalid subscription msg: {e:?}"),
+        }
+    }
+}
+
+#[async_trait]
+impl SwapperStatusStream for BoltzStatusStream {
+    fn track_swap_id(&self, swap_id: &str) -> Result<()> {
         let _ = self.subscription_notifier.send(swap_id.to_string());
         Ok(())
     }
 
-    pub(crate) fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
         self.update_notifier.subscribe()
     }
 
-    pub(crate) async fn track_pending_swaps(
-        self: Arc<BoltzStatusStream>,
+    async fn start(
+        self: Arc<Self>,
+        callback: Box<dyn ReconnectHandler>,
         mut shutdown: watch::Receiver<()>,
     ) {
         let keep_alive_ping_interval = Duration::from_secs(15);
@@ -55,17 +82,7 @@ impl BoltzStatusStream {
                 debug!("Start of ws stream loop");
                 match self.connect().await {
                     Ok(mut ws_stream) => {
-                        // Initially subscribe to all ongoing swaps
-                        match self.persister.list_ongoing_swaps() {
-                            Ok(initial_ongoing_swaps) => {
-                                info!("Got {} initial ongoing swaps", initial_ongoing_swaps.len());
-                                for ongoing_swap in initial_ongoing_swaps {
-                                    self.send_subscription(ongoing_swap.id(), &mut ws_stream)
-                                        .await;
-                                }
-                            }
-                            Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
-                        }
+                        callback.on_stream_reconnect().await;
 
                         let mut interval = tokio::time::interval(keep_alive_ping_interval);
                         interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
@@ -147,29 +164,5 @@ impl BoltzStatusStream {
                 }
             }
         });
-    }
-
-    async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let (socket, _) = connect_async(Url::parse(&self.url)?)
-            .await
-            .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
-        Ok(socket)
-    }
-
-    async fn send_subscription(
-        &self,
-        swap_id: String,
-        ws_stream: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
-    ) {
-        info!("Subscribing to status updates for swap ID {swap_id}");
-
-        let subscription = Subscription::new(&swap_id);
-        match serde_json::to_string(&subscription) {
-            Ok(subscribe_json) => match ws_stream.send(Message::Text(subscribe_json)).await {
-                Ok(_) => info!("Subscribed"),
-                Err(e) => error!("Failed to subscribe to {swap_id}: {e:?}"),
-            },
-            Err(e) => error!("Invalid subscription msg: {e:?}"),
-        }
     }
 }
