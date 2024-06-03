@@ -100,9 +100,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req, dynamic hint});
 
-  Future<Config> crateBindingsDefaultConfig({required Network network, dynamic hint});
+  Config crateBindingsDefaultConfig({required Network network, dynamic hint});
 
-  Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint});
+  LNInvoice crateBindingsParseInvoice({required String input, dynamic hint});
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk;
 
@@ -488,11 +488,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Config> crateBindingsDefaultConfig({required Network network, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+  Config crateBindingsDefaultConfig({required Network network, dynamic hint}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 = cst_encode_network(network);
-        return wire.wire__crate__bindings__default_config(port_, arg0);
+        return wire.wire__crate__bindings__default_config(arg0);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_config,
@@ -511,11 +511,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<LNInvoice> crateBindingsParseInvoice({required String input, dynamic hint}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
+  LNInvoice crateBindingsParseInvoice({required String input, dynamic hint}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
         var arg0 = cst_encode_String(input);
-        return wire.wire__crate__bindings__parse_invoice(port_, arg0);
+        return wire.wire__crate__bindings__parse_invoice(arg0);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_ln_invoice,

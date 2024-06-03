@@ -294,38 +294,35 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__connectPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__default_config(
-    int port_,
+  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(
     int network,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__default_config(
-      port_,
       network,
     );
   }
 
   late final _frbgen_breez_liquid_wire__crate__bindings__default_configPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
           'frbgen_breez_liquid_wire__crate__bindings__default_config');
   late final _frbgen_breez_liquid_wire__crate__bindings__default_config =
-      _frbgen_breez_liquid_wire__crate__bindings__default_configPtr.asFunction<void Function(int, int)>();
+      _frbgen_breez_liquid_wire__crate__bindings__default_configPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
-    int port_,
+  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
-      port_,
       input,
     );
   }
 
   late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
           'frbgen_breez_liquid_wire__crate__bindings__parse_invoice');
   late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoice =
       _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+          .asFunction<WireSyncRust2DartDco Function(ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void
       frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(

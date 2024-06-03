@@ -59,10 +59,12 @@ pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
     Ok(())
 }
 
+#[frb(sync)]
 pub fn default_config(network: Network) -> Config {
     LiquidSdk::default_config(network)
 }
 
+#[frb(sync)]
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }

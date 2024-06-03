@@ -391,40 +391,34 @@ fn wire__crate__bindings__connect_impl(
     )
 }
 fn wire__crate__bindings__default_config_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     network: impl CstDecode<crate::model::Network>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "default_config",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
             let api_network = network.cst_decode();
-            move |context| {
-                transform_result_dco((move || {
-                    Result::<_, ()>::Ok(crate::bindings::default_config(api_network))
-                })())
-            }
+            transform_result_dco((move || {
+                Result::<_, ()>::Ok(crate::bindings::default_config(api_network))
+            })())
         },
     )
 }
 fn wire__crate__bindings__parse_invoice_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
     input: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "parse_invoice",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
             let api_input = input.cst_decode();
-            move |context| {
-                transform_result_dco((move || crate::bindings::parse_invoice(api_input))())
-            }
+            transform_result_dco((move || crate::bindings::parse_invoice(api_input))())
         },
     )
 }

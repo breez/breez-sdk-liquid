@@ -872,18 +872,16 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__default_config(
-    port_: i64,
     network: i32,
-) {
-    wire__crate__bindings__default_config_impl(port_, network)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__default_config_impl(network)
 }
 
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
-    port_: i64,
     input: *mut wire_cst_list_prim_u_8_strict,
-) {
-    wire__crate__bindings__parse_invoice_impl(port_, input)
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__parse_invoice_impl(input)
 }
 
 #[no_mangle]

@@ -33,9 +33,13 @@ class Config {
   final String boltzUrl;
   final String electrumUrl;
 
-  /// Directory in which all SDK files (DB, log) are stored.
+  /// Directory in which all SDK files (DB, log, cache) are stored.
+  ///
+  /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
   final Network network;
+
+  /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
 
   const Config({
