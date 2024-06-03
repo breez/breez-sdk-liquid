@@ -120,6 +120,7 @@ jobs:
         if: ${{ inputs.publish }}
         uses: ncipollo/release-action@v1
         with:
+          repo: breez/breez-liquid-sdk-swift
           artifacts: "build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework.zip"
           tag: ${{ inputs.package-version || '0.0.1' }}
           token: ${{ secrets.GITHUB_TOKEN }}
