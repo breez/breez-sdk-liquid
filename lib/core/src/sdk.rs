@@ -12,6 +12,9 @@ use boltz_client::{
     Amount, Bolt11Invoice,
 };
 use log::{debug, error, info, warn};
+use lwk_common::{singlesig_desc, Signer, Singlesig};
+use lwk_signer::{AnySigner, SwSigner};
+use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{elements::LockTime, BlockchainBackend, ElementsNetwork};
@@ -912,6 +915,52 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         self.validate_invoice(&req.invoice)?;
+
+        match self.swapper.check_for_mrh(&req.invoice)? {
+            // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
+            Some((lbtc_address, amount_btc)) => {
+                let amount_sat: u64 = (amount_btc * 100_000_000.0) as u64;
+                info!("Found magic routing hint for L-BTC address {lbtc_address} and amount_sat {amount_sat}");
+
+                let receiver_amount_sat = get_invoice_amount!(req.invoice);
+                let tx = self
+                    .build_tx(None, &lbtc_address, receiver_amount_sat)
+                    .await?;
+                let onchain_fees_sat: u64 = tx.all_fees().values().sum();
+                info!("Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {onchain_fees_sat}");
+                info!("Built onchain L-BTC tx with ID {}", tx.txid());
+
+                let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
+                let broadcast_res = self
+                    .swapper
+                    .broadcast_tx(self.config.network.into(), &tx_hex);
+                info!("Trying to broadcast tx, result: {:?}", broadcast_res);
+
+                // TODO We cannot create and return a typical SendSwap, because we don't have a swap id
+                //   Also, none of the other swap fields are
+                //      - available, because swap is created in send_payment_via_swap() branch
+                //      - really needed (there can be no refund, etc)
+                //          - only info necessary is: amount, fees, tx_id
+
+                // TODO If we do insert a SendSwap, we have to link it to this tx_id
+                //  - new field in send_swaps? bip21_tx_id?
+                //  - what if the same MRH-enabled invoice is paid multiple times? Insert more payments with same swap_id?
+                // let swap = SendSwap { ... };
+                // self.persister.insert_send_swap(&swap)?;
+
+                Err(PaymentError::PaymentTimeout)
+            }
+
+            // If no MRH found, perform usual swap
+            None => self.send_payment_via_swap(req).await,
+        }
+    }
+
+    /// Performs a Send Payment by doing a swap (create it, fund it, track it, etc).
+    async fn send_payment_via_swap(
+        &self,
+        req: &PrepareSendResponse,
+    ) -> Result<SendPaymentResponse, PaymentError> {
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let lockup_tx_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
