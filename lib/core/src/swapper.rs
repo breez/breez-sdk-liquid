@@ -60,13 +60,13 @@ pub trait Swapper: Send + Sync {
         output_address: &str,
     ) -> Result<(), PaymentError>;
 
-    // Create a new receive swap
+    /// Create a new receive swap
     fn create_receive_swap(
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError>;
 
-    // Get a reverse pair information
+    /// Get a reverse pair information
     fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError>;
 
     /// Claim receive swap. Here the local swapper is the one that claims.
@@ -76,7 +76,8 @@ pub trait Swapper: Send + Sync {
         claim_address: String,
     ) -> Result<String, PaymentError>;
 
-    // chain broadcast
+    /// Chain broadcast
+    #[allow(dead_code)]
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError>;
 }
 
