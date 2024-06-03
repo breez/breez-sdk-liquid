@@ -14,7 +14,7 @@ use boltz_client::ToHex;
 use boltz_client::{
     swaps::{
         boltz::{RevSwapStates, SubSwapStates},
-        boltzv2::*,        
+        boltzv2::*,
     },
     util::secrets::Preimage,
     Amount, Bolt11Invoice, ElementsAddress,
@@ -25,7 +25,7 @@ use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{
-    elements::{Address, Transaction, LockTime},
+    elements::{Address, LockTime, Transaction},
     BlockchainBackend, ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
 use tokio::sync::{watch, Mutex, RwLock};
@@ -200,28 +200,28 @@ impl LiquidSdk {
                 tokio::select! {
                     update = updates_stream.recv() => match update {
                         Ok(boltzv2::Update { id, status }) => {
-                            let _ = cloned.sync().await;                            
+                            let _ = cloned.sync().await;
                             match cloned.persister.fetch_send_swap_by_id(&id) {
                                 Ok(Some(_)) => {
-                                  match cloned.try_handle_send_swap_boltz_status(&status, &id).await {
-                                    Ok(_) => info!("Succesfully handled Send Swap {id} update"),
-                                    Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
-                                  }                                  
-                                } 
-                                _ => {
-                                  match cloned.persister.fetch_receive_swap(&id) {
-                                    Ok(Some(_)) => {
-                                      match cloned.try_handle_receive_swap_boltz_status(&status, &id).await {
-                                        Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
-                                        Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")                                        
-                                      }
-                                    }                                  
-                                    _ => {
-                                      error!("Could not find Swap {id}");
+                                    match cloned.try_handle_send_swap_boltz_status(&status, &id).await {
+                                        Ok(_) => info!("Succesfully handled Send Swap {id} update"),
+                                        Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
                                     }
-                                  }                                  
-                                }                                
-                            }                                                     
+                                }
+                                _ => {
+                                    match cloned.persister.fetch_receive_swap(&id) {
+                                        Ok(Some(_)) => {
+                                            match cloned.try_handle_receive_swap_boltz_status(&status, &id).await {
+                                                Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
+                                                Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")
+                                            }
+                                        }
+                                        _ => {
+                                            error!("Could not find Swap {id}");
+                                        }
+                                    }
+                                }
+                            }
                         }
                         Err(e) => error!("Received stream error: {e:?}"),
                     },
@@ -522,19 +522,17 @@ impl LiquidSdk {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => {
-                      self.try_handle_receive_swap_update(&receive_swap.id, Pending, None)
-            .await?;
-          
-            match self.try_claim(&receive_swap).await {
-                        Ok(_) => {}
-                        Err(err) => match err {
-                            PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
-                            _ => error!("Claim for Receive Swap {id} failed: {err}")
+                        self.try_handle_receive_swap_update(&receive_swap.id, Pending, None)
+                            .await?;
+                        match self.try_claim(&receive_swap).await {
+                            Ok(_) => {}
+                            Err(err) => match err {
+                                PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
+                                _ => error!("Claim for Receive Swap {id} failed: {err}")
+                            }
                         }
-                    
-                  }
+                    }
                 }
-              }
                 Ok(())
             }
 
@@ -608,7 +606,7 @@ impl LiquidSdk {
                     .await
                     .map_err(|e| {
                         error!("Could not cooperate Send Swap {id} claim: {e}");
-                      anyhow!("Could not post claim details. Err: {e:?}")
+                        anyhow!("Could not post claim details. Err: {e:?}")
                     })?;
 
                 Ok(())
@@ -620,8 +618,8 @@ impl LiquidSdk {
                     self.get_preimage_from_script_path_claim_spend(&ongoing_send_swap)?;
                 self.validate_send_swap_preimage(id, &ongoing_send_swap.invoice, &preimage)
                     .await?;
-                  self.try_handle_send_swap_update(id, Complete, Some(&preimage), None, None)
-                  .await?;
+                self.try_handle_send_swap_update(id, Complete, Some(&preimage), None, None)
+                    .await?;
                 Ok(())
             }
 
@@ -730,7 +728,7 @@ impl LiquidSdk {
             pending_receive_sat,
             pubkey: self.lwk_signer.xpub().public_key.to_string(),
         })
-    }   
+    }
 
     async fn build_tx(
         &self,
@@ -873,7 +871,7 @@ impl LiquidSdk {
         Ok(refund_tx_id)
     }
 
-    async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {               
+    async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let amount_sat = get_invoice_amount!(swap.invoice);
         let broadcast_fees_sat =
             Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
@@ -912,9 +910,16 @@ impl LiquidSdk {
         );
         let output_address = self.next_unused_address().await?.to_string();
         let claim_tx_details = self.swapper.get_claim_tx_details(send_swap)?;
-        self.try_handle_send_swap_update(&send_swap.id, Complete, Some(&claim_tx_details.preimage), None, None)
-            .await?;
-        self.swapper.claim_send_swap_cooperative(send_swap, claim_tx_details,&output_address)?;        
+        self.try_handle_send_swap_update(
+            &send_swap.id,
+            Complete,
+            Some(&claim_tx_details.preimage),
+            None,
+            None,
+        )
+        .await?;
+        self.swapper
+            .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)?;
         Ok(())
     }
 
@@ -1072,9 +1077,10 @@ impl LiquidSdk {
             PaymentError::AlreadyClaimed
         );
         let swap_id = &ongoing_receive_swap.id;
-        let claim_address = self.next_unused_address().await?.to_string();          
-        let claim_tx_id = self.swapper.claim_receive_swap(ongoing_receive_swap, claim_address)?;        
-        info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {}", swap_id);        
+        let claim_address = self.next_unused_address().await?.to_string();
+        let claim_tx_id = self
+            .swapper
+            .claim_receive_swap(ongoing_receive_swap, claim_address)?;
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -1097,7 +1103,10 @@ impl LiquidSdk {
         req: &PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
-        let reverse_pair = self.swapper.get_reverse_swap_pairs()?.ok_or(PaymentError::PairsNotFound)?;      
+        let reverse_pair = self
+            .swapper
+            .get_reverse_swap_pairs()?
+            .ok_or(PaymentError::PairsNotFound)?;
 
         let payer_amount_sat = req.payer_amount_sat;
         let fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
@@ -1126,7 +1135,10 @@ impl LiquidSdk {
         let payer_amount_sat = req.payer_amount_sat;
         let fees_sat = req.fees_sat;
 
-        let reverse_pair = self.swapper.get_reverse_swap_pairs()?.ok_or(PaymentError::PairsNotFound)?;
+        let reverse_pair = self
+            .swapper
+            .get_reverse_swap_pairs()?
+            .ok_or(PaymentError::PairsNotFound)?;
         let new_fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
