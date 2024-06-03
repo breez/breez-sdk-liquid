@@ -1081,10 +1081,6 @@ impl LiquidSdk {
         let claim_tx_id = self
             .swapper
             .claim_receive_swap(ongoing_receive_swap, claim_address)?;
-        info!(
-            "Successfully broadcast claim tx {claim_tx_id} for Receive Swap {}",
-            swap_id
-        );
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
