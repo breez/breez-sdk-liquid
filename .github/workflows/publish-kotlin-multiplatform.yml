@@ -73,7 +73,7 @@ jobs:
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64
 
       - name: Build Kotlin Multiplatform project
-        working-directory: lib/bindings/kotlin-multiplatform
+        working-directory: lib/bindings/langs/kotlin-multiplatform
         env:
           ORG_GRADLE_PROJECT_libraryVersion: ${{ inputs.package-version || '0.0.1' }}
         run: ./gradlew :breez-liquid-sdk-kmp:assemble
@@ -86,7 +86,7 @@ jobs:
         
       - name: Publish artifacts
         if: ${{ inputs.publish }}
-        working-directory: lib/bindings/kotlin-multiplatform
+        working-directory: lib/bindings/langs/kotlin-multiplatform
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}

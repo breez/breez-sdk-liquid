@@ -53,7 +53,7 @@ jobs:
           path: lib/bindings/langs/android/lib/src/main/kotlin
 
       - name: Build Android project
-        working-directory: lib/bindings/android
+        working-directory: lib/bindings/langs/android
         env:
           ORG_GRADLE_PROJECT_libraryVersion: ${{ inputs.package-version || '0.0.1' }}
         run: ./gradlew assemble
@@ -66,7 +66,7 @@ jobs:
         
       - name: Publish artifacts
         if: ${{ inputs.publish }}
-        working-directory: lib/bindings/android
+        working-directory: lib/bindings/langs/android
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}

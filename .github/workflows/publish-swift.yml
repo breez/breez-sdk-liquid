@@ -73,10 +73,10 @@ jobs:
       - name: Copy swift bindings
         run: |
           mkdir -p build/lib/bindings/langs/swift/Sources/BreezLiquidSDK
-          cp langs/swift/BreezLiquidSDK.swift build/lib/bindings/langs/swift/Sources/BreezLiquidSDK/BreezLiquidSDK.swift
-          cp langs/swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64/breez_liquid_sdkFFI.framework/Headers
-          cp langs/swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64_x86_64-simulator/breez_liquid_sdkFFI.framework/Headers
-          cp langs/swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/macos-arm64_x86_64/breez_liquid_sdkFFI.framework/Headers
+          cp swift/BreezLiquidSDK.swift build/lib/bindings/langs/swift/Sources/BreezLiquidSDK/BreezLiquidSDK.swift
+          cp swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64/breez_liquid_sdkFFI.framework/Headers
+          cp swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64_x86_64-simulator/breez_liquid_sdkFFI.framework/Headers
+          cp swift/breez_liquid_sdkFFI.h build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/macos-arm64_x86_64/breez_liquid_sdkFFI.framework/Headers
           mkdir -p build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64/breez_liquid_sdkFFI.framework/breez_liquid_sdkFFI
           cp aarch64-apple-ios/libbreez_liquid_sdk_bindings.a build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64/breez_liquid_sdkFFI.framework/breez_liquid_sdkFFI
           mkdir -p build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/ios-arm64_x86_64-simulator/breez_liquid_sdkFFI.framework/breez_liquid_sdkFFI
@@ -84,16 +84,16 @@ jobs:
           cp darwin-universal/libbreez_liquid_sdk_bindings.a build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework/macos-arm64_x86_64/breez_liquid_sdkFFI.framework/breez_liquid_sdkFFI
 
       - name: Compress XCFramework
-        working-directory: build/lib/bindings/swift
+        working-directory: build/lib/bindings/langs/swift
         run: |
           zip -9 -r breez_liquid_sdkFFI.xcframework.zip breez_liquid_sdkFFI.xcframework
           echo "XCF_CHECKSUM=`swift package compute-checksum breez_liquid_sdkFFI.xcframework.zip`" >> $GITHUB_ENV
 
       - name: Update Swift Package definition
-        working-directory: build/lib/bindings/swift
+        working-directory: build/lib/bindings/langs/swift
         run: |
-          sed 's#.binaryTarget(name: "breez_liquid_sdkFFI", path: "./breez_liquid_sdkFFI.xcframework"),#.binaryTarget(name: "breez_liquid_sdkFFI", url: "https://github.com/breez/breez-liquid-sdk-langs/swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_liquid_sdkFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezLiquidSDKTests", dependencies: \["BreezLiquidSDK"\]),/d' Package.swift > ../../../../dist/Package.swift
-          cp -r Sources ../../../../dist
+          sed 's#.binaryTarget(name: "breez_liquid_sdkFFI", path: "./breez_liquid_sdkFFI.xcframework"),#.binaryTarget(name: "breez_liquid_sdkFFI", url: "https://github.com/breez/breez-liquid-sdk-langs/swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_liquid_sdkFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezLiquidSDKTests", dependencies: \["BreezLiquidSDK"\]),/d' Package.swift > ../../../../../dist/Package.swift
+          cp -r Sources ../../../../../dist
 
       - name: Update Cocoapods definitions
         working-directory: dist
