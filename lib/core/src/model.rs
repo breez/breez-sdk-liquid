@@ -224,6 +224,7 @@ impl Swap {
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     pub(crate) invoice: String,
+    pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     /// JSON representation of [crate::persist::send::InternalCreateSubmarineResponse]

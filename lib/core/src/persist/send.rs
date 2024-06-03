@@ -81,6 +81,7 @@ impl Persister {
             SELECT
                 id,
                 invoice,
+                preimage,
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
@@ -116,14 +117,15 @@ impl Persister {
         Ok(SendSwap {
             id: row.get(0)?,
             invoice: row.get(1)?,
-            payer_amount_sat: row.get(2)?,
-            receiver_amount_sat: row.get(3)?,
-            create_response_json: row.get(4)?,
-            refund_private_key: row.get(5)?,
-            lockup_tx_id: row.get(6)?,
-            refund_tx_id: row.get(7)?,
-            created_at: row.get(8)?,
-            state: row.get(9)?,
+            preimage: row.get(2)?,
+            payer_amount_sat: row.get(3)?,
+            receiver_amount_sat: row.get(4)?,
+            create_response_json: row.get(5)?,
+            refund_private_key: row.get(6)?,
+            lockup_tx_id: row.get(7)?,
+            refund_tx_id: row.get(8)?,
+            created_at: row.get(9)?,
+            state: row.get(10)?,
         })
     }
 
