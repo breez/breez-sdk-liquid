@@ -11,6 +11,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             created_at INTEGER NOT NULL,
             claim_fees_sat INTEGER NOT NULL,
             claim_tx_id TEXT,
+            lockup_tx_id TEXT,
             state INTEGER NOT NULL
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS send_swaps (

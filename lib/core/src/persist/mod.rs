@@ -79,6 +79,19 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn remove_payment(&self, tx_id: &str) -> Result<()> {
+        let mut con = self.get_connection()?;
+
+        let tx = con.transaction()?;
+        tx.execute(
+            "DELETE FROM payment_tx_data WHERE tx_id = ?",
+            params![tx_id],
+        )?;
+        tx.commit()?;
+
+        Ok(())
+    }
+
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let con = self.get_connection()?;
         let ongoing_send_swaps: Vec<Swap> = self
@@ -119,7 +132,7 @@ impl Persister {
                 rtx.amount_sat
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             LEFT JOIN receive_swaps AS rs        -- Receive Swap data
-                ON ptx.tx_id = rs.claim_tx_id
+                ON ptx.tx_id = rs.claim_tx_id OR ptx.tx_id = rs.lockup_tx_id
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data

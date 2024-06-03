@@ -1,10 +1,9 @@
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::Result;
-use lwk_wollet::elements::{LockTime, LockTime::*};
-
 use crate::error::PaymentError;
+use anyhow::Result;
+use lwk_wollet::elements::LockTime::{self, *};
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()

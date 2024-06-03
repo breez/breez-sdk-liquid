@@ -293,6 +293,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// Persisted when the lockup tx is detected in the mempool
+    pub(crate) lockup_tx_id: Option<String>,
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
@@ -742,4 +744,69 @@ macro_rules! get_invoice_amount {
             .expect("Expecting valid amount")
             / 1000
     };
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct SwapUpdateTxDetails {
+    #[serde(rename(deserialize = "id", serialize = "id"))]
+    pub(crate) tx_id: String,
+    pub(crate) hex: String,
+}
+
+/// Intermediate representation of [boltz_client::swaps::boltzv2::Update]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum Update {
+    TransactionMempool {
+        id: String,
+        status: String,
+        transaction: SwapUpdateTxDetails,
+    },
+    Generic {
+        id: String,
+        status: String,
+    },
+}
+
+impl Update {
+    pub(crate) fn get_swap_id(&self) -> &String {
+        match self {
+            Update::Generic { id, .. } => id,
+            Update::TransactionMempool { id, .. } => id,
+        }
+    }
+
+    pub(crate) fn get_swap_state(&self) -> &String {
+        match self {
+            Update::Generic { status, .. } => status,
+            Update::TransactionMempool { status, .. } => status,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RespError {
+    pub(crate) id: String,
+    pub(crate) error: String,
+}
+
+/// Intermediate representation of [boltz_client::swaps::boltzv2::SwapUpdate]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum SwapUpdate {
+    Subscription {
+        event: String,
+        channel: String,
+        args: Vec<String>,
+    },
+    Update {
+        event: String,
+        channel: String,
+        args: Vec<Update>,
+    },
+    Error {
+        event: String,
+        channel: String,
+        args: Vec<RespError>,
+    },
 }
