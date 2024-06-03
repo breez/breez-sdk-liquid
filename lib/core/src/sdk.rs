@@ -456,18 +456,28 @@ impl LiquidSdk {
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
-        let invoice = invoice
-            .trim()
-            .parse::<Bolt11Invoice>()
-            .map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice = invoice.trim().parse::<Bolt11Invoice>().map_err(|err| {
+            PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            }
+        })?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", Network::Mainnet) => {}
             ("testnet", Network::Testnet) => {}
-            _ => return Err(PaymentError::InvalidInvoice),
+            _ => {
+                return Err(PaymentError::InvalidInvoice {
+                    err: "Invoice cannot be paid on the current network".to_string(),
+                })
+            }
         }
 
-        ensure_sdk!(!invoice.is_expired(), PaymentError::InvalidInvoice);
+        ensure_sdk!(
+            !invoice.is_expired(),
+            PaymentError::InvalidInvoice {
+                err: "Invoice has expired".to_string()
+            }
+        );
 
         Ok(invoice)
     }
@@ -608,14 +618,18 @@ impl LiquidSdk {
 
         let swap = match self.persister.fetch_send_swap_by_invoice(&req.invoice)? {
             Some(swap) => {
-                if swap.state != TimedOut {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "Cannot attempt send {}: payment state is invalid ({:?})",
-                            swap.id, swap.state
-                        ),
-                    });
-                }
+                match swap.state {
+                    Pending => return Err(PaymentError::PaymentInProgress),
+                    Complete => return Err(PaymentError::AlreadyPaid),
+                    Failed => {
+                        return Err(PaymentError::InvalidInvoice {
+                            err: "Payment has already failed. Please try with another invoice."
+                                .to_string(),
+                        })
+                    }
+                    Created | TimedOut => {}
+                };
+
                 swap
             }
             None => {
@@ -786,17 +800,25 @@ impl LiquidSdk {
         let create_response = self.swapper.create_receive_swap(v2_req)?;
 
         let swap_id = create_response.id.clone();
-        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
-            .map_err(|_| PaymentError::InvalidInvoice)?;
-        let payer_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::InvalidInvoice)?
-            / 1000;
+        let invoice = Bolt11Invoice::from_str(&create_response.invoice).map_err(|err| {
+            PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            }
+        })?;
+        let payer_amount_sat =
+            invoice
+                .amount_milli_satoshis()
+                .ok_or(PaymentError::InvalidInvoice {
+                    err: "Invoice does not contain an amount".to_string(),
+                })?
+                / 1000;
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
         if invoice.payment_hash().to_string() != preimage_hash {
-            return Err(PaymentError::InvalidInvoice);
+            return Err(PaymentError::InvalidInvoice {
+                err: "Invalid preimage returned by swapper".to_string(),
+            });
         };
 
         let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
@@ -941,7 +963,10 @@ impl LiquidSdk {
             .strip_prefix("lightning:")
             .or(input.strip_prefix("LIGHTNING:"))
             .unwrap_or(input);
-        let invoice = Bolt11Invoice::from_str(input).map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice =
+            Bolt11Invoice::from_str(input).map_err(|err| PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            })?;
 
         // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
         let payee_pubkey: String = match invoice.payee_pub_key() {
@@ -959,7 +984,9 @@ impl LiquidSdk {
         let timestamp = invoice
             .timestamp()
             .duration_since(UNIX_EPOCH)
-            .map_err(|_| PaymentError::InvalidInvoice)?
+            .map_err(|err| PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            })?
             .as_secs();
         let routing_hints = invoice
             .route_hints()

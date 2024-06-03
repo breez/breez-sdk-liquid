@@ -8,6 +8,8 @@ enum LiquidSdkError {
 [Error]
 enum PaymentError {
     "AlreadyClaimed",
+    "AlreadyPaid",
+    "PaymentInProgress",
     "AmountOutOfRange",
     "Generic",
     "InvalidOrExpiredFees",
