@@ -551,8 +551,8 @@ dependencies = [
  "thiserror",
  "tokio",
  "uniffi 0.27.1",
- "uniffi-kotlin-multiplatform",
  "uniffi_bindgen 0.25.3",
+ "uniffi_bindgen_kotlin_multiplatform",
 ]
 
 [[package]]
@@ -3069,23 +3069,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "uniffi-kotlin-multiplatform"
-version = "0.1.0"
-source = "git+https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings?rev=55d51f3abf9819b32bd81756053dcfc10f8d5522#55d51f3abf9819b32bd81756053dcfc10f8d5522"
-dependencies = [
- "anyhow",
- "askama 0.12.1",
- "camino",
- "clap 4.5.4",
- "heck 0.4.1",
- "include_dir",
- "paste",
- "serde",
- "toml",
- "uniffi_bindgen 0.25.3",
-]
-
-[[package]]
 name = "uniffi_bindgen"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3155,6 +3138,23 @@ dependencies = [
  "uniffi_meta 0.27.1",
  "uniffi_testing 0.27.1",
  "uniffi_udl 0.27.1",
+]
+
+[[package]]
+name = "uniffi_bindgen_kotlin_multiplatform"
+version = "0.1.0"
+source = "git+https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings?rev=e8e3a88df5b657787c1198425c16008232b26548#e8e3a88df5b657787c1198425c16008232b26548"
+dependencies = [
+ "anyhow",
+ "askama 0.12.1",
+ "camino",
+ "clap 4.5.4",
+ "heck 0.4.1",
+ "include_dir",
+ "paste",
+ "serde",
+ "toml",
+ "uniffi_bindgen 0.25.3",
 ]
 
 [[package]]
