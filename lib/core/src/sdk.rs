@@ -1,13 +1,5 @@
-use std::time::Instant;
-use std::{
-    fs,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, UNIX_EPOCH},
-};
-
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
 use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
@@ -28,14 +20,21 @@ use lwk_wollet::{
     elements::{Address, LockTime, Transaction},
     BlockchainBackend, ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
 };
+use std::time::Instant;
+use std::{
+    fs,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, UNIX_EPOCH},
+};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
-use crate::swapper::{BoltzSwapper, Swapper};
+use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::{
-    boltz_status_stream::BoltzStatusStream,
     ensure_sdk,
     error::{LiquidSdkResult, PaymentError},
     event::EventManager,
@@ -59,7 +58,7 @@ pub struct LiquidSdk {
     lwk_signer: SwSigner,
     persister: Arc<Persister>,
     event_manager: Arc<EventManager>,
-    status_stream: Arc<BoltzStatusStream>,
+    status_stream: Arc<dyn SwapperStatusStream>,
     swapper: Arc<dyn Swapper>,
     is_started: RwLock<bool>,
     shutdown_sender: watch::Sender<()>,
@@ -100,18 +99,18 @@ impl LiquidSdk {
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
-        let status_stream = Arc::new(BoltzStatusStream::new(&config.boltz_url, persister.clone()));
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
         let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+        let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let sdk = Arc::new(LiquidSdk {
             config,
             lwk_wollet: Arc::new(Mutex::new(lwk_wollet)),
             lwk_signer: opts.signer,
-            persister,
+            persister: persister.clone(),
             event_manager,
-            status_stream,
+            status_stream: status_stream.clone(),
             swapper,
             is_started: RwLock::new(false),
             shutdown_sender,
@@ -160,11 +159,14 @@ impl LiquidSdk {
             }
         });
 
+        let reconnect_handler = Box::new(SwapperReconnectHandler {
+            persister: self.persister.clone(),
+            status_stream: self.status_stream.clone(),
+        });
         self.status_stream
             .clone()
-            .track_pending_swaps(self.shutdown_receiver.clone())
+            .start(reconnect_handler, self.shutdown_receiver.clone())
             .await;
-
         self.track_swap_updates().await;
         self.track_refundable_swaps().await;
 
@@ -1454,6 +1456,32 @@ impl LiquidSdk {
     /// An error is thrown if a global logger is already configured.
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
+    }
+}
+
+struct SwapperReconnectHandler {
+    persister: Arc<Persister>,
+    status_stream: Arc<dyn SwapperStatusStream>,
+}
+
+#[async_trait]
+impl ReconnectHandler for SwapperReconnectHandler {
+    async fn on_stream_reconnect(&self) {
+        match self.persister.list_ongoing_swaps() {
+            Ok(initial_ongoing_swaps) => {
+                info!(
+                    "On stream reconnection, got {} initial ongoing swaps",
+                    initial_ongoing_swaps.len()
+                );
+                for ongoing_swap in initial_ongoing_swaps {
+                    match self.status_stream.track_swap_id(&ongoing_swap.id()) {
+                        Ok(_) => info!("Tracking ongoing swap: {}", ongoing_swap.id()),
+                        Err(e) => error!("Failed to track ongoing swap: {e:?}"),
+                    }
+                }
+            }
+            Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
+        }
     }
 }
 
