@@ -4,6 +4,7 @@ import 'package:flutter_breez_liquid_example/routes/connect/connect_page.dart';
 import 'package:flutter_breez_liquid_example/routes/home/home_page.dart';
 import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
 import 'package:flutter_breez_liquid_example/services/keychain.dart';
+import 'package:flutter_breez_liquid_example/utils/config.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() async {
@@ -20,13 +21,12 @@ void main() async {
 
 Future<BindingLiquidSdk> reconnect({
   required String mnemonic,
-  Network network = Network.liquid,
+  Network network = Network.mainnet,
 }) async {
-  final dataDir = await getApplicationDocumentsDirectory();
+  final config = await getConfig(network: network);
   final req = ConnectRequest(
+    config: config,
     mnemonic: mnemonic,
-    dataDir: dataDir.path,
-    network: network,
   );
   return await connect(req: req);
 }

@@ -4,6 +4,7 @@ import 'package:flutter_breez_liquid/flutter_breez_liquid.dart';
 import 'package:flutter_breez_liquid_example/routes/connect/restore_page.dart';
 import 'package:flutter_breez_liquid_example/routes/home/home_page.dart';
 import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
+import 'package:flutter_breez_liquid_example/utils/config.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ConnectPage extends StatefulWidget {
@@ -95,13 +96,12 @@ class _ConnectPageState extends State<ConnectPage> {
 
   Future<BindingLiquidSdk> initializeWallet({
     required String mnemonic,
-    Network network = Network.liquid,
+    Network network = Network.mainnet,
   }) async {
-    final dataDir = await getApplicationDocumentsDirectory();
+    final config = await getConfig(network: network);
     final req = ConnectRequest(
+      config: config,
       mnemonic: mnemonic,
-      dataDir: dataDir.path,
-      network: network,
     );
     return await connect(req: req);
   }

@@ -112,7 +112,7 @@ class _SendPaymentDialogState extends State<SendPaymentDialog> {
                         try {
                           setState(() => paymentInProgress = true);
                           SendPaymentResponse resp = await widget.liquidSdk.sendPayment(req: sendPaymentReq!);
-                          debugPrint("Paid ${resp.txid}");
+                          debugPrint("Paid ${resp.payment.txId}");
                           if (context.mounted) {
                             Navigator.pop(context);
                           }
