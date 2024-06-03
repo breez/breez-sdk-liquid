@@ -14,6 +14,18 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 // EXTRA END
 typedef struct _Dart_Handle* Dart_Handle;
 
+/**
+ * The minimum acceptable fee rate when claiming using zero-conf
+ */
+#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET 0.1
+
+#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET 0.01
+
+/**
+ * The maximum acceptable amount in satoshi when claiming using zero-conf
+ */
+#define DEFAULT_ZERO_CONF_MAX_SAT 100000
+
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
   int32_t len;
@@ -106,6 +118,8 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *working_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
+  float zero_conf_min_fee_rate;
+  uint64_t *zero_conf_max_amount_sat;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {

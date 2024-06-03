@@ -29,6 +29,8 @@ export interface Config {
     workingDir: string
     network: Network
     paymentTimeoutSec: number
+    zeroConfMinFeeRate: number
+    zeroConfMaxAmountSat?: number
 }
 
 export interface ConnectRequest {

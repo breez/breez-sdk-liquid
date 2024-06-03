@@ -42,6 +42,7 @@ fun asConfig(config: ReadableMap): Config? {
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
+                "zeroConfMinFeeRate",
             ),
         )
     ) {
@@ -52,12 +53,25 @@ fun asConfig(config: ReadableMap): Config? {
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
+    val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate")
+    val zeroConfMaxAmountSat =
+        if (hasNonNullKey(
+                config,
+                "zeroConfMaxAmountSat",
+            )
+        ) {
+            config.getDouble("zeroConfMaxAmountSat").toULong()
+        } else {
+            null
+        }
     return Config(
         boltzUrl,
         electrumUrl,
         workingDir,
         network,
         paymentTimeoutSec,
+        zeroConfMinFeeRate,
+        zeroConfMaxAmountSat,
     )
 }
 
@@ -68,6 +82,8 @@ fun readableMapOf(config: Config): ReadableMap =
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
+        "zeroConfMinFeeRate" to config.zeroConfMinFeeRate,
+        "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {

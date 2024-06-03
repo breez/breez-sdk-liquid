@@ -182,6 +182,8 @@ impl CstDecode<crate::model::Config> for wire_cst_config {
             working_dir: self.working_dir.cst_decode(),
             network: self.network.cst_decode(),
             payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
+            zero_conf_min_fee_rate: self.zero_conf_min_fee_rate.cst_decode(),
+            zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
         }
     }
 }
@@ -525,6 +527,8 @@ impl NewWithNullPtr for wire_cst_config {
             working_dir: core::ptr::null_mut(),
             network: Default::default(),
             payment_timeout_sec: Default::default(),
+            zero_conf_min_fee_rate: Default::default(),
+            zero_conf_max_amount_sat: core::ptr::null_mut(),
         }
     }
 }
@@ -1083,6 +1087,8 @@ pub struct wire_cst_config {
     working_dir: *mut wire_cst_list_prim_u_8_strict,
     network: i32,
     payment_timeout_sec: u64,
+    zero_conf_min_fee_rate: f32,
+    zero_conf_max_amount_sat: *mut u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

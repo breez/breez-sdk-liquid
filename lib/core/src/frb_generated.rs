@@ -633,6 +633,12 @@ fn wire__crate__bindings__parse_invoice_impl(
 
 // Section: dart2rust
 
+impl CstDecode<f32> for f32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> f32 {
+        self
+    }
+}
 impl CstDecode<i32> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> i32 {
@@ -781,12 +787,16 @@ impl SseDecode for crate::model::Config {
         let mut var_workingDir = <String>::sse_decode(deserializer);
         let mut var_network = <crate::model::Network>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
+        let mut var_zeroConfMinFeeRate = <f32>::sse_decode(deserializer);
+        let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         return crate::model::Config {
             boltz_url: var_boltzUrl,
             electrum_url: var_electrumUrl,
             working_dir: var_workingDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
+            zero_conf_min_fee_rate: var_zeroConfMinFeeRate,
+            zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
         };
     }
 }
@@ -800,6 +810,13 @@ impl SseDecode for crate::model::ConnectRequest {
             mnemonic: var_mnemonic,
             config: var_config,
         };
+    }
+}
+
+impl SseDecode for f32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f32::<NativeEndian>().unwrap()
     }
 }
 
@@ -1385,6 +1402,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.working_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
+            self.zero_conf_min_fee_rate.into_into_dart().into_dart(),
+            self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -1899,6 +1918,8 @@ impl SseEncode for crate::model::Config {
         <String>::sse_encode(self.working_dir, serializer);
         <crate::model::Network>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
+        <f32>::sse_encode(self.zero_conf_min_fee_rate, serializer);
+        <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
     }
 }
 
@@ -1907,6 +1928,13 @@ impl SseEncode for crate::model::ConnectRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.mnemonic, serializer);
         <crate::model::Config>::sse_encode(self.config, serializer);
+    }
+}
+
+impl SseEncode for f32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
     }
 }
 

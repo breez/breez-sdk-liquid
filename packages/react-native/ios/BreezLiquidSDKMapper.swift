@@ -56,13 +56,25 @@ enum BreezLiquidSDKMapper {
         guard let paymentTimeoutSec = config["paymentTimeoutSec"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentTimeoutSec", typeName: "Config"))
         }
+        guard let zeroConfMinFeeRate = config["zeroConfMinFeeRate"] as? Float else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRate", typeName: "Config"))
+        }
+        var zeroConfMaxAmountSat: UInt64?
+        if hasNonNilKey(data: config, key: "zeroConfMaxAmountSat") {
+            guard let zeroConfMaxAmountSatTmp = config["zeroConfMaxAmountSat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "zeroConfMaxAmountSat"))
+            }
+            zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
+        }
 
         return Config(
             boltzUrl: boltzUrl,
             electrumUrl: electrumUrl,
             workingDir: workingDir,
             network: network,
-            paymentTimeoutSec: paymentTimeoutSec
+            paymentTimeoutSec: paymentTimeoutSec,
+            zeroConfMinFeeRate: zeroConfMinFeeRate,
+            zeroConfMaxAmountSat: zeroConfMaxAmountSat
         )
     }
 
@@ -73,6 +85,8 @@ enum BreezLiquidSDKMapper {
             "workingDir": config.workingDir,
             "network": valueOf(network: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
+            "zeroConfMinFeeRate": config.zeroConfMinFeeRate,
+            "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
         ]
     }
 

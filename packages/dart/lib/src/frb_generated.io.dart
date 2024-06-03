@@ -95,6 +95,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest dco_decode_connect_request(dynamic raw);
 
   @protected
+  double dco_decode_f_32(dynamic raw);
+
+  @protected
   GetInfoResponse dco_decode_get_info_response(dynamic raw);
 
   @protected
@@ -257,6 +260,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer);
@@ -612,6 +618,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
     wireObj.network = cst_encode_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
+    wireObj.zero_conf_min_fee_rate = cst_encode_f_32(apiObj.zeroConfMinFeeRate);
+    wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
   }
 
   @protected
@@ -891,6 +899,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk raw);
 
   @protected
+  double cst_encode_f_32(double raw);
+
+  @protected
   int cst_encode_i_32(int raw);
 
   @protected
@@ -980,6 +991,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_32(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer);
@@ -1622,12 +1636,9 @@ class RustLibWire implements BaseWire {
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 }
 
-typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
-typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartDartPostCObjectFnTypeFunction = bool Function(
-    DartDartPort port_id, ffi.Pointer<ffi.Void> message);
+typedef DartPostCObjectFnType
+    = ffi.Pointer<ffi.NativeFunction<ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
 typedef DartPort = ffi.Int64;
-typedef DartDartPort = int;
 
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
@@ -1756,6 +1767,11 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Uint64()
   external int payment_timeout_sec;
+
+  @ffi.Float()
+  external double zero_conf_min_fee_rate;
+
+  external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -1935,3 +1951,9 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
 }
+
+const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
+
+const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
+
+const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
