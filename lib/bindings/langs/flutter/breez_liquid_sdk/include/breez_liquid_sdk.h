@@ -278,10 +278,9 @@ void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(int64_t port_,
 void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
                                                         struct wire_cst_connect_request *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__default_config(int64_t port_, int32_t network);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network);
 
-void frbgen_breez_liquid_wire__crate__bindings__parse_invoice(int64_t port_,
-                                                              struct wire_cst_list_prim_u_8_strict *input);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
 
 void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
