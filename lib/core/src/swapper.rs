@@ -46,9 +46,9 @@ pub trait Swapper: Send + Sync {
         current_height: u32,
     ) -> Result<String, PaymentError>;
 
-    // Get claim tx details which includes the preimage as a proof of payment.
-    // It is used to validate the preimage before claiming which is the reason why we need to separate
-    // the claim into two steps.
+    /// Get claim tx details which includes the preimage as a proof of payment.
+    /// It is used to validate the preimage before claiming which is the reason why we need to separate
+    /// the claim into two steps.
     fn get_claim_tx_details(&self, swap: &SendSwap) -> Result<ClaimTxResponse, PaymentError>;
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
@@ -223,9 +223,9 @@ impl Swapper for BoltzSwapper {
         Ok(refund_tx_id)
     }
 
-    // Get claim tx details which includes the preimage as a proof of payment.
-    // It is used to validate the preimage before claiming which is the reason why we need to separate
-    // the claim into two steps.
+    /// Get claim tx details which includes the preimage as a proof of payment.
+    /// It is used to validate the preimage before claiming which is the reason why we need to separate
+    /// the claim into two steps.
     fn get_claim_tx_details(&self, swap: &SendSwap) -> Result<ClaimTxResponse, PaymentError> {
         let claim_tx_response = self.client.get_claim_tx_details(&swap.id)?;
         info!("Received claim tx details: {:?}", &claim_tx_response);
