@@ -911,9 +911,10 @@ impl LiquidSdk {
             &send_swap.id
         );
         let output_address = self.next_unused_address().await?.to_string();
-        let preimage = self.swapper.claim_send_swap_cooperative(send_swap, &output_address)?;
-        self.try_handle_send_swap_update(&send_swap.id, Complete, Some(&preimage), None, None)
+        let claim_tx_details = self.swapper.get_claim_tx_details(send_swap)?;
+        self.try_handle_send_swap_update(&send_swap.id, Complete, Some(&claim_tx_details.preimage), None, None)
             .await?;
+        self.swapper.claim_send_swap_cooperative(send_swap, claim_tx_details,&output_address)?;        
         Ok(())
     }
 
