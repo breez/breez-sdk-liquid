@@ -42,6 +42,7 @@ sealed class PaymentError with _$PaymentError implements FrbException {
     required String err,
     required String refundTxId,
   }) = PaymentError_Refunded;
+  const factory PaymentError.selfTransferNotSupported() = PaymentError_SelfTransferNotSupported;
   const factory PaymentError.sendError({
     required String err,
   }) = PaymentError_SendError;

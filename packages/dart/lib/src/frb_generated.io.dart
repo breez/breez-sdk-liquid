@@ -765,15 +765,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
+    if (apiObj is PaymentError_SelfTransferNotSupported) {
+      wireObj.tag = 12;
+      return;
+    }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 12;
+      wireObj.tag = 13;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 13;
+      wireObj.tag = 14;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }

@@ -374,13 +374,14 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                     refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
-            12 => {
+            12 => crate::error::PaymentError::SelfTransferNotSupported,
+            13 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            13 => {
+            14 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),

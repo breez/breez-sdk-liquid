@@ -767,6 +767,12 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        ensure_sdk!(
+            self.persister
+                .fetch_receive_swap_by_invoice(&req.invoice)?
+                .is_none(),
+            PaymentError::SelfTransferNotSupported
+        );
         let invoice = self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = invoice
             .amount_milli_satoshis()
@@ -914,6 +920,12 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        ensure_sdk!(
+            self.persister
+                .fetch_receive_swap_by_invoice(&req.invoice)?
+                .is_none(),
+            PaymentError::SelfTransferNotSupported
+        );
         self.validate_invoice(&req.invoice)?;
 
         match self.swapper.check_for_mrh(&req.invoice)? {

@@ -803,6 +803,49 @@ abstract class PaymentError_Refunded extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
+  factory _$$PaymentError_SelfTransferNotSupportedImplCopyWith(
+          _$PaymentError_SelfTransferNotSupportedImpl value,
+          $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) then) =
+      __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SelfTransferNotSupportedImpl>
+    implements _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
+  __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl(
+      _$PaymentError_SelfTransferNotSupportedImpl _value,
+      $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_SelfTransferNotSupportedImpl extends PaymentError_SelfTransferNotSupported {
+  const _$PaymentError_SelfTransferNotSupportedImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.selfTransferNotSupported()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PaymentError_SelfTransferNotSupportedImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_SelfTransferNotSupported extends PaymentError {
+  const factory PaymentError_SelfTransferNotSupported() = _$PaymentError_SelfTransferNotSupportedImpl;
+  const PaymentError_SelfTransferNotSupported._() : super._();
+}
+
+/// @nodoc
 abstract class _$$PaymentError_SendErrorImplCopyWith<$Res> {
   factory _$$PaymentError_SendErrorImplCopyWith(
           _$PaymentError_SendErrorImpl value, $Res Function(_$PaymentError_SendErrorImpl) then) =

@@ -906,10 +906,13 @@ impl SseDecode for crate::error::PaymentError {
                 };
             }
             12 => {
+                return crate::error::PaymentError::SelfTransferNotSupported;
+            }
+            13 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            13 => {
+            14 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -1375,11 +1378,12 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
                 refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::error::PaymentError::SelfTransferNotSupported => [12.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [13.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [13.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [14.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -1909,12 +1913,15 @@ impl SseEncode for crate::error::PaymentError {
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(refund_tx_id, serializer);
             }
-            crate::error::PaymentError::SendError { err } => {
+            crate::error::PaymentError::SelfTransferNotSupported => {
                 <i32>::sse_encode(12, serializer);
+            }
+            crate::error::PaymentError::SendError { err } => {
+                <i32>::sse_encode(13, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(13, serializer);
+                <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(err, serializer);
             }
         }

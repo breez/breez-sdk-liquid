@@ -68,6 +68,9 @@ pub enum PaymentError {
     #[error("The payment has been refunded. Reason for failure: {err}")]
     Refunded { err: String, refund_tx_id: String },
 
+    #[error("The payment is a self-transfer, which is not supported")]
+    SelfTransferNotSupported,
+
     #[error("Could not sign/send the transaction: {err}")]
     SendError { err: String },
 

@@ -19,6 +19,7 @@ enum PaymentError {
     "PaymentTimeout",
     "PersistError",
     "Refunded",
+    "SelfTransferNotSupported",
     "SendError",
     "SignerError",
 };
