@@ -23,6 +23,9 @@ on:
       REPO_SSH_KEY:
         description: 'ssh key to commit to the breez-liquid-sdk-swift repository'
         required: true
+      SWIFT_RELEASE_TOKEN:
+        description: 'github token to release to the breez-liquid-sdk-swift repository'
+        required: true
       COCOAPODS_TRUNK_TOKEN:
         description: 'cocoapods trunk token'
         required: true
@@ -118,13 +121,14 @@ jobs:
 
       - name: Release and attach XCFramework binary artifact
         if: ${{ inputs.publish }}
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          repo: breez/breez-liquid-sdk-swift
-          artifacts: "build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework.zip"
-          tag: ${{ inputs.package-version || '0.0.1' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: ${{ inputs.package-version || '0.0.1' }}
+          repository: breez/breez-liquid-sdk-swift
+          files: |
+            build/lib/bindings/langs/swift/breez_liquid_sdkFFI.xcframework.zip
+          tag_name: ${{ inputs.package-version || '0.0.1' }}
+          generate_release_notes: false
+          token: ${{ secrets.SWIFT_RELEASE_TOKEN }}
           prerelease: true
 
       - name: Push update to Cocoapods trunk
