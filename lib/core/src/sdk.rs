@@ -767,18 +767,13 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        ensure_sdk!(
-            self.persister
-                .fetch_receive_swap_by_invoice(&req.invoice)?
-                .is_none(),
-            PaymentError::SelfTransferNotSupported
-        );
+        self.ensure_send_is_not_self_transfer(&req.invoice)?;
         let invoice = self.validate_invoice(&req.invoice)?;
+
         let receiver_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::AmountOutOfRange)?
             / 1000;
-
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
         let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
@@ -907,6 +902,13 @@ impl LiquidSdk {
         Ok(lockup_tx_id)
     }
 
+    fn ensure_send_is_not_self_transfer(&self, invoice: &str) -> Result<(), PaymentError> {
+        match self.persister.fetch_receive_swap_by_invoice(invoice)? {
+            None => Ok(()),
+            Some(_) => Err(PaymentError::SelfTransferNotSupported),
+        }
+    }
+
     /// Creates, initiates and starts monitoring the progress of a Send Payment.
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
@@ -920,12 +922,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        ensure_sdk!(
-            self.persister
-                .fetch_receive_swap_by_invoice(&req.invoice)?
-                .is_none(),
-            PaymentError::SelfTransferNotSupported
-        );
+        self.ensure_send_is_not_self_transfer(&req.invoice)?;
         self.validate_invoice(&req.invoice)?;
 
         match self.swapper.check_for_mrh(&req.invoice)? {
