@@ -777,10 +777,14 @@ impl LiquidSdk {
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
         let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
+        let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
+            Some(_) => lockup_fees_sat,
+            None => lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat,
+        };
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat,
+            fees_sat
         })
     }
 
