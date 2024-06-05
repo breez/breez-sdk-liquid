@@ -945,26 +945,31 @@ impl LiquidSdk {
                     .build_tx(None, &lbtc_address, receiver_amount_sat)
                     .await?;
                 let onchain_fees_sat: u64 = tx.all_fees().values().sum();
+                let payer_amount_sat = receiver_amount_sat + onchain_fees_sat;
                 info!("Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {onchain_fees_sat}");
                 info!("Built onchain L-BTC tx with ID {}", tx.txid());
 
+                let tx_id = tx.txid().to_string();
                 let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
                 self.swapper
                     .broadcast_tx(self.config.network.into(), &tx_hex)?;
 
-                // TODO We cannot create and return a typical SendSwap, because we don't have a swap id
-                //   Also, none of the other swap fields are
-                //      - available, because swap is created in send_payment_via_swap() branch
-                //      - really needed (there can be no refund, etc)
-                //          - only info necessary is: amount, fees, tx_id
+                // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
+                // This makes the tx known to the SDK (get_info, list_payments) instantly
+                let tx_data = PaymentTxData {
+                    tx_id: tx_id.clone(),
+                    timestamp: None,
+                    amount_sat: payer_amount_sat,
+                    fees_sat: onchain_fees_sat,
+                    payment_type: PaymentType::Send,
+                    is_confirmed: false,
+                };
+                self.persister.insert_or_update_payment(tx_data.clone())?;
+                self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
-                // TODO If we do insert a SendSwap, we have to link it to this tx_id
-                //  - new field in send_swaps? bip21_tx_id?
-                //  - what if the same MRH-enabled invoice is paid multiple times? Insert more payments with same swap_id?
-                // let swap = SendSwap { ... };
-                // self.persister.insert_send_swap(&swap)?;
-
-                Err(PaymentError::PaymentTimeout)
+                Ok(SendPaymentResponse {
+                    payment: Payment::from(tx_data, None),
+                })
             }
 
             // If no MRH found, perform usual swap
