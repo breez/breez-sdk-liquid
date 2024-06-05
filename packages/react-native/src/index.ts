@@ -72,7 +72,7 @@ export interface Payment {
     swapId?: string
     timestamp: number
     amountSat: number
-    feesSat?: number
+    feesSat: number
     preimage?: string
     refundTxId?: string
     refundTxAmountSat?: number

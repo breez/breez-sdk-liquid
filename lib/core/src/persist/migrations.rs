@@ -31,7 +31,8 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             payment_type INTEGER NOT NULL,
             is_confirmed INTEGER NOT NULL,
             timestamp INTEGER,
-            amount_sat INTEGER NOT NULL
+            amount_sat INTEGER NOT NULL,
+            fees_sat INTEGER NOT NULL
         ) STRICT;",
     ]
 }

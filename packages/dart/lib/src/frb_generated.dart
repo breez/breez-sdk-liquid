@@ -852,7 +852,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       swapId: dco_decode_opt_String(arr[1]),
       timestamp: dco_decode_u_32(arr[2]),
       amountSat: dco_decode_u_64(arr[3]),
-      feesSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      feesSat: dco_decode_u_64(arr[4]),
       preimage: dco_decode_opt_String(arr[5]),
       refundTxId: dco_decode_opt_String(arr[6]),
       refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
@@ -1391,7 +1391,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_swapId = sse_decode_opt_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
-    var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
     var var_preimage = sse_decode_opt_String(deserializer);
     var var_refundTxId = sse_decode_opt_String(deserializer);
     var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -1946,7 +1946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.swapId, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
-    sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
     sse_encode_opt_String(self.preimage, serializer);
     sse_encode_opt_String(self.refundTxId, serializer);
     sse_encode_opt_box_autoadd_u_64(self.refundTxAmountSat, serializer);

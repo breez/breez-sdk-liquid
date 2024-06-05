@@ -279,10 +279,20 @@ class Payment {
   /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
   final BigInt amountSat;
 
-  /// If a swap is associated with this payment, this represents the total fees paid by the
-  /// sender. In other words, it's the delta between the amount that was sent and the amount
-  /// received.
-  final BigInt? feesSat;
+  /// Represents the fees paid by this wallet for this payment.
+  ///
+  /// ### Swaps
+  /// If there is an associated Send Swap, these fees represent the total fees paid by this wallet
+  /// (the sender). It is the difference between the amount that was sent and the amount received.
+  ///
+  /// If there is an associated Receive Swap, these fees represent the total fees paid by this wallet
+  /// (the receiver). It is also the difference between the amount that was sent and the amount received.
+  ///
+  /// ### Pure onchain txs
+  /// If no swap is associated with this payment:
+  /// - for Send payments, this is the onchain tx fee
+  /// - for Receive payments, this is zero
+  final BigInt feesSat;
 
   /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
   final String? preimage;
@@ -306,7 +316,7 @@ class Payment {
     this.swapId,
     required this.timestamp,
     required this.amountSat,
-    this.feesSat,
+    required this.feesSat,
     this.preimage,
     this.refundTxId,
     this.refundTxAmountSat,

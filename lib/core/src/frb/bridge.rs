@@ -836,7 +836,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_swapId = <Option<String>>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
-        let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_preimage = <Option<String>>::sse_decode(deserializer);
         let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
         let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -1860,7 +1860,7 @@ impl SseEncode for crate::model::Payment {
         <Option<String>>::sse_encode(self.swap_id, serializer);
         <u32>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
-        <Option<u64>>::sse_encode(self.fees_sat, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
         <Option<String>>::sse_encode(self.preimage, serializer);
         <Option<String>>::sse_encode(self.refund_tx_id, serializer);
         <Option<u64>>::sse_encode(self.refund_tx_amount_sat, serializer);

@@ -73,7 +73,7 @@ typedef struct wire_cst_payment {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   uint32_t timestamp;
   uint64_t amount_sat;
-  uint64_t *fees_sat;
+  uint64_t fees_sat;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;

@@ -540,6 +540,7 @@ impl LiquidSdk {
                             tx_id: lockup_tx_id.clone(),
                             timestamp: None,
                             amount_sat: swap.payer_amount_sat,
+                            fees_sat: 0, // Will be overwritten once LWK fetches the real tx
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
                         })?;
@@ -1096,6 +1097,7 @@ impl LiquidSdk {
             tx_id: claim_tx_id.clone(),
             timestamp: None,
             amount_sat: ongoing_receive_swap.receiver_amount_sat,
+            fees_sat: 0, // Will be overwritten once LWK fetches the real tx
             payment_type: PaymentType::Receive,
             is_confirmed: false,
         })?;
@@ -1253,6 +1255,7 @@ impl LiquidSdk {
                 tx_id,
                 timestamp: tx.timestamp,
                 amount_sat: amount_sat.unsigned_abs(),
+                fees_sat: tx.fee,
                 payment_type: match amount_sat >= 0 {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,

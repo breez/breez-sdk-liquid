@@ -372,12 +372,8 @@ enum BreezLiquidSDKMapper {
         guard let amountSat = payment["amountSat"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "Payment"))
         }
-        var feesSat: UInt64?
-        if hasNonNilKey(data: payment, key: "feesSat") {
-            guard let feesSatTmp = payment["feesSat"] as? UInt64 else {
-                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "feesSat"))
-            }
-            feesSat = feesSatTmp
+        guard let feesSat = payment["feesSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "Payment"))
         }
         var preimage: String?
         if hasNonNilKey(data: payment, key: "preimage") {
@@ -430,7 +426,7 @@ enum BreezLiquidSDKMapper {
             "swapId": payment.swapId == nil ? nil : payment.swapId,
             "timestamp": payment.timestamp,
             "amountSat": payment.amountSat,
-            "feesSat": payment.feesSat == nil ? nil : payment.feesSat,
+            "feesSat": payment.feesSat,
             "preimage": payment.preimage == nil ? nil : payment.preimage,
             "refundTxId": payment.refundTxId == nil ? nil : payment.refundTxId,
             "refundTxAmountSat": payment.refundTxAmountSat == nil ? nil : payment.refundTxAmountSat,
