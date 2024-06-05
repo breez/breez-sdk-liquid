@@ -131,7 +131,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Get the public key of the wallet
     async fn pubkey(&self) -> String {
-        self.lwk_signer.xpub().to_string()
+        self.lwk_signer.xpub().public_key.to_string()
     }
 
     /// Perform a full scan of the wallet
