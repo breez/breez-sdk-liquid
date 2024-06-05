@@ -1181,11 +1181,30 @@ impl LiquidSdk {
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
-            address: Some(mrh_addr_str),
+            address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
+
+        // Check if correct MRH was added to the invoice by Boltz
+        let (bip21_lbtc_address, bip21_amount_btc) = self
+            .swapper
+            .check_for_mrh(&create_response.invoice)?
+            .ok_or(PaymentError::receive_error("Invoice has no MRH"))?;
+        let received_bip21_amount_sat: u64 = (bip21_amount_btc * 100_000_000.0) as u64;
+        ensure_sdk!(
+            bip21_lbtc_address == mrh_addr_str,
+            PaymentError::receive_error("Invoice has incorrect address in MRH")
+        );
+        // The swap fee savings are passed on to the Sender: MRH amount = invoice amount - fees
+        let expected_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
+        ensure_sdk!(
+            received_bip21_amount_sat == expected_bip21_amount_sat,
+            PaymentError::receive_error(&format!(
+                "Invoice has incorrect amount in MRH: expected {expected_bip21_amount_sat} sat, MRH has {received_bip21_amount_sat} sat",
+            ))
+        );
 
         let swap_id = create_response.id.clone();
         let invoice = Bolt11Invoice::from_str(&create_response.invoice)

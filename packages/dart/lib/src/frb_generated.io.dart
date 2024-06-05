@@ -757,27 +757,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 10;
       return;
     }
+    if (apiObj is PaymentError_ReceiveError) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 11;
+      wireObj.kind.ReceiveError.err = pre_err;
+      return;
+    }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
       var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
-      wireObj.tag = 11;
+      wireObj.tag = 12;
       wireObj.kind.Refunded.err = pre_err;
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
     if (apiObj is PaymentError_SelfTransferNotSupported) {
-      wireObj.tag = 12;
+      wireObj.tag = 13;
       return;
     }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 13;
+      wireObj.tag = 14;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 14;
+      wireObj.tag = 15;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -1819,6 +1825,10 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_ReceiveError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_Refunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 
@@ -1837,6 +1847,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_Generic Generic;
 
   external wire_cst_PaymentError_LwkError LwkError;
+
+  external wire_cst_PaymentError_ReceiveError ReceiveError;
 
   external wire_cst_PaymentError_Refunded Refunded;
 

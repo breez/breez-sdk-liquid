@@ -18,6 +18,7 @@ enum PaymentError {
     "PairsNotFound",
     "PaymentTimeout",
     "PersistError",
+    "ReceiveError",
     "Refunded",
     "SelfTransferNotSupported",
     "SendError",

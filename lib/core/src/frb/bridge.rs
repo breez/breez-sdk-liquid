@@ -899,20 +899,24 @@ impl SseDecode for crate::error::PaymentError {
             }
             11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::ReceiveError { err: var_err };
+            }
+            12 => {
+                let mut var_err = <String>::sse_decode(deserializer);
                 let mut var_refundTxId = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
                     err: var_err,
                     refund_tx_id: var_refundTxId,
                 };
             }
-            12 => {
+            13 => {
                 return crate::error::PaymentError::SelfTransferNotSupported;
             }
-            13 => {
+            14 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            14 => {
+            15 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -1372,18 +1376,21 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             crate::error::PaymentError::PairsNotFound => [8.into_dart()].into_dart(),
             crate::error::PaymentError::PaymentTimeout => [9.into_dart()].into_dart(),
             crate::error::PaymentError::PersistError => [10.into_dart()].into_dart(),
+            crate::error::PaymentError::ReceiveError { err } => {
+                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
             crate::error::PaymentError::Refunded { err, refund_tx_id } => [
-                11.into_dart(),
+                12.into_dart(),
                 err.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::error::PaymentError::SelfTransferNotSupported => [12.into_dart()].into_dart(),
+            crate::error::PaymentError::SelfTransferNotSupported => [13.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [13.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [14.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [14.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [15.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
         }
     }
@@ -1908,20 +1915,24 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(10, serializer);
             }
-            crate::error::PaymentError::Refunded { err, refund_tx_id } => {
+            crate::error::PaymentError::ReceiveError { err } => {
                 <i32>::sse_encode(11, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::error::PaymentError::Refunded { err, refund_tx_id } => {
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(refund_tx_id, serializer);
             }
             crate::error::PaymentError::SelfTransferNotSupported => {
-                <i32>::sse_encode(12, serializer);
+                <i32>::sse_encode(13, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(13, serializer);
+                <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(14, serializer);
+                <i32>::sse_encode(15, serializer);
                 <String>::sse_encode(err, serializer);
             }
         }

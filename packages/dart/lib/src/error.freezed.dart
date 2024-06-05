@@ -721,6 +721,78 @@ abstract class PaymentError_PersistError extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
+  factory _$$PaymentError_ReceiveErrorImplCopyWith(
+          _$PaymentError_ReceiveErrorImpl value, $Res Function(_$PaymentError_ReceiveErrorImpl) then) =
+      __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String err});
+}
+
+/// @nodoc
+class __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_ReceiveErrorImpl>
+    implements _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
+  __$$PaymentError_ReceiveErrorImplCopyWithImpl(
+      _$PaymentError_ReceiveErrorImpl _value, $Res Function(_$PaymentError_ReceiveErrorImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_$PaymentError_ReceiveErrorImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentError_ReceiveErrorImpl extends PaymentError_ReceiveError {
+  const _$PaymentError_ReceiveErrorImpl({required this.err}) : super._();
+
+  @override
+  final String err;
+
+  @override
+  String toString() {
+    return 'PaymentError.receiveError(err: $err)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_ReceiveErrorImpl &&
+            (identical(other.err, err) || other.err == err));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, err);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
+      __$$PaymentError_ReceiveErrorImplCopyWithImpl<_$PaymentError_ReceiveErrorImpl>(this, _$identity);
+}
+
+abstract class PaymentError_ReceiveError extends PaymentError {
+  const factory PaymentError_ReceiveError({required final String err}) = _$PaymentError_ReceiveErrorImpl;
+  const PaymentError_ReceiveError._() : super._();
+
+  String get err;
+  @JsonKey(ignore: true)
+  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
   factory _$$PaymentError_RefundedImplCopyWith(
           _$PaymentError_RefundedImpl value, $Res Function(_$PaymentError_RefundedImpl) then) =

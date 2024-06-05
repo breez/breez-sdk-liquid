@@ -368,20 +368,26 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
             9 => crate::error::PaymentError::PaymentTimeout,
             10 => crate::error::PaymentError::PersistError,
             11 => {
+                let ans = unsafe { self.kind.ReceiveError };
+                crate::error::PaymentError::ReceiveError {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            12 => {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
                     refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
-            12 => crate::error::PaymentError::SelfTransferNotSupported,
-            13 => {
+            13 => crate::error::PaymentError::SelfTransferNotSupported,
+            14 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            14 => {
+            15 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -1196,6 +1202,7 @@ pub struct wire_cst_payment_error {
 pub union PaymentErrorKind {
     Generic: wire_cst_PaymentError_Generic,
     LwkError: wire_cst_PaymentError_LwkError,
+    ReceiveError: wire_cst_PaymentError_ReceiveError,
     Refunded: wire_cst_PaymentError_Refunded,
     SendError: wire_cst_PaymentError_SendError,
     SignerError: wire_cst_PaymentError_SignerError,
@@ -1209,6 +1216,11 @@ pub struct wire_cst_PaymentError_Generic {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_LwkError {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_ReceiveError {
     err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
