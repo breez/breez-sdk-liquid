@@ -42,6 +42,8 @@ pub trait OnchainWallet: Send + Sync {
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
+
+    async fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64, PaymentError>;
 }
 
 pub(crate) struct LiquidOnchainWallet {
@@ -141,5 +143,22 @@ impl OnchainWallet for LiquidOnchainWallet {
             ElectrumClient::new(&ElectrumUrl::new(&self.config.electrum_url, true, true))?;
         lwk_wollet::full_scan_with_electrum_client(&mut wallet, &mut electrum_client)?;
         Ok(())
+    }
+
+    async fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64, PaymentError> {
+        // TODO Replace this with own address when LWK supports taproot
+        //  https://github.com/Blockstream/lwk/issues/31
+        let temp_p2tr_addr = match self.config.network {
+          Network::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
+          Network::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
+      };
+
+        // Create a throw-away tx similar to the lockup tx, in order to estimate fees
+        Ok(self
+            .build_tx(None, temp_p2tr_addr, amount_sat)
+            .await?
+            .all_fees()
+            .values()
+            .sum())
     }
 }
