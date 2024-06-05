@@ -6,8 +6,7 @@ use boltz_client::swaps::boltzv2::{
     BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
-use lwk_signer::SwSigner;
-use lwk_wollet::{ElectrumClient, ElectrumUrl, ElementsNetwork, WolletDescriptor};
+use lwk_wollet::{ElectrumClient, ElectrumUrl, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
@@ -126,15 +125,6 @@ pub enum LiquidSdkEvent {
     PaymentSucceed { details: Payment },
     PaymentWaitingConfirmation { details: Payment },
     Synced,
-}
-
-pub struct LiquidSdkOptions {
-    pub config: Config,
-    pub signer: SwSigner,
-    /// Output script descriptor
-    ///
-    /// See <https://github.com/bitcoin/bips/pull/1143>
-    pub descriptor: WolletDescriptor,
 }
 
 #[derive(Debug, Serialize)]

@@ -9,17 +9,12 @@ use boltz_client::{
         boltzv2::*,
     },
     util::secrets::Preimage,
-    Amount, Bolt11Invoice, ElementsAddress,
+    Amount, Bolt11Invoice,
 };
 use log::{debug, error, info, warn};
-use lwk_common::{singlesig_desc, Signer, Singlesig};
-use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::{
-    elements::{Address, LockTime, Transaction},
-    BlockchainBackend, ElementsNetwork, FsPersister, Wollet as LwkWollet, WolletDescriptor,
-};
+use lwk_wollet::{elements::LockTime, BlockchainBackend, ElementsNetwork};
 use std::time::Instant;
 use std::{
     fs,
@@ -28,12 +23,13 @@ use std::{
     sync::Arc,
     time::{Duration, UNIX_EPOCH},
 };
-use tokio::sync::{watch, Mutex, RwLock};
+use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
+use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     ensure_sdk,
     error::{LiquidSdkResult, PaymentError},
@@ -52,10 +48,7 @@ pub const DEFAULT_DATA_DIR: &str = ".data";
 
 pub struct LiquidSdk {
     config: Config,
-    /// LWK Wollet, a watch-only Liquid wallet for this instance
-    lwk_wollet: Arc<Mutex<LwkWollet>>,
-    /// LWK Signer, for signing Liquid transactions
-    lwk_signer: SwSigner,
+    onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     event_manager: Arc<EventManager>,
     status_stream: Arc<dyn SwapperStatusStream>,
@@ -68,32 +61,14 @@ pub struct LiquidSdk {
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let config = req.config;
-        let is_mainnet = config.network == Network::Mainnet;
-        let signer = SwSigner::new(&req.mnemonic, is_mainnet)?;
-        let descriptor = LiquidSdk::get_descriptor(&signer, config.network)?;
-
-        let sdk = LiquidSdk::new(LiquidSdkOptions {
-            signer,
-            descriptor,
-            config,
-        })?;
+        let sdk = LiquidSdk::new(config, req.mnemonic)?;
         sdk.start().await?;
 
         Ok(sdk)
     }
 
-    fn new(opts: LiquidSdkOptions) -> Result<Arc<Self>> {
-        let config = opts.config;
-        let elements_network: ElementsNetwork = config.network.into();
-
+    fn new(config: Config, mnemonic: String) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
-
-        let lwk_persister = FsPersister::new(
-            config.working_dir.clone(),
-            elements_network,
-            &opts.descriptor,
-        )?;
-        let lwk_wollet = LwkWollet::new(elements_network, lwk_persister, opts.descriptor)?;
 
         let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
         persister.init()?;
@@ -105,9 +80,8 @@ impl LiquidSdk {
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let sdk = Arc::new(LiquidSdk {
-            config,
-            lwk_wollet: Arc::new(Mutex::new(lwk_wollet)),
-            lwk_signer: opts.signer,
+            config: config.clone(),
+            onchain_wallet: Arc::new(LiquidOnchainWallet::new(mnemonic, config)?),
             persister: persister.clone(),
             event_manager,
             status_stream: status_stream.clone(),
@@ -268,7 +242,7 @@ impl LiquidSdk {
     async fn check_send_swap_expiration(&self, send_swap: &SendSwap) -> Result<()> {
         if send_swap.lockup_tx_id.is_some() && send_swap.refund_tx_id.is_none() {
             let swap_script = send_swap.get_swap_script()?;
-            let current_height = self.lwk_wollet.lock().await.tip().height();
+            let current_height = self.onchain_wallet.tip().await.height();
             let locktime_from_height = LockTime::from_height(current_height)?;
 
             info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", send_swap.id, swap_script.locktime);
@@ -298,18 +272,6 @@ impl LiquidSdk {
     pub async fn remove_event_listener(&self, id: String) -> LiquidSdkResult<()> {
         self.event_manager.remove(id).await;
         Ok(())
-    }
-
-    fn get_descriptor(signer: &SwSigner, network: Network) -> Result<WolletDescriptor> {
-        let is_mainnet = network == Network::Mainnet;
-        let descriptor_str = singlesig_desc(
-            signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-            is_mainnet,
-        )
-        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
-        Ok(descriptor_str.parse()?)
     }
 
     fn validate_state_transition(
@@ -686,16 +648,12 @@ impl LiquidSdk {
         }
     }
 
-    /// Gets the next unused onchain Liquid address
-    async fn next_unused_address(&self) -> Result<Address, lwk_wollet::Error> {
-        let lwk_wollet = self.lwk_wollet.lock().await;
-        Ok(lwk_wollet.address(None)?.address().clone())
-    }
-
     pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
-
-        debug!("next_unused_address: {}", self.next_unused_address().await?);
+        debug!(
+            "next_unused_address: {}",
+            self.onchain_wallet.next_unused_address().await?
+        );
         if req.with_scan {
             self.sync().await?;
         }
@@ -735,33 +693,8 @@ impl LiquidSdk {
             balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
             pending_send_sat,
             pending_receive_sat,
-            pubkey: self.lwk_signer.xpub().public_key.to_string(),
+            pubkey: self.onchain_wallet.pubkey().await,
         })
-    }
-
-    async fn build_tx(
-        &self,
-        fee_rate: Option<f32>,
-        recipient_address: &str,
-        amount_sat: u64,
-    ) -> Result<Transaction, PaymentError> {
-        let lwk_wollet = self.lwk_wollet.lock().await;
-        let mut pset = lwk_wollet::TxBuilder::new(self.config.network.into())
-            .add_lbtc_recipient(
-                &ElementsAddress::from_str(recipient_address).map_err(|e| {
-                    PaymentError::Generic {
-                        err: format!(
-                            "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
-                        ),
-                    }
-                })?,
-                amount_sat,
-            )?
-            .fee_rate(fee_rate)
-            .finish(&lwk_wollet)?;
-        let signer = AnySigner::Software(self.lwk_signer.clone());
-        signer.sign(&mut pset)?;
-        Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
@@ -812,6 +745,7 @@ impl LiquidSdk {
 
         // Create a throw-away tx similar to the lockup tx, in order to estimate fees
         Ok(self
+            .onchain_wallet
             .build_tx(None, temp_p2tr_addr, amount_sat)
             .await?
             .all_fees()
@@ -864,8 +798,8 @@ impl LiquidSdk {
             &swap.id
         );
 
-        let current_height = self.lwk_wollet.lock().await.tip().height();
-        let output_address = self.next_unused_address().await?.to_string();
+        let current_height = self.onchain_wallet.tip().await.height();
+        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let refund_tx_id = self.swapper.refund_send_swap_non_cooperative(
             swap,
             broadcast_fees_sat,
@@ -885,7 +819,7 @@ impl LiquidSdk {
         let broadcast_fees_sat =
             Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
 
-        let output_address = self.next_unused_address().await?.to_string();
+        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let refund_res =
             self.swapper
                 .refund_send_swap_cooperative(swap, &output_address, broadcast_fees_sat);
@@ -917,7 +851,7 @@ impl LiquidSdk {
             "Claim is pending for Send Swap {}. Initiating cooperative claim",
             &send_swap.id
         );
-        let output_address = self.next_unused_address().await?.to_string();
+        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let claim_tx_details = self.swapper.get_claim_tx_details(send_swap)?;
         self.try_handle_send_swap_update(
             &send_swap.id,
@@ -943,6 +877,7 @@ impl LiquidSdk {
         );
 
         let lockup_tx = self
+            .onchain_wallet
             .build_tx(
                 None,
                 &create_response.address,
@@ -1087,7 +1022,7 @@ impl LiquidSdk {
             PaymentError::AlreadyClaimed
         );
         let swap_id = &ongoing_receive_swap.id;
-        let claim_address = self.next_unused_address().await?.to_string();
+        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let claim_tx_id = self
             .swapper
             .claim_receive_swap(ongoing_receive_swap, claim_address)?;
@@ -1218,9 +1153,7 @@ impl LiquidSdk {
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         if with_scan {
-            let mut electrum_client = self.config.get_electrum_client()?;
-            let mut lwk_wollet = self.lwk_wollet.lock().await;
-            lwk_wollet::full_scan_with_electrum_client(&mut lwk_wollet, &mut electrum_client)?;
+            self.onchain_wallet.full_scan().await?;
         }
 
         let pending_receive_swaps_by_claim_tx_id =
@@ -1228,7 +1161,7 @@ impl LiquidSdk {
         let pending_send_swaps_by_refund_tx_id =
             self.persister.list_pending_send_swaps_by_refund_tx_id()?;
 
-        for tx in self.lwk_wollet.lock().await.transactions()? {
+        for tx in self.onchain_wallet.transactions().await? {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
