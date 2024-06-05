@@ -10,3 +10,4 @@ pub mod persist;
 pub mod sdk;
 pub(crate) mod swapper;
 pub(crate) mod utils;
+pub(crate) mod wallet;
