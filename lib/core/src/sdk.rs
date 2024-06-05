@@ -12,8 +12,6 @@ use boltz_client::{
     Amount, Bolt11Invoice,
 };
 use log::{debug, error, info, warn};
-use lwk_common::{singlesig_desc, Signer, Singlesig};
-use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::hashes::{sha256, Hash};
@@ -777,15 +775,20 @@ impl LiquidSdk {
             / 1000;
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
         let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
-            Some(_) => lockup_fees_sat,
-            None => lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat,
+            Some((lbtc_address, _)) => {
+                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
+                    .await?
+            }
+            None => {
+                let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
+                lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
+            }
         };
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat
+            fees_sat,
         })
     }
 
@@ -938,6 +941,7 @@ impl LiquidSdk {
 
                 let receiver_amount_sat = get_invoice_amount!(req.invoice);
                 let tx = self
+                    .onchain_wallet
                     .build_tx(None, &lbtc_address, receiver_amount_sat)
                     .await?;
                 let onchain_fees_sat: u64 = tx.all_fees().values().sum();
@@ -1161,7 +1165,7 @@ impl LiquidSdk {
         let preimage_hash = preimage.sha256.to_string();
 
         // Address to be used for a BIP-21 direct payment
-        let mrh_addr = self.next_unused_address().await?;
+        let mrh_addr = self.onchain_wallet.next_unused_address().await?;
 
         // Signature of the claim public key of the SHA256 hash of the address for the direct payment
         let mrh_addr_str = mrh_addr.to_string();
