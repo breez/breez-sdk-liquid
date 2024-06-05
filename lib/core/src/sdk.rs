@@ -747,11 +747,6 @@ impl LiquidSdk {
     }
 
     async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64> {
-        self.estimate_onchain_tx_fee_p2tr(amount_sat).await
-    }
-
-    /// Estimate the onchain fee for sending the given amount to a taproot address
-    async fn estimate_onchain_tx_fee_p2tr(&self, amount_sat: u64) -> Result<u64> {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.config.network {
