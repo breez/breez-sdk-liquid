@@ -38,7 +38,7 @@ pub trait OnchainWallet: Send + Sync {
     async fn tip(&self) -> Tip;
 
     /// Get the public key of the wallet
-    async fn pubkey(&self) -> String;
+    fn pubkey(&self) -> String;
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
@@ -130,7 +130,7 @@ impl OnchainWallet for LiquidOnchainWallet {
     }
 
     /// Get the public key of the wallet
-    async fn pubkey(&self) -> String {
+    fn pubkey(&self) -> String {
         self.lwk_signer.xpub().public_key.to_string()
     }
 

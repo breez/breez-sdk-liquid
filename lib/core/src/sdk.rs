@@ -693,7 +693,7 @@ impl LiquidSdk {
             balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
             pending_send_sat,
             pending_receive_sat,
-            pubkey: self.onchain_wallet.pubkey().await,
+            pubkey: self.onchain_wallet.pubkey(),
         })
     }
 
