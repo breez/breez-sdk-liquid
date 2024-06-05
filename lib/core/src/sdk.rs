@@ -735,7 +735,23 @@ impl LiquidSdk {
         Ok(lbtc_pair)
     }
 
-    async fn get_broadcast_fee_estimation(&self, amount_sat: u64) -> Result<u64> {
+    /// Estimate the onchain fee for sending the given amount to the given destination address
+    async fn estimate_onchain_tx_fee(&self, amount_sat: u64, address: &str) -> Result<u64> {
+        Ok(self
+            .onchain_wallet
+            .build_tx(None, address, amount_sat)
+            .await?
+            .all_fees()
+            .values()
+            .sum())
+    }
+
+    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64> {
+        self.estimate_onchain_tx_fee_p2tr(amount_sat).await
+    }
+
+    /// Estimate the onchain fee for sending the given amount to a taproot address
+    async fn estimate_onchain_tx_fee_p2tr(&self, amount_sat: u64) -> Result<u64> {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.config.network {
@@ -743,14 +759,8 @@ impl LiquidSdk {
             Network::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
-        // Create a throw-away tx similar to the lockup tx, in order to estimate fees
-        Ok(self
-            .onchain_wallet
-            .build_tx(None, temp_p2tr_addr, amount_sat)
-            .await?
-            .all_fees()
-            .values()
-            .sum())
+        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr)
+            .await
     }
 
     pub async fn prepare_send_payment(
@@ -767,13 +777,11 @@ impl LiquidSdk {
 
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
-        let broadcast_fees_sat = self
-            .get_broadcast_fee_estimation(receiver_amount_sat)
-            .await?;
+        let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
+            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat,
         })
     }
 
@@ -816,18 +824,19 @@ impl LiquidSdk {
 
     async fn try_refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let amount_sat = get_invoice_amount!(swap.invoice);
-        let broadcast_fees_sat =
-            Amount::from_sat(self.get_broadcast_fee_estimation(amount_sat).await?);
-
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_tx_fees_sat = Amount::from_sat(
+            self.estimate_onchain_tx_fee(amount_sat, &output_address)
+                .await?,
+        );
         let refund_res =
             self.swapper
-                .refund_send_swap_cooperative(swap, &output_address, broadcast_fees_sat);
+                .refund_send_swap_cooperative(swap, &output_address, refund_tx_fees_sat);
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
                 warn!("Cooperative refund failed: {:?}", e);
-                self.try_refund_non_cooperative(swap, broadcast_fees_sat)
+                self.try_refund_non_cooperative(swap, refund_tx_fees_sat)
                     .await
             }
         }
@@ -909,13 +918,10 @@ impl LiquidSdk {
 
         self.validate_invoice(&req.invoice)?;
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
-
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
-        let broadcast_fees_sat = self
-            .get_broadcast_fee_estimation(receiver_amount_sat)
-            .await?;
+        let lockup_tx_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
         ensure_sdk!(
-            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + broadcast_fees_sat,
+            req.fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + lockup_tx_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
