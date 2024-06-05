@@ -44,7 +44,7 @@ impl SendSwapStateHandler {
         }
     }
 
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<String> {
+    pub(crate) fn subscribe_payment_updates(&self) -> broadcast::Receiver<String> {
         self.subscription_notifier.subscribe()
     }
 
@@ -330,13 +330,17 @@ impl SendSwapStateHandler {
 
     async fn refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let amount_sat = get_invoice_amount!(swap.invoice);
-        let broadcast_fees_sat = Amount::from_sat(
-            self.onchain_wallet
-                .get_broadcast_fee_estimation(amount_sat)
-                .await?,
-        );
-
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+
+        let fee = self
+            .onchain_wallet
+            .build_tx(None, &output_address, amount_sat)
+            .await?
+            .all_fees()
+            .values()
+            .sum();
+        let broadcast_fees_sat = Amount::from_sat(fee);
+
         let refund_res =
             self.swapper
                 .refund_send_swap_cooperative(swap, &output_address, broadcast_fees_sat);

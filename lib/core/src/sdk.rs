@@ -174,8 +174,19 @@ impl LiquidSdk {
                 cloned.persister.clone(),
                 cloned.swapper.clone(),
             );
+            let mut swap_state_changes = send_swap_state_handler.subscribe_payment_updates();
             loop {
                 tokio::select! {
+                    payment_id = swap_state_changes.recv() => {
+                      match payment_id {
+                          Ok(payment_id) => {
+                            if let Err(e) = cloned.emit_payment_updated(Some(payment_id)).await {
+                              error!("Failed to emit payment update: {e:?}");
+                            }
+                          }
+                          Err(e) => error!("Failed to receive send swap state change: {e:?}")
+                      }
+                    }
                     update = updates_stream.recv() => match update {
                         Ok(boltzv2::Update { id, status }) => {
                             let _ = cloned.sync().await;
