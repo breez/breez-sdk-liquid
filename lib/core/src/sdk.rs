@@ -949,10 +949,8 @@ impl LiquidSdk {
                 info!("Built onchain L-BTC tx with ID {}", tx.txid());
 
                 let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
-                let broadcast_res = self
-                    .swapper
-                    .broadcast_tx(self.config.network.into(), &tx_hex);
-                info!("Trying to broadcast tx, result: {:?}", broadcast_res);
+                self.swapper
+                    .broadcast_tx(self.config.network.into(), &tx_hex)?;
 
                 // TODO We cannot create and return a typical SendSwap, because we don't have a swap id
                 //   Also, none of the other swap fields are
