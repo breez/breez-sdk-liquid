@@ -353,6 +353,32 @@ impl SendSwapStateHandler {
         }
     }
 
+    async fn refund_non_cooperative(
+        &self,
+        swap: &SendSwap,
+        broadcast_fees_sat: Amount,
+    ) -> Result<String, PaymentError> {
+        info!(
+            "Initiating non-cooperative refund for Send Swap {}",
+            &swap.id
+        );
+
+        let current_height = self.onchain_wallet.tip().await.height();
+        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_tx_id = self.swapper.refund_send_swap_non_cooperative(
+            swap,
+            broadcast_fees_sat,
+            &output_address,
+            current_height,
+        )?;
+
+        info!(
+            "Successfully broadcast non-cooperative refund for Send Swap {}, tx: {}",
+            swap.id, refund_tx_id
+        );
+        Ok(refund_tx_id)
+    }
+
     fn validate_state_transition(
         from_state: PaymentState,
         to_state: PaymentState,
@@ -390,31 +416,5 @@ impl SendSwapStateHandler {
         (invoice_payment_hash.to_string() == preimage_hash)
             .then_some(())
             .ok_or(PaymentError::InvalidPreimage)
-    }
-
-    async fn refund_non_cooperative(
-        &self,
-        swap: &SendSwap,
-        broadcast_fees_sat: Amount,
-    ) -> Result<String, PaymentError> {
-        info!(
-            "Initiating non-cooperative refund for Send Swap {}",
-            &swap.id
-        );
-
-        let current_height = self.onchain_wallet.tip().await.height();
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_id = self.swapper.refund_send_swap_non_cooperative(
-            swap,
-            broadcast_fees_sat,
-            &output_address,
-            current_height,
-        )?;
-
-        info!(
-            "Successfully broadcast non-cooperative refund for Send Swap {}, tx: {}",
-            swap.id, refund_tx_id
-        );
-        Ok(refund_tx_id)
     }
 }
