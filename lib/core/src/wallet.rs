@@ -20,7 +20,10 @@ use crate::{
 
 #[async_trait]
 pub trait OnchainWallet: Send + Sync {
+    /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
+
+    /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
         fee_rate: Option<f32>,
@@ -28,12 +31,16 @@ pub trait OnchainWallet: Send + Sync {
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
+    /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
 
+    /// Get the current tip of the blockchain the wallet is aware of
     async fn tip(&self) -> Tip;
 
+    /// Get the public key of the wallet
     async fn pubkey(&self) -> String;
 
+    /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
 }
 
@@ -78,6 +85,7 @@ impl LiquidOnchainWallet {
 
 #[async_trait]
 impl OnchainWallet for LiquidOnchainWallet {
+    /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         let wallet = self.wallet.lock().await;
         wallet.transactions().map_err(|e| PaymentError::Generic {
@@ -85,6 +93,7 @@ impl OnchainWallet for LiquidOnchainWallet {
         })
     }
 
+    /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
         fee_rate: Option<f32>,
@@ -110,18 +119,22 @@ impl OnchainWallet for LiquidOnchainWallet {
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
+    /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
         Ok(self.wallet.lock().await.address(None)?.address().clone())
     }
 
+    /// Get the current tip of the blockchain the wallet is aware of
     async fn tip(&self) -> Tip {
         self.wallet.lock().await.tip()
     }
 
+    /// Get the public key of the wallet
     async fn pubkey(&self) -> String {
         self.lwk_signer.xpub().to_string()
     }
 
+    /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
         let mut wallet = self.wallet.lock().await;
         let mut electrum_client =
