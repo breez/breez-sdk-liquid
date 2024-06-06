@@ -971,6 +971,18 @@ impl LiquidSdk {
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
 
+            self.persister.insert_or_update_payment(PaymentTxData {
+                tx_id: tx_id.clone(),
+                timestamp: tx.timestamp,
+                amount_sat: amount_sat.unsigned_abs(),
+                fees_sat: tx.fee,
+                payment_type: match amount_sat >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                },
+                is_confirmed: is_tx_confirmed,
+            })?;
+
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.receive_swap_state_handler
@@ -992,29 +1004,17 @@ impl LiquidSdk {
                         // Covers events:
                         // - onchain Receive Pending and Complete
                         // - onchain Send Complete
-                        self.emit_payment_updated(Some(tx_id.clone())).await?;
+                        self.emit_payment_updated(Some(tx_id)).await?;
                     }
                     Some(payment_before_sync) => {
                         if payment_before_sync.status == Pending && is_tx_confirmed {
                             // A know payment that was in the mempool, but is now confirmed
                             // Covers events: Send and Receive direct onchain payments transitioning to Complete
-                            self.emit_payment_updated(Some(tx_id.clone())).await?;
+                            self.emit_payment_updated(Some(tx_id)).await?;
                         }
                     }
                 }
             }
-
-            self.persister.insert_or_update_payment(PaymentTxData {
-                tx_id,
-                timestamp: tx.timestamp,
-                amount_sat: amount_sat.unsigned_abs(),
-                fees_sat: tx.fee,
-                payment_type: match amount_sat >= 0 {
-                    true => PaymentType::Receive,
-                    false => PaymentType::Send,
-                },
-                is_confirmed: is_tx_confirmed,
-            })?;
         }
 
         Ok(())
