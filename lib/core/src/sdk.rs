@@ -633,46 +633,56 @@ impl LiquidSdk {
 
         match self.swapper.check_for_mrh(&req.invoice)? {
             // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
-            Some((lbtc_address, amount_btc)) => {
-                let amount_sat: u64 = (amount_btc * 100_000_000.0) as u64;
-                info!("Found magic routing hint for L-BTC address {lbtc_address} and amount_sat {amount_sat}");
-
-                let receiver_amount_sat = get_invoice_amount!(req.invoice);
-                let tx = self
-                    .onchain_wallet
-                    .build_tx(None, &lbtc_address, receiver_amount_sat)
-                    .await?;
-                let onchain_fees_sat: u64 = tx.all_fees().values().sum();
-                let payer_amount_sat = receiver_amount_sat + onchain_fees_sat;
-                info!("Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {onchain_fees_sat}");
-                info!("Built onchain L-BTC tx with ID {}", tx.txid());
-
-                let tx_id = tx.txid().to_string();
-                let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
-                self.swapper
-                    .broadcast_tx(self.config.network.into(), &tx_hex)?;
-
-                // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
-                // This makes the tx known to the SDK (get_info, list_payments) instantly
-                let tx_data = PaymentTxData {
-                    tx_id: tx_id.clone(),
-                    timestamp: None,
-                    amount_sat: payer_amount_sat,
-                    fees_sat: onchain_fees_sat,
-                    payment_type: PaymentType::Send,
-                    is_confirmed: false,
-                };
-                self.persister.insert_or_update_payment(tx_data.clone())?;
-                self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
-
-                Ok(SendPaymentResponse {
-                    payment: Payment::from(tx_data, None),
-                })
+            Some((address, amount_btc)) => {
+                self.send_payment_via_mrh(req, &address, amount_btc).await
             }
 
             // If no MRH found, perform usual swap
             None => self.send_payment_via_swap(req).await,
         }
+    }
+
+    /// Performs a Send Payment by doing an onchain tx to the L-BTC address in the MRH.
+    async fn send_payment_via_mrh(
+        &self,
+        req: &PrepareSendResponse,
+        lbtc_address: &String,
+        amount_btc: f64,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        let amount_sat: u64 = (amount_btc * 100_000_000.0) as u64;
+        info!("Found MRH for L-BTC address {lbtc_address} and amount_sat {amount_sat}");
+
+        let receiver_amount_sat = get_invoice_amount!(req.invoice);
+        let tx = self
+            .onchain_wallet
+            .build_tx(None, &lbtc_address, receiver_amount_sat)
+            .await?;
+        let onchain_fees_sat: u64 = tx.all_fees().values().sum();
+        let payer_amount_sat = receiver_amount_sat + onchain_fees_sat;
+        info!("Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {onchain_fees_sat}");
+        info!("Built onchain L-BTC tx with ID {}", tx.txid());
+
+        let tx_id = tx.txid().to_string();
+        let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
+        self.swapper
+            .broadcast_tx(self.config.network.into(), &tx_hex)?;
+
+        // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        let tx_data = PaymentTxData {
+            tx_id: tx_id.clone(),
+            timestamp: None,
+            amount_sat: payer_amount_sat,
+            fees_sat: onchain_fees_sat,
+            payment_type: PaymentType::Send,
+            is_confirmed: false,
+        };
+        self.persister.insert_or_update_payment(tx_data.clone())?;
+        self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        Ok(SendPaymentResponse {
+            payment: Payment::from(tx_data, None),
+        })
     }
 
     /// Performs a Send Payment by doing a swap (create it, fund it, track it, etc).
