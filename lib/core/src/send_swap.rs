@@ -14,6 +14,7 @@ use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::Witness;
+use lwk_wollet::elements::Transaction;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::BlockchainBackend;
 use std::{str::FromStr, sync::Arc};
@@ -64,7 +65,9 @@ impl SendSwapStateHandler {
                 match (swap.state, swap.lockup_tx_id.clone()) {
                     (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
                         let create_response = swap.get_boltz_create_response()?;
-                        let lockup_tx_id = self.lockup_funds(id, &create_response).await?;
+                        let lockup_tx = self.lockup_funds(id, &create_response).await?;
+                        let lockup_tx_id = lockup_tx.txid().to_string();
+                        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
 
                         // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
                         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -72,7 +75,7 @@ impl SendSwapStateHandler {
                             tx_id: lockup_tx_id.clone(),
                             timestamp: None,
                             amount_sat: swap.payer_amount_sat,
-                            fees_sat: 0, // Will be overwritten once LWK fetches the real tx
+                            fees_sat: lockup_tx_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
                         })?;
@@ -174,7 +177,7 @@ impl SendSwapStateHandler {
         &self,
         swap_id: &str,
         create_response: &CreateSubmarineResponse,
-    ) -> Result<String, PaymentError> {
+    ) -> Result<Transaction, PaymentError> {
         debug!(
             "Initiated Send Swap: send {} sats to liquid address {}",
             create_response.expected_amount, create_response.address
@@ -192,10 +195,8 @@ impl SendSwapStateHandler {
         let electrum_client = self.config.get_electrum_client()?;
         let lockup_tx_id = electrum_client.broadcast(&lockup_tx)?.to_string();
 
-        debug!(
-          "Successfully broadcast lockup transaction for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}"
-      );
-        Ok(lockup_tx_id)
+        debug!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+        Ok(lockup_tx)
     }
 
     /// Transitions a Send swap to a new state
