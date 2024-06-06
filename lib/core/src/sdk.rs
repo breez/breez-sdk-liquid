@@ -1,3 +1,13 @@
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{
+    fs,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, UNIX_EPOCH},
+};
+
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
@@ -10,14 +20,6 @@ use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
-use std::time::Instant;
-use std::{
-    fs,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, UNIX_EPOCH},
-};
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -943,6 +945,12 @@ impl LiquidSdk {
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
+        let payments_before_sync: HashMap<String, Payment> = self
+            .list_payments()
+            .await?
+            .into_iter()
+            .map(|p| (p.tx_id.clone(), p))
+            .collect();
         if with_scan {
             self.onchain_wallet.full_scan().await?;
         }
@@ -963,17 +971,36 @@ impl LiquidSdk {
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
 
-            // Transition the swaps whose state depends on this tx being confirmed
-            if is_tx_confirmed {
-                if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
+            if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
                     self.receive_swap_state_handler
                         .update_swap_info(&swap.id, Complete, None)
                         .await?;
                 }
-                if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
+            } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
                     send_swap_state_handler
                         .update_swap_info(&swap.id, Failed, None, None, None)
                         .await?;
+                }
+            } else {
+                // Payments that are not directly associated with a swap (e.g. direct onchain payments using MRH)
+
+                match payments_before_sync.get(&tx_id) {
+                    None => {
+                        // A completely new payment brought in by this sync, in mempool or confirmed
+                        // Covers events:
+                        // - onchain Receive Pending and Complete
+                        // - onchain Send Complete
+                        self.emit_payment_updated(Some(tx_id.clone())).await?;
+                    }
+                    Some(payment_before_sync) => {
+                        if payment_before_sync.status == Pending && is_tx_confirmed {
+                            // A know payment that was in the mempool, but is now confirmed
+                            // Covers events: Send and Receive direct onchain payments transitioning to Complete
+                            self.emit_payment_updated(Some(tx_id.clone())).await?;
+                        }
+                    }
                 }
             }
 
