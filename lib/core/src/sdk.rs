@@ -833,9 +833,7 @@ impl LiquidSdk {
             self.persister.clone(),
             self.swapper.clone(),
         );
-        let txs = self.onchain_wallet.transactions().await?;
-        let num = txs.len();
-        for tx in txs {
+        for tx in self.onchain_wallet.transactions().await? {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
@@ -852,14 +850,7 @@ impl LiquidSdk {
                         .update_swap_info(&swap.id, Failed, None, None, None)
                         .await?;
                 }
-            } else {
-                info!("*******Processing unconfirmed tx: {tx_id}");
             }
-
-            print!(
-                "*******Got tx num: {num}: {tx_id} height: {:?} \n",
-                tx.height
-            );
 
             self.persister.insert_or_update_payment(PaymentTxData {
                 tx_id,
