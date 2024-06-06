@@ -1,13 +1,11 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
 use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
-use boltz_client::{
-    swaps::{boltz::RevSwapStates, boltzv2::*},
-    util::secrets::Preimage,
-    Amount, Bolt11Invoice,
-};
+use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Amount, Bolt11Invoice};
+use futures_util::stream::select_all;
+use futures_util::StreamExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
@@ -22,9 +20,11 @@ use std::{
 };
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
+use tokio_stream::wrappers::BroadcastStream;
 
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
+use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
@@ -54,6 +54,8 @@ pub struct LiquidSdk {
     is_started: RwLock<bool>,
     shutdown_sender: watch::Sender<()>,
     shutdown_receiver: watch::Receiver<()>,
+    send_swap_state_handler: SendSwapStateHandler,
+    receive_swap_state_handler: ReceiveSwapStateHandler,
 }
 
 impl LiquidSdk {
@@ -77,9 +79,22 @@ impl LiquidSdk {
         let swapper = Arc::new(BoltzSwapper::new(config.clone()));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
+        let send_swap_state_handler = SendSwapStateHandler::new(
+            config.clone(),
+            onchain_wallet.clone(),
+            persister.clone(),
+            swapper.clone(),
+        );
+        let receive_swap_state_handler = ReceiveSwapStateHandler::new(
+            onchain_wallet.clone(),
+            persister.clone(),
+            swapper.clone(),
+        );
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
-            onchain_wallet: Arc::new(LiquidOnchainWallet::new(mnemonic, config)?),
+            onchain_wallet,
             persister: persister.clone(),
             event_manager,
             status_stream: status_stream.clone(),
@@ -87,8 +102,9 @@ impl LiquidSdk {
             is_started: RwLock::new(false),
             shutdown_sender,
             shutdown_receiver,
+            send_swap_state_handler,
+            receive_swap_state_handler,
         });
-
         Ok(sdk)
     }
 
@@ -170,23 +186,26 @@ impl LiquidSdk {
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             let mut updates_stream = cloned.status_stream.subscribe_swap_updates();
-            let send_swap_state_handler = SendSwapStateHandler::new(
-                cloned.config.clone(),
-                cloned.onchain_wallet.clone(),
-                cloned.persister.clone(),
-                cloned.swapper.clone(),
-            );
-            let mut swap_state_changes = send_swap_state_handler.subscribe_payment_updates();
+            let swaps_streams = vec![
+                cloned.send_swap_state_handler.subscribe_payment_updates(),
+                cloned
+                    .receive_swap_state_handler
+                    .subscribe_payment_updates(),
+            ];
+            let mut combined_swap_streams =
+                select_all(swaps_streams.into_iter().map(BroadcastStream::new));
             loop {
                 tokio::select! {
-                    payment_id = swap_state_changes.recv() => {
-                      match payment_id {
-                          Ok(payment_id) => {
-                            if let Err(e) = cloned.emit_payment_updated(Some(payment_id)).await {
-                              error!("Failed to emit payment update: {e:?}");
+                    payment_id = combined_swap_streams.next() => {
+                      if let Some(payment_id) = payment_id {
+                        match payment_id {
+                            Ok(payment_id) => {
+                              if let Err(e) = cloned.emit_payment_updated(Some(payment_id)).await {
+                                error!("Failed to emit payment update: {e:?}");
+                              }
                             }
-                          }
-                          Err(e) => error!("Failed to receive send swap state change: {e:?}")
+                            Err(e) => error!("Failed to receive swap state change: {e:?}")
+                        }
                       }
                     }
                     update = updates_stream.recv() => match update {
@@ -194,7 +213,7 @@ impl LiquidSdk {
                             let _ = cloned.sync().await;
                             match cloned.persister.fetch_send_swap_by_id(&id) {
                                 Ok(Some(_)) => {
-                                    match send_swap_state_handler.on_new_status(&status, &id).await {
+                                    match cloned.send_swap_state_handler.on_new_status(&status, &id).await {
                                         Ok(_) => info!("Succesfully handled Send Swap {id} update"),
                                         Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
                                     }
@@ -202,7 +221,7 @@ impl LiquidSdk {
                                 _ => {
                                     match cloned.persister.fetch_receive_swap(&id) {
                                         Ok(Some(_)) => {
-                                            match cloned.try_handle_receive_swap_boltz_status(&status, &id).await {
+                                            match cloned.receive_swap_state_handler.on_new_status(&status, &id).await {
                                                 Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
                                                 Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")
                                             }
@@ -294,61 +313,6 @@ impl LiquidSdk {
     pub async fn remove_event_listener(&self, id: String) -> LiquidSdkResult<()> {
         self.event_manager.remove(id).await;
         Ok(())
-    }
-
-    fn validate_state_transition(
-        from_state: PaymentState,
-        to_state: PaymentState,
-    ) -> Result<(), PaymentError> {
-        match (from_state, to_state) {
-            (_, Created) => Err(PaymentError::Generic {
-                err: "Cannot transition to Created state".to_string(),
-            }),
-
-            (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
-                err: format!("Cannot transition from {from_state:?} to Pending state"),
-            }),
-
-            (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
-                err: format!("Cannot transition from {from_state:?} to Complete state"),
-            }),
-
-            (Created, TimedOut) => Ok(()),
-            (_, TimedOut) => Err(PaymentError::Generic {
-                err: format!("Cannot transition from {from_state:?} to TimedOut state"),
-            }),
-
-            (_, Failed) => Ok(()),
-        }
-    }
-
-    /// Transitions a Receive swap to a new state
-    pub(crate) async fn try_handle_receive_swap_update(
-        &self,
-        swap_id: &str,
-        to_state: PaymentState,
-        claim_tx_id: Option<&str>,
-    ) -> Result<(), PaymentError> {
-        info!(
-            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?})"
-        );
-
-        let swap = self
-            .persister
-            .fetch_receive_swap(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Receive Swap not found {swap_id}"),
-            })?;
-        let payment_id = claim_tx_id.map(|c| c.to_string()).or(swap.claim_tx_id);
-
-        Self::validate_state_transition(swap.state, to_state)?;
-        self.persister
-            .try_handle_receive_swap_update(swap_id, to_state, claim_tx_id)?;
-
-        Ok(self.emit_payment_updated(payment_id).await?)
     }
 
     async fn emit_payment_updated(&self, payment_id: Option<String>) -> Result<()> {
@@ -444,62 +408,6 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Handles status updates from Boltz for Receive swaps
-    pub(crate) async fn try_handle_receive_swap_boltz_status(
-        &self,
-        swap_state: &str,
-        id: &str,
-    ) -> Result<()> {
-        let receive_swap = self
-            .persister
-            .fetch_receive_swap(id)?
-            .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
-
-        info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
-
-        match RevSwapStates::from_str(swap_state) {
-            Ok(RevSwapStates::SwapExpired
-            | RevSwapStates::InvoiceExpired
-            | RevSwapStates::TransactionFailed
-            | RevSwapStates::TransactionRefunded) => {
-                error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                self.try_handle_receive_swap_update(id, Failed, None).await?;
-                Ok(())
-            }
-
-            // The lockup tx is in the mempool and we accept 0-conf => try to claim
-            // TODO Add 0-conf preconditions check: https://github.com/breez/breez-liquid-sdk/issues/187
-            Ok(RevSwapStates::TransactionMempool
-            // The lockup tx is confirmed => try to claim
-            | RevSwapStates::TransactionConfirmed) => {
-                match receive_swap.claim_tx_id {
-                    Some(claim_tx_id) => {
-                        warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
-                    }
-                    None => {
-                        self.try_handle_receive_swap_update(&receive_swap.id, Pending, None)
-                            .await?;
-                        match self.try_claim(&receive_swap).await {
-                            Ok(_) => {}
-                            Err(err) => match err {
-                                PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
-                                _ => error!("Claim for Receive Swap {id} failed: {err}")
-                            }
-                        }
-                    }
-                }
-                Ok(())
-            }
-
-            Ok(_) => {
-                debug!("Unhandled state for Receive Swap {id}: {swap_state}");
-                Ok(())
-            },
-
-            _ => Err(anyhow!("Invalid RevSwapState for Receive Swap {id}: {swap_state}")),
-        }
-    }
-
     pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
         debug!(
@@ -550,18 +458,28 @@ impl LiquidSdk {
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
-        let invoice = invoice
-            .trim()
-            .parse::<Bolt11Invoice>()
-            .map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice = invoice.trim().parse::<Bolt11Invoice>().map_err(|err| {
+            PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            }
+        })?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", Network::Mainnet) => {}
             ("testnet", Network::Testnet) => {}
-            _ => return Err(PaymentError::InvalidInvoice),
+            _ => {
+                return Err(PaymentError::InvalidInvoice {
+                    err: "Invoice cannot be paid on the current network".to_string(),
+                })
+            }
         }
 
-        ensure_sdk!(!invoice.is_expired(), PaymentError::InvalidInvoice);
+        ensure_sdk!(
+            !invoice.is_expired(),
+            PaymentError::InvalidInvoice {
+                err: "Invoice has expired".to_string()
+            }
+        );
 
         Ok(invoice)
     }
@@ -769,7 +687,17 @@ impl LiquidSdk {
         );
 
         let swap = match self.persister.fetch_send_swap_by_invoice(&req.invoice)? {
-            Some(swap) => swap,
+            Some(swap) => match swap.state {
+                Pending => return Err(PaymentError::PaymentInProgress),
+                Complete => return Err(PaymentError::AlreadyPaid),
+                Failed => {
+                    return Err(PaymentError::InvalidInvoice {
+                        err: "Payment has already failed. Please try with another invoice."
+                            .to_string(),
+                    })
+                }
+                _ => swap,
+            },
             None => {
                 let keypair = utils::generate_keypair();
                 let refund_public_key = boltz_client::PublicKey {
@@ -871,34 +799,6 @@ impl LiquidSdk {
         }
     }
 
-    async fn try_claim(&self, ongoing_receive_swap: &ReceiveSwap) -> Result<(), PaymentError> {
-        ensure_sdk!(
-            ongoing_receive_swap.claim_tx_id.is_none(),
-            PaymentError::AlreadyClaimed
-        );
-        let swap_id = &ongoing_receive_swap.id;
-        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let claim_tx_id = self
-            .swapper
-            .claim_receive_swap(ongoing_receive_swap, claim_address)?;
-
-        // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
-        // This makes the tx known to the SDK (get_info, list_payments) instantly
-        self.persister.insert_or_update_payment(PaymentTxData {
-            tx_id: claim_tx_id.clone(),
-            timestamp: None,
-            amount_sat: ongoing_receive_swap.receiver_amount_sat,
-            fees_sat: 0, // Will be overwritten once LWK fetches the real tx
-            payment_type: PaymentType::Receive,
-            is_confirmed: false,
-        })?;
-
-        self.try_handle_receive_swap_update(swap_id, Pending, Some(&claim_tx_id))
-            .await?;
-
-        Ok(())
-    }
-
     pub async fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
@@ -991,17 +891,25 @@ impl LiquidSdk {
         );
 
         let swap_id = create_response.id.clone();
-        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
-            .map_err(|_| PaymentError::InvalidInvoice)?;
-        let payer_amount_sat = invoice
-            .amount_milli_satoshis()
-            .ok_or(PaymentError::InvalidInvoice)?
-            / 1000;
+        let invoice = Bolt11Invoice::from_str(&create_response.invoice).map_err(|err| {
+            PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            }
+        })?;
+        let payer_amount_sat =
+            invoice
+                .amount_milli_satoshis()
+                .ok_or(PaymentError::InvalidInvoice {
+                    err: "Invoice does not contain an amount".to_string(),
+                })?
+                / 1000;
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
         if invoice.payment_hash().to_string() != preimage_hash {
-            return Err(PaymentError::InvalidInvoice);
+            return Err(PaymentError::InvalidInvoice {
+                err: "Invalid preimage returned by swapper".to_string(),
+            });
         };
 
         let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
@@ -1058,7 +966,8 @@ impl LiquidSdk {
             // Transition the swaps whose state depends on this tx being confirmed
             if is_tx_confirmed {
                 if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
-                    self.try_handle_receive_swap_update(&swap.id, Complete, None)
+                    self.receive_swap_state_handler
+                        .update_swap_info(&swap.id, Complete, None)
                         .await?;
                 }
                 if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
@@ -1146,7 +1055,10 @@ impl LiquidSdk {
             .strip_prefix("lightning:")
             .or(input.strip_prefix("LIGHTNING:"))
             .unwrap_or(input);
-        let invoice = Bolt11Invoice::from_str(input).map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice =
+            Bolt11Invoice::from_str(input).map_err(|err| PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            })?;
 
         // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
         let payee_pubkey: String = match invoice.payee_pub_key() {
@@ -1164,7 +1076,9 @@ impl LiquidSdk {
         let timestamp = invoice
             .timestamp()
             .duration_since(UNIX_EPOCH)
-            .map_err(|_| PaymentError::InvalidInvoice)?
+            .map_err(|err| PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            })?
             .as_secs();
         let routing_hints = invoice
             .route_hints()

@@ -399,7 +399,7 @@ impl SendSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
 
-            (Created, TimedOut) => Ok(()),
+            (Created | TimedOut, TimedOut) => Ok(()),
             (_, TimedOut) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
@@ -411,7 +411,10 @@ impl SendSwapStateHandler {
     fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
         let preimage = Preimage::from_str(preimage)?;
         let preimage_hash = preimage.sha256.to_string();
-        let invoice = Bolt11Invoice::from_str(invoice).map_err(|_| PaymentError::InvalidInvoice)?;
+        let invoice =
+            Bolt11Invoice::from_str(invoice).map_err(|err| PaymentError::InvalidInvoice {
+                err: err.to_string(),
+            })?;
         let invoice_payment_hash = invoice.payment_hash();
 
         (invoice_payment_hash.to_string() == preimage_hash)

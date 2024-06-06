@@ -33,6 +33,7 @@ thiserror = { workspace = true }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 openssl = { version = "0.10", features = ["vendored"] }
 tokio = { version = "1", features = ["rt", "macros"] }
+tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 async-trait = "0.1.80"
