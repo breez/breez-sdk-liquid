@@ -617,21 +617,17 @@ impl LiquidSdk {
         );
 
         let swap = match self.persister.fetch_send_swap_by_invoice(&req.invoice)? {
-            Some(swap) => {
-                match swap.state {
-                    Pending => return Err(PaymentError::PaymentInProgress),
-                    Complete => return Err(PaymentError::AlreadyPaid),
-                    Failed => {
-                        return Err(PaymentError::InvalidInvoice {
-                            err: "Payment has already failed. Please try with another invoice."
-                                .to_string(),
-                        })
-                    }
-                    Created | TimedOut => {}
-                };
-
-                swap
-            }
+            Some(swap) => match swap.state {
+                Pending => return Err(PaymentError::PaymentInProgress),
+                Complete => return Err(PaymentError::AlreadyPaid),
+                Failed => {
+                    return Err(PaymentError::InvalidInvoice {
+                        err: "Payment has already failed. Please try with another invoice."
+                            .to_string(),
+                    })
+                }
+                _ => swap,
+            },
             None => {
                 let keypair = utils::generate_keypair();
                 let refund_public_key = boltz_client::PublicKey {
