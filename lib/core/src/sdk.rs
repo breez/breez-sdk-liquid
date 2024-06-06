@@ -202,7 +202,7 @@ impl LiquidSdk {
                                 error!("Failed to emit payment update: {e:?}");
                               }
                             }
-                            Err(e) => error!("Failed to receive send swap state change: {e:?}")
+                            Err(e) => error!("Failed to receive swap state change: {e:?}")
                         }
                       }
                     }
@@ -833,7 +833,9 @@ impl LiquidSdk {
             self.persister.clone(),
             self.swapper.clone(),
         );
-        for tx in self.onchain_wallet.transactions().await? {
+        let txs = self.onchain_wallet.transactions().await?;
+        let num = txs.len();
+        for tx in txs {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
@@ -850,7 +852,14 @@ impl LiquidSdk {
                         .update_swap_info(&swap.id, Failed, None, None, None)
                         .await?;
                 }
+            } else {
+                info!("*******Processing unconfirmed tx: {tx_id}");
             }
+
+            print!(
+                "*******Got tx num: {num}: {tx_id} height: {:?} \n",
+                tx.height
+            );
 
             self.persister.insert_or_update_payment(PaymentTxData {
                 tx_id,
