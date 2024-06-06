@@ -646,7 +646,7 @@ impl LiquidSdk {
     async fn send_payment_via_mrh(
         &self,
         req: &PrepareSendResponse,
-        lbtc_address: &String,
+        lbtc_address: &str,
         amount_btc: f64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let amount_sat: u64 = (amount_btc * 100_000_000.0) as u64;
@@ -655,7 +655,7 @@ impl LiquidSdk {
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
         let tx = self
             .onchain_wallet
-            .build_tx(None, &lbtc_address, receiver_amount_sat)
+            .build_tx(None, lbtc_address, receiver_amount_sat)
             .await?;
         let onchain_fees_sat: u64 = tx.all_fees().values().sum();
         let payer_amount_sat = receiver_amount_sat + onchain_fees_sat;
