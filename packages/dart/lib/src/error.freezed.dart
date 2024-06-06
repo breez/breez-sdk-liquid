@@ -249,6 +249,88 @@ abstract class PaymentError_AlreadyClaimed extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
+  factory _$$PaymentError_AlreadyPaidImplCopyWith(
+          _$PaymentError_AlreadyPaidImpl value, $Res Function(_$PaymentError_AlreadyPaidImpl) then) =
+      __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AlreadyPaidImpl>
+    implements _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
+  __$$PaymentError_AlreadyPaidImplCopyWithImpl(
+      _$PaymentError_AlreadyPaidImpl _value, $Res Function(_$PaymentError_AlreadyPaidImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_AlreadyPaidImpl extends PaymentError_AlreadyPaid {
+  const _$PaymentError_AlreadyPaidImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.alreadyPaid()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PaymentError_AlreadyPaidImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_AlreadyPaid extends PaymentError {
+  const factory PaymentError_AlreadyPaid() = _$PaymentError_AlreadyPaidImpl;
+  const PaymentError_AlreadyPaid._() : super._();
+}
+
+/// @nodoc
+abstract class _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
+  factory _$$PaymentError_PaymentInProgressImplCopyWith(_$PaymentError_PaymentInProgressImpl value,
+          $Res Function(_$PaymentError_PaymentInProgressImpl) then) =
+      __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentInProgressImpl>
+    implements _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
+  __$$PaymentError_PaymentInProgressImplCopyWithImpl(
+      _$PaymentError_PaymentInProgressImpl _value, $Res Function(_$PaymentError_PaymentInProgressImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$PaymentError_PaymentInProgressImpl extends PaymentError_PaymentInProgress {
+  const _$PaymentError_PaymentInProgressImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PaymentError.paymentInProgress()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PaymentError_PaymentInProgressImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PaymentError_PaymentInProgress extends PaymentError {
+  const factory PaymentError_PaymentInProgress() = _$PaymentError_PaymentInProgressImpl;
+  const PaymentError_PaymentInProgress._() : super._();
+}
+
+/// @nodoc
 abstract class _$$PaymentError_AmountOutOfRangeImplCopyWith<$Res> {
   factory _$$PaymentError_AmountOutOfRangeImplCopyWith(_$PaymentError_AmountOutOfRangeImpl value,
           $Res Function(_$PaymentError_AmountOutOfRangeImpl) then) =
@@ -448,6 +530,8 @@ abstract class _$$PaymentError_InvalidInvoiceImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidInvoiceImplCopyWith(
           _$PaymentError_InvalidInvoiceImpl value, $Res Function(_$PaymentError_InvalidInvoiceImpl) then) =
       __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String err});
 }
 
 /// @nodoc
@@ -457,31 +541,60 @@ class __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>
   __$$PaymentError_InvalidInvoiceImplCopyWithImpl(
       _$PaymentError_InvalidInvoiceImpl _value, $Res Function(_$PaymentError_InvalidInvoiceImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_$PaymentError_InvalidInvoiceImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$PaymentError_InvalidInvoiceImpl extends PaymentError_InvalidInvoice {
-  const _$PaymentError_InvalidInvoiceImpl() : super._();
+  const _$PaymentError_InvalidInvoiceImpl({required this.err}) : super._();
+
+  @override
+  final String err;
 
   @override
   String toString() {
-    return 'PaymentError.invalidInvoice()';
+    return 'PaymentError.invalidInvoice(err: $err)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$PaymentError_InvalidInvoiceImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_InvalidInvoiceImpl &&
+            (identical(other.err, err) || other.err == err));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, err);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
+      __$$PaymentError_InvalidInvoiceImplCopyWithImpl<_$PaymentError_InvalidInvoiceImpl>(this, _$identity);
 }
 
 abstract class PaymentError_InvalidInvoice extends PaymentError {
-  const factory PaymentError_InvalidInvoice() = _$PaymentError_InvalidInvoiceImpl;
+  const factory PaymentError_InvalidInvoice({required final String err}) = _$PaymentError_InvalidInvoiceImpl;
   const PaymentError_InvalidInvoice._() : super._();
+
+  String get err;
+  @JsonKey(ignore: true)
+  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc

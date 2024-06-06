@@ -35,6 +35,12 @@ pub enum PaymentError {
     #[error("The specified funds have already been claimed")]
     AlreadyClaimed,
 
+    #[error("The specified funds have already been sent")]
+    AlreadyPaid,
+
+    #[error("The payment is already in progress")]
+    PaymentInProgress,
+
     #[error("Invoice amount is out of range")]
     AmountOutOfRange,
 
@@ -47,8 +53,8 @@ pub enum PaymentError {
     #[error("Cannot pay: not enough funds")]
     InsufficientFunds,
 
-    #[error("The specified invoice is not valid")]
-    InvalidInvoice,
+    #[error("The specified invoice is not valid: {err}")]
+    InvalidInvoice { err: String },
 
     #[error("The generated preimage is not valid")]
     InvalidPreimage,
