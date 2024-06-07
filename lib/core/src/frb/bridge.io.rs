@@ -375,19 +375,26 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
             11 => crate::error::PaymentError::PaymentTimeout,
             12 => crate::error::PaymentError::PersistError,
             13 => {
+                let ans = unsafe { self.kind.ReceiveError };
+                crate::error::PaymentError::ReceiveError {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            14 => {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
                     refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
-            14 => {
+            15 => crate::error::PaymentError::SelfTransferNotSupported,
+            16 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            15 => {
+            17 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -615,7 +622,7 @@ impl NewWithNullPtr for wire_cst_payment {
             swap_id: core::ptr::null_mut(),
             timestamp: Default::default(),
             amount_sat: Default::default(),
-            fees_sat: core::ptr::null_mut(),
+            fees_sat: Default::default(),
             preimage: core::ptr::null_mut(),
             refund_tx_id: core::ptr::null_mut(),
             refund_tx_amount_sat: core::ptr::null_mut(),
@@ -1184,7 +1191,7 @@ pub struct wire_cst_payment {
     swap_id: *mut wire_cst_list_prim_u_8_strict,
     timestamp: u32,
     amount_sat: u64,
-    fees_sat: *mut u64,
+    fees_sat: u64,
     preimage: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_amount_sat: *mut u64,
@@ -1203,6 +1210,7 @@ pub union PaymentErrorKind {
     Generic: wire_cst_PaymentError_Generic,
     InvalidInvoice: wire_cst_PaymentError_InvalidInvoice,
     LwkError: wire_cst_PaymentError_LwkError,
+    ReceiveError: wire_cst_PaymentError_ReceiveError,
     Refunded: wire_cst_PaymentError_Refunded,
     SendError: wire_cst_PaymentError_SendError,
     SignerError: wire_cst_PaymentError_SignerError,
@@ -1221,6 +1229,11 @@ pub struct wire_cst_PaymentError_InvalidInvoice {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_LwkError {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_ReceiveError {
     err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]

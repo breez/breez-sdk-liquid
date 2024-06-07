@@ -699,7 +699,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.swap_id = cst_encode_opt_String(apiObj.swapId);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
-    wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
+    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.preimage = cst_encode_opt_String(apiObj.preimage);
     wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
     wireObj.refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
@@ -767,23 +767,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 12;
       return;
     }
+    if (apiObj is PaymentError_ReceiveError) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 13;
+      wireObj.kind.ReceiveError.err = pre_err;
+      return;
+    }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
       var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
-      wireObj.tag = 13;
+      wireObj.tag = 14;
       wireObj.kind.Refunded.err = pre_err;
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
+    if (apiObj is PaymentError_SelfTransferNotSupported) {
+      wireObj.tag = 15;
+      return;
+    }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 14;
+      wireObj.tag = 16;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 15;
+      wireObj.tag = 17;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -1565,9 +1575,12 @@ class RustLibWire implements BaseWire {
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 }
 
-typedef DartPostCObjectFnType
-    = ffi.Pointer<ffi.NativeFunction<ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
+typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
+typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
+typedef DartDartPostCObjectFnTypeFunction = bool Function(
+    DartDartPort port_id, ffi.Pointer<ffi.Void> message);
 typedef DartPort = ffi.Int64;
+typedef DartDartPort = int;
 
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
@@ -1644,7 +1657,8 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> fees_sat;
+  @ffi.Uint64()
+  external int fees_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
@@ -1825,6 +1839,10 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_ReceiveError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_Refunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 
@@ -1845,6 +1863,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
 
   external wire_cst_PaymentError_LwkError LwkError;
+
+  external wire_cst_PaymentError_ReceiveError ReceiveError;
 
   external wire_cst_PaymentError_Refunded Refunded;
 

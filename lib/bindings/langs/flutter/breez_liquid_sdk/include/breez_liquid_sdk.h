@@ -73,7 +73,7 @@ typedef struct wire_cst_payment {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   uint32_t timestamp;
   uint64_t amount_sat;
-  uint64_t *fees_sat;
+  uint64_t fees_sat;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
@@ -200,6 +200,10 @@ typedef struct wire_cst_PaymentError_LwkError {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_LwkError;
 
+typedef struct wire_cst_PaymentError_ReceiveError {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_PaymentError_ReceiveError;
+
 typedef struct wire_cst_PaymentError_Refunded {
   struct wire_cst_list_prim_u_8_strict *err;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
@@ -217,6 +221,7 @@ typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
   struct wire_cst_PaymentError_LwkError LwkError;
+  struct wire_cst_PaymentError_ReceiveError ReceiveError;
   struct wire_cst_PaymentError_Refunded Refunded;
   struct wire_cst_PaymentError_SendError SendError;
   struct wire_cst_PaymentError_SignerError SignerError;

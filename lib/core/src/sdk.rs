@@ -1,3 +1,13 @@
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{
+    fs,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, UNIX_EPOCH},
+};
+
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
@@ -7,15 +17,9 @@ use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Amount, Bolt11Inv
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info, warn};
+use lwk_wollet::bitcoin::hex::DisplayHex;
+use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
-use std::time::Instant;
-use std::{
-    fs,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, UNIX_EPOCH},
-};
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -532,19 +536,29 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        self.ensure_send_is_not_self_transfer(&req.invoice)?;
         let invoice = self.validate_invoice(&req.invoice)?;
+
         let receiver_amount_sat = invoice
             .amount_milli_satoshis()
             .ok_or(PaymentError::AmountOutOfRange)?
             / 1000;
-
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
+        let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
+            Some((lbtc_address, _)) => {
+                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
+                    .await?
+            }
+            None => {
+                let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
+                lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
+            }
+        };
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
-            fees_sat: lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat,
+            fees_sat,
         })
     }
 
@@ -594,6 +608,13 @@ impl LiquidSdk {
         }
     }
 
+    fn ensure_send_is_not_self_transfer(&self, invoice: &str) -> Result<(), PaymentError> {
+        match self.persister.fetch_receive_swap_by_invoice(invoice)? {
+            None => Ok(()),
+            Some(_) => Err(PaymentError::SelfTransferNotSupported),
+        }
+    }
+
     /// Creates, initiates and starts monitoring the progress of a Send Payment.
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
@@ -607,7 +628,68 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        self.ensure_send_is_not_self_transfer(&req.invoice)?;
         self.validate_invoice(&req.invoice)?;
+
+        match self.swapper.check_for_mrh(&req.invoice)? {
+            // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
+            Some((address, amount_btc)) => {
+                self.send_payment_via_mrh(req, &address, amount_btc).await
+            }
+
+            // If no MRH found, perform usual swap
+            None => self.send_payment_via_swap(req).await,
+        }
+    }
+
+    /// Performs a Send Payment by doing an onchain tx to the L-BTC address in the MRH.
+    async fn send_payment_via_mrh(
+        &self,
+        req: &PrepareSendResponse,
+        lbtc_address: &str,
+        amount_btc: f64,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        let amount_sat: u64 = (amount_btc * 100_000_000.0) as u64;
+        info!("Found MRH for L-BTC address {lbtc_address} and amount_sat {amount_sat}");
+
+        let receiver_amount_sat = get_invoice_amount!(req.invoice);
+        let tx = self
+            .onchain_wallet
+            .build_tx(None, lbtc_address, receiver_amount_sat)
+            .await?;
+        let onchain_fees_sat: u64 = tx.all_fees().values().sum();
+        let payer_amount_sat = receiver_amount_sat + onchain_fees_sat;
+        info!("Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {onchain_fees_sat}");
+        info!("Built onchain L-BTC tx with ID {}", tx.txid());
+
+        let tx_id = tx.txid().to_string();
+        let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
+        self.swapper
+            .broadcast_tx(self.config.network.into(), &tx_hex)?;
+
+        // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        let tx_data = PaymentTxData {
+            tx_id: tx_id.clone(),
+            timestamp: None,
+            amount_sat: payer_amount_sat,
+            fees_sat: onchain_fees_sat,
+            payment_type: PaymentType::Send,
+            is_confirmed: false,
+        };
+        self.persister.insert_or_update_payment(tx_data.clone())?;
+        self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        Ok(SendPaymentResponse {
+            payment: Payment::from(tx_data, None),
+        })
+    }
+
+    /// Performs a Send Payment by doing a swap (create it, fund it, track it, etc).
+    async fn send_payment_via_swap(
+        &self,
+        req: &PrepareSendResponse,
+    ) -> Result<SendPaymentResponse, PaymentError> {
         let receiver_amount_sat = get_invoice_amount!(req.invoice);
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let lockup_tx_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
@@ -781,17 +863,44 @@ impl LiquidSdk {
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
+        // Address to be used for a BIP-21 direct payment
+        let mrh_addr = self.onchain_wallet.next_unused_address().await?;
+
+        // Signature of the claim public key of the SHA256 hash of the address for the direct payment
+        let mrh_addr_str = mrh_addr.to_string();
+        let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
+        let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
+
         let v2_req = CreateReverseRequest {
             invoice_amount: req.payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
-            address: None,
-            address_signature: None,
+            address: Some(mrh_addr_str.clone()),
+            address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
+
+        // Check if correct MRH was added to the invoice by Boltz
+        let (bip21_lbtc_address, bip21_amount_btc) = self
+            .swapper
+            .check_for_mrh(&create_response.invoice)?
+            .ok_or(PaymentError::receive_error("Invoice has no MRH"))?;
+        let received_bip21_amount_sat: u64 = (bip21_amount_btc * 100_000_000.0) as u64;
+        ensure_sdk!(
+            bip21_lbtc_address == mrh_addr_str,
+            PaymentError::receive_error("Invoice has incorrect address in MRH")
+        );
+        // The swap fee savings are passed on to the Sender: MRH amount = invoice amount - fees
+        let expected_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
+        ensure_sdk!(
+            received_bip21_amount_sat == expected_bip21_amount_sat,
+            PaymentError::receive_error(&format!(
+                "Invoice has incorrect amount in MRH: expected {expected_bip21_amount_sat} sat, MRH has {received_bip21_amount_sat} sat",
+            ))
+        );
 
         let swap_id = create_response.id.clone();
         let invoice = Bolt11Invoice::from_str(&create_response.invoice).map_err(|err| {
@@ -846,6 +955,12 @@ impl LiquidSdk {
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
+        let payments_before_sync: HashMap<String, Payment> = self
+            .list_payments()
+            .await?
+            .into_iter()
+            .map(|p| (p.tx_id.clone(), p))
+            .collect();
         if with_scan {
             self.onchain_wallet.full_scan().await?;
         }
@@ -866,30 +981,50 @@ impl LiquidSdk {
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
 
-            // Transition the swaps whose state depends on this tx being confirmed
-            if is_tx_confirmed {
-                if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
-                    self.receive_swap_state_handler
-                        .update_swap_info(&swap.id, Complete, None)
-                        .await?;
-                }
-                if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
-                    send_swap_state_handler
-                        .update_swap_info(&swap.id, Failed, None, None, None)
-                        .await?;
-                }
-            }
-
             self.persister.insert_or_update_payment(PaymentTxData {
-                tx_id,
+                tx_id: tx_id.clone(),
                 timestamp: tx.timestamp,
                 amount_sat: amount_sat.unsigned_abs(),
+                fees_sat: tx.fee,
                 payment_type: match amount_sat >= 0 {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,
                 },
                 is_confirmed: is_tx_confirmed,
             })?;
+
+            if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
+                    self.receive_swap_state_handler
+                        .update_swap_info(&swap.id, Complete, None)
+                        .await?;
+                }
+            } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
+                    send_swap_state_handler
+                        .update_swap_info(&swap.id, Failed, None, None, None)
+                        .await?;
+                }
+            } else {
+                // Payments that are not directly associated with a swap (e.g. direct onchain payments using MRH)
+
+                match payments_before_sync.get(&tx_id) {
+                    None => {
+                        // A completely new payment brought in by this sync, in mempool or confirmed
+                        // Covers events:
+                        // - onchain Receive Pending and Complete
+                        // - onchain Send Complete
+                        self.emit_payment_updated(Some(tx_id)).await?;
+                    }
+                    Some(payment_before_sync) => {
+                        if payment_before_sync.status == Pending && is_tx_confirmed {
+                            // A know payment that was in the mempool, but is now confirmed
+                            // Covers events: Send and Receive direct onchain payments transitioning to Complete
+                            self.emit_payment_updated(Some(tx_id)).await?;
+                        }
+                    }
+                }
+            }
         }
 
         Ok(())

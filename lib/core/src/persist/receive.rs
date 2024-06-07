@@ -84,6 +84,17 @@ impl Persister {
         Ok(res.ok())
     }
 
+    pub(crate) fn fetch_receive_swap_by_invoice(
+        &self,
+        invoice: &str,
+    ) -> Result<Option<ReceiveSwap>> {
+        let con: Connection = self.get_connection()?;
+        let query = Self::list_receive_swaps_query(vec!["invoice= ?1".to_string()]);
+        let res = con.query_row(&query, [invoice], Self::sql_row_to_receive_swap);
+
+        Ok(res.ok())
+    }
+
     fn sql_row_to_receive_swap(row: &Row) -> rusqlite::Result<ReceiveSwap> {
         Ok(ReceiveSwap {
             id: row.get(0)?,

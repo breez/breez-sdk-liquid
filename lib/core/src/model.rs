@@ -508,6 +508,9 @@ pub struct PaymentTxData {
     /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
     pub amount_sat: u64,
 
+    /// The onchain fees of this tx
+    pub fees_sat: u64,
+
     pub payment_type: PaymentType,
 
     /// Onchain tx status
@@ -559,10 +562,20 @@ pub struct Payment {
     /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
     pub amount_sat: u64,
 
-    /// If a swap is associated with this payment, this represents the total fees paid by the
-    /// sender. In other words, it's the delta between the amount that was sent and the amount
-    /// received.
-    pub fees_sat: Option<u64>,
+    /// Represents the fees paid by this wallet for this payment.
+    ///
+    /// ### Swaps
+    /// If there is an associated Send Swap, these fees represent the total fees paid by this wallet
+    /// (the sender). It is the difference between the amount that was sent and the amount received.
+    ///
+    /// If there is an associated Receive Swap, these fees represent the total fees paid by this wallet
+    /// (the receiver). It is also the difference between the amount that was sent and the amount received.
+    ///
+    /// ### Pure onchain txs
+    /// If no swap is associated with this payment:
+    /// - for Send payments, this is the onchain tx fee
+    /// - for Receive payments, this is zero
+    pub fees_sat: u64,
 
     /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
     pub preimage: Option<String>,
@@ -592,9 +605,13 @@ impl Payment {
                 None => tx.timestamp.unwrap_or(utils::now()),
             },
             amount_sat: tx.amount_sat,
-            fees_sat: swap
-                .as_ref()
-                .map(|s| s.payer_amount_sat - s.receiver_amount_sat),
+            fees_sat: match swap.as_ref() {
+                Some(s) => s.payer_amount_sat - s.receiver_amount_sat,
+                None => match tx.payment_type {
+                    PaymentType::Receive => 0,
+                    PaymentType::Send => tx.fees_sat,
+                },
+            },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),

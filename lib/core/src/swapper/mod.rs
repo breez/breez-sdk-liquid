@@ -98,10 +98,12 @@ pub trait Swapper: Send + Sync {
     ) -> Result<String, PaymentError>;
 
     /// Chain broadcast
-    #[allow(dead_code)]
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError>;
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
+
+    /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
+    fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, f64)>, PaymentError>;
 }
 
 pub struct BoltzSwapper {
@@ -329,12 +331,20 @@ impl Swapper for BoltzSwapper {
         Ok(claim_tx_id)
     }
 
-    // chain broadcast
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError> {
         Ok(self.client.broadcast_tx(chain, &tx_hex.into())?)
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
         Box::new(BoltzStatusStream::new(&self.config.boltz_url))
+    }
+
+    fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
+        boltz_client::swaps::magic_routing::check_for_mrh(
+            &self.client,
+            invoice,
+            self.config.network.into(),
+        )
+        .map_err(Into::into)
     }
 }

@@ -633,7 +633,8 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> fees_sat;
+  @ffi.Uint64()
+  external int fees_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
@@ -814,6 +815,10 @@ final class wire_cst_PaymentError_LwkError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_ReceiveError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_Refunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 
@@ -834,6 +839,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
 
   external wire_cst_PaymentError_LwkError LwkError;
+
+  external wire_cst_PaymentError_ReceiveError ReceiveError;
 
   external wire_cst_PaymentError_Refunded Refunded;
 

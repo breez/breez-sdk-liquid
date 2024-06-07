@@ -20,7 +20,9 @@ enum PaymentError {
     "PairsNotFound",
     "PaymentTimeout",
     "PersistError",
+    "ReceiveError",
     "Refunded",
+    "SelfTransferNotSupported",
     "SendError",
     "SignerError",
 };
@@ -123,7 +125,7 @@ dictionary Payment {
     string? swap_id = null;
     u32 timestamp;
     u64 amount_sat;
-    u64? fees_sat = null;
+    u64 fees_sat;
     string? preimage = null;
     string? refund_tx_id = null;
     u64? refund_tx_amount_sat = null;

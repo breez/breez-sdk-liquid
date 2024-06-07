@@ -309,6 +309,7 @@ fun asPayment(payment: ReadableMap): Payment? {
                 "txId",
                 "timestamp",
                 "amountSat",
+                "feesSat",
                 "paymentType",
                 "status",
             ),
@@ -320,7 +321,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()
-    val feesSat = if (hasNonNullKey(payment, "feesSat")) payment.getDouble("feesSat").toULong() else null
+    val feesSat = payment.getDouble("feesSat").toULong()
     val preimage = if (hasNonNullKey(payment, "preimage")) payment.getString("preimage") else null
     val refundTxId = if (hasNonNullKey(payment, "refundTxId")) payment.getString("refundTxId") else null
     val refundTxAmountSat = if (hasNonNullKey(payment, "refundTxAmountSat")) payment.getDouble("refundTxAmountSat").toULong() else null

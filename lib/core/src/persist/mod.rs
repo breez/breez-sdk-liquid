@@ -59,15 +59,17 @@ impl Persister {
            tx_id,
            timestamp,
            amount_sat,
+           fees_sat,
            payment_type,
            is_confirmed
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
         ",
             (
                 ptx.tx_id,
                 ptx.timestamp,
                 ptx.amount_sat,
+                ptx.fees_sat,
                 ptx.payment_type,
                 ptx.is_confirmed,
             ),
@@ -99,6 +101,7 @@ impl Persister {
                 ptx.tx_id,
                 ptx.timestamp,
                 ptx.amount_sat,
+                ptx.fees_sat,
                 ptx.payment_type,
                 ptx.is_confirmed,
                 rs.id,
@@ -134,24 +137,25 @@ impl Persister {
             tx_id: row.get(0)?,
             timestamp: row.get(1)?,
             amount_sat: row.get(2)?,
-            payment_type: row.get(3)?,
-            is_confirmed: row.get(4)?,
+            fees_sat: row.get(3)?,
+            payment_type: row.get(4)?,
+            is_confirmed: row.get(5)?,
         };
 
-        let maybe_receive_swap_id: Option<String> = row.get(5)?;
-        let maybe_receive_swap_created_at: Option<u32> = row.get(6)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(7)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(8)?;
-        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(9)?;
+        let maybe_receive_swap_id: Option<String> = row.get(6)?;
+        let maybe_receive_swap_created_at: Option<u32> = row.get(7)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(8)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(9)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(10)?;
 
-        let maybe_send_swap_id: Option<String> = row.get(10)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(11)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(12)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(13)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(14)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(15)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(16)?;
-        let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(17)?;
+        let maybe_send_swap_id: Option<String> = row.get(11)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(12)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(13)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(14)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(15)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(16)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(17)?;
+        let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(18)?;
 
         let swap = match maybe_receive_swap_id {
             Some(receive_swap_id) => Some(PaymentSwapData {

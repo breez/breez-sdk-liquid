@@ -42,10 +42,14 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.pairsNotFound() = PaymentError_PairsNotFound;
   const factory PaymentError.paymentTimeout() = PaymentError_PaymentTimeout;
   const factory PaymentError.persistError() = PaymentError_PersistError;
+  const factory PaymentError.receiveError({
+    required String err,
+  }) = PaymentError_ReceiveError;
   const factory PaymentError.refunded({
     required String err,
     required String refundTxId,
   }) = PaymentError_Refunded;
+  const factory PaymentError.selfTransferNotSupported() = PaymentError_SelfTransferNotSupported;
   const factory PaymentError.sendError({
     required String err,
   }) = PaymentError_SendError;

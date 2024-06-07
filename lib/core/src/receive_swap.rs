@@ -136,6 +136,7 @@ impl ReceiveSwapStateHandler {
             tx_id: claim_tx_id.clone(),
             timestamp: None,
             amount_sat: ongoing_receive_swap.receiver_amount_sat,
+            fees_sat: 0,
             payment_type: PaymentType::Receive,
             is_confirmed: false,
         })?;

@@ -71,14 +71,27 @@ pub enum PaymentError {
     #[error("Could not store the swap details locally")]
     PersistError,
 
+    #[error("Could not process the Receive Payment: {err}")]
+    ReceiveError { err: String },
+
     #[error("The payment has been refunded. Reason for failure: {err}")]
     Refunded { err: String, refund_tx_id: String },
 
-    #[error("Could not sign/send the transaction: {err}")]
+    #[error("The payment is a self-transfer, which is not supported")]
+    SelfTransferNotSupported,
+
+    #[error("Could not process the Send Payment: {err}")]
     SendError { err: String },
 
     #[error("Could not sign the transaction: {err}")]
     SignerError { err: String },
+}
+impl PaymentError {
+    pub(crate) fn receive_error(err: &str) -> Self {
+        Self::ReceiveError {
+            err: err.to_string(),
+        }
+    }
 }
 
 impl From<boltz_client::error::Error> for PaymentError {
