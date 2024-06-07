@@ -216,7 +216,7 @@ impl LiquidSdk {
                             match cloned.persister.fetch_send_swap_by_id(&id) {
                                 Ok(Some(_)) => {
                                     match cloned.send_swap_state_handler.on_new_status(&status, &id).await {
-                                        Ok(_) => info!("Succesfully handled Send Swap {id} update"),
+                                        Ok(_) => info!("Successfully handled Send Swap {id} update"),
                                         Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
                                     }
                                 }
@@ -224,7 +224,7 @@ impl LiquidSdk {
                                     match cloned.persister.fetch_receive_swap(&id) {
                                         Ok(Some(_)) => {
                                             match cloned.receive_swap_state_handler.on_new_status(&status, &id).await {
-                                                Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
+                                                Ok(_) => info!("Successfully handled Receive Swap {id} update"),
                                                 Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")
                                             }
                                         }
