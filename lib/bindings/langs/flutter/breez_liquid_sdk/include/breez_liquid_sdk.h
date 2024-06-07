@@ -146,9 +146,9 @@ typedef struct wire_cst_LiquidSdkEvent_PaymentRefundPending {
   struct wire_cst_payment *details;
 } wire_cst_LiquidSdkEvent_PaymentRefundPending;
 
-typedef struct wire_cst_LiquidSdkEvent_PaymentSucceed {
+typedef struct wire_cst_LiquidSdkEvent_PaymentSucceeded {
   struct wire_cst_payment *details;
-} wire_cst_LiquidSdkEvent_PaymentSucceed;
+} wire_cst_LiquidSdkEvent_PaymentSucceeded;
 
 typedef struct wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation {
   struct wire_cst_payment *details;
@@ -159,7 +159,7 @@ typedef union LiquidSdkEventKind {
   struct wire_cst_LiquidSdkEvent_PaymentPending PaymentPending;
   struct wire_cst_LiquidSdkEvent_PaymentRefunded PaymentRefunded;
   struct wire_cst_LiquidSdkEvent_PaymentRefundPending PaymentRefundPending;
-  struct wire_cst_LiquidSdkEvent_PaymentSucceed PaymentSucceed;
+  struct wire_cst_LiquidSdkEvent_PaymentSucceeded PaymentSucceeded;
   struct wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
 } LiquidSdkEventKind;
 

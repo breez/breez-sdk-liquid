@@ -754,7 +754,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 4:
-        return LiquidSdkEvent_PaymentSucceed(
+        return LiquidSdkEvent_PaymentSucceeded(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 5:
@@ -1273,7 +1273,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LiquidSdkEvent_PaymentRefundPending(details: var_details);
       case 4:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return LiquidSdkEvent_PaymentSucceed(details: var_details);
+        return LiquidSdkEvent_PaymentSucceeded(details: var_details);
       case 5:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
         return LiquidSdkEvent_PaymentWaitingConfirmation(details: var_details);
@@ -1862,7 +1862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LiquidSdkEvent_PaymentRefundPending(details: final details):
         sse_encode_i_32(3, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case LiquidSdkEvent_PaymentSucceed(details: final details):
+      case LiquidSdkEvent_PaymentSucceeded(details: final details):
         sse_encode_i_32(4, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
       case LiquidSdkEvent_PaymentWaitingConfirmation(details: final details):

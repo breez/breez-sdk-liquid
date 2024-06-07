@@ -331,20 +331,20 @@ abstract class LiquidSdkEvent_PaymentRefundPending extends LiquidSdkEvent {
 }
 
 /// @nodoc
-abstract class _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<$Res> {
-  factory _$$LiquidSdkEvent_PaymentSucceedImplCopyWith(_$LiquidSdkEvent_PaymentSucceedImpl value,
-          $Res Function(_$LiquidSdkEvent_PaymentSucceedImpl) then) =
-      __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<$Res>;
+abstract class _$$LiquidSdkEvent_PaymentSucceededImplCopyWith<$Res> {
+  factory _$$LiquidSdkEvent_PaymentSucceededImplCopyWith(_$LiquidSdkEvent_PaymentSucceededImpl value,
+          $Res Function(_$LiquidSdkEvent_PaymentSucceededImpl) then) =
+      __$$LiquidSdkEvent_PaymentSucceededImplCopyWithImpl<$Res>;
   @useResult
   $Res call({Payment details});
 }
 
 /// @nodoc
-class __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<$Res>
-    extends _$LiquidSdkEventCopyWithImpl<$Res, _$LiquidSdkEvent_PaymentSucceedImpl>
-    implements _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<$Res> {
-  __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl(
-      _$LiquidSdkEvent_PaymentSucceedImpl _value, $Res Function(_$LiquidSdkEvent_PaymentSucceedImpl) _then)
+class __$$LiquidSdkEvent_PaymentSucceededImplCopyWithImpl<$Res>
+    extends _$LiquidSdkEventCopyWithImpl<$Res, _$LiquidSdkEvent_PaymentSucceededImpl>
+    implements _$$LiquidSdkEvent_PaymentSucceededImplCopyWith<$Res> {
+  __$$LiquidSdkEvent_PaymentSucceededImplCopyWithImpl(_$LiquidSdkEvent_PaymentSucceededImpl _value,
+      $Res Function(_$LiquidSdkEvent_PaymentSucceededImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -352,7 +352,7 @@ class __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<$Res>
   $Res call({
     Object? details = null,
   }) {
-    return _then(_$LiquidSdkEvent_PaymentSucceedImpl(
+    return _then(_$LiquidSdkEvent_PaymentSucceededImpl(
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
@@ -363,22 +363,22 @@ class __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$LiquidSdkEvent_PaymentSucceedImpl extends LiquidSdkEvent_PaymentSucceed {
-  const _$LiquidSdkEvent_PaymentSucceedImpl({required this.details}) : super._();
+class _$LiquidSdkEvent_PaymentSucceededImpl extends LiquidSdkEvent_PaymentSucceeded {
+  const _$LiquidSdkEvent_PaymentSucceededImpl({required this.details}) : super._();
 
   @override
   final Payment details;
 
   @override
   String toString() {
-    return 'LiquidSdkEvent.paymentSucceed(details: $details)';
+    return 'LiquidSdkEvent.paymentSucceeded(details: $details)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LiquidSdkEvent_PaymentSucceedImpl &&
+            other is _$LiquidSdkEvent_PaymentSucceededImpl &&
             (identical(other.details, details) || other.details == details));
   }
 
@@ -388,19 +388,19 @@ class _$LiquidSdkEvent_PaymentSucceedImpl extends LiquidSdkEvent_PaymentSucceed 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<_$LiquidSdkEvent_PaymentSucceedImpl> get copyWith =>
-      __$$LiquidSdkEvent_PaymentSucceedImplCopyWithImpl<_$LiquidSdkEvent_PaymentSucceedImpl>(
+  _$$LiquidSdkEvent_PaymentSucceededImplCopyWith<_$LiquidSdkEvent_PaymentSucceededImpl> get copyWith =>
+      __$$LiquidSdkEvent_PaymentSucceededImplCopyWithImpl<_$LiquidSdkEvent_PaymentSucceededImpl>(
           this, _$identity);
 }
 
-abstract class LiquidSdkEvent_PaymentSucceed extends LiquidSdkEvent {
-  const factory LiquidSdkEvent_PaymentSucceed({required final Payment details}) =
-      _$LiquidSdkEvent_PaymentSucceedImpl;
-  const LiquidSdkEvent_PaymentSucceed._() : super._();
+abstract class LiquidSdkEvent_PaymentSucceeded extends LiquidSdkEvent {
+  const factory LiquidSdkEvent_PaymentSucceeded({required final Payment details}) =
+      _$LiquidSdkEvent_PaymentSucceededImpl;
+  const LiquidSdkEvent_PaymentSucceeded._() : super._();
 
   Payment get details;
   @JsonKey(ignore: true)
-  _$$LiquidSdkEvent_PaymentSucceedImplCopyWith<_$LiquidSdkEvent_PaymentSucceedImpl> get copyWith =>
+  _$$LiquidSdkEvent_PaymentSucceededImplCopyWith<_$LiquidSdkEvent_PaymentSucceededImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

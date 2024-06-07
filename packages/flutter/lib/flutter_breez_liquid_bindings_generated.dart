@@ -738,7 +738,7 @@ final class wire_cst_LiquidSdkEvent_PaymentRefundPending extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
-final class wire_cst_LiquidSdkEvent_PaymentSucceed extends ffi.Struct {
+final class wire_cst_LiquidSdkEvent_PaymentSucceeded extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
@@ -755,7 +755,7 @@ final class LiquidSdkEventKind extends ffi.Union {
 
   external wire_cst_LiquidSdkEvent_PaymentRefundPending PaymentRefundPending;
 
-  external wire_cst_LiquidSdkEvent_PaymentSucceed PaymentSucceed;
+  external wire_cst_LiquidSdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
 }

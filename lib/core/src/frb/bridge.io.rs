@@ -242,7 +242,7 @@ impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
                 }
             }
             4 => {
-                let ans = unsafe { self.kind.PaymentSucceed };
+                let ans = unsafe { self.kind.PaymentSucceeded };
                 crate::model::LiquidSdkEvent::PaymentSucceeded {
                     details: ans.details.cst_decode(),
                 }
@@ -1104,7 +1104,7 @@ pub union LiquidSdkEventKind {
     PaymentPending: wire_cst_LiquidSdkEvent_PaymentPending,
     PaymentRefunded: wire_cst_LiquidSdkEvent_PaymentRefunded,
     PaymentRefundPending: wire_cst_LiquidSdkEvent_PaymentRefundPending,
-    PaymentSucceed: wire_cst_LiquidSdkEvent_PaymentSucceed,
+    PaymentSucceeded: wire_cst_LiquidSdkEvent_PaymentSucceeded,
     PaymentWaitingConfirmation: wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation,
     nil__: (),
 }
@@ -1130,7 +1130,7 @@ pub struct wire_cst_LiquidSdkEvent_PaymentRefundPending {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_LiquidSdkEvent_PaymentSucceed {
+pub struct wire_cst_LiquidSdkEvent_PaymentSucceeded {
     details: *mut wire_cst_payment,
 }
 #[repr(C)]

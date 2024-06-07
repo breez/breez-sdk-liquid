@@ -156,9 +156,9 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const factory LiquidSdkEvent.paymentRefundPending({
     required Payment details,
   }) = LiquidSdkEvent_PaymentRefundPending;
-  const factory LiquidSdkEvent.paymentSucceed({
+  const factory LiquidSdkEvent.paymentSucceeded({
     required Payment details,
-  }) = LiquidSdkEvent_PaymentSucceed;
+  }) = LiquidSdkEvent_PaymentSucceeded;
   const factory LiquidSdkEvent.paymentWaitingConfirmation({
     required Payment details,
   }) = LiquidSdkEvent_PaymentWaitingConfirmation;
