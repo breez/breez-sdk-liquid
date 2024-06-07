@@ -958,7 +958,10 @@ impl LiquidSdk {
             .list_payments()
             .await?
             .into_iter()
-            .map(|p| (p.tx_id.clone(), p))
+            .filter_map(|payment| {
+                let tx_id = payment.tx_id.clone();
+                tx_id.map(|tx_id| (tx_id, payment))
+            })
             .collect();
         if with_scan {
             self.onchain_wallet.full_scan().await?;
@@ -1027,7 +1030,7 @@ impl LiquidSdk {
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 
-        let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
+        let mut payments: Vec<Payment> = self.persister.get_payments()?;
         payments.sort_by_key(|p| p.timestamp);
         Ok(payments)
     }

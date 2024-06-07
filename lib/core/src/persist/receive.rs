@@ -175,6 +175,20 @@ impl Persister {
         Ok(res)
     }
 
+    /// Pending Receive Swaps which have not been claimed yet and whose
+    /// lockup_tx_id is known
+    pub(crate) fn list_unclaimed_pending_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+        let res = self
+            .list_pending_receive_swaps()?
+            .into_iter()
+            .filter(|pending_receive_swap| {
+                pending_receive_swap.claim_tx_id.is_none()
+                    && pending_receive_swap.lockup_tx_id.is_some()
+            })
+            .collect();
+        Ok(res)
+    }
+
     pub(crate) fn try_handle_receive_swap_update(
         &self,
         swap_id: &str,

@@ -68,14 +68,6 @@ impl ReceiveSwapStateHandler {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
                 let lockup_tx_id = &transaction.id;
-                self.persister.insert_or_update_payment(PaymentTxData {
-                    tx_id: lockup_tx_id.clone(),
-                    timestamp: None,
-                    amount_sat: receive_swap.receiver_amount_sat,
-                    payment_type: PaymentType::Receive,
-                    is_confirmed: false,
-                    fees_sat: 0,
-                })?;
                 self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
                     .await?;
                 Ok(())

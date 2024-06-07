@@ -3,7 +3,7 @@ mod migrations;
 pub(crate) mod receive;
 pub(crate) mod send;
 
-use std::{collections::HashMap, fs::create_dir_all, path::PathBuf, str::FromStr};
+use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use anyhow::Result;
 use migrations::current_migrations;
@@ -138,17 +138,14 @@ impl Persister {
                 ss.state,
                 rtx.amount_sat
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
-            LEFT JOIN receive_swaps AS rs        -- Receive Swap data (by claim or, if set, lockup tx_id)
-                ON ptx.tx_id = rs.claim_tx_id OR ptx.tx_id = rs.lockup_tx_id
+            LEFT JOIN receive_swaps AS rs        -- Receive Swap data (by claim)
+                ON ptx.tx_id = rs.claim_tx_id
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id = ss.refund_tx_id
             WHERE                                -- Filter out refund txs from Payment tx list
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
-            AND                                  -- Filter out the (temporary) Receive lockup txs,
-                                                 -- which are not included in this LWK wallet's history
-                ptx.tx_id NOT IN (SELECT lockup_tx_id FROM receive_swaps WHERE lockup_tx_id NOT NULL)
             AND {}
             ",
             where_clause.unwrap_or("true")
@@ -217,18 +214,32 @@ impl Persister {
             .optional()?)
     }
 
-    pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
+    pub fn get_payments(&self) -> Result<Vec<Payment>> {
         let con = self.get_connection()?;
 
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
         let mut stmt = con.prepare(&self.select_payment_query(None))?;
-
-        let data = stmt
-            .query_map(params![], |row| {
-                self.sql_row_to_payment(row).map(|p| (p.tx_id.clone(), p))
-            })?
+        let payments: Vec<Payment> = stmt
+            .query_map(params![], |row| self.sql_row_to_payment(row))?
             .map(|i| i.unwrap())
             .collect();
-        Ok(data)
+        let unclaimed_payments = self
+            .list_unclaimed_pending_receive_swaps()?
+            .into_iter()
+            .map(|pending_receive_swap| Payment {
+                tx_id: None,
+                swap_id: Some(pending_receive_swap.id),
+                timestamp: pending_receive_swap.created_at,
+                amount_sat: pending_receive_swap.receiver_amount_sat,
+                fees_sat: pending_receive_swap.payer_amount_sat
+                    - pending_receive_swap.receiver_amount_sat,
+                preimage: None,
+                refund_tx_id: None,
+                refund_tx_amount_sat: None,
+                payment_type: PaymentType::Receive,
+                status: pending_receive_swap.state,
+            })
+            .collect();
+        Ok([payments, unclaimed_payments].concat())
     }
 }

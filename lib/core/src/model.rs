@@ -541,7 +541,7 @@ pub struct Payment {
     ///
     /// For Receive Payments that are [PaymentState::Pending], this may be the lockup or the claim
     /// tx ID. For Receive Payments that are [PaymentState::Complete], this is the claim tx ID.
-    pub tx_id: String,
+    pub tx_id: Option<String>,
 
     /// The swap ID, if any swap is associated with this payment
     pub swap_id: Option<String>,
@@ -594,7 +594,7 @@ pub struct Payment {
 impl Payment {
     pub(crate) fn from(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
         Payment {
-            tx_id: tx.tx_id,
+            tx_id: Some(tx.tx_id),
             swap_id: swap.as_ref().map(|s| s.swap_id.clone()),
             timestamp: match swap {
                 Some(ref swap) => swap.created_at,

@@ -265,7 +265,7 @@ class Payment {
   ///
   /// For Receive Payments that are [PaymentState::Pending], this may be the lockup or the claim
   /// tx ID. For Receive Payments that are [PaymentState::Complete], this is the claim tx ID.
-  final String txId;
+  final String? txId;
 
   /// The swap ID, if any swap is associated with this payment
   final String? swapId;
@@ -315,7 +315,7 @@ class Payment {
   final PaymentState status;
 
   const Payment({
-    required this.txId,
+    this.txId,
     this.swapId,
     required this.timestamp,
     required this.amountSat,
