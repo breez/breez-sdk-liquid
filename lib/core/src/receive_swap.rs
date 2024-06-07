@@ -73,6 +73,7 @@ impl ReceiveSwapStateHandler {
                     amount_sat: receive_swap.receiver_amount_sat,
                     payment_type: PaymentType::Receive,
                     is_confirmed: false,
+                    fees_sat: 0,
                 })?;
                 self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
                     .await?;

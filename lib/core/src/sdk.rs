@@ -989,7 +989,7 @@ impl LiquidSdk {
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.receive_swap_state_handler
-                        .update_swap_info(&swap.id, Complete, None)
+                        .update_swap_info(&swap.id, Complete, None, None)
                         .await?;
                 }
             } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
