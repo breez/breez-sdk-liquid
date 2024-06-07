@@ -52,6 +52,7 @@ pub(super) fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>)
                 lwk_wollet=info,
                 rustls=warn,
                 rustyline=warn,
+                ureq=info,
                 tungstenite=warn
             "#,
         )
