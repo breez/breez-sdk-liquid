@@ -131,7 +131,7 @@ impl Persister {
                 ss.state,
                 rtx.amount_sat
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
-            LEFT JOIN receive_swaps AS rs        -- Receive Swap data
+            LEFT JOIN receive_swaps AS rs        -- Receive Swap data (by claim or, if set, lockup tx_id)
                 ON ptx.tx_id = rs.claim_tx_id OR ptx.tx_id = rs.lockup_tx_id
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
@@ -139,7 +139,10 @@ impl Persister {
                 ON rtx.tx_id = ss.refund_tx_id
             WHERE                                -- Filter out refund txs from Payment tx list
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
-                AND {}
+            AND                                  -- Filter out the (temporary) Receive lockup txs,
+                                                 -- which are not included in this LWK wallet's history
+                ptx.tx_id NOT IN (SELECT lockup_tx_id FROM receive_swaps WHERE lockup_tx_id NOT NULL)
+            AND {}
             ",
             where_clause.unwrap_or("true")
         )
