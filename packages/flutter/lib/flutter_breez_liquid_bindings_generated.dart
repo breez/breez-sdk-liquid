@@ -868,5 +868,3 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
-
-const double LIQUID_CLAIM_TX_FEERATE_MSAT = 100.0;

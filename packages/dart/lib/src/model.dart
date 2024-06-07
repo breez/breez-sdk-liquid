@@ -262,6 +262,9 @@ enum Network {
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 class Payment {
   /// The tx ID of the onchain transaction
+  ///
+  /// For Receive Payments that are [PaymentState::Pending], this may be the lockup or the claim
+  /// tx ID. For Receive Payments that are [PaymentState::Complete], this is the claim tx ID.
   final String txId;
 
   /// The swap ID, if any swap is associated with this payment
