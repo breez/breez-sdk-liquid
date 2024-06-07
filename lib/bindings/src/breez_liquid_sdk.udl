@@ -152,7 +152,7 @@ interface LiquidSdkEvent {
     PaymentPending(Payment details);
     PaymentRefunded(Payment details);
     PaymentRefundPending(Payment details);
-    PaymentSucceed(Payment details);
+    PaymentSucceeded(Payment details);
     PaymentWaitingConfirmation(Payment details);
     Synced();
 };

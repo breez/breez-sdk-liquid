@@ -197,7 +197,6 @@ impl Persister {
     pub fn get_payments(&self) -> Result<HashMap<String, Payment>> {
         let con = self.get_connection()?;
 
-        // TODO For refund txs, do not create a new Payment
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
         let mut stmt = con.prepare(&self.select_payment_query(None))?;
 

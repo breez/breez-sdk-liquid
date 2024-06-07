@@ -216,7 +216,7 @@ impl LiquidSdk {
                             match cloned.persister.fetch_send_swap_by_id(&id) {
                                 Ok(Some(_)) => {
                                     match cloned.send_swap_state_handler.on_new_status(&status, &id).await {
-                                        Ok(_) => info!("Succesfully handled Send Swap {id} update"),
+                                        Ok(_) => info!("Successfully handled Send Swap {id} update"),
                                         Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
                                     }
                                 }
@@ -224,7 +224,7 @@ impl LiquidSdk {
                                     match cloned.persister.fetch_receive_swap(&id) {
                                         Ok(Some(_)) => {
                                             match cloned.receive_swap_state_handler.on_new_status(&status, &id).await {
-                                                Ok(_) => info!("Succesfully handled Receive Swap {id} update"),
+                                                Ok(_) => info!("Successfully handled Receive Swap {id} update"),
                                                 Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")
                                             }
                                         }
@@ -323,7 +323,7 @@ impl LiquidSdk {
                 Some(payment) => {
                     match payment.status {
                         Complete => {
-                            self.notify_event_listeners(LiquidSdkEvent::PaymentSucceed {
+                            self.notify_event_listeners(LiquidSdkEvent::PaymentSucceeded {
                                 details: payment,
                             })
                             .await?
@@ -796,7 +796,7 @@ impl LiquidSdk {
                         },
                         _ => error!("Received Send Payment pending event for payment without swap ID"),
                     },
-                    Ok(LiquidSdkEvent::PaymentSucceed { details }) => match details.swap_id.clone()
+                    Ok(LiquidSdkEvent::PaymentSucceeded { details }) => match details.swap_id.clone()
                     {
                         Some(id) if id == swap_id => {
                             debug!("Received Send Payment succeed event");

@@ -122,7 +122,7 @@ pub enum LiquidSdkEvent {
     PaymentPending { details: Payment },
     PaymentRefunded { details: Payment },
     PaymentRefundPending { details: Payment },
-    PaymentSucceed { details: Payment },
+    PaymentSucceeded { details: Payment },
     PaymentWaitingConfirmation { details: Payment },
     Synced,
 }

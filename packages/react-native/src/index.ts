@@ -130,7 +130,7 @@ export enum LiquidSdkEventVariant {
     PAYMENT_PENDING = "paymentPending",
     PAYMENT_REFUNDED = "paymentRefunded",
     PAYMENT_REFUND_PENDING = "paymentRefundPending",
-    PAYMENT_SUCCEED = "paymentSucceed",
+    PAYMENT_SUCCEEDED = "paymentSucceeded",
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
     SYNCED = "synced"
 }
@@ -148,7 +148,7 @@ export type LiquidSdkEvent = {
     type: LiquidSdkEventVariant.PAYMENT_REFUND_PENDING,
     details: Payment
 } | {
-    type: LiquidSdkEventVariant.PAYMENT_SUCCEED,
+    type: LiquidSdkEventVariant.PAYMENT_SUCCEEDED,
     details: Payment
 } | {
     type: LiquidSdkEventVariant.PAYMENT_WAITING_CONFIRMATION,

@@ -701,8 +701,8 @@ fun asLiquidSdkEvent(liquidSdkEvent: ReadableMap): LiquidSdkEvent? {
     if (type == "paymentRefundPending") {
         return LiquidSdkEvent.PaymentRefundPending(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
     }
-    if (type == "paymentSucceed") {
-        return LiquidSdkEvent.PaymentSucceed(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
+    if (type == "paymentSucceeded") {
+        return LiquidSdkEvent.PaymentSucceeded(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
     }
     if (type == "paymentWaitingConfirmation") {
         return LiquidSdkEvent.PaymentWaitingConfirmation(liquidSdkEvent.getMap("details")?.let { asPayment(it) }!!)
@@ -732,8 +732,8 @@ fun readableMapOf(liquidSdkEvent: LiquidSdkEvent): ReadableMap? {
             pushToMap(map, "type", "paymentRefundPending")
             pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
         }
-        is LiquidSdkEvent.PaymentSucceed -> {
-            pushToMap(map, "type", "paymentSucceed")
+        is LiquidSdkEvent.PaymentSucceeded -> {
+            pushToMap(map, "type", "paymentSucceeded")
             pushToMap(map, "details", readableMapOf(liquidSdkEvent.details))
         }
         is LiquidSdkEvent.PaymentWaitingConfirmation -> {

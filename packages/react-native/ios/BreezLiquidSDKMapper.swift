@@ -837,13 +837,13 @@ enum BreezLiquidSDKMapper {
 
             return LiquidSdkEvent.paymentRefundPending(details: _details)
         }
-        if type == "paymentSucceed" {
+        if type == "paymentSucceeded" {
             guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
                 throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "LiquidSdkEvent"))
             }
             let _details = try asPayment(payment: detailsTmp)
 
-            return LiquidSdkEvent.paymentSucceed(details: _details)
+            return LiquidSdkEvent.paymentSucceeded(details: _details)
         }
         if type == "paymentWaitingConfirmation" {
             guard let detailsTmp = liquidSdkEvent["details"] as? [String: Any?] else {
@@ -894,11 +894,11 @@ enum BreezLiquidSDKMapper {
                 "details": dictionaryOf(payment: details),
             ]
 
-        case let .paymentSucceed(
+        case let .paymentSucceeded(
             details
         ):
             return [
-                "type": "paymentSucceed",
+                "type": "paymentSucceeded",
                 "details": dictionaryOf(payment: details),
             ]
 

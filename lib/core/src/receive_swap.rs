@@ -1,3 +1,10 @@
+use std::{str::FromStr, sync::Arc};
+
+use anyhow::{anyhow, Result};
+use boltz_client::swaps::boltz::RevSwapStates;
+use log::{debug, error, info, warn};
+use tokio::sync::broadcast;
+
 use crate::ensure_sdk;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{PaymentTxData, PaymentType, ReceiveSwap};
@@ -5,11 +12,6 @@ use crate::{
     error::PaymentError, model::PaymentState, persist::Persister, swapper::Swapper,
     wallet::OnchainWallet,
 };
-use anyhow::{anyhow, Result};
-use boltz_client::swaps::boltz::RevSwapStates;
-use log::{debug, error, info, warn};
-use std::{str::FromStr, sync::Arc};
-use tokio::sync::broadcast;
 
 pub(crate) struct ReceiveSwapStateHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,

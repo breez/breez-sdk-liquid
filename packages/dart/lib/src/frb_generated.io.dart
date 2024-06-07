@@ -653,10 +653,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.PaymentRefundPending.details = pre_details;
       return;
     }
-    if (apiObj is LiquidSdkEvent_PaymentSucceed) {
+    if (apiObj is LiquidSdkEvent_PaymentSucceeded) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
       wireObj.tag = 4;
-      wireObj.kind.PaymentSucceed.details = pre_details;
+      wireObj.kind.PaymentSucceeded.details = pre_details;
       return;
     }
     if (apiObj is LiquidSdkEvent_PaymentWaitingConfirmation) {
@@ -1762,7 +1762,7 @@ final class wire_cst_LiquidSdkEvent_PaymentRefundPending extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
-final class wire_cst_LiquidSdkEvent_PaymentSucceed extends ffi.Struct {
+final class wire_cst_LiquidSdkEvent_PaymentSucceeded extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
@@ -1779,7 +1779,7 @@ final class LiquidSdkEventKind extends ffi.Union {
 
   external wire_cst_LiquidSdkEvent_PaymentRefundPending PaymentRefundPending;
 
-  external wire_cst_LiquidSdkEvent_PaymentSucceed PaymentSucceed;
+  external wire_cst_LiquidSdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
 }

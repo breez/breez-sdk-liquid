@@ -1,17 +1,16 @@
 mod boltz_status_stream;
+
 use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
+use boltz_client::error::Error;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     self, BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
     CreateSubmarineRequest, CreateSubmarineResponse, ReversePair, SubmarinePair,
 };
-
-use boltz_client::error::Error;
-
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, LBtcSwapTxV2};
 use boltz_status_stream::BoltzStatusStream;
