@@ -243,7 +243,7 @@ impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
             }
             4 => {
                 let ans = unsafe { self.kind.PaymentSucceed };
-                crate::model::LiquidSdkEvent::PaymentSucceed {
+                crate::model::LiquidSdkEvent::PaymentSucceeded {
                     details: ans.details.cst_decode(),
                 }
             }
