@@ -115,9 +115,9 @@ impl SwapperStatusStream for BoltzStatusStream {
                                             tokio::time::sleep(reconnect_delay).await;
                                             break;
                                         },
-                                        Ok(msg) if msg.is_text() => {
-                                            info!("Received msg: {msg:?}");
-                                            match serde_json::from_str::<SwapUpdate>(&msg.to_string()) {
+                                        Ok(Message::Text(payload)) => {
+                                            info!("Received text msg: {payload:?}");
+                                            match serde_json::from_str::<SwapUpdate>(&payload) {
                                                 // Subscription confirmation
                                                 Ok(SwapUpdate::Subscription { .. }) => {}
 
@@ -140,7 +140,9 @@ impl SwapperStatusStream for BoltzStatusStream {
                                                 Err(e) => warn!("WS response is invalid SwapUpdate: {e:?}"),
                                             }
                                         },
-                                        Ok(msg) => info!("Unhandled msg: {msg:?}"),
+                                        Ok(Message::Ping(_)) => debug!("Received ping"),
+                                        Ok(Message::Pong(_)) => debug!("Received pong"),
+                                        Ok(msg) => warn!("Unhandled msg: {msg:?}"),
                                         Err(e) => {
                                             error!("Received stream error: {e:?}");
                                             let _ = ws_stream.close(None).await;
