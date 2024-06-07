@@ -501,7 +501,7 @@ checksum = "829a082bd3761fde7476dc2ed85ca56c11628948460ece621e4f56fef5046567"
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/ok300/boltz-rust?branch=ok300-breez-latest-06-05#9a0b5fdcb71271d804aa755870fc079e9605e2c4"
+source = "git+https://github.com/hydra-yse/boltz-rust?branch=yse-breez-latest#66cdf65ba889a25a5274af3d27f5f52a2d4e3cc9"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",

@@ -9,7 +9,7 @@ use boltz_client::error::Error;
 use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
-    BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
+    self, BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
     CreateSubmarineRequest, CreateSubmarineResponse, ReversePair, SubmarinePair,
 };
 use boltz_client::util::secrets::Preimage;
@@ -21,7 +21,7 @@ use serde_json::Value;
 use tokio::sync::{broadcast, watch};
 
 use crate::error::PaymentError;
-use crate::model::{Config, Network, ReceiveSwap, SendSwap, Update};
+use crate::model::{Config, Network, ReceiveSwap, SendSwap};
 use crate::utils;
 
 #[async_trait]
@@ -37,7 +37,7 @@ pub trait SwapperStatusStream: Send + Sync {
         shutdown: watch::Receiver<()>,
     );
     fn track_swap_id(&self, swap_id: &str) -> Result<()>;
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<Update>;
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update>;
 }
 
 pub trait Swapper: Send + Sync {
