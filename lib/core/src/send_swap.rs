@@ -1,3 +1,16 @@
+use std::{str::FromStr, sync::Arc};
+
+use anyhow::{anyhow, Result};
+use boltz_client::swaps::{boltz::SubSwapStates, boltzv2::CreateSubmarineResponse};
+use boltz_client::util::secrets::Preimage;
+use boltz_client::{Amount, Bolt11Invoice, ToHex};
+use log::{debug, error, info, warn};
+use lwk_wollet::bitcoin::Witness;
+use lwk_wollet::elements::Transaction;
+use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::BlockchainBackend;
+use tokio::sync::broadcast;
+
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{Config, SendSwap};
 use crate::swapper::Swapper;
@@ -8,17 +21,6 @@ use crate::{
     model::{PaymentState, PaymentTxData, PaymentType},
     persist::Persister,
 };
-use anyhow::{anyhow, Result};
-use boltz_client::swaps::{boltz::SubSwapStates, boltzv2::CreateSubmarineResponse};
-use boltz_client::util::secrets::Preimage;
-use boltz_client::{Amount, Bolt11Invoice, ToHex};
-use log::{debug, error, info, warn};
-use lwk_wollet::bitcoin::Witness;
-use lwk_wollet::elements::Transaction;
-use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::BlockchainBackend;
-use std::{str::FromStr, sync::Arc};
-use tokio::sync::broadcast;
 
 pub(crate) struct SendSwapStateHandler {
     config: Config,

@@ -1,17 +1,17 @@
+use std::{str::FromStr, sync::Arc};
+
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::ElementsAddress;
+use lwk_common::Signer;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
-use std::{str::FromStr, sync::Arc};
-use tokio::sync::Mutex;
-
-use async_trait::async_trait;
-use lwk_common::Signer;
 use lwk_wollet::{
     elements::{Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
+use tokio::sync::Mutex;
 
 use crate::{
     error::PaymentError,

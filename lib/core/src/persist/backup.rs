@@ -1,6 +1,7 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::Result;
 use rusqlite::{backup::Backup, Connection};
-use std::path::{Path, PathBuf};
 
 use super::Persister;
 use crate::model::Network;
