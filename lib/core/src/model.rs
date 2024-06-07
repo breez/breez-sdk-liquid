@@ -538,6 +538,9 @@ pub struct PaymentSwapData {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Payment {
     /// The tx ID of the onchain transaction
+    ///
+    /// For Receive Payments that are [PaymentState::Pending], this may be the lockup or the claim
+    /// tx ID. For Receive Payments that are [PaymentState::Complete], this is the claim tx ID.
     pub tx_id: String,
 
     /// The swap ID, if any swap is associated with this payment

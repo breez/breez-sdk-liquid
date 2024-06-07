@@ -182,7 +182,7 @@ impl Persister {
         claim_tx_id: Option<&str>,
         lockup_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite claim_tx_id
+        // Do not overwrite claim_tx_id or lockup_tx_id
         let con: Connection = self.get_connection()?;
         con.execute(
             "UPDATE receive_swaps
