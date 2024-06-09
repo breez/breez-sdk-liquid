@@ -8,11 +8,11 @@ use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::elements::Transaction;
 use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::BlockchainBackend;
 use tokio::sync::broadcast;
 
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{Config, SendSwap};
+use crate::sdk::ChainService;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, get_invoice_amount};
@@ -21,12 +21,13 @@ use crate::{
     model::{PaymentState, PaymentTxData, PaymentType},
     persist::Persister,
 };
-
+#[derive(Clone)]
 pub(crate) struct SendSwapStateHandler {
     config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
+    chain_service: Arc<dyn ChainService>,
     subscription_notifier: broadcast::Sender<String>,
 }
 
@@ -36,6 +37,7 @@ impl SendSwapStateHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
+        chain_service: Arc<dyn ChainService>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -43,6 +45,7 @@ impl SendSwapStateHandler {
             onchain_wallet,
             persister,
             swapper,
+            chain_service,
             subscription_notifier,
         }
     }
@@ -194,8 +197,7 @@ impl SendSwapStateHandler {
             )
             .await?;
 
-        let electrum_client = self.config.get_electrum_client()?;
-        let lockup_tx_id = electrum_client.broadcast(&lockup_tx)?.to_string();
+        let lockup_tx_id = self.chain_service.broadcast(&lockup_tx)?.to_string();
 
         debug!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
         Ok(lockup_tx)
@@ -262,7 +264,6 @@ impl SendSwapStateHandler {
         info!("Retrieving preimage from non-cooperative claim tx");
 
         let id = &swap.id;
-        let electrum_client = self.config.get_electrum_client()?;
         let swap_script = swap.get_swap_script()?;
         let swap_script_pk = swap_script
             .to_address(self.config.network.into())?
@@ -270,7 +271,8 @@ impl SendSwapStateHandler {
         debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
 
         // Get tx history of the swap script (lockup address)
-        let history: Vec<_> = electrum_client
+        let history: Vec<_> = self
+            .chain_service
             .get_scripts_history(&[&swap_script_pk])?
             .into_iter()
             .flatten()
@@ -292,7 +294,8 @@ impl SendSwapStateHandler {
                 let claim_tx_id = claim_tx_entry.txid;
                 debug!("Send Swap {id} has claim tx {claim_tx_id}");
 
-                let claim_tx = electrum_client
+                let claim_tx = self
+                    .chain_service
                     .get_transactions(&[claim_tx_id])
                     .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
                     .first()
