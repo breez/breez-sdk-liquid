@@ -152,10 +152,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_rust_bridge
-      sha256: efb018e387c5e844095e35e9d6c6bd1610c49f25de109f4988b7c45aeca60a9a
+      sha256: "867ae0e50cf856ab9fe8d26f88319aa5ec47b3e641e055280bdc626d6f5cd0f2"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0-dev.36"
+    version: "2.0.0-dev.38"
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -362,10 +362,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: a248d8146ee5983446bf03ed5ea8f6533129a12b11f12057ad1b4a67a2b3b41d
+      sha256: "9c96da072b421e98183f9ea7464898428e764bc0ce5567f27ec8693442e72514"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.4"
+    version: "2.2.5"
   path_provider_foundation:
     dependency: transitive
     description:
@@ -565,4 +565,4 @@ packages:
     version: "2.2.1"
 sdks:
   dart: ">=3.4.0 <4.0.0"
-  flutter: ">=3.19.0"
+  flutter: ">=3.22.0"

@@ -1,6 +1,8 @@
-rust_input: ../../../core/src/bindings.rs
+rust_input: crate::bindings
+rust_root: ../../../core/
 dart_output: ../../../../packages/dart/lib/src
-rust_output: ../../../core/src/frb/bridge.rs
+# flutter_rust_bridge has relative path issues with this new approach introduced in 2.0.0-dev.38
+# rust_output: ../../../core/frb/bridge.rs
 c_output: breez_liquid_sdk/include/breez_liquid_sdk.h
 web: false
 full_dep: true
