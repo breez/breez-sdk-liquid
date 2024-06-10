@@ -293,7 +293,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
-    /// Persisted when the lockup tx is detected in the mempool
+    /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
+    /// Afterwards, it shows the lockup tx creation time.    
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
@@ -536,10 +537,6 @@ pub struct PaymentSwapData {
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Payment {
-    /// The tx ID of the onchain transaction
-    ///
-    /// For Receive Payments that are [PaymentState::Pending], this may be the lockup or the claim
-    /// tx ID. For Receive Payments that are [PaymentState::Complete], this is the claim tx ID.
     pub tx_id: Option<String>,
 
     /// The swap ID, if any swap is associated with this payment
@@ -766,11 +763,4 @@ macro_rules! get_invoice_amount {
             .expect("Expecting valid amount")
             / 1000
     };
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct SwapUpdateTxDetails {
-    #[serde(rename(deserialize = "id", serialize = "id"))]
-    pub(crate) tx_id: String,
-    pub(crate) hex: String,
 }

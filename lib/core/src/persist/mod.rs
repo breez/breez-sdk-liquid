@@ -196,7 +196,7 @@ impl Persister {
         match (tx, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
             (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_type)),
-            (Some(tx), None) => Ok(Payment::from_tx_data(tx, swap)),
+            (Some(tx), None) => Ok(Payment::from_tx_data(tx, None)),
             (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap))),
         }
     }
