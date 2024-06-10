@@ -165,12 +165,6 @@ impl ReceiveSwapStateHandler {
             is_confirmed: false,
         })?;
 
-        // The lockup tx_id was used to identify the Receive Swap until the claim tx is available
-        // We now purge the temporary lockup tx from the tx data table
-        if let Some(lockup_tx_id) = &ongoing_receive_swap.lockup_tx_id {
-            self.persister.remove_temporary_tx(lockup_tx_id)?;
-        };
-
         self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)
             .await?;
 

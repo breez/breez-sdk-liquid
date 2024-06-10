@@ -79,26 +79,6 @@ impl Persister {
         Ok(())
     }
 
-    /// Removes an entry from the `payment_tx_data` table.
-    ///
-    /// Should only be used for transactions that don't belong to this wallet's history, like
-    /// the temporary lockup tx used to identify a Receive Payment until the claim tx is available.
-    ///
-    /// This has no effect on transactions that belong to the wallet's history, as they will be
-    /// re-added on the next `sync`.
-    pub(crate) fn remove_temporary_tx(&self, tx_id: &str) -> Result<()> {
-        let mut con = self.get_connection()?;
-
-        let tx = con.transaction()?;
-        tx.execute(
-            "DELETE FROM payment_tx_data WHERE tx_id = ?",
-            params![tx_id],
-        )?;
-        tx.commit()?;
-
-        Ok(())
-    }
-
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let con = self.get_connection()?;
         let ongoing_send_swaps: Vec<Swap> = self
