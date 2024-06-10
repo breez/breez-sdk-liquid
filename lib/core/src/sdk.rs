@@ -684,7 +684,7 @@ impl LiquidSdk {
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
         Ok(SendPaymentResponse {
-            payment: Payment::from(tx_data, None),
+            payment: Payment::from_tx_data(tx_data, None),
         })
     }
 
@@ -938,7 +938,6 @@ impl LiquidSdk {
                 receiver_amount_sat: payer_amount_sat - req.fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
-                lockup_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
             })

@@ -294,7 +294,6 @@ pub(crate) struct ReceiveSwap {
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
     /// Persisted when the lockup tx is detected in the mempool
-    pub(crate) lockup_tx_id: Option<String>,
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
@@ -592,7 +591,27 @@ pub struct Payment {
     pub status: PaymentState,
 }
 impl Payment {
-    pub(crate) fn from(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
+    pub(crate) fn from_pending_swap(swap: PaymentSwapData, payment_type: PaymentType) -> Payment {
+        let amount_sat = match payment_type {
+            PaymentType::Receive => swap.receiver_amount_sat,
+            PaymentType::Send => swap.payer_amount_sat,
+        };
+
+        Payment {
+            tx_id: None,
+            swap_id: Some(swap.swap_id),
+            timestamp: swap.created_at,
+            amount_sat,
+            fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            preimage: swap.preimage,
+            refund_tx_id: swap.refund_tx_id,
+            refund_tx_amount_sat: swap.refund_tx_amount_sat,
+            payment_type,
+            status: swap.status,
+        }
+    }
+
+    pub(crate) fn from_tx_data(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
         Payment {
             tx_id: Some(tx.tx_id),
             swap_id: swap.as_ref().map(|s| s.swap_id.clone()),

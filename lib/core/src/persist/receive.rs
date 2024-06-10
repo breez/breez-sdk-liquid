@@ -67,7 +67,6 @@ impl Persister {
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
-                rs.lockup_tx_id,
                 rs.created_at,
                 rs.state
             FROM receive_swaps AS rs
@@ -107,9 +106,8 @@ impl Persister {
             receiver_amount_sat: row.get(6)?,
             claim_fees_sat: row.get(7)?,
             claim_tx_id: row.get(8)?,
-            lockup_tx_id: row.get(9)?,
-            created_at: row.get(10)?,
-            state: row.get(11)?,
+            created_at: row.get(9)?,
+            state: row.get(10)?,
         })
     }
 
@@ -170,20 +168,6 @@ impl Persister {
                     .claim_tx_id
                     .as_ref()
                     .map(|claim_tx_id| (claim_tx_id.clone(), pending_receive_swap.clone()))
-            })
-            .collect();
-        Ok(res)
-    }
-
-    /// Pending Receive Swaps which have not been claimed yet and whose
-    /// lockup_tx_id is known
-    pub(crate) fn list_unclaimed_pending_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
-        let res = self
-            .list_pending_receive_swaps()?
-            .into_iter()
-            .filter(|pending_receive_swap| {
-                pending_receive_swap.claim_tx_id.is_none()
-                    && pending_receive_swap.lockup_tx_id.is_some()
             })
             .collect();
         Ok(res)
