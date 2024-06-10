@@ -133,9 +133,10 @@ impl Persister {
     }
 
     fn sql_row_to_payment(&self, row: &Row) -> Result<Payment, rusqlite::Error> {
-        let tx = match row.get(0)? {
-            Some(tx_id) => Some(PaymentTxData {
-                tx_id,
+        let maybe_tx_tx_id: Result<String, rusqlite::Error> = row.get(0);
+        let tx = match maybe_tx_tx_id {
+            Ok(ref tx_id) => Some(PaymentTxData {
+                tx_id: tx_id.to_string(),
                 timestamp: row.get(1)?,
                 amount_sat: row.get(2)?,
                 fees_sat: row.get(3)?,
@@ -190,7 +191,7 @@ impl Persister {
         };
 
         match (tx, swap.clone()) {
-            (None, None) => Err(row.get::<usize, String>(0).err().unwrap()),
+            (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
             (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_type)),
             (Some(tx), None) => Ok(Payment::from_tx_data(tx, swap)),
             (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap))),
