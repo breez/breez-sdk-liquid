@@ -9,7 +9,7 @@ void main() {
   group('main', () {
     setUpAll(() async {
       await initApi();
-      ConnectRequest connectRequest = ConnectRequest(mnemonic: "", network: Network.liquidTestnet);
+      ConnectRequest connectRequest = ConnectRequest(mnemonic: "", config: defaultConfig(network: Network.testnet));
       sdk = await connect(req: connectRequest);
     });
 
