@@ -68,7 +68,7 @@ export interface LogEntry {
 }
 
 export interface Payment {
-    txId: string
+    txId?: string
     swapId?: string
     timestamp: number
     amountSat: number

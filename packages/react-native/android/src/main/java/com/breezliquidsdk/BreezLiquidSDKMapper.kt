@@ -306,7 +306,6 @@ fun asPayment(payment: ReadableMap): Payment? {
     if (!validateMandatoryFields(
             payment,
             arrayOf(
-                "txId",
                 "timestamp",
                 "amountSat",
                 "feesSat",
@@ -317,7 +316,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     ) {
         return null
     }
-    val txId = payment.getString("txId")!!
+    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()

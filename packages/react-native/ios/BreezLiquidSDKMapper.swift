@@ -356,8 +356,12 @@ enum BreezLiquidSDKMapper {
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
-        guard let txId = payment["txId"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txId", typeName: "Payment"))
+        var txId: String?
+        if hasNonNilKey(data: payment, key: "txId") {
+            guard let txIdTmp = payment["txId"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "txId"))
+            }
+            txId = txIdTmp
         }
         var swapId: String?
         if hasNonNilKey(data: payment, key: "swapId") {
@@ -422,7 +426,7 @@ enum BreezLiquidSDKMapper {
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
         return [
-            "txId": payment.txId,
+            "txId": payment.txId == nil ? nil : payment.txId,
             "swapId": payment.swapId == nil ? nil : payment.swapId,
             "timestamp": payment.timestamp,
             "amountSat": payment.amountSat,
