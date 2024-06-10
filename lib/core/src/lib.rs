@@ -1,9 +1,9 @@
 #[cfg(feature = "frb")]
-pub mod bindings;
+pub(crate) mod bindings;
 pub mod error;
 pub(crate) mod event;
 #[cfg(feature = "frb")]
-pub mod frb;
+pub(crate) mod frb_generated;
 pub mod logger;
 pub mod model;
 pub mod persist;
