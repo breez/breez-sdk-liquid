@@ -118,7 +118,10 @@ impl Persister {
                 ss.state,
                 rtx.amount_sat
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
-            FULL JOIN receive_swaps AS rs        -- Receive Swap data (by claim)
+            FULL JOIN (
+                SELECT * FROM receive_swaps
+                WHERE claim_tx_id IS NOT NULL OR lockup_tx_id IS NOT NULL
+            ) rs                                 -- Receive Swap data (by claim)
                 ON ptx.tx_id = rs.claim_tx_id
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
