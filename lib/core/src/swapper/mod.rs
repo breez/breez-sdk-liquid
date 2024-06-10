@@ -6,6 +6,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::error::Error;
+use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     self, BoltzApiClientV2, ClaimTxResponse, CreateReverseRequest, CreateReverseResponse,
@@ -108,13 +109,21 @@ pub trait Swapper: Send + Sync {
 pub struct BoltzSwapper {
     client: BoltzApiClientV2,
     config: Config,
+    electrum_config: ElectrumConfig,
 }
 
 impl BoltzSwapper {
     pub fn new(config: Config) -> BoltzSwapper {
         BoltzSwapper {
             client: BoltzApiClientV2::new(&config.boltz_url),
-            config,
+            config: config.clone(),
+            electrum_config: ElectrumConfig::new(
+                config.network.into(),
+                &config.electrum_url,
+                true,
+                true,
+                100,
+            ),
         }
     }
 
@@ -128,7 +137,7 @@ impl BoltzSwapper {
         Ok(LBtcSwapTxV2::new_refund(
             swap_script.clone(),
             output_address,
-            &self.config.get_electrum_config(),
+            &self.electrum_config,
             self.config.boltz_url.clone(),
             swap.id.to_string(),
         )?)
@@ -194,8 +203,7 @@ impl Swapper for BoltzSwapper {
             Network::Mainnet => None,
             Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
-        let refund_tx_id =
-            refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
+        let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
         info!(
             "Successfully broadcast cooperative refund for Send Swap {}",
             &swap.id
@@ -239,8 +247,7 @@ impl Swapper for BoltzSwapper {
             Network::Mainnet => None,
             Network::Testnet => Some((&self.client, boltz_client::network::Chain::LiquidTestnet)),
         };
-        let refund_tx_id =
-            refund_tx.broadcast(&tx, &self.config.get_electrum_config(), is_lowball)?;
+        let refund_tx_id = refund_tx.broadcast(&tx, &self.electrum_config, is_lowball)?;
         info!(
             "Successfully broadcast non-cooperative refund for swap-in {}",
             swap.id
@@ -305,7 +312,7 @@ impl Swapper for BoltzSwapper {
         let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
             claim_address,
-            &self.config.get_electrum_config(),
+            &self.electrum_config,
             self.config.boltz_url.clone(),
             swap.id.clone(),
         )?;
@@ -322,7 +329,7 @@ impl Swapper for BoltzSwapper {
 
         let claim_tx_id = claim_tx_wrapper.broadcast(
             &claim_tx,
-            &self.config.get_electrum_config(),
+            &self.electrum_config,
             Some((&self.client, self.config.network.into())),
         )?;
         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");

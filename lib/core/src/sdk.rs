@@ -20,6 +20,7 @@ use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
+use lwk_wollet::{BlockchainBackend, ElectrumClient, ElectrumUrl};
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -45,6 +46,9 @@ use crate::{
 pub const LIQUID_CLAIM_TX_FEERATE_MSAT: f32 = 100.0;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
+
+pub(crate) trait ChainService: Send + Sync + BlockchainBackend {}
+impl ChainService for ElectrumClient {}
 
 pub struct LiquidSdk {
     config: Config,
@@ -81,13 +85,22 @@ impl LiquidSdk {
         let swapper = Arc::new(BoltzSwapper::new(config.clone()));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
+        let chain_service = Arc::new(ElectrumClient::new(&ElectrumUrl::new(
+            &config.electrum_url,
+            true,
+            true,
+        ))?);
+
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
+
         let send_swap_state_handler = SendSwapStateHandler::new(
             config.clone(),
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
+            chain_service.clone(),
         );
+
         let receive_swap_state_handler = ReceiveSwapStateHandler::new(
             onchain_wallet.clone(),
             persister.clone(),
@@ -286,13 +299,7 @@ impl LiquidSdk {
                 let id = &send_swap.id;
                 let refund_tx_id = self.try_refund(send_swap).await?;
                 info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
-                let send_swap_state_handler = SendSwapStateHandler::new(
-                    self.config.clone(),
-                    self.onchain_wallet.clone(),
-                    self.persister.clone(),
-                    self.swapper.clone(),
-                );
-                send_swap_state_handler
+                self.send_swap_state_handler
                     .update_swap_info(id, Pending, None, None, Some(&refund_tx_id))
                     .await?;
             }
@@ -765,12 +772,7 @@ impl LiquidSdk {
 
         let mut events_stream = self.event_manager.subscribe();
         let mut maybe_payment: Option<Payment> = None;
-        let send_swap_state_handler = SendSwapStateHandler::new(
-            self.config.clone(),
-            self.onchain_wallet.clone(),
-            self.persister.clone(),
-            self.swapper.clone(),
-        );
+        let send_swap_state_handler = self.send_swap_state_handler.clone();
 
         loop {
             tokio::select! {
@@ -970,12 +972,6 @@ impl LiquidSdk {
         let pending_send_swaps_by_refund_tx_id =
             self.persister.list_pending_send_swaps_by_refund_tx_id()?;
 
-        let send_swap_state_handler = SendSwapStateHandler::new(
-            self.config.clone(),
-            self.onchain_wallet.clone(),
-            self.persister.clone(),
-            self.swapper.clone(),
-        );
         for tx in self.onchain_wallet.transactions().await? {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
@@ -1001,7 +997,7 @@ impl LiquidSdk {
                 }
             } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
-                    send_swap_state_handler
+                    self.send_swap_state_handler
                         .update_swap_info(&swap.id, Failed, None, None, None)
                         .await?;
                 }

@@ -1,12 +1,11 @@
 use anyhow::{anyhow, Result};
-use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree, BOLTZ_MAINNET_URL_V2,
     BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
-use lwk_wollet::{ElectrumClient, ElectrumUrl, ElementsNetwork};
+use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
@@ -28,14 +27,6 @@ pub struct Config {
     pub payment_timeout_sec: u64,
 }
 impl Config {
-    pub(crate) fn get_electrum_client(&self) -> Result<ElectrumClient, lwk_wollet::Error> {
-        ElectrumClient::new(&ElectrumUrl::new(&self.electrum_url, true, true))
-    }
-
-    pub(crate) fn get_electrum_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(self.network.into(), &self.electrum_url, true, true, 100)
-    }
-
     pub fn mainnet() -> Self {
         Config {
             boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
