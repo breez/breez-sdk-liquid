@@ -110,22 +110,19 @@ class FlutterBreezLiquidBindings {
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_get_info_request> req,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
       port_,
       that,
-      req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr = _lookup<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_get_info_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_get_info_request>)>();
+          .asFunction<void Function(int, int)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
@@ -412,17 +409,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
-  ffi.Pointer<wire_cst_get_info_request> frbgen_breez_liquid_cst_new_box_autoadd_get_info_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request();
-  }
-
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_get_info_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_get_info_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr
-          .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
-
   ffi.Pointer<wire_cst_liquid_sdk_event> frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event();
   }
@@ -612,11 +598,6 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
 
 final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
-}
-
-final class wire_cst_get_info_request extends ffi.Struct {
-  @ffi.Bool()
-  external bool with_scan;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {

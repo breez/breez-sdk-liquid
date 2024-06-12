@@ -72,8 +72,7 @@ abstract class RustLibApi extends BaseApi {
 
   void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that});
 
-  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo(
-      {required BindingLiquidSdk that, required GetInfoRequest req});
+  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that});
 
   Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that});
 
@@ -220,29 +219,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo(
-      {required BindingLiquidSdk that, required GetInfoRequest req}) {
+  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        var arg1 = cst_encode_box_autoadd_get_info_request(req);
-        return wire.wire__crate__bindings__BindingLiquidSdk_get_info(port_, arg0, arg1);
+        return wire.wire__crate__bindings__BindingLiquidSdk_get_info(port_, arg0);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_get_info_response,
         decodeErrorData: dco_decode_liquid_sdk_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkGetInfoConstMeta,
-      argValues: [that, req],
+      argValues: [that],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkGetInfoConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_get_info",
-        argNames: ["that", "req"],
+        argNames: ["that"],
       );
 
   @override
@@ -611,12 +608,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool dco_decode_bool(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as bool;
-  }
-
-  @protected
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_backup_request(raw);
@@ -632,12 +623,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_connect_request(raw);
-  }
-
-  @protected
-  GetInfoRequest dco_decode_box_autoadd_get_info_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_get_info_request(raw);
   }
 
   @protected
@@ -710,16 +695,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ConnectRequest(
       mnemonic: dco_decode_String(arr[0]),
       config: dco_decode_config(arr[1]),
-    );
-  }
-
-  @protected
-  GetInfoRequest dco_decode_get_info_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return GetInfoRequest(
-      withScan: dco_decode_bool(arr[0]),
     );
   }
 
@@ -1155,12 +1130,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_backup_request(deserializer));
@@ -1176,12 +1145,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_connect_request(deserializer));
-  }
-
-  @protected
-  GetInfoRequest sse_decode_box_autoadd_get_info_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_get_info_request(deserializer));
   }
 
   @protected
@@ -1254,13 +1217,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_mnemonic = sse_decode_String(deserializer);
     var var_config = sse_decode_config(deserializer);
     return ConnectRequest(mnemonic: var_mnemonic, config: var_config);
-  }
-
-  @protected
-  GetInfoRequest sse_decode_get_info_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_withScan = sse_decode_bool(deserializer);
-    return GetInfoRequest(withScan: var_withScan);
   }
 
   @protected
@@ -1646,6 +1602,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
   int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -1667,12 +1629,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
 // ignore: invalid_use_of_internal_member
     return (raw as BindingLiquidSdkImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  bool cst_encode_bool(bool raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw;
   }
 
   @protected
@@ -1782,12 +1738,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
-  }
-
-  @protected
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_backup_request(self, serializer);
@@ -1803,12 +1753,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_connect_request(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_get_info_request(GetInfoRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_get_info_request(self, serializer);
   }
 
   @protected
@@ -1875,12 +1819,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.mnemonic, serializer);
     sse_encode_config(self.config, serializer);
-  }
-
-  @protected
-  void sse_encode_get_info_request(GetInfoRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_bool(self.withScan, serializer);
   }
 
   @protected
@@ -2198,6 +2136,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
   }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
 }
 
 @sealed
@@ -2232,8 +2176,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
         that: this,
       );
 
-  Future<GetInfoResponse> getInfo({required GetInfoRequest req}) =>
-      RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(that: this, req: req);
+  Future<GetInfoResponse> getInfo() => RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(
+        that: this,
+      );
 
   Future<List<Payment>> listPayments() => RustLib.instance.api.crateBindingsBindingLiquidSdkListPayments(
         that: this,

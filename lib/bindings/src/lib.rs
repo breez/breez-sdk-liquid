@@ -79,8 +79,8 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.remove_event_listener(id))
     }
 
-    pub fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
-        rt().block_on(self.sdk.get_info(req)).map_err(Into::into)
+    pub fn get_info(&self) -> Result<GetInfoResponse, LiquidSdkError> {
+        rt().block_on(self.sdk.get_info()).map_err(Into::into)
     }
 
     pub fn prepare_send_payment(

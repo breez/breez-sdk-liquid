@@ -158,11 +158,6 @@ pub struct SendPaymentResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct GetInfoRequest {
-    pub with_scan: bool,
-}
-
-#[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,

@@ -13,8 +13,7 @@ try {
 
     var listenerId = sdk.addEventListener(SDKListener())
 
-    var getInfoReq = breez_liquid_sdk.GetInfoRequest(false)
-    var nodeInfo = sdk.getInfo(getInfoReq)
+    var nodeInfo = sdk.getInfo()
 
     sdk.removeEventListener(listenerId)
 

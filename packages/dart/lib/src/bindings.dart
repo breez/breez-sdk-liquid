@@ -33,7 +33,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void emptyWalletCache();
 
-  Future<GetInfoResponse> getInfo({required GetInfoRequest req});
+  Future<GetInfoResponse> getInfo();
 
   Future<List<Payment>> listPayments();
 

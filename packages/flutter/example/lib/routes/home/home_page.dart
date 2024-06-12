@@ -22,11 +22,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Stream<GetInfoResponse> walletInfoStream() async* {
     debugPrint("Initialized walletInfoStream");
-    GetInfoRequest req = const GetInfoRequest(withScan: false);
-    yield await widget.liquidSDK.getInfo(req: req);
+    yield await widget.liquidSDK.getInfo();
     while (true) {
       await Future.delayed(const Duration(seconds: 10));
-      yield await widget.liquidSDK.getInfo(req: req);
+      yield await widget.liquidSDK.getInfo();
       debugPrint("Refreshed wallet info");
     }
   }

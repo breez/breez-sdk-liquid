@@ -118,13 +118,6 @@ impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
         CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
     }
 }
-impl CstDecode<crate::model::GetInfoRequest> for *mut wire_cst_get_info_request {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::GetInfoRequest {
-        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::GetInfoRequest>::cst_decode(*wrap).into()
-    }
-}
 impl CstDecode<crate::model::LiquidSdkEvent> for *mut wire_cst_liquid_sdk_event {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::LiquidSdkEvent {
@@ -198,14 +191,6 @@ impl CstDecode<crate::model::ConnectRequest> for wire_cst_connect_request {
         crate::model::ConnectRequest {
             mnemonic: self.mnemonic.cst_decode(),
             config: self.config.cst_decode(),
-        }
-    }
-}
-impl CstDecode<crate::model::GetInfoRequest> for wire_cst_get_info_request {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::GetInfoRequest {
-        crate::model::GetInfoRequest {
-            with_scan: self.with_scan.cst_decode(),
         }
     }
 }
@@ -561,18 +546,6 @@ impl Default for wire_cst_connect_request {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_get_info_request {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            with_scan: Default::default(),
-        }
-    }
-}
-impl Default for wire_cst_get_info_request {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
-}
 impl NewWithNullPtr for wire_cst_get_info_response {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -838,9 +811,8 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_em
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_get_info_request,
 ) {
-    wire__crate__bindings__BindingLiquidSdk_get_info_impl(port_, that, req)
+    wire__crate__bindings__BindingLiquidSdk_get_info_impl(port_, that)
 }
 
 #[no_mangle]
@@ -985,14 +957,6 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_get_info_request(
-) -> *mut wire_cst_get_info_request {
-    flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_get_info_request::new_with_null_ptr(),
-    )
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(
 ) -> *mut wire_cst_liquid_sdk_event {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -1125,11 +1089,6 @@ pub struct wire_cst_config {
 pub struct wire_cst_connect_request {
     mnemonic: *mut wire_cst_list_prim_u_8_strict,
     config: wire_cst_config,
-}
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct wire_cst_get_info_request {
-    with_scan: bool,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

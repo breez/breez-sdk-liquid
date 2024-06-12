@@ -91,22 +91,6 @@ class ConnectRequest {
           config == other.config;
 }
 
-class GetInfoRequest {
-  final bool withScan;
-
-  const GetInfoRequest({
-    required this.withScan,
-  });
-
-  @override
-  int get hashCode => withScan.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GetInfoRequest && runtimeType == other.runtimeType && withScan == other.withScan;
-}
-
 class GetInfoResponse {
   /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
   final BigInt balanceSat;
