@@ -110,22 +110,19 @@ class FlutterBreezLiquidBindings {
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_get_info_request> req,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
       port_,
       that,
-      req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr = _lookup<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_get_info_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_get_info_request>)>();
+          .asFunction<void Function(int, int)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
@@ -260,6 +257,28 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
+    int port_,
+    ffi.Pointer<wire_cst_binding_event_listener> that,
+    ffi.Pointer<wire_cst_liquid_sdk_event> e,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
+      port_,
+      that,
+      e,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_binding_event_listener>,
+                  ffi.Pointer<wire_cst_liquid_sdk_event>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event');
+  late final _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event =
+      _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr.asFunction<
+          void Function(
+              int, ffi.Pointer<wire_cst_binding_event_listener>, ffi.Pointer<wire_cst_liquid_sdk_event>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> s,
@@ -367,6 +386,18 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_backup_requestPtr
           .asFunction<ffi.Pointer<wire_cst_backup_request> Function()>();
 
+  ffi.Pointer<wire_cst_binding_event_listener>
+      frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener =
+      _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr
+          .asFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>();
+
   ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
   }
@@ -378,16 +409,16 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
-  ffi.Pointer<wire_cst_get_info_request> frbgen_breez_liquid_cst_new_box_autoadd_get_info_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request();
+  ffi.Pointer<wire_cst_liquid_sdk_event> frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_get_info_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_get_info_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_info_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_get_info_requestPtr
-          .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_liquid_sdk_event> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event =
+      _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr
+          .asFunction<ffi.Pointer<wire_cst_liquid_sdk_event> Function()>();
 
   ffi.Pointer<wire_cst_payment> frbgen_breez_liquid_cst_new_box_autoadd_payment() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_payment();
@@ -569,11 +600,6 @@ final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
-final class wire_cst_get_info_request extends ffi.Struct {
-  @ffi.Bool()
-  external bool with_scan;
-}
-
 final class wire_cst_prepare_receive_request extends ffi.Struct {
   @ffi.Uint64()
   external int payer_amount_sat;
@@ -602,24 +628,8 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external int fees_sat;
 }
 
-final class wire_cst_config extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> electrum_url;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
-
-  @ffi.Int32()
-  external int network;
-
-  @ffi.Uint64()
-  external int payment_timeout_sec;
-}
-
-final class wire_cst_connect_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
-
-  external wire_cst_config config;
+final class wire_cst_binding_event_listener extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> stream;
 }
 
 final class wire_cst_payment extends ffi.Struct {
@@ -647,6 +657,71 @@ final class wire_cst_payment extends ffi.Struct {
 
   @ffi.Int32()
   external int status;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentFailed extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentPending extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentRefunded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentRefundPending extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentSucceeded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class LiquidSdkEventKind extends ffi.Union {
+  external wire_cst_LiquidSdkEvent_PaymentFailed PaymentFailed;
+
+  external wire_cst_LiquidSdkEvent_PaymentPending PaymentPending;
+
+  external wire_cst_LiquidSdkEvent_PaymentRefunded PaymentRefunded;
+
+  external wire_cst_LiquidSdkEvent_PaymentRefundPending PaymentRefundPending;
+
+  external wire_cst_LiquidSdkEvent_PaymentSucceeded PaymentSucceeded;
+
+  external wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+}
+
+final class wire_cst_liquid_sdk_event extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LiquidSdkEventKind kind;
+}
+
+final class wire_cst_config extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> electrum_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
+
+  @ffi.Int32()
+  external int network;
+
+  @ffi.Uint64()
+  external int payment_timeout_sec;
+}
+
+final class wire_cst_connect_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+
+  external wire_cst_config config;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {
@@ -720,51 +795,6 @@ final class wire_cst_liquid_sdk_error extends ffi.Struct {
   external int tag;
 
   external LiquidSdkErrorKind kind;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentFailed extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentPending extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentRefunded extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentRefundPending extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentSucceeded extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class LiquidSdkEventKind extends ffi.Union {
-  external wire_cst_LiquidSdkEvent_PaymentFailed PaymentFailed;
-
-  external wire_cst_LiquidSdkEvent_PaymentPending PaymentPending;
-
-  external wire_cst_LiquidSdkEvent_PaymentRefunded PaymentRefunded;
-
-  external wire_cst_LiquidSdkEvent_PaymentRefundPending PaymentRefundPending;
-
-  external wire_cst_LiquidSdkEvent_PaymentSucceeded PaymentSucceeded;
-
-  external wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
-}
-
-final class wire_cst_liquid_sdk_event extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external LiquidSdkEventKind kind;
 }
 
 final class wire_cst_ln_invoice extends ffi.Struct {

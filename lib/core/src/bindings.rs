@@ -6,10 +6,10 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 
-use crate::{error::*, frb::bridge::StreamSink, model::*, sdk::LiquidSdk};
+use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk};
 
-struct BindingEventListener {
-    stream: StreamSink<LiquidSdkEvent>,
+pub struct BindingEventListener {
+    pub stream: StreamSink<LiquidSdkEvent>,
 }
 
 impl EventListener for BindingEventListener {
@@ -74,8 +74,8 @@ pub struct BindingLiquidSdk {
 }
 
 impl BindingLiquidSdk {
-    pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse, LiquidSdkError> {
-        self.sdk.get_info(req).await.map_err(Into::into)
+    pub async fn get_info(&self) -> Result<GetInfoResponse, LiquidSdkError> {
+        self.sdk.get_info().await.map_err(Into::into)
     }
 
     pub async fn add_event_listener(

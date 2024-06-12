@@ -160,15 +160,10 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
-    fun getInfo(
-        req: ReadableMap,
-        promise: Promise,
-    ) {
+    fun getInfo(promise: Promise) {
         executor.execute {
             try {
-                val getInfoRequest =
-                    asGetInfoRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "GetInfoRequest")) }
-                val res = getBindingLiquidSdk().getInfo(getInfoRequest)
+                val res = getBindingLiquidSdk().getInfo()
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

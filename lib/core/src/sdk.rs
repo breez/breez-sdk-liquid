@@ -413,15 +413,12 @@ impl LiquidSdk {
         Ok(())
     }
 
-    pub async fn get_info(&self, req: GetInfoRequest) -> Result<GetInfoResponse> {
+    pub async fn get_info(&self) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
         debug!(
             "next_unused_address: {}",
             self.onchain_wallet.next_unused_address().await?
         );
-        if req.with_scan {
-            self.sync().await?;
-        }
 
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;

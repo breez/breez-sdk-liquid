@@ -38,8 +38,7 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    getInfo: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
+    getInfo: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

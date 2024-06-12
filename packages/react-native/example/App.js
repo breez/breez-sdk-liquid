@@ -58,7 +58,7 @@ const App = () => {
                 listenerId = await addEventListener(eventHandler)
                 addLine("addEventListener", listenerId)
 
-                let walletInfo = await getInfo({ withScan: false })
+                let walletInfo = await getInfo()
                 addLine("getInfo", JSON.stringify(walletInfo))
             } catch (e) {
                 addLine("error", e.toString())

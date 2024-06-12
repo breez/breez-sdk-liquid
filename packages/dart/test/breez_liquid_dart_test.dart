@@ -14,9 +14,8 @@ void main() {
     });
 
     test("after setting up, getInfo should throw exception with 'Not initialized' message", () async {
-      GetInfoRequest getInfoRequest = GetInfoRequest(withScan: true);
       try {
-        await sdk.getInfo(req: getInfoRequest);
+        await sdk.getInfo();
       } catch (e) {
         if (e is AnyhowException) {
           expect(e.message, "Not initialized");

@@ -144,11 +144,10 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
-    @objc(getInfo:resolve:reject:)
-    func getInfo(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(getInfo:reject:)
+    func getInfo(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let getInfoRequest = try BreezLiquidSDKMapper.asGetInfoRequest(getInfoRequest: req)
-            var res = try getBindingLiquidSdk().getInfo(req: getInfoRequest)
+            var res = try getBindingLiquidSdk().getInfo()
             resolve(BreezLiquidSDKMapper.dictionaryOf(getInfoResponse: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
