@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'error.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart' if (dart.library.html) 'frb_generated.web.dart';
+import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -814,7 +815,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
     return LNInvoice(
       bolt11: dco_decode_String(arr[0]),
-      network: dco_decode_liquid_sdk_network(arr[1]),
+      network: dco_decode_network(arr[1]),
       payeePubkey: dco_decode_String(arr[2]),
       paymentHash: dco_decode_String(arr[3]),
       description: dco_decode_opt_String(arr[4]),
@@ -837,6 +838,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       line: dco_decode_String(arr[0]),
       level: dco_decode_String(arr[1]),
     );
+  }
+
+  @protected
+  Network dco_decode_network(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return Network.values[raw as int];
   }
 
   @protected
@@ -1360,7 +1367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_bolt11 = sse_decode_String(deserializer);
-    var var_network = sse_decode_liquid_sdk_network(deserializer);
+    var var_network = sse_decode_network(deserializer);
     var var_payeePubkey = sse_decode_String(deserializer);
     var var_paymentHash = sse_decode_String(deserializer);
     var var_description = sse_decode_opt_String(deserializer);
@@ -1392,6 +1399,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_line = sse_decode_String(deserializer);
     var var_level = sse_decode_String(deserializer);
     return LogEntry(line: var_line, level: var_level);
+  }
+
+  @protected
+  Network sse_decode_network(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return Network.values[inner];
   }
 
   @protected
@@ -1663,6 +1677,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int cst_encode_liquid_sdk_network(LiquidSdkNetwork raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_network(Network raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
   }
@@ -1957,7 +1977,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.bolt11, serializer);
-    sse_encode_liquid_sdk_network(self.network, serializer);
+    sse_encode_network(self.network, serializer);
     sse_encode_String(self.payeePubkey, serializer);
     sse_encode_String(self.paymentHash, serializer);
     sse_encode_opt_String(self.description, serializer);
@@ -1975,6 +1995,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.line, serializer);
     sse_encode_String(self.level, serializer);
+  }
+
+  @protected
+  void sse_encode_network(Network self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

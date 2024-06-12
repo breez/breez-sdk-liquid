@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'error.dart';
 import 'frb_generated.dart';
+import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
@@ -129,6 +130,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry dco_decode_log_entry(dynamic raw);
+
+  @protected
+  Network dco_decode_network(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -296,6 +300,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
+
+  @protected
+  Network sse_decode_network(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -701,7 +708,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_ln_invoice(LNInvoice apiObj, wire_cst_ln_invoice wireObj) {
     wireObj.bolt11 = cst_encode_String(apiObj.bolt11);
-    wireObj.network = cst_encode_liquid_sdk_network(apiObj.network);
+    wireObj.network = cst_encode_network(apiObj.network);
     wireObj.payee_pubkey = cst_encode_String(apiObj.payeePubkey);
     wireObj.payment_hash = cst_encode_String(apiObj.paymentHash);
     wireObj.description = cst_encode_opt_String(apiObj.description);
@@ -908,6 +915,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_liquid_sdk_network(LiquidSdkNetwork raw);
 
   @protected
+  int cst_encode_network(Network raw);
+
+  @protected
   int cst_encode_payment_state(PaymentState raw);
 
   @protected
@@ -1027,6 +1037,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_network(Network self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);

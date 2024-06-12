@@ -631,6 +631,41 @@ fn wire__crate__bindings__parse_invoice_impl(
     )
 }
 
+// Section: static_checks
+
+#[allow(clippy::unnecessary_literal_unwrap)]
+const _: fn() = || {
+    {
+        let LNInvoice = None::<crate::LNInvoice>.unwrap();
+        let _: String = LNInvoice.bolt11;
+        let _: crate::Network = LNInvoice.network;
+        let _: String = LNInvoice.payee_pubkey;
+        let _: String = LNInvoice.payment_hash;
+        let _: Option<String> = LNInvoice.description;
+        let _: Option<String> = LNInvoice.description_hash;
+        let _: Option<u64> = LNInvoice.amount_msat;
+        let _: u64 = LNInvoice.timestamp;
+        let _: u64 = LNInvoice.expiry;
+        let _: Vec<crate::RouteHint> = LNInvoice.routing_hints;
+        let _: Vec<u8> = LNInvoice.payment_secret;
+        let _: u64 = LNInvoice.min_final_cltv_expiry_delta;
+    }
+    {
+        let RouteHint = None::<crate::RouteHint>.unwrap();
+        let _: Vec<crate::RouteHintHop> = RouteHint.hops;
+    }
+    {
+        let RouteHintHop = None::<crate::RouteHintHop>.unwrap();
+        let _: String = RouteHintHop.src_node_id;
+        let _: u64 = RouteHintHop.short_channel_id;
+        let _: u32 = RouteHintHop.fees_base_msat;
+        let _: u32 = RouteHintHop.fees_proportional_millionths;
+        let _: u64 = RouteHintHop.cltv_expiry_delta;
+        let _: Option<u64> = RouteHintHop.htlc_minimum_msat;
+        let _: Option<u64> = RouteHintHop.htlc_maximum_msat;
+    }
+};
+
 // Section: dart2rust
 
 impl CstDecode<f32> for f32 {
@@ -652,6 +687,18 @@ impl CstDecode<crate::model::LiquidSdkNetwork> for i32 {
             0 => crate::model::LiquidSdkNetwork::Mainnet,
             1 => crate::model::LiquidSdkNetwork::Testnet,
             _ => unreachable!("Invalid variant for LiquidSdkNetwork: {}", self),
+        }
+    }
+}
+impl CstDecode<crate::Network> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::Network {
+        match self {
+            0 => crate::Network::Bitcoin,
+            1 => crate::Network::Testnet,
+            2 => crate::Network::Signet,
+            3 => crate::Network::Regtest,
+            _ => unreachable!("Invalid variant for Network: {}", self),
         }
     }
 }
@@ -952,35 +999,35 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for Vec<crate::model::RouteHint> {
+impl SseDecode for Vec<crate::RouteHint> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::model::RouteHint>::sse_decode(deserializer));
+            ans_.push(<crate::RouteHint>::sse_decode(deserializer));
         }
         return ans_;
     }
 }
 
-impl SseDecode for Vec<crate::model::RouteHintHop> {
+impl SseDecode for Vec<crate::RouteHintHop> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::model::RouteHintHop>::sse_decode(deserializer));
+            ans_.push(<crate::RouteHintHop>::sse_decode(deserializer));
         }
         return ans_;
     }
 }
 
-impl SseDecode for crate::model::LNInvoice {
+impl SseDecode for crate::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_bolt11 = <String>::sse_decode(deserializer);
-        let mut var_network = <crate::model::LiquidSdkNetwork>::sse_decode(deserializer);
+        let mut var_network = <crate::Network>::sse_decode(deserializer);
         let mut var_payeePubkey = <String>::sse_decode(deserializer);
         let mut var_paymentHash = <String>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
@@ -988,10 +1035,10 @@ impl SseDecode for crate::model::LNInvoice {
         let mut var_amountMsat = <Option<u64>>::sse_decode(deserializer);
         let mut var_timestamp = <u64>::sse_decode(deserializer);
         let mut var_expiry = <u64>::sse_decode(deserializer);
-        let mut var_routingHints = <Vec<crate::model::RouteHint>>::sse_decode(deserializer);
+        let mut var_routingHints = <Vec<crate::RouteHint>>::sse_decode(deserializer);
         let mut var_paymentSecret = <Vec<u8>>::sse_decode(deserializer);
         let mut var_minFinalCltvExpiryDelta = <u64>::sse_decode(deserializer);
-        return crate::model::LNInvoice {
+        return crate::LNInvoice {
             bolt11: var_bolt11,
             network: var_network,
             payee_pubkey: var_payeePubkey,
@@ -1016,6 +1063,20 @@ impl SseDecode for crate::model::LogEntry {
         return crate::model::LogEntry {
             line: var_line,
             level: var_level,
+        };
+    }
+}
+
+impl SseDecode for crate::Network {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::Network::Bitcoin,
+            1 => crate::Network::Testnet,
+            2 => crate::Network::Signet,
+            3 => crate::Network::Regtest,
+            _ => unreachable!("Invalid variant for Network: {}", inner),
         };
     }
 }
@@ -1240,15 +1301,15 @@ impl SseDecode for crate::model::RestoreRequest {
     }
 }
 
-impl SseDecode for crate::model::RouteHint {
+impl SseDecode for crate::RouteHint {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_hops = <Vec<crate::model::RouteHintHop>>::sse_decode(deserializer);
-        return crate::model::RouteHint { hops: var_hops };
+        let mut var_hops = <Vec<crate::RouteHintHop>>::sse_decode(deserializer);
+        return crate::RouteHint { hops: var_hops };
     }
 }
 
-impl SseDecode for crate::model::RouteHintHop {
+impl SseDecode for crate::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_srcNodeId = <String>::sse_decode(deserializer);
@@ -1258,7 +1319,7 @@ impl SseDecode for crate::model::RouteHintHop {
         let mut var_cltvExpiryDelta = <u64>::sse_decode(deserializer);
         let mut var_htlcMinimumMsat = <Option<u64>>::sse_decode(deserializer);
         let mut var_htlcMaximumMsat = <Option<u64>>::sse_decode(deserializer);
-        return crate::model::RouteHintHop {
+        return crate::RouteHintHop {
             src_node_id: var_srcNodeId,
             short_channel_id: var_shortChannelId,
             fees_base_msat: var_feesBaseMsat,
@@ -1534,31 +1595,32 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkNetwork>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::LNInvoice {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LNInvoice> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.bolt11.into_into_dart().into_dart(),
-            self.network.into_into_dart().into_dart(),
-            self.payee_pubkey.into_into_dart().into_dart(),
-            self.payment_hash.into_into_dart().into_dart(),
-            self.description.into_into_dart().into_dart(),
-            self.description_hash.into_into_dart().into_dart(),
-            self.amount_msat.into_into_dart().into_dart(),
-            self.timestamp.into_into_dart().into_dart(),
-            self.expiry.into_into_dart().into_dart(),
-            self.routing_hints.into_into_dart().into_dart(),
-            self.payment_secret.into_into_dart().into_dart(),
-            self.min_final_cltv_expiry_delta
+            self.0.bolt11.into_into_dart().into_dart(),
+            self.0.network.into_into_dart().into_dart(),
+            self.0.payee_pubkey.into_into_dart().into_dart(),
+            self.0.payment_hash.into_into_dart().into_dart(),
+            self.0.description.into_into_dart().into_dart(),
+            self.0.description_hash.into_into_dart().into_dart(),
+            self.0.amount_msat.into_into_dart().into_dart(),
+            self.0.timestamp.into_into_dart().into_dart(),
+            self.0.expiry.into_into_dart().into_dart(),
+            self.0.routing_hints.into_into_dart().into_dart(),
+            self.0.payment_secret.into_into_dart().into_dart(),
+            self.0
+                .min_final_cltv_expiry_delta
                 .into_into_dart()
                 .into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LNInvoice {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::LNInvoice> for crate::model::LNInvoice {
-    fn into_into_dart(self) -> crate::model::LNInvoice {
-        self
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::LNInvoice> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LNInvoice>> for crate::LNInvoice {
+    fn into_into_dart(self) -> FrbWrapper<crate::LNInvoice> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1575,6 +1637,24 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::mode
 impl flutter_rust_bridge::IntoIntoDart<crate::model::LogEntry> for crate::model::LogEntry {
     fn into_into_dart(self) -> crate::model::LogEntry {
         self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::Network> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::Network::Bitcoin => 0.into_dart(),
+            crate::Network::Testnet => 1.into_dart(),
+            crate::Network::Signet => 2.into_dart(),
+            crate::Network::Regtest => 3.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::Network> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::Network>> for crate::Network {
+    fn into_into_dart(self) -> FrbWrapper<crate::Network> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1799,38 +1879,42 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::RestoreRequest>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::RouteHint {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::RouteHint> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.hops.into_into_dart().into_dart()].into_dart()
+        [self.0.hops.into_into_dart().into_dart()].into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHint {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHint> for crate::model::RouteHint {
-    fn into_into_dart(self) -> crate::model::RouteHint {
-        self
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::RouteHint> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::RouteHint>> for crate::RouteHint {
+    fn into_into_dart(self) -> FrbWrapper<crate::RouteHint> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::RouteHintHop {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::RouteHintHop> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.src_node_id.into_into_dart().into_dart(),
-            self.short_channel_id.into_into_dart().into_dart(),
-            self.fees_base_msat.into_into_dart().into_dart(),
-            self.fees_proportional_millionths
+            self.0.src_node_id.into_into_dart().into_dart(),
+            self.0.short_channel_id.into_into_dart().into_dart(),
+            self.0.fees_base_msat.into_into_dart().into_dart(),
+            self.0
+                .fees_proportional_millionths
                 .into_into_dart()
                 .into_dart(),
-            self.cltv_expiry_delta.into_into_dart().into_dart(),
-            self.htlc_minimum_msat.into_into_dart().into_dart(),
-            self.htlc_maximum_msat.into_into_dart().into_dart(),
+            self.0.cltv_expiry_delta.into_into_dart().into_dart(),
+            self.0.htlc_minimum_msat.into_into_dart().into_dart(),
+            self.0.htlc_maximum_msat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::RouteHintHop {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::RouteHintHop> for crate::model::RouteHintHop {
-    fn into_into_dart(self) -> crate::model::RouteHintHop {
-        self
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::RouteHintHop>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::RouteHintHop>> for crate::RouteHintHop {
+    fn into_into_dart(self) -> FrbWrapper<crate::RouteHintHop> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -2055,31 +2139,31 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for Vec<crate::model::RouteHint> {
+impl SseEncode for Vec<crate::RouteHint> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::model::RouteHint>::sse_encode(item, serializer);
+            <crate::RouteHint>::sse_encode(item, serializer);
         }
     }
 }
 
-impl SseEncode for Vec<crate::model::RouteHintHop> {
+impl SseEncode for Vec<crate::RouteHintHop> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::model::RouteHintHop>::sse_encode(item, serializer);
+            <crate::RouteHintHop>::sse_encode(item, serializer);
         }
     }
 }
 
-impl SseEncode for crate::model::LNInvoice {
+impl SseEncode for crate::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.bolt11, serializer);
-        <crate::model::LiquidSdkNetwork>::sse_encode(self.network, serializer);
+        <crate::Network>::sse_encode(self.network, serializer);
         <String>::sse_encode(self.payee_pubkey, serializer);
         <String>::sse_encode(self.payment_hash, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
@@ -2087,7 +2171,7 @@ impl SseEncode for crate::model::LNInvoice {
         <Option<u64>>::sse_encode(self.amount_msat, serializer);
         <u64>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.expiry, serializer);
-        <Vec<crate::model::RouteHint>>::sse_encode(self.routing_hints, serializer);
+        <Vec<crate::RouteHint>>::sse_encode(self.routing_hints, serializer);
         <Vec<u8>>::sse_encode(self.payment_secret, serializer);
         <u64>::sse_encode(self.min_final_cltv_expiry_delta, serializer);
     }
@@ -2098,6 +2182,24 @@ impl SseEncode for crate::model::LogEntry {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.line, serializer);
         <String>::sse_encode(self.level, serializer);
+    }
+}
+
+impl SseEncode for crate::Network {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::Network::Bitcoin => 0,
+                crate::Network::Testnet => 1,
+                crate::Network::Signet => 2,
+                crate::Network::Regtest => 3,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -2290,14 +2392,14 @@ impl SseEncode for crate::model::RestoreRequest {
     }
 }
 
-impl SseEncode for crate::model::RouteHint {
+impl SseEncode for crate::RouteHint {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<crate::model::RouteHintHop>>::sse_encode(self.hops, serializer);
+        <Vec<crate::RouteHintHop>>::sse_encode(self.hops, serializer);
     }
 }
 
-impl SseEncode for crate::model::RouteHintHop {
+impl SseEncode for crate::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.src_node_id, serializer);

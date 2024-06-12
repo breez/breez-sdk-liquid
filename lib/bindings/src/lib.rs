@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
-use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
+use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk, *};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;

@@ -287,9 +287,9 @@ impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
         }
     }
 }
-impl CstDecode<Vec<crate::model::RouteHint>> for *mut wire_cst_list_route_hint {
+impl CstDecode<Vec<crate::RouteHint>> for *mut wire_cst_list_route_hint {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> Vec<crate::model::RouteHint> {
+    fn cst_decode(self) -> Vec<crate::RouteHint> {
         let vec = unsafe {
             let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
             flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -297,9 +297,9 @@ impl CstDecode<Vec<crate::model::RouteHint>> for *mut wire_cst_list_route_hint {
         vec.into_iter().map(CstDecode::cst_decode).collect()
     }
 }
-impl CstDecode<Vec<crate::model::RouteHintHop>> for *mut wire_cst_list_route_hint_hop {
+impl CstDecode<Vec<crate::RouteHintHop>> for *mut wire_cst_list_route_hint_hop {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> Vec<crate::model::RouteHintHop> {
+    fn cst_decode(self) -> Vec<crate::RouteHintHop> {
         let vec = unsafe {
             let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
             flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -307,10 +307,10 @@ impl CstDecode<Vec<crate::model::RouteHintHop>> for *mut wire_cst_list_route_hin
         vec.into_iter().map(CstDecode::cst_decode).collect()
     }
 }
-impl CstDecode<crate::model::LNInvoice> for wire_cst_ln_invoice {
+impl CstDecode<crate::LNInvoice> for wire_cst_ln_invoice {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::LNInvoice {
-        crate::model::LNInvoice {
+    fn cst_decode(self) -> crate::LNInvoice {
+        crate::LNInvoice {
             bolt11: self.bolt11.cst_decode(),
             network: self.network.cst_decode(),
             payee_pubkey: self.payee_pubkey.cst_decode(),
@@ -465,18 +465,18 @@ impl CstDecode<crate::model::RestoreRequest> for wire_cst_restore_request {
         }
     }
 }
-impl CstDecode<crate::model::RouteHint> for wire_cst_route_hint {
+impl CstDecode<crate::RouteHint> for wire_cst_route_hint {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::RouteHint {
-        crate::model::RouteHint {
+    fn cst_decode(self) -> crate::RouteHint {
+        crate::RouteHint {
             hops: self.hops.cst_decode(),
         }
     }
 }
-impl CstDecode<crate::model::RouteHintHop> for wire_cst_route_hint_hop {
+impl CstDecode<crate::RouteHintHop> for wire_cst_route_hint_hop {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::RouteHintHop {
-        crate::model::RouteHintHop {
+    fn cst_decode(self) -> crate::RouteHintHop {
+        crate::RouteHintHop {
             src_node_id: self.src_node_id.cst_decode(),
             short_channel_id: self.short_channel_id.cst_decode(),
             fees_base_msat: self.fees_base_msat.cst_decode(),

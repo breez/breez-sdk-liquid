@@ -1,16 +1,11 @@
 use std::collections::HashMap;
 use std::time::Instant;
-use std::{
-    fs,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, UNIX_EPOCH},
-};
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
+use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Amount, Bolt11Invoice};
 use futures_util::stream::select_all;
@@ -31,13 +26,11 @@ use crate::send_swap::SendSwapStateHandler;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
-    ensure_sdk,
     error::{LiquidSdkResult, PaymentError},
     event::EventManager,
-    get_invoice_amount,
     model::*,
     persist::Persister,
-    utils,
+    utils, *,
 };
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
@@ -1081,56 +1074,7 @@ impl LiquidSdk {
     }
 
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
-        let input = input
-            .strip_prefix("lightning:")
-            .or(input.strip_prefix("LIGHTNING:"))
-            .unwrap_or(input);
-        let invoice =
-            Bolt11Invoice::from_str(input).map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?;
-
-        // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
-        let payee_pubkey: String = match invoice.payee_pub_key() {
-            Some(key) => key.serialize().to_hex(),
-            None => invoice.recover_payee_pub_key().serialize().to_hex(),
-        };
-        let description = match invoice.description() {
-            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-            Bolt11InvoiceDescription::Hash(_) => None,
-        };
-        let description_hash = match invoice.description() {
-            Bolt11InvoiceDescription::Direct(_) => None,
-            Bolt11InvoiceDescription::Hash(h) => Some(h.0.to_string()),
-        };
-        let timestamp = invoice
-            .timestamp()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?
-            .as_secs();
-        let routing_hints = invoice
-            .route_hints()
-            .iter()
-            .map(RouteHint::from_ldk_hint)
-            .collect();
-
-        let res = LNInvoice {
-            bolt11: input.to_string(),
-            network: invoice.currency().try_into()?,
-            payee_pubkey,
-            payment_hash: invoice.payment_hash().to_hex(),
-            description,
-            description_hash,
-            amount_msat: invoice.amount_milli_satoshis(),
-            timestamp,
-            expiry: invoice.expiry_time().as_secs(),
-            routing_hints,
-            payment_secret: invoice.payment_secret().0.to_vec(),
-            min_final_cltv_expiry_delta: invoice.min_final_cltv_expiry_delta(),
-        };
-        Ok(res)
+        parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
     }
 
     /// Configures a global SDK logger that will log to file and will forward log events to

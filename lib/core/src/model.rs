@@ -4,7 +4,7 @@ use boltz_client::swaps::boltzv2::{
     CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree, BOLTZ_MAINNET_URL_V2,
     BOLTZ_TESTNET_URL_V2,
 };
-use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
+use boltz_client::{Keypair, LBtcSwapScriptV2};
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -660,69 +660,6 @@ impl Payment {
 pub struct LogEntry {
     pub line: String,
     pub level: String,
-}
-
-/// Wrapper for a BOLT11 LN invoice
-#[derive(Clone, Debug, PartialEq)]
-pub struct LNInvoice {
-    pub bolt11: String,
-    pub network: LiquidSdkNetwork,
-    pub payee_pubkey: String,
-    pub payment_hash: String,
-    pub description: Option<String>,
-    pub description_hash: Option<String>,
-    pub amount_msat: Option<u64>,
-    pub timestamp: u64,
-    pub expiry: u64,
-    pub routing_hints: Vec<RouteHint>,
-    pub payment_secret: Vec<u8>,
-    pub min_final_cltv_expiry_delta: u64,
-}
-
-/// A route hint for a LN payment
-#[derive(Clone, Debug, PartialEq)]
-pub struct RouteHint {
-    pub hops: Vec<RouteHintHop>,
-}
-
-impl RouteHint {
-    pub fn from_ldk_hint(hint: &boltz_client::lightning_invoice::RouteHint) -> RouteHint {
-        let mut hops = Vec::new();
-        for hop in hint.0.iter() {
-            let pubkey_res = hop.src_node_id.serialize().to_hex();
-
-            let router_hop = RouteHintHop {
-                src_node_id: pubkey_res,
-                short_channel_id: hop.short_channel_id,
-                fees_base_msat: hop.fees.base_msat,
-                fees_proportional_millionths: hop.fees.proportional_millionths,
-                cltv_expiry_delta: u64::from(hop.cltv_expiry_delta),
-                htlc_minimum_msat: hop.htlc_minimum_msat,
-                htlc_maximum_msat: hop.htlc_maximum_msat,
-            };
-            hops.push(router_hop);
-        }
-        RouteHint { hops }
-    }
-}
-
-/// Details of a specific hop in a larger route hint
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RouteHintHop {
-    /// The node_id of the non-target end of the route
-    pub src_node_id: String,
-    /// The short_channel_id of this channel
-    pub short_channel_id: u64,
-    /// The fees which must be paid to use this channel
-    pub fees_base_msat: u32,
-    pub fees_proportional_millionths: u32,
-
-    /// The difference in CLTV values between this node and the next node.
-    pub cltv_expiry_delta: u64,
-    /// The minimum value, in msat, which must be relayed to the next hop.
-    pub htlc_minimum_msat: Option<u64>,
-    /// The maximum value in msat available for routing with a single HTLC.
-    pub htlc_maximum_msat: Option<u64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
