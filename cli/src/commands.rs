@@ -54,6 +54,11 @@ pub(crate) enum Command {
     },
     /// Shuts down all background threads of this SDK instance
     Disconnect,
+    /// Parse a generic string to get its type and relevant metadata
+    Parse {
+        /// Generic input (URL, LNURL, BIP-21 BTC Address, LN invoice, etc)
+        input: String,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -176,6 +181,10 @@ pub(crate) async fn handle_command(
         Command::Disconnect => {
             sdk.disconnect().await?;
             command_result!("Liquid SDK instance disconnected")
+        }
+        Command::Parse { input } => {
+            let res = LiquidSdk::parse(&input).await?;
+            command_result!(res)
         }
     })
 }
