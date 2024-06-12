@@ -178,8 +178,9 @@ impl Persister {
         swap_id: &str,
         to_state: PaymentState,
         claim_tx_id: Option<&str>,
+        lockup_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite claim_tx_id
+        // Do not overwrite claim_tx_id or lockup_tx_id
         let con: Connection = self.get_connection()?;
         con.execute(
             "UPDATE receive_swaps
@@ -189,12 +190,17 @@ impl Persister {
                         WHEN claim_tx_id IS NULL THEN :claim_tx_id
                         ELSE claim_tx_id
                     END,
-
+                lockup_tx_id = 
+                    CASE
+                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
+                        ELSE lockup_tx_id
+                    END,
                 state = :state
             WHERE
                 id = :id",
             named_params! {
                 ":id": swap_id,
+                ":lockup_tx_id": lockup_tx_id,
                 ":claim_tx_id": claim_tx_id,
                 ":state": to_state,
             },

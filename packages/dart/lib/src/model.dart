@@ -245,8 +245,7 @@ enum Network {
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 class Payment {
-  /// The tx ID of the onchain transaction
-  final String txId;
+  final String? txId;
 
   /// The swap ID, if any swap is associated with this payment
   final String? swapId;
@@ -296,7 +295,7 @@ class Payment {
   final PaymentState status;
 
   const Payment({
-    required this.txId,
+    this.txId,
     this.swapId,
     required this.timestamp,
     required this.amountSat,

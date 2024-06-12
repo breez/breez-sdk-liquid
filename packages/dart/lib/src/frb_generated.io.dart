@@ -714,7 +714,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
-    wireObj.tx_id = cst_encode_String(apiObj.txId);
+    wireObj.tx_id = cst_encode_opt_String(apiObj.txId);
     wireObj.swap_id = cst_encode_opt_String(apiObj.swapId);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
@@ -1935,5 +1935,3 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
 }
-
-const double LIQUID_CLAIM_TX_FEERATE_MSAT = 100.0;

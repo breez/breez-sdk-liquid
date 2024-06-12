@@ -14,12 +14,6 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 // EXTRA END
 typedef struct _Dart_Handle* Dart_Handle;
 
-/**
- * Claim tx feerate, in sats per vbyte.
- * Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
- */
-#define LIQUID_CLAIM_TX_FEERATE_MSAT 100.0
-
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
   int32_t len;

@@ -2,6 +2,7 @@ use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::RevSwapStates;
+use boltz_client::swaps::boltzv2;
 use log::{debug, error, info, warn};
 use tokio::sync::broadcast;
 
@@ -40,7 +41,10 @@ impl ReceiveSwapStateHandler {
     }
 
     /// Handles status updates from Boltz for Receive swaps
-    pub(crate) async fn on_new_status(&self, swap_state: &str, id: &str) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
+        let id = update.id();
+        let swap_state = update.status();
+
         let receive_swap = self
             .persister
             .fetch_receive_swap(id)?
@@ -49,46 +53,56 @@ impl ReceiveSwapStateHandler {
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
         match RevSwapStates::from_str(swap_state) {
-          Ok(RevSwapStates::SwapExpired
-          | RevSwapStates::InvoiceExpired
-          | RevSwapStates::TransactionFailed
-          | RevSwapStates::TransactionRefunded) => {
-              error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-              self.update_swap_info(id, Failed, None).await?;
-              Ok(())
-          }
+            Ok(
+                RevSwapStates::SwapExpired
+                | RevSwapStates::InvoiceExpired
+                | RevSwapStates::TransactionFailed
+                | RevSwapStates::TransactionRefunded,
+            ) => {
+                error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
+                self.update_swap_info(id, Failed, None, None).await?;
+                Ok(())
+            }
+            Ok(RevSwapStates::TransactionMempool) => {
+                let boltzv2::Update::TransactionMempool { transaction, .. } = update else {
+                    return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                };
+                let lockup_tx_id = &transaction.id;
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
+                    .await?;
+                Ok(())
+            }
+            Ok(RevSwapStates::TransactionConfirmed) => {
+                match receive_swap.claim_tx_id {
+                    Some(claim_tx_id) => {
+                        warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
+                    }
+                    None => {
+                        self.update_swap_info(&receive_swap.id, Pending, None, None)
+                            .await?;
+                        match self.claim(&receive_swap).await {
+                            Ok(_) => {}
+                            Err(err) => match err {
+                                PaymentError::AlreadyClaimed => {
+                                    warn!("Funds already claimed for Receive Swap {id}")
+                                }
+                                _ => error!("Claim for Receive Swap {id} failed: {err}"),
+                            },
+                        }
+                    }
+                }
+                Ok(())
+            }
 
-          // The lockup tx is in the mempool and we accept 0-conf => try to claim
-          // TODO Add 0-conf preconditions check: https://github.com/breez/breez-liquid-sdk/issues/187
-          Ok(RevSwapStates::TransactionMempool
-          // The lockup tx is confirmed => try to claim
-          | RevSwapStates::TransactionConfirmed) => {
-              match receive_swap.claim_tx_id {
-                  Some(claim_tx_id) => {
-                      warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
-                  }
-                  None => {
-                      self.update_swap_info(&receive_swap.id, Pending, None)
-                          .await?;
-                      match self.claim(&receive_swap).await {
-                          Ok(_) => {}
-                          Err(err) => match err {
-                              PaymentError::AlreadyClaimed => warn!("Funds already claimed for Receive Swap {id}"),
-                              _ => error!("Claim for Receive Swap {id} failed: {err}")
-                          }
-                      }
-                  }
-              }
-              Ok(())
-          }
+            Ok(_) => {
+                debug!("Unhandled state for Receive Swap {id}: {swap_state}");
+                Ok(())
+            }
 
-          Ok(_) => {
-              debug!("Unhandled state for Receive Swap {id}: {swap_state}");
-              Ok(())
-          },
-
-          _ => Err(anyhow!("Invalid RevSwapState for Receive Swap {id}: {swap_state}")),
-      }
+            _ => Err(anyhow!(
+                "Invalid RevSwapState for Receive Swap {id}: {swap_state}"
+            )),
+        }
     }
 
     /// Transitions a Receive swap to a new state
@@ -97,9 +111,10 @@ impl ReceiveSwapStateHandler {
         swap_id: &str,
         to_state: PaymentState,
         claim_tx_id: Option<&str>,
+        lockup_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         info!(
-            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?})"
+            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?}, lockup_tx_id = {lockup_tx_id:?})"
         );
 
         let swap = self
@@ -109,11 +124,18 @@ impl ReceiveSwapStateHandler {
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),
             })?;
-        let payment_id = claim_tx_id.map(|c| c.to_string()).or(swap.claim_tx_id);
+        let payment_id = claim_tx_id
+            .or(lockup_tx_id)
+            .map(|id| id.to_string())
+            .or(swap.claim_tx_id);
 
         Self::validate_state_transition(swap.state, to_state)?;
-        self.persister
-            .try_handle_receive_swap_update(swap_id, to_state, claim_tx_id)?;
+        self.persister.try_handle_receive_swap_update(
+            swap_id,
+            to_state,
+            claim_tx_id,
+            lockup_tx_id,
+        )?;
 
         if let Some(payment_id) = payment_id {
             let _ = self.subscription_notifier.send(payment_id);
@@ -143,7 +165,7 @@ impl ReceiveSwapStateHandler {
             is_confirmed: false,
         })?;
 
-        self.update_swap_info(swap_id, Pending, Some(&claim_tx_id))
+        self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)
             .await?;
 
         Ok(())

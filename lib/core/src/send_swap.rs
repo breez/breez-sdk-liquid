@@ -1,6 +1,7 @@
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use boltz_client::swaps::boltzv2;
 use boltz_client::swaps::{boltz::SubSwapStates, boltzv2::CreateSubmarineResponse};
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, ToHex};
@@ -55,7 +56,9 @@ impl SendSwapStateHandler {
     }
 
     /// Handles status updates from Boltz for Send swaps
-    pub(crate) async fn on_new_status(&self, swap_state: &str, id: &str) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
+        let id = update.id();
+        let swap_state = update.status();
         let swap = self
             .persister
             .fetch_send_swap_by_id(id)?

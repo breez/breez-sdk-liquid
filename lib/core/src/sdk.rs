@@ -11,7 +11,6 @@ use std::{
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
-use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Amount, Bolt11Invoice};
 use futures_util::stream::select_all;
@@ -40,10 +39,6 @@ use crate::{
     persist::Persister,
     utils,
 };
-
-/// Claim tx feerate, in sats per vbyte.
-/// Since the  Liquid blocks are consistently empty for now, we hardcode the minimum feerate.
-pub const LIQUID_CLAIM_TX_FEERATE_MSAT: f32 = 100.0;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 
@@ -224,19 +219,20 @@ impl LiquidSdk {
                       }
                     }
                     update = updates_stream.recv() => match update {
-                        Ok(boltzv2::Update { id, status }) => {
+                        Ok(update) => {
                             let _ = cloned.sync().await;
-                            match cloned.persister.fetch_send_swap_by_id(&id) {
+                            let id = update.id();
+                            match cloned.persister.fetch_send_swap_by_id(id) {
                                 Ok(Some(_)) => {
-                                    match cloned.send_swap_state_handler.on_new_status(&status, &id).await {
+                                    match cloned.send_swap_state_handler.on_new_status(&update).await {
                                         Ok(_) => info!("Successfully handled Send Swap {id} update"),
                                         Err(e) => error!("Failed to handle Send Swap {id} update: {e}")
                                     }
                                 }
                                 _ => {
-                                    match cloned.persister.fetch_receive_swap(&id) {
+                                    match cloned.persister.fetch_receive_swap(id) {
                                         Ok(Some(_)) => {
-                                            match cloned.receive_swap_state_handler.on_new_status(&status, &id).await {
+                                            match cloned.receive_swap_state_handler.on_new_status(&update).await {
                                                 Ok(_) => info!("Successfully handled Receive Swap {id} update"),
                                                 Err(e) => error!("Failed to handle Receive Swap {id} update: {e}")
                                             }
@@ -685,7 +681,7 @@ impl LiquidSdk {
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
         Ok(SendPaymentResponse {
-            payment: Payment::from(tx_data, None),
+            payment: Payment::from_tx_data(tx_data, None),
         })
     }
 
@@ -958,7 +954,10 @@ impl LiquidSdk {
             .list_payments()
             .await?
             .into_iter()
-            .map(|p| (p.tx_id.clone(), p))
+            .filter_map(|payment| {
+                let tx_id = payment.tx_id.clone();
+                tx_id.map(|tx_id| (tx_id, payment))
+            })
             .collect();
         if with_scan {
             self.onchain_wallet.full_scan().await?;
@@ -989,7 +988,7 @@ impl LiquidSdk {
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.receive_swap_state_handler
-                        .update_swap_info(&swap.id, Complete, None)
+                        .update_swap_info(&swap.id, Complete, None, None)
                         .await?;
                 }
             } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
@@ -1027,7 +1026,7 @@ impl LiquidSdk {
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 
-        let mut payments: Vec<Payment> = self.persister.get_payments()?.values().cloned().collect();
+        let mut payments: Vec<Payment> = self.persister.get_payments()?;
         payments.sort_by_key(|p| p.timestamp);
         Ok(payments)
     }

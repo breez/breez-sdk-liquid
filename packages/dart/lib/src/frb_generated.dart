@@ -849,7 +849,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return Payment(
-      txId: dco_decode_String(arr[0]),
+      txId: dco_decode_opt_String(arr[0]),
       swapId: dco_decode_opt_String(arr[1]),
       timestamp: dco_decode_u_32(arr[2]),
       amountSat: dco_decode_u_64(arr[3]),
@@ -1401,7 +1401,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_txId = sse_decode_String(deserializer);
+    var var_txId = sse_decode_opt_String(deserializer);
     var var_swapId = sse_decode_opt_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
@@ -1968,7 +1968,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.txId, serializer);
+    sse_encode_opt_String(self.txId, serializer);
     sse_encode_opt_String(self.swapId, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);

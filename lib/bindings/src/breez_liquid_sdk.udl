@@ -117,7 +117,7 @@ dictionary LNInvoice {
 };
 
 dictionary Payment {
-    string tx_id;
+    string? tx_id = null;
     string? swap_id = null;
     u32 timestamp;
     u64 amount_sat;

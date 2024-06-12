@@ -288,6 +288,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
+    /// Afterwards, it shows the lockup tx creation time.    
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
@@ -530,8 +532,7 @@ pub struct PaymentSwapData {
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Payment {
-    /// The tx ID of the onchain transaction
-    pub tx_id: String,
+    pub tx_id: Option<String>,
 
     /// The swap ID, if any swap is associated with this payment
     pub swap_id: Option<String>,
@@ -582,9 +583,29 @@ pub struct Payment {
     pub status: PaymentState,
 }
 impl Payment {
-    pub(crate) fn from(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
+    pub(crate) fn from_pending_swap(swap: PaymentSwapData, payment_type: PaymentType) -> Payment {
+        let amount_sat = match payment_type {
+            PaymentType::Receive => swap.receiver_amount_sat,
+            PaymentType::Send => swap.payer_amount_sat,
+        };
+
         Payment {
-            tx_id: tx.tx_id,
+            tx_id: None,
+            swap_id: Some(swap.swap_id),
+            timestamp: swap.created_at,
+            amount_sat,
+            fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            preimage: swap.preimage,
+            refund_tx_id: swap.refund_tx_id,
+            refund_tx_amount_sat: swap.refund_tx_amount_sat,
+            payment_type,
+            status: swap.status,
+        }
+    }
+
+    pub(crate) fn from_tx_data(tx: PaymentTxData, swap: Option<PaymentSwapData>) -> Payment {
+        Payment {
+            tx_id: Some(tx.tx_id),
             swap_id: swap.as_ref().map(|s| s.swap_id.clone()),
             timestamp: match swap {
                 Some(ref swap) => swap.created_at,
