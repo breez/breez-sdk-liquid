@@ -13,8 +13,7 @@ let sdk = try breez_liquid_sdk.connect(req: connectRequest);
 
 let listenerId = try sdk.addEventListener(listener: SDKListener());
 
-let getInfoReq = breez_liquid_sdk.GetInfoRequest(withScan: false);
-let nodeInfo = try sdk.getInfo(req: getInfoReq);
+let nodeInfo = try sdk.getInfo();
 
 try sdk.removeEventListener(id: listenerId);
 

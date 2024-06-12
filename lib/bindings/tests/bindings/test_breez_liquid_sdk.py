@@ -14,8 +14,7 @@ def test():
 
     listener_id = sdk.add_event_listener(SDKListener())
 
-    get_info_req = breez_liquid_sdk.GetInfoRequest(with_scan=False)
-    node_info = sdk.get_info(get_info_req)
+    node_info = sdk.get_info()
 
     sdk.remove_event_listener(listener_id)
 
