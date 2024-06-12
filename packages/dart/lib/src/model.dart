@@ -37,7 +37,7 @@ class Config {
   ///
   /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
-  final Network network;
+  final LiquidSdkNetwork network;
 
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
@@ -162,10 +162,19 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const factory LiquidSdkEvent.synced() = LiquidSdkEvent_Synced;
 }
 
+enum LiquidSdkNetwork {
+  /// Mainnet Bitcoin and Liquid chains
+  mainnet,
+
+  /// Testnet Bitcoin and Liquid chains
+  testnet,
+  ;
+}
+
 /// Wrapper for a BOLT11 LN invoice
 class LNInvoice {
   final String bolt11;
-  final Network network;
+  final LiquidSdkNetwork network;
   final String payeePubkey;
   final String paymentHash;
   final String? description;
@@ -243,15 +252,6 @@ class LogEntry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
-}
-
-enum Network {
-  /// Mainnet Bitcoin and Liquid chains
-  mainnet,
-
-  /// Testnet Bitcoin and Liquid chains
-  testnet,
-  ;
 }
 
 /// Represents an SDK payment.

@@ -31,13 +31,13 @@ dictionary Config {
     string boltz_url;
     string electrum_url;
     string working_dir;
-    Network network;
+    LiquidSdkNetwork network;
     u64 payment_timeout_sec;
     f32 zero_conf_min_fee_rate;
     u64? zero_conf_max_amount_sat;
 };
 
-enum Network {
+enum LiquidSdkNetwork {
     "Mainnet",
     "Testnet",
 };
@@ -105,7 +105,7 @@ dictionary RouteHintHop {
 
 dictionary LNInvoice {
     string bolt11;
-    Network network;
+    LiquidSdkNetwork network;
     string payee_pubkey;
     string payment_hash;
     string? description;
@@ -175,7 +175,7 @@ namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     void set_logger(Logger logger);
     
-    Config default_config(Network network);
+    Config default_config(LiquidSdkNetwork network);
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string invoice);

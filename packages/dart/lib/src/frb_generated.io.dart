@@ -110,6 +110,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidSdkEvent dco_decode_liquid_sdk_event(dynamic raw);
 
   @protected
+  LiquidSdkNetwork dco_decode_liquid_sdk_network(dynamic raw);
+
+  @protected
   List<Payment> dco_decode_list_payment(dynamic raw);
 
   @protected
@@ -126,9 +129,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry dco_decode_log_entry(dynamic raw);
-
-  @protected
-  Network dco_decode_network(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -277,6 +277,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidSdkEvent sse_decode_liquid_sdk_event(SseDeserializer deserializer);
 
   @protected
+  LiquidSdkNetwork sse_decode_liquid_sdk_network(SseDeserializer deserializer);
+
+  @protected
   List<Payment> sse_decode_list_payment(SseDeserializer deserializer);
 
   @protected
@@ -293,9 +296,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
-
-  @protected
-  Network sse_decode_network(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -616,7 +616,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.boltz_url = cst_encode_String(apiObj.boltzUrl);
     wireObj.electrum_url = cst_encode_String(apiObj.electrumUrl);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
-    wireObj.network = cst_encode_network(apiObj.network);
+    wireObj.network = cst_encode_liquid_sdk_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.zero_conf_min_fee_rate = cst_encode_f_32(apiObj.zeroConfMinFeeRate);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
@@ -701,7 +701,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_ln_invoice(LNInvoice apiObj, wire_cst_ln_invoice wireObj) {
     wireObj.bolt11 = cst_encode_String(apiObj.bolt11);
-    wireObj.network = cst_encode_network(apiObj.network);
+    wireObj.network = cst_encode_liquid_sdk_network(apiObj.network);
     wireObj.payee_pubkey = cst_encode_String(apiObj.payeePubkey);
     wireObj.payment_hash = cst_encode_String(apiObj.paymentHash);
     wireObj.description = cst_encode_opt_String(apiObj.description);
@@ -905,7 +905,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_i_32(int raw);
 
   @protected
-  int cst_encode_network(Network raw);
+  int cst_encode_liquid_sdk_network(LiquidSdkNetwork raw);
 
   @protected
   int cst_encode_payment_state(PaymentState raw);
@@ -1008,6 +1008,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_liquid_sdk_event(LiquidSdkEvent self, SseSerializer serializer);
 
   @protected
+  void sse_encode_liquid_sdk_network(LiquidSdkNetwork self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_payment(List<Payment> self, SseSerializer serializer);
 
   @protected
@@ -1024,9 +1027,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_network(Network self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);

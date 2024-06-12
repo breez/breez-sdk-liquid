@@ -15,7 +15,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     error::PaymentError,
-    model::{Config, Network},
+    model::{Config, LiquidSdkNetwork},
 };
 
 #[async_trait]
@@ -52,7 +52,7 @@ pub(crate) struct LiquidOnchainWallet {
 
 impl LiquidOnchainWallet {
     pub(crate) fn new(mnemonic: String, config: Config) -> Result<Self> {
-        let is_mainnet = config.network == Network::Mainnet;
+        let is_mainnet = config.network == LiquidSdkNetwork::Mainnet;
         let lwk_signer = SwSigner::new(&mnemonic, is_mainnet)?;
         let descriptor = LiquidOnchainWallet::get_descriptor(&lwk_signer, config.network)?;
         let elements_network: ElementsNetwork = config.network.into();
@@ -69,9 +69,9 @@ impl LiquidOnchainWallet {
 
     fn get_descriptor(
         signer: &SwSigner,
-        network: Network,
+        network: LiquidSdkNetwork,
     ) -> Result<WolletDescriptor, PaymentError> {
-        let is_mainnet = network == Network::Mainnet;
+        let is_mainnet = network == LiquidSdkNetwork::Mainnet;
         let descriptor_str = singlesig_desc(
             signer,
             Singlesig::Wpkh,

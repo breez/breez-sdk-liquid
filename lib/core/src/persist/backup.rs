@@ -4,13 +4,13 @@ use anyhow::Result;
 use rusqlite::{backup::Backup, Connection};
 
 use super::Persister;
-use crate::model::Network;
+use crate::model::LiquidSdkNetwork;
 
 impl Persister {
     pub(crate) fn get_default_backup_path(&self) -> PathBuf {
         self.main_db_dir.join(match self.network {
-            Network::Mainnet => "backup.sql",
-            Network::Testnet => "backup-testnet.sql",
+            LiquidSdkNetwork::Mainnet => "backup.sql",
+            LiquidSdkNetwork::Testnet => "backup-testnet.sql",
         })
     }
 

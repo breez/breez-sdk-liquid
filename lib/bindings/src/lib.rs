@@ -58,7 +58,7 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkEr
     })
 }
 
-pub fn default_config(network: Network) -> Config {
+pub fn default_config(network: LiquidSdkNetwork) -> Config {
     LiquidSdk::default_config(network)
 }
 

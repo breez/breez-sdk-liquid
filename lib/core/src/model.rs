@@ -26,7 +26,7 @@ pub struct Config {
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
-    pub network: Network,
+    pub network: LiquidSdkNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in sat/vbyte
@@ -42,7 +42,7 @@ impl Config {
             boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
             electrum_url: "blockstream.info:995".to_string(),
             working_dir: ".".to_string(),
-            network: Network::Mainnet,
+            network: LiquidSdkNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
@@ -54,7 +54,7 @@ impl Config {
             boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
             electrum_url: "blockstream.info:465".to_string(),
             working_dir: ".".to_string(),
-            network: Network::Testnet,
+            network: LiquidSdkNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
@@ -68,52 +68,54 @@ impl Config {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
-pub enum Network {
+pub enum LiquidSdkNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
 }
 
-impl From<Network> for ElementsNetwork {
-    fn from(value: Network) -> Self {
+impl From<LiquidSdkNetwork> for ElementsNetwork {
+    fn from(value: LiquidSdkNetwork) -> Self {
         match value {
-            Network::Mainnet => ElementsNetwork::Liquid,
-            Network::Testnet => ElementsNetwork::LiquidTestnet,
+            LiquidSdkNetwork::Mainnet => ElementsNetwork::Liquid,
+            LiquidSdkNetwork::Testnet => ElementsNetwork::LiquidTestnet,
         }
     }
 }
 
-impl From<Network> for Chain {
-    fn from(value: Network) -> Self {
+impl From<LiquidSdkNetwork> for Chain {
+    fn from(value: LiquidSdkNetwork) -> Self {
         match value {
-            Network::Mainnet => Chain::Liquid,
-            Network::Testnet => Chain::LiquidTestnet,
+            LiquidSdkNetwork::Mainnet => Chain::Liquid,
+            LiquidSdkNetwork::Testnet => Chain::LiquidTestnet,
         }
     }
 }
 
-impl TryFrom<&str> for Network {
+impl TryFrom<&str> for LiquidSdkNetwork {
     type Error = anyhow::Error;
 
-    fn try_from(value: &str) -> Result<Network, anyhow::Error> {
+    fn try_from(value: &str) -> Result<LiquidSdkNetwork, anyhow::Error> {
         match value.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Mainnet),
-            "testnet" => Ok(Network::Testnet),
+            "mainnet" => Ok(LiquidSdkNetwork::Mainnet),
+            "testnet" => Ok(LiquidSdkNetwork::Testnet),
             _ => Err(anyhow!("Invalid network")),
         }
     }
 }
 
-impl TryFrom<boltz_client::lightning_invoice::Currency> for Network {
+impl TryFrom<boltz_client::lightning_invoice::Currency> for LiquidSdkNetwork {
     type Error = anyhow::Error;
 
     fn try_from(
         value: boltz_client::lightning_invoice::Currency,
-    ) -> Result<Network, anyhow::Error> {
+    ) -> Result<LiquidSdkNetwork, anyhow::Error> {
         match value {
-            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(Network::Mainnet),
-            boltz_client::lightning_invoice::Currency::BitcoinTestnet => Ok(Network::Testnet),
+            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(LiquidSdkNetwork::Mainnet),
+            boltz_client::lightning_invoice::Currency::BitcoinTestnet => {
+                Ok(LiquidSdkNetwork::Testnet)
+            }
             _ => Err(anyhow!("Invalid network")),
         }
     }
@@ -664,7 +666,7 @@ pub struct LogEntry {
 #[derive(Clone, Debug, PartialEq)]
 pub struct LNInvoice {
     pub bolt11: String,
-    pub network: Network,
+    pub network: LiquidSdkNetwork,
     pub payee_pubkey: String,
     pub payment_hash: String,
     pub description: Option<String>,

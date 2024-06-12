@@ -599,7 +599,7 @@ fn wire__crate__bindings__connect_impl(
     )
 }
 fn wire__crate__bindings__default_config_impl(
-    network: impl CstDecode<crate::model::Network>,
+    network: impl CstDecode<crate::model::LiquidSdkNetwork>,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -645,13 +645,13 @@ impl CstDecode<i32> for i32 {
         self
     }
 }
-impl CstDecode<crate::model::Network> for i32 {
+impl CstDecode<crate::model::LiquidSdkNetwork> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::Network {
+    fn cst_decode(self) -> crate::model::LiquidSdkNetwork {
         match self {
-            0 => crate::model::Network::Mainnet,
-            1 => crate::model::Network::Testnet,
-            _ => unreachable!("Invalid variant for Network: {}", self),
+            0 => crate::model::LiquidSdkNetwork::Mainnet,
+            1 => crate::model::LiquidSdkNetwork::Testnet,
+            _ => unreachable!("Invalid variant for LiquidSdkNetwork: {}", self),
         }
     }
 }
@@ -785,7 +785,7 @@ impl SseDecode for crate::model::Config {
         let mut var_boltzUrl = <String>::sse_decode(deserializer);
         let mut var_electrumUrl = <String>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
-        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_network = <crate::model::LiquidSdkNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRate = <f32>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -916,6 +916,18 @@ impl SseDecode for crate::model::LiquidSdkEvent {
     }
 }
 
+impl SseDecode for crate::model::LiquidSdkNetwork {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::LiquidSdkNetwork::Mainnet,
+            1 => crate::model::LiquidSdkNetwork::Testnet,
+            _ => unreachable!("Invalid variant for LiquidSdkNetwork: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for Vec<crate::model::Payment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -968,7 +980,7 @@ impl SseDecode for crate::model::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_bolt11 = <String>::sse_decode(deserializer);
-        let mut var_network = <crate::model::Network>::sse_decode(deserializer);
+        let mut var_network = <crate::model::LiquidSdkNetwork>::sse_decode(deserializer);
         let mut var_payeePubkey = <String>::sse_decode(deserializer);
         let mut var_paymentHash = <String>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
@@ -1004,18 +1016,6 @@ impl SseDecode for crate::model::LogEntry {
         return crate::model::LogEntry {
             line: var_line,
             level: var_level,
-        };
-    }
-}
-
-impl SseDecode for crate::model::Network {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <i32>::sse_decode(deserializer);
-        return match inner {
-            0 => crate::model::Network::Mainnet,
-            1 => crate::model::Network::Testnet,
-            _ => unreachable!("Invalid variant for Network: {}", inner),
         };
     }
 }
@@ -1513,6 +1513,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkEvent>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LiquidSdkNetwork {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Mainnet => 0.into_dart(),
+            Self::Testnet => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::LiquidSdkNetwork
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidSdkNetwork>
+    for crate::model::LiquidSdkNetwork
+{
+    fn into_into_dart(self) -> crate::model::LiquidSdkNetwork {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::LNInvoice {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1553,22 +1574,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::LogEntry {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LogEntry {}
 impl flutter_rust_bridge::IntoIntoDart<crate::model::LogEntry> for crate::model::LogEntry {
     fn into_into_dart(self) -> crate::model::LogEntry {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::Network {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::Mainnet => 0.into_dart(),
-            Self::Testnet => 1.into_dart(),
-            _ => unreachable!(),
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::Network {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::Network> for crate::model::Network {
-    fn into_into_dart(self) -> crate::model::Network {
         self
     }
 }
@@ -1916,7 +1921,7 @@ impl SseEncode for crate::model::Config {
         <String>::sse_encode(self.boltz_url, serializer);
         <String>::sse_encode(self.electrum_url, serializer);
         <String>::sse_encode(self.working_dir, serializer);
-        <crate::model::Network>::sse_encode(self.network, serializer);
+        <crate::model::LiquidSdkNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <f32>::sse_encode(self.zero_conf_min_fee_rate, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
@@ -2014,6 +2019,22 @@ impl SseEncode for crate::model::LiquidSdkEvent {
     }
 }
 
+impl SseEncode for crate::model::LiquidSdkNetwork {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::LiquidSdkNetwork::Mainnet => 0,
+                crate::model::LiquidSdkNetwork::Testnet => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for Vec<crate::model::Payment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2058,7 +2079,7 @@ impl SseEncode for crate::model::LNInvoice {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.bolt11, serializer);
-        <crate::model::Network>::sse_encode(self.network, serializer);
+        <crate::model::LiquidSdkNetwork>::sse_encode(self.network, serializer);
         <String>::sse_encode(self.payee_pubkey, serializer);
         <String>::sse_encode(self.payment_hash, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
@@ -2077,22 +2098,6 @@ impl SseEncode for crate::model::LogEntry {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.line, serializer);
         <String>::sse_encode(self.level, serializer);
-    }
-}
-
-impl SseEncode for crate::model::Network {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(
-            match self {
-                crate::model::Network::Mainnet => 0,
-                crate::model::Network::Testnet => 1,
-                _ => {
-                    unimplemented!("");
-                }
-            },
-            serializer,
-        );
     }
 }
 
