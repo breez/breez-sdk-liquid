@@ -133,38 +133,6 @@ enum BreezLiquidSDKMapper {
         return connectRequestList.map { v -> [String: Any?] in dictionaryOf(connectRequest: v) }
     }
 
-    static func asGetInfoRequest(getInfoRequest: [String: Any?]) throws -> GetInfoRequest {
-        guard let withScan = getInfoRequest["withScan"] as? Bool else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "withScan", typeName: "GetInfoRequest"))
-        }
-
-        return GetInfoRequest(
-            withScan: withScan)
-    }
-
-    static func dictionaryOf(getInfoRequest: GetInfoRequest) -> [String: Any?] {
-        return [
-            "withScan": getInfoRequest.withScan,
-        ]
-    }
-
-    static func asGetInfoRequestList(arr: [Any]) throws -> [GetInfoRequest] {
-        var list = [GetInfoRequest]()
-        for value in arr {
-            if let val = value as? [String: Any?] {
-                var getInfoRequest = try asGetInfoRequest(getInfoRequest: val)
-                list.append(getInfoRequest)
-            } else {
-                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "GetInfoRequest"))
-            }
-        }
-        return list
-    }
-
-    static func arrayOf(getInfoRequestList: [GetInfoRequest]) -> [Any] {
-        return getInfoRequestList.map { v -> [String: Any?] in dictionaryOf(getInfoRequest: v) }
-    }
-
     static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
         guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))

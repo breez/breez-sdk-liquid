@@ -151,7 +151,7 @@ pub(crate) async fn handle_command(
             }
         }
         Command::GetInfo => {
-            command_result!(sdk.get_info(GetInfoRequest { with_scan: true }).await?)
+            command_result!(sdk.get_info().await?)
         }
         Command::ListPayments => {
             let payments = sdk.list_payments().await?;

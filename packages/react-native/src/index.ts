@@ -36,10 +36,6 @@ export interface ConnectRequest {
     mnemonic: string
 }
 
-export interface GetInfoRequest {
-    withScan: boolean
-}
-
 export interface GetInfoResponse {
     balanceSat: number
     pendingSendSat: number
@@ -216,8 +212,8 @@ export const removeEventListener = async (id: string): Promise<void> => {
     await BreezLiquidSDK.removeEventListener(id)
 }
 
-export const getInfo = async (req: GetInfoRequest): Promise<GetInfoResponse> => {
-    const response = await BreezLiquidSDK.getInfo(req)
+export const getInfo = async (): Promise<GetInfoResponse> => {
+    const response = await BreezLiquidSDK.getInfo()
     return response
 }
 

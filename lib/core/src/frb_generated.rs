@@ -208,7 +208,6 @@ fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    req: impl CstDecode<crate::model::GetInfoRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -218,7 +217,6 @@ fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            let api_req = req.cst_decode();
             move |context| async move {
                 transform_result_dco(
                     (move || async move {
@@ -239,7 +237,7 @@ fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
                             }
                         }
                         let api_that = &*api_that_decoded.unwrap();
-                        crate::bindings::BindingLiquidSdk::get_info(api_that, api_req).await
+                        crate::bindings::BindingLiquidSdk::get_info(api_that).await
                     })()
                     .await,
                 )
@@ -635,12 +633,6 @@ fn wire__crate__bindings__parse_invoice_impl(
 
 // Section: dart2rust
 
-impl CstDecode<bool> for bool {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> bool {
-        self
-    }
-}
 impl CstDecode<i32> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> i32 {
@@ -781,13 +773,6 @@ impl SseDecode for crate::bindings::BindingEventListener {
     }
 }
 
-impl SseDecode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u8().unwrap() != 0
-    }
-}
-
 impl SseDecode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -814,16 +799,6 @@ impl SseDecode for crate::model::ConnectRequest {
         return crate::model::ConnectRequest {
             mnemonic: var_mnemonic,
             config: var_config,
-        };
-    }
-}
-
-impl SseDecode for crate::model::GetInfoRequest {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_withScan = <bool>::sse_decode(deserializer);
-        return crate::model::GetInfoRequest {
-            with_scan: var_withScan,
         };
     }
 }
@@ -1321,6 +1296,13 @@ impl SseDecode for usize {
     }
 }
 
+impl SseDecode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -1428,20 +1410,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::ConnectRequest>
     for crate::model::ConnectRequest
 {
     fn into_into_dart(self) -> crate::model::ConnectRequest {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::GetInfoRequest {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.with_scan.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::GetInfoRequest {}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoRequest>
-    for crate::model::GetInfoRequest
-{
-    fn into_into_dart(self) -> crate::model::GetInfoRequest {
         self
     }
 }
@@ -1923,13 +1891,6 @@ impl SseEncode for crate::bindings::BindingEventListener {
     }
 }
 
-impl SseEncode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u8(self as _).unwrap();
-    }
-}
-
 impl SseEncode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1946,13 +1907,6 @@ impl SseEncode for crate::model::ConnectRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.mnemonic, serializer);
         <crate::model::Config>::sse_encode(self.config, serializer);
-    }
-}
-
-impl SseEncode for crate::model::GetInfoRequest {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.with_scan, serializer);
     }
 }
 
@@ -2363,6 +2317,13 @@ impl SseEncode for usize {
             .cursor
             .write_u64::<NativeEndian>(self as _)
             .unwrap();
+    }
+}
+
+impl SseEncode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u8(self as _).unwrap();
     }
 }
 

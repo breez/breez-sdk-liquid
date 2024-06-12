@@ -56,9 +56,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BindingEventListener dco_decode_binding_event_listener(dynamic raw);
 
   @protected
-  bool dco_decode_bool(dynamic raw);
-
-  @protected
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw);
 
   @protected
@@ -66,9 +63,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
-
-  @protected
-  GetInfoRequest dco_decode_box_autoadd_get_info_request(dynamic raw);
 
   @protected
   LiquidSdkEvent dco_decode_box_autoadd_liquid_sdk_event(dynamic raw);
@@ -99,9 +93,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest dco_decode_connect_request(dynamic raw);
-
-  @protected
-  GetInfoRequest dco_decode_get_info_request(dynamic raw);
 
   @protected
   GetInfoResponse dco_decode_get_info_response(dynamic raw);
@@ -229,9 +220,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BindingEventListener sse_decode_binding_event_listener(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer);
 
   @protected
@@ -239,9 +227,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
-
-  @protected
-  GetInfoRequest sse_decode_box_autoadd_get_info_request(SseDeserializer deserializer);
 
   @protected
   LiquidSdkEvent sse_decode_box_autoadd_liquid_sdk_event(SseDeserializer deserializer);
@@ -272,9 +257,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
-
-  @protected
-  GetInfoRequest sse_decode_get_info_request(SseDeserializer deserializer);
 
   @protected
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer);
@@ -370,6 +352,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(AnyhowException raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     throw UnimplementedError();
@@ -419,14 +404,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_connect_request();
     cst_api_fill_to_wire_connect_request(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_get_info_request> cst_encode_box_autoadd_get_info_request(GetInfoRequest raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_get_info_request();
-    cst_api_fill_to_wire_get_info_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -588,12 +565,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_get_info_request(
-      GetInfoRequest apiObj, ffi.Pointer<wire_cst_get_info_request> wireObj) {
-    cst_api_fill_to_wire_get_info_request(apiObj, wireObj.ref);
-  }
-
-  @protected
   void cst_api_fill_to_wire_box_autoadd_liquid_sdk_event(
       LiquidSdkEvent apiObj, ffi.Pointer<wire_cst_liquid_sdk_event> wireObj) {
     cst_api_fill_to_wire_liquid_sdk_event(apiObj, wireObj.ref);
@@ -647,11 +618,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
     wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
     cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_get_info_request(GetInfoRequest apiObj, wire_cst_get_info_request wireObj) {
-    wireObj.with_scan = cst_encode_bool(apiObj.withScan);
   }
 
   @protected
@@ -925,9 +891,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk raw);
 
   @protected
-  bool cst_encode_bool(bool raw);
-
-  @protected
   int cst_encode_i_32(int raw);
 
   @protected
@@ -980,9 +943,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_binding_event_listener(BindingEventListener self, SseSerializer serializer);
 
   @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
-
-  @protected
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
@@ -990,9 +950,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_get_info_request(GetInfoRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_liquid_sdk_event(LiquidSdkEvent self, SseSerializer serializer);
@@ -1023,9 +980,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_get_info_request(GetInfoRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer);
@@ -1119,6 +1073,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -1228,22 +1185,18 @@ class RustLibWire implements BaseWire {
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_get_info_request> req,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_get_info(
       port_,
       that,
-      req,
     );
   }
 
-  late final _wire__crate__bindings__BindingLiquidSdk_get_infoPtr = _lookup<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_get_info_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
+  late final _wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _wire__crate__bindings__BindingLiquidSdk_get_info =
-      _wire__crate__bindings__BindingLiquidSdk_get_infoPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_get_info_request>)>();
+      _wire__crate__bindings__BindingLiquidSdk_get_infoPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
@@ -1519,16 +1472,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_connect_request =
       _cst_new_box_autoadd_connect_requestPtr.asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
-  ffi.Pointer<wire_cst_get_info_request> cst_new_box_autoadd_get_info_request() {
-    return _cst_new_box_autoadd_get_info_request();
-  }
-
-  late final _cst_new_box_autoadd_get_info_requestPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_get_info_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_get_info_request');
-  late final _cst_new_box_autoadd_get_info_request = _cst_new_box_autoadd_get_info_requestPtr
-      .asFunction<ffi.Pointer<wire_cst_get_info_request> Function()>();
-
   ffi.Pointer<wire_cst_liquid_sdk_event> cst_new_box_autoadd_liquid_sdk_event() {
     return _cst_new_box_autoadd_liquid_sdk_event();
   }
@@ -1695,11 +1638,6 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
 
 final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
-}
-
-final class wire_cst_get_info_request extends ffi.Struct {
-  @ffi.Bool()
-  external bool with_scan;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {

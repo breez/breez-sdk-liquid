@@ -117,38 +117,6 @@ fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
     return list
 }
 
-fun asGetInfoRequest(getInfoRequest: ReadableMap): GetInfoRequest? {
-    if (!validateMandatoryFields(
-            getInfoRequest,
-            arrayOf(
-                "withScan",
-            ),
-        )
-    ) {
-        return null
-    }
-    val withScan = getInfoRequest.getBoolean("withScan")
-    return GetInfoRequest(
-        withScan,
-    )
-}
-
-fun readableMapOf(getInfoRequest: GetInfoRequest): ReadableMap =
-    readableMapOf(
-        "withScan" to getInfoRequest.withScan,
-    )
-
-fun asGetInfoRequestList(arr: ReadableArray): List<GetInfoRequest> {
-    val list = ArrayList<GetInfoRequest>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asGetInfoRequest(value)!!)
-            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
 fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
     if (!validateMandatoryFields(
             getInfoResponse,

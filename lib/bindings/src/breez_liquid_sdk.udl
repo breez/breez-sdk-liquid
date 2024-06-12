@@ -45,10 +45,6 @@ dictionary ConnectRequest {
     string mnemonic;
 };
 
-dictionary GetInfoRequest {
-    boolean with_scan;
-};
-
 dictionary GetInfoResponse {
     u64 balance_sat;
     u64 pending_send_sat;
@@ -191,7 +187,7 @@ interface BindingLiquidSdk {
     void remove_event_listener(string id);
 
     [Throws=LiquidSdkError]
-    GetInfoResponse get_info(GetInfoRequest req);
+    GetInfoResponse get_info();
 
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
