@@ -1073,6 +1073,12 @@ impl LiquidSdk {
         }
     }
 
+    pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
+        parse(input)
+            .await
+            .map_err(|e| PaymentError::Generic { err: e.to_string() })
+    }
+
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
         parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
     }

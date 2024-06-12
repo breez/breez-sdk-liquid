@@ -33,6 +33,51 @@ fun asBackupRequestList(arr: ReadableArray): List<BackupRequest> {
     return list
 }
 
+fun asBitcoinAddressData(bitcoinAddressData: ReadableMap): BitcoinAddressData? {
+    if (!validateMandatoryFields(
+            bitcoinAddressData,
+            arrayOf(
+                "address",
+                "network",
+            ),
+        )
+    ) {
+        return null
+    }
+    val address = bitcoinAddressData.getString("address")!!
+    val network = bitcoinAddressData.getString("network")?.let { asNetwork(it) }!!
+    val amountSat = if (hasNonNullKey(bitcoinAddressData, "amountSat")) bitcoinAddressData.getDouble("amountSat").toULong() else null
+    val label = if (hasNonNullKey(bitcoinAddressData, "label")) bitcoinAddressData.getString("label") else null
+    val message = if (hasNonNullKey(bitcoinAddressData, "message")) bitcoinAddressData.getString("message") else null
+    return BitcoinAddressData(
+        address,
+        network,
+        amountSat,
+        label,
+        message,
+    )
+}
+
+fun readableMapOf(bitcoinAddressData: BitcoinAddressData): ReadableMap =
+    readableMapOf(
+        "address" to bitcoinAddressData.address,
+        "network" to bitcoinAddressData.network.name.lowercase(),
+        "amountSat" to bitcoinAddressData.amountSat,
+        "label" to bitcoinAddressData.label,
+        "message" to bitcoinAddressData.message,
+    )
+
+fun asBitcoinAddressDataList(arr: ReadableArray): List<BitcoinAddressData> {
+    val list = ArrayList<BitcoinAddressData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBitcoinAddressData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
@@ -51,7 +96,7 @@ fun asConfig(config: ReadableMap): Config? {
     val boltzUrl = config.getString("boltzUrl")!!
     val electrumUrl = config.getString("electrumUrl")!!
     val workingDir = config.getString("workingDir")!!
-    val network = config.getString("network")?.let { asNetwork(it) }!!
+    val network = config.getString("network")?.let { asLiquidSdkNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate")
     val zeroConfMaxAmountSat =
@@ -244,6 +289,191 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLnInvoice(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlAuthRequestData(lnUrlAuthRequestData: ReadableMap): LnUrlAuthRequestData? {
+    if (!validateMandatoryFields(
+            lnUrlAuthRequestData,
+            arrayOf(
+                "k1",
+                "domain",
+                "url",
+            ),
+        )
+    ) {
+        return null
+    }
+    val k1 = lnUrlAuthRequestData.getString("k1")!!
+    val domain = lnUrlAuthRequestData.getString("domain")!!
+    val url = lnUrlAuthRequestData.getString("url")!!
+    val action = if (hasNonNullKey(lnUrlAuthRequestData, "action")) lnUrlAuthRequestData.getString("action") else null
+    return LnUrlAuthRequestData(
+        k1,
+        domain,
+        url,
+        action,
+    )
+}
+
+fun readableMapOf(lnUrlAuthRequestData: LnUrlAuthRequestData): ReadableMap =
+    readableMapOf(
+        "k1" to lnUrlAuthRequestData.k1,
+        "domain" to lnUrlAuthRequestData.domain,
+        "url" to lnUrlAuthRequestData.url,
+        "action" to lnUrlAuthRequestData.action,
+    )
+
+fun asLnUrlAuthRequestDataList(arr: ReadableArray): List<LnUrlAuthRequestData> {
+    val list = ArrayList<LnUrlAuthRequestData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlAuthRequestData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlErrorData(lnUrlErrorData: ReadableMap): LnUrlErrorData? {
+    if (!validateMandatoryFields(
+            lnUrlErrorData,
+            arrayOf(
+                "reason",
+            ),
+        )
+    ) {
+        return null
+    }
+    val reason = lnUrlErrorData.getString("reason")!!
+    return LnUrlErrorData(
+        reason,
+    )
+}
+
+fun readableMapOf(lnUrlErrorData: LnUrlErrorData): ReadableMap =
+    readableMapOf(
+        "reason" to lnUrlErrorData.reason,
+    )
+
+fun asLnUrlErrorDataList(arr: ReadableArray): List<LnUrlErrorData> {
+    val list = ArrayList<LnUrlErrorData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlErrorData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlPayRequestData(lnUrlPayRequestData: ReadableMap): LnUrlPayRequestData? {
+    if (!validateMandatoryFields(
+            lnUrlPayRequestData,
+            arrayOf(
+                "callback",
+                "minSendable",
+                "maxSendable",
+                "metadataStr",
+                "commentAllowed",
+                "domain",
+                "allowsNostr",
+            ),
+        )
+    ) {
+        return null
+    }
+    val callback = lnUrlPayRequestData.getString("callback")!!
+    val minSendable = lnUrlPayRequestData.getDouble("minSendable").toULong()
+    val maxSendable = lnUrlPayRequestData.getDouble("maxSendable").toULong()
+    val metadataStr = lnUrlPayRequestData.getString("metadataStr")!!
+    val commentAllowed = lnUrlPayRequestData.getInt("commentAllowed").toUShort()
+    val domain = lnUrlPayRequestData.getString("domain")!!
+    val allowsNostr = lnUrlPayRequestData.getBoolean("allowsNostr")
+    val nostrPubkey = if (hasNonNullKey(lnUrlPayRequestData, "nostrPubkey")) lnUrlPayRequestData.getString("nostrPubkey") else null
+    val lnAddress = if (hasNonNullKey(lnUrlPayRequestData, "lnAddress")) lnUrlPayRequestData.getString("lnAddress") else null
+    return LnUrlPayRequestData(
+        callback,
+        minSendable,
+        maxSendable,
+        metadataStr,
+        commentAllowed,
+        domain,
+        allowsNostr,
+        nostrPubkey,
+        lnAddress,
+    )
+}
+
+fun readableMapOf(lnUrlPayRequestData: LnUrlPayRequestData): ReadableMap =
+    readableMapOf(
+        "callback" to lnUrlPayRequestData.callback,
+        "minSendable" to lnUrlPayRequestData.minSendable,
+        "maxSendable" to lnUrlPayRequestData.maxSendable,
+        "metadataStr" to lnUrlPayRequestData.metadataStr,
+        "commentAllowed" to lnUrlPayRequestData.commentAllowed,
+        "domain" to lnUrlPayRequestData.domain,
+        "allowsNostr" to lnUrlPayRequestData.allowsNostr,
+        "nostrPubkey" to lnUrlPayRequestData.nostrPubkey,
+        "lnAddress" to lnUrlPayRequestData.lnAddress,
+    )
+
+fun asLnUrlPayRequestDataList(arr: ReadableArray): List<LnUrlPayRequestData> {
+    val list = ArrayList<LnUrlPayRequestData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlPayRequestData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: ReadableMap): LnUrlWithdrawRequestData? {
+    if (!validateMandatoryFields(
+            lnUrlWithdrawRequestData,
+            arrayOf(
+                "callback",
+                "k1",
+                "defaultDescription",
+                "minWithdrawable",
+                "maxWithdrawable",
+            ),
+        )
+    ) {
+        return null
+    }
+    val callback = lnUrlWithdrawRequestData.getString("callback")!!
+    val k1 = lnUrlWithdrawRequestData.getString("k1")!!
+    val defaultDescription = lnUrlWithdrawRequestData.getString("defaultDescription")!!
+    val minWithdrawable = lnUrlWithdrawRequestData.getDouble("minWithdrawable").toULong()
+    val maxWithdrawable = lnUrlWithdrawRequestData.getDouble("maxWithdrawable").toULong()
+    return LnUrlWithdrawRequestData(
+        callback,
+        k1,
+        defaultDescription,
+        minWithdrawable,
+        maxWithdrawable,
+    )
+}
+
+fun readableMapOf(lnUrlWithdrawRequestData: LnUrlWithdrawRequestData): ReadableMap =
+    readableMapOf(
+        "callback" to lnUrlWithdrawRequestData.callback,
+        "k1" to lnUrlWithdrawRequestData.k1,
+        "defaultDescription" to lnUrlWithdrawRequestData.defaultDescription,
+        "minWithdrawable" to lnUrlWithdrawRequestData.minWithdrawable,
+        "maxWithdrawable" to lnUrlWithdrawRequestData.maxWithdrawable,
+    )
+
+fun asLnUrlWithdrawRequestDataList(arr: ReadableArray): List<LnUrlWithdrawRequestData> {
+    val list = ArrayList<LnUrlWithdrawRequestData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlWithdrawRequestData(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -669,6 +899,86 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     return list
 }
 
+fun asInputType(inputType: ReadableMap): InputType? {
+    val type = inputType.getString("type")
+
+    if (type == "bitcoinAddress") {
+        return InputType.BitcoinAddress(inputType.getMap("address")?.let { asBitcoinAddressData(it) }!!)
+    }
+    if (type == "bolt11") {
+        return InputType.Bolt11(inputType.getMap("invoice")?.let { asLnInvoice(it) }!!)
+    }
+    if (type == "nodeId") {
+        return InputType.NodeId(inputType.getString("nodeId")!!)
+    }
+    if (type == "url") {
+        return InputType.Url(inputType.getString("url")!!)
+    }
+    if (type == "lnUrlPay") {
+        return InputType.LnUrlPay(inputType.getMap("data")?.let { asLnUrlPayRequestData(it) }!!)
+    }
+    if (type == "lnUrlWithdraw") {
+        return InputType.LnUrlWithdraw(inputType.getMap("data")?.let { asLnUrlWithdrawRequestData(it) }!!)
+    }
+    if (type == "lnUrlAuth") {
+        return InputType.LnUrlAuth(inputType.getMap("data")?.let { asLnUrlAuthRequestData(it) }!!)
+    }
+    if (type == "lnUrlEndpointError") {
+        return InputType.LnUrlEndpointError(inputType.getMap("data")?.let { asLnUrlErrorData(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(inputType: InputType): ReadableMap? {
+    val map = Arguments.createMap()
+    when (inputType) {
+        is InputType.BitcoinAddress -> {
+            pushToMap(map, "type", "bitcoinAddress")
+            pushToMap(map, "address", readableMapOf(inputType.address))
+        }
+        is InputType.Bolt11 -> {
+            pushToMap(map, "type", "bolt11")
+            pushToMap(map, "invoice", readableMapOf(inputType.invoice))
+        }
+        is InputType.NodeId -> {
+            pushToMap(map, "type", "nodeId")
+            pushToMap(map, "nodeId", inputType.nodeId)
+        }
+        is InputType.Url -> {
+            pushToMap(map, "type", "url")
+            pushToMap(map, "url", inputType.url)
+        }
+        is InputType.LnUrlPay -> {
+            pushToMap(map, "type", "lnUrlPay")
+            pushToMap(map, "data", readableMapOf(inputType.data))
+        }
+        is InputType.LnUrlWithdraw -> {
+            pushToMap(map, "type", "lnUrlWithdraw")
+            pushToMap(map, "data", readableMapOf(inputType.data))
+        }
+        is InputType.LnUrlAuth -> {
+            pushToMap(map, "type", "lnUrlAuth")
+            pushToMap(map, "data", readableMapOf(inputType.data))
+        }
+        is InputType.LnUrlEndpointError -> {
+            pushToMap(map, "type", "lnUrlEndpointError")
+            pushToMap(map, "data", readableMapOf(inputType.data))
+        }
+    }
+    return map
+}
+
+fun asInputTypeList(arr: ReadableArray): List<InputType> {
+    val list = ArrayList<InputType>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asInputType(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLiquidSdkEvent(liquidSdkEvent: ReadableMap): LiquidSdkEvent? {
     val type = liquidSdkEvent.getString("type")
 
@@ -735,6 +1045,19 @@ fun asLiquidSdkEventList(arr: ReadableArray): List<LiquidSdkEvent> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLiquidSdkEvent(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLiquidSdkNetwork(type: String): LiquidSdkNetwork = LiquidSdkNetwork.valueOf(camelToUpperSnakeCase(type))
+
+fun asLiquidSdkNetworkList(arr: ReadableArray): List<LiquidSdkNetwork> {
+    val list = ArrayList<LiquidSdkNetwork>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is String -> list.add(asLiquidSdkNetwork(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

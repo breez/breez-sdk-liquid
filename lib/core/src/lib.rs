@@ -63,3 +63,59 @@ pub struct _RouteHintHop {
     pub htlc_minimum_msat: Option<u64>,
     pub htlc_maximum_msat: Option<u64>,
 }
+
+#[frb(mirror(InputType))]
+pub enum _InputType {
+    BitcoinAddress { address: BitcoinAddressData },
+    Bolt11 { invoice: LNInvoice },
+    NodeId { node_id: String },
+    Url { url: String },
+    LnUrlPay { data: LnUrlPayRequestData },
+    LnUrlWithdraw { data: LnUrlWithdrawRequestData },
+    LnUrlAuth { data: LnUrlAuthRequestData },
+    LnUrlEndpointError { data: LnUrlErrorData },
+}
+
+#[frb(mirror(BitcoinAddressData))]
+pub struct _BitcoinAddressData {
+    pub address: String,
+    pub network: crate::prelude::Network,
+    pub amount_sat: Option<u64>,
+    pub label: Option<String>,
+    pub message: Option<String>,
+}
+
+#[frb(mirror(LnUrlPayRequestData))]
+pub struct _LnUrlPayRequestData {
+    pub callback: String,
+    pub min_sendable: u64,
+    pub max_sendable: u64,
+    pub metadata_str: String,
+    pub comment_allowed: u16,
+    pub domain: String,
+    pub allows_nostr: bool,
+    pub nostr_pubkey: Option<String>,
+    pub ln_address: Option<String>,
+}
+
+#[frb(mirror(LnUrlWithdrawRequestData))]
+pub struct _LnUrlWithdrawRequestData {
+    pub callback: String,
+    pub k1: String,
+    pub default_description: String,
+    pub min_withdrawable: u64,
+    pub max_withdrawable: u64,
+}
+
+#[frb(mirror(LnUrlAuthRequestData))]
+pub struct _LnUrlAuthRequestData {
+    pub k1: String,
+    pub action: Option<String>,
+    pub domain: String,
+    pub url: String,
+}
+
+#[frb(mirror(LnUrlErrorData))]
+pub struct _LnUrlErrorData {
+    pub reason: String,
+}

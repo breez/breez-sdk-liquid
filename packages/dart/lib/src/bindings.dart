@@ -21,6 +21,8 @@ Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogS
 Config defaultConfig({required LiquidSdkNetwork network}) =>
     RustLib.instance.api.crateBindingsDefaultConfig(network: network);
 
+Future<InputType> parse({required String input}) => RustLib.instance.api.crateBindingsParse(input: input);
+
 LNInvoice parseInvoice({required String input}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input);
 

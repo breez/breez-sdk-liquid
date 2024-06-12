@@ -127,10 +127,13 @@ typedef struct wire_cst_connect_request {
   struct wire_cst_config config;
 } wire_cst_connect_request;
 
-typedef struct wire_cst_list_payment {
-  struct wire_cst_payment *ptr;
-  int32_t len;
-} wire_cst_list_payment;
+typedef struct wire_cst_bitcoin_address_data {
+  struct wire_cst_list_prim_u_8_strict *address;
+  int32_t network;
+  uint64_t *amount_sat;
+  struct wire_cst_list_prim_u_8_strict *label;
+  struct wire_cst_list_prim_u_8_strict *message;
+} wire_cst_bitcoin_address_data;
 
 typedef struct wire_cst_route_hint_hop {
   struct wire_cst_list_prim_u_8_strict *src_node_id;
@@ -156,26 +159,6 @@ typedef struct wire_cst_list_route_hint {
   int32_t len;
 } wire_cst_list_route_hint;
 
-typedef struct wire_cst_get_info_response {
-  uint64_t balance_sat;
-  uint64_t pending_send_sat;
-  uint64_t pending_receive_sat;
-  struct wire_cst_list_prim_u_8_strict *pubkey;
-} wire_cst_get_info_response;
-
-typedef struct wire_cst_LiquidSdkError_Generic {
-  struct wire_cst_list_prim_u_8_strict *err;
-} wire_cst_LiquidSdkError_Generic;
-
-typedef union LiquidSdkErrorKind {
-  struct wire_cst_LiquidSdkError_Generic Generic;
-} LiquidSdkErrorKind;
-
-typedef struct wire_cst_liquid_sdk_error {
-  int32_t tag;
-  union LiquidSdkErrorKind kind;
-} wire_cst_liquid_sdk_error;
-
 typedef struct wire_cst_ln_invoice {
   struct wire_cst_list_prim_u_8_strict *bolt11;
   int32_t network;
@@ -190,6 +173,110 @@ typedef struct wire_cst_ln_invoice {
   struct wire_cst_list_prim_u_8_strict *payment_secret;
   uint64_t min_final_cltv_expiry_delta;
 } wire_cst_ln_invoice;
+
+typedef struct wire_cst_ln_url_auth_request_data {
+  struct wire_cst_list_prim_u_8_strict *k1;
+  struct wire_cst_list_prim_u_8_strict *action;
+  struct wire_cst_list_prim_u_8_strict *domain;
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_ln_url_auth_request_data;
+
+typedef struct wire_cst_ln_url_error_data {
+  struct wire_cst_list_prim_u_8_strict *reason;
+} wire_cst_ln_url_error_data;
+
+typedef struct wire_cst_ln_url_pay_request_data {
+  struct wire_cst_list_prim_u_8_strict *callback;
+  uint64_t min_sendable;
+  uint64_t max_sendable;
+  struct wire_cst_list_prim_u_8_strict *metadata_str;
+  uint16_t comment_allowed;
+  struct wire_cst_list_prim_u_8_strict *domain;
+  bool allows_nostr;
+  struct wire_cst_list_prim_u_8_strict *nostr_pubkey;
+  struct wire_cst_list_prim_u_8_strict *ln_address;
+} wire_cst_ln_url_pay_request_data;
+
+typedef struct wire_cst_ln_url_withdraw_request_data {
+  struct wire_cst_list_prim_u_8_strict *callback;
+  struct wire_cst_list_prim_u_8_strict *k1;
+  struct wire_cst_list_prim_u_8_strict *default_description;
+  uint64_t min_withdrawable;
+  uint64_t max_withdrawable;
+} wire_cst_ln_url_withdraw_request_data;
+
+typedef struct wire_cst_list_payment {
+  struct wire_cst_payment *ptr;
+  int32_t len;
+} wire_cst_list_payment;
+
+typedef struct wire_cst_get_info_response {
+  uint64_t balance_sat;
+  uint64_t pending_send_sat;
+  uint64_t pending_receive_sat;
+  struct wire_cst_list_prim_u_8_strict *pubkey;
+} wire_cst_get_info_response;
+
+typedef struct wire_cst_InputType_BitcoinAddress {
+  struct wire_cst_bitcoin_address_data *address;
+} wire_cst_InputType_BitcoinAddress;
+
+typedef struct wire_cst_InputType_Bolt11 {
+  struct wire_cst_ln_invoice *invoice;
+} wire_cst_InputType_Bolt11;
+
+typedef struct wire_cst_InputType_NodeId {
+  struct wire_cst_list_prim_u_8_strict *node_id;
+} wire_cst_InputType_NodeId;
+
+typedef struct wire_cst_InputType_Url {
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_InputType_Url;
+
+typedef struct wire_cst_InputType_LnUrlPay {
+  struct wire_cst_ln_url_pay_request_data *data;
+} wire_cst_InputType_LnUrlPay;
+
+typedef struct wire_cst_InputType_LnUrlWithdraw {
+  struct wire_cst_ln_url_withdraw_request_data *data;
+} wire_cst_InputType_LnUrlWithdraw;
+
+typedef struct wire_cst_InputType_LnUrlAuth {
+  struct wire_cst_ln_url_auth_request_data *data;
+} wire_cst_InputType_LnUrlAuth;
+
+typedef struct wire_cst_InputType_LnUrlEndpointError {
+  struct wire_cst_ln_url_error_data *data;
+} wire_cst_InputType_LnUrlEndpointError;
+
+typedef union InputTypeKind {
+  struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
+  struct wire_cst_InputType_Bolt11 Bolt11;
+  struct wire_cst_InputType_NodeId NodeId;
+  struct wire_cst_InputType_Url Url;
+  struct wire_cst_InputType_LnUrlPay LnUrlPay;
+  struct wire_cst_InputType_LnUrlWithdraw LnUrlWithdraw;
+  struct wire_cst_InputType_LnUrlAuth LnUrlAuth;
+  struct wire_cst_InputType_LnUrlEndpointError LnUrlEndpointError;
+} InputTypeKind;
+
+typedef struct wire_cst_input_type {
+  int32_t tag;
+  union InputTypeKind kind;
+} wire_cst_input_type;
+
+typedef struct wire_cst_LiquidSdkError_Generic {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LiquidSdkError_Generic;
+
+typedef union LiquidSdkErrorKind {
+  struct wire_cst_LiquidSdkError_Generic Generic;
+} LiquidSdkErrorKind;
+
+typedef struct wire_cst_liquid_sdk_error {
+  int32_t tag;
+  union LiquidSdkErrorKind kind;
+} wire_cst_liquid_sdk_error;
 
 typedef struct wire_cst_log_entry {
   struct wire_cst_list_prim_u_8_strict *line;
@@ -301,6 +388,9 @@ void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network);
 
+void frbgen_breez_liquid_wire__crate__bindings__parse(int64_t port_,
+                                                      struct wire_cst_list_prim_u_8_strict *input);
+
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
 
 void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
@@ -311,9 +401,21 @@ struct wire_cst_backup_request *frbgen_breez_liquid_cst_new_box_autoadd_backup_r
 
 struct wire_cst_binding_event_listener *frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(void);
 
+struct wire_cst_bitcoin_address_data *frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(void);
+
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
 struct wire_cst_liquid_sdk_event *frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(void);
+
+struct wire_cst_ln_invoice *frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice(void);
+
+struct wire_cst_ln_url_auth_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(void);
+
+struct wire_cst_ln_url_error_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data(void);
+
+struct wire_cst_ln_url_pay_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(void);
+
+struct wire_cst_ln_url_withdraw_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(void);
 
 struct wire_cst_payment *frbgen_breez_liquid_cst_new_box_autoadd_payment(void);
 
@@ -340,8 +442,14 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response);
@@ -371,6 +479,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__breez_log_stream);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__default_config);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;

@@ -74,7 +74,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     @objc(defaultConfig:resolve:reject:)
     func defaultConfig(_ network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let networkTmp = try BreezLiquidSDKMapper.asNetwork(network: network)
+            let networkTmp = try BreezLiquidSDKMapper.asLiquidSdkNetwork(liquidSdkNetwork: network)
             var res = BreezLiquidSDK.defaultConfig(network: networkTmp)
             res.workingDir = RNBreezLiquidSDK.breezLiquidSdkDirectory.path
             resolve(BreezLiquidSDKMapper.dictionaryOf(config: res))
@@ -83,10 +83,20 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
-    @objc(parseInvoice:resolve:reject:)
-    func parseInvoice(_ invoice: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(parse:resolve:reject:)
+    func parse(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try BreezLiquidSDK.parseInvoice(invoice: invoice)
+            var res = try BreezLiquidSDK.parse(input: input)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(inputType: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(parseInvoice:resolve:reject:)
+    func parseInvoice(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try BreezLiquidSDK.parseInvoice(input: input)
             resolve(BreezLiquidSDKMapper.dictionaryOf(lnInvoice: res))
         } catch let err {
             rejectErr(err: err, reject: reject)

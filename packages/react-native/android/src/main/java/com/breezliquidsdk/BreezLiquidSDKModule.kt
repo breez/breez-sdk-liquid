@@ -61,7 +61,7 @@ class BreezLiquidSDKModule(
     ) {
         executor.execute {
             try {
-                val networkTmp = asNetwork(network)
+                val networkTmp = asLiquidSdkNetwork(network)
                 val res = defaultConfig(networkTmp)
                 val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezLiquidSdk")
 
@@ -74,13 +74,28 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
-    fun parseInvoice(
-        invoice: String,
+    fun parse(
+        input: String,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = parseInvoice(invoice)
+                val res = parse(input)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun parseInvoice(
+        input: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = parseInvoice(input)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

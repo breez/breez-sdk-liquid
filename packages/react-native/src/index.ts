@@ -23,11 +23,19 @@ export interface BackupRequest {
     backupPath?: string
 }
 
+export interface BitcoinAddressData {
+    address: string
+    network: Network
+    amountSat?: number
+    label?: string
+    message?: string
+}
+
 export interface Config {
     boltzUrl: string
     electrumUrl: string
     workingDir: string
-    network: Network
+    network: LiquidSdkNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRate: number
     zeroConfMaxAmountSat?: number
@@ -58,6 +66,37 @@ export interface LnInvoice {
     routingHints: RouteHint[]
     paymentSecret: number[]
     minFinalCltvExpiryDelta: number
+}
+
+export interface LnUrlAuthRequestData {
+    k1: string
+    domain: string
+    url: string
+    action?: string
+}
+
+export interface LnUrlErrorData {
+    reason: string
+}
+
+export interface LnUrlPayRequestData {
+    callback: string
+    minSendable: number
+    maxSendable: number
+    metadataStr: string
+    commentAllowed: number
+    domain: string
+    allowsNostr: boolean
+    nostrPubkey?: string
+    lnAddress?: string
+}
+
+export interface LnUrlWithdrawRequestData {
+    callback: string
+    k1: string
+    defaultDescription: string
+    minWithdrawable: number
+    maxWithdrawable: number
 }
 
 export interface LogEntry {
@@ -123,6 +162,43 @@ export interface SendPaymentResponse {
     payment: Payment
 }
 
+export enum InputTypeVariant {
+    BITCOIN_ADDRESS = "bitcoinAddress",
+    BOLT11 = "bolt11",
+    NODE_ID = "nodeId",
+    URL = "url",
+    LN_URL_PAY = "lnUrlPay",
+    LN_URL_WITHDRAW = "lnUrlWithdraw",
+    LN_URL_AUTH = "lnUrlAuth",
+    LN_URL_ENDPOINT_ERROR = "lnUrlEndpointError"
+}
+
+export type InputType = {
+    type: InputTypeVariant.BITCOIN_ADDRESS,
+    address: BitcoinAddressData
+} | {
+    type: InputTypeVariant.BOLT11,
+    invoice: LnInvoice
+} | {
+    type: InputTypeVariant.NODE_ID,
+    nodeId: string
+} | {
+    type: InputTypeVariant.URL,
+    url: string
+} | {
+    type: InputTypeVariant.LN_URL_PAY,
+    data: LnUrlPayRequestData
+} | {
+    type: InputTypeVariant.LN_URL_WITHDRAW,
+    data: LnUrlWithdrawRequestData
+} | {
+    type: InputTypeVariant.LN_URL_AUTH,
+    data: LnUrlAuthRequestData
+} | {
+    type: InputTypeVariant.LN_URL_ENDPOINT_ERROR,
+    data: LnUrlErrorData
+}
+
 export enum LiquidSdkEventVariant {
     PAYMENT_FAILED = "paymentFailed",
     PAYMENT_PENDING = "paymentPending",
@@ -155,9 +231,16 @@ export type LiquidSdkEvent = {
     type: LiquidSdkEventVariant.SYNCED
 }
 
-export enum Network {
+export enum LiquidSdkNetwork {
     MAINNET = "mainnet",
     TESTNET = "testnet"
+}
+
+export enum Network {
+    BITCOIN = "bitcoin",
+    TESTNET = "testnet",
+    SIGNET = "signet",
+    REGTEST = "regtest"
 }
 
 export enum PaymentState {
@@ -199,13 +282,18 @@ export const setLogger = async (logger: Logger): Promise<EmitterSubscription> =>
     return subscription
 }
 
-export const defaultConfig = async (network: Network): Promise<Config> => {
+export const defaultConfig = async (network: LiquidSdkNetwork): Promise<Config> => {
     const response = await BreezLiquidSDK.defaultConfig(network)
     return response
 }
 
-export const parseInvoice = async (invoice: string): Promise<LnInvoice> => {
-    const response = await BreezLiquidSDK.parseInvoice(invoice)
+export const parse = async (input: string): Promise<InputType> => {
+    const response = await BreezLiquidSDK.parse(input)
+    return response
+}
+
+export const parseInvoice = async (input: string): Promise<LnInvoice> => {
+    const response = await BreezLiquidSDK.parseInvoice(input)
     return response
 }
 

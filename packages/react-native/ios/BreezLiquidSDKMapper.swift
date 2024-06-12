@@ -38,6 +38,73 @@ enum BreezLiquidSDKMapper {
         return backupRequestList.map { v -> [String: Any?] in dictionaryOf(backupRequest: v) }
     }
 
+    static func asBitcoinAddressData(bitcoinAddressData: [String: Any?]) throws -> BitcoinAddressData {
+        guard let address = bitcoinAddressData["address"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "BitcoinAddressData"))
+        }
+        guard let networkTmp = bitcoinAddressData["network"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "BitcoinAddressData"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        var amountSat: UInt64?
+        if hasNonNilKey(data: bitcoinAddressData, key: "amountSat") {
+            guard let amountSatTmp = bitcoinAddressData["amountSat"] as? UInt64 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "amountSat"))
+            }
+            amountSat = amountSatTmp
+        }
+        var label: String?
+        if hasNonNilKey(data: bitcoinAddressData, key: "label") {
+            guard let labelTmp = bitcoinAddressData["label"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "label"))
+            }
+            label = labelTmp
+        }
+        var message: String?
+        if hasNonNilKey(data: bitcoinAddressData, key: "message") {
+            guard let messageTmp = bitcoinAddressData["message"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "message"))
+            }
+            message = messageTmp
+        }
+
+        return BitcoinAddressData(
+            address: address,
+            network: network,
+            amountSat: amountSat,
+            label: label,
+            message: message
+        )
+    }
+
+    static func dictionaryOf(bitcoinAddressData: BitcoinAddressData) -> [String: Any?] {
+        return [
+            "address": bitcoinAddressData.address,
+            "network": valueOf(network: bitcoinAddressData.network),
+            "amountSat": bitcoinAddressData.amountSat == nil ? nil : bitcoinAddressData.amountSat,
+            "label": bitcoinAddressData.label == nil ? nil : bitcoinAddressData.label,
+            "message": bitcoinAddressData.message == nil ? nil : bitcoinAddressData.message,
+        ]
+    }
+
+    static func asBitcoinAddressDataList(arr: [Any]) throws -> [BitcoinAddressData] {
+        var list = [BitcoinAddressData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var bitcoinAddressData = try asBitcoinAddressData(bitcoinAddressData: val)
+                list.append(bitcoinAddressData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "BitcoinAddressData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(bitcoinAddressDataList: [BitcoinAddressData]) -> [Any] {
+        return bitcoinAddressDataList.map { v -> [String: Any?] in dictionaryOf(bitcoinAddressData: v) }
+    }
+
     static func asConfig(config: [String: Any?]) throws -> Config {
         guard let boltzUrl = config["boltzUrl"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "boltzUrl", typeName: "Config"))
@@ -51,7 +118,7 @@ enum BreezLiquidSDKMapper {
         guard let networkTmp = config["network"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "Config"))
         }
-        let network = try asNetwork(network: networkTmp)
+        let network = try asLiquidSdkNetwork(liquidSdkNetwork: networkTmp)
 
         guard let paymentTimeoutSec = config["paymentTimeoutSec"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentTimeoutSec", typeName: "Config"))
@@ -83,7 +150,7 @@ enum BreezLiquidSDKMapper {
             "boltzUrl": config.boltzUrl,
             "electrumUrl": config.electrumUrl,
             "workingDir": config.workingDir,
-            "network": valueOf(network: config.network),
+            "network": valueOf(liquidSdkNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRate": config.zeroConfMinFeeRate,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
@@ -297,6 +364,224 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(lnInvoiceList: [LnInvoice]) -> [Any] {
         return lnInvoiceList.map { v -> [String: Any?] in dictionaryOf(lnInvoice: v) }
+    }
+
+    static func asLnUrlAuthRequestData(lnUrlAuthRequestData: [String: Any?]) throws -> LnUrlAuthRequestData {
+        guard let k1 = lnUrlAuthRequestData["k1"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "k1", typeName: "LnUrlAuthRequestData"))
+        }
+        guard let domain = lnUrlAuthRequestData["domain"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "domain", typeName: "LnUrlAuthRequestData"))
+        }
+        guard let url = lnUrlAuthRequestData["url"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "LnUrlAuthRequestData"))
+        }
+        var action: String?
+        if hasNonNilKey(data: lnUrlAuthRequestData, key: "action") {
+            guard let actionTmp = lnUrlAuthRequestData["action"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "action"))
+            }
+            action = actionTmp
+        }
+
+        return LnUrlAuthRequestData(
+            k1: k1,
+            domain: domain,
+            url: url,
+            action: action
+        )
+    }
+
+    static func dictionaryOf(lnUrlAuthRequestData: LnUrlAuthRequestData) -> [String: Any?] {
+        return [
+            "k1": lnUrlAuthRequestData.k1,
+            "domain": lnUrlAuthRequestData.domain,
+            "url": lnUrlAuthRequestData.url,
+            "action": lnUrlAuthRequestData.action == nil ? nil : lnUrlAuthRequestData.action,
+        ]
+    }
+
+    static func asLnUrlAuthRequestDataList(arr: [Any]) throws -> [LnUrlAuthRequestData] {
+        var list = [LnUrlAuthRequestData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlAuthRequestData = try asLnUrlAuthRequestData(lnUrlAuthRequestData: val)
+                list.append(lnUrlAuthRequestData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlAuthRequestData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlAuthRequestDataList: [LnUrlAuthRequestData]) -> [Any] {
+        return lnUrlAuthRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlAuthRequestData: v) }
+    }
+
+    static func asLnUrlErrorData(lnUrlErrorData: [String: Any?]) throws -> LnUrlErrorData {
+        guard let reason = lnUrlErrorData["reason"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "reason", typeName: "LnUrlErrorData"))
+        }
+
+        return LnUrlErrorData(
+            reason: reason)
+    }
+
+    static func dictionaryOf(lnUrlErrorData: LnUrlErrorData) -> [String: Any?] {
+        return [
+            "reason": lnUrlErrorData.reason,
+        ]
+    }
+
+    static func asLnUrlErrorDataList(arr: [Any]) throws -> [LnUrlErrorData] {
+        var list = [LnUrlErrorData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlErrorData = try asLnUrlErrorData(lnUrlErrorData: val)
+                list.append(lnUrlErrorData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlErrorData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlErrorDataList: [LnUrlErrorData]) -> [Any] {
+        return lnUrlErrorDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlErrorData: v) }
+    }
+
+    static func asLnUrlPayRequestData(lnUrlPayRequestData: [String: Any?]) throws -> LnUrlPayRequestData {
+        guard let callback = lnUrlPayRequestData["callback"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "callback", typeName: "LnUrlPayRequestData"))
+        }
+        guard let minSendable = lnUrlPayRequestData["minSendable"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minSendable", typeName: "LnUrlPayRequestData"))
+        }
+        guard let maxSendable = lnUrlPayRequestData["maxSendable"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxSendable", typeName: "LnUrlPayRequestData"))
+        }
+        guard let metadataStr = lnUrlPayRequestData["metadataStr"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "metadataStr", typeName: "LnUrlPayRequestData"))
+        }
+        guard let commentAllowed = lnUrlPayRequestData["commentAllowed"] as? UInt16 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "commentAllowed", typeName: "LnUrlPayRequestData"))
+        }
+        guard let domain = lnUrlPayRequestData["domain"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "domain", typeName: "LnUrlPayRequestData"))
+        }
+        guard let allowsNostr = lnUrlPayRequestData["allowsNostr"] as? Bool else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "allowsNostr", typeName: "LnUrlPayRequestData"))
+        }
+        var nostrPubkey: String?
+        if hasNonNilKey(data: lnUrlPayRequestData, key: "nostrPubkey") {
+            guard let nostrPubkeyTmp = lnUrlPayRequestData["nostrPubkey"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "nostrPubkey"))
+            }
+            nostrPubkey = nostrPubkeyTmp
+        }
+        var lnAddress: String?
+        if hasNonNilKey(data: lnUrlPayRequestData, key: "lnAddress") {
+            guard let lnAddressTmp = lnUrlPayRequestData["lnAddress"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "lnAddress"))
+            }
+            lnAddress = lnAddressTmp
+        }
+
+        return LnUrlPayRequestData(
+            callback: callback,
+            minSendable: minSendable,
+            maxSendable: maxSendable,
+            metadataStr: metadataStr,
+            commentAllowed: commentAllowed,
+            domain: domain,
+            allowsNostr: allowsNostr,
+            nostrPubkey: nostrPubkey,
+            lnAddress: lnAddress
+        )
+    }
+
+    static func dictionaryOf(lnUrlPayRequestData: LnUrlPayRequestData) -> [String: Any?] {
+        return [
+            "callback": lnUrlPayRequestData.callback,
+            "minSendable": lnUrlPayRequestData.minSendable,
+            "maxSendable": lnUrlPayRequestData.maxSendable,
+            "metadataStr": lnUrlPayRequestData.metadataStr,
+            "commentAllowed": lnUrlPayRequestData.commentAllowed,
+            "domain": lnUrlPayRequestData.domain,
+            "allowsNostr": lnUrlPayRequestData.allowsNostr,
+            "nostrPubkey": lnUrlPayRequestData.nostrPubkey == nil ? nil : lnUrlPayRequestData.nostrPubkey,
+            "lnAddress": lnUrlPayRequestData.lnAddress == nil ? nil : lnUrlPayRequestData.lnAddress,
+        ]
+    }
+
+    static func asLnUrlPayRequestDataList(arr: [Any]) throws -> [LnUrlPayRequestData] {
+        var list = [LnUrlPayRequestData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlPayRequestData = try asLnUrlPayRequestData(lnUrlPayRequestData: val)
+                list.append(lnUrlPayRequestData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlPayRequestData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlPayRequestDataList: [LnUrlPayRequestData]) -> [Any] {
+        return lnUrlPayRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlPayRequestData: v) }
+    }
+
+    static func asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: [String: Any?]) throws -> LnUrlWithdrawRequestData {
+        guard let callback = lnUrlWithdrawRequestData["callback"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "callback", typeName: "LnUrlWithdrawRequestData"))
+        }
+        guard let k1 = lnUrlWithdrawRequestData["k1"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "k1", typeName: "LnUrlWithdrawRequestData"))
+        }
+        guard let defaultDescription = lnUrlWithdrawRequestData["defaultDescription"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "defaultDescription", typeName: "LnUrlWithdrawRequestData"))
+        }
+        guard let minWithdrawable = lnUrlWithdrawRequestData["minWithdrawable"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minWithdrawable", typeName: "LnUrlWithdrawRequestData"))
+        }
+        guard let maxWithdrawable = lnUrlWithdrawRequestData["maxWithdrawable"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxWithdrawable", typeName: "LnUrlWithdrawRequestData"))
+        }
+
+        return LnUrlWithdrawRequestData(
+            callback: callback,
+            k1: k1,
+            defaultDescription: defaultDescription,
+            minWithdrawable: minWithdrawable,
+            maxWithdrawable: maxWithdrawable
+        )
+    }
+
+    static func dictionaryOf(lnUrlWithdrawRequestData: LnUrlWithdrawRequestData) -> [String: Any?] {
+        return [
+            "callback": lnUrlWithdrawRequestData.callback,
+            "k1": lnUrlWithdrawRequestData.k1,
+            "defaultDescription": lnUrlWithdrawRequestData.defaultDescription,
+            "minWithdrawable": lnUrlWithdrawRequestData.minWithdrawable,
+            "maxWithdrawable": lnUrlWithdrawRequestData.maxWithdrawable,
+        ]
+    }
+
+    static func asLnUrlWithdrawRequestDataList(arr: [Any]) throws -> [LnUrlWithdrawRequestData] {
+        var list = [LnUrlWithdrawRequestData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlWithdrawRequestData = try asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: val)
+                list.append(lnUrlWithdrawRequestData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlWithdrawRequestData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlWithdrawRequestDataList: [LnUrlWithdrawRequestData]) -> [Any] {
+        return lnUrlWithdrawRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawRequestData: v) }
     }
 
     static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
@@ -789,6 +1074,157 @@ enum BreezLiquidSDKMapper {
         return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
     }
 
+    static func asInputType(inputType: [String: Any?]) throws -> InputType {
+        let type = inputType["type"] as! String
+        if type == "bitcoinAddress" {
+            guard let addressTmp = inputType["address"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "InputType"))
+            }
+            let _address = try asBitcoinAddressData(bitcoinAddressData: addressTmp)
+
+            return InputType.bitcoinAddress(address: _address)
+        }
+        if type == "bolt11" {
+            guard let invoiceTmp = inputType["invoice"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "InputType"))
+            }
+            let _invoice = try asLnInvoice(lnInvoice: invoiceTmp)
+
+            return InputType.bolt11(invoice: _invoice)
+        }
+        if type == "nodeId" {
+            guard let _nodeId = inputType["nodeId"] as? String else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "nodeId", typeName: "InputType"))
+            }
+            return InputType.nodeId(nodeId: _nodeId)
+        }
+        if type == "url" {
+            guard let _url = inputType["url"] as? String else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "InputType"))
+            }
+            return InputType.url(url: _url)
+        }
+        if type == "lnUrlPay" {
+            guard let dataTmp = inputType["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "InputType"))
+            }
+            let _data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
+
+            return InputType.lnUrlPay(data: _data)
+        }
+        if type == "lnUrlWithdraw" {
+            guard let dataTmp = inputType["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "InputType"))
+            }
+            let _data = try asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: dataTmp)
+
+            return InputType.lnUrlWithdraw(data: _data)
+        }
+        if type == "lnUrlAuth" {
+            guard let dataTmp = inputType["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "InputType"))
+            }
+            let _data = try asLnUrlAuthRequestData(lnUrlAuthRequestData: dataTmp)
+
+            return InputType.lnUrlAuth(data: _data)
+        }
+        if type == "lnUrlEndpointError" {
+            guard let dataTmp = inputType["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "InputType"))
+            }
+            let _data = try asLnUrlErrorData(lnUrlErrorData: dataTmp)
+
+            return InputType.lnUrlEndpointError(data: _data)
+        }
+
+        throw LiquidSdkError.Generic(message: "Unexpected type \(type) for enum InputType")
+    }
+
+    static func dictionaryOf(inputType: InputType) -> [String: Any?] {
+        switch inputType {
+        case let .bitcoinAddress(
+            address
+        ):
+            return [
+                "type": "bitcoinAddress",
+                "address": dictionaryOf(bitcoinAddressData: address),
+            ]
+
+        case let .bolt11(
+            invoice
+        ):
+            return [
+                "type": "bolt11",
+                "invoice": dictionaryOf(lnInvoice: invoice),
+            ]
+
+        case let .nodeId(
+            nodeId
+        ):
+            return [
+                "type": "nodeId",
+                "nodeId": nodeId,
+            ]
+
+        case let .url(
+            url
+        ):
+            return [
+                "type": "url",
+                "url": url,
+            ]
+
+        case let .lnUrlPay(
+            data
+        ):
+            return [
+                "type": "lnUrlPay",
+                "data": dictionaryOf(lnUrlPayRequestData: data),
+            ]
+
+        case let .lnUrlWithdraw(
+            data
+        ):
+            return [
+                "type": "lnUrlWithdraw",
+                "data": dictionaryOf(lnUrlWithdrawRequestData: data),
+            ]
+
+        case let .lnUrlAuth(
+            data
+        ):
+            return [
+                "type": "lnUrlAuth",
+                "data": dictionaryOf(lnUrlAuthRequestData: data),
+            ]
+
+        case let .lnUrlEndpointError(
+            data
+        ):
+            return [
+                "type": "lnUrlEndpointError",
+                "data": dictionaryOf(lnUrlErrorData: data),
+            ]
+        }
+    }
+
+    static func arrayOf(inputTypeList: [InputType]) -> [Any] {
+        return inputTypeList.map { v -> [String: Any?] in dictionaryOf(inputType: v) }
+    }
+
+    static func asInputTypeList(arr: [Any]) throws -> [InputType] {
+        var list = [InputType]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var inputType = try asInputType(inputType: val)
+                list.append(inputType)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "InputType"))
+            }
+        }
+        return list
+    }
+
     static func asLiquidSdkEvent(liquidSdkEvent: [String: Any?]) throws -> LiquidSdkEvent {
         let type = liquidSdkEvent["type"] as! String
         if type == "paymentFailed" {
@@ -920,13 +1356,58 @@ enum BreezLiquidSDKMapper {
         return list
     }
 
+    static func asLiquidSdkNetwork(liquidSdkNetwork: String) throws -> LiquidSdkNetwork {
+        switch liquidSdkNetwork {
+        case "mainnet":
+            return LiquidSdkNetwork.mainnet
+
+        case "testnet":
+            return LiquidSdkNetwork.testnet
+
+        default: throw LiquidSdkError.Generic(message: "Invalid variant \(liquidSdkNetwork) for enum LiquidSdkNetwork")
+        }
+    }
+
+    static func valueOf(liquidSdkNetwork: LiquidSdkNetwork) -> String {
+        switch liquidSdkNetwork {
+        case .mainnet:
+            return "mainnet"
+
+        case .testnet:
+            return "testnet"
+        }
+    }
+
+    static func arrayOf(liquidSdkNetworkList: [LiquidSdkNetwork]) -> [String] {
+        return liquidSdkNetworkList.map { v -> String in valueOf(liquidSdkNetwork: v) }
+    }
+
+    static func asLiquidSdkNetworkList(arr: [Any]) throws -> [LiquidSdkNetwork] {
+        var list = [LiquidSdkNetwork]()
+        for value in arr {
+            if let val = value as? String {
+                var liquidSdkNetwork = try asLiquidSdkNetwork(liquidSdkNetwork: val)
+                list.append(liquidSdkNetwork)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LiquidSdkNetwork"))
+            }
+        }
+        return list
+    }
+
     static func asNetwork(network: String) throws -> Network {
         switch network {
-        case "mainnet":
-            return Network.mainnet
+        case "bitcoin":
+            return Network.bitcoin
 
         case "testnet":
             return Network.testnet
+
+        case "signet":
+            return Network.signet
+
+        case "regtest":
+            return Network.regtest
 
         default: throw LiquidSdkError.Generic(message: "Invalid variant \(network) for enum Network")
         }
@@ -934,11 +1415,17 @@ enum BreezLiquidSDKMapper {
 
     static func valueOf(network: Network) -> String {
         switch network {
-        case .mainnet:
-            return "mainnet"
+        case .bitcoin:
+            return "bitcoin"
 
         case .testnet:
             return "testnet"
+
+        case .signet:
+            return "signet"
+
+        case .regtest:
+            return "regtest"
         }
     }
 

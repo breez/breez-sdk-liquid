@@ -38,6 +38,57 @@ dictionary RouteHintHop {
      u64? htlc_maximum_msat;
 };
 
+[Enum]
+interface InputType {
+    BitcoinAddress(BitcoinAddressData address);
+    Bolt11(LNInvoice invoice);
+    NodeId(string node_id);
+    Url(string url);
+    LnUrlPay(LnUrlPayRequestData data);
+    LnUrlWithdraw(LnUrlWithdrawRequestData data);
+    LnUrlAuth(LnUrlAuthRequestData data);
+    LnUrlEndpointError(LnUrlErrorData data);
+};
+
+dictionary BitcoinAddressData {
+    string address;
+    Network network;
+    u64? amount_sat;
+    string? label;
+    string? message;
+};
+
+dictionary LnUrlPayRequestData {
+    string callback;
+    u64 min_sendable;
+    u64 max_sendable;
+    string metadata_str;
+    u16 comment_allowed;
+    string domain;
+    boolean allows_nostr;
+    string? nostr_pubkey;
+    string? ln_address;
+};
+
+dictionary LnUrlWithdrawRequestData {
+    string callback;
+    string k1;
+    string default_description;
+    u64 min_withdrawable;
+    u64 max_withdrawable;
+};
+
+dictionary LnUrlAuthRequestData {
+    string k1;
+    string domain;
+    string url;
+    string? action = null;
+};
+
+dictionary LnUrlErrorData {
+    string reason;
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 
@@ -192,7 +243,10 @@ namespace breez_liquid_sdk {
     Config default_config(LiquidSdkNetwork network);
 
     [Throws=PaymentError]
-    LNInvoice parse_invoice(string invoice);
+    InputType parse(string input);
+
+    [Throws=PaymentError]
+    LNInvoice parse_invoice(string input);
 };
 
 interface BindingLiquidSdk {

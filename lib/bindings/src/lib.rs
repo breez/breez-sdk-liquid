@@ -62,6 +62,9 @@ pub fn default_config(network: LiquidSdkNetwork) -> Config {
     LiquidSdk::default_config(network)
 }
 
+pub fn parse(input: String) -> Result<InputType, PaymentError> {
+    rt().block_on(async { LiquidSdk::parse(&input).await })
+}
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }

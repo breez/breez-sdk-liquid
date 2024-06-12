@@ -10,7 +10,13 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    parseInvoice: (NSString*)invoice
+    parse: (NSString*)input
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    parseInvoice: (NSString*)input
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
