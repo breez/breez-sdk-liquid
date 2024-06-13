@@ -648,6 +648,8 @@ final class wire_cst_payment extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
   external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;

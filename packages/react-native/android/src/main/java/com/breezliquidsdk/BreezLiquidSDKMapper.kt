@@ -306,6 +306,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     val amountSat = payment.getDouble("amountSat").toULong()
     val feesSat = payment.getDouble("feesSat").toULong()
     val preimage = if (hasNonNullKey(payment, "preimage")) payment.getString("preimage") else null
+    val invoice = if (hasNonNullKey(payment, "invoice")) payment.getString("invoice") else null
     val refundTxId = if (hasNonNullKey(payment, "refundTxId")) payment.getString("refundTxId") else null
     val refundTxAmountSat = if (hasNonNullKey(payment, "refundTxAmountSat")) payment.getDouble("refundTxAmountSat").toULong() else null
     val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
@@ -317,6 +318,7 @@ fun asPayment(payment: ReadableMap): Payment? {
         amountSat,
         feesSat,
         preimage,
+        invoice,
         refundTxId,
         refundTxAmountSat,
         paymentType,
@@ -332,6 +334,7 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
         "preimage" to payment.preimage,
+        "invoice" to payment.invoice,
         "refundTxId" to payment.refundTxId,
         "refundTxAmountSat" to payment.refundTxAmountSat,
         "paymentType" to payment.paymentType.name.lowercase(),
