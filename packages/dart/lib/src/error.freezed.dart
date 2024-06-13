@@ -189,6 +189,78 @@ abstract class LiquidSdkError_NotStarted extends LiquidSdkError {
 }
 
 /// @nodoc
+abstract class _$$LiquidSdkError_LnUrlPayImplCopyWith<$Res> {
+  factory _$$LiquidSdkError_LnUrlPayImplCopyWith(
+          _$LiquidSdkError_LnUrlPayImpl value, $Res Function(_$LiquidSdkError_LnUrlPayImpl) then) =
+      __$$LiquidSdkError_LnUrlPayImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String field0});
+}
+
+/// @nodoc
+class __$$LiquidSdkError_LnUrlPayImplCopyWithImpl<$Res>
+    extends _$LiquidSdkErrorCopyWithImpl<$Res, _$LiquidSdkError_LnUrlPayImpl>
+    implements _$$LiquidSdkError_LnUrlPayImplCopyWith<$Res> {
+  __$$LiquidSdkError_LnUrlPayImplCopyWithImpl(
+      _$LiquidSdkError_LnUrlPayImpl _value, $Res Function(_$LiquidSdkError_LnUrlPayImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? field0 = null,
+  }) {
+    return _then(_$LiquidSdkError_LnUrlPayImpl(
+      null == field0
+          ? _value.field0
+          : field0 // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LiquidSdkError_LnUrlPayImpl extends LiquidSdkError_LnUrlPay {
+  const _$LiquidSdkError_LnUrlPayImpl(this.field0) : super._();
+
+  @override
+  final String field0;
+
+  @override
+  String toString() {
+    return 'LiquidSdkError.lnUrlPay(field0: $field0)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LiquidSdkError_LnUrlPayImpl &&
+            (identical(other.field0, field0) || other.field0 == field0));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, field0);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LiquidSdkError_LnUrlPayImplCopyWith<_$LiquidSdkError_LnUrlPayImpl> get copyWith =>
+      __$$LiquidSdkError_LnUrlPayImplCopyWithImpl<_$LiquidSdkError_LnUrlPayImpl>(this, _$identity);
+}
+
+abstract class LiquidSdkError_LnUrlPay extends LiquidSdkError {
+  const factory LiquidSdkError_LnUrlPay(final String field0) = _$LiquidSdkError_LnUrlPayImpl;
+  const LiquidSdkError_LnUrlPay._() : super._();
+
+  String get field0;
+  @JsonKey(ignore: true)
+  _$$LiquidSdkError_LnUrlPayImplCopyWith<_$LiquidSdkError_LnUrlPayImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$PaymentError {}
 
 /// @nodoc

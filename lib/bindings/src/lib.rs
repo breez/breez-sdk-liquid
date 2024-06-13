@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
+use breez_liquid_sdk::model::lnurl::*;
 use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk, *};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
@@ -116,6 +117,10 @@ impl BindingLiquidSdk {
 
     pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.sdk.list_payments())
+    }
+
+    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
+        rt().block_on(self.sdk.lnurl_pay(req))
     }
 
     pub fn sync(&self) -> LiquidSdkResult<()> {

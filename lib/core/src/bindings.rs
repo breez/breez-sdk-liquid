@@ -6,7 +6,9 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 
+use crate::model::lnurl::WrappedLnUrlPayResult;
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk, *};
+use sdk_common::prelude::LnUrlPayRequest;
 
 pub struct BindingEventListener {
     pub stream: StreamSink<LiquidSdkEvent>,
@@ -121,6 +123,13 @@ impl BindingLiquidSdk {
 
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.sdk.list_payments().await
+    }
+
+    pub async fn lnurl_pay(
+        &self,
+        req: LnUrlPayRequest,
+    ) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
+        self.sdk.lnurl_pay(req).await
     }
 
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {

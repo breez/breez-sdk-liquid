@@ -98,6 +98,66 @@ pub struct _LnUrlPayRequestData {
     pub ln_address: Option<String>,
 }
 
+// #[frb(mirror(LnUrlPayError))]
+// pub enum _LnUrlPayError {
+//     AlreadyPaid,
+//     Generic { err: String },
+//     InvalidAmount { err: String },
+//     InvalidInvoice { err: String },
+//     InvalidNetwork { err: String },
+//     InvalidUri { err: String },
+//     InvoiceExpired { err: String },
+//     PaymentFailed { err: String },
+//     PaymentTimeout { err: String },
+//     RouteNotFound { err: String },
+//     RouteTooExpensive { err: String },
+//     ServiceConnectivity { err: String },
+// }
+
+#[frb(mirror(LnUrlPayRequest))]
+pub struct _LnUrlPayRequest {
+    pub data: LnUrlPayRequestData,
+    pub amount_msat: u64,
+    pub comment: Option<String>,
+    pub payment_label: Option<String>,
+}
+
+#[frb(mirror(SuccessActionProcessed))]
+pub enum _SuccessActionProcessed {
+    Aes { result: AesSuccessActionDataResult },
+    Message { data: MessageSuccessActionData },
+    Url { data: UrlSuccessActionData },
+}
+
+#[frb(mirror(AesSuccessActionDataResult))]
+pub enum _AesSuccessActionDataResult {
+    Decrypted { data: AesSuccessActionDataDecrypted },
+    ErrorStatus { reason: String },
+}
+
+#[frb(mirror(AesSuccessActionDataDecrypted))]
+pub struct _AesSuccessActionDataDecrypted {
+    pub description: String,
+    pub plaintext: String,
+}
+
+#[frb(mirror(MessageSuccessActionData))]
+pub struct _MessageSuccessActionData {
+    pub message: String,
+}
+
+#[frb(mirror(UrlSuccessActionData))]
+pub struct _UrlSuccessActionData {
+    pub description: String,
+    pub url: String,
+}
+
+#[frb(mirror(LnUrlPayErrorData))]
+pub struct _LnUrlPayErrorData {
+    pub payment_hash: String,
+    pub reason: String,
+}
+
 #[frb(mirror(LnUrlWithdrawRequestData))]
 pub struct _LnUrlWithdrawRequestData {
     pub callback: String,

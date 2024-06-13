@@ -7,6 +7,7 @@ use std::time::Duration;
 use anyhow::Result;
 use breez_liquid_sdk::model::*;
 use breez_liquid_sdk::sdk::LiquidSdk;
+use breez_liquid_sdk::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -59,6 +60,11 @@ pub(crate) enum Command {
         /// Generic input (URL, LNURL, BIP-21 BTC Address, LN invoice, etc)
         input: String,
     },
+    /// Pay using LNURL
+    LnurlPay {
+        /// LN Address or LNURL-pay endpoint
+        lnurl: String,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -102,7 +108,7 @@ macro_rules! wait_confirmation {
 }
 
 pub(crate) async fn handle_command(
-    _rl: &mut Editor<CliHelper, DefaultHistory>,
+    rl: &mut Editor<CliHelper, DefaultHistory>,
     sdk: &Arc<LiquidSdk>,
     command: Command,
 ) -> Result<String> {
@@ -184,6 +190,31 @@ pub(crate) async fn handle_command(
         }
         Command::Parse { input } => {
             let res = LiquidSdk::parse(&input).await?;
+            command_result!(res)
+        }
+        Command::LnurlPay { lnurl } => {
+            let input = LiquidSdk::parse(&lnurl).await?;
+            let res = match input {
+                InputType::LnUrlPay { data: pd } => {
+                    let prompt = format!(
+                        "Amount to pay in millisatoshi (min {} msat, max {} msat): ",
+                        pd.min_sendable, pd.max_sendable
+                    );
+
+                    let amount_msat = rl.readline(&prompt)?;
+                    let pay_res = sdk
+                        .lnurl_pay(LnUrlPayRequest {
+                            data: pd,
+                            amount_msat: amount_msat.parse::<u64>()?,
+                            comment: None,
+                            payment_label: None,
+                        })
+                        .await?;
+                    Ok(pay_res)
+                }
+                _ => Err(anyhow::anyhow!("Invalid input")),
+            }?;
+
             command_result!(res)
         }
     })

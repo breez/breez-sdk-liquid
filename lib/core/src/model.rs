@@ -105,18 +105,11 @@ impl TryFrom<&str> for LiquidSdkNetwork {
     }
 }
 
-impl TryFrom<boltz_client::lightning_invoice::Currency> for LiquidSdkNetwork {
-    type Error = anyhow::Error;
-
-    fn try_from(
-        value: boltz_client::lightning_invoice::Currency,
-    ) -> Result<LiquidSdkNetwork, anyhow::Error> {
+impl From<LiquidSdkNetwork> for sdk_common::prelude::Network {
+    fn from(value: LiquidSdkNetwork) -> Self {
         match value {
-            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(LiquidSdkNetwork::Mainnet),
-            boltz_client::lightning_invoice::Currency::BitcoinTestnet => {
-                Ok(LiquidSdkNetwork::Testnet)
-            }
-            _ => Err(anyhow!("Invalid network")),
+            LiquidSdkNetwork::Mainnet => Self::Bitcoin,
+            LiquidSdkNetwork::Testnet => Self::Testnet,
         }
     }
 }
@@ -702,6 +695,35 @@ impl From<SwapTree> for InternalSwapTree {
         InternalSwapTree {
             claim_leaf: value.claim_leaf.into(),
             refund_leaf: value.refund_leaf.into(),
+        }
+    }
+}
+
+/// LNURL-related wrappers
+pub mod lnurl {
+    use sdk_common::prelude::*;
+    use serde::Serialize;
+    use crate::error::LiquidSdkError;
+
+    use crate::model::Payment;
+
+    /// Wrapper around [LnUrlPayResult], which includes the [Payment] on success
+    #[derive(Serialize)]
+    pub enum WrappedLnUrlPayResult {
+        EndpointSuccess { data: WrappedLnUrlPaySuccessData },
+        EndpointError { data: LnUrlErrorData },
+        PayError { data: LnUrlPayErrorData },
+    }
+
+    #[derive(Serialize)]
+    pub struct WrappedLnUrlPaySuccessData {
+        pub payment: Payment,
+        pub success_action: Option<SuccessActionProcessed>,
+    }
+    
+    impl From<LnUrlError> for LiquidSdkError {
+        fn from(value: LnUrlError) -> Self {
+            Self::LnUrlPay(format!("{value}"))
         }
     }
 }

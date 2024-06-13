@@ -13,6 +13,7 @@ use futures_util::StreamExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
 use lwk_wollet::{BlockchainBackend, ElectrumClient, ElectrumUrl};
 use tokio::sync::{watch, RwLock};
@@ -20,6 +21,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::error::LiquidSdkError;
+use crate::model::lnurl::{WrappedLnUrlPayResult, WrappedLnUrlPaySuccessData};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
@@ -1064,6 +1066,83 @@ impl LiquidSdk {
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
         self.persister.restore_from_backup(backup_path)
+    }
+
+    /// Second step of LNURL-pay. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlPayRequest` payload needed here.
+    ///
+    /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
+    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
+    /// is made.
+    pub async fn lnurl_pay(
+        &self,
+        req: LnUrlPayRequest,
+    ) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
+        match validate_lnurl_pay(
+            req.amount_msat,
+            &req.comment,
+            &req.data,
+            self.config.network.into()
+        )
+            .await?
+        {
+            ValidatedCallbackResponse::EndpointError { data: e } => {
+                Ok(WrappedLnUrlPayResult::EndpointError { data: e })
+            }
+            ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
+                let pay_req = self.prepare_send_payment(&PrepareSendRequest {
+                    invoice: cb.pr.clone(),
+                }).await.map_err(|e| LiquidSdkError::Generic {
+                    err: format!("{e}")
+                })?;
+
+                let payment = self.send_payment(&pay_req)
+                    .await.map_err(|e| LiquidSdkError::LnUrlPay(format!("{e}")))?
+                .payment;
+
+
+                let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
+                    Some(sa) => {
+                        let processed_sa = match sa {
+                            // For AES, we decrypt the contents on the fly
+                            SuccessAction::Aes(data) => {
+                                let preimage_str = payment.preimage.clone().ok_or(
+                                    LiquidSdkError::Generic {
+                                        err: "Payment successful but no preimage found".to_string()
+                                    }
+                                )?;
+                                let preimage = sha256::Hash::from_str(&preimage_str).map_err(|_|
+                                    LiquidSdkError::Generic {
+                                        err: "Invalid preimage".to_string()
+                                    }
+                                )?;
+                                let preimage_arr: [u8; 32] = preimage.into_32();
+                                let result = match (data, &preimage_arr).try_into() {
+                                    Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                                    Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                                        reason: e.to_string(),
+                                    },
+                                };
+                                SuccessActionProcessed::Aes { result }
+                            }
+                            SuccessAction::Message(data) => {
+                                SuccessActionProcessed::Message { data }
+                            }
+                            SuccessAction::Url(data) => SuccessActionProcessed::Url { data },
+                        };
+                        Some(processed_sa)
+                    }
+                    None => None,
+                };
+
+                Ok(WrappedLnUrlPayResult::EndpointSuccess {
+                    data: WrappedLnUrlPaySuccessData {
+                        payment,
+                        success_action: maybe_sa_processed,
+                    },
+                })
+            }
+        }
     }
 
     pub fn default_config(network: LiquidSdkNetwork) -> Config {
