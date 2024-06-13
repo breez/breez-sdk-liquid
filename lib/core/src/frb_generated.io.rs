@@ -546,74 +546,74 @@ impl CstDecode<crate::LnUrlErrorData> for wire_cst_ln_url_error_data {
         }
     }
 }
-impl CstDecode<crate::LnUrlPayError> for wire_cst_ln_url_pay_error {
+impl CstDecode<crate::bindings::duplicates::LnUrlPayError> for wire_cst_ln_url_pay_error {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::LnUrlPayError {
+    fn cst_decode(self) -> crate::bindings::duplicates::LnUrlPayError {
         match self.tag {
-            0 => crate::LnUrlPayError::AlreadyPaid,
+            0 => crate::bindings::duplicates::LnUrlPayError::AlreadyPaid,
             1 => {
                 let ans = unsafe { self.kind.Generic };
-                crate::LnUrlPayError::Generic {
+                crate::bindings::duplicates::LnUrlPayError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
             2 => {
                 let ans = unsafe { self.kind.InvalidAmount };
-                crate::LnUrlPayError::InvalidAmount {
+                crate::bindings::duplicates::LnUrlPayError::InvalidAmount {
                     err: ans.err.cst_decode(),
                 }
             }
             3 => {
                 let ans = unsafe { self.kind.InvalidInvoice };
-                crate::LnUrlPayError::InvalidInvoice {
+                crate::bindings::duplicates::LnUrlPayError::InvalidInvoice {
                     err: ans.err.cst_decode(),
                 }
             }
             4 => {
                 let ans = unsafe { self.kind.InvalidNetwork };
-                crate::LnUrlPayError::InvalidNetwork {
+                crate::bindings::duplicates::LnUrlPayError::InvalidNetwork {
                     err: ans.err.cst_decode(),
                 }
             }
             5 => {
                 let ans = unsafe { self.kind.InvalidUri };
-                crate::LnUrlPayError::InvalidUri {
+                crate::bindings::duplicates::LnUrlPayError::InvalidUri {
                     err: ans.err.cst_decode(),
                 }
             }
             6 => {
                 let ans = unsafe { self.kind.InvoiceExpired };
-                crate::LnUrlPayError::InvoiceExpired {
+                crate::bindings::duplicates::LnUrlPayError::InvoiceExpired {
                     err: ans.err.cst_decode(),
                 }
             }
             7 => {
                 let ans = unsafe { self.kind.PaymentFailed };
-                crate::LnUrlPayError::PaymentFailed {
+                crate::bindings::duplicates::LnUrlPayError::PaymentFailed {
                     err: ans.err.cst_decode(),
                 }
             }
             8 => {
                 let ans = unsafe { self.kind.PaymentTimeout };
-                crate::LnUrlPayError::PaymentTimeout {
+                crate::bindings::duplicates::LnUrlPayError::PaymentTimeout {
                     err: ans.err.cst_decode(),
                 }
             }
             9 => {
                 let ans = unsafe { self.kind.RouteNotFound };
-                crate::LnUrlPayError::RouteNotFound {
+                crate::bindings::duplicates::LnUrlPayError::RouteNotFound {
                     err: ans.err.cst_decode(),
                 }
             }
             10 => {
                 let ans = unsafe { self.kind.RouteTooExpensive };
-                crate::LnUrlPayError::RouteTooExpensive {
+                crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive {
                     err: ans.err.cst_decode(),
                 }
             }
             11 => {
                 let ans = unsafe { self.kind.ServiceConnectivity };
-                crate::LnUrlPayError::ServiceConnectivity {
+                crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity {
                     err: ans.err.cst_decode(),
                 }
             }

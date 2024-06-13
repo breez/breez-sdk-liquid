@@ -1372,57 +1372,61 @@ impl SseDecode for crate::LnUrlErrorData {
     }
 }
 
-impl SseDecode for crate::LnUrlPayError {
+impl SseDecode for crate::bindings::duplicates::LnUrlPayError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                return crate::LnUrlPayError::AlreadyPaid;
+                return crate::bindings::duplicates::LnUrlPayError::AlreadyPaid;
             }
             1 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::Generic { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::Generic { err: var_err };
             }
             2 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::InvalidAmount { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err: var_err };
             }
             3 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::InvalidInvoice { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err: var_err };
             }
             4 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::InvalidNetwork { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err: var_err };
             }
             5 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::InvalidUri { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidUri { err: var_err };
             }
             6 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::InvoiceExpired { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err: var_err };
             }
             7 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::PaymentFailed { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err: var_err };
             }
             8 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::PaymentTimeout { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err: var_err };
             }
             9 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::RouteNotFound { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err: var_err };
             }
             10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::RouteTooExpensive { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive {
+                    err: var_err,
+                };
             }
             11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::LnUrlPayError::ServiceConnectivity { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity {
+                    err: var_err,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -2323,41 +2327,41 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LnUrlErrorData>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::LnUrlPayError {
+impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlPayError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::LnUrlPayError::AlreadyPaid => [0.into_dart()].into_dart(),
-            crate::LnUrlPayError::Generic { err } => {
+            crate::bindings::duplicates::LnUrlPayError::AlreadyPaid => [0.into_dart()].into_dart(),
+            crate::bindings::duplicates::LnUrlPayError::Generic { err } => {
                 [1.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::InvalidAmount { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
                 [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::InvalidInvoice { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
                 [3.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::InvalidNetwork { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
                 [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::InvalidUri { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
                 [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::InvoiceExpired { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
                 [6.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::PaymentFailed { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
                 [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::PaymentTimeout { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
                 [8.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::RouteNotFound { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
                 [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::RouteTooExpensive { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
                 [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::LnUrlPayError::ServiceConnectivity { err } => {
+            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
                 [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             _ => {
@@ -2366,9 +2370,14 @@ impl flutter_rust_bridge::IntoDart for crate::LnUrlPayError {
         }
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::LnUrlPayError {}
-impl flutter_rust_bridge::IntoIntoDart<crate::LnUrlPayError> for crate::LnUrlPayError {
-    fn into_into_dart(self) -> crate::LnUrlPayError {
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bindings::duplicates::LnUrlPayError
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bindings::duplicates::LnUrlPayError>
+    for crate::bindings::duplicates::LnUrlPayError
+{
+    fn into_into_dart(self) -> crate::bindings::duplicates::LnUrlPayError {
         self
     }
 }
@@ -3246,54 +3255,54 @@ impl SseEncode for crate::LnUrlErrorData {
     }
 }
 
-impl SseEncode for crate::LnUrlPayError {
+impl SseEncode for crate::bindings::duplicates::LnUrlPayError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::LnUrlPayError::AlreadyPaid => {
+            crate::bindings::duplicates::LnUrlPayError::AlreadyPaid => {
                 <i32>::sse_encode(0, serializer);
             }
-            crate::LnUrlPayError::Generic { err } => {
+            crate::bindings::duplicates::LnUrlPayError::Generic { err } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::InvalidAmount { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::InvalidInvoice { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
                 <i32>::sse_encode(3, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::InvalidNetwork { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
                 <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::InvalidUri { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
                 <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::InvoiceExpired { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
                 <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::PaymentFailed { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::PaymentTimeout { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
                 <i32>::sse_encode(8, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::RouteNotFound { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
                 <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::RouteTooExpensive { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::LnUrlPayError::ServiceConnectivity { err } => {
+            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
                 <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(err, serializer);
             }
