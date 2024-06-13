@@ -11,6 +11,10 @@ use rusqlite::ToSql;
 use serde::{Deserialize, Serialize};
 
 use crate::error::PaymentError;
+use crate::receive_swap::{
+    DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+    DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+};
 use crate::utils;
 
 /// Configuration for the Liquid SDK
@@ -25,7 +29,13 @@ pub struct Config {
     pub network: Network,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
+    /// Zero-conf minimum accepted fee-rate in sat/vbyte
+    pub zero_conf_min_fee_rate: f32,
+    /// Maximum amount in satoshi to accept zero-conf payments with
+    /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
+    pub zero_conf_max_amount_sat: Option<u64>,
 }
+
 impl Config {
     pub fn mainnet() -> Self {
         Config {
@@ -34,6 +44,8 @@ impl Config {
             working_dir: ".".to_string(),
             network: Network::Mainnet,
             payment_timeout_sec: 15,
+            zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            zero_conf_max_amount_sat: None,
         }
     }
 
@@ -44,7 +56,14 @@ impl Config {
             working_dir: ".".to_string(),
             network: Network::Testnet,
             payment_timeout_sec: 15,
+            zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            zero_conf_max_amount_sat: None,
         }
+    }
+
+    pub fn zero_conf_max_amount_sat(&self) -> u64 {
+        self.zero_conf_max_amount_sat
+            .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 }
 

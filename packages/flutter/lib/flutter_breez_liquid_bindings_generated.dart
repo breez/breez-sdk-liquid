@@ -716,6 +716,11 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Uint64()
   external int payment_timeout_sec;
+
+  @ffi.Float()
+  external double zero_conf_min_fee_rate;
+
+  external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -898,3 +903,9 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
+
+const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
+
+const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
+
+const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;

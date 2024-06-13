@@ -2,8 +2,13 @@ use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::PaymentError;
-use anyhow::Result;
-use lwk_wollet::elements::LockTime::{self, *};
+use anyhow::{anyhow, Result};
+use lwk_wollet::elements::encode::deserialize;
+use lwk_wollet::elements::hex::FromHex;
+use lwk_wollet::elements::{
+    LockTime::{self, *},
+    Transaction,
+};
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -37,4 +42,10 @@ pub(crate) fn is_locktime_expired(current_locktime: LockTime, expiry_locktime: L
         (Seconds(n), Seconds(lock_time)) => n >= lock_time,
         _ => false, // Not using the same units
     }
+}
+
+pub(crate) fn deserialize_tx_hex(tx_hex: &str) -> Result<Transaction> {
+    Ok(deserialize(&Vec::<u8>::from_hex(tx_hex).map_err(
+        |err| anyhow!("Could not deserialize transaction: {err:?}"),
+    )?)?)
 }

@@ -33,6 +33,8 @@ dictionary Config {
     string working_dir;
     Network network;
     u64 payment_timeout_sec;
+    f32 zero_conf_min_fee_rate;
+    u64? zero_conf_max_amount_sat;
 };
 
 enum Network {

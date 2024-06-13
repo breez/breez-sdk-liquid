@@ -6,15 +6,22 @@ use boltz_client::swaps::boltzv2;
 use log::{debug, error, info, warn};
 use tokio::sync::broadcast;
 
-use crate::ensure_sdk;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
-use crate::model::{PaymentTxData, PaymentType, ReceiveSwap};
+use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
+use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError, model::PaymentState, persist::Persister, swapper::Swapper,
     wallet::OnchainWallet,
 };
 
+/// The minimum acceptable fee rate when claiming using zero-conf
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: f32 = 0.1;
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: f32 = 0.01;
+/// The maximum acceptable amount in satoshi when claiming using zero-conf
+pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 100_000;
+
 pub(crate) struct ReceiveSwapStateHandler {
+    config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
@@ -23,12 +30,14 @@ pub(crate) struct ReceiveSwapStateHandler {
 
 impl ReceiveSwapStateHandler {
     pub(crate) fn new(
+        config: Config,
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
+            config,
             onchain_wallet,
             persister,
             swapper,
@@ -63,16 +72,77 @@ impl ReceiveSwapStateHandler {
                 self.update_swap_info(id, Failed, None, None).await?;
                 Ok(())
             }
+            // The lockup tx is in the mempool and we accept 0-conf => try to claim
+            // Execute 0-conf preconditions check
             Ok(RevSwapStates::TransactionMempool) => {
                 let boltzv2::Update::TransactionMempool { transaction, .. } = update else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
+
                 let lockup_tx_id = &transaction.id;
                 self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
                     .await?;
+
+                if let Some(claim_tx_id) = receive_swap.claim_tx_id {
+                    return Err(anyhow!(
+                        "Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}"
+                    ));
+                }
+
+                let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
+
+                // If the amount is greater than the zero-conf limit
+                let max_amount_sat = self.config.zero_conf_max_amount_sat();
+                let receiver_amount_sat = receive_swap.receiver_amount_sat;
+                if receiver_amount_sat > max_amount_sat {
+                    warn!("[Receive Swap {id}] Amount is too high to claim with zero-conf ({receiver_amount_sat} sat > {max_amount_sat} sat). Waiting for confirmation...");
+                    return Ok(());
+                }
+
+                debug!("[Receive Swap {id}] Amount is within valid range for zero-conf ({receiver_amount_sat} < {max_amount_sat} sat)");
+
+                // If the transaction has RBF, see https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki
+                // TODO: Check for inherent RBF by ensuring all tx ancestors are confirmed
+                let rbf_explicit = lockup_tx.input.iter().any(|input| input.sequence.is_rbf());
+                // let rbf_inherent = lockup_tx_history.height < 0;
+
+                if rbf_explicit {
+                    warn!("[Receive Swap {id}] Lockup transaction signals RBF. Waiting for confirmation...");
+                    return Ok(());
+                }
+
+                debug!("[Receive Swap {id}] Lockup tx does not signal RBF. Proceeding...");
+
+                // If the fees are higher than our estimated value
+                let tx_fees: u64 = lockup_tx.all_fees().values().sum();
+                let min_fee_rate = self.config.zero_conf_min_fee_rate;
+                let lower_bound_estimated_fees = lockup_tx.vsize() as f32 * min_fee_rate * 0.8;
+
+                if lower_bound_estimated_fees > tx_fees as f32 {
+                    warn!("[Receive Swap {id}] Lockup tx fees are too low: Expected at least {lower_bound_estimated_fees} sat, got {tx_fees} sat. Waiting for confirmation...");
+                    return Ok(());
+                }
+
+                debug!("[Receive Swap {id}] Lockup tx fees are within acceptable range ({tx_fees} > {lower_bound_estimated_fees} sat). Proceeding with claim.");
+
+                match self.claim(&receive_swap).await {
+                    Ok(_) => {}
+                    Err(err) => match err {
+                        PaymentError::AlreadyClaimed => {
+                            warn!("Funds already claimed for Receive Swap {id}")
+                        }
+                        _ => error!("Claim for Receive Swap {id} failed: {err}"),
+                    },
+                }
+
                 Ok(())
             }
             Ok(RevSwapStates::TransactionConfirmed) => {
+                // TODO: We need to ensure that the lockup tx is actually confirmed
+                // if lockup_tx_history.height <= 0 {
+                //     return Err(anyhow!("Tx state mismatch: Lockup transaction was marked as confirmed by the swapper, but isn't."));
+                // }
+
                 match receive_swap.claim_tx_id {
                     Some(claim_tx_id) => {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")

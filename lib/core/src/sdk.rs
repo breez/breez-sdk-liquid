@@ -97,6 +97,7 @@ impl LiquidSdk {
         );
 
         let receive_swap_state_handler = ReceiveSwapStateHandler::new(
+            config.clone(),
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),

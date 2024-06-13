@@ -42,12 +42,21 @@ class Config {
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
 
+  /// Zero-conf minimum accepted fee-rate in sat/vbyte
+  final double zeroConfMinFeeRate;
+
+  /// Maximum amount in satoshi to accept zero-conf payments with
+  /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
+  final BigInt? zeroConfMaxAmountSat;
+
   const Config({
     required this.boltzUrl,
     required this.electrumUrl,
     required this.workingDir,
     required this.network,
     required this.paymentTimeoutSec,
+    required this.zeroConfMinFeeRate,
+    this.zeroConfMaxAmountSat,
   });
 
   @override
@@ -56,7 +65,9 @@ class Config {
       electrumUrl.hashCode ^
       workingDir.hashCode ^
       network.hashCode ^
-      paymentTimeoutSec.hashCode;
+      paymentTimeoutSec.hashCode ^
+      zeroConfMinFeeRate.hashCode ^
+      zeroConfMaxAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -67,7 +78,9 @@ class Config {
           electrumUrl == other.electrumUrl &&
           workingDir == other.workingDir &&
           network == other.network &&
-          paymentTimeoutSec == other.paymentTimeoutSec;
+          paymentTimeoutSec == other.paymentTimeoutSec &&
+          zeroConfMinFeeRate == other.zeroConfMinFeeRate &&
+          zeroConfMaxAmountSat == other.zeroConfMaxAmountSat;
 }
 
 class ConnectRequest {
