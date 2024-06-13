@@ -128,8 +128,8 @@ impl BindingLiquidSdk {
     pub async fn lnurl_pay(
         &self,
         req: LnUrlPayRequest,
-    ) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
-        self.sdk.lnurl_pay(req).await
+    ) -> Result<WrappedLnUrlPayResult, LnUrlPayError> {
+        self.sdk.lnurl_pay(req).await.map_err(Into::into)
     }
 
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {

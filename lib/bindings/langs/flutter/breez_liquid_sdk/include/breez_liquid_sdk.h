@@ -341,19 +341,77 @@ typedef struct wire_cst_LiquidSdkError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LiquidSdkError_Generic;
 
-typedef struct wire_cst_LiquidSdkError_LnUrlPay {
-  struct wire_cst_list_prim_u_8_strict *field0;
-} wire_cst_LiquidSdkError_LnUrlPay;
-
 typedef union LiquidSdkErrorKind {
   struct wire_cst_LiquidSdkError_Generic Generic;
-  struct wire_cst_LiquidSdkError_LnUrlPay LnUrlPay;
 } LiquidSdkErrorKind;
 
 typedef struct wire_cst_liquid_sdk_error {
   int32_t tag;
   union LiquidSdkErrorKind kind;
 } wire_cst_liquid_sdk_error;
+
+typedef struct wire_cst_LnUrlPayError_Generic {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_Generic;
+
+typedef struct wire_cst_LnUrlPayError_InvalidAmount {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InvalidAmount;
+
+typedef struct wire_cst_LnUrlPayError_InvalidInvoice {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InvalidInvoice;
+
+typedef struct wire_cst_LnUrlPayError_InvalidNetwork {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InvalidNetwork;
+
+typedef struct wire_cst_LnUrlPayError_InvalidUri {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InvalidUri;
+
+typedef struct wire_cst_LnUrlPayError_InvoiceExpired {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InvoiceExpired;
+
+typedef struct wire_cst_LnUrlPayError_PaymentFailed {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_PaymentFailed;
+
+typedef struct wire_cst_LnUrlPayError_PaymentTimeout {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_PaymentTimeout;
+
+typedef struct wire_cst_LnUrlPayError_RouteNotFound {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_RouteNotFound;
+
+typedef struct wire_cst_LnUrlPayError_RouteTooExpensive {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_RouteTooExpensive;
+
+typedef struct wire_cst_LnUrlPayError_ServiceConnectivity {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_ServiceConnectivity;
+
+typedef union LnUrlPayErrorKind {
+  struct wire_cst_LnUrlPayError_Generic Generic;
+  struct wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
+  struct wire_cst_LnUrlPayError_InvalidInvoice InvalidInvoice;
+  struct wire_cst_LnUrlPayError_InvalidNetwork InvalidNetwork;
+  struct wire_cst_LnUrlPayError_InvalidUri InvalidUri;
+  struct wire_cst_LnUrlPayError_InvoiceExpired InvoiceExpired;
+  struct wire_cst_LnUrlPayError_PaymentFailed PaymentFailed;
+  struct wire_cst_LnUrlPayError_PaymentTimeout PaymentTimeout;
+  struct wire_cst_LnUrlPayError_RouteNotFound RouteNotFound;
+  struct wire_cst_LnUrlPayError_RouteTooExpensive RouteTooExpensive;
+  struct wire_cst_LnUrlPayError_ServiceConnectivity ServiceConnectivity;
+} LnUrlPayErrorKind;
+
+typedef struct wire_cst_ln_url_pay_error {
+  int32_t tag;
+  union LnUrlPayErrorKind kind;
+} wire_cst_ln_url_pay_error;
 
 typedef struct wire_cst_log_entry {
   struct wire_cst_list_prim_u_8_strict *line;

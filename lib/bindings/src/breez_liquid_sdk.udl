@@ -128,6 +128,22 @@ dictionary LnUrlPayRequest {
     string? payment_label = null;
 };
 
+[Error]
+interface LnUrlPayError {
+    AlreadyPaid();
+    Generic(string err);
+    InvalidAmount(string err);
+    InvalidInvoice(string err);
+    InvalidNetwork(string err);
+    InvalidUri(string err);
+    InvoiceExpired(string err);
+    PaymentFailed(string err);
+    PaymentTimeout(string err);
+    RouteNotFound(string err);
+    RouteTooExpensive(string err);
+    ServiceConnectivity(string err);
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 
@@ -155,7 +171,6 @@ enum LiquidSdkError {
     "AlreadyStarted",
     "Generic",
     "NotStarted",
-    "LnUrlPay",
 };
 
 [Error]
@@ -345,6 +360,6 @@ interface BindingLiquidSdk {
     [Throws=LiquidSdkError]
     void disconnect();
 
-    [Throws=LiquidSdkError]
+    [Throws=LnUrlPayError]
     WrappedLnUrlPayResult lnurl_pay(LnUrlPayRequest req);
 };

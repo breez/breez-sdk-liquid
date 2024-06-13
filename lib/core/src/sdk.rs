@@ -1075,7 +1075,7 @@ impl LiquidSdk {
     pub async fn lnurl_pay(
         &self,
         req: LnUrlPayRequest,
-    ) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
+    ) -> Result<WrappedLnUrlPayResult, sdk_common::prelude::LnUrlPayError> {
         match validate_lnurl_pay(
             req.amount_msat,
             &req.comment,
@@ -1092,15 +1092,11 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         invoice: cb.pr.clone(),
                     })
-                    .await
-                    .map_err(|e| LiquidSdkError::Generic {
-                        err: format!("{e}"),
-                    })?;
+                    .await?;
 
                 let payment = self
                     .send_payment(&pay_req)
-                    .await
-                    .map_err(|e| LiquidSdkError::LnUrlPay(format!("{e}")))?
+                    .await?
                     .payment;
 
                 let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
@@ -1111,10 +1107,10 @@ impl LiquidSdk {
                                 let preimage_str =
                                     payment.preimage.clone().ok_or(LiquidSdkError::Generic {
                                         err: "Payment successful but no preimage found".to_string(),
-                                    })?;
+                                    }).unwrap();
                                 let preimage =
                                     sha256::Hash::from_str(&preimage_str).map_err(|_| {
-                                        LiquidSdkError::Generic {
+                                        sdk_common::prelude::LnUrlPayError::Generic {
                                             err: "Invalid preimage".to_string(),
                                         }
                                     })?;

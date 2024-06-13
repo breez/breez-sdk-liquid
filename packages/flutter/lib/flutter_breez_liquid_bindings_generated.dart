@@ -1231,14 +1231,8 @@ final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
-final class wire_cst_LiquidSdkError_LnUrlPay extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
-}
-
 final class LiquidSdkErrorKind extends ffi.Union {
   external wire_cst_LiquidSdkError_Generic Generic;
-
-  external wire_cst_LiquidSdkError_LnUrlPay LnUrlPay;
 }
 
 final class wire_cst_liquid_sdk_error extends ffi.Struct {
@@ -1246,6 +1240,81 @@ final class wire_cst_liquid_sdk_error extends ffi.Struct {
   external int tag;
 
   external LiquidSdkErrorKind kind;
+}
+
+final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidAmount extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidInvoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidNetwork extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidUri extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvoiceExpired extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_PaymentFailed extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_PaymentTimeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_RouteNotFound extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_RouteTooExpensive extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_ServiceConnectivity extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class LnUrlPayErrorKind extends ffi.Union {
+  external wire_cst_LnUrlPayError_Generic Generic;
+
+  external wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
+
+  external wire_cst_LnUrlPayError_InvalidInvoice InvalidInvoice;
+
+  external wire_cst_LnUrlPayError_InvalidNetwork InvalidNetwork;
+
+  external wire_cst_LnUrlPayError_InvalidUri InvalidUri;
+
+  external wire_cst_LnUrlPayError_InvoiceExpired InvoiceExpired;
+
+  external wire_cst_LnUrlPayError_PaymentFailed PaymentFailed;
+
+  external wire_cst_LnUrlPayError_PaymentTimeout PaymentTimeout;
+
+  external wire_cst_LnUrlPayError_RouteNotFound RouteNotFound;
+
+  external wire_cst_LnUrlPayError_RouteTooExpensive RouteTooExpensive;
+
+  external wire_cst_LnUrlPayError_ServiceConnectivity ServiceConnectivity;
+}
+
+final class wire_cst_ln_url_pay_error extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlPayErrorKind kind;
 }
 
 final class wire_cst_log_entry extends ffi.Struct {

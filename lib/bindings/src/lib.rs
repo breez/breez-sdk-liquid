@@ -119,8 +119,8 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.list_payments())
     }
 
-    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<WrappedLnUrlPayResult, LiquidSdkError> {
-        rt().block_on(self.sdk.lnurl_pay(req))
+    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<WrappedLnUrlPayResult, LnUrlPayError> {
+        rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
     }
 
     pub fn sync(&self) -> LiquidSdkResult<()> {

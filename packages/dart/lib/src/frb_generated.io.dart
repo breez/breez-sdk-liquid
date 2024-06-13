@@ -193,6 +193,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlErrorData dco_decode_ln_url_error_data(dynamic raw);
 
   @protected
+  LnUrlPayError dco_decode_ln_url_pay_error(dynamic raw);
+
+  @protected
   LnUrlPayErrorData dco_decode_ln_url_pay_error_data(dynamic raw);
 
   @protected
@@ -460,6 +463,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LnUrlErrorData sse_decode_ln_url_error_data(SseDeserializer deserializer);
+
+  @protected
+  LnUrlPayError sse_decode_ln_url_pay_error(SseDeserializer deserializer);
 
   @protected
   LnUrlPayErrorData sse_decode_ln_url_pay_error_data(SseDeserializer deserializer);
@@ -1152,12 +1158,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 2;
       return;
     }
-    if (apiObj is LiquidSdkError_LnUrlPay) {
-      var pre_field0 = cst_encode_String(apiObj.field0);
-      wireObj.tag = 3;
-      wireObj.kind.LnUrlPay.field0 = pre_field0;
-      return;
-    }
   }
 
   @protected
@@ -1232,6 +1232,80 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_ln_url_error_data(LnUrlErrorData apiObj, wire_cst_ln_url_error_data wireObj) {
     wireObj.reason = cst_encode_String(apiObj.reason);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_url_pay_error(LnUrlPayError apiObj, wire_cst_ln_url_pay_error wireObj) {
+    if (apiObj is LnUrlPayError_AlreadyPaid) {
+      wireObj.tag = 0;
+      return;
+    }
+    if (apiObj is LnUrlPayError_Generic) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 1;
+      wireObj.kind.Generic.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvalidAmount) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 2;
+      wireObj.kind.InvalidAmount.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvalidInvoice) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 3;
+      wireObj.kind.InvalidInvoice.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvalidNetwork) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 4;
+      wireObj.kind.InvalidNetwork.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvalidUri) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 5;
+      wireObj.kind.InvalidUri.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvoiceExpired) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 6;
+      wireObj.kind.InvoiceExpired.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_PaymentFailed) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 7;
+      wireObj.kind.PaymentFailed.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_PaymentTimeout) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 8;
+      wireObj.kind.PaymentTimeout.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_RouteNotFound) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 9;
+      wireObj.kind.RouteNotFound.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_RouteTooExpensive) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 10;
+      wireObj.kind.RouteTooExpensive.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_ServiceConnectivity) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 11;
+      wireObj.kind.ServiceConnectivity.err = pre_err;
+      return;
+    }
   }
 
   @protected
@@ -1727,6 +1801,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_url_pay_error(LnUrlPayError self, SseSerializer serializer);
 
   @protected
   void sse_encode_ln_url_pay_error_data(LnUrlPayErrorData self, SseSerializer serializer);
@@ -3004,14 +3081,8 @@ final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
-final class wire_cst_LiquidSdkError_LnUrlPay extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
-}
-
 final class LiquidSdkErrorKind extends ffi.Union {
   external wire_cst_LiquidSdkError_Generic Generic;
-
-  external wire_cst_LiquidSdkError_LnUrlPay LnUrlPay;
 }
 
 final class wire_cst_liquid_sdk_error extends ffi.Struct {
@@ -3019,6 +3090,81 @@ final class wire_cst_liquid_sdk_error extends ffi.Struct {
   external int tag;
 
   external LiquidSdkErrorKind kind;
+}
+
+final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidAmount extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidInvoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidNetwork extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvalidUri extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_InvoiceExpired extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_PaymentFailed extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_PaymentTimeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_RouteNotFound extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_RouteTooExpensive extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlPayError_ServiceConnectivity extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class LnUrlPayErrorKind extends ffi.Union {
+  external wire_cst_LnUrlPayError_Generic Generic;
+
+  external wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
+
+  external wire_cst_LnUrlPayError_InvalidInvoice InvalidInvoice;
+
+  external wire_cst_LnUrlPayError_InvalidNetwork InvalidNetwork;
+
+  external wire_cst_LnUrlPayError_InvalidUri InvalidUri;
+
+  external wire_cst_LnUrlPayError_InvoiceExpired InvoiceExpired;
+
+  external wire_cst_LnUrlPayError_PaymentFailed PaymentFailed;
+
+  external wire_cst_LnUrlPayError_PaymentTimeout PaymentTimeout;
+
+  external wire_cst_LnUrlPayError_RouteNotFound RouteNotFound;
+
+  external wire_cst_LnUrlPayError_RouteTooExpensive RouteTooExpensive;
+
+  external wire_cst_LnUrlPayError_ServiceConnectivity ServiceConnectivity;
+}
+
+final class wire_cst_ln_url_pay_error extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlPayErrorKind kind;
 }
 
 final class wire_cst_log_entry extends ffi.Struct {

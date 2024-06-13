@@ -420,10 +420,6 @@ impl CstDecode<crate::error::LiquidSdkError> for wire_cst_liquid_sdk_error {
                 }
             }
             2 => crate::error::LiquidSdkError::NotStarted,
-            3 => {
-                let ans = unsafe { self.kind.LnUrlPay };
-                crate::error::LiquidSdkError::LnUrlPay(ans.field0.cst_decode())
-            }
             _ => unreachable!(),
         }
     }
@@ -547,6 +543,81 @@ impl CstDecode<crate::LnUrlErrorData> for wire_cst_ln_url_error_data {
     fn cst_decode(self) -> crate::LnUrlErrorData {
         crate::LnUrlErrorData {
             reason: self.reason.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::LnUrlPayError> for wire_cst_ln_url_pay_error {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::LnUrlPayError {
+        match self.tag {
+            0 => crate::LnUrlPayError::AlreadyPaid,
+            1 => {
+                let ans = unsafe { self.kind.Generic };
+                crate::LnUrlPayError::Generic {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            2 => {
+                let ans = unsafe { self.kind.InvalidAmount };
+                crate::LnUrlPayError::InvalidAmount {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            3 => {
+                let ans = unsafe { self.kind.InvalidInvoice };
+                crate::LnUrlPayError::InvalidInvoice {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            4 => {
+                let ans = unsafe { self.kind.InvalidNetwork };
+                crate::LnUrlPayError::InvalidNetwork {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            5 => {
+                let ans = unsafe { self.kind.InvalidUri };
+                crate::LnUrlPayError::InvalidUri {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            6 => {
+                let ans = unsafe { self.kind.InvoiceExpired };
+                crate::LnUrlPayError::InvoiceExpired {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            7 => {
+                let ans = unsafe { self.kind.PaymentFailed };
+                crate::LnUrlPayError::PaymentFailed {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            8 => {
+                let ans = unsafe { self.kind.PaymentTimeout };
+                crate::LnUrlPayError::PaymentTimeout {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            9 => {
+                let ans = unsafe { self.kind.RouteNotFound };
+                crate::LnUrlPayError::RouteNotFound {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            10 => {
+                let ans = unsafe { self.kind.RouteTooExpensive };
+                crate::LnUrlPayError::RouteTooExpensive {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            11 => {
+                let ans = unsafe { self.kind.ServiceConnectivity };
+                crate::LnUrlPayError::ServiceConnectivity {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            _ => unreachable!(),
         }
     }
 }
@@ -1044,6 +1115,19 @@ impl NewWithNullPtr for wire_cst_ln_url_error_data {
     }
 }
 impl Default for wire_cst_ln_url_error_data {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_ln_url_pay_error {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: LnUrlPayErrorKind { nil__: () },
+        }
+    }
+}
+impl Default for wire_cst_ln_url_pay_error {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1899,18 +1983,12 @@ pub struct wire_cst_liquid_sdk_error {
 #[derive(Clone, Copy)]
 pub union LiquidSdkErrorKind {
     Generic: wire_cst_LiquidSdkError_Generic,
-    LnUrlPay: wire_cst_LiquidSdkError_LnUrlPay,
     nil__: (),
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_LiquidSdkError_Generic {
     err: *mut wire_cst_list_prim_u_8_strict,
-}
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct wire_cst_LiquidSdkError_LnUrlPay {
-    field0: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -2011,6 +2089,83 @@ pub struct wire_cst_ln_url_auth_request_data {
 #[derive(Clone, Copy)]
 pub struct wire_cst_ln_url_error_data {
     reason: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_ln_url_pay_error {
+    tag: i32,
+    kind: LnUrlPayErrorKind,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union LnUrlPayErrorKind {
+    Generic: wire_cst_LnUrlPayError_Generic,
+    InvalidAmount: wire_cst_LnUrlPayError_InvalidAmount,
+    InvalidInvoice: wire_cst_LnUrlPayError_InvalidInvoice,
+    InvalidNetwork: wire_cst_LnUrlPayError_InvalidNetwork,
+    InvalidUri: wire_cst_LnUrlPayError_InvalidUri,
+    InvoiceExpired: wire_cst_LnUrlPayError_InvoiceExpired,
+    PaymentFailed: wire_cst_LnUrlPayError_PaymentFailed,
+    PaymentTimeout: wire_cst_LnUrlPayError_PaymentTimeout,
+    RouteNotFound: wire_cst_LnUrlPayError_RouteNotFound,
+    RouteTooExpensive: wire_cst_LnUrlPayError_RouteTooExpensive,
+    ServiceConnectivity: wire_cst_LnUrlPayError_ServiceConnectivity,
+    nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_Generic {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_InvalidAmount {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_InvalidInvoice {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_InvalidNetwork {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_InvalidUri {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_InvoiceExpired {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_PaymentFailed {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_PaymentTimeout {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_RouteNotFound {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_RouteTooExpensive {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlPayError_ServiceConnectivity {
+    err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

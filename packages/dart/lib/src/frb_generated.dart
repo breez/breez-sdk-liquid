@@ -286,7 +286,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_wrapped_ln_url_pay_result,
-        decodeErrorData: dco_decode_liquid_sdk_error,
+        decodeErrorData: dco_decode_ln_url_pay_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkLnurlPayConstMeta,
       argValues: [that, req],
@@ -965,10 +965,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         );
       case 2:
         return LiquidSdkError_NotStarted();
-      case 3:
-        return LiquidSdkError_LnUrlPay(
-          dco_decode_String(raw[1]),
-        );
       default:
         throw Exception("unreachable");
     }
@@ -1081,6 +1077,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return LnUrlErrorData(
       reason: dco_decode_String(arr[0]),
     );
+  }
+
+  @protected
+  LnUrlPayError dco_decode_ln_url_pay_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlPayError_AlreadyPaid();
+      case 1:
+        return LnUrlPayError_Generic(
+          err: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return LnUrlPayError_InvalidAmount(
+          err: dco_decode_String(raw[1]),
+        );
+      case 3:
+        return LnUrlPayError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
+        );
+      case 4:
+        return LnUrlPayError_InvalidNetwork(
+          err: dco_decode_String(raw[1]),
+        );
+      case 5:
+        return LnUrlPayError_InvalidUri(
+          err: dco_decode_String(raw[1]),
+        );
+      case 6:
+        return LnUrlPayError_InvoiceExpired(
+          err: dco_decode_String(raw[1]),
+        );
+      case 7:
+        return LnUrlPayError_PaymentFailed(
+          err: dco_decode_String(raw[1]),
+        );
+      case 8:
+        return LnUrlPayError_PaymentTimeout(
+          err: dco_decode_String(raw[1]),
+        );
+      case 9:
+        return LnUrlPayError_RouteNotFound(
+          err: dco_decode_String(raw[1]),
+        );
+      case 10:
+        return LnUrlPayError_RouteTooExpensive(
+          err: dco_decode_String(raw[1]),
+        );
+      case 11:
+        return LnUrlPayError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -1842,9 +1893,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LiquidSdkError_Generic(err: var_err);
       case 2:
         return LiquidSdkError_NotStarted();
-      case 3:
-        var var_field0 = sse_decode_String(deserializer);
-        return LiquidSdkError_LnUrlPay(var_field0);
       default:
         throw UnimplementedError('');
     }
@@ -1976,6 +2024,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_reason = sse_decode_String(deserializer);
     return LnUrlErrorData(reason: var_reason);
+  }
+
+  @protected
+  LnUrlPayError sse_decode_ln_url_pay_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return LnUrlPayError_AlreadyPaid();
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_Generic(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidAmount(err: var_err);
+      case 3:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidInvoice(err: var_err);
+      case 4:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidNetwork(err: var_err);
+      case 5:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidUri(err: var_err);
+      case 6:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvoiceExpired(err: var_err);
+      case 7:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_PaymentFailed(err: var_err);
+      case 8:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_PaymentTimeout(err: var_err);
+      case 9:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_RouteNotFound(err: var_err);
+      case 10:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_RouteTooExpensive(err: var_err);
+      case 11:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -2791,9 +2885,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(err, serializer);
       case LiquidSdkError_NotStarted():
         sse_encode_i_32(2, serializer);
-      case LiquidSdkError_LnUrlPay(field0: final field0):
-        sse_encode_i_32(3, serializer);
-        sse_encode_String(field0, serializer);
       default:
         throw UnimplementedError('');
     }
@@ -2898,6 +2989,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.reason, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_error(LnUrlPayError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlPayError_AlreadyPaid():
+        sse_encode_i_32(0, serializer);
+      case LnUrlPayError_Generic(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidAmount(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidInvoice(err: final err):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidNetwork(err: final err):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidUri(err: final err):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvoiceExpired(err: final err):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_PaymentFailed(err: final err):
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_PaymentTimeout(err: final err):
+        sse_encode_i_32(8, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_RouteNotFound(err: final err):
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_RouteTooExpensive(err: final err):
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(11, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected

@@ -22,10 +22,6 @@ pub enum LiquidSdkError {
 
     #[error("Liquid SDK instance is not running")]
     NotStarted,
-
-    // TODO Wrap sdk_common::prelude::LnUrlPayError
-    #[error("LNURL pay error: {0}")]
-    LnUrlPay(String),
 }
 
 impl From<anyhow::Error> for LiquidSdkError {
