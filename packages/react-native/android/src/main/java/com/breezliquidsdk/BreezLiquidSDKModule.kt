@@ -328,4 +328,21 @@ class BreezLiquidSDKModule(
             }
         }
     }
+
+    @ReactMethod
+    fun lnurlPay(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val lnUrlPayRequest =
+                    asLnUrlPayRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "LnUrlPayRequest")) }
+                val res = getBindingLiquidSdk().lnurlPay(lnUrlPayRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

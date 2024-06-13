@@ -19,6 +19,11 @@ const BreezLiquidSDK = NativeModules.RNBreezLiquidSDK
 
 const BreezLiquidSDKEmitter = new NativeEventEmitter(BreezLiquidSDK)
 
+export interface AesSuccessActionDataDecrypted {
+    description: string
+    plaintext: string
+}
+
 export interface BackupRequest {
     backupPath?: string
 }
@@ -79,6 +84,18 @@ export interface LnUrlErrorData {
     reason: string
 }
 
+export interface LnUrlPayErrorData {
+    paymentHash: string
+    reason: string
+}
+
+export interface LnUrlPayRequest {
+    data: LnUrlPayRequestData
+    amountMsat: number
+    comment?: string
+    paymentLabel?: string
+}
+
 export interface LnUrlPayRequestData {
     callback: string
     minSendable: number
@@ -102,6 +119,10 @@ export interface LnUrlWithdrawRequestData {
 export interface LogEntry {
     line: string
     level: string
+}
+
+export interface MessageSuccessActionData {
+    message: string
 }
 
 export interface Payment {
@@ -160,6 +181,29 @@ export interface RouteHintHop {
 
 export interface SendPaymentResponse {
     payment: Payment
+}
+
+export interface UrlSuccessActionData {
+    description: string
+    url: string
+}
+
+export interface WrappedLnUrlPaySuccessData {
+    successAction?: SuccessActionProcessed
+    payment: Payment
+}
+
+export enum AesSuccessActionDataResultVariant {
+    DECRYPTED = "decrypted",
+    ERROR_STATUS = "errorStatus"
+}
+
+export type AesSuccessActionDataResult = {
+    type: AesSuccessActionDataResultVariant.DECRYPTED,
+    data: AesSuccessActionDataDecrypted
+} | {
+    type: AesSuccessActionDataResultVariant.ERROR_STATUS,
+    reason: string
 }
 
 export enum InputTypeVariant {
@@ -256,6 +300,40 @@ export enum PaymentType {
     SEND = "send"
 }
 
+export enum SuccessActionProcessedVariant {
+    AES = "aes",
+    MESSAGE = "message",
+    URL = "url"
+}
+
+export type SuccessActionProcessed = {
+    type: SuccessActionProcessedVariant.AES,
+    result: AesSuccessActionDataResult
+} | {
+    type: SuccessActionProcessedVariant.MESSAGE,
+    data: MessageSuccessActionData
+} | {
+    type: SuccessActionProcessedVariant.URL,
+    data: UrlSuccessActionData
+}
+
+export enum WrappedLnUrlPayResultVariant {
+    ENDPOINT_SUCCESS = "endpointSuccess",
+    ENDPOINT_ERROR = "endpointError",
+    PAY_ERROR = "payError"
+}
+
+export type WrappedLnUrlPayResult = {
+    type: WrappedLnUrlPayResultVariant.ENDPOINT_SUCCESS,
+    data: WrappedLnUrlPaySuccessData
+} | {
+    type: WrappedLnUrlPayResultVariant.ENDPOINT_ERROR,
+    data: LnUrlErrorData
+} | {
+    type: WrappedLnUrlPayResultVariant.PAY_ERROR,
+    data: LnUrlPayErrorData
+}
+
 export type EventListener = (e: LiquidSdkEvent) => void
 
 export type Logger = (logEntry: LogEntry) => void
@@ -346,4 +424,9 @@ export const restore = async (req: RestoreRequest): Promise<void> => {
 
 export const disconnect = async (): Promise<void> => {
     await BreezLiquidSDK.disconnect()
+}
+
+export const lnurlPay = async (req: LnUrlPayRequest): Promise<WrappedLnUrlPayResult> => {
+    const response = await BreezLiquidSDK.lnurlPay(req)
+    return response
 }

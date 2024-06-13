@@ -4,8 +4,6 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
-use boltz_client::swaps::boltzv2;
 use boltz_client::ToHex;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Amount, Bolt11Invoice};
 use futures_util::stream::select_all;
@@ -1082,40 +1080,44 @@ impl LiquidSdk {
             req.amount_msat,
             &req.comment,
             &req.data,
-            self.config.network.into()
+            self.config.network.into(),
         )
-            .await?
+        .await?
         {
             ValidatedCallbackResponse::EndpointError { data: e } => {
                 Ok(WrappedLnUrlPayResult::EndpointError { data: e })
             }
             ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
-                let pay_req = self.prepare_send_payment(&PrepareSendRequest {
-                    invoice: cb.pr.clone(),
-                }).await.map_err(|e| LiquidSdkError::Generic {
-                    err: format!("{e}")
-                })?;
+                let pay_req = self
+                    .prepare_send_payment(&PrepareSendRequest {
+                        invoice: cb.pr.clone(),
+                    })
+                    .await
+                    .map_err(|e| LiquidSdkError::Generic {
+                        err: format!("{e}"),
+                    })?;
 
-                let payment = self.send_payment(&pay_req)
-                    .await.map_err(|e| LiquidSdkError::LnUrlPay(format!("{e}")))?
-                .payment;
-
+                let payment = self
+                    .send_payment(&pay_req)
+                    .await
+                    .map_err(|e| LiquidSdkError::LnUrlPay(format!("{e}")))?
+                    .payment;
 
                 let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
                     Some(sa) => {
                         let processed_sa = match sa {
                             // For AES, we decrypt the contents on the fly
                             SuccessAction::Aes(data) => {
-                                let preimage_str = payment.preimage.clone().ok_or(
-                                    LiquidSdkError::Generic {
-                                        err: "Payment successful but no preimage found".to_string()
-                                    }
-                                )?;
-                                let preimage = sha256::Hash::from_str(&preimage_str).map_err(|_|
-                                    LiquidSdkError::Generic {
-                                        err: "Invalid preimage".to_string()
-                                    }
-                                )?;
+                                let preimage_str =
+                                    payment.preimage.clone().ok_or(LiquidSdkError::Generic {
+                                        err: "Payment successful but no preimage found".to_string(),
+                                    })?;
+                                let preimage =
+                                    sha256::Hash::from_str(&preimage_str).map_err(|_| {
+                                        LiquidSdkError::Generic {
+                                            err: "Invalid preimage".to_string(),
+                                        }
+                                    })?;
                                 let preimage_arr: [u8; 32] = preimage.into_32();
                                 let result = match (data, &preimage_arr).try_into() {
                                     Ok(data) => AesSuccessActionDataResult::Decrypted { data },

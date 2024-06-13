@@ -701,9 +701,9 @@ impl From<SwapTree> for InternalSwapTree {
 
 /// LNURL-related wrappers
 pub mod lnurl {
+    use crate::error::LiquidSdkError;
     use sdk_common::prelude::*;
     use serde::Serialize;
-    use crate::error::LiquidSdkError;
 
     use crate::model::Payment;
 
@@ -720,7 +720,7 @@ pub mod lnurl {
         pub payment: Payment,
         pub success_action: Option<SuccessActionProcessed>,
     }
-    
+
     impl From<LnUrlError> for LiquidSdkError {
         fn from(value: LnUrlError) -> Self {
             Self::LnUrlPay(format!("{value}"))

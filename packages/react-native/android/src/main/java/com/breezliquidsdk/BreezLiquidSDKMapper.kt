@@ -3,6 +3,42 @@ import breez_liquid_sdk.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asAesSuccessActionDataDecrypted(aesSuccessActionDataDecrypted: ReadableMap): AesSuccessActionDataDecrypted? {
+    if (!validateMandatoryFields(
+            aesSuccessActionDataDecrypted,
+            arrayOf(
+                "description",
+                "plaintext",
+            ),
+        )
+    ) {
+        return null
+    }
+    val description = aesSuccessActionDataDecrypted.getString("description")!!
+    val plaintext = aesSuccessActionDataDecrypted.getString("plaintext")!!
+    return AesSuccessActionDataDecrypted(
+        description,
+        plaintext,
+    )
+}
+
+fun readableMapOf(aesSuccessActionDataDecrypted: AesSuccessActionDataDecrypted): ReadableMap =
+    readableMapOf(
+        "description" to aesSuccessActionDataDecrypted.description,
+        "plaintext" to aesSuccessActionDataDecrypted.plaintext,
+    )
+
+fun asAesSuccessActionDataDecryptedList(arr: ReadableArray): List<AesSuccessActionDataDecrypted> {
+    val list = ArrayList<AesSuccessActionDataDecrypted>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAesSuccessActionDataDecrypted(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asBackupRequest(backupRequest: ReadableMap): BackupRequest? {
     if (!validateMandatoryFields(
             backupRequest,
@@ -370,6 +406,84 @@ fun asLnUrlErrorDataList(arr: ReadableArray): List<LnUrlErrorData> {
     return list
 }
 
+fun asLnUrlPayErrorData(lnUrlPayErrorData: ReadableMap): LnUrlPayErrorData? {
+    if (!validateMandatoryFields(
+            lnUrlPayErrorData,
+            arrayOf(
+                "paymentHash",
+                "reason",
+            ),
+        )
+    ) {
+        return null
+    }
+    val paymentHash = lnUrlPayErrorData.getString("paymentHash")!!
+    val reason = lnUrlPayErrorData.getString("reason")!!
+    return LnUrlPayErrorData(
+        paymentHash,
+        reason,
+    )
+}
+
+fun readableMapOf(lnUrlPayErrorData: LnUrlPayErrorData): ReadableMap =
+    readableMapOf(
+        "paymentHash" to lnUrlPayErrorData.paymentHash,
+        "reason" to lnUrlPayErrorData.reason,
+    )
+
+fun asLnUrlPayErrorDataList(arr: ReadableArray): List<LnUrlPayErrorData> {
+    val list = ArrayList<LnUrlPayErrorData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlPayErrorData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
+    if (!validateMandatoryFields(
+            lnUrlPayRequest,
+            arrayOf(
+                "data",
+                "amountMsat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val data = lnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
+    val amountMsat = lnUrlPayRequest.getDouble("amountMsat").toULong()
+    val comment = if (hasNonNullKey(lnUrlPayRequest, "comment")) lnUrlPayRequest.getString("comment") else null
+    val paymentLabel = if (hasNonNullKey(lnUrlPayRequest, "paymentLabel")) lnUrlPayRequest.getString("paymentLabel") else null
+    return LnUrlPayRequest(
+        data,
+        amountMsat,
+        comment,
+        paymentLabel,
+    )
+}
+
+fun readableMapOf(lnUrlPayRequest: LnUrlPayRequest): ReadableMap =
+    readableMapOf(
+        "data" to readableMapOf(lnUrlPayRequest.data),
+        "amountMsat" to lnUrlPayRequest.amountMsat,
+        "comment" to lnUrlPayRequest.comment,
+        "paymentLabel" to lnUrlPayRequest.paymentLabel,
+    )
+
+fun asLnUrlPayRequestList(arr: ReadableArray): List<LnUrlPayRequest> {
+    val list = ArrayList<LnUrlPayRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlPayRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlPayRequestData(lnUrlPayRequestData: ReadableMap): LnUrlPayRequestData? {
     if (!validateMandatoryFields(
             lnUrlPayRequestData,
@@ -510,6 +624,38 @@ fun asLogEntryList(arr: ReadableArray): List<LogEntry> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLogEntry(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asMessageSuccessActionData(messageSuccessActionData: ReadableMap): MessageSuccessActionData? {
+    if (!validateMandatoryFields(
+            messageSuccessActionData,
+            arrayOf(
+                "message",
+            ),
+        )
+    ) {
+        return null
+    }
+    val message = messageSuccessActionData.getString("message")!!
+    return MessageSuccessActionData(
+        message,
+    )
+}
+
+fun readableMapOf(messageSuccessActionData: MessageSuccessActionData): ReadableMap =
+    readableMapOf(
+        "message" to messageSuccessActionData.message,
+    )
+
+fun asMessageSuccessActionDataList(arr: ReadableArray): List<MessageSuccessActionData> {
+    val list = ArrayList<MessageSuccessActionData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asMessageSuccessActionData(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -899,6 +1045,128 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     return list
 }
 
+fun asUrlSuccessActionData(urlSuccessActionData: ReadableMap): UrlSuccessActionData? {
+    if (!validateMandatoryFields(
+            urlSuccessActionData,
+            arrayOf(
+                "description",
+                "url",
+            ),
+        )
+    ) {
+        return null
+    }
+    val description = urlSuccessActionData.getString("description")!!
+    val url = urlSuccessActionData.getString("url")!!
+    return UrlSuccessActionData(
+        description,
+        url,
+    )
+}
+
+fun readableMapOf(urlSuccessActionData: UrlSuccessActionData): ReadableMap =
+    readableMapOf(
+        "description" to urlSuccessActionData.description,
+        "url" to urlSuccessActionData.url,
+    )
+
+fun asUrlSuccessActionDataList(arr: ReadableArray): List<UrlSuccessActionData> {
+    val list = ArrayList<UrlSuccessActionData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asUrlSuccessActionData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asWrappedLnUrlPaySuccessData(wrappedLnUrlPaySuccessData: ReadableMap): WrappedLnUrlPaySuccessData? {
+    if (!validateMandatoryFields(
+            wrappedLnUrlPaySuccessData,
+            arrayOf(
+                "payment",
+            ),
+        )
+    ) {
+        return null
+    }
+    val successAction =
+        if (hasNonNullKey(
+                wrappedLnUrlPaySuccessData,
+                "successAction",
+            )
+        ) {
+            wrappedLnUrlPaySuccessData.getMap("successAction")?.let {
+                asSuccessActionProcessed(it)
+            }
+        } else {
+            null
+        }
+    val payment = wrappedLnUrlPaySuccessData.getMap("payment")?.let { asPayment(it) }!!
+    return WrappedLnUrlPaySuccessData(
+        successAction,
+        payment,
+    )
+}
+
+fun readableMapOf(wrappedLnUrlPaySuccessData: WrappedLnUrlPaySuccessData): ReadableMap =
+    readableMapOf(
+        "successAction" to wrappedLnUrlPaySuccessData.successAction?.let { readableMapOf(it) },
+        "payment" to readableMapOf(wrappedLnUrlPaySuccessData.payment),
+    )
+
+fun asWrappedLnUrlPaySuccessDataList(arr: ReadableArray): List<WrappedLnUrlPaySuccessData> {
+    val list = ArrayList<WrappedLnUrlPaySuccessData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asWrappedLnUrlPaySuccessData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asAesSuccessActionDataResult(aesSuccessActionDataResult: ReadableMap): AesSuccessActionDataResult? {
+    val type = aesSuccessActionDataResult.getString("type")
+
+    if (type == "decrypted") {
+        return AesSuccessActionDataResult.Decrypted(
+            aesSuccessActionDataResult.getMap("data")?.let { asAesSuccessActionDataDecrypted(it) }!!,
+        )
+    }
+    if (type == "errorStatus") {
+        return AesSuccessActionDataResult.ErrorStatus(aesSuccessActionDataResult.getString("reason")!!)
+    }
+    return null
+}
+
+fun readableMapOf(aesSuccessActionDataResult: AesSuccessActionDataResult): ReadableMap? {
+    val map = Arguments.createMap()
+    when (aesSuccessActionDataResult) {
+        is AesSuccessActionDataResult.Decrypted -> {
+            pushToMap(map, "type", "decrypted")
+            pushToMap(map, "data", readableMapOf(aesSuccessActionDataResult.data))
+        }
+        is AesSuccessActionDataResult.ErrorStatus -> {
+            pushToMap(map, "type", "errorStatus")
+            pushToMap(map, "reason", aesSuccessActionDataResult.reason)
+        }
+    }
+    return map
+}
+
+fun asAesSuccessActionDataResultList(arr: ReadableArray): List<AesSuccessActionDataResult> {
+    val list = ArrayList<AesSuccessActionDataResult>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAesSuccessActionDataResult(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asInputType(inputType: ReadableMap): InputType? {
     val type = inputType.getString("type")
 
@@ -1097,6 +1365,96 @@ fun asPaymentTypeList(arr: ReadableArray): List<PaymentType> {
     for (value in arr.toArrayList()) {
         when (value) {
             is String -> list.add(asPaymentType(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSuccessActionProcessed(successActionProcessed: ReadableMap): SuccessActionProcessed? {
+    val type = successActionProcessed.getString("type")
+
+    if (type == "aes") {
+        return SuccessActionProcessed.Aes(successActionProcessed.getMap("result")?.let { asAesSuccessActionDataResult(it) }!!)
+    }
+    if (type == "message") {
+        return SuccessActionProcessed.Message(successActionProcessed.getMap("data")?.let { asMessageSuccessActionData(it) }!!)
+    }
+    if (type == "url") {
+        return SuccessActionProcessed.Url(successActionProcessed.getMap("data")?.let { asUrlSuccessActionData(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(successActionProcessed: SuccessActionProcessed): ReadableMap? {
+    val map = Arguments.createMap()
+    when (successActionProcessed) {
+        is SuccessActionProcessed.Aes -> {
+            pushToMap(map, "type", "aes")
+            pushToMap(map, "result", readableMapOf(successActionProcessed.result))
+        }
+        is SuccessActionProcessed.Message -> {
+            pushToMap(map, "type", "message")
+            pushToMap(map, "data", readableMapOf(successActionProcessed.data))
+        }
+        is SuccessActionProcessed.Url -> {
+            pushToMap(map, "type", "url")
+            pushToMap(map, "data", readableMapOf(successActionProcessed.data))
+        }
+    }
+    return map
+}
+
+fun asSuccessActionProcessedList(arr: ReadableArray): List<SuccessActionProcessed> {
+    val list = ArrayList<SuccessActionProcessed>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSuccessActionProcessed(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asWrappedLnUrlPayResult(wrappedLnUrlPayResult: ReadableMap): WrappedLnUrlPayResult? {
+    val type = wrappedLnUrlPayResult.getString("type")
+
+    if (type == "endpointSuccess") {
+        return WrappedLnUrlPayResult.EndpointSuccess(wrappedLnUrlPayResult.getMap("data")?.let { asWrappedLnUrlPaySuccessData(it) }!!)
+    }
+    if (type == "endpointError") {
+        return WrappedLnUrlPayResult.EndpointError(wrappedLnUrlPayResult.getMap("data")?.let { asLnUrlErrorData(it) }!!)
+    }
+    if (type == "payError") {
+        return WrappedLnUrlPayResult.PayError(wrappedLnUrlPayResult.getMap("data")?.let { asLnUrlPayErrorData(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(wrappedLnUrlPayResult: WrappedLnUrlPayResult): ReadableMap? {
+    val map = Arguments.createMap()
+    when (wrappedLnUrlPayResult) {
+        is WrappedLnUrlPayResult.EndpointSuccess -> {
+            pushToMap(map, "type", "endpointSuccess")
+            pushToMap(map, "data", readableMapOf(wrappedLnUrlPayResult.data))
+        }
+        is WrappedLnUrlPayResult.EndpointError -> {
+            pushToMap(map, "type", "endpointError")
+            pushToMap(map, "data", readableMapOf(wrappedLnUrlPayResult.data))
+        }
+        is WrappedLnUrlPayResult.PayError -> {
+            pushToMap(map, "type", "payError")
+            pushToMap(map, "data", readableMapOf(wrappedLnUrlPayResult.data))
+        }
+    }
+    return map
+}
+
+fun asWrappedLnUrlPayResultList(arr: ReadableArray): List<WrappedLnUrlPayResult> {
+    val list = ArrayList<WrappedLnUrlPayResult>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asWrappedLnUrlPayResult(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

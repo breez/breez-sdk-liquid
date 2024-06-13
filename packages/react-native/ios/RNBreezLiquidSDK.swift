@@ -261,6 +261,17 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(lnurlPay:resolve:reject:)
+    func lnurlPay(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlPayRequest = try BreezLiquidSDKMapper.asLnUrlPayRequest(lnUrlPayRequest: req)
+            var res = try getBindingLiquidSdk().lnurlPay(req: lnUrlPayRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(wrappedLnUrlPayResult: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"
