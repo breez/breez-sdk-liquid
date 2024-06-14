@@ -5,10 +5,10 @@ use std::sync::Arc;
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
+use sdk_common::prelude::{LnUrlPayRequest, LnUrlWithdrawRequest};
 
 use crate::model::lnurl::WrappedLnUrlPayResult;
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk, *};
-use sdk_common::prelude::LnUrlPayRequest;
 
 pub struct BindingEventListener {
     pub stream: StreamSink<LiquidSdkEvent>,
@@ -132,6 +132,17 @@ impl BindingLiquidSdk {
         self.sdk.lnurl_pay(req).await.map_err(Into::into)
     }
 
+    pub async fn lnurl_withdraw(
+        &self,
+        req: LnUrlWithdrawRequest,
+    ) -> Result<duplicates::LnUrlWithdrawResult, duplicates::LnUrlWithdrawError> {
+        self.sdk
+            .lnurl_withdraw(req)
+            .await
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {
         self.sdk.sync().await.map_err(Into::into)
     }
@@ -158,7 +169,10 @@ impl BindingLiquidSdk {
 
 /// External structs that cannot be mirrored for FRB, so are therefore duplicated instead
 pub mod duplicates {
+    use sdk_common::prelude::*;
+    use serde::{Deserialize, Serialize};
     use thiserror::Error;
+
     use crate::error::PaymentError;
 
     #[derive(Clone, Debug, Error)]
@@ -219,16 +233,34 @@ pub mod duplicates {
             match value {
                 sdk_common::prelude::LnUrlPayError::AlreadyPaid => Self::AlreadyPaid,
                 sdk_common::prelude::LnUrlPayError::Generic { err } => Self::Generic { err },
-                sdk_common::prelude::LnUrlPayError::InvalidAmount { err } => Self::InvalidAmount { err },
-                sdk_common::prelude::LnUrlPayError::InvalidInvoice { err } => Self::InvalidInvoice { err },
-                sdk_common::prelude::LnUrlPayError::InvalidNetwork { err } => Self::InvalidNetwork { err },
+                sdk_common::prelude::LnUrlPayError::InvalidAmount { err } => {
+                    Self::InvalidAmount { err }
+                }
+                sdk_common::prelude::LnUrlPayError::InvalidInvoice { err } => {
+                    Self::InvalidInvoice { err }
+                }
+                sdk_common::prelude::LnUrlPayError::InvalidNetwork { err } => {
+                    Self::InvalidNetwork { err }
+                }
                 sdk_common::prelude::LnUrlPayError::InvalidUri { err } => Self::InvalidUri { err },
-                sdk_common::prelude::LnUrlPayError::InvoiceExpired { err } => Self::InvoiceExpired { err },
-                sdk_common::prelude::LnUrlPayError::PaymentFailed { err } => Self::PaymentFailed { err },
-                sdk_common::prelude::LnUrlPayError::PaymentTimeout { err } => Self::PaymentTimeout { err },
-                sdk_common::prelude::LnUrlPayError::RouteNotFound { err } => Self::RouteNotFound { err },
-                sdk_common::prelude::LnUrlPayError::RouteTooExpensive { err } => Self::RouteTooExpensive { err },
-                sdk_common::prelude::LnUrlPayError::ServiceConnectivity { err } => Self::ServiceConnectivity { err },
+                sdk_common::prelude::LnUrlPayError::InvoiceExpired { err } => {
+                    Self::InvoiceExpired { err }
+                }
+                sdk_common::prelude::LnUrlPayError::PaymentFailed { err } => {
+                    Self::PaymentFailed { err }
+                }
+                sdk_common::prelude::LnUrlPayError::PaymentTimeout { err } => {
+                    Self::PaymentTimeout { err }
+                }
+                sdk_common::prelude::LnUrlPayError::RouteNotFound { err } => {
+                    Self::RouteNotFound { err }
+                }
+                sdk_common::prelude::LnUrlPayError::RouteTooExpensive { err } => {
+                    Self::RouteTooExpensive { err }
+                }
+                sdk_common::prelude::LnUrlPayError::ServiceConnectivity { err } => {
+                    Self::ServiceConnectivity { err }
+                }
             }
         }
     }
@@ -236,7 +268,98 @@ pub mod duplicates {
     impl From<PaymentError> for sdk_common::prelude::LnUrlPayError {
         fn from(value: PaymentError) -> Self {
             Self::Generic {
-                err: format!("{value}")
+                err: format!("{value}"),
+            }
+        }
+    }
+
+    #[derive(Debug, Error)]
+    pub enum LnUrlWithdrawError {
+        /// This error is raised when a general error occurs not specific to other error variants
+        /// in this enum.
+        #[error("Generic: {err}")]
+        Generic { err: String },
+
+        /// This error is raised when the amount is zero or the amount does not cover
+        /// the cost to open a new channel.
+        #[error("Invalid amount: {err}")]
+        InvalidAmount { err: String },
+
+        /// This error is raised when the lightning invoice cannot be parsed.
+        #[error("Invalid invoice: {err}")]
+        InvalidInvoice { err: String },
+
+        /// This error is raised when the decoded LNURL URI is not compliant to the specification.
+        #[error("Invalid uri: {err}")]
+        InvalidUri { err: String },
+
+        /// This error is raised when no routing hints were able to be added to the invoice
+        /// while trying to receive a payment.
+        #[error("No routing hints: {err}")]
+        InvoiceNoRoutingHints { err: String },
+
+        /// This error is raised when a connection to an external service fails.
+        #[error("Service connectivity: {err}")]
+        ServiceConnectivity { err: String },
+    }
+
+    impl From<sdk_common::prelude::LnUrlWithdrawError> for LnUrlWithdrawError {
+        fn from(value: sdk_common::prelude::LnUrlWithdrawError) -> Self {
+            match value {
+                sdk_common::prelude::LnUrlWithdrawError::Generic { err } => Self::Generic { err },
+                sdk_common::prelude::LnUrlWithdrawError::InvalidAmount { err } => {
+                    Self::InvalidAmount { err }
+                }
+                sdk_common::prelude::LnUrlWithdrawError::InvalidInvoice { err } => {
+                    Self::InvalidInvoice { err }
+                }
+                sdk_common::prelude::LnUrlWithdrawError::InvalidUri { err } => {
+                    Self::InvalidUri { err }
+                }
+                sdk_common::prelude::LnUrlWithdrawError::InvoiceNoRoutingHints { err } => {
+                    Self::InvoiceNoRoutingHints { err }
+                }
+                sdk_common::prelude::LnUrlWithdrawError::ServiceConnectivity { err } => {
+                    Self::ServiceConnectivity { err }
+                }
+            }
+        }
+    }
+
+    impl From<PaymentError> for sdk_common::prelude::LnUrlWithdrawError {
+        fn from(value: PaymentError) -> Self {
+            Self::Generic {
+                err: format!("{value}"),
+            }
+        }
+    }
+
+    #[derive(Clone, Serialize)]
+    pub enum LnUrlWithdrawResult {
+        Ok { data: LnUrlWithdrawSuccessData },
+        ErrorStatus { data: LnUrlErrorData },
+    }
+    impl From<sdk_common::prelude::LnUrlWithdrawResult> for LnUrlWithdrawResult {
+        fn from(value: sdk_common::prelude::LnUrlWithdrawResult) -> Self {
+            match value {
+                sdk_common::prelude::LnUrlWithdrawResult::Ok { data } => {
+                    Self::Ok { data: data.into() }
+                }
+                sdk_common::prelude::LnUrlWithdrawResult::ErrorStatus { data } => {
+                    Self::ErrorStatus { data }
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Deserialize, Debug, Serialize)]
+    pub struct LnUrlWithdrawSuccessData {
+        pub invoice: LNInvoice,
+    }
+    impl From<sdk_common::prelude::LnUrlWithdrawSuccessData> for LnUrlWithdrawSuccessData {
+        fn from(value: sdk_common::prelude::LnUrlWithdrawSuccessData) -> Self {
+            Self {
+                invoice: value.invoice,
             }
         }
     }

@@ -144,6 +144,16 @@ interface LnUrlPayError {
     ServiceConnectivity(string err);
 };
 
+[Error]
+interface LnUrlWithdrawError {
+    Generic(string err);
+    InvalidAmount(string err);
+    InvalidInvoice(string err);
+    InvalidUri(string err);
+    ServiceConnectivity(string err);
+    InvoiceNoRoutingHints(string err);
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 

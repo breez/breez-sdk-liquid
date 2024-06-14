@@ -44,6 +44,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<WrappedLnUrlPayResult> lnurlPay({required LnUrlPayRequest req});
 
+  Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req});
+
   Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req});
 
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req});

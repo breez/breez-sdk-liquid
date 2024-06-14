@@ -65,6 +65,10 @@ pub(crate) enum Command {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
     },
+    LnurlWithdraw {
+        /// LNURL-withdraw endpoint
+        lnurl: String,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -211,6 +215,30 @@ pub(crate) async fn handle_command(
                         })
                         .await?;
                     Ok(pay_res)
+                }
+                _ => Err(anyhow::anyhow!("Invalid input")),
+            }?;
+
+            command_result!(res)
+        }
+        Command::LnurlWithdraw { lnurl } => {
+            let input = LiquidSdk::parse(&lnurl).await?;
+            let res = match input {
+                InputType::LnUrlWithdraw { data: pd } => {
+                    let prompt = format!(
+                        "Amount to withdraw in millisatoshi (min {} msat, max {} msat): ",
+                        pd.min_withdrawable, pd.max_withdrawable
+                    );
+
+                    let amount_msat = rl.readline(&prompt)?;
+                    let withdraw_res = sdk
+                        .lnurl_withdraw(LnUrlWithdrawRequest {
+                            data: pd,
+                            amount_msat: amount_msat.parse()?,
+                            description: Some("LNURL-withdraw".to_string()),
+                        })
+                        .await?;
+                    Ok(withdraw_res)
                 }
                 _ => Err(anyhow::anyhow!("Invalid input")),
             }?;

@@ -110,7 +110,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlPayRequestData dco_decode_box_autoadd_ln_url_pay_request_data(dynamic raw);
 
   @protected
+  LnUrlWithdrawRequest dco_decode_box_autoadd_ln_url_withdraw_request(dynamic raw);
+
+  @protected
   LnUrlWithdrawRequestData dco_decode_box_autoadd_ln_url_withdraw_request_data(dynamic raw);
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_box_autoadd_ln_url_withdraw_success_data(dynamic raw);
 
   @protected
   MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw);
@@ -206,7 +212,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlPayRequestData dco_decode_ln_url_pay_request_data(dynamic raw);
 
   @protected
+  LnUrlWithdrawError dco_decode_ln_url_withdraw_error(dynamic raw);
+
+  @protected
+  LnUrlWithdrawRequest dco_decode_ln_url_withdraw_request(dynamic raw);
+
+  @protected
   LnUrlWithdrawRequestData dco_decode_ln_url_withdraw_request_data(dynamic raw);
+
+  @protected
+  LnUrlWithdrawResult dco_decode_ln_url_withdraw_result(dynamic raw);
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_ln_url_withdraw_success_data(dynamic raw);
 
   @protected
   LogEntry dco_decode_log_entry(dynamic raw);
@@ -381,7 +399,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlPayRequestData sse_decode_box_autoadd_ln_url_pay_request_data(SseDeserializer deserializer);
 
   @protected
+  LnUrlWithdrawRequest sse_decode_box_autoadd_ln_url_withdraw_request(SseDeserializer deserializer);
+
+  @protected
   LnUrlWithdrawRequestData sse_decode_box_autoadd_ln_url_withdraw_request_data(SseDeserializer deserializer);
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_box_autoadd_ln_url_withdraw_success_data(SseDeserializer deserializer);
 
   @protected
   MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer);
@@ -478,7 +502,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlPayRequestData sse_decode_ln_url_pay_request_data(SseDeserializer deserializer);
 
   @protected
+  LnUrlWithdrawError sse_decode_ln_url_withdraw_error(SseDeserializer deserializer);
+
+  @protected
+  LnUrlWithdrawRequest sse_decode_ln_url_withdraw_request(SseDeserializer deserializer);
+
+  @protected
   LnUrlWithdrawRequestData sse_decode_ln_url_withdraw_request_data(SseDeserializer deserializer);
+
+  @protected
+  LnUrlWithdrawResult sse_decode_ln_url_withdraw_result(SseDeserializer deserializer);
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_ln_url_withdraw_success_data(SseDeserializer deserializer);
 
   @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
@@ -707,11 +743,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_ln_url_withdraw_request> cst_encode_box_autoadd_ln_url_withdraw_request(
+      LnUrlWithdrawRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_ln_url_withdraw_request();
+    cst_api_fill_to_wire_ln_url_withdraw_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_ln_url_withdraw_request_data> cst_encode_box_autoadd_ln_url_withdraw_request_data(
       LnUrlWithdrawRequestData raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_ln_url_withdraw_request_data();
     cst_api_fill_to_wire_ln_url_withdraw_request_data(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_ln_url_withdraw_success_data> cst_encode_box_autoadd_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_ln_url_withdraw_success_data();
+    cst_api_fill_to_wire_ln_url_withdraw_success_data(raw, ptr.ref);
     return ptr;
   }
 
@@ -1002,9 +1056,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_ln_url_withdraw_request(
+      LnUrlWithdrawRequest apiObj, ffi.Pointer<wire_cst_ln_url_withdraw_request> wireObj) {
+    cst_api_fill_to_wire_ln_url_withdraw_request(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_ln_url_withdraw_request_data(
       LnUrlWithdrawRequestData apiObj, ffi.Pointer<wire_cst_ln_url_withdraw_request_data> wireObj) {
     cst_api_fill_to_wire_ln_url_withdraw_request_data(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData apiObj, ffi.Pointer<wire_cst_ln_url_withdraw_success_data> wireObj) {
+    cst_api_fill_to_wire_ln_url_withdraw_success_data(apiObj, wireObj.ref);
   }
 
   @protected
@@ -1339,6 +1405,55 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_ln_url_withdraw_error(
+      LnUrlWithdrawError apiObj, wire_cst_ln_url_withdraw_error wireObj) {
+    if (apiObj is LnUrlWithdrawError_Generic) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 0;
+      wireObj.kind.Generic.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawError_InvalidAmount) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 1;
+      wireObj.kind.InvalidAmount.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawError_InvalidInvoice) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 2;
+      wireObj.kind.InvalidInvoice.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawError_InvalidUri) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 3;
+      wireObj.kind.InvalidUri.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawError_InvoiceNoRoutingHints) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 4;
+      wireObj.kind.InvoiceNoRoutingHints.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawError_ServiceConnectivity) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 5;
+      wireObj.kind.ServiceConnectivity.err = pre_err;
+      return;
+    }
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_url_withdraw_request(
+      LnUrlWithdrawRequest apiObj, wire_cst_ln_url_withdraw_request wireObj) {
+    cst_api_fill_to_wire_ln_url_withdraw_request_data(apiObj.data, wireObj.data);
+    wireObj.amount_msat = cst_encode_u_64(apiObj.amountMsat);
+    wireObj.description = cst_encode_opt_String(apiObj.description);
+  }
+
+  @protected
   void cst_api_fill_to_wire_ln_url_withdraw_request_data(
       LnUrlWithdrawRequestData apiObj, wire_cst_ln_url_withdraw_request_data wireObj) {
     wireObj.callback = cst_encode_String(apiObj.callback);
@@ -1346,6 +1461,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.default_description = cst_encode_String(apiObj.defaultDescription);
     wireObj.min_withdrawable = cst_encode_u_64(apiObj.minWithdrawable);
     wireObj.max_withdrawable = cst_encode_u_64(apiObj.maxWithdrawable);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_url_withdraw_result(
+      LnUrlWithdrawResult apiObj, wire_cst_ln_url_withdraw_result wireObj) {
+    if (apiObj is LnUrlWithdrawResult_Ok) {
+      var pre_data = cst_encode_box_autoadd_ln_url_withdraw_success_data(apiObj.data);
+      wireObj.tag = 0;
+      wireObj.kind.Ok.data = pre_data;
+      return;
+    }
+    if (apiObj is LnUrlWithdrawResult_ErrorStatus) {
+      var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
+      wireObj.tag = 1;
+      wireObj.kind.ErrorStatus.data = pre_data;
+      return;
+    }
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData apiObj, wire_cst_ln_url_withdraw_success_data wireObj) {
+    cst_api_fill_to_wire_ln_invoice(apiObj.invoice, wireObj.invoice);
   }
 
   @protected
@@ -1717,8 +1855,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_ln_url_withdraw_request_data(
       LnUrlWithdrawRequestData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_message_success_action_data(
@@ -1816,7 +1961,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ln_url_withdraw_error(LnUrlWithdrawError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ln_url_withdraw_request_data(LnUrlWithdrawRequestData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_url_withdraw_result(LnUrlWithdrawResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer);
 
   @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
@@ -2062,6 +2219,26 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_pay =
       _wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_pay_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_ln_url_withdraw_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw');
+  late final _wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw =
+      _wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
     int port_,
@@ -2440,6 +2617,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_ln_url_pay_request_data = _cst_new_box_autoadd_ln_url_pay_request_dataPtr
       .asFunction<ffi.Pointer<wire_cst_ln_url_pay_request_data> Function()>();
 
+  ffi.Pointer<wire_cst_ln_url_withdraw_request> cst_new_box_autoadd_ln_url_withdraw_request() {
+    return _cst_new_box_autoadd_ln_url_withdraw_request();
+  }
+
+  late final _cst_new_box_autoadd_ln_url_withdraw_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request');
+  late final _cst_new_box_autoadd_ln_url_withdraw_request = _cst_new_box_autoadd_ln_url_withdraw_requestPtr
+      .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request> Function()>();
+
   ffi.Pointer<wire_cst_ln_url_withdraw_request_data> cst_new_box_autoadd_ln_url_withdraw_request_data() {
     return _cst_new_box_autoadd_ln_url_withdraw_request_data();
   }
@@ -2450,6 +2637,17 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_ln_url_withdraw_request_data =
       _cst_new_box_autoadd_ln_url_withdraw_request_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request_data> Function()>();
+
+  ffi.Pointer<wire_cst_ln_url_withdraw_success_data> cst_new_box_autoadd_ln_url_withdraw_success_data() {
+    return _cst_new_box_autoadd_ln_url_withdraw_success_data();
+  }
+
+  late final _cst_new_box_autoadd_ln_url_withdraw_success_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_withdraw_success_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data');
+  late final _cst_new_box_autoadd_ln_url_withdraw_success_data =
+      _cst_new_box_autoadd_ln_url_withdraw_success_dataPtr
+          .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_success_data> Function()>();
 
   ffi.Pointer<wire_cst_message_success_action_data> cst_new_box_autoadd_message_success_action_data() {
     return _cst_new_box_autoadd_message_success_action_data();
@@ -2685,6 +2883,29 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
+}
+
+final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> default_description;
+
+  @ffi.Uint64()
+  external int min_withdrawable;
+
+  @ffi.Uint64()
+  external int max_withdrawable;
+}
+
+final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
+  external wire_cst_ln_url_withdraw_request_data data;
+
+  @ffi.Uint64()
+  external int amount_msat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
@@ -2944,18 +3165,8 @@ final class wire_cst_ln_url_pay_error_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
 }
 
-final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> default_description;
-
-  @ffi.Uint64()
-  external int min_withdrawable;
-
-  @ffi.Uint64()
-  external int max_withdrawable;
+final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
+  external wire_cst_ln_invoice invoice;
 }
 
 final class wire_cst_message_success_action_data extends ffi.Struct {
@@ -3166,6 +3377,72 @@ final class wire_cst_ln_url_pay_error extends ffi.Struct {
   external int tag;
 
   external LnUrlPayErrorKind kind;
+}
+
+final class wire_cst_LnUrlWithdrawError_Generic extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlWithdrawError_InvalidAmount extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlWithdrawError_InvalidInvoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlWithdrawError_InvalidUri extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlWithdrawError_InvoiceNoRoutingHints extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlWithdrawError_ServiceConnectivity extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class LnUrlWithdrawErrorKind extends ffi.Union {
+  external wire_cst_LnUrlWithdrawError_Generic Generic;
+
+  external wire_cst_LnUrlWithdrawError_InvalidAmount InvalidAmount;
+
+  external wire_cst_LnUrlWithdrawError_InvalidInvoice InvalidInvoice;
+
+  external wire_cst_LnUrlWithdrawError_InvalidUri InvalidUri;
+
+  external wire_cst_LnUrlWithdrawError_InvoiceNoRoutingHints InvoiceNoRoutingHints;
+
+  external wire_cst_LnUrlWithdrawError_ServiceConnectivity ServiceConnectivity;
+}
+
+final class wire_cst_ln_url_withdraw_error extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlWithdrawErrorKind kind;
+}
+
+final class wire_cst_LnUrlWithdrawResult_Ok extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
+}
+
+final class wire_cst_LnUrlWithdrawResult_ErrorStatus extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_error_data> data;
+}
+
+final class LnUrlWithdrawResultKind extends ffi.Union {
+  external wire_cst_LnUrlWithdrawResult_Ok Ok;
+
+  external wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
+}
+
+final class wire_cst_ln_url_withdraw_result extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlWithdrawResultKind kind;
 }
 
 final class wire_cst_log_entry extends ffi.Struct {

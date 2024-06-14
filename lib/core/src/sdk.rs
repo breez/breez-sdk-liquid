@@ -1094,20 +1094,20 @@ impl LiquidSdk {
                     })
                     .await?;
 
-                let payment = self
-                    .send_payment(&pay_req)
-                    .await?
-                    .payment;
+                let payment = self.send_payment(&pay_req).await?.payment;
 
                 let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
                     Some(sa) => {
                         let processed_sa = match sa {
                             // For AES, we decrypt the contents on the fly
                             SuccessAction::Aes(data) => {
-                                let preimage_str =
-                                    payment.preimage.clone().ok_or(LiquidSdkError::Generic {
+                                let preimage_str = payment
+                                    .preimage
+                                    .clone()
+                                    .ok_or(LiquidSdkError::Generic {
                                         err: "Payment successful but no preimage found".to_string(),
-                                    }).unwrap();
+                                    })
+                                    .unwrap();
                                 let preimage =
                                     sha256::Hash::from_str(&preimage_str).map_err(|_| {
                                         sdk_common::prelude::LnUrlPayError::Generic {
@@ -1141,6 +1141,28 @@ impl LiquidSdk {
                 })
             }
         }
+    }
+
+    /// Second step of LNURL-withdraw. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlWithdrawRequest` payload needed here.
+    ///
+    /// This call will validate the given `amount_msat` against the parameters
+    /// of the LNURL endpoint (`data`). If they match the endpoint requirements, the LNURL withdraw
+    /// request is made. A successful result here means the endpoint started the payment.
+    pub async fn lnurl_withdraw(
+        &self,
+        req: LnUrlWithdrawRequest,
+    ) -> Result<LnUrlWithdrawResult, sdk_common::prelude::LnUrlWithdrawError> {
+        let receive_res = self
+            .receive_payment(&PrepareReceiveResponse {
+                payer_amount_sat: 0,
+                fees_sat: 0,
+            })
+            .await?;
+        let invoice = parse_invoice(&receive_res.invoice)?;
+
+        let res = validate_lnurl_withdraw(req.data, invoice).await?;
+        Ok(res)
     }
 
     pub fn default_config(network: LiquidSdkNetwork) -> Config {

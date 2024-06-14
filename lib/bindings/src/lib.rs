@@ -123,6 +123,14 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
     }
 
+    pub fn lnurl_withdraw(
+        &self,
+        req: LnUrlWithdrawRequest,
+    ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
+        rt().block_on(self.sdk.lnurl_withdraw(req))
+            .map_err(Into::into)
+    }
+
     pub fn sync(&self) -> LiquidSdkResult<()> {
         rt().block_on(self.sdk.sync()).map_err(Into::into)
     }

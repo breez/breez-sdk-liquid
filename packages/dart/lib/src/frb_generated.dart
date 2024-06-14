@@ -57,7 +57,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.38';
 
   @override
-  int get rustContentHash => 2010679441;
+  int get rustContentHash => -2033859719;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -81,6 +81,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<WrappedLnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
       {required BindingLiquidSdk that, required LnUrlPayRequest req});
+
+  Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
+      {required BindingLiquidSdk that, required LnUrlWithdrawRequest req});
 
   Future<PrepareReceiveResponse> crateBindingsBindingLiquidSdkPrepareReceivePayment(
       {required BindingLiquidSdk that, required PrepareReceiveRequest req});
@@ -297,6 +300,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlPayConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_lnurl_pay",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
+      {required BindingLiquidSdk that, required LnUrlWithdrawRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_ln_url_withdraw_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_url_withdraw_result,
+        decodeErrorData: dco_decode_ln_url_withdraw_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_lnurl_withdraw",
         argNames: ["that", "req"],
       );
 
@@ -790,9 +819,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlWithdrawRequest dco_decode_box_autoadd_ln_url_withdraw_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_withdraw_request(raw);
+  }
+
+  @protected
   LnUrlWithdrawRequestData dco_decode_box_autoadd_ln_url_withdraw_request_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_ln_url_withdraw_request_data(raw);
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_box_autoadd_ln_url_withdraw_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_withdraw_success_data(raw);
   }
 
   @protected
@@ -1178,6 +1219,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlWithdrawError dco_decode_ln_url_withdraw_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlWithdrawError_Generic(
+          err: dco_decode_String(raw[1]),
+        );
+      case 1:
+        return LnUrlWithdrawError_InvalidAmount(
+          err: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return LnUrlWithdrawError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
+        );
+      case 3:
+        return LnUrlWithdrawError_InvalidUri(
+          err: dco_decode_String(raw[1]),
+        );
+      case 4:
+        return LnUrlWithdrawError_InvoiceNoRoutingHints(
+          err: dco_decode_String(raw[1]),
+        );
+      case 5:
+        return LnUrlWithdrawError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  LnUrlWithdrawRequest dco_decode_ln_url_withdraw_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LnUrlWithdrawRequest(
+      data: dco_decode_ln_url_withdraw_request_data(arr[0]),
+      amountMsat: dco_decode_u_64(arr[1]),
+      description: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
   LnUrlWithdrawRequestData dco_decode_ln_url_withdraw_request_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1188,6 +1274,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       defaultDescription: dco_decode_String(arr[2]),
       minWithdrawable: dco_decode_u_64(arr[3]),
       maxWithdrawable: dco_decode_u_64(arr[4]),
+    );
+  }
+
+  @protected
+  LnUrlWithdrawResult dco_decode_ln_url_withdraw_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlWithdrawResult_Ok(
+          data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),
+        );
+      case 1:
+        return LnUrlWithdrawResult_ErrorStatus(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_ln_url_withdraw_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return LnUrlWithdrawSuccessData(
+      invoice: dco_decode_ln_invoice(arr[0]),
     );
   }
 
@@ -1720,9 +1833,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlWithdrawRequest sse_decode_box_autoadd_ln_url_withdraw_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_withdraw_request(deserializer));
+  }
+
+  @protected
   LnUrlWithdrawRequestData sse_decode_box_autoadd_ln_url_withdraw_request_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_ln_url_withdraw_request_data(deserializer));
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_box_autoadd_ln_url_withdraw_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_withdraw_success_data(deserializer));
   }
 
   @protected
@@ -2117,6 +2242,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlWithdrawError sse_decode_ln_url_withdraw_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_Generic(err: var_err);
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidAmount(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidInvoice(err: var_err);
+      case 3:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidUri(err: var_err);
+      case 4:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvoiceNoRoutingHints(err: var_err);
+      case 5:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlWithdrawRequest sse_decode_ln_url_withdraw_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_data = sse_decode_ln_url_withdraw_request_data(deserializer);
+    var var_amountMsat = sse_decode_u_64(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
+    return LnUrlWithdrawRequest(data: var_data, amountMsat: var_amountMsat, description: var_description);
+  }
+
+  @protected
   LnUrlWithdrawRequestData sse_decode_ln_url_withdraw_request_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_callback = sse_decode_String(deserializer);
@@ -2130,6 +2293,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         defaultDescription: var_defaultDescription,
         minWithdrawable: var_minWithdrawable,
         maxWithdrawable: var_maxWithdrawable);
+  }
+
+  @protected
+  LnUrlWithdrawResult sse_decode_ln_url_withdraw_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
+        return LnUrlWithdrawResult_Ok(data: var_data);
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlWithdrawResult_ErrorStatus(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_ln_url_withdraw_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_invoice = sse_decode_ln_invoice(deserializer);
+    return LnUrlWithdrawSuccessData(invoice: var_invoice);
   }
 
   @protected
@@ -2726,10 +2913,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_request(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_ln_url_withdraw_request_data(
       LnUrlWithdrawRequestData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_withdraw_request_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_success_data(self, serializer);
   }
 
   @protected
@@ -3067,6 +3267,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ln_url_withdraw_error(LnUrlWithdrawError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlWithdrawError_Generic(err: final err):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidAmount(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidInvoice(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidUri(err: final err):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvoiceNoRoutingHints(err: final err):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_request_data(self.data, serializer);
+    sse_encode_u_64(self.amountMsat, serializer);
+    sse_encode_opt_String(self.description, serializer);
+  }
+
+  @protected
   void sse_encode_ln_url_withdraw_request_data(LnUrlWithdrawRequestData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.callback, serializer);
@@ -3074,6 +3309,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.defaultDescription, serializer);
     sse_encode_u_64(self.minWithdrawable, serializer);
     sse_encode_u_64(self.maxWithdrawable, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_result(LnUrlWithdrawResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlWithdrawResult_Ok(data: final data):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
+      case LnUrlWithdrawResult_ErrorStatus(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_invoice(self.invoice, serializer);
   }
 
   @protected
@@ -3397,6 +3653,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<WrappedLnUrlPayResult> lnurlPay({required LnUrlPayRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlPay(that: this, req: req);
+
+  Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlWithdraw(that: this, req: req);
 
   Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareReceivePayment(that: this, req: req);

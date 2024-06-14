@@ -98,22 +98,6 @@ pub struct _LnUrlPayRequestData {
     pub ln_address: Option<String>,
 }
 
-// #[frb(mirror(LnUrlPayError))]
-// pub enum _LnUrlPayError {
-//     AlreadyPaid,
-//     Generic { err: String },
-//     InvalidAmount { err: String },
-//     InvalidInvoice { err: String },
-//     InvalidNetwork { err: String },
-//     InvalidUri { err: String },
-//     InvoiceExpired { err: String },
-//     PaymentFailed { err: String },
-//     PaymentTimeout { err: String },
-//     RouteNotFound { err: String },
-//     RouteTooExpensive { err: String },
-//     ServiceConnectivity { err: String },
-// }
-
 #[frb(mirror(LnUrlPayRequest))]
 pub struct _LnUrlPayRequest {
     pub data: LnUrlPayRequestData,
@@ -178,4 +162,11 @@ pub struct _LnUrlAuthRequestData {
 #[frb(mirror(LnUrlErrorData))]
 pub struct _LnUrlErrorData {
     pub reason: String,
+}
+
+#[frb(mirror(LnUrlWithdrawRequest))]
+pub struct _LnUrlWithdrawRequest {
+    pub data: LnUrlWithdrawRequestData,
+    pub amount_msat: u64,
+    pub description: Option<String>,
 }
