@@ -49,7 +49,7 @@ class HomePageBottomAppBar extends StatelessWidget {
                   context: context,
                   builder: (context) => ReceivePaymentDialog(
                     liquidSDK: liquidSDK,
-                    paymentsStream: paymentsStream.asBroadcastStream(),
+                    paymentsStream: paymentsStream,
                   ),
                 );
               },
