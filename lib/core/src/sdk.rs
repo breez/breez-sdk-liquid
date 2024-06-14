@@ -1153,12 +1153,14 @@ impl LiquidSdk {
         &self,
         req: LnUrlWithdrawRequest,
     ) -> Result<LnUrlWithdrawResult, sdk_common::prelude::LnUrlWithdrawError> {
-        let receive_res = self
-            .receive_payment(&PrepareReceiveResponse {
-                payer_amount_sat: 0,
-                fees_sat: 0,
+        let prepare_receive_res = self
+            .prepare_receive_payment(&{
+                PrepareReceiveRequest {
+                    payer_amount_sat: req.amount_msat / 1_000,
+                }
             })
             .await?;
+        let receive_res = self.receive_payment(&prepare_receive_res).await?;
         let invoice = parse_invoice(&receive_res.invoice)?;
 
         let res = validate_lnurl_withdraw(req.data, invoice).await?;
