@@ -863,7 +863,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       amountSat: dco_decode_u_64(arr[3]),
       feesSat: dco_decode_u_64(arr[4]),
       preimage: dco_decode_opt_String(arr[5]),
-      invoice: dco_decode_opt_String(arr[6]),
+      bolt11: dco_decode_opt_String(arr[6]),
       refundTxId: dco_decode_opt_String(arr[7]),
       refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[8]),
       paymentType: dco_decode_payment_type(arr[9]),
@@ -1426,7 +1426,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
     var var_preimage = sse_decode_opt_String(deserializer);
-    var var_invoice = sse_decode_opt_String(deserializer);
+    var var_bolt11 = sse_decode_opt_String(deserializer);
     var var_refundTxId = sse_decode_opt_String(deserializer);
     var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_paymentType = sse_decode_payment_type(deserializer);
@@ -1438,7 +1438,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         amountSat: var_amountSat,
         feesSat: var_feesSat,
         preimage: var_preimage,
-        invoice: var_invoice,
+        bolt11: var_bolt11,
         refundTxId: var_refundTxId,
         refundTxAmountSat: var_refundTxAmountSat,
         paymentType: var_paymentType,
@@ -2009,7 +2009,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
     sse_encode_opt_String(self.preimage, serializer);
-    sse_encode_opt_String(self.invoice, serializer);
+    sse_encode_opt_String(self.bolt11, serializer);
     sse_encode_opt_String(self.refundTxId, serializer);
     sse_encode_opt_box_autoadd_u_64(self.refundTxAmountSat, serializer);
     sse_encode_payment_type(self.paymentType, serializer);

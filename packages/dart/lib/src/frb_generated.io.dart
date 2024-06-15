@@ -728,7 +728,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.preimage = cst_encode_opt_String(apiObj.preimage);
-    wireObj.invoice = cst_encode_opt_String(apiObj.invoice);
+    wireObj.bolt11 = cst_encode_opt_String(apiObj.bolt11);
     wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
     wireObj.refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
     wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
@@ -1637,12 +1637,9 @@ class RustLibWire implements BaseWire {
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 }
 
-typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
-typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartDartPostCObjectFnTypeFunction = bool Function(
-    DartDartPort port_id, ffi.Pointer<ffi.Void> message);
+typedef DartPostCObjectFnType
+    = ffi.Pointer<ffi.NativeFunction<ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message)>>;
 typedef DartPort = ffi.Int64;
-typedef DartDartPort = int;
 
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
@@ -1703,7 +1700,7 @@ final class wire_cst_payment extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 

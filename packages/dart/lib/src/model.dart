@@ -296,7 +296,7 @@ class Payment {
   /// Represents the invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
-  final String? invoice;
+  final String? bolt11;
 
   /// For a Send swap which was refunded, this is the refund tx id
   final String? refundTxId;
@@ -319,7 +319,7 @@ class Payment {
     required this.amountSat,
     required this.feesSat,
     this.preimage,
-    this.invoice,
+    this.bolt11,
     this.refundTxId,
     this.refundTxAmountSat,
     required this.paymentType,
@@ -334,7 +334,7 @@ class Payment {
       amountSat.hashCode ^
       feesSat.hashCode ^
       preimage.hashCode ^
-      invoice.hashCode ^
+      bolt11.hashCode ^
       refundTxId.hashCode ^
       refundTxAmountSat.hashCode ^
       paymentType.hashCode ^
@@ -351,7 +351,7 @@ class Payment {
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
           preimage == other.preimage &&
-          invoice == other.invoice &&
+          bolt11 == other.bolt11 &&
           refundTxId == other.refundTxId &&
           refundTxAmountSat == other.refundTxAmountSat &&
           paymentType == other.paymentType &&

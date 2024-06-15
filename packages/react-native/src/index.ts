@@ -72,7 +72,7 @@ export interface Payment {
     amountSat: number
     feesSat: number
     preimage?: string
-    invoice?: string
+    bolt11?: string
     refundTxId?: string
     refundTxAmountSat?: number
     paymentType: PaymentType

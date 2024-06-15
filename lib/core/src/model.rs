@@ -533,7 +533,7 @@ pub struct PaymentSwapData {
 
     pub preimage: Option<String>,
 
-    pub invoice: Option<String>,
+    pub bolt11: String,
 
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
@@ -591,7 +591,7 @@ pub struct Payment {
     /// Represents the invoice associated with a payment
     /// In the case of a Send payment, this is the invoice paid by the swapper
     /// In the case of a Receive payment, this is the invoice paid by the user
-    pub invoice: Option<String>,
+    pub bolt11: Option<String>,
 
     /// For a Send swap which was refunded, this is the refund tx id
     pub refund_tx_id: Option<String>,
@@ -622,7 +622,7 @@ impl Payment {
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             preimage: swap.preimage,
-            invoice: swap.invoice,
+            bolt11: Some(swap.bolt11),
             refund_tx_id: swap.refund_tx_id,
             refund_tx_amount_sat: swap.refund_tx_amount_sat,
             payment_type,
@@ -647,7 +647,7 @@ impl Payment {
                 },
             },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
-            invoice: swap.as_ref().and_then(|s| s.invoice.clone()),
+            bolt11: swap.as_ref().map(|s| s.bolt11.clone()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,
