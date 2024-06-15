@@ -82,12 +82,12 @@ impl SwapperStatusStream for BoltzStatusStream {
                 debug!("Start of ws stream loop");
                 match self.connect().await {
                     Ok(mut ws_stream) => {
+                        let mut subscription_stream = self.subscription_notifier.subscribe();
+
                         callback.on_stream_reconnect().await;
 
                         let mut interval = tokio::time::interval(keep_alive_ping_interval);
                         interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
-
-                        let mut subscription_stream = self.subscription_notifier.subscribe();
 
                         loop {
                             tokio::select! {
