@@ -1255,7 +1255,7 @@ final class wire_cst_InputType_LnUrlAuth extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_auth_request_data> data;
 }
 
-final class wire_cst_InputType_LnUrlEndpointError extends ffi.Struct {
+final class wire_cst_InputType_LnUrlError extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
@@ -1274,7 +1274,7 @@ final class InputTypeKind extends ffi.Union {
 
   external wire_cst_InputType_LnUrlAuth LnUrlAuth;
 
-  external wire_cst_InputType_LnUrlEndpointError LnUrlEndpointError;
+  external wire_cst_InputType_LnUrlError LnUrlError;
 }
 
 final class wire_cst_input_type extends ffi.Struct {

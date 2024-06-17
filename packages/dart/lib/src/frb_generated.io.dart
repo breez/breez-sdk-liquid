@@ -1201,10 +1201,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.LnUrlAuth.data = pre_data;
       return;
     }
-    if (apiObj is InputType_LnUrlEndpointError) {
+    if (apiObj is InputType_LnUrlError) {
       var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
       wireObj.tag = 7;
-      wireObj.kind.LnUrlEndpointError.data = pre_data;
+      wireObj.kind.LnUrlError.data = pre_data;
       return;
     }
   }
@@ -3260,7 +3260,7 @@ final class wire_cst_InputType_LnUrlAuth extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_auth_request_data> data;
 }
 
-final class wire_cst_InputType_LnUrlEndpointError extends ffi.Struct {
+final class wire_cst_InputType_LnUrlError extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
@@ -3279,7 +3279,7 @@ final class InputTypeKind extends ffi.Union {
 
   external wire_cst_InputType_LnUrlAuth LnUrlAuth;
 
-  external wire_cst_InputType_LnUrlEndpointError LnUrlEndpointError;
+  external wire_cst_InputType_LnUrlError LnUrlError;
 }
 
 final class wire_cst_input_type extends ffi.Struct {

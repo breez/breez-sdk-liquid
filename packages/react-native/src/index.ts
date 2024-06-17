@@ -214,7 +214,7 @@ export enum InputTypeVariant {
     LN_URL_PAY = "lnUrlPay",
     LN_URL_WITHDRAW = "lnUrlWithdraw",
     LN_URL_AUTH = "lnUrlAuth",
-    LN_URL_ENDPOINT_ERROR = "lnUrlEndpointError"
+    LN_URL_ERROR = "lnUrlError"
 }
 
 export type InputType = {
@@ -239,7 +239,7 @@ export type InputType = {
     type: InputTypeVariant.LN_URL_AUTH,
     data: LnUrlAuthRequestData
 } | {
-    type: InputTypeVariant.LN_URL_ENDPOINT_ERROR,
+    type: InputTypeVariant.LN_URL_ERROR,
     data: LnUrlErrorData
 }
 

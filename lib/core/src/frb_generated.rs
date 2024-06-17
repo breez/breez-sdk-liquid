@@ -786,7 +786,7 @@ const _: fn() = || {
         crate::InputType::LnUrlAuth { data } => {
             let _: crate::LnUrlAuthRequestData = data;
         }
-        crate::InputType::LnUrlEndpointError { data } => {
+        crate::InputType::LnUrlError { data } => {
             let _: crate::LnUrlErrorData = data;
         }
     }
@@ -1224,7 +1224,7 @@ impl SseDecode for crate::InputType {
             }
             7 => {
                 let mut var_data = <crate::LnUrlErrorData>::sse_decode(deserializer);
-                return crate::InputType::LnUrlEndpointError { data: var_data };
+                return crate::InputType::LnUrlError { data: var_data };
             }
             _ => {
                 unimplemented!("");
@@ -2306,7 +2306,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::InputType> {
             crate::InputType::LnUrlAuth { data } => {
                 [6.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::InputType::LnUrlEndpointError { data } => {
+            crate::InputType::LnUrlError { data } => {
                 [7.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
             _ => {
@@ -3344,7 +3344,7 @@ impl SseEncode for crate::InputType {
                 <i32>::sse_encode(6, serializer);
                 <crate::LnUrlAuthRequestData>::sse_encode(data, serializer);
             }
-            crate::InputType::LnUrlEndpointError { data } => {
+            crate::InputType::LnUrlError { data } => {
                 <i32>::sse_encode(7, serializer);
                 <crate::LnUrlErrorData>::sse_encode(data, serializer);
             }

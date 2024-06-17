@@ -987,7 +987,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           data: dco_decode_box_autoadd_ln_url_auth_request_data(raw[1]),
         );
       case 7:
-        return InputType_LnUrlEndpointError(
+        return InputType_LnUrlError(
           data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
       default:
@@ -2000,7 +2000,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return InputType_LnUrlAuth(data: var_data);
       case 7:
         var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-        return InputType_LnUrlEndpointError(data: var_data);
+        return InputType_LnUrlError(data: var_data);
       default:
         throw UnimplementedError('');
     }
@@ -3067,7 +3067,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case InputType_LnUrlAuth(data: final data):
         sse_encode_i_32(6, serializer);
         sse_encode_box_autoadd_ln_url_auth_request_data(data, serializer);
-      case InputType_LnUrlEndpointError(data: final data):
+      case InputType_LnUrlError(data: final data):
         sse_encode_i_32(7, serializer);
         sse_encode_box_autoadd_ln_url_error_data(data, serializer);
       default:

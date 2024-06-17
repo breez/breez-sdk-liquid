@@ -415,8 +415,8 @@ impl CstDecode<crate::InputType> for wire_cst_input_type {
                 }
             }
             7 => {
-                let ans = unsafe { self.kind.LnUrlEndpointError };
-                crate::InputType::LnUrlEndpointError {
+                let ans = unsafe { self.kind.LnUrlError };
+                crate::InputType::LnUrlError {
                     data: ans.data.cst_decode(),
                 }
             }
@@ -2109,7 +2109,7 @@ pub union InputTypeKind {
     LnUrlPay: wire_cst_InputType_LnUrlPay,
     LnUrlWithdraw: wire_cst_InputType_LnUrlWithdraw,
     LnUrlAuth: wire_cst_InputType_LnUrlAuth,
-    LnUrlEndpointError: wire_cst_InputType_LnUrlEndpointError,
+    LnUrlError: wire_cst_InputType_LnUrlError,
     nil__: (),
 }
 #[repr(C)]
@@ -2149,7 +2149,7 @@ pub struct wire_cst_InputType_LnUrlAuth {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_InputType_LnUrlEndpointError {
+pub struct wire_cst_InputType_LnUrlError {
     data: *mut wire_cst_ln_url_error_data,
 }
 #[repr(C)]
