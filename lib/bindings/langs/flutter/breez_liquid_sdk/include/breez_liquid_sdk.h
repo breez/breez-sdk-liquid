@@ -246,17 +246,13 @@ typedef struct wire_cst_ln_url_pay_error_data {
   struct wire_cst_list_prim_u_8_strict *reason;
 } wire_cst_ln_url_pay_error_data;
 
-typedef struct wire_cst_ln_url_withdraw_success_data {
-  struct wire_cst_ln_invoice invoice;
-} wire_cst_ln_url_withdraw_success_data;
+typedef struct wire_cst_SuccessActionProcessed_Aes {
+  struct wire_cst_aes_success_action_data_result *result;
+} wire_cst_SuccessActionProcessed_Aes;
 
 typedef struct wire_cst_message_success_action_data {
   struct wire_cst_list_prim_u_8_strict *message;
 } wire_cst_message_success_action_data;
-
-typedef struct wire_cst_SuccessActionProcessed_Aes {
-  struct wire_cst_aes_success_action_data_result *result;
-} wire_cst_SuccessActionProcessed_Aes;
 
 typedef struct wire_cst_SuccessActionProcessed_Message {
   struct wire_cst_message_success_action_data *data;
@@ -282,10 +278,14 @@ typedef struct wire_cst_success_action_processed {
   union SuccessActionProcessedKind kind;
 } wire_cst_success_action_processed;
 
-typedef struct wire_cst_wrapped_ln_url_pay_success_data {
+typedef struct wire_cst_ln_url_pay_success_data {
   struct wire_cst_payment payment;
   struct wire_cst_success_action_processed *success_action;
-} wire_cst_wrapped_ln_url_pay_success_data;
+} wire_cst_ln_url_pay_success_data;
+
+typedef struct wire_cst_ln_url_withdraw_success_data {
+  struct wire_cst_ln_invoice invoice;
+} wire_cst_ln_url_withdraw_success_data;
 
 typedef struct wire_cst_list_payment {
   struct wire_cst_payment *ptr;
@@ -423,6 +423,29 @@ typedef struct wire_cst_ln_url_pay_error {
   union LnUrlPayErrorKind kind;
 } wire_cst_ln_url_pay_error;
 
+typedef struct wire_cst_LnUrlPayResult_EndpointSuccess {
+  struct wire_cst_ln_url_pay_success_data *data;
+} wire_cst_LnUrlPayResult_EndpointSuccess;
+
+typedef struct wire_cst_LnUrlPayResult_EndpointError {
+  struct wire_cst_ln_url_error_data *data;
+} wire_cst_LnUrlPayResult_EndpointError;
+
+typedef struct wire_cst_LnUrlPayResult_PayError {
+  struct wire_cst_ln_url_pay_error_data *data;
+} wire_cst_LnUrlPayResult_PayError;
+
+typedef union LnUrlPayResultKind {
+  struct wire_cst_LnUrlPayResult_EndpointSuccess EndpointSuccess;
+  struct wire_cst_LnUrlPayResult_EndpointError EndpointError;
+  struct wire_cst_LnUrlPayResult_PayError PayError;
+} LnUrlPayResultKind;
+
+typedef struct wire_cst_ln_url_pay_result {
+  int32_t tag;
+  union LnUrlPayResultKind kind;
+} wire_cst_ln_url_pay_result;
+
 typedef struct wire_cst_LnUrlWithdrawError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LnUrlWithdrawError_Generic;
@@ -537,29 +560,6 @@ typedef struct wire_cst_send_payment_response {
   struct wire_cst_payment payment;
 } wire_cst_send_payment_response;
 
-typedef struct wire_cst_WrappedLnUrlPayResult_EndpointSuccess {
-  struct wire_cst_wrapped_ln_url_pay_success_data *data;
-} wire_cst_WrappedLnUrlPayResult_EndpointSuccess;
-
-typedef struct wire_cst_WrappedLnUrlPayResult_EndpointError {
-  struct wire_cst_ln_url_error_data *data;
-} wire_cst_WrappedLnUrlPayResult_EndpointError;
-
-typedef struct wire_cst_WrappedLnUrlPayResult_PayError {
-  struct wire_cst_ln_url_pay_error_data *data;
-} wire_cst_WrappedLnUrlPayResult_PayError;
-
-typedef union WrappedLnUrlPayResultKind {
-  struct wire_cst_WrappedLnUrlPayResult_EndpointSuccess EndpointSuccess;
-  struct wire_cst_WrappedLnUrlPayResult_EndpointError EndpointError;
-  struct wire_cst_WrappedLnUrlPayResult_PayError PayError;
-} WrappedLnUrlPayResultKind;
-
-typedef struct wire_cst_wrapped_ln_url_pay_result {
-  int32_t tag;
-  union WrappedLnUrlPayResultKind kind;
-} wire_cst_wrapped_ln_url_pay_result;
-
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(int64_t port_,
                                                                                     uintptr_t that,
                                                                                     struct wire_cst_list_prim_u_8_strict *listener);
@@ -655,6 +655,8 @@ struct wire_cst_ln_url_pay_request *frbgen_breez_liquid_cst_new_box_autoadd_ln_u
 
 struct wire_cst_ln_url_pay_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(void);
 
+struct wire_cst_ln_url_pay_success_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data(void);
+
 struct wire_cst_ln_url_withdraw_request *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request(void);
 
 struct wire_cst_ln_url_withdraw_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(void);
@@ -681,8 +683,6 @@ uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_url_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
 
-struct wire_cst_wrapped_ln_url_pay_success_data *frbgen_breez_liquid_cst_new_box_autoadd_wrapped_ln_url_pay_success_data(void);
-
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
@@ -705,6 +705,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data);
@@ -718,7 +719,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_wrapped_ln_url_pay_success_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);

@@ -2703,7 +2703,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.4.1"
-source = "git+https://github.com/breez/breez-sdk?branch=ok300-extract-commons-lnurl#98d5a6175753fbca974151f009780b41776156fb"
+source = "git+https://github.com/breez/breez-sdk?branch=ok300-extract-commons-lnurl#b1b249129eda9a80231ae3af8101700db5ade97d"
 dependencies = [
  "aes 0.8.4",
  "anyhow",

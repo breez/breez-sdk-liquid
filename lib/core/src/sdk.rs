@@ -19,7 +19,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::error::LiquidSdkError;
-use crate::model::lnurl::{WrappedLnUrlPayResult, WrappedLnUrlPaySuccessData};
+use crate::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
@@ -1072,10 +1072,7 @@ impl LiquidSdk {
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
     /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
     /// is made.
-    pub async fn lnurl_pay(
-        &self,
-        req: LnUrlPayRequest,
-    ) -> Result<WrappedLnUrlPayResult, sdk_common::prelude::LnUrlPayError> {
+    pub async fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
         match validate_lnurl_pay(
             req.amount_msat,
             &req.comment,
@@ -1085,7 +1082,7 @@ impl LiquidSdk {
         .await?
         {
             ValidatedCallbackResponse::EndpointError { data: e } => {
-                Ok(WrappedLnUrlPayResult::EndpointError { data: e })
+                Ok(LnUrlPayResult::EndpointError { data: e })
             }
             ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
                 let pay_req = self
@@ -1133,8 +1130,8 @@ impl LiquidSdk {
                     None => None,
                 };
 
-                Ok(WrappedLnUrlPayResult::EndpointSuccess {
-                    data: WrappedLnUrlPaySuccessData {
+                Ok(LnUrlPayResult::EndpointSuccess {
+                    data: LnUrlPaySuccessData {
                         payment,
                         success_action: maybe_sa_processed,
                     },

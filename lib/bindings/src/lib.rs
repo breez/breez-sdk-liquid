@@ -4,8 +4,14 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
-use breez_liquid_sdk::model::lnurl::*;
-use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk, *};
+use breez_liquid_sdk::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
+use breez_liquid_sdk::{
+    error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
+    BitcoinAddressData, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayError,
+    LnUrlPayErrorData, LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawError,
+    LnUrlWithdrawRequest, LnUrlWithdrawRequestData, LnUrlWithdrawResult, MessageSuccessActionData,
+    Network, RouteHint, RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
@@ -119,7 +125,7 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.list_payments())
     }
 
-    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<WrappedLnUrlPayResult, LnUrlPayError> {
+    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
         rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
     }
 

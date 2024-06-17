@@ -266,7 +266,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         do {
             let lnUrlPayRequest = try BreezLiquidSDKMapper.asLnUrlPayRequest(lnUrlPayRequest: req)
             var res = try getBindingLiquidSdk().lnurlPay(req: lnUrlPayRequest)
-            resolve(BreezLiquidSDKMapper.dictionaryOf(wrappedLnUrlPayResult: res))
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlPayResult: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
         }

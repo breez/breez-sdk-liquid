@@ -79,7 +79,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that});
 
-  Future<WrappedLnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
+  Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
       {required BindingLiquidSdk that, required LnUrlPayRequest req});
 
   Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
@@ -278,7 +278,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<WrappedLnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
+  Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
       {required BindingLiquidSdk that, required LnUrlPayRequest req}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -289,7 +289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_pay(port_, arg0, arg1);
       },
       codec: DcoCodec(
-        decodeSuccessData: dco_decode_wrapped_ln_url_pay_result,
+        decodeSuccessData: dco_decode_ln_url_pay_result,
         decodeErrorData: dco_decode_ln_url_pay_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkLnurlPayConstMeta,
@@ -819,6 +819,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlPaySuccessData dco_decode_box_autoadd_ln_url_pay_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_pay_success_data(raw);
+  }
+
+  @protected
   LnUrlWithdrawRequest dco_decode_box_autoadd_ln_url_withdraw_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_ln_url_withdraw_request(raw);
@@ -894,12 +900,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UrlSuccessActionData dco_decode_box_autoadd_url_success_action_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_url_success_action_data(raw);
-  }
-
-  @protected
-  WrappedLnUrlPaySuccessData dco_decode_box_autoadd_wrapped_ln_url_pay_success_data(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_wrapped_ln_url_pay_success_data(raw);
   }
 
   @protected
@@ -1215,6 +1215,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       allowsNostr: dco_decode_bool(arr[6]),
       nostrPubkey: dco_decode_opt_String(arr[7]),
       lnAddress: dco_decode_opt_String(arr[8]),
+    );
+  }
+
+  @protected
+  LnUrlPayResult dco_decode_ln_url_pay_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlPayResult_EndpointSuccess(
+          data: dco_decode_box_autoadd_ln_url_pay_success_data(raw[1]),
+        );
+      case 1:
+        return LnUrlPayResult_EndpointError(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
+        );
+      case 2:
+        return LnUrlPayResult_PayError(
+          data: dco_decode_box_autoadd_ln_url_pay_error_data(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  LnUrlPaySuccessData dco_decode_ln_url_pay_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LnUrlPaySuccessData(
+      payment: dco_decode_payment(arr[0]),
+      successAction: dco_decode_opt_box_autoadd_success_action_processed(arr[1]),
     );
   }
 
@@ -1608,38 +1640,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WrappedLnUrlPayResult dco_decode_wrapped_ln_url_pay_result(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    switch (raw[0]) {
-      case 0:
-        return WrappedLnUrlPayResult_EndpointSuccess(
-          data: dco_decode_box_autoadd_wrapped_ln_url_pay_success_data(raw[1]),
-        );
-      case 1:
-        return WrappedLnUrlPayResult_EndpointError(
-          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
-        );
-      case 2:
-        return WrappedLnUrlPayResult_PayError(
-          data: dco_decode_box_autoadd_ln_url_pay_error_data(raw[1]),
-        );
-      default:
-        throw Exception("unreachable");
-    }
-  }
-
-  @protected
-  WrappedLnUrlPaySuccessData dco_decode_wrapped_ln_url_pay_success_data(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return WrappedLnUrlPaySuccessData(
-      payment: dco_decode_payment(arr[0]),
-      successAction: dco_decode_opt_box_autoadd_success_action_processed(arr[1]),
-    );
-  }
-
-  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_String(deserializer);
@@ -1833,6 +1833,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlPaySuccessData sse_decode_box_autoadd_ln_url_pay_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_pay_success_data(deserializer));
+  }
+
+  @protected
   LnUrlWithdrawRequest sse_decode_box_autoadd_ln_url_withdraw_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_ln_url_withdraw_request(deserializer));
@@ -1908,13 +1914,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UrlSuccessActionData sse_decode_box_autoadd_url_success_action_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_url_success_action_data(deserializer));
-  }
-
-  @protected
-  WrappedLnUrlPaySuccessData sse_decode_box_autoadd_wrapped_ln_url_pay_success_data(
-      SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_wrapped_ln_url_pay_success_data(deserializer));
   }
 
   @protected
@@ -2239,6 +2238,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         allowsNostr: var_allowsNostr,
         nostrPubkey: var_nostrPubkey,
         lnAddress: var_lnAddress);
+  }
+
+  @protected
+  LnUrlPayResult sse_decode_ln_url_pay_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_data = sse_decode_box_autoadd_ln_url_pay_success_data(deserializer);
+        return LnUrlPayResult_EndpointSuccess(data: var_data);
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlPayResult_EndpointError(data: var_data);
+      case 2:
+        var var_data = sse_decode_box_autoadd_ln_url_pay_error_data(deserializer);
+        return LnUrlPayResult_PayError(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlPaySuccessData sse_decode_ln_url_pay_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payment = sse_decode_payment(deserializer);
+    var var_successAction = sse_decode_opt_box_autoadd_success_action_processed(deserializer);
+    return LnUrlPaySuccessData(payment: var_payment, successAction: var_successAction);
   }
 
   @protected
@@ -2612,34 +2639,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WrappedLnUrlPayResult sse_decode_wrapped_ln_url_pay_result(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var tag_ = sse_decode_i_32(deserializer);
-    switch (tag_) {
-      case 0:
-        var var_data = sse_decode_box_autoadd_wrapped_ln_url_pay_success_data(deserializer);
-        return WrappedLnUrlPayResult_EndpointSuccess(data: var_data);
-      case 1:
-        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-        return WrappedLnUrlPayResult_EndpointError(data: var_data);
-      case 2:
-        var var_data = sse_decode_box_autoadd_ln_url_pay_error_data(deserializer);
-        return WrappedLnUrlPayResult_PayError(data: var_data);
-      default:
-        throw UnimplementedError('');
-    }
-  }
-
-  @protected
-  WrappedLnUrlPaySuccessData sse_decode_wrapped_ln_url_pay_success_data(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_payment = sse_decode_payment(deserializer);
-    var var_successAction = sse_decode_opt_box_autoadd_success_action_processed(deserializer);
-    return WrappedLnUrlPaySuccessData(payment: var_payment, successAction: var_successAction);
-  }
-
-  @protected
   int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -2913,6 +2912,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_success_data(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_withdraw_request(self, serializer);
@@ -2993,13 +2998,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_url_success_action_data(UrlSuccessActionData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_url_success_action_data(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_wrapped_ln_url_pay_success_data(
-      WrappedLnUrlPaySuccessData self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_wrapped_ln_url_pay_success_data(self, serializer);
   }
 
   @protected
@@ -3264,6 +3262,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.allowsNostr, serializer);
     sse_encode_opt_String(self.nostrPubkey, serializer);
     sse_encode_opt_String(self.lnAddress, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_result(LnUrlPayResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlPayResult_EndpointSuccess(data: final data):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_ln_url_pay_success_data(data, serializer);
+      case LnUrlPayResult_EndpointError(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      case LnUrlPayResult_PayError(data: final data):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_ln_url_pay_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment(self.payment, serializer);
+    sse_encode_opt_box_autoadd_success_action_processed(self.successAction, serializer);
   }
 
   @protected
@@ -3584,31 +3607,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
   }
-
-  @protected
-  void sse_encode_wrapped_ln_url_pay_result(WrappedLnUrlPayResult self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    switch (self) {
-      case WrappedLnUrlPayResult_EndpointSuccess(data: final data):
-        sse_encode_i_32(0, serializer);
-        sse_encode_box_autoadd_wrapped_ln_url_pay_success_data(data, serializer);
-      case WrappedLnUrlPayResult_EndpointError(data: final data):
-        sse_encode_i_32(1, serializer);
-        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
-      case WrappedLnUrlPayResult_PayError(data: final data):
-        sse_encode_i_32(2, serializer);
-        sse_encode_box_autoadd_ln_url_pay_error_data(data, serializer);
-      default:
-        throw UnimplementedError('');
-    }
-  }
-
-  @protected
-  void sse_encode_wrapped_ln_url_pay_success_data(WrappedLnUrlPaySuccessData self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_payment(self.payment, serializer);
-    sse_encode_opt_box_autoadd_success_action_processed(self.successAction, serializer);
-  }
 }
 
 @sealed
@@ -3651,7 +3649,7 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
         that: this,
       );
 
-  Future<WrappedLnUrlPayResult> lnurlPay({required LnUrlPayRequest req}) =>
+  Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlPay(that: this, req: req);
 
   Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req}) =>

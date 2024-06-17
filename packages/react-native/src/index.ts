@@ -108,6 +108,11 @@ export interface LnUrlPayRequestData {
     lnAddress?: string
 }
 
+export interface LnUrlPaySuccessData {
+    successAction?: SuccessActionProcessed
+    payment: Payment
+}
+
 export interface LnUrlWithdrawRequestData {
     callback: string
     k1: string
@@ -186,11 +191,6 @@ export interface SendPaymentResponse {
 export interface UrlSuccessActionData {
     description: string
     url: string
-}
-
-export interface WrappedLnUrlPaySuccessData {
-    successAction?: SuccessActionProcessed
-    payment: Payment
 }
 
 export enum AesSuccessActionDataResultVariant {
@@ -280,6 +280,23 @@ export enum LiquidSdkNetwork {
     TESTNET = "testnet"
 }
 
+export enum LnUrlPayResultVariant {
+    ENDPOINT_SUCCESS = "endpointSuccess",
+    ENDPOINT_ERROR = "endpointError",
+    PAY_ERROR = "payError"
+}
+
+export type LnUrlPayResult = {
+    type: LnUrlPayResultVariant.ENDPOINT_SUCCESS,
+    data: LnUrlPaySuccessData
+} | {
+    type: LnUrlPayResultVariant.ENDPOINT_ERROR,
+    data: LnUrlErrorData
+} | {
+    type: LnUrlPayResultVariant.PAY_ERROR,
+    data: LnUrlPayErrorData
+}
+
 export enum Network {
     BITCOIN = "bitcoin",
     TESTNET = "testnet",
@@ -315,23 +332,6 @@ export type SuccessActionProcessed = {
 } | {
     type: SuccessActionProcessedVariant.URL,
     data: UrlSuccessActionData
-}
-
-export enum WrappedLnUrlPayResultVariant {
-    ENDPOINT_SUCCESS = "endpointSuccess",
-    ENDPOINT_ERROR = "endpointError",
-    PAY_ERROR = "payError"
-}
-
-export type WrappedLnUrlPayResult = {
-    type: WrappedLnUrlPayResultVariant.ENDPOINT_SUCCESS,
-    data: WrappedLnUrlPaySuccessData
-} | {
-    type: WrappedLnUrlPayResultVariant.ENDPOINT_ERROR,
-    data: LnUrlErrorData
-} | {
-    type: WrappedLnUrlPayResultVariant.PAY_ERROR,
-    data: LnUrlPayErrorData
 }
 
 export type EventListener = (e: LiquidSdkEvent) => void
@@ -426,7 +426,7 @@ export const disconnect = async (): Promise<void> => {
     await BreezLiquidSDK.disconnect()
 }
 
-export const lnurlPay = async (req: LnUrlPayRequest): Promise<WrappedLnUrlPayResult> => {
+export const lnurlPay = async (req: LnUrlPayRequest): Promise<LnUrlPayResult> => {
     const response = await BreezLiquidSDK.lnurlPay(req)
     return response
 }

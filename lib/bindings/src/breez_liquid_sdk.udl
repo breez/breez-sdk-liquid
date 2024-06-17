@@ -162,13 +162,13 @@ interface LnUrlWithdrawError {
 // These are connecting structures that glue relevant sdk-common structs to the SDK
 
 [Enum]
-interface WrappedLnUrlPayResult {
-    EndpointSuccess(WrappedLnUrlPaySuccessData data);
+interface LnUrlPayResult {
+    EndpointSuccess(LnUrlPaySuccessData data);
     EndpointError(LnUrlErrorData data);
     PayError(LnUrlPayErrorData data);
 };
 
-dictionary WrappedLnUrlPaySuccessData {
+dictionary LnUrlPaySuccessData {
     SuccessActionProcessed? success_action;
     Payment payment;
 };
@@ -371,5 +371,5 @@ interface BindingLiquidSdk {
     void disconnect();
 
     [Throws=LnUrlPayError]
-    WrappedLnUrlPayResult lnurl_pay(LnUrlPayRequest req);
+    LnUrlPayResult lnurl_pay(LnUrlPayRequest req);
 };

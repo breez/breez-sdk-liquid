@@ -718,14 +718,14 @@ pub mod lnurl {
     /// * `PayError` indicates that an error occurred while trying to pay the invoice from the LNURL endpoint.
     /// This includes the payment hash of the failed invoice and the failure reason.
     #[derive(Serialize)]
-    pub enum WrappedLnUrlPayResult {
-        EndpointSuccess { data: WrappedLnUrlPaySuccessData },
+    pub enum LnUrlPayResult {
+        EndpointSuccess { data: LnUrlPaySuccessData },
         EndpointError { data: LnUrlErrorData },
         PayError { data: LnUrlPayErrorData },
     }
 
     #[derive(Serialize)]
-    pub struct WrappedLnUrlPaySuccessData {
+    pub struct LnUrlPaySuccessData {
         pub payment: Payment,
         pub success_action: Option<SuccessActionProcessed>,
     }
