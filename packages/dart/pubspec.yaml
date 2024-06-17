@@ -12,7 +12,7 @@ platforms:
   ios:
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.4.0 <4.0.0'
 
 dev_dependencies:
   build_runner: ^2.4.10

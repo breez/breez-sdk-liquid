@@ -27,7 +27,7 @@ class BreezLiquidSDK {
   }
 
   Future<liquid_sdk.GetInfoResponse> _getInfo(liquid_sdk.BindingLiquidSdk sdk) async {
-    final walletInfo = await sdk.getInfo(req: const liquid_sdk.GetInfoRequest(withScan: false));
+    final walletInfo = await sdk.getInfo();
     _walletInfoController.add(walletInfo);
     return walletInfo;
   }
