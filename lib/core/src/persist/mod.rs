@@ -230,3 +230,37 @@ impl Persister {
         Ok(payments)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use crate::test_utils::{new_payment_tx_data, new_persister, new_receive_swap, new_send_swap};
+
+    use super::{PaymentState, PaymentType};
+
+    #[test]
+    fn test_get_payments() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        let payment_tx_data = new_payment_tx_data(PaymentType::Send);
+        storage.insert_or_update_payment(payment_tx_data.clone())?;
+
+        assert!(storage.get_payments()?.first().is_some());
+        assert!(storage.get_payment(payment_tx_data.tx_id)?.is_some());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_ongoing_swaps() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        storage.insert_send_swap(&new_send_swap(None))?;
+        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+
+        assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
+
+        Ok(())
+    }
+}

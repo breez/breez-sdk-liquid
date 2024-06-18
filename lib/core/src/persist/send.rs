@@ -270,3 +270,97 @@ impl InternalCreateSubmarineResponse {
         Ok(res)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use anyhow::{anyhow, Result};
+
+    use crate::test_utils::{new_persister, new_send_swap};
+
+    use super::PaymentState;
+
+    #[test]
+    fn test_fetch_send_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+        let send_swap = new_send_swap(None);
+
+        storage.insert_send_swap(&send_swap)?;
+        // Fetch swap by id
+        assert!(storage.fetch_send_swap_by_id(&send_swap.id).is_ok());
+        // Fetch swap by invoice
+        assert!(storage
+            .fetch_send_swap_by_invoice(&send_swap.invoice)
+            .is_ok());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_send_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        // List general send swaps
+        let range = 0..3;
+        for _ in range.clone() {
+            storage.insert_send_swap(&new_send_swap(None))?;
+        }
+
+        let con = storage.get_connection()?;
+        let swaps = storage.list_send_swaps(&con, vec![])?;
+        assert_eq!(swaps.len(), range.len());
+
+        // List ongoing send swaps
+        storage.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
+        let ongoing_swaps = storage.list_ongoing_send_swaps(&con)?;
+        assert_eq!(ongoing_swaps.len(), 4);
+
+        // List pending send swaps
+        let ongoing_swaps = storage.list_pending_send_swaps()?;
+        assert_eq!(ongoing_swaps.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_send_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        let mut send_swap = new_send_swap(None);
+        storage.insert_send_swap(&send_swap)?;
+
+        // Update metadata
+        let new_state = PaymentState::Pending;
+        let preimage = Some("preimage");
+        let lockup_tx_id = Some("lockup_tx_id");
+        let refund_tx_id = Some("refund_tx_id");
+
+        storage.try_handle_send_swap_update(
+            &send_swap.id,
+            new_state,
+            preimage,
+            lockup_tx_id,
+            refund_tx_id,
+        )?;
+
+        let updated_send_swap = storage
+            .fetch_send_swap_by_id(&send_swap.id)?
+            .ok_or(anyhow!("Could not find Send swap in database"))?;
+
+        assert_eq!(new_state, updated_send_swap.state);
+        assert_eq!(preimage, updated_send_swap.preimage.as_deref());
+        assert_eq!(lockup_tx_id, updated_send_swap.lockup_tx_id.as_deref());
+        assert_eq!(refund_tx_id, updated_send_swap.refund_tx_id.as_deref());
+
+        send_swap.state = new_state;
+
+        // Update state (global)
+        let new_state = PaymentState::Complete;
+        storage.update_send_swaps_by_state(send_swap.state, PaymentState::Complete)?;
+        let updated_send_swap = storage
+            .fetch_send_swap_by_id(&send_swap.id)?
+            .ok_or(anyhow!("Could not find Send swap in database"))?;
+        assert_eq!(new_state, updated_send_swap.state);
+
+        Ok(())
+    }
+}

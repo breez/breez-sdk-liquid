@@ -413,6 +413,9 @@ impl SendSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
+            (Complete, Failed) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Failed state"),
+            }),
             (_, Failed) => Ok(()),
         }
     }
@@ -429,5 +432,78 @@ impl SendSwapStateHandler {
         (invoice_payment_hash.to_string() == preimage_hash)
             .then_some(())
             .ok_or(PaymentError::InvalidPreimage)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        collections::{HashMap, HashSet},
+        sync::Arc,
+    };
+
+    use anyhow::Result;
+
+    use crate::{
+        model::PaymentState::{self, *},
+        test_utils::{new_persister, new_send_swap, new_send_swap_state_handler},
+    };
+
+    #[tokio::test]
+    async fn test_send_swap_state_transitions() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+        let storage = Arc::new(storage);
+
+        let send_swap_state_handler = new_send_swap_state_handler(storage.clone())?;
+
+        // Test valid combinations of states
+        let valid_combinations = HashMap::from([
+            (
+                Created,
+                HashSet::from([Pending, Complete, TimedOut, Failed]),
+            ),
+            (Pending, HashSet::from([Pending, Complete, Failed])),
+            (TimedOut, HashSet::from([TimedOut, Failed])),
+            (Complete, HashSet::from([])),
+            (Failed, HashSet::from([Failed])),
+        ]);
+
+        for (first_state, allowed_states) in valid_combinations.iter() {
+            for allowed_state in allowed_states {
+                let send_swap = new_send_swap(Some(*first_state));
+                storage.insert_send_swap(&send_swap)?;
+
+                assert!(send_swap_state_handler
+                    .update_swap_info(&send_swap.id, *allowed_state, None, None, None)
+                    .await
+                    .is_ok());
+            }
+        }
+
+        // Test invalid combinations of states
+        let all_states = HashSet::from([Created, Pending, Complete, TimedOut, Failed]);
+        let invalid_combinations: HashMap<PaymentState, HashSet<PaymentState>> = valid_combinations
+            .iter()
+            .map(|(first_state, allowed_states)| {
+                (
+                    *first_state,
+                    all_states.difference(allowed_states).cloned().collect(),
+                )
+            })
+            .collect();
+
+        for (first_state, disallowed_states) in invalid_combinations.iter() {
+            for disallowed_state in disallowed_states {
+                let send_swap = new_send_swap(Some(*first_state));
+                storage.insert_send_swap(&send_swap)?;
+
+                assert!(send_swap_state_handler
+                    .update_swap_info(&send_swap.id, *disallowed_state, None, None, None)
+                    .await
+                    .is_err());
+            }
+        }
+
+        Ok(())
     }
 }
