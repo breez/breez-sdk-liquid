@@ -40,6 +40,16 @@ jobs:
           cd ../cli
           cargo clippy -- -D warnings
 
+  tests:
+    name: Test sdk-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run sdk-core tests
+        working-directory: lib/core
+        run: cargo test
+
   build-bindings:
     name: Test bindings
     runs-on: ubuntu-latest
