@@ -102,13 +102,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
     }
 }
 
-pub(crate) struct TempPersister {
-    pub(crate) persister: Persister,
-    #[allow(dead_code)]
-    pub(crate) temp_dir: TempDir,
-}
-
-pub(crate) fn new_temp_persister() -> Result<TempPersister> {
+pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
     let temp_dir = TempDir::new("liquid-sdk")?;
     let persister = Persister::new(
         temp_dir
@@ -118,10 +112,7 @@ pub(crate) fn new_temp_persister() -> Result<TempPersister> {
         Network::Testnet,
     )?;
     persister.init()?;
-    Ok(TempPersister {
-        persister,
-        temp_dir,
-    })
+    Ok((temp_dir, persister))
 }
 
 pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {

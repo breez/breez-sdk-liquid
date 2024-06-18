@@ -253,13 +253,13 @@ impl InternalCreateReverseResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::{new_receive_swap, new_temp_persister};
+    use crate::test_utils::{new_persister, new_receive_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_receive_swap() -> Result<()> {
-        let storage = &new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
 
         let receive_swap = new_receive_swap(None);
 
@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_list_receive_swap() -> Result<()> {
-        let storage = &new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
 
         // List general receive swaps
         let range = 0..3;
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_update_receive_swap() -> Result<()> {
-        let storage = new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
 
         let receive_swap = new_receive_swap(None);
         storage.insert_receive_swap(&receive_swap)?;

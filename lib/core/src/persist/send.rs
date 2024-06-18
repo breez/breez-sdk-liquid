@@ -275,13 +275,13 @@ impl InternalCreateSubmarineResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::{new_send_swap, new_temp_persister};
+    use crate::test_utils::{new_persister, new_send_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_send_swap() -> Result<()> {
-        let storage = &new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
         let send_swap = new_send_swap(None);
 
         storage.insert_send_swap(&send_swap)?;
@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn test_list_send_swap() -> Result<()> {
-        let storage = &new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
 
         // List general send swaps
         let range = 0..3;
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn test_update_send_swap() -> Result<()> {
-        let storage = &new_temp_persister()?.persister;
+        let (_temp_dir, storage) = new_persister()?;
 
         let mut send_swap = new_send_swap(None);
         storage.insert_send_swap(&send_swap)?;
