@@ -250,39 +250,10 @@ impl InternalCreateReverseResponse {
 }
 
 #[cfg(test)]
-pub(crate) mod test_utils {
-    use bip39::rand::{self, distributions::Alphanumeric, Rng};
-
-    use crate::utils;
-
-    use super::{PaymentState, ReceiveSwap};
-
-    pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSwap {
-        let id = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(4)
-            .map(char::from)
-            .collect();
-        ReceiveSwap {
-            id,
-            preimage: "".to_string(),
-            create_response_json: "{}".to_string(),
-            claim_private_key: "".to_string(),
-            invoice: "".to_string(),
-            payer_amount_sat: 0,
-            receiver_amount_sat: 0,
-            claim_fees_sat: 0,
-            claim_tx_id: None,
-            created_at: utils::now(),
-            state: payment_state.unwrap_or(PaymentState::Created),
-        }
-    }
-}
-
-#[cfg(test)]
 mod tests {
-    use crate::persist::{receive::test_utils::new_receive_swap, test_utils::new_persister};
     use anyhow::{anyhow, Result};
+
+    use crate::test_utils::{new_persister, new_receive_swap};
 
     use super::PaymentState;
 

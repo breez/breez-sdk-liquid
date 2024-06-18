@@ -435,41 +435,6 @@ impl SendSwapStateHandler {
     }
 }
 
-pub(crate) mod test_utils {
-    use std::sync::Arc;
-
-    use crate::{
-        model::Config, persist::Persister, swapper::BoltzSwapper,
-        wallet::test_utils::new_onchain_wallet,
-    };
-
-    use super::SendSwapStateHandler;
-    use anyhow::Result;
-    use lwk_wollet::{ElectrumClient, ElectrumUrl};
-
-    #[allow(dead_code)]
-    pub(crate) fn new_send_swap_state_handler(
-        persister: Arc<Persister>,
-    ) -> Result<SendSwapStateHandler> {
-        let config = Config::testnet();
-        let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
-        let chain_service = Arc::new(ElectrumClient::new(&ElectrumUrl::new(
-            &config.electrum_url,
-            true,
-            true,
-        ))?);
-
-        Ok(SendSwapStateHandler::new(
-            config,
-            onchain_wallet,
-            persister,
-            swapper,
-            chain_service,
-        ))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -478,8 +443,7 @@ mod tests {
 
     use crate::{
         model::PaymentState::*,
-        persist::{send::test_utils::new_send_swap, test_utils::new_persister},
-        send_swap::test_utils::new_send_swap_state_handler,
+        test_utils::{new_persister, new_send_swap, new_send_swap_state_handler},
     };
 
     #[tokio::test]

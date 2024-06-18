@@ -272,44 +272,10 @@ impl InternalCreateSubmarineResponse {
 }
 
 #[cfg(test)]
-pub(crate) mod test_utils {
-    use bip39::rand::{self, distributions::Alphanumeric, Rng};
-
-    use crate::utils;
-
-    use super::{PaymentState, SendSwap};
-
-    pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
-        let id = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(4)
-            .map(char::from)
-            .collect();
-        let invoice = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(4)
-            .map(char::from)
-            .collect();
-        SendSwap {
-            id,
-            invoice,
-            preimage: None,
-            payer_amount_sat: 0,
-            receiver_amount_sat: 0,
-            create_response_json: "{}".to_string(),
-            lockup_tx_id: None,
-            refund_tx_id: None,
-            created_at: utils::now(),
-            state: payment_state.unwrap_or(PaymentState::Created),
-            refund_private_key: "".to_string(),
-        }
-    }
-}
-
-#[cfg(test)]
 mod tests {
-    use crate::persist::{send::test_utils::new_send_swap, test_utils::new_persister};
     use anyhow::{anyhow, Result};
+
+    use crate::test_utils::{new_persister, new_send_swap};
 
     use super::PaymentState;
 

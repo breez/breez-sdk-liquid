@@ -36,10 +36,12 @@ impl Persister {
 
 #[cfg(test)]
 mod tests {
-    use crate::persist::{
-        send::test_utils::new_send_swap, test_utils::new_persister, PaymentState,
-    };
     use anyhow::Result;
+
+    use crate::{
+        persist::PaymentState,
+        test_utils::{new_persister, new_send_swap},
+    };
 
     #[test]
     fn test_backup_and_restore() -> Result<()> {

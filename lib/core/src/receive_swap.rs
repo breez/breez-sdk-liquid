@@ -273,34 +273,6 @@ impl ReceiveSwapStateHandler {
     }
 }
 
-pub(crate) mod test_utils {
-    use std::sync::Arc;
-
-    use crate::{
-        model::Config, persist::Persister, swapper::BoltzSwapper,
-        wallet::test_utils::new_onchain_wallet,
-    };
-
-    use super::ReceiveSwapStateHandler;
-    use anyhow::Result;
-
-    #[allow(dead_code)]
-    pub(crate) fn new_receive_swap_state_handler(
-        persister: Arc<Persister>,
-    ) -> Result<ReceiveSwapStateHandler> {
-        let config = Config::testnet();
-        let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
-
-        Ok(ReceiveSwapStateHandler::new(
-            config,
-            onchain_wallet,
-            persister,
-            swapper,
-        ))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -309,8 +281,7 @@ mod tests {
 
     use crate::{
         model::PaymentState::*,
-        persist::{receive::test_utils::new_receive_swap, test_utils::new_persister},
-        receive_swap::test_utils::new_receive_swap_state_handler,
+        test_utils::{new_persister, new_receive_swap, new_receive_swap_state_handler},
     };
 
     #[tokio::test]

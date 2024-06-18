@@ -232,60 +232,10 @@ impl Persister {
 }
 
 #[cfg(test)]
-pub(crate) mod test_utils {
-    use anyhow::{anyhow, Result};
-    use bip39::rand::{self, distributions::Alphanumeric, Rng};
-    use tempdir::TempDir;
-
-    use super::{Network, PaymentTxData, PaymentType, Persister};
-
-    pub(crate) struct TempPersister {
-        pub(crate) persister: Persister,
-        #[allow(dead_code)]
-        pub(crate) temp_dir: TempDir,
-    }
-
-    pub(crate) fn new_persister() -> Result<TempPersister> {
-        let temp_dir = TempDir::new("liquid-sdk")?;
-        let persister = Persister::new(
-            temp_dir
-                .path()
-                .to_str()
-                .ok_or(anyhow!("Could not create temporary directory"))?,
-            Network::Testnet,
-        )?;
-        persister.init()?;
-        Ok(TempPersister {
-            persister,
-            temp_dir,
-        })
-    }
-
-    pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
-        let tx_id = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(4)
-            .map(char::from)
-            .collect();
-        PaymentTxData {
-            tx_id,
-            timestamp: None,
-            amount_sat: 0,
-            fees_sat: 0,
-            payment_type,
-            is_confirmed: false,
-        }
-    }
-}
-
-#[cfg(test)]
 mod tests {
-    use crate::persist::{
-        receive::test_utils::new_receive_swap,
-        send::test_utils::new_send_swap,
-        test_utils::{new_payment_tx_data, new_persister},
-    };
     use anyhow::Result;
+
+    use crate::test_utils::{new_payment_tx_data, new_persister, new_receive_swap, new_send_swap};
 
     use super::{PaymentState, PaymentType};
 
