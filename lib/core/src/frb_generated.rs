@@ -1051,6 +1051,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_preimage = <Option<String>>::sse_decode(deserializer);
+        let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
         let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
         let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
@@ -1062,6 +1063,7 @@ impl SseDecode for crate::model::Payment {
             amount_sat: var_amountSat,
             fees_sat: var_feesSat,
             preimage: var_preimage,
+            bolt11: var_bolt11,
             refund_tx_id: var_refundTxId,
             refund_tx_amount_sat: var_refundTxAmountSat,
             payment_type: var_paymentType,
@@ -1582,6 +1584,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Payment {
             self.amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.preimage.into_into_dart().into_dart(),
+            self.bolt11.into_into_dart().into_dart(),
             self.refund_tx_id.into_into_dart().into_dart(),
             self.refund_tx_amount_sat.into_into_dart().into_dart(),
             self.payment_type.into_into_dart().into_dart(),
@@ -2125,6 +2128,7 @@ impl SseEncode for crate::model::Payment {
         <u64>::sse_encode(self.amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <Option<String>>::sse_encode(self.preimage, serializer);
+        <Option<String>>::sse_encode(self.bolt11, serializer);
         <Option<String>>::sse_encode(self.refund_tx_id, serializer);
         <Option<u64>>::sse_encode(self.refund_tx_amount_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
