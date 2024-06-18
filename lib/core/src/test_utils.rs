@@ -8,13 +8,16 @@ use crate::{
     send_swap::SendSwapStateHandler,
     swapper::BoltzSwapper,
     utils,
-    wallet::test_utils::new_onchain_wallet,
+    wallet::LiquidOnchainWallet,
 };
 
 use anyhow::{anyhow, Result};
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
 use lwk_wollet::{ElectrumClient, ElectrumUrl};
 use tempdir::TempDir;
+
+pub(crate) const TEST_MNEMONIC: &str =
+    "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
 pub(crate) fn new_send_swap_state_handler(
     persister: Arc<Persister>,
@@ -135,4 +138,8 @@ pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
         payment_type,
         is_confirmed: false,
     }
+}
+
+pub(crate) fn new_onchain_wallet(config: &Config) -> Result<LiquidOnchainWallet> {
+    LiquidOnchainWallet::new(TEST_MNEMONIC.to_string(), config.clone())
 }
