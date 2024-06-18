@@ -382,7 +382,7 @@ impl ReceiveSwap {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
 

@@ -275,12 +275,15 @@ impl ReceiveSwapStateHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{
+        collections::{HashMap, HashSet},
+        sync::Arc,
+    };
 
     use anyhow::Result;
 
     use crate::{
-        model::PaymentState::*,
+        model::PaymentState::{self, *},
         test_utils::{new_persister, new_receive_swap, new_receive_swap_state_handler},
     };
 
@@ -292,53 +295,51 @@ mod tests {
         let receive_swap_state_handler = new_receive_swap_state_handler(storage.clone())?;
 
         // Test valid combinations of states
-        let valid_combinations = [
-            (Created, Pending),
-            (Pending, Pending),
-            (Created, Complete),
-            (Pending, Complete),
-            (Created, TimedOut),
-            (TimedOut, TimedOut),
-            (Created, Failed),
-            (Pending, Failed),
-            (TimedOut, Failed),
-        ];
+        let valid_combinations = HashMap::from([
+            (
+                Created,
+                HashSet::from([Pending, Complete, TimedOut, Failed]),
+            ),
+            (Pending, HashSet::from([Pending, Complete, Failed])),
+            (TimedOut, HashSet::from([TimedOut, Failed])),
+            (Complete, HashSet::from([])),
+            (Failed, HashSet::from([Failed])),
+        ]);
 
-        for (first_state, second_state) in valid_combinations.iter() {
-            let receive_swap = new_receive_swap(Some(*first_state));
-            storage.insert_receive_swap(&receive_swap)?;
+        for (first_state, allowed_states) in valid_combinations.iter() {
+            for allowed_state in allowed_states {
+                let receive_swap = new_receive_swap(Some(*first_state));
+                storage.insert_receive_swap(&receive_swap)?;
 
-            assert!(receive_swap_state_handler
-                .update_swap_info(&receive_swap.id, *second_state, None, None)
-                .await
-                .is_ok());
+                assert!(receive_swap_state_handler
+                    .update_swap_info(&receive_swap.id, *allowed_state, None, None)
+                    .await
+                    .is_ok());
+            }
         }
 
         // Test invalid combinations of states
-        let invalid_combinations = [
-            (Created, Created),
-            (Pending, Created),
-            (Complete, Created),
-            (TimedOut, Created),
-            (Complete, Pending),
-            (Failed, Pending),
-            (TimedOut, Pending),
-            (Complete, Complete),
-            (Failed, Complete),
-            (TimedOut, Complete),
-            (Complete, TimedOut),
-            (Failed, TimedOut),
-            (Complete, Failed),
-        ];
+        let all_states = HashSet::from([Created, Pending, Complete, TimedOut, Failed]);
+        let invalid_combinations: HashMap<PaymentState, HashSet<PaymentState>> = valid_combinations
+            .iter()
+            .map(|(first_state, allowed_states)| {
+                (
+                    *first_state,
+                    all_states.difference(allowed_states).cloned().collect(),
+                )
+            })
+            .collect();
 
-        for (first_state, second_state) in invalid_combinations.iter() {
-            let receive_swap = new_receive_swap(Some(*first_state));
-            storage.insert_receive_swap(&receive_swap)?;
+        for (first_state, disallowed_states) in invalid_combinations.iter() {
+            for disallowed_state in disallowed_states {
+                let receive_swap = new_receive_swap(Some(*first_state));
+                storage.insert_receive_swap(&receive_swap)?;
 
-            assert!(receive_swap_state_handler
-                .update_swap_info(&receive_swap.id, *second_state, None, None)
-                .await
-                .is_err());
+                assert!(receive_swap_state_handler
+                    .update_swap_info(&receive_swap.id, *disallowed_state, None, None)
+                    .await
+                    .is_err());
+            }
         }
 
         Ok(())
