@@ -235,13 +235,15 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::{new_payment_tx_data, new_persister, new_receive_swap, new_send_swap};
+    use crate::test_utils::{
+        new_payment_tx_data, new_receive_swap, new_send_swap, new_temp_persister,
+    };
 
     use super::{PaymentState, PaymentType};
 
     #[test]
     fn test_get_payments() -> Result<()> {
-        let storage = &new_persister()?.persister;
+        let storage = &new_temp_persister()?.persister;
 
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(payment_tx_data.clone())?;
@@ -254,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_list_ongoing_swaps() -> Result<()> {
-        let storage = &new_persister()?.persister;
+        let storage = &new_temp_persister()?.persister;
 
         storage.insert_send_swap(&new_send_swap(None))?;
         storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;

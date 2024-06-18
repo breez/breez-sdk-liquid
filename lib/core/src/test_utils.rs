@@ -105,7 +105,7 @@ pub(crate) struct TempPersister {
     pub(crate) temp_dir: TempDir,
 }
 
-pub(crate) fn new_persister() -> Result<TempPersister> {
+pub(crate) fn new_temp_persister() -> Result<TempPersister> {
     let temp_dir = TempDir::new("liquid-sdk")?;
     let persister = Persister::new(
         temp_dir

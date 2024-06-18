@@ -443,12 +443,12 @@ mod tests {
 
     use crate::{
         model::PaymentState::*,
-        test_utils::{new_persister, new_send_swap, new_send_swap_state_handler},
+        test_utils::{new_send_swap, new_send_swap_state_handler, new_temp_persister},
     };
 
     #[tokio::test]
     async fn test_send_swap_state_transitions() -> Result<()> {
-        let temp_persister = new_persister()?;
+        let temp_persister = new_temp_persister()?;
         let storage = Arc::new(temp_persister.persister);
 
         let send_swap_state_handler = new_send_swap_state_handler(storage.clone())?;
