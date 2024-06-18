@@ -9,8 +9,9 @@ use breez_liquid_sdk::{
     error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
     BitcoinAddressData, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayError,
     LnUrlPayErrorData, LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawError,
-    LnUrlWithdrawRequest, LnUrlWithdrawRequestData, LnUrlWithdrawResult, MessageSuccessActionData,
-    Network, RouteHint, RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+    LnUrlWithdrawRequest, LnUrlWithdrawRequestData, LnUrlWithdrawResult, LnUrlWithdrawSuccessData,
+    MessageSuccessActionData, Network, RouteHint, RouteHintHop, SuccessActionProcessed,
+    UrlSuccessActionData,
 };
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;

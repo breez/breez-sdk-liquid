@@ -154,6 +154,30 @@ interface LnUrlWithdrawError {
     InvoiceNoRoutingHints(string err);
 };
 
+[Enum]
+interface LnUrlWithdrawResult {
+    Ok(LnUrlWithdrawSuccessData data);
+    ErrorStatus(LnUrlErrorData data);
+};
+
+dictionary LnUrlWithdrawSuccessData {
+    LNInvoice invoice;
+};
+
+dictionary LnUrlWithdrawRequestData {
+    string callback;
+    string k1;
+    string default_description;
+    u64 min_withdrawable;
+    u64 max_withdrawable;
+};
+
+dictionary LnUrlWithdrawRequest {
+    LnUrlWithdrawRequestData data;
+    u64 amount_msat;
+    string? description = null;
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 
@@ -372,4 +396,7 @@ interface BindingLiquidSdk {
 
     [Throws=LnUrlPayError]
     LnUrlPayResult lnurl_pay(LnUrlPayRequest req);
+
+    [Throws=LnUrlWithdrawError]
+    LnUrlWithdrawResult lnurl_withdraw(LnUrlWithdrawRequest req);
 };
