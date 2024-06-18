@@ -326,4 +326,5 @@ jobs:
       publish: ${{ needs.setup.outputs.publish == 'true' }}
     secrets:
       REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
+      SWIFT_RELEASE_TOKEN: ${{ secrets.SWIFT_RELEASE_TOKEN }}
       COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}

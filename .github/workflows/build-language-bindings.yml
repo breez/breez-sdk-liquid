@@ -117,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: bindings-python
-          path: lib/bindings/ffi/langs/python/breez_liquid_sdk.py
+          path: lib/bindings/ffi/python/breez_liquid_sdk.py
 
 #      - name: Build C# binding
 #        if: ${{ inputs.csharp }}

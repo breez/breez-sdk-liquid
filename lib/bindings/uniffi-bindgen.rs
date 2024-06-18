@@ -1,5 +1,5 @@
 use camino::Utf8Path;
-use uniffi_kotlin_multiplatform::KotlinBindingGenerator;
+use uniffi_bindgen_kotlin_multiplatform::KotlinBindingGenerator;
 
 fn main() {
     uniffi::uniffi_bindgen_main();
