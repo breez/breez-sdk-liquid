@@ -413,6 +413,9 @@ impl SendSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
+            (Complete, Failed) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Failed state"),
+            }),
             (_, Failed) => Ok(()),
         }
     }
@@ -429,5 +432,113 @@ impl SendSwapStateHandler {
         (invoice_payment_hash.to_string() == preimage_hash)
             .then_some(())
             .ok_or(PaymentError::InvalidPreimage)
+    }
+}
+
+pub(crate) mod test_utils {
+    use std::sync::Arc;
+
+    use crate::{
+        model::Config, persist::Persister, swapper::BoltzSwapper,
+        wallet::test_utils::new_onchain_wallet,
+    };
+
+    use super::SendSwapStateHandler;
+    use anyhow::Result;
+    use lwk_wollet::{ElectrumClient, ElectrumUrl};
+
+    #[allow(dead_code)]
+    pub(crate) fn new_send_swap_state_handler(
+        persister: Arc<Persister>,
+    ) -> Result<SendSwapStateHandler> {
+        let config = Config::testnet();
+        let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
+        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+        let chain_service = Arc::new(ElectrumClient::new(&ElectrumUrl::new(
+            &config.electrum_url,
+            true,
+            true,
+        ))?);
+
+        Ok(SendSwapStateHandler::new(
+            config,
+            onchain_wallet,
+            persister,
+            swapper,
+            chain_service,
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use anyhow::Result;
+
+    use crate::{
+        model::PaymentState::*,
+        persist::{send::test_utils::new_send_swap, test_utils::new_persister},
+        send_swap::test_utils::new_send_swap_state_handler,
+    };
+
+    #[tokio::test]
+    async fn test_send_swap_state_transitions() -> Result<()> {
+        let temp_persister = new_persister()?;
+        let storage = Arc::new(temp_persister.persister);
+
+        let send_swap_state_handler = new_send_swap_state_handler(storage.clone())?;
+
+        // Test valid combinations of states
+        let valid_combinations = [
+            (Created, Pending),
+            (Pending, Pending),
+            (Created, Complete),
+            (Pending, Complete),
+            (Created, TimedOut),
+            (TimedOut, TimedOut),
+            (Created, Failed),
+            (Pending, Failed),
+            (TimedOut, Failed),
+        ];
+
+        for (first_state, second_state) in valid_combinations.iter() {
+            let send_swap = new_send_swap(Some(*first_state));
+            storage.insert_send_swap(&send_swap)?;
+
+            assert!(send_swap_state_handler
+                .update_swap_info(&send_swap.id, *second_state, None, None, None)
+                .await
+                .is_ok());
+        }
+
+        // Test invalid combinations of states
+        let invalid_combinations = [
+            (Created, Created),
+            (Pending, Created),
+            (Complete, Created),
+            (TimedOut, Created),
+            (Complete, Pending),
+            (Failed, Pending),
+            (TimedOut, Pending),
+            (Complete, Complete),
+            (Failed, Complete),
+            (TimedOut, Complete),
+            (Complete, TimedOut),
+            (Failed, TimedOut),
+            (Complete, Failed),
+        ];
+
+        for (first_state, second_state) in invalid_combinations.iter() {
+            let send_swap = new_send_swap(Some(*first_state));
+            storage.insert_send_swap(&send_swap)?;
+
+            assert!(send_swap_state_handler
+                .update_swap_info(&send_swap.id, *second_state, None, None, None)
+                .await
+                .is_err());
+        }
+
+        Ok(())
     }
 }

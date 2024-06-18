@@ -260,12 +260,116 @@ impl ReceiveSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
 
-            (Created, TimedOut) => Ok(()),
+            (Created | TimedOut, TimedOut) => Ok(()),
             (_, TimedOut) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
+            (Complete, Failed) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Failed state"),
+            }),
             (_, Failed) => Ok(()),
         }
+    }
+}
+
+pub(crate) mod test_utils {
+    use std::sync::Arc;
+
+    use crate::{
+        model::Config, persist::Persister, swapper::BoltzSwapper,
+        wallet::test_utils::new_onchain_wallet,
+    };
+
+    use super::ReceiveSwapStateHandler;
+    use anyhow::Result;
+
+    #[allow(dead_code)]
+    pub(crate) fn new_receive_swap_state_handler(
+        persister: Arc<Persister>,
+    ) -> Result<ReceiveSwapStateHandler> {
+        let config = Config::testnet();
+        let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
+        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+
+        Ok(ReceiveSwapStateHandler::new(
+            config,
+            onchain_wallet,
+            persister,
+            swapper,
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use anyhow::Result;
+
+    use crate::{
+        model::PaymentState::*,
+        persist::{receive::test_utils::new_receive_swap, test_utils::new_persister},
+        receive_swap::test_utils::new_receive_swap_state_handler,
+    };
+
+    #[tokio::test]
+    async fn test_receive_swap_state_transitions() -> Result<()> {
+        let temp_persister = new_persister()?;
+        let storage = Arc::new(temp_persister.persister);
+
+        let receive_swap_state_handler = new_receive_swap_state_handler(storage.clone())?;
+
+        // Test valid combinations of states
+        let valid_combinations = [
+            (Created, Pending),
+            (Pending, Pending),
+            (Created, Complete),
+            (Pending, Complete),
+            (Created, TimedOut),
+            (TimedOut, TimedOut),
+            (Created, Failed),
+            (Pending, Failed),
+            (TimedOut, Failed),
+        ];
+
+        for (first_state, second_state) in valid_combinations.iter() {
+            let receive_swap = new_receive_swap(Some(*first_state));
+            storage.insert_receive_swap(&receive_swap)?;
+
+            assert!(receive_swap_state_handler
+                .update_swap_info(&receive_swap.id, *second_state, None, None)
+                .await
+                .is_ok());
+        }
+
+        // Test invalid combinations of states
+        let invalid_combinations = [
+            (Created, Created),
+            (Pending, Created),
+            (Complete, Created),
+            (TimedOut, Created),
+            (Complete, Pending),
+            (Failed, Pending),
+            (TimedOut, Pending),
+            (Complete, Complete),
+            (Failed, Complete),
+            (TimedOut, Complete),
+            (Complete, TimedOut),
+            (Failed, TimedOut),
+            (Complete, Failed),
+        ];
+
+        for (first_state, second_state) in invalid_combinations.iter() {
+            let receive_swap = new_receive_swap(Some(*first_state));
+            storage.insert_receive_swap(&receive_swap)?;
+
+            assert!(receive_swap_state_handler
+                .update_swap_info(&receive_swap.id, *second_state, None, None)
+                .await
+                .is_err());
+        }
+
+        Ok(())
     }
 }

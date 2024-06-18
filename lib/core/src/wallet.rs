@@ -143,3 +143,16 @@ impl OnchainWallet for LiquidOnchainWallet {
         Ok(())
     }
 }
+
+pub(crate) mod test_utils {
+    use crate::model::Config;
+    use anyhow::Result;
+
+    use super::LiquidOnchainWallet;
+
+    #[allow(dead_code)]
+    pub(crate) fn new_onchain_wallet(config: &Config) -> Result<LiquidOnchainWallet> {
+        let test_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        LiquidOnchainWallet::new(test_mnemonic.to_string(), config.clone())
+    }
+}
