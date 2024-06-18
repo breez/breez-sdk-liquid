@@ -178,6 +178,19 @@ dictionary LnUrlWithdrawRequest {
     string? description = null;
 };
 
+[Enum]
+interface LnUrlCallbackStatus {
+    Ok();
+    ErrorStatus(LnUrlErrorData data);
+};
+
+[Error]
+interface LnUrlAuthError {
+    Generic(string err);
+    InvalidUri(string err);
+    ServiceConnectivity(string err);
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 
@@ -399,4 +412,7 @@ interface BindingLiquidSdk {
 
     [Throws=LnUrlWithdrawError]
     LnUrlWithdrawResult lnurl_withdraw(LnUrlWithdrawRequest req);
+
+    [Throws=LnUrlAuthError]
+    LnUrlCallbackStatus lnurl_auth(LnUrlAuthRequestData req_data);
 };

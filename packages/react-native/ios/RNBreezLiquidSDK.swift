@@ -272,6 +272,28 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(lnurlWithdraw:resolve:reject:)
+    func lnurlWithdraw(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlWithdrawRequest = try BreezLiquidSDKMapper.asLnUrlWithdrawRequest(lnUrlWithdrawRequest: req)
+            var res = try getBindingLiquidSdk().lnurlWithdraw(req: lnUrlWithdrawRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlWithdrawResult: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(lnurlAuth:resolve:reject:)
+    func lnurlAuth(_ reqData: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlAuthRequestData = try BreezLiquidSDKMapper.asLnUrlAuthRequestData(lnUrlAuthRequestData: reqData)
+            var res = try getBindingLiquidSdk().lnurlAuth(reqData: lnUrlAuthRequestData)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlCallbackStatus: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

@@ -541,6 +541,32 @@ impl CstDecode<crate::LNInvoice> for wire_cst_ln_invoice {
         }
     }
 }
+impl CstDecode<crate::bindings::duplicates::LnUrlAuthError> for wire_cst_ln_url_auth_error {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::duplicates::LnUrlAuthError {
+        match self.tag {
+            0 => {
+                let ans = unsafe { self.kind.Generic };
+                crate::bindings::duplicates::LnUrlAuthError::Generic {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            1 => {
+                let ans = unsafe { self.kind.InvalidUri };
+                crate::bindings::duplicates::LnUrlAuthError::InvalidUri {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            2 => {
+                let ans = unsafe { self.kind.ServiceConnectivity };
+                crate::bindings::duplicates::LnUrlAuthError::ServiceConnectivity {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+}
 impl CstDecode<crate::LnUrlAuthRequestData> for wire_cst_ln_url_auth_request_data {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::LnUrlAuthRequestData {
@@ -549,6 +575,23 @@ impl CstDecode<crate::LnUrlAuthRequestData> for wire_cst_ln_url_auth_request_dat
             action: self.action.cst_decode(),
             domain: self.domain.cst_decode(),
             url: self.url.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::bindings::duplicates::LnUrlCallbackStatus>
+    for wire_cst_ln_url_callback_status
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::duplicates::LnUrlCallbackStatus {
+        match self.tag {
+            0 => crate::bindings::duplicates::LnUrlCallbackStatus::Ok,
+            1 => {
+                let ans = unsafe { self.kind.ErrorStatus };
+                crate::bindings::duplicates::LnUrlCallbackStatus::ErrorStatus {
+                    data: ans.data.cst_decode(),
+                }
+            }
+            _ => unreachable!(),
         }
     }
 }
@@ -1190,6 +1233,19 @@ impl Default for wire_cst_ln_invoice {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_ln_url_auth_error {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: LnUrlAuthErrorKind { nil__: () },
+        }
+    }
+}
+impl Default for wire_cst_ln_url_auth_error {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_ln_url_auth_request_data {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -1201,6 +1257,19 @@ impl NewWithNullPtr for wire_cst_ln_url_auth_request_data {
     }
 }
 impl Default for wire_cst_ln_url_auth_request_data {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_ln_url_callback_status {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: LnUrlCallbackStatusKind { nil__: () },
+        }
+    }
+}
+impl Default for wire_cst_ln_url_callback_status {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1621,6 +1690,15 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_li
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_list_payments_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+    port_: i64,
+    that: usize,
+    req_data: *mut wire_cst_ln_url_auth_request_data,
+) {
+    wire__crate__bindings__BindingLiquidSdk_lnurl_auth_impl(port_, that, req_data)
 }
 
 #[no_mangle]
@@ -2254,11 +2332,57 @@ pub struct wire_cst_ln_invoice {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_ln_url_auth_error {
+    tag: i32,
+    kind: LnUrlAuthErrorKind,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union LnUrlAuthErrorKind {
+    Generic: wire_cst_LnUrlAuthError_Generic,
+    InvalidUri: wire_cst_LnUrlAuthError_InvalidUri,
+    ServiceConnectivity: wire_cst_LnUrlAuthError_ServiceConnectivity,
+    nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlAuthError_Generic {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlAuthError_InvalidUri {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlAuthError_ServiceConnectivity {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_ln_url_auth_request_data {
     k1: *mut wire_cst_list_prim_u_8_strict,
     action: *mut wire_cst_list_prim_u_8_strict,
     domain: *mut wire_cst_list_prim_u_8_strict,
     url: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_ln_url_callback_status {
+    tag: i32,
+    kind: LnUrlCallbackStatusKind,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union LnUrlCallbackStatusKind {
+    ErrorStatus: wire_cst_LnUrlCallbackStatus_ErrorStatus,
+    nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlCallbackStatus_ErrorStatus {
+    data: *mut wire_cst_ln_url_error_data,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

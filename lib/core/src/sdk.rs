@@ -14,9 +14,12 @@ use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
 use lwk_wollet::{BlockchainBackend, ElectrumClient, ElectrumUrl};
+use sdk_common::bitcoin::secp256k1::Secp256k1;
+use sdk_common::bitcoin::util::bip32::ChildNumber;
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use url::Url;
 
 use crate::error::LiquidSdkError;
 use crate::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
@@ -1162,6 +1165,31 @@ impl LiquidSdk {
 
         let res = validate_lnurl_withdraw(req.data, invoice).await?;
         Ok(res)
+    }
+
+    /// Third and last step of LNURL-auth. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlAuthRequestData` payload needed here. The second step is user approval of auth action.
+    ///
+    /// This call will sign `k1` of the LNURL endpoint (`req_data`) on `secp256k1` using `linkingPrivKey` and DER-encodes the signature.
+    /// If they match the endpoint requirements, the LNURL auth request is made. A successful result here means the client signature is verified.
+    pub async fn lnurl_auth(
+        &self,
+        req_data: LnUrlAuthRequestData,
+    ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
+        // m/138'/0
+        let hashing_key = self.onchain_wallet.derive_bip32_key(vec![
+            ChildNumber::from_hardened_idx(138).map_err(Into::<LnUrlError>::into)?,
+            ChildNumber::from(0),
+        ])?;
+
+        let url =
+            Url::from_str(&req_data.url).map_err(|e| LnUrlError::InvalidUri(e.to_string()))?;
+
+        let derivation_path = get_derivation_path(hashing_key, url)?;
+        let linking_key = self.onchain_wallet.derive_bip32_key(derivation_path)?;
+        let linking_keys = linking_key.to_keypair(&Secp256k1::new());
+
+        Ok(perform_lnurl_auth(linking_keys, req_data).await?)
     }
 
     pub fn default_config(network: LiquidSdkNetwork) -> Config {

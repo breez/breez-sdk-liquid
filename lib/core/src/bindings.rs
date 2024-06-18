@@ -143,6 +143,17 @@ impl BindingLiquidSdk {
             .map_err(Into::into)
     }
 
+    pub async fn lnurl_auth(
+        &self,
+        req_data: LnUrlAuthRequestData,
+    ) -> Result<duplicates::LnUrlCallbackStatus, duplicates::LnUrlAuthError> {
+        self.sdk
+            .lnurl_auth(req_data)
+            .await
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {
         self.sdk.sync().await.map_err(Into::into)
     }
@@ -360,6 +371,65 @@ pub mod duplicates {
         fn from(value: sdk_common::prelude::LnUrlWithdrawSuccessData) -> Self {
             Self {
                 invoice: value.invoice,
+            }
+        }
+    }
+
+    #[derive(Debug, Error)]
+    pub enum LnUrlAuthError {
+        /// This error is raised when a general error occurs not specific to other error variants
+        /// in this enum.
+        #[error("Generic: {err}")]
+        Generic { err: String },
+
+        /// This error is raised when the decoded LNURL URI is not compliant to the specification.
+        #[error("Invalid uri: {err}")]
+        InvalidUri { err: String },
+
+        /// This error is raised when a connection to an external service fails.
+        #[error("Service connectivity: {err}")]
+        ServiceConnectivity { err: String },
+    }
+    impl From<sdk_common::prelude::LnUrlAuthError> for LnUrlAuthError {
+        fn from(value: prelude::LnUrlAuthError) -> Self {
+            match value {
+                sdk_common::prelude::LnUrlAuthError::Generic { err } => Self::Generic { err },
+                sdk_common::prelude::LnUrlAuthError::InvalidUri { err } => Self::InvalidUri { err },
+                sdk_common::prelude::LnUrlAuthError::ServiceConnectivity { err } => {
+                    Self::ServiceConnectivity { err }
+                }
+            }
+        }
+    }
+
+    /// Contains the result of the entire LNURL interaction, as reported by the LNURL endpoint.
+    ///
+    /// * `Ok` indicates the interaction with the endpoint was valid, and the endpoint
+    ///  - started to pay the invoice asynchronously in the case of LNURL-withdraw,
+    ///  - verified the client signature in the case of LNURL-auth,////// * `Error` indicates a generic issue the LNURL endpoint encountered, including a freetext
+    /// description of the reason.
+    ///
+    /// Both cases are described in LUD-03 <https://github.com/lnurl/luds/blob/luds/03.md> & LUD-04: <https://github.com/lnurl/luds/blob/luds/04.md>
+    #[derive(Clone, Deserialize, Debug, Serialize)]
+    #[serde(rename_all = "UPPERCASE")]
+    #[serde(tag = "status")]
+    pub enum LnUrlCallbackStatus {
+        /// On-wire format is: `{"status": "OK"}`
+        Ok,
+        /// On-wire format is: `{"status": "ERROR", "reason": "error details..."}`
+        #[serde(rename = "ERROR")]
+        ErrorStatus {
+            #[serde(flatten)]
+            data: LnUrlErrorData,
+        },
+    }
+    impl From<sdk_common::prelude::LnUrlCallbackStatus> for LnUrlCallbackStatus {
+        fn from(value: prelude::LnUrlCallbackStatus) -> Self {
+            match value {
+                sdk_common::prelude::LnUrlCallbackStatus::Ok => Self::Ok,
+                sdk_common::prelude::LnUrlCallbackStatus::ErrorStatus { data } => {
+                    Self::ErrorStatus { data }
+                }
             }
         }
     }

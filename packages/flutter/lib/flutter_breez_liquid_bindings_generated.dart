@@ -141,6 +141,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_ln_url_auth_request_data> req_data,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+      port_,
+      that,
+      req_data,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
     int port_,
     int that,
@@ -845,6 +865,16 @@ final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
+final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> action;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+}
+
 final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
 
@@ -1140,16 +1170,6 @@ final class wire_cst_ln_invoice extends ffi.Struct {
   external int min_final_cltv_expiry_delta;
 }
 
-final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> action;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-}
-
 final class wire_cst_ln_url_error_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
 }
@@ -1297,6 +1317,48 @@ final class wire_cst_liquid_sdk_error extends ffi.Struct {
   external int tag;
 
   external LiquidSdkErrorKind kind;
+}
+
+final class wire_cst_LnUrlAuthError_Generic extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlAuthError_InvalidUri extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlAuthError_ServiceConnectivity extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class LnUrlAuthErrorKind extends ffi.Union {
+  external wire_cst_LnUrlAuthError_Generic Generic;
+
+  external wire_cst_LnUrlAuthError_InvalidUri InvalidUri;
+
+  external wire_cst_LnUrlAuthError_ServiceConnectivity ServiceConnectivity;
+}
+
+final class wire_cst_ln_url_auth_error extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlAuthErrorKind kind;
+}
+
+final class wire_cst_LnUrlCallbackStatus_ErrorStatus extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_error_data> data;
+}
+
+final class LnUrlCallbackStatusKind extends ffi.Union {
+  external wire_cst_LnUrlCallbackStatus_ErrorStatus ErrorStatus;
+}
+
+final class wire_cst_ln_url_callback_status extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlCallbackStatusKind kind;
 }
 
 final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {

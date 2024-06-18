@@ -7,11 +7,11 @@ use breez_liquid_sdk::logger::Logger;
 use breez_liquid_sdk::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
 use breez_liquid_sdk::{
     error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
-    BitcoinAddressData, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayError,
-    LnUrlPayErrorData, LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawError,
-    LnUrlWithdrawRequest, LnUrlWithdrawRequestData, LnUrlWithdrawResult, LnUrlWithdrawSuccessData,
-    MessageSuccessActionData, Network, RouteHint, RouteHintHop, SuccessActionProcessed,
-    UrlSuccessActionData,
+    BitcoinAddressData, InputType, LNInvoice, LnUrlAuthError, LnUrlAuthRequestData,
+    LnUrlCallbackStatus, LnUrlErrorData, LnUrlPayError, LnUrlPayErrorData, LnUrlPayRequest,
+    LnUrlPayRequestData, LnUrlWithdrawError, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
+    LnUrlWithdrawResult, LnUrlWithdrawSuccessData, MessageSuccessActionData, Network, RouteHint,
+    RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
 };
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
@@ -136,6 +136,13 @@ impl BindingLiquidSdk {
     ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
         rt().block_on(self.sdk.lnurl_withdraw(req))
             .map_err(Into::into)
+    }
+
+    pub fn lnurl_auth(
+        &self,
+        req_data: LnUrlAuthRequestData,
+    ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
+        rt().block_on(self.sdk.lnurl_auth(req_data))
     }
 
     pub fn sync(&self) -> LiquidSdkResult<()> {

@@ -35,6 +35,13 @@ typedef struct wire_cst_backup_request {
   struct wire_cst_list_prim_u_8_strict *backup_path;
 } wire_cst_backup_request;
 
+typedef struct wire_cst_ln_url_auth_request_data {
+  struct wire_cst_list_prim_u_8_strict *k1;
+  struct wire_cst_list_prim_u_8_strict *action;
+  struct wire_cst_list_prim_u_8_strict *domain;
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_ln_url_auth_request_data;
+
 typedef struct wire_cst_ln_url_pay_request_data {
   struct wire_cst_list_prim_u_8_strict *callback;
   uint64_t min_sendable;
@@ -230,13 +237,6 @@ typedef struct wire_cst_ln_invoice {
   uint64_t min_final_cltv_expiry_delta;
 } wire_cst_ln_invoice;
 
-typedef struct wire_cst_ln_url_auth_request_data {
-  struct wire_cst_list_prim_u_8_strict *k1;
-  struct wire_cst_list_prim_u_8_strict *action;
-  struct wire_cst_list_prim_u_8_strict *domain;
-  struct wire_cst_list_prim_u_8_strict *url;
-} wire_cst_ln_url_auth_request_data;
-
 typedef struct wire_cst_ln_url_error_data {
   struct wire_cst_list_prim_u_8_strict *reason;
 } wire_cst_ln_url_error_data;
@@ -359,6 +359,42 @@ typedef struct wire_cst_liquid_sdk_error {
   int32_t tag;
   union LiquidSdkErrorKind kind;
 } wire_cst_liquid_sdk_error;
+
+typedef struct wire_cst_LnUrlAuthError_Generic {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlAuthError_Generic;
+
+typedef struct wire_cst_LnUrlAuthError_InvalidUri {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlAuthError_InvalidUri;
+
+typedef struct wire_cst_LnUrlAuthError_ServiceConnectivity {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlAuthError_ServiceConnectivity;
+
+typedef union LnUrlAuthErrorKind {
+  struct wire_cst_LnUrlAuthError_Generic Generic;
+  struct wire_cst_LnUrlAuthError_InvalidUri InvalidUri;
+  struct wire_cst_LnUrlAuthError_ServiceConnectivity ServiceConnectivity;
+} LnUrlAuthErrorKind;
+
+typedef struct wire_cst_ln_url_auth_error {
+  int32_t tag;
+  union LnUrlAuthErrorKind kind;
+} wire_cst_ln_url_auth_error;
+
+typedef struct wire_cst_LnUrlCallbackStatus_ErrorStatus {
+  struct wire_cst_ln_url_error_data *data;
+} wire_cst_LnUrlCallbackStatus_ErrorStatus;
+
+typedef union LnUrlCallbackStatusKind {
+  struct wire_cst_LnUrlCallbackStatus_ErrorStatus ErrorStatus;
+} LnUrlCallbackStatusKind;
+
+typedef struct wire_cst_ln_url_callback_status {
+  int32_t tag;
+  union LnUrlCallbackStatusKind kind;
+} wire_cst_ln_url_callback_status;
 
 typedef struct wire_cst_LnUrlPayError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
@@ -578,6 +614,10 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(int64_t port_,
                                                                                uintptr_t that);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(int64_t port_,
+                                                                            uintptr_t that,
+                                                                            struct wire_cst_ln_url_auth_request_data *req_data);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(int64_t port_,
                                                                            uintptr_t that,
                                                                            struct wire_cst_ln_url_pay_request *req);
@@ -731,6 +771,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment);

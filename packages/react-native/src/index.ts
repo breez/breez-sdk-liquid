@@ -113,12 +113,22 @@ export interface LnUrlPaySuccessData {
     payment: Payment
 }
 
+export interface LnUrlWithdrawRequest {
+    data: LnUrlWithdrawRequestData
+    amountMsat: number
+    description?: string
+}
+
 export interface LnUrlWithdrawRequestData {
     callback: string
     k1: string
     defaultDescription: string
     minWithdrawable: number
     maxWithdrawable: number
+}
+
+export interface LnUrlWithdrawSuccessData {
+    invoice: LnInvoice
 }
 
 export interface LogEntry {
@@ -280,6 +290,18 @@ export enum LiquidSdkNetwork {
     TESTNET = "testnet"
 }
 
+export enum LnUrlCallbackStatusVariant {
+    OK = "ok",
+    ERROR_STATUS = "errorStatus"
+}
+
+export type LnUrlCallbackStatus = {
+    type: LnUrlCallbackStatusVariant.OK
+} | {
+    type: LnUrlCallbackStatusVariant.ERROR_STATUS,
+    data: LnUrlErrorData
+}
+
 export enum LnUrlPayResultVariant {
     ENDPOINT_SUCCESS = "endpointSuccess",
     ENDPOINT_ERROR = "endpointError",
@@ -295,6 +317,19 @@ export type LnUrlPayResult = {
 } | {
     type: LnUrlPayResultVariant.PAY_ERROR,
     data: LnUrlPayErrorData
+}
+
+export enum LnUrlWithdrawResultVariant {
+    OK = "ok",
+    ERROR_STATUS = "errorStatus"
+}
+
+export type LnUrlWithdrawResult = {
+    type: LnUrlWithdrawResultVariant.OK,
+    data: LnUrlWithdrawSuccessData
+} | {
+    type: LnUrlWithdrawResultVariant.ERROR_STATUS,
+    data: LnUrlErrorData
 }
 
 export enum Network {
@@ -428,5 +463,15 @@ export const disconnect = async (): Promise<void> => {
 
 export const lnurlPay = async (req: LnUrlPayRequest): Promise<LnUrlPayResult> => {
     const response = await BreezLiquidSDK.lnurlPay(req)
+    return response
+}
+
+export const lnurlWithdraw = async (req: LnUrlWithdrawRequest): Promise<LnUrlWithdrawResult> => {
+    const response = await BreezLiquidSDK.lnurlWithdraw(req)
+    return response
+}
+
+export const lnurlAuth = async (reqData: LnUrlAuthRequestData): Promise<LnUrlCallbackStatus> => {
+    const response = await BreezLiquidSDK.lnurlAuth(reqData)
     return response
 }

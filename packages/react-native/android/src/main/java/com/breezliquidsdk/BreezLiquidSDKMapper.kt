@@ -588,6 +588,45 @@ fun asLnUrlPaySuccessDataList(arr: ReadableArray): List<LnUrlPaySuccessData> {
     return list
 }
 
+fun asLnUrlWithdrawRequest(lnUrlWithdrawRequest: ReadableMap): LnUrlWithdrawRequest? {
+    if (!validateMandatoryFields(
+            lnUrlWithdrawRequest,
+            arrayOf(
+                "data",
+                "amountMsat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val data = lnUrlWithdrawRequest.getMap("data")?.let { asLnUrlWithdrawRequestData(it) }!!
+    val amountMsat = lnUrlWithdrawRequest.getDouble("amountMsat").toULong()
+    val description = if (hasNonNullKey(lnUrlWithdrawRequest, "description")) lnUrlWithdrawRequest.getString("description") else null
+    return LnUrlWithdrawRequest(
+        data,
+        amountMsat,
+        description,
+    )
+}
+
+fun readableMapOf(lnUrlWithdrawRequest: LnUrlWithdrawRequest): ReadableMap =
+    readableMapOf(
+        "data" to readableMapOf(lnUrlWithdrawRequest.data),
+        "amountMsat" to lnUrlWithdrawRequest.amountMsat,
+        "description" to lnUrlWithdrawRequest.description,
+    )
+
+fun asLnUrlWithdrawRequestList(arr: ReadableArray): List<LnUrlWithdrawRequest> {
+    val list = ArrayList<LnUrlWithdrawRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlWithdrawRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: ReadableMap): LnUrlWithdrawRequestData? {
     if (!validateMandatoryFields(
             lnUrlWithdrawRequestData,
@@ -630,6 +669,38 @@ fun asLnUrlWithdrawRequestDataList(arr: ReadableArray): List<LnUrlWithdrawReques
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawRequestData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: ReadableMap): LnUrlWithdrawSuccessData? {
+    if (!validateMandatoryFields(
+            lnUrlWithdrawSuccessData,
+            arrayOf(
+                "invoice",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = lnUrlWithdrawSuccessData.getMap("invoice")?.let { asLnInvoice(it) }!!
+    return LnUrlWithdrawSuccessData(
+        invoice,
+    )
+}
+
+fun readableMapOf(lnUrlWithdrawSuccessData: LnUrlWithdrawSuccessData): ReadableMap =
+    readableMapOf(
+        "invoice" to readableMapOf(lnUrlWithdrawSuccessData.invoice),
+    )
+
+fun asLnUrlWithdrawSuccessDataList(arr: ReadableArray): List<LnUrlWithdrawSuccessData> {
+    val list = ArrayList<LnUrlWithdrawSuccessData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlWithdrawSuccessData(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -1328,6 +1399,43 @@ fun asLiquidSdkNetworkList(arr: ReadableArray): List<LiquidSdkNetwork> {
     return list
 }
 
+fun asLnUrlCallbackStatus(lnUrlCallbackStatus: ReadableMap): LnUrlCallbackStatus? {
+    val type = lnUrlCallbackStatus.getString("type")
+
+    if (type == "ok") {
+        return LnUrlCallbackStatus.Ok
+    }
+    if (type == "errorStatus") {
+        return LnUrlCallbackStatus.ErrorStatus(lnUrlCallbackStatus.getMap("data")?.let { asLnUrlErrorData(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(lnUrlCallbackStatus: LnUrlCallbackStatus): ReadableMap? {
+    val map = Arguments.createMap()
+    when (lnUrlCallbackStatus) {
+        is LnUrlCallbackStatus.Ok -> {
+            pushToMap(map, "type", "ok")
+        }
+        is LnUrlCallbackStatus.ErrorStatus -> {
+            pushToMap(map, "type", "errorStatus")
+            pushToMap(map, "data", readableMapOf(lnUrlCallbackStatus.data))
+        }
+    }
+    return map
+}
+
+fun asLnUrlCallbackStatusList(arr: ReadableArray): List<LnUrlCallbackStatus> {
+    val list = ArrayList<LnUrlCallbackStatus>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlCallbackStatus(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlPayResult(lnUrlPayResult: ReadableMap): LnUrlPayResult? {
     val type = lnUrlPayResult.getString("type")
 
@@ -1367,6 +1475,44 @@ fun asLnUrlPayResultList(arr: ReadableArray): List<LnUrlPayResult> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPayResult(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLnUrlWithdrawResult(lnUrlWithdrawResult: ReadableMap): LnUrlWithdrawResult? {
+    val type = lnUrlWithdrawResult.getString("type")
+
+    if (type == "ok") {
+        return LnUrlWithdrawResult.Ok(lnUrlWithdrawResult.getMap("data")?.let { asLnUrlWithdrawSuccessData(it) }!!)
+    }
+    if (type == "errorStatus") {
+        return LnUrlWithdrawResult.ErrorStatus(lnUrlWithdrawResult.getMap("data")?.let { asLnUrlErrorData(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(lnUrlWithdrawResult: LnUrlWithdrawResult): ReadableMap? {
+    val map = Arguments.createMap()
+    when (lnUrlWithdrawResult) {
+        is LnUrlWithdrawResult.Ok -> {
+            pushToMap(map, "type", "ok")
+            pushToMap(map, "data", readableMapOf(lnUrlWithdrawResult.data))
+        }
+        is LnUrlWithdrawResult.ErrorStatus -> {
+            pushToMap(map, "type", "errorStatus")
+            pushToMap(map, "data", readableMapOf(lnUrlWithdrawResult.data))
+        }
+    }
+    return map
+}
+
+fun asLnUrlWithdrawResultList(arr: ReadableArray): List<LnUrlWithdrawResult> {
+    val list = ArrayList<LnUrlWithdrawResult>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlWithdrawResult(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

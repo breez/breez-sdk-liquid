@@ -706,6 +706,55 @@ enum BreezLiquidSDKMapper {
         return lnUrlPaySuccessDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlPaySuccessData: v) }
     }
 
+    static func asLnUrlWithdrawRequest(lnUrlWithdrawRequest: [String: Any?]) throws -> LnUrlWithdrawRequest {
+        guard let dataTmp = lnUrlWithdrawRequest["data"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlWithdrawRequest"))
+        }
+        let data = try asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: dataTmp)
+
+        guard let amountMsat = lnUrlWithdrawRequest["amountMsat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "LnUrlWithdrawRequest"))
+        }
+        var description: String?
+        if hasNonNilKey(data: lnUrlWithdrawRequest, key: "description") {
+            guard let descriptionTmp = lnUrlWithdrawRequest["description"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "description"))
+            }
+            description = descriptionTmp
+        }
+
+        return LnUrlWithdrawRequest(
+            data: data,
+            amountMsat: amountMsat,
+            description: description
+        )
+    }
+
+    static func dictionaryOf(lnUrlWithdrawRequest: LnUrlWithdrawRequest) -> [String: Any?] {
+        return [
+            "data": dictionaryOf(lnUrlWithdrawRequestData: lnUrlWithdrawRequest.data),
+            "amountMsat": lnUrlWithdrawRequest.amountMsat,
+            "description": lnUrlWithdrawRequest.description == nil ? nil : lnUrlWithdrawRequest.description,
+        ]
+    }
+
+    static func asLnUrlWithdrawRequestList(arr: [Any]) throws -> [LnUrlWithdrawRequest] {
+        var list = [LnUrlWithdrawRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlWithdrawRequest = try asLnUrlWithdrawRequest(lnUrlWithdrawRequest: val)
+                list.append(lnUrlWithdrawRequest)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlWithdrawRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlWithdrawRequestList: [LnUrlWithdrawRequest]) -> [Any] {
+        return lnUrlWithdrawRequestList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawRequest: v) }
+    }
+
     static func asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: [String: Any?]) throws -> LnUrlWithdrawRequestData {
         guard let callback = lnUrlWithdrawRequestData["callback"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "callback", typeName: "LnUrlWithdrawRequestData"))
@@ -757,6 +806,39 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(lnUrlWithdrawRequestDataList: [LnUrlWithdrawRequestData]) -> [Any] {
         return lnUrlWithdrawRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawRequestData: v) }
+    }
+
+    static func asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: [String: Any?]) throws -> LnUrlWithdrawSuccessData {
+        guard let invoiceTmp = lnUrlWithdrawSuccessData["invoice"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "LnUrlWithdrawSuccessData"))
+        }
+        let invoice = try asLnInvoice(lnInvoice: invoiceTmp)
+
+        return LnUrlWithdrawSuccessData(
+            invoice: invoice)
+    }
+
+    static func dictionaryOf(lnUrlWithdrawSuccessData: LnUrlWithdrawSuccessData) -> [String: Any?] {
+        return [
+            "invoice": dictionaryOf(lnInvoice: lnUrlWithdrawSuccessData.invoice),
+        ]
+    }
+
+    static func asLnUrlWithdrawSuccessDataList(arr: [Any]) throws -> [LnUrlWithdrawSuccessData] {
+        var list = [LnUrlWithdrawSuccessData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlWithdrawSuccessData = try asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: val)
+                list.append(lnUrlWithdrawSuccessData)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlWithdrawSuccessData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlWithdrawSuccessDataList: [LnUrlWithdrawSuccessData]) -> [Any] {
+        return lnUrlWithdrawSuccessDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawSuccessData: v) }
     }
 
     static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
@@ -1697,6 +1779,57 @@ enum BreezLiquidSDKMapper {
         return list
     }
 
+    static func asLnUrlCallbackStatus(lnUrlCallbackStatus: [String: Any?]) throws -> LnUrlCallbackStatus {
+        let type = lnUrlCallbackStatus["type"] as! String
+        if type == "ok" {
+            return LnUrlCallbackStatus.ok
+        }
+        if type == "errorStatus" {
+            guard let dataTmp = lnUrlCallbackStatus["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlCallbackStatus"))
+            }
+            let _data = try asLnUrlErrorData(lnUrlErrorData: dataTmp)
+
+            return LnUrlCallbackStatus.errorStatus(data: _data)
+        }
+
+        throw LiquidSdkError.Generic(message: "Unexpected type \(type) for enum LnUrlCallbackStatus")
+    }
+
+    static func dictionaryOf(lnUrlCallbackStatus: LnUrlCallbackStatus) -> [String: Any?] {
+        switch lnUrlCallbackStatus {
+        case .ok:
+            return [
+                "type": "ok",
+            ]
+
+        case let .errorStatus(
+            data
+        ):
+            return [
+                "type": "errorStatus",
+                "data": dictionaryOf(lnUrlErrorData: data),
+            ]
+        }
+    }
+
+    static func arrayOf(lnUrlCallbackStatusList: [LnUrlCallbackStatus]) -> [Any] {
+        return lnUrlCallbackStatusList.map { v -> [String: Any?] in dictionaryOf(lnUrlCallbackStatus: v) }
+    }
+
+    static func asLnUrlCallbackStatusList(arr: [Any]) throws -> [LnUrlCallbackStatus] {
+        var list = [LnUrlCallbackStatus]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlCallbackStatus = try asLnUrlCallbackStatus(lnUrlCallbackStatus: val)
+                list.append(lnUrlCallbackStatus)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlCallbackStatus"))
+            }
+        }
+        return list
+    }
+
     static func asLnUrlPayResult(lnUrlPayResult: [String: Any?]) throws -> LnUrlPayResult {
         let type = lnUrlPayResult["type"] as! String
         if type == "endpointSuccess" {
@@ -1767,6 +1900,65 @@ enum BreezLiquidSDKMapper {
                 list.append(lnUrlPayResult)
             } else {
                 throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlPayResult"))
+            }
+        }
+        return list
+    }
+
+    static func asLnUrlWithdrawResult(lnUrlWithdrawResult: [String: Any?]) throws -> LnUrlWithdrawResult {
+        let type = lnUrlWithdrawResult["type"] as! String
+        if type == "ok" {
+            guard let dataTmp = lnUrlWithdrawResult["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlWithdrawResult"))
+            }
+            let _data = try asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: dataTmp)
+
+            return LnUrlWithdrawResult.ok(data: _data)
+        }
+        if type == "errorStatus" {
+            guard let dataTmp = lnUrlWithdrawResult["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlWithdrawResult"))
+            }
+            let _data = try asLnUrlErrorData(lnUrlErrorData: dataTmp)
+
+            return LnUrlWithdrawResult.errorStatus(data: _data)
+        }
+
+        throw LiquidSdkError.Generic(message: "Unexpected type \(type) for enum LnUrlWithdrawResult")
+    }
+
+    static func dictionaryOf(lnUrlWithdrawResult: LnUrlWithdrawResult) -> [String: Any?] {
+        switch lnUrlWithdrawResult {
+        case let .ok(
+            data
+        ):
+            return [
+                "type": "ok",
+                "data": dictionaryOf(lnUrlWithdrawSuccessData: data),
+            ]
+
+        case let .errorStatus(
+            data
+        ):
+            return [
+                "type": "errorStatus",
+                "data": dictionaryOf(lnUrlErrorData: data),
+            ]
+        }
+    }
+
+    static func arrayOf(lnUrlWithdrawResultList: [LnUrlWithdrawResult]) -> [Any] {
+        return lnUrlWithdrawResultList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawResult: v) }
+    }
+
+    static func asLnUrlWithdrawResultList(arr: [Any]) throws -> [LnUrlWithdrawResult] {
+        var list = [LnUrlWithdrawResult]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlWithdrawResult = try asLnUrlWithdrawResult(lnUrlWithdrawResult: val)
+                list.append(lnUrlWithdrawResult)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LnUrlWithdrawResult"))
             }
         }
         return list

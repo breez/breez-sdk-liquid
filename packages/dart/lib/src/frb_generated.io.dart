@@ -194,7 +194,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNInvoice dco_decode_ln_invoice(dynamic raw);
 
   @protected
+  LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw);
+
+  @protected
   LnUrlAuthRequestData dco_decode_ln_url_auth_request_data(dynamic raw);
+
+  @protected
+  LnUrlCallbackStatus dco_decode_ln_url_callback_status(dynamic raw);
 
   @protected
   LnUrlErrorData dco_decode_ln_url_error_data(dynamic raw);
@@ -483,7 +489,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer);
 
   @protected
+  LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer);
+
+  @protected
   LnUrlAuthRequestData sse_decode_ln_url_auth_request_data(SseDeserializer deserializer);
+
+  @protected
+  LnUrlCallbackStatus sse_decode_ln_url_callback_status(SseDeserializer deserializer);
 
   @protected
   LnUrlErrorData sse_decode_ln_url_error_data(SseDeserializer deserializer);
@@ -1287,12 +1299,49 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_ln_url_auth_error(LnUrlAuthError apiObj, wire_cst_ln_url_auth_error wireObj) {
+    if (apiObj is LnUrlAuthError_Generic) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 0;
+      wireObj.kind.Generic.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlAuthError_InvalidUri) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 1;
+      wireObj.kind.InvalidUri.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlAuthError_ServiceConnectivity) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 2;
+      wireObj.kind.ServiceConnectivity.err = pre_err;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_ln_url_auth_request_data(
       LnUrlAuthRequestData apiObj, wire_cst_ln_url_auth_request_data wireObj) {
     wireObj.k1 = cst_encode_String(apiObj.k1);
     wireObj.action = cst_encode_opt_String(apiObj.action);
     wireObj.domain = cst_encode_String(apiObj.domain);
     wireObj.url = cst_encode_String(apiObj.url);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_url_callback_status(
+      LnUrlCallbackStatus apiObj, wire_cst_ln_url_callback_status wireObj) {
+    if (apiObj is LnUrlCallbackStatus_Ok) {
+      wireObj.tag = 0;
+      return;
+    }
+    if (apiObj is LnUrlCallbackStatus_ErrorStatus) {
+      var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
+      wireObj.tag = 1;
+      wireObj.kind.ErrorStatus.data = pre_data;
+      return;
+    }
   }
 
   @protected
@@ -1940,7 +1989,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer);
+
+  @protected
   void sse_encode_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_url_callback_status(LnUrlCallbackStatus self, SseSerializer serializer);
 
   @protected
   void sse_encode_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer);
@@ -2196,6 +2251,26 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
   late final _wire__crate__bindings__BindingLiquidSdk_list_payments =
       _wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_ln_url_auth_request_data> req_data,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+      port_,
+      that,
+      req_data,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth');
+  late final _wire__crate__bindings__BindingLiquidSdk_lnurl_auth =
+      _wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
     int port_,
@@ -2845,6 +2920,16 @@ final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
+final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> action;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+}
+
 final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
 
@@ -3140,16 +3225,6 @@ final class wire_cst_ln_invoice extends ffi.Struct {
   external int min_final_cltv_expiry_delta;
 }
 
-final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> action;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-}
-
 final class wire_cst_ln_url_error_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
 }
@@ -3297,6 +3372,48 @@ final class wire_cst_liquid_sdk_error extends ffi.Struct {
   external int tag;
 
   external LiquidSdkErrorKind kind;
+}
+
+final class wire_cst_LnUrlAuthError_Generic extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlAuthError_InvalidUri extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class wire_cst_LnUrlAuthError_ServiceConnectivity extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
+final class LnUrlAuthErrorKind extends ffi.Union {
+  external wire_cst_LnUrlAuthError_Generic Generic;
+
+  external wire_cst_LnUrlAuthError_InvalidUri InvalidUri;
+
+  external wire_cst_LnUrlAuthError_ServiceConnectivity ServiceConnectivity;
+}
+
+final class wire_cst_ln_url_auth_error extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlAuthErrorKind kind;
+}
+
+final class wire_cst_LnUrlCallbackStatus_ErrorStatus extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_error_data> data;
+}
+
+final class LnUrlCallbackStatusKind extends ffi.Union {
+  external wire_cst_LnUrlCallbackStatus_ErrorStatus ErrorStatus;
+}
+
+final class wire_cst_ln_url_callback_status extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external LnUrlCallbackStatusKind kind;
 }
 
 final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {

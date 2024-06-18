@@ -114,6 +114,15 @@ impl From<LiquidSdkNetwork> for sdk_common::prelude::Network {
     }
 }
 
+impl From<LiquidSdkNetwork> for sdk_common::bitcoin::Network {
+    fn from(value: LiquidSdkNetwork) -> Self {
+        match value {
+            LiquidSdkNetwork::Mainnet => Self::Bitcoin,
+            LiquidSdkNetwork::Testnet => Self::Testnet,
+        }
+    }
+}
+
 /// Trait that can be used to react to various [LiquidSdkEvent]s emitted by the SDK.
 pub trait EventListener: Send + Sync {
     fn on_event(&self, e: LiquidSdkEvent);

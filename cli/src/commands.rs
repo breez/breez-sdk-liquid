@@ -69,6 +69,10 @@ pub(crate) enum Command {
         /// LNURL-withdraw endpoint
         lnurl: String,
     },
+    LnurlAuth {
+        /// LNURL-auth endpoint
+        lnurl: String,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -241,6 +245,19 @@ pub(crate) async fn handle_command(
                     Ok(withdraw_res)
                 }
                 _ => Err(anyhow::anyhow!("Invalid input")),
+            }?;
+
+            command_result!(res)
+        }
+        Command::LnurlAuth { lnurl } => {
+            let lnurl_endpoint = lnurl.trim();
+
+            let res = match parse(lnurl_endpoint).await? {
+                InputType::LnUrlAuth { data: ad } => {
+                    let auth_res = sdk.lnurl_auth(ad).await?;
+                    serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())
+                }
+                _ => Err(anyhow::anyhow!("Unexpected result type")),
             }?;
 
             command_result!(res)

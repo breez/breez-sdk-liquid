@@ -57,7 +57,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0-dev.38';
 
   @override
-  int get rustContentHash => -2033859719;
+  int get rustContentHash => 802195911;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -78,6 +78,9 @@ abstract class RustLibApi extends BaseApi {
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that});
 
   Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that});
+
+  Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth(
+      {required BindingLiquidSdk that, required LnUrlAuthRequestData reqData});
 
   Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
       {required BindingLiquidSdk that, required LnUrlPayRequest req});
@@ -275,6 +278,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkListPaymentsConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_list_payments",
         argNames: ["that"],
+      );
+
+  @override
+  Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth(
+      {required BindingLiquidSdk that, required LnUrlAuthRequestData reqData}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_ln_url_auth_request_data(reqData);
+        return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_auth(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_url_callback_status,
+        decodeErrorData: dco_decode_ln_url_auth_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta,
+      argValues: [that, reqData],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_lnurl_auth",
+        argNames: ["that", "reqData"],
       );
 
   @override
@@ -1099,6 +1128,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlAuthError_Generic(
+          err: dco_decode_String(raw[1]),
+        );
+      case 1:
+        return LnUrlAuthError_InvalidUri(
+          err: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return LnUrlAuthError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
   LnUrlAuthRequestData dco_decode_ln_url_auth_request_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1109,6 +1159,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       domain: dco_decode_String(arr[2]),
       url: dco_decode_String(arr[3]),
     );
+  }
+
+  @protected
+  LnUrlCallbackStatus dco_decode_ln_url_callback_status(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlCallbackStatus_Ok();
+      case 1:
+        return LnUrlCallbackStatus_ErrorStatus(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -2135,6 +2200,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_Generic(err: var_err);
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_InvalidUri(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   LnUrlAuthRequestData sse_decode_ln_url_auth_request_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_k1 = sse_decode_String(deserializer);
@@ -2142,6 +2227,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_domain = sse_decode_String(deserializer);
     var var_url = sse_decode_String(deserializer);
     return LnUrlAuthRequestData(k1: var_k1, action: var_action, domain: var_domain, url: var_url);
+  }
+
+  @protected
+  LnUrlCallbackStatus sse_decode_ln_url_callback_status(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return LnUrlCallbackStatus_Ok();
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlCallbackStatus_ErrorStatus(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -3176,12 +3277,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlAuthError_Generic(err: final err):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlAuthError_InvalidUri(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlAuthError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   void sse_encode_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.k1, serializer);
     sse_encode_opt_String(self.action, serializer);
     sse_encode_String(self.domain, serializer);
     sse_encode_String(self.url, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_callback_status(LnUrlCallbackStatus self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlCallbackStatus_Ok():
+        sse_encode_i_32(0, serializer);
+      case LnUrlCallbackStatus_ErrorStatus(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -3648,6 +3781,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<List<Payment>> listPayments() => RustLib.instance.api.crateBindingsBindingLiquidSdkListPayments(
         that: this,
       );
+
+  Future<LnUrlCallbackStatus> lnurlAuth({required LnUrlAuthRequestData reqData}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlAuth(that: this, reqData: reqData);
 
   Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlPay(that: this, req: req);

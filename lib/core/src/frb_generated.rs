@@ -35,7 +35,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0-dev.38";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2033859719;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 802195911;
 
 // Section: executor
 
@@ -280,6 +280,50 @@ fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
                         }
                         let api_that = &*api_that_decoded.unwrap();
                         crate::bindings::BindingLiquidSdk::list_payments(api_that).await
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_lnurl_auth_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req_data: impl CstDecode<crate::LnUrlAuthRequestData>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_lnurl_auth",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req_data = req_data.cst_decode();
+            move |context| async move {
+                transform_result_dco(
+                    (move || async move {
+                        let mut api_that_decoded = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_decoded =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that = &*api_that_decoded.unwrap();
+                        crate::bindings::BindingLiquidSdk::lnurl_auth(api_that, api_req_data).await
                     })()
                     .await,
                 )
@@ -1398,6 +1442,32 @@ impl SseDecode for crate::LNInvoice {
     }
 }
 
+impl SseDecode for crate::bindings::duplicates::LnUrlAuthError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::bindings::duplicates::LnUrlAuthError::Generic { err: var_err };
+            }
+            1 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::bindings::duplicates::LnUrlAuthError::InvalidUri { err: var_err };
+            }
+            2 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::bindings::duplicates::LnUrlAuthError::ServiceConnectivity {
+                    err: var_err,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::LnUrlAuthRequestData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1411,6 +1481,27 @@ impl SseDecode for crate::LnUrlAuthRequestData {
             domain: var_domain,
             url: var_url,
         };
+    }
+}
+
+impl SseDecode for crate::bindings::duplicates::LnUrlCallbackStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crate::bindings::duplicates::LnUrlCallbackStatus::Ok;
+            }
+            1 => {
+                let mut var_data = <crate::LnUrlErrorData>::sse_decode(deserializer);
+                return crate::bindings::duplicates::LnUrlCallbackStatus::ErrorStatus {
+                    data: var_data,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -2428,6 +2519,36 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LNInvoice>> for crate::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlAuthError {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::bindings::duplicates::LnUrlAuthError::Generic { err } => {
+                [0.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::duplicates::LnUrlAuthError::InvalidUri { err } => {
+                [1.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::duplicates::LnUrlAuthError::ServiceConnectivity { err } => {
+                [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bindings::duplicates::LnUrlAuthError
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bindings::duplicates::LnUrlAuthError>
+    for crate::bindings::duplicates::LnUrlAuthError
+{
+    fn into_into_dart(self) -> crate::bindings::duplicates::LnUrlAuthError {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LnUrlAuthRequestData> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -2448,6 +2569,31 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LnUrlAuthRequestData>>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::LnUrlAuthRequestData> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlCallbackStatus {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::bindings::duplicates::LnUrlCallbackStatus::Ok => [0.into_dart()].into_dart(),
+            crate::bindings::duplicates::LnUrlCallbackStatus::ErrorStatus { data } => {
+                [1.into_dart(), data.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bindings::duplicates::LnUrlCallbackStatus
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bindings::duplicates::LnUrlCallbackStatus>
+    for crate::bindings::duplicates::LnUrlCallbackStatus
+{
+    fn into_into_dart(self) -> crate::bindings::duplicates::LnUrlCallbackStatus {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -3484,6 +3630,29 @@ impl SseEncode for crate::LNInvoice {
     }
 }
 
+impl SseEncode for crate::bindings::duplicates::LnUrlAuthError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::bindings::duplicates::LnUrlAuthError::Generic { err } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::bindings::duplicates::LnUrlAuthError::InvalidUri { err } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::bindings::duplicates::LnUrlAuthError::ServiceConnectivity { err } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::LnUrlAuthRequestData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3491,6 +3660,24 @@ impl SseEncode for crate::LnUrlAuthRequestData {
         <Option<String>>::sse_encode(self.action, serializer);
         <String>::sse_encode(self.domain, serializer);
         <String>::sse_encode(self.url, serializer);
+    }
+}
+
+impl SseEncode for crate::bindings::duplicates::LnUrlCallbackStatus {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::bindings::duplicates::LnUrlCallbackStatus::Ok => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crate::bindings::duplicates::LnUrlCallbackStatus::ErrorStatus { data } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::LnUrlErrorData>::sse_encode(data, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
