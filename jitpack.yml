@@ -1,0 +1,2 @@
+install:
+  - ./lib/bindings/langs/android/buildForJitpack.sh
