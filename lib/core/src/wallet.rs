@@ -151,7 +151,6 @@ impl OnchainWallet for LiquidOnchainWallet {
     }
 
     fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError> {
-        // TODO Do we directly want to access the seed? Or better export this whole method upstream to lwk?
         let seed = self.lwk_signer.seed().ok_or(PaymentError::SignerError {
             err: "Could not get signer seed".to_string(),
         })?;
