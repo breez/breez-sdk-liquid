@@ -10,7 +10,6 @@ import 'dart:convert';
 import 'error.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart' if (dart.library.html) 'frb_generated.web.dart';
-import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
