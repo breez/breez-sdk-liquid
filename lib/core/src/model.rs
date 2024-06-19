@@ -389,7 +389,7 @@ impl ReceiveSwap {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
 
@@ -540,6 +540,8 @@ pub struct PaymentSwapData {
 
     pub preimage: Option<String>,
 
+    pub bolt11: String,
+
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
 
@@ -593,6 +595,11 @@ pub struct Payment {
     /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
     pub preimage: Option<String>,
 
+    /// Represents the invoice associated with a payment
+    /// In the case of a Send payment, this is the invoice paid by the swapper
+    /// In the case of a Receive payment, this is the invoice paid by the user
+    pub bolt11: Option<String>,
+
     /// For a Send swap which was refunded, this is the refund tx id
     pub refund_tx_id: Option<String>,
 
@@ -622,6 +629,7 @@ impl Payment {
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             preimage: swap.preimage,
+            bolt11: Some(swap.bolt11),
             refund_tx_id: swap.refund_tx_id,
             refund_tx_amount_sat: swap.refund_tx_amount_sat,
             payment_type,
@@ -646,6 +654,7 @@ impl Payment {
                 },
             },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
+            bolt11: swap.as_ref().map(|s| s.bolt11.clone()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,

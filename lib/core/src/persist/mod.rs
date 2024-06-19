@@ -106,11 +106,13 @@ impl Persister {
                 ptx.is_confirmed,
                 rs.id,
                 rs.created_at,
+                rs.invoice,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.state,
                 ss.id,
                 ss.created_at,
+                ss.invoice,
                 ss.preimage,
                 ss.refund_tx_id,
                 ss.payer_amount_sat,
@@ -151,18 +153,20 @@ impl Persister {
 
         let maybe_receive_swap_id: Option<String> = row.get(6)?;
         let maybe_receive_swap_created_at: Option<u32> = row.get(7)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(8)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(9)?;
-        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(10)?;
+        let maybe_receive_swap_invoice: Option<String> = row.get(8)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(9)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(10)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(11)?;
 
-        let maybe_send_swap_id: Option<String> = row.get(11)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(12)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(13)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(14)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(15)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(16)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(17)?;
-        let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(18)?;
+        let maybe_send_swap_id: Option<String> = row.get(12)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(13)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(14)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(15)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(16)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(17)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(18)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(19)?;
+        let maybe_send_swap_refund_tx_amount_sat: Option<u64> = row.get(20)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
@@ -170,6 +174,7 @@ impl Persister {
                     swap_id: receive_swap_id,
                     created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                     preimage: None,
+                    bolt11: maybe_receive_swap_invoice.unwrap_or("".to_string()),
                     payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
                     receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
                     refund_tx_id: None,
@@ -183,6 +188,7 @@ impl Persister {
                     swap_id: send_swap_id,
                     created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                     preimage: maybe_send_swap_preimage,
+                    bolt11: maybe_send_swap_invoice.unwrap_or("".to_string()),
                     payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                     receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
                     refund_tx_id: maybe_send_swap_refund_tx_id,
@@ -222,5 +228,39 @@ impl Persister {
             .map(|i| i.unwrap())
             .collect();
         Ok(payments)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use crate::test_utils::{new_payment_tx_data, new_persister, new_receive_swap, new_send_swap};
+
+    use super::{PaymentState, PaymentType};
+
+    #[test]
+    fn test_get_payments() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        let payment_tx_data = new_payment_tx_data(PaymentType::Send);
+        storage.insert_or_update_payment(payment_tx_data.clone())?;
+
+        assert!(storage.get_payments()?.first().is_some());
+        assert!(storage.get_payment(payment_tx_data.tx_id)?.is_some());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_ongoing_swaps() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        storage.insert_send_swap(&new_send_swap(None))?;
+        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+
+        assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
+
+        Ok(())
     }
 }

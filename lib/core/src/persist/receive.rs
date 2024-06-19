@@ -248,3 +248,78 @@ impl InternalCreateReverseResponse {
         Ok(res)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use anyhow::{anyhow, Result};
+
+    use crate::test_utils::{new_persister, new_receive_swap};
+
+    use super::PaymentState;
+
+    #[test]
+    fn test_fetch_receive_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        let receive_swap = new_receive_swap(None);
+
+        storage.insert_receive_swap(&receive_swap)?;
+        // Fetch swap by id
+        assert!(storage.fetch_receive_swap(&receive_swap.id).is_ok());
+        // Fetch swap by invoice
+        assert!(storage
+            .fetch_receive_swap_by_invoice(&receive_swap.invoice)
+            .is_ok());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_list_receive_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        // List general receive swaps
+        let range = 0..3;
+        for _ in range.clone() {
+            storage.insert_receive_swap(&new_receive_swap(None))?;
+        }
+
+        let con = storage.get_connection()?;
+        let swaps = storage.list_receive_swaps(&con, vec![])?;
+        assert_eq!(swaps.len(), range.len());
+
+        // List ongoing receive swaps
+        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        let ongoing_swaps = storage.list_ongoing_receive_swaps(&con)?;
+        assert_eq!(ongoing_swaps.len(), 4);
+
+        // List pending receive swaps
+        let ongoing_swaps = storage.list_pending_receive_swaps()?;
+        assert_eq!(ongoing_swaps.len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_receive_swap() -> Result<()> {
+        let (_temp_dir, storage) = new_persister()?;
+
+        let receive_swap = new_receive_swap(None);
+        storage.insert_receive_swap(&receive_swap)?;
+
+        // Update metadata
+        let new_state = PaymentState::Pending;
+        let claim_tx_id = Some("claim_tx_id");
+
+        storage.try_handle_receive_swap_update(&receive_swap.id, new_state, claim_tx_id, None)?;
+
+        let updated_receive_swap = storage
+            .fetch_receive_swap(&receive_swap.id)?
+            .ok_or(anyhow!("Could not find Receive swap in database"))?;
+
+        assert_eq!(new_state, updated_receive_swap.state);
+        assert_eq!(claim_tx_id, updated_receive_swap.claim_tx_id.as_deref());
+
+        Ok(())
+    }
+}
