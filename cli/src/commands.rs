@@ -21,7 +21,7 @@ use serde_json::to_string_pretty;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
-    /// Send lbtc and receive btc through a swap
+    /// Send lbtc and receive btc lightning through a swap
     SendPayment {
         /// Invoice which has to be paid
         bolt11: String,
@@ -29,6 +29,14 @@ pub(crate) enum Command {
         /// Delay for the send, in seconds
         #[arg(short, long)]
         delay: Option<u64>,
+    },
+    /// Send lbtc and receive btc onchain through a swap
+    SendOnchainPayment {
+        /// Btc onchain address to send to
+        address: String,
+
+        /// Amount that will be received, in satoshi
+        amount_sat: u64,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -168,6 +176,30 @@ pub(crate) async fn handle_command(
                 let response = sdk.send_payment(&prepare_response).await?;
                 command_result!(response)
             }
+        }
+        Command::SendOnchainPayment {
+            address,
+            amount_sat,
+        } => {
+            let prepare_res = sdk
+                .prepare_pay_onchain(&PreparePayOnchainRequest { amount_sat })
+                .await?;
+
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_res.fees_sat
+                ),
+                "Payment send halted"
+            );
+
+            let response = sdk
+                .pay_onchain(&PayOnchainRequest {
+                    address,
+                    prepare_res,
+                })
+                .await?;
+            command_result!(response)
         }
         Command::GetInfo => {
             command_result!(sdk.get_info().await?)

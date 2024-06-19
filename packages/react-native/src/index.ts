@@ -38,7 +38,8 @@ export interface BitcoinAddressData {
 
 export interface Config {
     boltzUrl: string
-    electrumUrl: string
+    liquidElectrumUrl: string
+    bitcoinElectrumUrl: string
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
@@ -140,6 +141,11 @@ export interface MessageSuccessActionData {
     message: string
 }
 
+export interface PayOnchainRequest {
+    address: string
+    prepareRes: PreparePayOnchainResponse
+}
+
 export interface Payment {
     txId?: string
     swapId?: string
@@ -152,6 +158,15 @@ export interface Payment {
     refundTxAmountSat?: number
     paymentType: PaymentType
     status: PaymentState
+}
+
+export interface PreparePayOnchainRequest {
+    amountSat: number
+}
+
+export interface PreparePayOnchainResponse {
+    amountSat: number
+    feesSat: number
 }
 
 export interface PrepareReceiveRequest {
@@ -438,6 +453,16 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
+    return response
+}
+
+export const preparePayOnchain = async (req: PreparePayOnchainRequest): Promise<PreparePayOnchainResponse> => {
+    const response = await BreezLiquidSDK.preparePayOnchain(req)
+    return response
+}
+
+export const payOnchain = async (req: PayOnchainRequest): Promise<SendPaymentResponse> => {
+    const response = await BreezLiquidSDK.payOnchain(req)
     return response
 }
 

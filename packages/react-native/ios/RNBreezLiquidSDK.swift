@@ -208,6 +208,28 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(preparePayOnchain:resolve:reject:)
+    func preparePayOnchain(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let preparePayOnchainRequest = try BreezLiquidSDKMapper.asPreparePayOnchainRequest(preparePayOnchainRequest: req)
+            var res = try getBindingLiquidSdk().preparePayOnchain(req: preparePayOnchainRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(preparePayOnchainResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(payOnchain:resolve:reject:)
+    func payOnchain(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let payOnchainRequest = try BreezLiquidSDKMapper.asPayOnchainRequest(payOnchainRequest: req)
+            var res = try getBindingLiquidSdk().payOnchain(req: payOnchainRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(sendPaymentResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(listPayments:reject:)
     func listPayments(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

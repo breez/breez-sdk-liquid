@@ -218,6 +218,7 @@ enum LiquidSdkError {
     "AlreadyStarted",
     "Generic",
     "NotStarted",
+    "ServiceConnectivity",
 };
 
 [Error]
@@ -244,7 +245,8 @@ enum PaymentError {
 
 dictionary Config {
     string boltz_url;
-    string electrum_url;
+    string liquid_electrum_url;
+    string bitcoin_electrum_url;
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
@@ -294,6 +296,20 @@ dictionary PrepareReceiveResponse {
 dictionary ReceivePaymentResponse {
     string id;
     string invoice;
+};
+
+dictionary PreparePayOnchainRequest {
+    u64 amount_sat;
+};
+
+dictionary PreparePayOnchainResponse {
+    u64 amount_sat;
+    u64 fees_sat;
+};
+
+dictionary PayOnchainRequest {
+    string address;
+    PreparePayOnchainResponse prepare_res;
 };
 
 dictionary BackupRequest {
@@ -392,6 +408,12 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=PaymentError]
+    PreparePayOnchainResponse prepare_pay_onchain(PreparePayOnchainRequest req);
+
+    [Throws=PaymentError]
+    SendPaymentResponse pay_onchain(PayOnchainRequest req);
 
     [Throws=PaymentError]
     sequence<Payment> list_payments();

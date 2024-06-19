@@ -23,6 +23,9 @@ pub enum LiquidSdkError {
 
     #[error("Liquid SDK instance is not running")]
     NotStarted,
+
+    #[error("Service connectivity: {err}")]
+    ServiceConnectivity { err: String },
 }
 
 impl From<anyhow::Error> for LiquidSdkError {
@@ -42,7 +45,7 @@ pub enum PaymentError {
     #[error("The payment is already in progress")]
     PaymentInProgress,
 
-    #[error("Invoice amount is out of range")]
+    #[error("Amount is out of range")]
     AmountOutOfRange,
 
     #[error("Generic error: {err}")]
@@ -108,24 +111,26 @@ impl From<boltz_client::error::Error> for PaymentError {
     }
 }
 
-#[allow(clippy::match_single_binding)]
-impl From<lwk_wollet::Error> for PaymentError {
-    fn from(err: lwk_wollet::Error) -> Self {
-        match err {
-            _ => PaymentError::LwkError {
-                err: format!("{err:?}"),
-            },
+impl From<boltz_client::bitcoin::hex::HexToArrayError> for PaymentError {
+    fn from(err: boltz_client::bitcoin::hex::HexToArrayError) -> Self {
+        PaymentError::Generic {
+            err: format!("{err:?}"),
         }
     }
 }
 
-#[allow(clippy::match_single_binding)]
+impl From<lwk_wollet::Error> for PaymentError {
+    fn from(err: lwk_wollet::Error) -> Self {
+        PaymentError::LwkError {
+            err: format!("{err:?}"),
+        }
+    }
+}
+
 impl From<lwk_signer::SignerError> for PaymentError {
     fn from(err: lwk_signer::SignerError) -> Self {
-        match err {
-            _ => PaymentError::SignerError {
-                err: format!("{err:?}"),
-            },
+        PaymentError::SignerError {
+            err: format!("{err:?}"),
         }
     }
 }

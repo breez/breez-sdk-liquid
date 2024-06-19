@@ -141,8 +141,11 @@ impl OnchainWallet for LiquidOnchainWallet {
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
         let mut wallet = self.wallet.lock().await;
-        let mut electrum_client =
-            ElectrumClient::new(&ElectrumUrl::new(&self.config.electrum_url, true, true))?;
+        let mut electrum_client = ElectrumClient::new(&ElectrumUrl::new(
+            &self.config.liquid_electrum_url,
+            true,
+            true,
+        ))?;
         lwk_wollet::full_scan_with_electrum_client(&mut wallet, &mut electrum_client)?;
         Ok(())
     }

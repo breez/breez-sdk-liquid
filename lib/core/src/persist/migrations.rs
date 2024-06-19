@@ -35,5 +35,24 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             amount_sat INTEGER NOT NULL,
             fees_sat INTEGER NOT NULL
         ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS chain_swaps (
+            id TEXT NOT NULL PRIMARY KEY,
+            direction INTEGER NOT NULL,
+            address TEXT NOT NULL,
+            preimage TEXT NOT NULL,
+            payer_amount_sat INTEGER NOT NULL,
+            receiver_amount_sat INTEGER NOT NULL,
+            accept_zero_conf INTEGER NOT NULL,
+            create_response_json TEXT NOT NULL,
+            claim_private_key TEXT NOT NULL,
+            refund_private_key TEXT NOT NULL,
+            server_lockup_tx_id TEXT,
+            user_lockup_tx_id TEXT,
+            claim_fees_sat INTEGER NOT NULL,
+            claim_tx_id TEXT,
+            refund_tx_id TEXT,
+            created_at INTEGER NOT NULL,
+            state INTEGER NOT NULL
+        ) STRICT;",
     ]
 }

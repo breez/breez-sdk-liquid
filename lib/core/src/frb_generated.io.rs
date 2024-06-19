@@ -270,11 +270,27 @@ impl CstDecode<crate::MessageSuccessActionData> for *mut wire_cst_message_succes
         CstDecode::<crate::MessageSuccessActionData>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::PayOnchainRequest> for *mut wire_cst_pay_onchain_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PayOnchainRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PayOnchainRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::Payment> for *mut wire_cst_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Payment {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::PreparePayOnchainRequest>
+    for *mut wire_cst_prepare_pay_onchain_request
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PreparePayOnchainRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
@@ -337,7 +353,8 @@ impl CstDecode<crate::model::Config> for wire_cst_config {
     fn cst_decode(self) -> crate::model::Config {
         crate::model::Config {
             boltz_url: self.boltz_url.cst_decode(),
-            electrum_url: self.electrum_url.cst_decode(),
+            liquid_electrum_url: self.liquid_electrum_url.cst_decode(),
+            bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
             working_dir: self.working_dir.cst_decode(),
             network: self.network.cst_decode(),
             payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
@@ -434,6 +451,12 @@ impl CstDecode<crate::error::LiquidSdkError> for wire_cst_liquid_sdk_error {
                 }
             }
             2 => crate::error::LiquidSdkError::NotStarted,
+            3 => {
+                let ans = unsafe { self.kind.ServiceConnectivity };
+                crate::error::LiquidSdkError::ServiceConnectivity {
+                    err: ans.err.cst_decode(),
+                }
+            }
             _ => unreachable!(),
         }
     }
@@ -864,6 +887,15 @@ impl CstDecode<crate::MessageSuccessActionData> for wire_cst_message_success_act
         }
     }
 }
+impl CstDecode<crate::model::PayOnchainRequest> for wire_cst_pay_onchain_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PayOnchainRequest {
+        crate::model::PayOnchainRequest {
+            address: self.address.cst_decode(),
+            prepare_res: self.prepare_res.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::Payment> for wire_cst_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Payment {
@@ -941,6 +973,23 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                 }
             }
             _ => unreachable!(),
+        }
+    }
+}
+impl CstDecode<crate::model::PreparePayOnchainRequest> for wire_cst_prepare_pay_onchain_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
+        crate::model::PreparePayOnchainRequest {
+            amount_sat: self.amount_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::PreparePayOnchainResponse> for wire_cst_prepare_pay_onchain_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PreparePayOnchainResponse {
+        crate::model::PreparePayOnchainResponse {
+            amount_sat: self.amount_sat.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
         }
     }
 }
@@ -1130,7 +1179,8 @@ impl NewWithNullPtr for wire_cst_config {
     fn new_with_null_ptr() -> Self {
         Self {
             boltz_url: core::ptr::null_mut(),
-            electrum_url: core::ptr::null_mut(),
+            liquid_electrum_url: core::ptr::null_mut(),
+            bitcoin_electrum_url: core::ptr::null_mut(),
             working_dir: core::ptr::null_mut(),
             network: Default::default(),
             payment_timeout_sec: Default::default(),
@@ -1467,6 +1517,19 @@ impl Default for wire_cst_message_success_action_data {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_pay_onchain_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            address: core::ptr::null_mut(),
+            prepare_res: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_pay_onchain_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_payment {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -1498,6 +1561,31 @@ impl NewWithNullPtr for wire_cst_payment_error {
     }
 }
 impl Default for wire_cst_payment_error {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            amount_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_pay_onchain_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_pay_onchain_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            amount_sat: Default::default(),
+            fees_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_pay_onchain_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1719,6 +1807,24 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ln
     req: *mut wire_cst_ln_url_withdraw_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_pay_onchain_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_prepare_pay_onchain_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain_impl(port_, that, req)
 }
 
 #[no_mangle]
@@ -1980,8 +2086,24 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_message_success_action
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request(
+) -> *mut wire_cst_pay_onchain_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_pay_onchain_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(
+) -> *mut wire_cst_prepare_pay_onchain_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_prepare_pay_onchain_request::new_with_null_ptr(),
+    )
 }
 
 #[no_mangle]
@@ -2148,7 +2270,8 @@ pub struct wire_cst_bitcoin_address_data {
 #[derive(Clone, Copy)]
 pub struct wire_cst_config {
     boltz_url: *mut wire_cst_list_prim_u_8_strict,
-    electrum_url: *mut wire_cst_list_prim_u_8_strict,
+    liquid_electrum_url: *mut wire_cst_list_prim_u_8_strict,
+    bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
     working_dir: *mut wire_cst_list_prim_u_8_strict,
     network: i32,
     payment_timeout_sec: u64,
@@ -2238,11 +2361,17 @@ pub struct wire_cst_liquid_sdk_error {
 #[derive(Clone, Copy)]
 pub union LiquidSdkErrorKind {
     Generic: wire_cst_LiquidSdkError_Generic,
+    ServiceConnectivity: wire_cst_LiquidSdkError_ServiceConnectivity,
     nil__: (),
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_LiquidSdkError_Generic {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LiquidSdkError_ServiceConnectivity {
     err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
@@ -2634,6 +2763,12 @@ pub struct wire_cst_message_success_action_data {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_pay_onchain_request {
+    address: *mut wire_cst_list_prim_u_8_strict,
+    prepare_res: wire_cst_prepare_pay_onchain_response,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_payment {
     tx_id: *mut wire_cst_list_prim_u_8_strict,
     swap_id: *mut wire_cst_list_prim_u_8_strict,
@@ -2700,6 +2835,17 @@ pub struct wire_cst_PaymentError_SendError {
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_SignerError {
     err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_pay_onchain_request {
+    amount_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_pay_onchain_response {
+    amount_sat: u64,
+    fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

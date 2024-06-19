@@ -93,7 +93,7 @@ jobs:
       - name: Update Swift Package definition
         working-directory: build/lib/bindings/langs/swift
         run: |
-          sed 's#.binaryTarget(name: "breez_liquid_sdkFFI", path: "./breez_liquid_sdkFFI.xcframework"),#.binaryTarget(name: "breez_liquid_sdkFFI", url: "https://github.com/breez/breez-liquid-sdk-langs/swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_liquid_sdkFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezLiquidSDKTests", dependencies: \["BreezLiquidSDK"\]),/d' Package.swift > ../../../../../dist/Package.swift
+          sed 's#.binaryTarget(name: "breez_liquid_sdkFFI", path: "./breez_liquid_sdkFFI.xcframework"),#.binaryTarget(name: "breez_liquid_sdkFFI", url: "https://github.com/breez/breez-liquid-sdk-swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_liquid_sdkFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezLiquidSDKTests", dependencies: \["BreezLiquidSDK"\]),/d' Package.swift > ../../../../../dist/Package.swift
           cp -r Sources ../../../../../dist
 
       - name: Update Cocoapods definitions

@@ -120,6 +120,20 @@ impl BindingLiquidSdk {
         self.sdk.receive_payment(&req).await
     }
 
+    pub async fn prepare_pay_onchain(
+        &self,
+        req: PreparePayOnchainRequest,
+    ) -> Result<PreparePayOnchainResponse, PaymentError> {
+        self.sdk.prepare_pay_onchain(&req).await
+    }
+
+    pub async fn pay_onchain(
+        &self,
+        req: PayOnchainRequest,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        self.sdk.pay_onchain(&req).await
+    }
+
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.sdk.list_payments().await
     }
