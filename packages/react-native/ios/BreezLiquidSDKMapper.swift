@@ -42,8 +42,11 @@ enum BreezLiquidSDKMapper {
         guard let boltzUrl = config["boltzUrl"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "boltzUrl", typeName: "Config"))
         }
-        guard let electrumUrl = config["electrumUrl"] as? String else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "electrumUrl", typeName: "Config"))
+        guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
+        }
+        guard let bitcoinElectrumUrl = config["bitcoinElectrumUrl"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinElectrumUrl", typeName: "Config"))
         }
         guard let workingDir = config["workingDir"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "workingDir", typeName: "Config"))
@@ -69,7 +72,8 @@ enum BreezLiquidSDKMapper {
 
         return Config(
             boltzUrl: boltzUrl,
-            electrumUrl: electrumUrl,
+            liquidElectrumUrl: liquidElectrumUrl,
+            bitcoinElectrumUrl: bitcoinElectrumUrl,
             workingDir: workingDir,
             network: network,
             paymentTimeoutSec: paymentTimeoutSec,
@@ -81,7 +85,8 @@ enum BreezLiquidSDKMapper {
     static func dictionaryOf(config: Config) -> [String: Any?] {
         return [
             "boltzUrl": config.boltzUrl,
-            "electrumUrl": config.electrumUrl,
+            "liquidElectrumUrl": config.liquidElectrumUrl,
+            "bitcoinElectrumUrl": config.bitcoinElectrumUrl,
             "workingDir": config.workingDir,
             "network": valueOf(network: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
@@ -337,6 +342,45 @@ enum BreezLiquidSDKMapper {
         return logEntryList.map { v -> [String: Any?] in dictionaryOf(logEntry: v) }
     }
 
+    static func asPayOnchainRequest(payOnchainRequest: [String: Any?]) throws -> PayOnchainRequest {
+        guard let address = payOnchainRequest["address"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "PayOnchainRequest"))
+        }
+        guard let prepareResTmp = payOnchainRequest["prepareRes"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareRes", typeName: "PayOnchainRequest"))
+        }
+        let prepareRes = try asPreparePayOnchainResponse(preparePayOnchainResponse: prepareResTmp)
+
+        return PayOnchainRequest(
+            address: address,
+            prepareRes: prepareRes
+        )
+    }
+
+    static func dictionaryOf(payOnchainRequest: PayOnchainRequest) -> [String: Any?] {
+        return [
+            "address": payOnchainRequest.address,
+            "prepareRes": dictionaryOf(preparePayOnchainResponse: payOnchainRequest.prepareRes),
+        ]
+    }
+
+    static func asPayOnchainRequestList(arr: [Any]) throws -> [PayOnchainRequest] {
+        var list = [PayOnchainRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var payOnchainRequest = try asPayOnchainRequest(payOnchainRequest: val)
+                list.append(payOnchainRequest)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PayOnchainRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(payOnchainRequestList: [PayOnchainRequest]) -> [Any] {
+        return payOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(payOnchainRequest: v) }
+    }
+
     static func asPayment(payment: [String: Any?]) throws -> Payment {
         var txId: String?
         if hasNonNilKey(data: payment, key: "txId") {
@@ -445,6 +489,76 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(paymentList: [Payment]) -> [Any] {
         return paymentList.map { v -> [String: Any?] in dictionaryOf(payment: v) }
+    }
+
+    static func asPreparePayOnchainRequest(preparePayOnchainRequest: [String: Any?]) throws -> PreparePayOnchainRequest {
+        guard let amountSat = preparePayOnchainRequest["amountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "PreparePayOnchainRequest"))
+        }
+
+        return PreparePayOnchainRequest(
+            amountSat: amountSat)
+    }
+
+    static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
+        return [
+            "amountSat": preparePayOnchainRequest.amountSat,
+        ]
+    }
+
+    static func asPreparePayOnchainRequestList(arr: [Any]) throws -> [PreparePayOnchainRequest] {
+        var list = [PreparePayOnchainRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var preparePayOnchainRequest = try asPreparePayOnchainRequest(preparePayOnchainRequest: val)
+                list.append(preparePayOnchainRequest)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PreparePayOnchainRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(preparePayOnchainRequestList: [PreparePayOnchainRequest]) -> [Any] {
+        return preparePayOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(preparePayOnchainRequest: v) }
+    }
+
+    static func asPreparePayOnchainResponse(preparePayOnchainResponse: [String: Any?]) throws -> PreparePayOnchainResponse {
+        guard let amountSat = preparePayOnchainResponse["amountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "PreparePayOnchainResponse"))
+        }
+        guard let feesSat = preparePayOnchainResponse["feesSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PreparePayOnchainResponse"))
+        }
+
+        return PreparePayOnchainResponse(
+            amountSat: amountSat,
+            feesSat: feesSat
+        )
+    }
+
+    static func dictionaryOf(preparePayOnchainResponse: PreparePayOnchainResponse) -> [String: Any?] {
+        return [
+            "amountSat": preparePayOnchainResponse.amountSat,
+            "feesSat": preparePayOnchainResponse.feesSat,
+        ]
+    }
+
+    static func asPreparePayOnchainResponseList(arr: [Any]) throws -> [PreparePayOnchainResponse] {
+        var list = [PreparePayOnchainResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var preparePayOnchainResponse = try asPreparePayOnchainResponse(preparePayOnchainResponse: val)
+                list.append(preparePayOnchainResponse)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PreparePayOnchainResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(preparePayOnchainResponseList: [PreparePayOnchainResponse]) -> [Any] {
+        return preparePayOnchainResponseList.map { v -> [String: Any?] in dictionaryOf(preparePayOnchainResponse: v) }
     }
 
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {

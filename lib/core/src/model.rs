@@ -1,10 +1,10 @@
 use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
-    CreateReverseResponse, CreateSubmarineResponse, Leaf, SwapTree, BOLTZ_MAINNET_URL_V2,
-    BOLTZ_TESTNET_URL_V2,
+    CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+    BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
 };
-use boltz_client::{Keypair, LBtcSwapScriptV2, ToHex};
+use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2, ToHex};
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -21,7 +21,8 @@ use crate::utils;
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
     pub boltz_url: String,
-    pub electrum_url: String,
+    pub liquid_electrum_url: String,
+    pub bitcoin_electrum_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
@@ -40,7 +41,8 @@ impl Config {
     pub fn mainnet() -> Self {
         Config {
             boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
-            electrum_url: "blockstream.info:995".to_string(),
+            liquid_electrum_url: "blockstream.info:995".to_string(),
+            bitcoin_electrum_url: "blockstream.info:700".to_string(),
             working_dir: ".".to_string(),
             network: Network::Mainnet,
             payment_timeout_sec: 15,
@@ -52,7 +54,8 @@ impl Config {
     pub fn testnet() -> Self {
         Config {
             boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
-            electrum_url: "blockstream.info:465".to_string(),
+            liquid_electrum_url: "blockstream.info:465".to_string(),
+            bitcoin_electrum_url: "blockstream.info:993".to_string(),
             working_dir: ".".to_string(),
             network: Network::Testnet,
             payment_timeout_sec: 15,
@@ -73,6 +76,14 @@ pub enum Network {
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
+}
+impl Network {
+    pub fn as_bitcoin_chain(&self) -> Chain {
+        match self {
+            Network::Mainnet => Chain::Bitcoin,
+            Network::Testnet => Chain::BitcoinTestnet,
+        }
+    }
 }
 
 impl From<Network> for ElementsNetwork {
@@ -176,6 +187,23 @@ pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct PreparePayOnchainRequest {
+    pub amount_sat: u64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PreparePayOnchainResponse {
+    pub amount_sat: u64,
+    pub fees_sat: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PayOnchainRequest {
+    pub address: String,
+    pub prepare_res: PreparePayOnchainResponse,
+}
+
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
@@ -201,16 +229,190 @@ pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
 
+// A swap enum variant
 #[derive(Clone, Debug)]
 pub(crate) enum Swap {
+    Chain(ChainSwap),
     Send(SendSwap),
     Receive(ReceiveSwap),
 }
 impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
-            Swap::Send(SendSwap { id, .. }) | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
+            Swap::Chain(ChainSwap { id, .. })
+            | Swap::Send(SendSwap { id, .. })
+            | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum SwapScriptV2 {
+    Bitcoin(BtcSwapScriptV2),
+    Liquid(LBtcSwapScriptV2),
+}
+impl SwapScriptV2 {
+    pub(crate) fn as_bitcoin_script(&self) -> Result<BtcSwapScriptV2> {
+        match self {
+            SwapScriptV2::Bitcoin(script) => Ok(script.clone()),
+            _ => Err(anyhow!("Invalid chain")),
+        }
+    }
+
+    pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScriptV2> {
+        match self {
+            SwapScriptV2::Liquid(script) => Ok(script.clone()),
+            _ => Err(anyhow!("Invalid chain")),
+        }
+    }
+}
+
+#[allow(clippy::large_enum_variant)]
+pub(crate) enum SwapTxV2 {
+    Bitcoin(BtcSwapTxV2),
+    Liquid(LBtcSwapTxV2),
+}
+impl SwapTxV2 {
+    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTxV2> {
+        match self {
+            SwapTxV2::Bitcoin(tx) => Ok(tx.clone()),
+            _ => Err(anyhow!("Invalid chain")),
+        }
+    }
+
+    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTxV2> {
+        match self {
+            SwapTxV2::Liquid(tx) => Ok(tx.clone()),
+            _ => Err(anyhow!("Invalid chain")),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+pub enum Direction {
+    Incoming = 0,
+    Outgoing = 1,
+}
+impl ToSql for Direction {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
+    }
+}
+impl FromSql for Direction {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Integer(i) => match i as u8 {
+                0 => Ok(Direction::Incoming),
+                1 => Ok(Direction::Outgoing),
+                _ => Err(FromSqlError::OutOfRange(i)),
+            },
+            _ => Err(FromSqlError::InvalidType),
+        }
+    }
+}
+
+/// A chain swap
+#[derive(Clone, Debug)]
+pub(crate) struct ChainSwap {
+    pub(crate) id: String,
+    pub(crate) direction: Direction,
+    pub(crate) address: String,
+    pub(crate) preimage: String,
+    pub(crate) payer_amount_sat: u64,
+    pub(crate) receiver_amount_sat: u64,
+    pub(crate) claim_fees_sat: u64,
+    pub(crate) accept_zero_conf: bool,
+    /// JSON representation of [crate::persist::send::InternalCreateChainResponse]
+    pub(crate) create_response_json: String,
+    /// Persisted only when the server lockup tx is successfully broadcast
+    pub(crate) server_lockup_tx_id: Option<String>,
+    /// Persisted only when the user lockup tx is successfully broadcast
+    pub(crate) user_lockup_tx_id: Option<String>,
+    /// Persisted as soon as a claim tx is broadcast
+    pub(crate) claim_tx_id: Option<String>,
+    /// Persisted as soon as a refund tx is broadcast
+    pub(crate) refund_tx_id: Option<String>,
+    pub(crate) created_at: u32,
+    pub(crate) state: PaymentState,
+    pub(crate) claim_private_key: String,
+    pub(crate) refund_private_key: String,
+}
+impl ChainSwap {
+    pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
+    }
+
+    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, PaymentError> {
+        utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
+    }
+
+    pub(crate) fn get_boltz_create_response(&self) -> Result<CreateChainResponse> {
+        let internal_create_response: crate::persist::chain::InternalCreateChainResponse =
+            serde_json::from_str(&self.create_response_json).map_err(|e| {
+                anyhow!("Failed to deserialize InternalCreateSubmarineResponse: {e:?}")
+            })?;
+
+        Ok(CreateChainResponse {
+            id: self.id.clone(),
+            claim_details: internal_create_response.claim_details,
+            lockup_details: internal_create_response.lockup_details,
+        })
+    }
+
+    pub(crate) fn get_claim_swap_script(&self) -> Result<SwapScriptV2, PaymentError> {
+        let chain_swap_details = self.get_boltz_create_response()?.claim_details;
+        let our_pubkey = self.get_claim_keypair()?.public_key();
+        let swap_script = match self.direction {
+            Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+                Side::To,
+                chain_swap_details,
+                our_pubkey.into(),
+            )?),
+            Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+                Side::To,
+                chain_swap_details,
+                our_pubkey.into(),
+            )?),
+        };
+        Ok(swap_script)
+    }
+
+    pub(crate) fn get_lockup_swap_script(&self) -> Result<SwapScriptV2, PaymentError> {
+        let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
+        let our_pubkey = self.get_refund_keypair()?.public_key();
+        let swap_script = match self.direction {
+            Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+                Side::From,
+                chain_swap_details,
+                our_pubkey.into(),
+            )?),
+            Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+                Side::From,
+                chain_swap_details,
+                our_pubkey.into(),
+            )?),
+        };
+        Ok(swap_script)
+    }
+
+    pub(crate) fn from_boltz_struct_to_json(
+        create_response: &CreateChainResponse,
+        expected_swap_id: &str,
+    ) -> Result<String, PaymentError> {
+        let internal_create_response =
+            crate::persist::chain::InternalCreateChainResponse::try_convert_from_boltz(
+                create_response,
+                expected_swap_id,
+            )?;
+
+        let create_response_json =
+            serde_json::to_string(&internal_create_response).map_err(|e| {
+                PaymentError::Generic {
+                    err: format!("Failed to serialize InternalCreateChainResponse: {e:?}"),
+                }
+            })?;
+
+        Ok(create_response_json)
     }
 }
 
@@ -461,6 +663,14 @@ pub enum PaymentType {
     Receive = 0,
     Send = 1,
 }
+impl From<Direction> for PaymentType {
+    fn from(value: Direction) -> Self {
+        match value {
+            Direction::Incoming => Self::Receive,
+            Direction::Outgoing => Self::Send,
+        }
+    }
+}
 impl ToSql for PaymentType {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -533,7 +743,7 @@ pub struct PaymentSwapData {
 
     pub preimage: Option<String>,
 
-    pub bolt11: String,
+    pub bolt11: Option<String>,
 
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
@@ -622,7 +832,7 @@ impl Payment {
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             preimage: swap.preimage,
-            bolt11: Some(swap.bolt11),
+            bolt11: swap.bolt11,
             refund_tx_id: swap.refund_tx_id,
             refund_tx_amount_sat: swap.refund_tx_amount_sat,
             payment_type,
@@ -647,7 +857,7 @@ impl Payment {
                 },
             },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
-            bolt11: swap.as_ref().map(|s| s.bolt11.clone()),
+            bolt11: swap.as_ref().and_then(|s| s.bolt11.clone()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,

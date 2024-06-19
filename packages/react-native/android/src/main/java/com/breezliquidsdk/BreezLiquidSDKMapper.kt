@@ -38,7 +38,8 @@ fun asConfig(config: ReadableMap): Config? {
             config,
             arrayOf(
                 "boltzUrl",
-                "electrumUrl",
+                "liquidElectrumUrl",
+                "bitcoinElectrumUrl",
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
@@ -49,7 +50,8 @@ fun asConfig(config: ReadableMap): Config? {
         return null
     }
     val boltzUrl = config.getString("boltzUrl")!!
-    val electrumUrl = config.getString("electrumUrl")!!
+    val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
+    val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
@@ -66,7 +68,8 @@ fun asConfig(config: ReadableMap): Config? {
         }
     return Config(
         boltzUrl,
-        electrumUrl,
+        liquidElectrumUrl,
+        bitcoinElectrumUrl,
         workingDir,
         network,
         paymentTimeoutSec,
@@ -78,7 +81,8 @@ fun asConfig(config: ReadableMap): Config? {
 fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
         "boltzUrl" to config.boltzUrl,
-        "electrumUrl" to config.electrumUrl,
+        "liquidElectrumUrl" to config.liquidElectrumUrl,
+        "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
@@ -286,6 +290,42 @@ fun asLogEntryList(arr: ReadableArray): List<LogEntry> {
     return list
 }
 
+fun asPayOnchainRequest(payOnchainRequest: ReadableMap): PayOnchainRequest? {
+    if (!validateMandatoryFields(
+            payOnchainRequest,
+            arrayOf(
+                "address",
+                "prepareRes",
+            ),
+        )
+    ) {
+        return null
+    }
+    val address = payOnchainRequest.getString("address")!!
+    val prepareRes = payOnchainRequest.getMap("prepareRes")?.let { asPreparePayOnchainResponse(it) }!!
+    return PayOnchainRequest(
+        address,
+        prepareRes,
+    )
+}
+
+fun readableMapOf(payOnchainRequest: PayOnchainRequest): ReadableMap =
+    readableMapOf(
+        "address" to payOnchainRequest.address,
+        "prepareRes" to readableMapOf(payOnchainRequest.prepareRes),
+    )
+
+fun asPayOnchainRequestList(arr: ReadableArray): List<PayOnchainRequest> {
+    val list = ArrayList<PayOnchainRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPayOnchainRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPayment(payment: ReadableMap): Payment? {
     if (!validateMandatoryFields(
             payment,
@@ -346,6 +386,74 @@ fun asPaymentList(arr: ReadableArray): List<Payment> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPayment(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePayOnchainRequest? {
+    if (!validateMandatoryFields(
+            preparePayOnchainRequest,
+            arrayOf(
+                "amountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val amountSat = preparePayOnchainRequest.getDouble("amountSat").toULong()
+    return PreparePayOnchainRequest(
+        amountSat,
+    )
+}
+
+fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
+    readableMapOf(
+        "amountSat" to preparePayOnchainRequest.amountSat,
+    )
+
+fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
+    val list = ArrayList<PreparePayOnchainRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPreparePayOnchainRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPreparePayOnchainResponse(preparePayOnchainResponse: ReadableMap): PreparePayOnchainResponse? {
+    if (!validateMandatoryFields(
+            preparePayOnchainResponse,
+            arrayOf(
+                "amountSat",
+                "feesSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val amountSat = preparePayOnchainResponse.getDouble("amountSat").toULong()
+    val feesSat = preparePayOnchainResponse.getDouble("feesSat").toULong()
+    return PreparePayOnchainResponse(
+        amountSat,
+        feesSat,
+    )
+}
+
+fun readableMapOf(preparePayOnchainResponse: PreparePayOnchainResponse): ReadableMap =
+    readableMapOf(
+        "amountSat" to preparePayOnchainResponse.amountSat,
+        "feesSat" to preparePayOnchainResponse.feesSat,
+    )
+
+fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainResponse> {
+    val list = ArrayList<PreparePayOnchainResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPreparePayOnchainResponse(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

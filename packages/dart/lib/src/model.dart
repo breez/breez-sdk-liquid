@@ -31,7 +31,8 @@ class BackupRequest {
 /// Configuration for the Liquid SDK
 class Config {
   final String boltzUrl;
-  final String electrumUrl;
+  final String liquidElectrumUrl;
+  final String bitcoinElectrumUrl;
 
   /// Directory in which all SDK files (DB, log, cache) are stored.
   ///
@@ -51,7 +52,8 @@ class Config {
 
   const Config({
     required this.boltzUrl,
-    required this.electrumUrl,
+    required this.liquidElectrumUrl,
+    required this.bitcoinElectrumUrl,
     required this.workingDir,
     required this.network,
     required this.paymentTimeoutSec,
@@ -62,7 +64,8 @@ class Config {
   @override
   int get hashCode =>
       boltzUrl.hashCode ^
-      electrumUrl.hashCode ^
+      liquidElectrumUrl.hashCode ^
+      bitcoinElectrumUrl.hashCode ^
       workingDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
@@ -75,7 +78,8 @@ class Config {
       other is Config &&
           runtimeType == other.runtimeType &&
           boltzUrl == other.boltzUrl &&
-          electrumUrl == other.electrumUrl &&
+          liquidElectrumUrl == other.liquidElectrumUrl &&
+          bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
           workingDir == other.workingDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
@@ -254,6 +258,27 @@ enum Network {
   ;
 }
 
+class PayOnchainRequest {
+  final String address;
+  final PreparePayOnchainResponse prepareRes;
+
+  const PayOnchainRequest({
+    required this.address,
+    required this.prepareRes,
+  });
+
+  @override
+  int get hashCode => address.hashCode ^ prepareRes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PayOnchainRequest &&
+          runtimeType == other.runtimeType &&
+          address == other.address &&
+          prepareRes == other.prepareRes;
+}
+
 /// Represents an SDK payment.
 ///
 /// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
@@ -416,6 +441,43 @@ enum PaymentType {
   receive,
   send,
   ;
+}
+
+class PreparePayOnchainRequest {
+  final BigInt amountSat;
+
+  const PreparePayOnchainRequest({
+    required this.amountSat,
+  });
+
+  @override
+  int get hashCode => amountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PreparePayOnchainRequest && runtimeType == other.runtimeType && amountSat == other.amountSat;
+}
+
+class PreparePayOnchainResponse {
+  final BigInt amountSat;
+  final BigInt feesSat;
+
+  const PreparePayOnchainResponse({
+    required this.amountSat,
+    required this.feesSat,
+  });
+
+  @override
+  int get hashCode => amountSat.hashCode ^ feesSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PreparePayOnchainResponse &&
+          runtimeType == other.runtimeType &&
+          amountSat == other.amountSat &&
+          feesSat == other.feesSat;
 }
 
 class PrepareReceiveRequest {
