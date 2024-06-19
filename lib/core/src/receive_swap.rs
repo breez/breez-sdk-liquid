@@ -51,9 +51,8 @@ impl ReceiveSwapStateHandler {
 
     /// Handles status updates from Boltz for Receive swaps
     pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
-        let id = update.id();
-        let swap_state = update.status();
-
+        let id = &update.id;
+        let swap_state = &update.status;
         let receive_swap = self
             .persister
             .fetch_receive_swap(id)?
@@ -75,7 +74,7 @@ impl ReceiveSwapStateHandler {
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // Execute 0-conf preconditions check
             Ok(RevSwapStates::TransactionMempool) => {
-                let boltzv2::Update::TransactionMempool { transaction, .. } = update else {
+                let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
 

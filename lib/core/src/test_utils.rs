@@ -2,7 +2,11 @@
 use std::sync::Arc;
 
 use crate::{
-    model::{Config, Network, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
+    chain_swap::ChainSwapStateHandler,
+    model::{
+        ChainSwap, Config, Direction, Network, PaymentState, PaymentTxData, PaymentType,
+        ReceiveSwap, SendSwap,
+    },
     persist::Persister,
     receive_swap::ReceiveSwapStateHandler,
     send_swap::SendSwapStateHandler,
@@ -15,6 +19,7 @@ use anyhow::{anyhow, Result};
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
 use lwk_wollet::{ElectrumClient, ElectrumUrl};
 use tempdir::TempDir;
+use tokio::sync::Mutex;
 
 pub(crate) const TEST_MNEMONIC: &str =
     "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
@@ -25,11 +30,11 @@ pub(crate) fn new_send_swap_state_handler(
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone()));
-    let chain_service = Arc::new(ElectrumClient::new(&ElectrumUrl::new(
-        &config.electrum_url,
+    let chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
+        &config.liquid_electrum_url,
         true,
         true,
-    ))?);
+    ))?));
 
     Ok(SendSwapStateHandler::new(
         config,
@@ -53,6 +58,27 @@ pub(crate) fn new_receive_swap_state_handler(
         persister,
         swapper,
     ))
+}
+
+pub(crate) fn new_chain_swap_state_handler(
+    persister: Arc<Persister>,
+) -> Result<ChainSwapStateHandler> {
+    let config = Config::testnet();
+    let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
+    let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+    let liquid_chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
+        &config.liquid_electrum_url,
+        true,
+        true,
+    ))?));
+
+    ChainSwapStateHandler::new(
+        config,
+        onchain_wallet,
+        persister,
+        swapper,
+        liquid_chain_service,
+    )
 }
 
 pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
@@ -99,6 +125,33 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         claim_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
+    }
+}
+
+pub(crate) fn new_chain_swap(payment_state: Option<PaymentState>) -> ChainSwap {
+    let id = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(4)
+        .map(char::from)
+        .collect();
+    ChainSwap {
+        id,
+        direction: Direction::Incoming,
+        address: "".to_string(),
+        preimage: "".to_string(),
+        create_response_json: "{}".to_string(),
+        claim_private_key: "".to_string(),
+        refund_private_key: "".to_string(),
+        payer_amount_sat: 0,
+        receiver_amount_sat: 0,
+        claim_fees_sat: 0,
+        server_lockup_tx_id: None,
+        user_lockup_tx_id: None,
+        claim_tx_id: None,
+        refund_tx_id: None,
+        created_at: utils::now(),
+        state: payment_state.unwrap_or(PaymentState::Created),
+        accept_zero_conf: false,
     }
 }
 

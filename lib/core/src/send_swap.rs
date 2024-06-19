@@ -4,16 +4,16 @@ use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltzv2;
 use boltz_client::swaps::{boltz::SubSwapStates, boltzv2::CreateSubmarineResponse};
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Amount, Bolt11Invoice, ToHex};
+use boltz_client::{Bolt11Invoice, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::elements::Transaction;
 use lwk_wollet::hashes::{sha256, Hash};
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, Mutex};
 
+use crate::chain::ChainService;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{Config, SendSwap};
-use crate::sdk::ChainService;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, get_invoice_amount};
@@ -28,7 +28,7 @@ pub(crate) struct SendSwapStateHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
-    chain_service: Arc<dyn ChainService>,
+    chain_service: Arc<Mutex<dyn ChainService>>,
     subscription_notifier: broadcast::Sender<String>,
 }
 
@@ -38,7 +38,7 @@ impl SendSwapStateHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        chain_service: Arc<dyn ChainService>,
+        chain_service: Arc<Mutex<dyn ChainService>>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -57,8 +57,8 @@ impl SendSwapStateHandler {
 
     /// Handles status updates from Boltz for Send swaps
     pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
-        let id = update.id();
-        let swap_state = update.status();
+        let id = &update.id;
+        let swap_state = &update.status;
         let swap = self
             .persister
             .fetch_send_swap_by_id(id)?
@@ -124,7 +124,9 @@ impl SendSwapStateHandler {
                     }
                     None => {
                         debug!("The claim tx was a script path spend (non-cooperative claim)");
-                        let preimage = self.get_preimage_from_script_path_claim_spend(&swap)?;
+                        let preimage = self
+                            .get_preimage_from_script_path_claim_spend(&swap)
+                            .await?;
                         self.validate_send_swap_preimage(id, &swap.invoice, &preimage)
                             .await?;
                         self.update_swap_info(id, Complete, Some(&preimage), None, None)
@@ -200,7 +202,12 @@ impl SendSwapStateHandler {
             )
             .await?;
 
-        let lockup_tx_id = self.chain_service.broadcast(&lockup_tx)?.to_string();
+        let lockup_tx_id = self
+            .chain_service
+            .lock()
+            .await
+            .broadcast(&lockup_tx)?
+            .to_string();
 
         debug!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
         Ok(lockup_tx)
@@ -246,7 +253,7 @@ impl SendSwapStateHandler {
             &send_swap.id
         );
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let claim_tx_details = self.swapper.get_claim_tx_details(send_swap)?;
+        let claim_tx_details = self.swapper.get_send_claim_tx_details(send_swap)?;
         self.update_swap_info(
             &send_swap.id,
             Complete,
@@ -260,7 +267,7 @@ impl SendSwapStateHandler {
         Ok(())
     }
 
-    fn get_preimage_from_script_path_claim_spend(
+    async fn get_preimage_from_script_path_claim_spend(
         &self,
         swap: &SendSwap,
     ) -> Result<String, PaymentError> {
@@ -276,6 +283,8 @@ impl SendSwapStateHandler {
         // Get tx history of the swap script (lockup address)
         let history: Vec<_> = self
             .chain_service
+            .lock()
+            .await
             .get_scripts_history(&[&swap_script_pk])?
             .into_iter()
             .flatten()
@@ -299,6 +308,8 @@ impl SendSwapStateHandler {
 
                 let claim_tx = self
                     .chain_service
+                    .lock()
+                    .await
                     .get_transactions(&[claim_tx_id])
                     .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
                     .first()
@@ -349,16 +360,15 @@ impl SendSwapStateHandler {
             .all_fees()
             .values()
             .sum();
-        let broadcast_fees_sat = Amount::from_sat(fee);
 
-        let refund_res =
-            self.swapper
-                .refund_send_swap_cooperative(swap, &output_address, broadcast_fees_sat);
+        let refund_res = self
+            .swapper
+            .refund_send_swap_cooperative(swap, &output_address, fee);
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
                 warn!("Cooperative refund failed: {:?}", e);
-                self.refund_non_cooperative(swap, broadcast_fees_sat).await
+                self.refund_non_cooperative(swap, fee).await
             }
         }
     }
@@ -366,7 +376,7 @@ impl SendSwapStateHandler {
     async fn refund_non_cooperative(
         &self,
         swap: &SendSwap,
-        broadcast_fees_sat: Amount,
+        broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
         info!(
             "Initiating non-cooperative refund for Send Swap {}",

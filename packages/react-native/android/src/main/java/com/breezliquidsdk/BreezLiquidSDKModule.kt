@@ -244,6 +244,42 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
+    fun preparePayOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val preparePayOnchainRequest =
+                    asPreparePayOnchainRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PreparePayOnchainRequest")) }
+                val res = getBindingLiquidSdk().preparePayOnchain(preparePayOnchainRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun payOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val payOnchainRequest =
+                    asPayOnchainRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PayOnchainRequest")) }
+                val res = getBindingLiquidSdk().payOnchain(payOnchainRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listPayments(promise: Promise) {
         executor.execute {
             try {
