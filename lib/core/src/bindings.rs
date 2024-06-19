@@ -61,7 +61,7 @@ pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
 }
 
 #[frb(sync)]
-pub fn default_config(network: LiquidSdkNetwork) -> Config {
+pub fn default_config(network: LiquidNetwork) -> Config {
     LiquidSdk::default_config(network)
 }
 

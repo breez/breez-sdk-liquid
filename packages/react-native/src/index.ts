@@ -40,7 +40,7 @@ export interface Config {
     boltzUrl: string
     electrumUrl: string
     workingDir: string
-    network: LiquidSdkNetwork
+    network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRate: number
     zeroConfMaxAmountSat?: number
@@ -253,6 +253,11 @@ export type InputType = {
     data: LnUrlErrorData
 }
 
+export enum LiquidNetwork {
+    MAINNET = "mainnet",
+    TESTNET = "testnet"
+}
+
 export enum LiquidSdkEventVariant {
     PAYMENT_FAILED = "paymentFailed",
     PAYMENT_PENDING = "paymentPending",
@@ -283,11 +288,6 @@ export type LiquidSdkEvent = {
     details: Payment
 } | {
     type: LiquidSdkEventVariant.SYNCED
-}
-
-export enum LiquidSdkNetwork {
-    MAINNET = "mainnet",
-    TESTNET = "testnet"
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -395,7 +395,7 @@ export const setLogger = async (logger: Logger): Promise<EmitterSubscription> =>
     return subscription
 }
 
-export const defaultConfig = async (network: LiquidSdkNetwork): Promise<Config> => {
+export const defaultConfig = async (network: LiquidNetwork): Promise<Config> => {
     const response = await BreezLiquidSDK.defaultConfig(network)
     return response
 }

@@ -132,7 +132,7 @@ fun asConfig(config: ReadableMap): Config? {
     val boltzUrl = config.getString("boltzUrl")!!
     val electrumUrl = config.getString("electrumUrl")!!
     val workingDir = config.getString("workingDir")!!
-    val network = config.getString("network")?.let { asLiquidSdkNetwork(it) }!!
+    val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate")
     val zeroConfMaxAmountSat =
@@ -1314,6 +1314,19 @@ fun asInputTypeList(arr: ReadableArray): List<InputType> {
     return list
 }
 
+fun asLiquidNetwork(type: String): LiquidNetwork = LiquidNetwork.valueOf(camelToUpperSnakeCase(type))
+
+fun asLiquidNetworkList(arr: ReadableArray): List<LiquidNetwork> {
+    val list = ArrayList<LiquidNetwork>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is String -> list.add(asLiquidNetwork(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLiquidSdkEvent(liquidSdkEvent: ReadableMap): LiquidSdkEvent? {
     val type = liquidSdkEvent.getString("type")
 
@@ -1380,19 +1393,6 @@ fun asLiquidSdkEventList(arr: ReadableArray): List<LiquidSdkEvent> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLiquidSdkEvent(value)!!)
-            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asLiquidSdkNetwork(type: String): LiquidSdkNetwork = LiquidSdkNetwork.valueOf(camelToUpperSnakeCase(type))
-
-fun asLiquidSdkNetworkList(arr: ReadableArray): List<LiquidSdkNetwork> {
-    val list = ArrayList<LiquidSdkNetwork>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is String -> list.add(asLiquidSdkNetwork(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

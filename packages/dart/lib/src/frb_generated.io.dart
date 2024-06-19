@@ -169,13 +169,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType dco_decode_input_type(dynamic raw);
 
   @protected
+  LiquidNetwork dco_decode_liquid_network(dynamic raw);
+
+  @protected
   LiquidSdkError dco_decode_liquid_sdk_error(dynamic raw);
 
   @protected
   LiquidSdkEvent dco_decode_liquid_sdk_event(dynamic raw);
-
-  @protected
-  LiquidSdkNetwork dco_decode_liquid_sdk_network(dynamic raw);
 
   @protected
   List<Payment> dco_decode_list_payment(dynamic raw);
@@ -464,13 +464,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType sse_decode_input_type(SseDeserializer deserializer);
 
   @protected
+  LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
+
+  @protected
   LiquidSdkError sse_decode_liquid_sdk_error(SseDeserializer deserializer);
 
   @protected
   LiquidSdkEvent sse_decode_liquid_sdk_event(SseDeserializer deserializer);
-
-  @protected
-  LiquidSdkNetwork sse_decode_liquid_sdk_network(SseDeserializer deserializer);
 
   @protected
   List<Payment> sse_decode_list_payment(SseDeserializer deserializer);
@@ -1147,7 +1147,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.boltz_url = cst_encode_String(apiObj.boltzUrl);
     wireObj.electrum_url = cst_encode_String(apiObj.electrumUrl);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
-    wireObj.network = cst_encode_liquid_sdk_network(apiObj.network);
+    wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.zero_conf_min_fee_rate = cst_encode_f_32(apiObj.zeroConfMinFeeRate);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
@@ -1792,7 +1792,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_i_32(int raw);
 
   @protected
-  int cst_encode_liquid_sdk_network(LiquidSdkNetwork raw);
+  int cst_encode_liquid_network(LiquidNetwork raw);
 
   @protected
   int cst_encode_network(Network raw);
@@ -1964,13 +1964,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_input_type(InputType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
+
+  @protected
   void sse_encode_liquid_sdk_error(LiquidSdkError self, SseSerializer serializer);
 
   @protected
   void sse_encode_liquid_sdk_event(LiquidSdkEvent self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_liquid_sdk_network(LiquidSdkNetwork self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_payment(List<Payment> self, SseSerializer serializer);

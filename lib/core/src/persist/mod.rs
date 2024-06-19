@@ -10,16 +10,16 @@ use migrations::current_migrations;
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
 
-use crate::model::{LiquidSdkNetwork::*, *};
+use crate::model::{LiquidNetwork::*, *};
 use crate::utils;
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
-    network: LiquidSdkNetwork,
+    network: LiquidNetwork,
 }
 
 impl Persister {
-    pub fn new(working_dir: &str, network: LiquidSdkNetwork) -> Result<Self> {
+    pub fn new(working_dir: &str, network: LiquidNetwork) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;

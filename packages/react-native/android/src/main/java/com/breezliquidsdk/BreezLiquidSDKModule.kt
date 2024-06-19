@@ -61,7 +61,7 @@ class BreezLiquidSDKModule(
     ) {
         executor.execute {
             try {
-                val networkTmp = asLiquidSdkNetwork(network)
+                val networkTmp = asLiquidNetwork(network)
                 val res = defaultConfig(networkTmp)
                 val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezLiquidSdk")
 

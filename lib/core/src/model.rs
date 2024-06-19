@@ -27,7 +27,7 @@ pub struct Config {
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
-    pub network: LiquidSdkNetwork,
+    pub network: LiquidNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in sat/vbyte
@@ -43,7 +43,7 @@ impl Config {
             boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
             electrum_url: "blockstream.info:995".to_string(),
             working_dir: ".".to_string(),
-            network: LiquidSdkNetwork::Mainnet,
+            network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
@@ -55,7 +55,7 @@ impl Config {
             boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
             electrum_url: "blockstream.info:465".to_string(),
             working_dir: ".".to_string(),
-            network: LiquidSdkNetwork::Testnet,
+            network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
@@ -68,58 +68,60 @@ impl Config {
     }
 }
 
+/// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
+/// Bitcoin network used.
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
-pub enum LiquidSdkNetwork {
+pub enum LiquidNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
 }
 
-impl From<LiquidSdkNetwork> for ElementsNetwork {
-    fn from(value: LiquidSdkNetwork) -> Self {
+impl From<LiquidNetwork> for ElementsNetwork {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidSdkNetwork::Mainnet => ElementsNetwork::Liquid,
-            LiquidSdkNetwork::Testnet => ElementsNetwork::LiquidTestnet,
+            LiquidNetwork::Mainnet => ElementsNetwork::Liquid,
+            LiquidNetwork::Testnet => ElementsNetwork::LiquidTestnet,
         }
     }
 }
 
-impl From<LiquidSdkNetwork> for Chain {
-    fn from(value: LiquidSdkNetwork) -> Self {
+impl From<LiquidNetwork> for Chain {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidSdkNetwork::Mainnet => Chain::Liquid,
-            LiquidSdkNetwork::Testnet => Chain::LiquidTestnet,
+            LiquidNetwork::Mainnet => Chain::Liquid,
+            LiquidNetwork::Testnet => Chain::LiquidTestnet,
         }
     }
 }
 
-impl TryFrom<&str> for LiquidSdkNetwork {
+impl TryFrom<&str> for LiquidNetwork {
     type Error = anyhow::Error;
 
-    fn try_from(value: &str) -> Result<LiquidSdkNetwork, anyhow::Error> {
+    fn try_from(value: &str) -> Result<LiquidNetwork, anyhow::Error> {
         match value.to_lowercase().as_str() {
-            "mainnet" => Ok(LiquidSdkNetwork::Mainnet),
-            "testnet" => Ok(LiquidSdkNetwork::Testnet),
+            "mainnet" => Ok(LiquidNetwork::Mainnet),
+            "testnet" => Ok(LiquidNetwork::Testnet),
             _ => Err(anyhow!("Invalid network")),
         }
     }
 }
 
-impl From<LiquidSdkNetwork> for sdk_common::prelude::Network {
-    fn from(value: LiquidSdkNetwork) -> Self {
+impl From<LiquidNetwork> for sdk_common::prelude::Network {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidSdkNetwork::Mainnet => Self::Bitcoin,
-            LiquidSdkNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Mainnet => Self::Bitcoin,
+            LiquidNetwork::Testnet => Self::Testnet,
         }
     }
 }
 
-impl From<LiquidSdkNetwork> for sdk_common::bitcoin::Network {
-    fn from(value: LiquidSdkNetwork) -> Self {
+impl From<LiquidNetwork> for sdk_common::bitcoin::Network {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidSdkNetwork::Mainnet => Self::Bitcoin,
-            LiquidSdkNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Mainnet => Self::Bitcoin,
+            LiquidNetwork::Testnet => Self::Testnet,
         }
     }
 }

@@ -110,7 +110,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req});
 
-  Config crateBindingsDefaultConfig({required LiquidSdkNetwork network});
+  Config crateBindingsDefaultConfig({required LiquidNetwork network});
 
   Future<InputType> crateBindingsParse({required String input});
 
@@ -582,10 +582,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Config crateBindingsDefaultConfig({required LiquidSdkNetwork network}) {
+  Config crateBindingsDefaultConfig({required LiquidNetwork network}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
-        var arg0 = cst_encode_liquid_sdk_network(network);
+        var arg0 = cst_encode_liquid_network(network);
         return wire.wire__crate__bindings__default_config(arg0);
       },
       codec: DcoCodec(
@@ -939,7 +939,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       boltzUrl: dco_decode_String(arr[0]),
       electrumUrl: dco_decode_String(arr[1]),
       workingDir: dco_decode_String(arr[2]),
-      network: dco_decode_liquid_sdk_network(arr[3]),
+      network: dco_decode_liquid_network(arr[3]),
       paymentTimeoutSec: dco_decode_u_64(arr[4]),
       zeroConfMinFeeRate: dco_decode_f_32(arr[5]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
@@ -1024,6 +1024,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiquidNetwork dco_decode_liquid_network(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return LiquidNetwork.values[raw as int];
+  }
+
+  @protected
   LiquidSdkError dco_decode_liquid_sdk_error(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -1073,12 +1079,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
-  }
-
-  @protected
-  LiquidSdkNetwork dco_decode_liquid_sdk_network(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return LiquidSdkNetwork.values[raw as int];
   }
 
   @protected
@@ -1986,7 +1986,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_boltzUrl = sse_decode_String(deserializer);
     var var_electrumUrl = sse_decode_String(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
-    var var_network = sse_decode_liquid_sdk_network(deserializer);
+    var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_zeroConfMinFeeRate = sse_decode_f_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -2070,6 +2070,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return LiquidNetwork.values[inner];
+  }
+
+  @protected
   LiquidSdkError sse_decode_liquid_sdk_error(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2116,13 +2123,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
-  }
-
-  @protected
-  LiquidSdkNetwork sse_decode_liquid_sdk_network(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return LiquidSdkNetwork.values[inner];
   }
 
   @protected
@@ -2781,7 +2781,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int cst_encode_liquid_sdk_network(LiquidSdkNetwork raw) {
+  int cst_encode_liquid_network(LiquidNetwork raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
   }
@@ -3106,7 +3106,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.boltzUrl, serializer);
     sse_encode_String(self.electrumUrl, serializer);
     sse_encode_String(self.workingDir, serializer);
-    sse_encode_liquid_sdk_network(self.network, serializer);
+    sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_f_32(self.zeroConfMinFeeRate, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
@@ -3174,6 +3174,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_liquid_sdk_error(LiquidSdkError self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
@@ -3216,12 +3222,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
-  }
-
-  @protected
-  void sse_encode_liquid_sdk_network(LiquidSdkNetwork self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

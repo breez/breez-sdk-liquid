@@ -38,7 +38,7 @@ class Config {
   ///
   /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
-  final LiquidSdkNetwork network;
+  final LiquidNetwork network;
 
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
@@ -138,6 +138,17 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+/// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
+/// Bitcoin network used.
+enum LiquidNetwork {
+  /// Mainnet Bitcoin and Liquid chains
+  mainnet,
+
+  /// Testnet Bitcoin and Liquid chains
+  testnet,
+  ;
+}
+
 @freezed
 sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const LiquidSdkEvent._();
@@ -161,15 +172,6 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
     required Payment details,
   }) = LiquidSdkEvent_PaymentWaitingConfirmation;
   const factory LiquidSdkEvent.synced() = LiquidSdkEvent_Synced;
-}
-
-enum LiquidSdkNetwork {
-  /// Mainnet Bitcoin and Liquid chains
-  mainnet,
-
-  /// Testnet Bitcoin and Liquid chains
-  testnet,
-  ;
 }
 
 @freezed

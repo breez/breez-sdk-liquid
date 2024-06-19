@@ -246,13 +246,13 @@ dictionary Config {
     string boltz_url;
     string electrum_url;
     string working_dir;
-    LiquidSdkNetwork network;
+    LiquidNetwork network;
     u64 payment_timeout_sec;
     f32 zero_conf_min_fee_rate;
     u64? zero_conf_max_amount_sat;
 };
 
-enum LiquidSdkNetwork {
+enum LiquidNetwork {
     "Mainnet",
     "Testnet",
 };
@@ -361,7 +361,7 @@ namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     void set_logger(Logger logger);
     
-    Config default_config(LiquidSdkNetwork network);
+    Config default_config(LiquidNetwork network);
 
     [Throws=PaymentError]
     InputType parse(string input);

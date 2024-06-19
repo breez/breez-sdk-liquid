@@ -463,8 +463,8 @@ impl LiquidSdk {
         })?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
-            ("bitcoin", LiquidSdkNetwork::Mainnet) => {}
-            ("testnet", LiquidSdkNetwork::Testnet) => {}
+            ("bitcoin", LiquidNetwork::Mainnet) => {}
+            ("testnet", LiquidNetwork::Testnet) => {}
             _ => {
                 return Err(PaymentError::InvalidInvoice {
                     err: "Invoice cannot be paid on the current network".to_string(),
@@ -518,8 +518,8 @@ impl LiquidSdk {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.config.network {
-            LiquidSdkNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
-            LiquidSdkNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
+            LiquidNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
+            LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
         self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr)
@@ -1191,10 +1191,10 @@ impl LiquidSdk {
         Ok(perform_lnurl_auth(linking_keys, req_data).await?)
     }
 
-    pub fn default_config(network: LiquidSdkNetwork) -> Config {
+    pub fn default_config(network: LiquidNetwork) -> Config {
         match network {
-            LiquidSdkNetwork::Mainnet => Config::mainnet(),
-            LiquidSdkNetwork::Testnet => Config::testnet(),
+            LiquidNetwork::Mainnet => Config::mainnet(),
+            LiquidNetwork::Testnet => Config::testnet(),
         }
     }
 

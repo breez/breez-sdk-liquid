@@ -156,7 +156,7 @@ enum BreezLiquidSDKMapper {
         guard let networkTmp = config["network"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "Config"))
         }
-        let network = try asLiquidSdkNetwork(liquidSdkNetwork: networkTmp)
+        let network = try asLiquidNetwork(liquidNetwork: networkTmp)
 
         guard let paymentTimeoutSec = config["paymentTimeoutSec"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentTimeoutSec", typeName: "Config"))
@@ -188,7 +188,7 @@ enum BreezLiquidSDKMapper {
             "boltzUrl": config.boltzUrl,
             "electrumUrl": config.electrumUrl,
             "workingDir": config.workingDir,
-            "network": valueOf(liquidSdkNetwork: config.network),
+            "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRate": config.zeroConfMinFeeRate,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
@@ -1609,6 +1609,45 @@ enum BreezLiquidSDKMapper {
         return list
     }
 
+    static func asLiquidNetwork(liquidNetwork: String) throws -> LiquidNetwork {
+        switch liquidNetwork {
+        case "mainnet":
+            return LiquidNetwork.mainnet
+
+        case "testnet":
+            return LiquidNetwork.testnet
+
+        default: throw LiquidSdkError.Generic(message: "Invalid variant \(liquidNetwork) for enum LiquidNetwork")
+        }
+    }
+
+    static func valueOf(liquidNetwork: LiquidNetwork) -> String {
+        switch liquidNetwork {
+        case .mainnet:
+            return "mainnet"
+
+        case .testnet:
+            return "testnet"
+        }
+    }
+
+    static func arrayOf(liquidNetworkList: [LiquidNetwork]) -> [String] {
+        return liquidNetworkList.map { v -> String in valueOf(liquidNetwork: v) }
+    }
+
+    static func asLiquidNetworkList(arr: [Any]) throws -> [LiquidNetwork] {
+        var list = [LiquidNetwork]()
+        for value in arr {
+            if let val = value as? String {
+                var liquidNetwork = try asLiquidNetwork(liquidNetwork: val)
+                list.append(liquidNetwork)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LiquidNetwork"))
+            }
+        }
+        return list
+    }
+
     static func asLiquidSdkEvent(liquidSdkEvent: [String: Any?]) throws -> LiquidSdkEvent {
         let type = liquidSdkEvent["type"] as! String
         if type == "paymentFailed" {
@@ -1735,45 +1774,6 @@ enum BreezLiquidSDKMapper {
                 list.append(liquidSdkEvent)
             } else {
                 throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LiquidSdkEvent"))
-            }
-        }
-        return list
-    }
-
-    static func asLiquidSdkNetwork(liquidSdkNetwork: String) throws -> LiquidSdkNetwork {
-        switch liquidSdkNetwork {
-        case "mainnet":
-            return LiquidSdkNetwork.mainnet
-
-        case "testnet":
-            return LiquidSdkNetwork.testnet
-
-        default: throw LiquidSdkError.Generic(message: "Invalid variant \(liquidSdkNetwork) for enum LiquidSdkNetwork")
-        }
-    }
-
-    static func valueOf(liquidSdkNetwork: LiquidSdkNetwork) -> String {
-        switch liquidSdkNetwork {
-        case .mainnet:
-            return "mainnet"
-
-        case .testnet:
-            return "testnet"
-        }
-    }
-
-    static func arrayOf(liquidSdkNetworkList: [LiquidSdkNetwork]) -> [String] {
-        return liquidSdkNetworkList.map { v -> String in valueOf(liquidSdkNetwork: v) }
-    }
-
-    static func asLiquidSdkNetworkList(arr: [Any]) throws -> [LiquidSdkNetwork] {
-        var list = [LiquidSdkNetwork]()
-        for value in arr {
-            if let val = value as? String {
-                var liquidSdkNetwork = try asLiquidSdkNetwork(liquidSdkNetwork: val)
-                list.append(liquidSdkNetwork)
-            } else {
-                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LiquidSdkNetwork"))
             }
         }
         return list

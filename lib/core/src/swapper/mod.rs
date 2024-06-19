@@ -21,7 +21,7 @@ use serde_json::Value;
 use tokio::sync::{broadcast, watch};
 
 use crate::error::PaymentError;
-use crate::model::{Config, LiquidSdkNetwork, ReceiveSwap, SendSwap};
+use crate::model::{Config, LiquidNetwork, ReceiveSwap, SendSwap};
 use crate::utils;
 
 #[async_trait]
@@ -200,8 +200,8 @@ impl Swapper for BoltzSwapper {
             cooperative,
         )?;
         let is_lowball = match self.config.network {
-            LiquidSdkNetwork::Mainnet => None,
-            LiquidSdkNetwork::Testnet => {
+            LiquidNetwork::Mainnet => None,
+            LiquidNetwork::Testnet => {
                 Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
             }
         };
@@ -246,8 +246,8 @@ impl Swapper for BoltzSwapper {
             None,
         )?;
         let is_lowball = match self.config.network {
-            LiquidSdkNetwork::Mainnet => None,
-            LiquidSdkNetwork::Testnet => {
+            LiquidNetwork::Mainnet => None,
+            LiquidNetwork::Testnet => {
                 Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
             }
         };
