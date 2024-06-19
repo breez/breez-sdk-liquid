@@ -2,7 +2,9 @@
 use std::sync::Arc;
 
 use crate::{
-    model::{Config, Network, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
+    model::{
+        Config, LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap,
+    },
     persist::Persister,
     receive_swap::ReceiveSwapStateHandler,
     send_swap::SendSwapStateHandler,
@@ -109,7 +111,7 @@ pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
             .path()
             .to_str()
             .ok_or(anyhow!("Could not create temporary directory"))?,
-        Network::Testnet,
+        LiquidNetwork::Testnet,
     )?;
     persister.init()?;
     Ok((temp_dir, persister))
