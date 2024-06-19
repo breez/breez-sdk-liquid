@@ -2356,7 +2356,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.4.1"
-source = "git+https://github.com/breez/breez-sdk?branch=ok300-extract-lnurl-auth-structs#9d62d9bd351783bf45322489b0aa4e5f8ec9f014"
+source = "git+https://github.com/breez/breez-sdk?branch=ok300-extract-lnurl-auth-structs#d0cccca5b63d147d931a8472eb01181d8dc14478"
 dependencies = [
  "aes 0.8.4",
  "anyhow",
