@@ -12,7 +12,6 @@ import 'error.dart';
 import 'frb_generated.dart';
 import 'lib.dart';
 import 'model.dart';
-import 'model/lnurl.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {

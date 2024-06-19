@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
-use breez_liquid_sdk::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
 use breez_liquid_sdk::{
     error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
     BitcoinAddressData, InputType, LNInvoice, LnUrlAuthError, LnUrlAuthRequestData,

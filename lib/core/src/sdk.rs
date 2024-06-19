@@ -22,7 +22,6 @@ use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
 
 use crate::error::LiquidSdkError;
-use crate::model::lnurl::{LnUrlPayResult, LnUrlPaySuccessData};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
@@ -1134,7 +1133,7 @@ impl LiquidSdk {
                 };
 
                 Ok(LnUrlPayResult::EndpointSuccess {
-                    data: LnUrlPaySuccessData {
+                    data: model::LnUrlPaySuccessData {
                         payment,
                         success_action: maybe_sa_processed,
                     },

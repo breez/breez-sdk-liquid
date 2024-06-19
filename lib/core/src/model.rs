@@ -8,6 +8,7 @@ use boltz_client::{Keypair, LBtcSwapScriptV2};
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
+use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::error::PaymentError;
@@ -708,36 +709,28 @@ impl From<SwapTree> for InternalSwapTree {
     }
 }
 
-/// LNURL-related wrappers
-pub mod lnurl {
-    use sdk_common::prelude::*;
-    use serde::Serialize;
+/// Contains the result of the entire LNURL-pay interaction, as reported by the LNURL endpoint.
+///
+/// * `EndpointSuccess` indicates the payment is complete. The endpoint may return a `SuccessActionProcessed`,
+/// in which case, the wallet has to present it to the user as described in
+/// <https://github.com/lnurl/luds/blob/luds/09.md>
+///
+/// * `EndpointError` indicates a generic issue the LNURL endpoint encountered, including a freetext
+/// field with the reason.
+///
+/// * `PayError` indicates that an error occurred while trying to pay the invoice from the LNURL endpoint.
+/// This includes the payment hash of the failed invoice and the failure reason.
+#[derive(Serialize)]
+pub enum LnUrlPayResult {
+    EndpointSuccess { data: LnUrlPaySuccessData },
+    EndpointError { data: LnUrlErrorData },
+    PayError { data: LnUrlPayErrorData },
+}
 
-    use crate::model::Payment;
-
-    /// Contains the result of the entire LNURL-pay interaction, as reported by the LNURL endpoint.
-    ///
-    /// * `EndpointSuccess` indicates the payment is complete. The endpoint may return a `SuccessActionProcessed`,
-    /// in which case, the wallet has to present it to the user as described in
-    /// <https://github.com/lnurl/luds/blob/luds/09.md>
-    ///
-    /// * `EndpointError` indicates a generic issue the LNURL endpoint encountered, including a freetext
-    /// field with the reason.
-    ///
-    /// * `PayError` indicates that an error occurred while trying to pay the invoice from the LNURL endpoint.
-    /// This includes the payment hash of the failed invoice and the failure reason.
-    #[derive(Serialize)]
-    pub enum LnUrlPayResult {
-        EndpointSuccess { data: LnUrlPaySuccessData },
-        EndpointError { data: LnUrlErrorData },
-        PayError { data: LnUrlPayErrorData },
-    }
-
-    #[derive(Serialize)]
-    pub struct LnUrlPaySuccessData {
-        pub payment: Payment,
-        pub success_action: Option<SuccessActionProcessed>,
-    }
+#[derive(Serialize)]
+pub struct LnUrlPaySuccessData {
+    pub payment: Payment,
+    pub success_action: Option<SuccessActionProcessed>,
 }
 
 #[macro_export]

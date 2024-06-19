@@ -520,3 +520,248 @@ abstract class LiquidSdkEvent_Synced extends LiquidSdkEvent {
   const factory LiquidSdkEvent_Synced() = _$LiquidSdkEvent_SyncedImpl;
   const LiquidSdkEvent_Synced._() : super._();
 }
+
+/// @nodoc
+mixin _$LnUrlPayResult {
+  Object get data => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $LnUrlPayResultCopyWith<$Res> {
+  factory $LnUrlPayResultCopyWith(LnUrlPayResult value, $Res Function(LnUrlPayResult) then) =
+      _$LnUrlPayResultCopyWithImpl<$Res, LnUrlPayResult>;
+}
+
+/// @nodoc
+class _$LnUrlPayResultCopyWithImpl<$Res, $Val extends LnUrlPayResult>
+    implements $LnUrlPayResultCopyWith<$Res> {
+  _$LnUrlPayResultCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+}
+
+/// @nodoc
+abstract class _$$LnUrlPayResult_EndpointSuccessImplCopyWith<$Res> {
+  factory _$$LnUrlPayResult_EndpointSuccessImplCopyWith(_$LnUrlPayResult_EndpointSuccessImpl value,
+          $Res Function(_$LnUrlPayResult_EndpointSuccessImpl) then) =
+      __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LnUrlPaySuccessData data});
+}
+
+/// @nodoc
+class __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl<$Res>
+    extends _$LnUrlPayResultCopyWithImpl<$Res, _$LnUrlPayResult_EndpointSuccessImpl>
+    implements _$$LnUrlPayResult_EndpointSuccessImplCopyWith<$Res> {
+  __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl(
+      _$LnUrlPayResult_EndpointSuccessImpl _value, $Res Function(_$LnUrlPayResult_EndpointSuccessImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$LnUrlPayResult_EndpointSuccessImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as LnUrlPaySuccessData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LnUrlPayResult_EndpointSuccessImpl extends LnUrlPayResult_EndpointSuccess {
+  const _$LnUrlPayResult_EndpointSuccessImpl({required this.data}) : super._();
+
+  @override
+  final LnUrlPaySuccessData data;
+
+  @override
+  String toString() {
+    return 'LnUrlPayResult.endpointSuccess(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LnUrlPayResult_EndpointSuccessImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LnUrlPayResult_EndpointSuccessImplCopyWith<_$LnUrlPayResult_EndpointSuccessImpl> get copyWith =>
+      __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl<_$LnUrlPayResult_EndpointSuccessImpl>(
+          this, _$identity);
+}
+
+abstract class LnUrlPayResult_EndpointSuccess extends LnUrlPayResult {
+  const factory LnUrlPayResult_EndpointSuccess({required final LnUrlPaySuccessData data}) =
+      _$LnUrlPayResult_EndpointSuccessImpl;
+  const LnUrlPayResult_EndpointSuccess._() : super._();
+
+  @override
+  LnUrlPaySuccessData get data;
+  @JsonKey(ignore: true)
+  _$$LnUrlPayResult_EndpointSuccessImplCopyWith<_$LnUrlPayResult_EndpointSuccessImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$LnUrlPayResult_EndpointErrorImplCopyWith<$Res> {
+  factory _$$LnUrlPayResult_EndpointErrorImplCopyWith(
+          _$LnUrlPayResult_EndpointErrorImpl value, $Res Function(_$LnUrlPayResult_EndpointErrorImpl) then) =
+      __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LnUrlErrorData data});
+}
+
+/// @nodoc
+class __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl<$Res>
+    extends _$LnUrlPayResultCopyWithImpl<$Res, _$LnUrlPayResult_EndpointErrorImpl>
+    implements _$$LnUrlPayResult_EndpointErrorImplCopyWith<$Res> {
+  __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl(
+      _$LnUrlPayResult_EndpointErrorImpl _value, $Res Function(_$LnUrlPayResult_EndpointErrorImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$LnUrlPayResult_EndpointErrorImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as LnUrlErrorData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LnUrlPayResult_EndpointErrorImpl extends LnUrlPayResult_EndpointError {
+  const _$LnUrlPayResult_EndpointErrorImpl({required this.data}) : super._();
+
+  @override
+  final LnUrlErrorData data;
+
+  @override
+  String toString() {
+    return 'LnUrlPayResult.endpointError(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LnUrlPayResult_EndpointErrorImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LnUrlPayResult_EndpointErrorImplCopyWith<_$LnUrlPayResult_EndpointErrorImpl> get copyWith =>
+      __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl<_$LnUrlPayResult_EndpointErrorImpl>(this, _$identity);
+}
+
+abstract class LnUrlPayResult_EndpointError extends LnUrlPayResult {
+  const factory LnUrlPayResult_EndpointError({required final LnUrlErrorData data}) =
+      _$LnUrlPayResult_EndpointErrorImpl;
+  const LnUrlPayResult_EndpointError._() : super._();
+
+  @override
+  LnUrlErrorData get data;
+  @JsonKey(ignore: true)
+  _$$LnUrlPayResult_EndpointErrorImplCopyWith<_$LnUrlPayResult_EndpointErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$LnUrlPayResult_PayErrorImplCopyWith<$Res> {
+  factory _$$LnUrlPayResult_PayErrorImplCopyWith(
+          _$LnUrlPayResult_PayErrorImpl value, $Res Function(_$LnUrlPayResult_PayErrorImpl) then) =
+      __$$LnUrlPayResult_PayErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LnUrlPayErrorData data});
+}
+
+/// @nodoc
+class __$$LnUrlPayResult_PayErrorImplCopyWithImpl<$Res>
+    extends _$LnUrlPayResultCopyWithImpl<$Res, _$LnUrlPayResult_PayErrorImpl>
+    implements _$$LnUrlPayResult_PayErrorImplCopyWith<$Res> {
+  __$$LnUrlPayResult_PayErrorImplCopyWithImpl(
+      _$LnUrlPayResult_PayErrorImpl _value, $Res Function(_$LnUrlPayResult_PayErrorImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$LnUrlPayResult_PayErrorImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as LnUrlPayErrorData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LnUrlPayResult_PayErrorImpl extends LnUrlPayResult_PayError {
+  const _$LnUrlPayResult_PayErrorImpl({required this.data}) : super._();
+
+  @override
+  final LnUrlPayErrorData data;
+
+  @override
+  String toString() {
+    return 'LnUrlPayResult.payError(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LnUrlPayResult_PayErrorImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LnUrlPayResult_PayErrorImplCopyWith<_$LnUrlPayResult_PayErrorImpl> get copyWith =>
+      __$$LnUrlPayResult_PayErrorImplCopyWithImpl<_$LnUrlPayResult_PayErrorImpl>(this, _$identity);
+}
+
+abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
+  const factory LnUrlPayResult_PayError({required final LnUrlPayErrorData data}) =
+      _$LnUrlPayResult_PayErrorImpl;
+  const LnUrlPayResult_PayError._() : super._();
+
+  @override
+  LnUrlPayErrorData get data;
+  @JsonKey(ignore: true)
+  _$$LnUrlPayResult_PayErrorImplCopyWith<_$LnUrlPayResult_PayErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
