@@ -74,7 +74,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     @objc(defaultConfig:resolve:reject:)
     func defaultConfig(_ network: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let networkTmp = try BreezLiquidSDKMapper.asNetwork(network: network)
+            let networkTmp = try BreezLiquidSDKMapper.asLiquidNetwork(liquidNetwork: network)
             var res = BreezLiquidSDK.defaultConfig(network: networkTmp)
             res.workingDir = RNBreezLiquidSDK.breezLiquidSdkDirectory.path
             resolve(BreezLiquidSDKMapper.dictionaryOf(config: res))
@@ -83,10 +83,20 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
-    @objc(parseInvoice:resolve:reject:)
-    func parseInvoice(_ invoice: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(parse:resolve:reject:)
+    func parse(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try BreezLiquidSDK.parseInvoice(invoice: invoice)
+            var res = try BreezLiquidSDK.parse(input: input)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(inputType: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(parseInvoice:resolve:reject:)
+    func parseInvoice(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try BreezLiquidSDK.parseInvoice(input: input)
             resolve(BreezLiquidSDKMapper.dictionaryOf(lnInvoice: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
@@ -268,6 +278,39 @@ class RNBreezLiquidSDK: RCTEventEmitter {
             try getBindingLiquidSdk().disconnect()
             bindingLiquidSdk = nil
             resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(lnurlPay:resolve:reject:)
+    func lnurlPay(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlPayRequest = try BreezLiquidSDKMapper.asLnUrlPayRequest(lnUrlPayRequest: req)
+            var res = try getBindingLiquidSdk().lnurlPay(req: lnUrlPayRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlPayResult: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(lnurlWithdraw:resolve:reject:)
+    func lnurlWithdraw(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlWithdrawRequest = try BreezLiquidSDKMapper.asLnUrlWithdrawRequest(lnUrlWithdrawRequest: req)
+            var res = try getBindingLiquidSdk().lnurlWithdraw(req: lnUrlWithdrawRequest)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlWithdrawResult: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(lnurlAuth:resolve:reject:)
+    func lnurlAuth(_ reqData: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let lnUrlAuthRequestData = try BreezLiquidSDKMapper.asLnUrlAuthRequestData(lnUrlAuthRequestData: reqData)
+            var res = try getBindingLiquidSdk().lnurlAuth(reqData: lnUrlAuthRequestData)
+            resolve(BreezLiquidSDKMapper.dictionaryOf(lnUrlCallbackStatus: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
         }

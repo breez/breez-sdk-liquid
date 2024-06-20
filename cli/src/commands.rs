@@ -7,6 +7,7 @@ use std::time::Duration;
 use anyhow::Result;
 use breez_liquid_sdk::model::*;
 use breez_liquid_sdk::sdk::LiquidSdk;
+use breez_liquid_sdk::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -62,6 +63,24 @@ pub(crate) enum Command {
     },
     /// Shuts down all background threads of this SDK instance
     Disconnect,
+    /// Parse a generic string to get its type and relevant metadata
+    Parse {
+        /// Generic input (URL, LNURL, BIP-21 BTC Address, LN invoice, etc)
+        input: String,
+    },
+    /// Pay using LNURL
+    LnurlPay {
+        /// LN Address or LNURL-pay endpoint
+        lnurl: String,
+    },
+    LnurlWithdraw {
+        /// LNURL-withdraw endpoint
+        lnurl: String,
+    },
+    LnurlAuth {
+        /// LNURL-auth endpoint
+        lnurl: String,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -105,7 +124,7 @@ macro_rules! wait_confirmation {
 }
 
 pub(crate) async fn handle_command(
-    _rl: &mut Editor<CliHelper, DefaultHistory>,
+    rl: &mut Editor<CliHelper, DefaultHistory>,
     sdk: &Arc<LiquidSdk>,
     command: Command,
 ) -> Result<String> {
@@ -208,6 +227,72 @@ pub(crate) async fn handle_command(
         Command::Disconnect => {
             sdk.disconnect().await?;
             command_result!("Liquid SDK instance disconnected")
+        }
+        Command::Parse { input } => {
+            let res = LiquidSdk::parse(&input).await?;
+            command_result!(res)
+        }
+        Command::LnurlPay { lnurl } => {
+            let input = LiquidSdk::parse(&lnurl).await?;
+            let res = match input {
+                InputType::LnUrlPay { data: pd } => {
+                    let prompt = format!(
+                        "Amount to pay in millisatoshi (min {} msat, max {} msat): ",
+                        pd.min_sendable, pd.max_sendable
+                    );
+
+                    let amount_msat = rl.readline(&prompt)?;
+                    let pay_res = sdk
+                        .lnurl_pay(LnUrlPayRequest {
+                            data: pd,
+                            amount_msat: amount_msat.parse::<u64>()?,
+                            comment: None,
+                            payment_label: None,
+                        })
+                        .await?;
+                    Ok(pay_res)
+                }
+                _ => Err(anyhow::anyhow!("Invalid input")),
+            }?;
+
+            command_result!(res)
+        }
+        Command::LnurlWithdraw { lnurl } => {
+            let input = LiquidSdk::parse(&lnurl).await?;
+            let res = match input {
+                InputType::LnUrlWithdraw { data: pd } => {
+                    let prompt = format!(
+                        "Amount to withdraw in millisatoshi (min {} msat, max {} msat): ",
+                        pd.min_withdrawable, pd.max_withdrawable
+                    );
+
+                    let amount_msat = rl.readline(&prompt)?;
+                    let withdraw_res = sdk
+                        .lnurl_withdraw(LnUrlWithdrawRequest {
+                            data: pd,
+                            amount_msat: amount_msat.parse()?,
+                            description: Some("LNURL-withdraw".to_string()),
+                        })
+                        .await?;
+                    Ok(withdraw_res)
+                }
+                _ => Err(anyhow::anyhow!("Invalid input")),
+            }?;
+
+            command_result!(res)
+        }
+        Command::LnurlAuth { lnurl } => {
+            let lnurl_endpoint = lnurl.trim();
+
+            let res = match parse(lnurl_endpoint).await? {
+                InputType::LnUrlAuth { data: ad } => {
+                    let auth_res = sdk.lnurl_auth(ad).await?;
+                    serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())
+                }
+                _ => Err(anyhow::anyhow!("Unexpected result type")),
+            }?;
+
+            command_result!(res)
         }
     })
 }

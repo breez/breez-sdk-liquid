@@ -23,7 +23,7 @@ void main() async {
 Future<BindingLiquidSdk> reconnect({
   required BreezLiquidSDK liquidSDK,
   required String mnemonic,
-  Network network = Network.mainnet,
+  LiquidNetwork network = LiquidNetwork.mainnet,
 }) async {
   final config = await getConfig(network: network);
   final req = ConnectRequest(

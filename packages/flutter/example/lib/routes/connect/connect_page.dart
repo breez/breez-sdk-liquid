@@ -97,7 +97,7 @@ class _ConnectPageState extends State<ConnectPage> {
 
   Future<BindingLiquidSdk> initializeWallet({
     required String mnemonic,
-    Network network = Network.mainnet,
+    LiquidNetwork network = LiquidNetwork.mainnet,
   }) async {
     final config = await getConfig(network: network);
     final req = ConnectRequest(

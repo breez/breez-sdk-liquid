@@ -11,11 +11,13 @@ use lwk_wollet::{
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
+use sdk_common::bitcoin::secp256k1::Secp256k1;
+use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
 use tokio::sync::Mutex;
 
 use crate::{
     error::PaymentError,
-    model::{Config, Network},
+    model::{Config, LiquidNetwork},
 };
 
 #[async_trait]
@@ -40,6 +42,8 @@ pub trait OnchainWallet: Send + Sync {
     /// Get the public key of the wallet
     fn pubkey(&self) -> String;
 
+    fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError>;
+
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
 }
@@ -52,7 +56,7 @@ pub(crate) struct LiquidOnchainWallet {
 
 impl LiquidOnchainWallet {
     pub(crate) fn new(mnemonic: String, config: Config) -> Result<Self> {
-        let is_mainnet = config.network == Network::Mainnet;
+        let is_mainnet = config.network == LiquidNetwork::Mainnet;
         let lwk_signer = SwSigner::new(&mnemonic, is_mainnet)?;
         let descriptor = LiquidOnchainWallet::get_descriptor(&lwk_signer, config.network)?;
         let elements_network: ElementsNetwork = config.network.into();
@@ -69,9 +73,9 @@ impl LiquidOnchainWallet {
 
     fn get_descriptor(
         signer: &SwSigner,
-        network: Network,
+        network: LiquidNetwork,
     ) -> Result<WolletDescriptor, PaymentError> {
-        let is_mainnet = network == Network::Mainnet;
+        let is_mainnet = network == LiquidNetwork::Mainnet;
         let descriptor_str = singlesig_desc(
             signer,
             Singlesig::Wpkh,
@@ -144,5 +148,15 @@ impl OnchainWallet for LiquidOnchainWallet {
         ))?;
         lwk_wollet::full_scan_with_electrum_client(&mut wallet, &mut electrum_client)?;
         Ok(())
+    }
+
+    fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError> {
+        let seed = self.lwk_signer.seed().ok_or(PaymentError::SignerError {
+            err: "Could not get signer seed".to_string(),
+        })?;
+
+        let bip32_xpriv = ExtendedPrivKey::new_master(self.config.network.into(), &seed)?
+            .derive_priv(&Secp256k1::new(), &path)?;
+        Ok(bip32_xpriv)
     }
 }

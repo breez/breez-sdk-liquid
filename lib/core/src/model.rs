@@ -4,10 +4,11 @@ use boltz_client::swaps::boltzv2::{
     CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
 };
-use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2, ToHex};
+use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
+use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::error::PaymentError;
@@ -27,7 +28,7 @@ pub struct Config {
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
-    pub network: Network,
+    pub network: LiquidNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in sat/vbyte
@@ -44,7 +45,7 @@ impl Config {
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
             working_dir: ".".to_string(),
-            network: Network::Mainnet,
+            network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
@@ -57,7 +58,7 @@ impl Config {
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
             working_dir: ".".to_string(),
-            network: Network::Testnet,
+            network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
@@ -70,62 +71,68 @@ impl Config {
     }
 }
 
+/// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
+/// Bitcoin network used.
 #[derive(Debug, Copy, Clone, PartialEq, Serialize)]
-pub enum Network {
+pub enum LiquidNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
 }
-impl Network {
+impl LiquidNetwork {
     pub fn as_bitcoin_chain(&self) -> Chain {
         match self {
-            Network::Mainnet => Chain::Bitcoin,
-            Network::Testnet => Chain::BitcoinTestnet,
+            LiquidNetwork::Mainnet => Chain::Bitcoin,
+            LiquidNetwork::Testnet => Chain::BitcoinTestnet,
         }
     }
 }
 
-impl From<Network> for ElementsNetwork {
-    fn from(value: Network) -> Self {
+impl From<LiquidNetwork> for ElementsNetwork {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            Network::Mainnet => ElementsNetwork::Liquid,
-            Network::Testnet => ElementsNetwork::LiquidTestnet,
+            LiquidNetwork::Mainnet => ElementsNetwork::Liquid,
+            LiquidNetwork::Testnet => ElementsNetwork::LiquidTestnet,
         }
     }
 }
 
-impl From<Network> for Chain {
-    fn from(value: Network) -> Self {
+impl From<LiquidNetwork> for Chain {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            Network::Mainnet => Chain::Liquid,
-            Network::Testnet => Chain::LiquidTestnet,
+            LiquidNetwork::Mainnet => Chain::Liquid,
+            LiquidNetwork::Testnet => Chain::LiquidTestnet,
         }
     }
 }
 
-impl TryFrom<&str> for Network {
+impl TryFrom<&str> for LiquidNetwork {
     type Error = anyhow::Error;
 
-    fn try_from(value: &str) -> Result<Network, anyhow::Error> {
+    fn try_from(value: &str) -> Result<LiquidNetwork, anyhow::Error> {
         match value.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Mainnet),
-            "testnet" => Ok(Network::Testnet),
+            "mainnet" => Ok(LiquidNetwork::Mainnet),
+            "testnet" => Ok(LiquidNetwork::Testnet),
             _ => Err(anyhow!("Invalid network")),
         }
     }
 }
 
-impl TryFrom<boltz_client::lightning_invoice::Currency> for Network {
-    type Error = anyhow::Error;
-
-    fn try_from(
-        value: boltz_client::lightning_invoice::Currency,
-    ) -> Result<Network, anyhow::Error> {
+impl From<LiquidNetwork> for sdk_common::prelude::Network {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            boltz_client::lightning_invoice::Currency::Bitcoin => Ok(Network::Mainnet),
-            boltz_client::lightning_invoice::Currency::BitcoinTestnet => Ok(Network::Testnet),
-            _ => Err(anyhow!("Invalid network")),
+            LiquidNetwork::Mainnet => Self::Bitcoin,
+            LiquidNetwork::Testnet => Self::Testnet,
+        }
+    }
+}
+
+impl From<LiquidNetwork> for sdk_common::bitcoin::Network {
+    fn from(value: LiquidNetwork) -> Self {
+        match value {
+            LiquidNetwork::Mainnet => Self::Bitcoin,
+            LiquidNetwork::Testnet => Self::Testnet,
         }
     }
 }
@@ -879,69 +886,6 @@ pub struct LogEntry {
     pub level: String,
 }
 
-/// Wrapper for a BOLT11 LN invoice
-#[derive(Clone, Debug, PartialEq)]
-pub struct LNInvoice {
-    pub bolt11: String,
-    pub network: Network,
-    pub payee_pubkey: String,
-    pub payment_hash: String,
-    pub description: Option<String>,
-    pub description_hash: Option<String>,
-    pub amount_msat: Option<u64>,
-    pub timestamp: u64,
-    pub expiry: u64,
-    pub routing_hints: Vec<RouteHint>,
-    pub payment_secret: Vec<u8>,
-    pub min_final_cltv_expiry_delta: u64,
-}
-
-/// A route hint for a LN payment
-#[derive(Clone, Debug, PartialEq)]
-pub struct RouteHint {
-    pub hops: Vec<RouteHintHop>,
-}
-
-impl RouteHint {
-    pub fn from_ldk_hint(hint: &boltz_client::lightning_invoice::RouteHint) -> RouteHint {
-        let mut hops = Vec::new();
-        for hop in hint.0.iter() {
-            let pubkey_res = hop.src_node_id.serialize().to_hex();
-
-            let router_hop = RouteHintHop {
-                src_node_id: pubkey_res,
-                short_channel_id: hop.short_channel_id,
-                fees_base_msat: hop.fees.base_msat,
-                fees_proportional_millionths: hop.fees.proportional_millionths,
-                cltv_expiry_delta: u64::from(hop.cltv_expiry_delta),
-                htlc_minimum_msat: hop.htlc_minimum_msat,
-                htlc_maximum_msat: hop.htlc_maximum_msat,
-            };
-            hops.push(router_hop);
-        }
-        RouteHint { hops }
-    }
-}
-
-/// Details of a specific hop in a larger route hint
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RouteHintHop {
-    /// The node_id of the non-target end of the route
-    pub src_node_id: String,
-    /// The short_channel_id of this channel
-    pub short_channel_id: u64,
-    /// The fees which must be paid to use this channel
-    pub fees_base_msat: u32,
-    pub fees_proportional_millionths: u32,
-
-    /// The difference in CLTV values between this node and the next node.
-    pub cltv_expiry_delta: u64,
-    /// The minimum value, in msat, which must be relayed to the next hop.
-    pub htlc_minimum_msat: Option<u64>,
-    /// The maximum value in msat available for routing with a single HTLC.
-    pub htlc_maximum_msat: Option<u64>,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct InternalLeaf {
     pub output: String,
@@ -984,6 +928,30 @@ impl From<SwapTree> for InternalSwapTree {
             refund_leaf: value.refund_leaf.into(),
         }
     }
+}
+
+/// Contains the result of the entire LNURL-pay interaction, as reported by the LNURL endpoint.
+///
+/// * `EndpointSuccess` indicates the payment is complete. The endpoint may return a `SuccessActionProcessed`,
+/// in which case, the wallet has to present it to the user as described in
+/// <https://github.com/lnurl/luds/blob/luds/09.md>
+///
+/// * `EndpointError` indicates a generic issue the LNURL endpoint encountered, including a freetext
+/// field with the reason.
+///
+/// * `PayError` indicates that an error occurred while trying to pay the invoice from the LNURL endpoint.
+/// This includes the payment hash of the failed invoice and the failure reason.
+#[derive(Serialize)]
+pub enum LnUrlPayResult {
+    EndpointSuccess { data: LnUrlPaySuccessData },
+    EndpointError { data: LnUrlErrorData },
+    PayError { data: LnUrlPayErrorData },
+}
+
+#[derive(Serialize)]
+pub struct LnUrlPaySuccessData {
+    pub payment: Payment,
+    pub success_action: Option<SuccessActionProcessed>,
 }
 
 #[macro_export]

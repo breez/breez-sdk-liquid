@@ -4,7 +4,14 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
-use breez_liquid_sdk::{error::*, model::*, sdk::LiquidSdk};
+use breez_liquid_sdk::{
+    error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
+    BitcoinAddressData, InputType, LNInvoice, LnUrlAuthError, LnUrlAuthRequestData,
+    LnUrlCallbackStatus, LnUrlErrorData, LnUrlPayError, LnUrlPayErrorData, LnUrlPayRequest,
+    LnUrlPayRequestData, LnUrlWithdrawError, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
+    LnUrlWithdrawResult, LnUrlWithdrawSuccessData, MessageSuccessActionData, Network, RouteHint,
+    RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
@@ -58,10 +65,13 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, LiquidSdkEr
     })
 }
 
-pub fn default_config(network: Network) -> Config {
+pub fn default_config(network: LiquidNetwork) -> Config {
     LiquidSdk::default_config(network)
 }
 
+pub fn parse(input: String) -> Result<InputType, PaymentError> {
+    rt().block_on(async { LiquidSdk::parse(&input).await })
+}
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }
@@ -124,6 +134,25 @@ impl BindingLiquidSdk {
 
     pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.sdk.list_payments())
+    }
+
+    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
+        rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
+    }
+
+    pub fn lnurl_withdraw(
+        &self,
+        req: LnUrlWithdrawRequest,
+    ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
+        rt().block_on(self.sdk.lnurl_withdraw(req))
+            .map_err(Into::into)
+    }
+
+    pub fn lnurl_auth(
+        &self,
+        req_data: LnUrlAuthRequestData,
+    ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
+        rt().block_on(self.sdk.lnurl_auth(req_data))
     }
 
     pub fn sync(&self) -> LiquidSdkResult<()> {

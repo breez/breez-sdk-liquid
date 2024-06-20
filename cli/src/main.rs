@@ -23,11 +23,11 @@ pub(crate) struct Args {
     pub(crate) log_file: Option<String>,
 
     #[clap(short, long, value_parser = parse_network_arg)]
-    pub(crate) network: Option<Network>,
+    pub(crate) network: Option<LiquidNetwork>,
 }
 
-fn parse_network_arg(s: &str) -> Result<Network, String> {
-    Network::try_from(s).map_err(|e| e.to_string())
+fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
+    LiquidNetwork::try_from(s).map_err(|e| e.to_string())
 }
 
 fn show_results(result: Result<String>) -> Result<()> {
@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
-    let network = args.network.unwrap_or(Network::Testnet);
+    let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let mut config = LiquidSdk::default_config(network);
     config.working_dir = data_dir_str;
     let sdk = LiquidSdk::connect(ConnectRequest {
@@ -86,8 +86,8 @@ async fn main() -> Result<()> {
         .await?;
 
     let cli_prompt = match network {
-        Network::Mainnet => "breez-liquid-cli [mainnet]> ",
-        Network::Testnet => "breez-liquid-cli [testnet]> ",
+        LiquidNetwork::Mainnet => "breez-liquid-cli [mainnet]> ",
+        LiquidNetwork::Testnet => "breez-liquid-cli [testnet]> ",
     };
 
     loop {

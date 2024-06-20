@@ -23,7 +23,7 @@ use tokio::sync::{broadcast, watch};
 
 use crate::error::PaymentError;
 use crate::model::{
-    ChainSwap, Config, Direction, Network, ReceiveSwap, SendSwap, SwapScriptV2, SwapTxV2,
+    ChainSwap, Config, Direction, LiquidNetwork, ReceiveSwap, SendSwap, SwapScriptV2, SwapTxV2,
 };
 use crate::utils;
 
@@ -62,7 +62,7 @@ pub trait Swapper: Send + Sync {
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
-    /// Refund a cooperatively chain swap  
+    /// Refund a cooperatively chain swap
     fn refund_chain_swap_cooperative(
         &self,
         swap: &ChainSwap,
@@ -70,7 +70,7 @@ pub trait Swapper: Send + Sync {
         broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError>;
 
-    /// Refund a cooperatively send swap  
+    /// Refund a cooperatively send swap
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,
@@ -349,8 +349,8 @@ impl BoltzSwapper {
                     is_cooperative,
                 )?;
                 let is_lowball = match self.config.network {
-                    Network::Mainnet => None,
-                    Network::Testnet => {
+                    LiquidNetwork::Mainnet => None,
+                    LiquidNetwork::Testnet => {
                         Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
                     }
                 };
@@ -423,8 +423,8 @@ impl BoltzSwapper {
                     None,
                 )?;
                 let is_lowball = match self.config.network {
-                    Network::Mainnet => None,
-                    Network::Testnet => {
+                    LiquidNetwork::Mainnet => None,
+                    LiquidNetwork::Testnet => {
                         Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
                     }
                 };
@@ -471,7 +471,7 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
     }
 
-    /// Refund a cooperatively chain swap  
+    /// Refund a cooperatively chain swap
     fn refund_chain_swap_cooperative(
         &self,
         swap: &ChainSwap,
@@ -490,7 +490,7 @@ impl Swapper for BoltzSwapper {
         )
     }
 
-    /// Refund a cooperatively send swap  
+    /// Refund a cooperatively send swap
     fn refund_send_swap_cooperative(
         &self,
         swap: &SendSwap,

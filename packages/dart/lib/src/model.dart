@@ -3,6 +3,7 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import 'bindings.dart';
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
@@ -38,7 +39,7 @@ class Config {
   ///
   /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
-  final Network network;
+  final LiquidNetwork network;
 
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
@@ -141,6 +142,17 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+/// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
+/// Bitcoin network used.
+enum LiquidNetwork {
+  /// Mainnet Bitcoin and Liquid chains
+  mainnet,
+
+  /// Testnet Bitcoin and Liquid chains
+  testnet,
+  ;
+}
+
 @freezed
 sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const LiquidSdkEvent._();
@@ -166,68 +178,40 @@ sealed class LiquidSdkEvent with _$LiquidSdkEvent {
   const factory LiquidSdkEvent.synced() = LiquidSdkEvent_Synced;
 }
 
-/// Wrapper for a BOLT11 LN invoice
-class LNInvoice {
-  final String bolt11;
-  final Network network;
-  final String payeePubkey;
-  final String paymentHash;
-  final String? description;
-  final String? descriptionHash;
-  final BigInt? amountMsat;
-  final BigInt timestamp;
-  final BigInt expiry;
-  final List<RouteHint> routingHints;
-  final Uint8List paymentSecret;
-  final BigInt minFinalCltvExpiryDelta;
+@freezed
+sealed class LnUrlPayResult with _$LnUrlPayResult {
+  const LnUrlPayResult._();
 
-  const LNInvoice({
-    required this.bolt11,
-    required this.network,
-    required this.payeePubkey,
-    required this.paymentHash,
-    this.description,
-    this.descriptionHash,
-    this.amountMsat,
-    required this.timestamp,
-    required this.expiry,
-    required this.routingHints,
-    required this.paymentSecret,
-    required this.minFinalCltvExpiryDelta,
+  const factory LnUrlPayResult.endpointSuccess({
+    required LnUrlPaySuccessData data,
+  }) = LnUrlPayResult_EndpointSuccess;
+  const factory LnUrlPayResult.endpointError({
+    required LnUrlErrorData data,
+  }) = LnUrlPayResult_EndpointError;
+  const factory LnUrlPayResult.payError({
+    required LnUrlPayErrorData data,
+  }) = LnUrlPayResult_PayError;
+}
+
+class LnUrlPaySuccessData {
+  final Payment payment;
+  final SuccessActionProcessed? successAction;
+
+  const LnUrlPaySuccessData({
+    required this.payment,
+    this.successAction,
   });
 
   @override
-  int get hashCode =>
-      bolt11.hashCode ^
-      network.hashCode ^
-      payeePubkey.hashCode ^
-      paymentHash.hashCode ^
-      description.hashCode ^
-      descriptionHash.hashCode ^
-      amountMsat.hashCode ^
-      timestamp.hashCode ^
-      expiry.hashCode ^
-      routingHints.hashCode ^
-      paymentSecret.hashCode ^
-      minFinalCltvExpiryDelta.hashCode;
+  int get hashCode => payment.hashCode ^ successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is LNInvoice &&
+      other is LnUrlPaySuccessData &&
           runtimeType == other.runtimeType &&
-          bolt11 == other.bolt11 &&
-          network == other.network &&
-          payeePubkey == other.payeePubkey &&
-          paymentHash == other.paymentHash &&
-          description == other.description &&
-          descriptionHash == other.descriptionHash &&
-          amountMsat == other.amountMsat &&
-          timestamp == other.timestamp &&
-          expiry == other.expiry &&
-          routingHints == other.routingHints &&
-          paymentSecret == other.paymentSecret &&
-          minFinalCltvExpiryDelta == other.minFinalCltvExpiryDelta;
+          payment == other.payment &&
+          successAction == other.successAction;
 }
 
 /// Internal SDK log entry used in the Uniffi and Dart bindings
@@ -247,15 +231,6 @@ class LogEntry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
-}
-
-enum Network {
-  /// Mainnet Bitcoin and Liquid chains
-  mainnet,
-
-  /// Testnet Bitcoin and Liquid chains
-  testnet,
-  ;
 }
 
 class PayOnchainRequest {
@@ -591,77 +566,6 @@ class RestoreRequest {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RestoreRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
-}
-
-/// A route hint for a LN payment
-class RouteHint {
-  final List<RouteHintHop> hops;
-
-  const RouteHint({
-    required this.hops,
-  });
-
-  @override
-  int get hashCode => hops.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is RouteHint && runtimeType == other.runtimeType && hops == other.hops;
-}
-
-/// Details of a specific hop in a larger route hint
-class RouteHintHop {
-  /// The node_id of the non-target end of the route
-  final String srcNodeId;
-
-  /// The short_channel_id of this channel
-  final BigInt shortChannelId;
-
-  /// The fees which must be paid to use this channel
-  final int feesBaseMsat;
-  final int feesProportionalMillionths;
-
-  /// The difference in CLTV values between this node and the next node.
-  final BigInt cltvExpiryDelta;
-
-  /// The minimum value, in msat, which must be relayed to the next hop.
-  final BigInt? htlcMinimumMsat;
-
-  /// The maximum value in msat available for routing with a single HTLC.
-  final BigInt? htlcMaximumMsat;
-
-  const RouteHintHop({
-    required this.srcNodeId,
-    required this.shortChannelId,
-    required this.feesBaseMsat,
-    required this.feesProportionalMillionths,
-    required this.cltvExpiryDelta,
-    this.htlcMinimumMsat,
-    this.htlcMaximumMsat,
-  });
-
-  @override
-  int get hashCode =>
-      srcNodeId.hashCode ^
-      shortChannelId.hashCode ^
-      feesBaseMsat.hashCode ^
-      feesProportionalMillionths.hashCode ^
-      cltvExpiryDelta.hashCode ^
-      htlcMinimumMsat.hashCode ^
-      htlcMaximumMsat.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RouteHintHop &&
-          runtimeType == other.runtimeType &&
-          srcNodeId == other.srcNodeId &&
-          shortChannelId == other.shortChannelId &&
-          feesBaseMsat == other.feesBaseMsat &&
-          feesProportionalMillionths == other.feesProportionalMillionths &&
-          cltvExpiryDelta == other.cltvExpiryDelta &&
-          htlcMinimumMsat == other.htlcMinimumMsat &&
-          htlcMaximumMsat == other.htlcMaximumMsat;
 }
 
 class SendPaymentResponse {

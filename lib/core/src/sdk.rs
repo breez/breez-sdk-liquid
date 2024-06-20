@@ -1,16 +1,9 @@
 use std::collections::HashMap;
 use std::time::Instant;
-use std::{
-    fs,
-    path::PathBuf,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, UNIX_EPOCH},
-};
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::lightning_invoice::Bolt11InvoiceDescription;
 use boltz_client::ToHex;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use futures_util::stream::select_all;
@@ -18,11 +11,15 @@ use futures_util::StreamExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
 use lwk_wollet::{ElectrumClient, ElectrumUrl};
+use sdk_common::bitcoin::secp256k1::Secp256k1;
+use sdk_common::bitcoin::util::bip32::ChildNumber;
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use url::Url;
 
 use crate::chain::ChainService;
 use crate::chain_swap::ChainSwapStateHandler;
@@ -33,13 +30,11 @@ use crate::send_swap::SendSwapStateHandler;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
-    ensure_sdk,
     error::{LiquidSdkResult, PaymentError},
     event::EventManager,
-    get_invoice_amount,
     model::*,
     persist::Persister,
-    utils,
+    utils, *,
 };
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
@@ -511,8 +506,8 @@ impl LiquidSdk {
         })?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
-            ("bitcoin", Network::Mainnet) => {}
-            ("testnet", Network::Testnet) => {}
+            ("bitcoin", LiquidNetwork::Mainnet) => {}
+            ("testnet", LiquidNetwork::Testnet) => {}
             _ => {
                 return Err(PaymentError::InvalidInvoice {
                     err: "Invoice cannot be paid on the current network".to_string(),
@@ -585,8 +580,8 @@ impl LiquidSdk {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.config.network {
-            Network::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
-            Network::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
+            LiquidNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
+            LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
         self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr)
@@ -1288,64 +1283,144 @@ impl LiquidSdk {
         self.persister.restore_from_backup(backup_path)
     }
 
-    pub fn default_config(network: Network) -> Config {
-        match network {
-            Network::Mainnet => Config::mainnet(),
-            Network::Testnet => Config::testnet(),
+    /// Second step of LNURL-pay. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlPayRequest` payload needed here.
+    ///
+    /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
+    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
+    /// is made.
+    pub async fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
+        match validate_lnurl_pay(
+            req.amount_msat,
+            &req.comment,
+            &req.data,
+            self.config.network.into(),
+        )
+        .await?
+        {
+            ValidatedCallbackResponse::EndpointError { data: e } => {
+                Ok(LnUrlPayResult::EndpointError { data: e })
+            }
+            ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
+                let pay_req = self
+                    .prepare_send_payment(&PrepareSendRequest {
+                        invoice: cb.pr.clone(),
+                    })
+                    .await?;
+
+                let payment = self.send_payment(&pay_req).await?.payment;
+
+                let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
+                    Some(sa) => {
+                        let processed_sa = match sa {
+                            // For AES, we decrypt the contents on the fly
+                            SuccessAction::Aes(data) => {
+                                let preimage_str = payment
+                                    .preimage
+                                    .clone()
+                                    .ok_or(LiquidSdkError::Generic {
+                                        err: "Payment successful but no preimage found".to_string(),
+                                    })
+                                    .unwrap();
+                                let preimage =
+                                    sha256::Hash::from_str(&preimage_str).map_err(|_| {
+                                        sdk_common::prelude::LnUrlPayError::Generic {
+                                            err: "Invalid preimage".to_string(),
+                                        }
+                                    })?;
+                                let preimage_arr: [u8; 32] = preimage.into_32();
+                                let result = match (data, &preimage_arr).try_into() {
+                                    Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                                    Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                                        reason: e.to_string(),
+                                    },
+                                };
+                                SuccessActionProcessed::Aes { result }
+                            }
+                            SuccessAction::Message(data) => {
+                                SuccessActionProcessed::Message { data }
+                            }
+                            SuccessAction::Url(data) => SuccessActionProcessed::Url { data },
+                        };
+                        Some(processed_sa)
+                    }
+                    None => None,
+                };
+
+                Ok(LnUrlPayResult::EndpointSuccess {
+                    data: model::LnUrlPaySuccessData {
+                        payment,
+                        success_action: maybe_sa_processed,
+                    },
+                })
+            }
         }
     }
 
-    pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
-        let input = input
-            .strip_prefix("lightning:")
-            .or(input.strip_prefix("LIGHTNING:"))
-            .unwrap_or(input);
-        let invoice =
-            Bolt11Invoice::from_str(input).map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?;
+    /// Second step of LNURL-withdraw. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlWithdrawRequest` payload needed here.
+    ///
+    /// This call will validate the given `amount_msat` against the parameters
+    /// of the LNURL endpoint (`data`). If they match the endpoint requirements, the LNURL withdraw
+    /// request is made. A successful result here means the endpoint started the payment.
+    pub async fn lnurl_withdraw(
+        &self,
+        req: LnUrlWithdrawRequest,
+    ) -> Result<LnUrlWithdrawResult, sdk_common::prelude::LnUrlWithdrawError> {
+        let prepare_receive_res = self
+            .prepare_receive_payment(&{
+                PrepareReceiveRequest {
+                    payer_amount_sat: req.amount_msat / 1_000,
+                }
+            })
+            .await?;
+        let receive_res = self.receive_payment(&prepare_receive_res).await?;
+        let invoice = parse_invoice(&receive_res.invoice)?;
 
-        // Try to take payee pubkey from the tagged fields, if doesn't exist recover it from the signature
-        let payee_pubkey: String = match invoice.payee_pub_key() {
-            Some(key) => key.serialize().to_hex(),
-            None => invoice.recover_payee_pub_key().serialize().to_hex(),
-        };
-        let description = match invoice.description() {
-            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-            Bolt11InvoiceDescription::Hash(_) => None,
-        };
-        let description_hash = match invoice.description() {
-            Bolt11InvoiceDescription::Direct(_) => None,
-            Bolt11InvoiceDescription::Hash(h) => Some(h.0.to_string()),
-        };
-        let timestamp = invoice
-            .timestamp()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?
-            .as_secs();
-        let routing_hints = invoice
-            .route_hints()
-            .iter()
-            .map(RouteHint::from_ldk_hint)
-            .collect();
-
-        let res = LNInvoice {
-            bolt11: input.to_string(),
-            network: invoice.currency().try_into()?,
-            payee_pubkey,
-            payment_hash: invoice.payment_hash().to_hex(),
-            description,
-            description_hash,
-            amount_msat: invoice.amount_milli_satoshis(),
-            timestamp,
-            expiry: invoice.expiry_time().as_secs(),
-            routing_hints,
-            payment_secret: invoice.payment_secret().0.to_vec(),
-            min_final_cltv_expiry_delta: invoice.min_final_cltv_expiry_delta(),
-        };
+        let res = validate_lnurl_withdraw(req.data, invoice).await?;
         Ok(res)
+    }
+
+    /// Third and last step of LNURL-auth. The first step is `parse()`, which also validates the LNURL destination
+    /// and generates the `LnUrlAuthRequestData` payload needed here. The second step is user approval of auth action.
+    ///
+    /// This call will sign `k1` of the LNURL endpoint (`req_data`) on `secp256k1` using `linkingPrivKey` and DER-encodes the signature.
+    /// If they match the endpoint requirements, the LNURL auth request is made. A successful result here means the client signature is verified.
+    pub async fn lnurl_auth(
+        &self,
+        req_data: LnUrlAuthRequestData,
+    ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
+        // m/138'/0
+        let hashing_key = self.onchain_wallet.derive_bip32_key(vec![
+            ChildNumber::from_hardened_idx(138).map_err(Into::<LnUrlError>::into)?,
+            ChildNumber::from(0),
+        ])?;
+
+        let url =
+            Url::from_str(&req_data.url).map_err(|e| LnUrlError::InvalidUri(e.to_string()))?;
+
+        let derivation_path = get_derivation_path(hashing_key, url)?;
+        let linking_key = self.onchain_wallet.derive_bip32_key(derivation_path)?;
+        let linking_keys = linking_key.to_keypair(&Secp256k1::new());
+
+        Ok(perform_lnurl_auth(linking_keys, req_data).await?)
+    }
+
+    pub fn default_config(network: LiquidNetwork) -> Config {
+        match network {
+            LiquidNetwork::Mainnet => Config::mainnet(),
+            LiquidNetwork::Testnet => Config::testnet(),
+        }
+    }
+
+    pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
+        parse(input)
+            .await
+            .map_err(|e| PaymentError::Generic { err: e.to_string() })
+    }
+
+    pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
+        parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
     }
 
     /// Configures a global SDK logger that will log to file and will forward log events to

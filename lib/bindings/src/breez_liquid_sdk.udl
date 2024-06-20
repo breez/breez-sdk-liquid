@@ -1,3 +1,218 @@
+//////////////////////////////////
+// BEGIN sdk-common mirror imports
+// These are structs defined in sdk-common, which we want to make available in this project's UDL bindings
+
+dictionary LNInvoice {
+    string bolt11;
+    Network network;
+    string payee_pubkey;
+    string payment_hash;
+    string? description;
+    string? description_hash;
+    u64? amount_msat;
+    u64 timestamp;
+    u64 expiry;
+    sequence<RouteHint> routing_hints;
+    sequence<u8> payment_secret;
+    u64 min_final_cltv_expiry_delta;
+};
+
+enum Network {
+    "Bitcoin",
+    "Testnet",
+    "Signet",
+    "Regtest",
+};
+
+dictionary RouteHint {
+    sequence<RouteHintHop> hops;
+};
+
+dictionary RouteHintHop {
+     string src_node_id;
+     u64 short_channel_id;
+     u32 fees_base_msat;
+     u32 fees_proportional_millionths;
+     u64 cltv_expiry_delta;
+     u64? htlc_minimum_msat;
+     u64? htlc_maximum_msat;
+};
+
+[Enum]
+interface InputType {
+    BitcoinAddress(BitcoinAddressData address);
+    Bolt11(LNInvoice invoice);
+    NodeId(string node_id);
+    Url(string url);
+    LnUrlPay(LnUrlPayRequestData data);
+    LnUrlWithdraw(LnUrlWithdrawRequestData data);
+    LnUrlAuth(LnUrlAuthRequestData data);
+    LnUrlError(LnUrlErrorData data);
+};
+
+dictionary BitcoinAddressData {
+    string address;
+    Network network;
+    u64? amount_sat;
+    string? label;
+    string? message;
+};
+
+dictionary LnUrlPayRequestData {
+    string callback;
+    u64 min_sendable;
+    u64 max_sendable;
+    string metadata_str;
+    u16 comment_allowed;
+    string domain;
+    boolean allows_nostr;
+    string? nostr_pubkey;
+    string? ln_address;
+};
+
+dictionary LnUrlWithdrawRequestData {
+    string callback;
+    string k1;
+    string default_description;
+    u64 min_withdrawable;
+    u64 max_withdrawable;
+};
+
+dictionary LnUrlAuthRequestData {
+    string k1;
+    string domain;
+    string url;
+    string? action = null;
+};
+
+dictionary LnUrlErrorData {
+    string reason;
+};
+
+[Enum]
+interface SuccessActionProcessed {
+    Aes(AesSuccessActionDataResult result);
+    Message(MessageSuccessActionData data);
+    Url(UrlSuccessActionData data);
+};
+
+[Enum]
+interface AesSuccessActionDataResult {
+    Decrypted(AesSuccessActionDataDecrypted data);
+    ErrorStatus(string reason);
+};
+
+dictionary AesSuccessActionDataDecrypted {
+    string description;
+    string plaintext;
+};
+
+dictionary MessageSuccessActionData {
+    string message;
+};
+
+dictionary UrlSuccessActionData {
+    string description;
+    string url;
+};
+
+dictionary LnUrlPayErrorData {
+    string payment_hash;
+    string reason;
+};
+
+dictionary LnUrlPayRequest {
+    LnUrlPayRequestData data;
+    u64 amount_msat;
+    string? comment = null;
+    string? payment_label = null;
+};
+
+[Error]
+interface LnUrlPayError {
+    AlreadyPaid();
+    Generic(string err);
+    InvalidAmount(string err);
+    InvalidInvoice(string err);
+    InvalidNetwork(string err);
+    InvalidUri(string err);
+    InvoiceExpired(string err);
+    PaymentFailed(string err);
+    PaymentTimeout(string err);
+    RouteNotFound(string err);
+    RouteTooExpensive(string err);
+    ServiceConnectivity(string err);
+};
+
+[Error]
+interface LnUrlWithdrawError {
+    Generic(string err);
+    InvalidAmount(string err);
+    InvalidInvoice(string err);
+    InvalidUri(string err);
+    ServiceConnectivity(string err);
+    InvoiceNoRoutingHints(string err);
+};
+
+[Enum]
+interface LnUrlWithdrawResult {
+    Ok(LnUrlWithdrawSuccessData data);
+    ErrorStatus(LnUrlErrorData data);
+};
+
+dictionary LnUrlWithdrawSuccessData {
+    LNInvoice invoice;
+};
+
+dictionary LnUrlWithdrawRequestData {
+    string callback;
+    string k1;
+    string default_description;
+    u64 min_withdrawable;
+    u64 max_withdrawable;
+};
+
+dictionary LnUrlWithdrawRequest {
+    LnUrlWithdrawRequestData data;
+    u64 amount_msat;
+    string? description = null;
+};
+
+[Enum]
+interface LnUrlCallbackStatus {
+    Ok();
+    ErrorStatus(LnUrlErrorData data);
+};
+
+[Error]
+interface LnUrlAuthError {
+    Generic(string err);
+    InvalidUri(string err);
+    ServiceConnectivity(string err);
+};
+
+// END sdk-common mirror imports
+////////////////////////////////
+
+//////////////////////////////////
+// BEGIN sdk-common wrappers
+// These are connecting structures that glue relevant sdk-common structs to the SDK
+
+[Enum]
+interface LnUrlPayResult {
+    EndpointSuccess(LnUrlPaySuccessData data);
+    EndpointError(LnUrlErrorData data);
+    PayError(LnUrlPayErrorData data);
+};
+
+dictionary LnUrlPaySuccessData {
+    SuccessActionProcessed? success_action;
+    Payment payment;
+};
+
+// END sdk-common wrappers
+////////////////////////////////
+
 [Error]
 enum LiquidSdkError {
     "AlreadyStarted",
@@ -33,13 +248,13 @@ dictionary Config {
     string liquid_electrum_url;
     string bitcoin_electrum_url;
     string working_dir;
-    Network network;
+    LiquidNetwork network;
     u64 payment_timeout_sec;
     f32 zero_conf_min_fee_rate;
     u64? zero_conf_max_amount_sat;
 };
 
-enum Network {
+enum LiquidNetwork {
     "Mainnet",
     "Testnet",
 };
@@ -105,35 +320,6 @@ dictionary RestoreRequest {
     string? backup_path = null;
 };
 
-dictionary RouteHint {
-    sequence<RouteHintHop> hops;
-};
-
-dictionary RouteHintHop {
-     string src_node_id;
-     u64 short_channel_id;
-     u32 fees_base_msat;
-     u32 fees_proportional_millionths;
-     u64 cltv_expiry_delta;
-     u64? htlc_minimum_msat;
-     u64? htlc_maximum_msat;
- };
-
-dictionary LNInvoice {
-    string bolt11;
-    Network network;
-    string payee_pubkey;
-    string payment_hash;
-    string? description;
-    string? description_hash;
-    u64? amount_msat;
-    u64 timestamp;
-    u64 expiry;
-    sequence<RouteHint> routing_hints;
-    sequence<u8> payment_secret;
-    u64 min_final_cltv_expiry_delta;
-};
-
 dictionary Payment {
     string? tx_id = null;
     string? swap_id = null;
@@ -192,10 +378,13 @@ namespace breez_liquid_sdk {
     [Throws=LiquidSdkError]
     void set_logger(Logger logger);
     
-    Config default_config(Network network);
+    Config default_config(LiquidNetwork network);
 
     [Throws=PaymentError]
-    LNInvoice parse_invoice(string invoice);
+    InputType parse(string input);
+
+    [Throws=PaymentError]
+    LNInvoice parse_invoice(string input);
 };
 
 interface BindingLiquidSdk {
@@ -240,4 +429,13 @@ interface BindingLiquidSdk {
 
     [Throws=LiquidSdkError]
     void disconnect();
+
+    [Throws=LnUrlPayError]
+    LnUrlPayResult lnurl_pay(LnUrlPayRequest req);
+
+    [Throws=LnUrlWithdrawError]
+    LnUrlWithdrawResult lnurl_withdraw(LnUrlWithdrawRequest req);
+
+    [Throws=LnUrlAuthError]
+    LnUrlCallbackStatus lnurl_auth(LnUrlAuthRequestData req_data);
 };

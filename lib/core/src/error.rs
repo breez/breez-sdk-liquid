@@ -1,4 +1,5 @@
 use anyhow::Error;
+use sdk_common::prelude::LnUrlAuthError;
 
 pub type LiquidSdkResult<T, E = LiquidSdkError> = Result<T, E>;
 
@@ -146,6 +147,22 @@ impl From<LiquidSdkError> for PaymentError {
     fn from(err: LiquidSdkError) -> Self {
         Self::Generic {
             err: err.to_string(),
+        }
+    }
+}
+
+impl From<crate::bitcoin::util::bip32::Error> for PaymentError {
+    fn from(err: crate::bitcoin::util::bip32::Error) -> Self {
+        Self::SignerError {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<PaymentError> for LnUrlAuthError {
+    fn from(value: PaymentError) -> Self {
+        Self::Generic {
+            err: format!("Failed to perform LNURL-auth: {value:?}"),
         }
     }
 }

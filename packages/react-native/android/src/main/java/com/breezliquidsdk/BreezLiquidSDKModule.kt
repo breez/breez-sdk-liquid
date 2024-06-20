@@ -61,7 +61,7 @@ class BreezLiquidSDKModule(
     ) {
         executor.execute {
             try {
-                val networkTmp = asNetwork(network)
+                val networkTmp = asLiquidNetwork(network)
                 val res = defaultConfig(networkTmp)
                 val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezLiquidSdk")
 
@@ -74,13 +74,28 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
-    fun parseInvoice(
-        invoice: String,
+    fun parse(
+        input: String,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val res = parseInvoice(invoice)
+                val res = parse(input)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun parseInvoice(
+        input: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = parseInvoice(input)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -344,6 +359,59 @@ class BreezLiquidSDKModule(
                 getBindingLiquidSdk().disconnect()
                 bindingLiquidSdk = null
                 promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun lnurlPay(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val lnUrlPayRequest =
+                    asLnUrlPayRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "LnUrlPayRequest")) }
+                val res = getBindingLiquidSdk().lnurlPay(lnUrlPayRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun lnurlWithdraw(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val lnUrlWithdrawRequest =
+                    asLnUrlWithdrawRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "LnUrlWithdrawRequest")) }
+                val res = getBindingLiquidSdk().lnurlWithdraw(lnUrlWithdrawRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun lnurlAuth(
+        reqData: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val lnUrlAuthRequestData =
+                    asLnUrlAuthRequestData(reqData)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("reqData", "LnUrlAuthRequestData")) }
+                val res = getBindingLiquidSdk().lnurlAuth(lnUrlAuthRequestData)
+                promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }
