@@ -25,9 +25,9 @@ lwk_signer = "0.5.1"
 # Switch back to published version once this PR is merged and included in release: https://github.com/Blockstream/lwk/pull/34 (ETA in v0.5.2)
 lwk_wollet = { git = "https://github.com/Blockstream/lwk", rev = "ffd793d0a1b1122c9bba7de23ccb73033eded98c" }
 #lwk_wollet = "0.5.1"
-rusqlite = { version = "0.29", features = ["backup", "bundled"] } # Same version as used in sdk-common
+rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "ok300-extract-lnurl-auth-structs" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "main" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 thiserror = { workspace = true }
