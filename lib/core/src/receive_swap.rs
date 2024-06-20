@@ -2,10 +2,16 @@ use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::RevSwapStates;
-use boltz_client::swaps::boltzv2;
+use boltz_client::swaps::boltzv2::{self, SwapUpdateTxDetails};
+use boltz_client::ToHex;
 use log::{debug, error, info, warn};
-use tokio::sync::broadcast;
+use lwk_wollet::elements::hex::FromHex;
+use lwk_wollet::elements::Script;
+use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::History;
+use tokio::sync::{broadcast, Mutex};
 
+use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::{ensure_sdk, utils};
@@ -26,6 +32,7 @@ pub(crate) struct ReceiveSwapStateHandler {
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     subscription_notifier: broadcast::Sender<String>,
+    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
 }
 
 impl ReceiveSwapStateHandler {
@@ -34,6 +41,7 @@ impl ReceiveSwapStateHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
+        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -42,6 +50,7 @@ impl ReceiveSwapStateHandler {
             persister,
             swapper,
             subscription_notifier,
+            liquid_chain_service,
         }
     }
 
@@ -88,6 +97,15 @@ impl ReceiveSwapStateHandler {
                     ));
                 }
 
+                // looking for lockup script history to verify lockup was broadcasted
+                if let Err(e) = self.verify_lockup_tx(&receive_swap, &transaction).await {
+                    return Err(anyhow!(
+                        "swapper mempool reported lockup could not be verified. txid: {}, err: {}",
+                        transaction.id,
+                        e
+                    ));
+                }
+                info!("swapper lockup was verified");
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
 
                 // If the amount is greater than the zero-conf limit
@@ -141,6 +159,19 @@ impl ReceiveSwapStateHandler {
                 // if lockup_tx_history.height <= 0 {
                 //     return Err(anyhow!("Tx state mismatch: Lockup transaction was marked as confirmed by the swapper, but isn't."));
                 // }
+
+                let Some(transaction) = update.transaction.clone() else {
+                    return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                };
+                // looking for lockup script history to verify lockup was broadcasted
+                if let Err(e) = self.verify_lockup_tx(&receive_swap, &transaction).await {
+                    return Err(anyhow!(
+                        "swapper reported lockup could not be verified. txid: {}, err: {}",
+                        transaction.id,
+                        e
+                    ));
+                }
+                info!("swapper lockup was verified, moving to claim");
 
                 match receive_swap.claim_tx_id {
                     Some(claim_tx_id) => {
@@ -269,6 +300,78 @@ impl ReceiveSwapStateHandler {
             }),
             (_, Failed) => Ok(()),
         }
+    }
+
+    async fn verify_lockup_tx(
+        &self,
+        receive_swap: &ReceiveSwap,
+        swap_update_tx: &SwapUpdateTxDetails,
+    ) -> Result<()> {
+        // looking for lockup script history to verify lockup was broadcasted
+        let script_history = self.lockup_script_history(receive_swap).await?;
+        let lockup_tx_history = script_history
+            .iter()
+            .find(|h| h.txid.to_hex().eq(&swap_update_tx.id));
+
+        if lockup_tx_history.is_none() {
+            return Err(anyhow!(
+                "swapper lockup wasn't found, reported txid={} waiting for confirmation",
+                swap_update_tx.id,
+            ));
+        }
+
+        info!("swapper lockup found, verifying transaction content...");
+
+        let lockup_tx = utils::deserialize_tx_hex(&swap_update_tx.hex)?;
+        if !lockup_tx
+            .txid()
+            .to_hex()
+            .eq(&lockup_tx_history.unwrap().txid.to_hex())
+        {
+            return Err(anyhow!(
+                "swapper reported txid and transaction hex do not match: {} vs {}",
+                swap_update_tx.id,
+                lockup_tx.txid().to_hex()
+            ));
+        }
+        Ok(())
+    }
+
+    async fn lockup_script_history(&self, receive_swap: &ReceiveSwap) -> Result<Vec<History>> {
+        let script = receive_swap.get_swap_script()?;
+        let address =
+            script
+                .to_address(self.config.network.into())
+                .map_err(|e| PaymentError::Generic {
+                    err: format!("failed to get swap script address {e:?}"),
+                })?;
+        let sc = Script::from_hex(
+            hex::encode(address.to_unconfidential().script_pubkey().as_bytes()).as_str(),
+        )
+        .map_err(|e| PaymentError::Generic {
+            err: format!("failed to get swap script address {e:?}"),
+        })?;
+
+        let script_hash = sha256::Hash::hash(sc.as_bytes()).to_byte_array().to_hex();
+        info!("fetching script history for {}", script_hash);
+        let mut script_history = vec![];
+
+        let mut retries = 1;
+        while script_history.is_empty() && retries < 5 {
+            script_history = self
+                .liquid_chain_service
+                .lock()
+                .await
+                .get_script_history(&sc)
+                .await?;
+            info!(
+                "script history for {} got zero transactions, retrying in {} seconds...",
+                script_hash, retries
+            );
+            std::thread::sleep(std::time::Duration::from_secs(retries));
+            retries += 1;
+        }
+        Ok(script_history)
     }
 }
 

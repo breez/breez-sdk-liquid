@@ -13,7 +13,6 @@ use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements::LockTime, ElementsNetwork};
-use lwk_wollet::{ElectrumClient, ElectrumUrl};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use tokio::sync::{watch, Mutex, RwLock};
@@ -21,7 +20,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
 
-use crate::chain::ChainService;
+use crate::chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
@@ -46,7 +45,7 @@ pub struct LiquidSdk {
     event_manager: Arc<EventManager>,
     status_stream: Arc<dyn SwapperStatusStream>,
     swapper: Arc<dyn Swapper>,
-    chain_service: Arc<Mutex<dyn ChainService>>,
+    chain_service: Arc<Mutex<dyn LiquidChainService>>,
     is_started: RwLock<bool>,
     shutdown_sender: watch::Sender<()>,
     shutdown_receiver: watch::Receiver<()>,
@@ -76,11 +75,7 @@ impl LiquidSdk {
         let swapper = Arc::new(BoltzSwapper::new(config.clone()));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
-        let chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
-            &config.liquid_electrum_url,
-            true,
-            true,
-        ))?));
+        let chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
@@ -97,6 +92,7 @@ impl LiquidSdk {
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
+            chain_service.clone(),
         );
 
         let chain_swap_state_handler = ChainSwapStateHandler::new(
@@ -303,7 +299,7 @@ impl LiquidSdk {
             match chain_swap.direction {
                 Direction::Outgoing => {
                     let swap_script = chain_swap.get_lockup_swap_script()?.as_liquid_script()?;
-                    let current_height = self.chain_service.lock().await.tip()?.height;
+                    let current_height = self.chain_service.lock().await.tip().await?;
                     let locktime_from_height = LockTime::from_height(current_height)?;
 
                     info!("Checking Chain Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", chain_swap.id, swap_script.locktime);
@@ -331,7 +327,7 @@ impl LiquidSdk {
     async fn check_send_swap_expiration(&self, send_swap: &SendSwap) -> Result<()> {
         if send_swap.lockup_tx_id.is_some() && send_swap.refund_tx_id.is_none() {
             let swap_script = send_swap.get_swap_script()?;
-            let current_height = self.chain_service.lock().await.tip()?.height;
+            let current_height = self.chain_service.lock().await.tip().await?;
             let locktime_from_height = LockTime::from_height(current_height)?;
 
             info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", send_swap.id, swap_script.locktime);
@@ -569,7 +565,7 @@ impl LiquidSdk {
     async fn estimate_onchain_tx_fee(&self, amount_sat: u64, address: &str) -> Result<u64> {
         Ok(self
             .onchain_wallet
-            .build_tx(None, address, amount_sat)
+            .build_tx(Some(10.0), address, amount_sat)
             .await?
             .all_fees()
             .values()

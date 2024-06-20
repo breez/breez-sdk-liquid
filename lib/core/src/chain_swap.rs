@@ -9,7 +9,7 @@ use lwk_wollet::ElectrumUrl;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::bitcoin::{BitcoinChainService, ElectrumClient};
-use crate::chain::ChainService;
+use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
 use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
 use crate::swapper::Swapper;
@@ -20,7 +20,7 @@ pub(crate) struct ChainSwapStateHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
-    liquid_chain_service: Arc<Mutex<dyn ChainService>>,
+    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     subscription_notifier: broadcast::Sender<String>,
 }
@@ -31,7 +31,7 @@ impl ChainSwapStateHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        liquid_chain_service: Arc<Mutex<dyn ChainService>>,
+        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     ) -> Result<Self> {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let bitcoin_chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
@@ -331,7 +331,8 @@ impl ChainSwapStateHandler {
             .liquid_chain_service
             .lock()
             .await
-            .broadcast(&lockup_tx)?
+            .broadcast(&lockup_tx, Some(swap_id))
+            .await?
             .to_string();
 
         debug!(
@@ -444,7 +445,7 @@ impl ChainSwapStateHandler {
 
         let current_height = match swap.direction {
             Direction::Incoming => self.bitcoin_chain_service.lock().await.tip()?.height as u32,
-            Direction::Outgoing => self.liquid_chain_service.lock().await.tip()?.height,
+            Direction::Outgoing => self.liquid_chain_service.lock().await.tip().await?,
         };
 
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
