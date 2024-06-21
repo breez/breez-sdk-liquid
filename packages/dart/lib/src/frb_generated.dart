@@ -2043,10 +2043,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareRefundResponse dco_decode_prepare_refund_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareRefundResponse(
-      refundTxVsize: dco_decode_u_32(arr[0]),
-      refundTxFeeSat: dco_decode_u_64(arr[1]),
+      txVsize: dco_decode_u_32(arr[0]),
+      txFeeSat: dco_decode_u_64(arr[1]),
+      refundTxId: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -3438,9 +3439,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PrepareRefundResponse sse_decode_prepare_refund_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_refundTxVsize = sse_decode_u_32(deserializer);
-    var var_refundTxFeeSat = sse_decode_u_64(deserializer);
-    return PrepareRefundResponse(refundTxVsize: var_refundTxVsize, refundTxFeeSat: var_refundTxFeeSat);
+    var var_txVsize = sse_decode_u_32(deserializer);
+    var var_txFeeSat = sse_decode_u_64(deserializer);
+    var var_refundTxId = sse_decode_opt_String(deserializer);
+    return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId);
   }
 
   @protected
@@ -4754,8 +4756,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_prepare_refund_response(PrepareRefundResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.refundTxVsize, serializer);
-    sse_encode_u_64(self.refundTxFeeSat, serializer);
+    sse_encode_u_32(self.txVsize, serializer);
+    sse_encode_u_64(self.txFeeSat, serializer);
+    sse_encode_opt_String(self.refundTxId, serializer);
   }
 
   @protected

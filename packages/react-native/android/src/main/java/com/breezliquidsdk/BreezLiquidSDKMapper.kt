@@ -1289,25 +1289,28 @@ fun asPrepareRefundResponse(prepareRefundResponse: ReadableMap): PrepareRefundRe
     if (!validateMandatoryFields(
             prepareRefundResponse,
             arrayOf(
-                "refundTxVsize",
-                "refundTxFeeSat",
+                "txVsize",
+                "txFeeSat",
             ),
         )
     ) {
         return null
     }
-    val refundTxVsize = prepareRefundResponse.getInt("refundTxVsize").toUInt()
-    val refundTxFeeSat = prepareRefundResponse.getDouble("refundTxFeeSat").toULong()
+    val txVsize = prepareRefundResponse.getInt("txVsize").toUInt()
+    val txFeeSat = prepareRefundResponse.getDouble("txFeeSat").toULong()
+    val refundTxId = if (hasNonNullKey(prepareRefundResponse, "refundTxId")) prepareRefundResponse.getString("refundTxId") else null
     return PrepareRefundResponse(
-        refundTxVsize,
-        refundTxFeeSat,
+        txVsize,
+        txFeeSat,
+        refundTxId,
     )
 }
 
 fun readableMapOf(prepareRefundResponse: PrepareRefundResponse): ReadableMap =
     readableMapOf(
-        "refundTxVsize" to prepareRefundResponse.refundTxVsize,
-        "refundTxFeeSat" to prepareRefundResponse.refundTxFeeSat,
+        "txVsize" to prepareRefundResponse.txVsize,
+        "txFeeSat" to prepareRefundResponse.txFeeSat,
+        "refundTxId" to prepareRefundResponse.refundTxId,
     )
 
 fun asPrepareRefundResponseList(arr: ReadableArray): List<PrepareRefundResponse> {

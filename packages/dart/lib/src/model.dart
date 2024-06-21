@@ -560,24 +560,27 @@ class PrepareRefundRequest {
 }
 
 class PrepareRefundResponse {
-  final int refundTxVsize;
-  final BigInt refundTxFeeSat;
+  final int txVsize;
+  final BigInt txFeeSat;
+  final String? refundTxId;
 
   const PrepareRefundResponse({
-    required this.refundTxVsize,
-    required this.refundTxFeeSat,
+    required this.txVsize,
+    required this.txFeeSat,
+    this.refundTxId,
   });
 
   @override
-  int get hashCode => refundTxVsize.hashCode ^ refundTxFeeSat.hashCode;
+  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ refundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareRefundResponse &&
           runtimeType == other.runtimeType &&
-          refundTxVsize == other.refundTxVsize &&
-          refundTxFeeSat == other.refundTxFeeSat;
+          txVsize == other.txVsize &&
+          txFeeSat == other.txFeeSat &&
+          refundTxId == other.refundTxId;
 }
 
 class PrepareSendRequest {

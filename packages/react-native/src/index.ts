@@ -219,8 +219,9 @@ export interface PrepareRefundRequest {
 }
 
 export interface PrepareRefundResponse {
-    refundTxVsize: number
-    refundTxFeeSat: number
+    txVsize: number
+    txFeeSat: number
+    refundTxId?: string
 }
 
 export interface PrepareSendRequest {

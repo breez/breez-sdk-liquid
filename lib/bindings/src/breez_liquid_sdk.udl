@@ -416,8 +416,9 @@ dictionary PrepareRefundRequest {
 };
 
 dictionary PrepareRefundResponse {
-    u32 refund_tx_vsize;
-    u64 refund_tx_fee_sat;
+    u32 tx_vsize;
+    u64 tx_fee_sat;
+    string? refund_tx_id = null;
 };
 
 dictionary RefundRequest {

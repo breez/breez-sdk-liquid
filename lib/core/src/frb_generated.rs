@@ -2802,11 +2802,13 @@ impl SseDecode for crate::model::PrepareRefundRequest {
 impl SseDecode for crate::model::PrepareRefundResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_refundTxVsize = <u32>::sse_decode(deserializer);
-        let mut var_refundTxFeeSat = <u64>::sse_decode(deserializer);
+        let mut var_txVsize = <u32>::sse_decode(deserializer);
+        let mut var_txFeeSat = <u64>::sse_decode(deserializer);
+        let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareRefundResponse {
-            refund_tx_vsize: var_refundTxVsize,
-            refund_tx_fee_sat: var_refundTxFeeSat,
+            tx_vsize: var_txVsize,
+            tx_fee_sat: var_txFeeSat,
+            refund_tx_id: var_refundTxId,
         };
     }
 }
@@ -4245,8 +4247,9 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareRefundRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareRefundResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.refund_tx_vsize.into_into_dart().into_dart(),
-            self.refund_tx_fee_sat.into_into_dart().into_dart(),
+            self.tx_vsize.into_into_dart().into_dart(),
+            self.tx_fee_sat.into_into_dart().into_dart(),
+            self.refund_tx_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5563,8 +5566,9 @@ impl SseEncode for crate::model::PrepareRefundRequest {
 impl SseEncode for crate::model::PrepareRefundResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.refund_tx_vsize, serializer);
-        <u64>::sse_encode(self.refund_tx_fee_sat, serializer);
+        <u32>::sse_encode(self.tx_vsize, serializer);
+        <u64>::sse_encode(self.tx_fee_sat, serializer);
+        <Option<String>>::sse_encode(self.refund_tx_id, serializer);
     }
 }
 

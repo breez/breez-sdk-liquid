@@ -2178,8 +2178,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_refund_response(
       PrepareRefundResponse apiObj, wire_cst_prepare_refund_response wireObj) {
-    wireObj.refund_tx_vsize = cst_encode_u_32(apiObj.refundTxVsize);
-    wireObj.refund_tx_fee_sat = cst_encode_u_64(apiObj.refundTxFeeSat);
+    wireObj.tx_vsize = cst_encode_u_32(apiObj.txVsize);
+    wireObj.tx_fee_sat = cst_encode_u_64(apiObj.txFeeSat);
+    wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
   }
 
   @protected
@@ -4795,10 +4796,12 @@ final class wire_cst_payment_error extends ffi.Struct {
 
 final class wire_cst_prepare_refund_response extends ffi.Struct {
   @ffi.Uint32()
-  external int refund_tx_vsize;
+  external int tx_vsize;
 
   @ffi.Uint64()
-  external int refund_tx_fee_sat;
+  external int tx_fee_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
 
 final class wire_cst_receive_onchain_response extends ffi.Struct {

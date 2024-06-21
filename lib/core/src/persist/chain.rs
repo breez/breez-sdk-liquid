@@ -159,7 +159,7 @@ impl Persister {
         &self,
         con: &Connection,
         where_clauses: Vec<String>,
-    ) -> rusqlite::Result<Vec<ChainSwap>> {
+    ) -> Result<Vec<ChainSwap>> {
         let query = Self::list_chain_swaps_query(where_clauses);
         let chain_swaps = con
             .prepare(&query)?
@@ -169,14 +169,15 @@ impl Persister {
         Ok(chain_swaps)
     }
 
-    pub(crate) fn list_ongoing_chain_swaps(
+    pub(crate) fn list_chain_swaps_by_state(
         &self,
         con: &Connection,
-    ) -> rusqlite::Result<Vec<ChainSwap>> {
+        states: Vec<PaymentState>,
+    ) -> Result<Vec<ChainSwap>> {
         let mut where_clause: Vec<String> = Vec::new();
         where_clause.push(format!(
             "state in ({})",
-            [PaymentState::Created, PaymentState::Pending]
+            states
                 .iter()
                 .map(|t| format!("'{}'", *t as i8))
                 .collect::<Vec<_>>()
@@ -186,15 +187,18 @@ impl Persister {
         self.list_chain_swaps(con, where_clause)
     }
 
+    pub(crate) fn list_finished_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
+        self.list_chain_swaps_by_state(&con, vec![PaymentState::Complete, PaymentState::Failed])
+    }
+
+    pub(crate) fn list_ongoing_chain_swaps(&self, con: &Connection) -> Result<Vec<ChainSwap>> {
+        self.list_chain_swaps_by_state(con, vec![PaymentState::Created, PaymentState::Pending])
+    }
+
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        let query = Self::list_chain_swaps_query(vec!["state = ?1".to_string()]);
-        let res = con
-            .prepare(&query)?
-            .query_map(params![PaymentState::Pending], Self::sql_row_to_chain_swap)?
-            .map(|i| i.unwrap())
-            .collect();
-        Ok(res)
+        let con = self.get_connection()?;
+        self.list_chain_swaps_by_state(&con, vec![PaymentState::Pending])
     }
 
     /// Pending Chain swaps, indexed by refund tx id

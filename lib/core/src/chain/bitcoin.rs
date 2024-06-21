@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use electrum_client::{Client, ElectrumApi, HeaderNotification};
+use electrum_client::{Client, ElectrumApi, HeaderNotification, ListUnspentRes};
 use lwk_wollet::{
     bitcoin::{
-        self,
         block::Header,
         consensus::{deserialize, serialize},
         BlockHash, Script, Transaction, Txid,
@@ -13,6 +12,28 @@ use lwk_wollet::{
 };
 
 type Height = u32;
+
+#[allow(dead_code)]
+pub struct Unspent {
+    /// Confirmation height of the transaction that created this output.
+    pub height: usize,
+    /// Txid of the transaction
+    pub tx_hash: Txid,
+    /// Index of the output in the transaction.
+    pub tx_pos: usize,
+    /// Value of the output.
+    pub value: u64,
+}
+impl From<ListUnspentRes> for Unspent {
+    fn from(value: ListUnspentRes) -> Self {
+        Unspent {
+            height: value.height,
+            tx_hash: value.tx_hash,
+            tx_pos: value.tx_pos,
+            value: value.value,
+        }
+    }
+}
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -37,6 +58,9 @@ pub trait BitcoinChainService: Send + Sync {
 
     /// Get the transactions involved in a list of scripts
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+
+    /// Get a list of unspend outputs
+    fn script_list_unspent(&self, script: &Script) -> Result<Vec<Unspent>>;
 }
 
 pub(crate) struct ElectrumClient {
@@ -91,13 +115,8 @@ impl BitcoinChainService for ElectrumClient {
     }
 
     fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        let txids: Vec<bitcoin::Txid> = txids
-            .iter()
-            .map(|t| bitcoin::Txid::from_raw_hash(t.to_raw_hash()))
-            .collect();
-
         let mut result = vec![];
-        for tx in self.client.batch_transaction_get_raw(&txids)? {
+        for tx in self.client.batch_transaction_get_raw(txids)? {
             let tx: Transaction = deserialize(&tx)?;
             result.push(tx);
         }
@@ -118,16 +137,20 @@ impl BitcoinChainService for ElectrumClient {
     }
 
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        let scripts: Vec<&bitcoin::Script> = scripts
-            .iter()
-            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
-            .collect();
-
         Ok(self
             .client
-            .batch_script_get_history(&scripts)?
+            .batch_script_get_history(scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
+            .collect())
+    }
+
+    fn script_list_unspent(&self, script: &Script) -> Result<Vec<Unspent>> {
+        Ok(self
+            .client
+            .script_list_unspent(script)?
+            .into_iter()
+            .map(Into::into)
             .collect())
     }
 }

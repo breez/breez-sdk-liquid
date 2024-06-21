@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
@@ -199,7 +199,8 @@ impl LiquidSdk {
             .start(reconnect_handler, self.shutdown_receiver.clone())
             .await;
         self.track_swap_updates().await;
-        self.track_refundable_swaps().await;
+        self.track_pending_swaps().await;
+        self.track_finished_swaps().await;
 
         Ok(())
     }
@@ -285,7 +286,7 @@ impl LiquidSdk {
         });
     }
 
-    async fn track_refundable_swaps(self: &Arc<LiquidSdk>) {
+    async fn track_pending_swaps(self: &Arc<LiquidSdk>) {
         let cloned = self.clone();
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
@@ -308,20 +309,117 @@ impl LiquidSdk {
                             Ok(pending_chain_swaps) => {
                                 for swap in pending_chain_swaps {
                                     if let Err(e) = cloned.check_chain_swap_expiration(&swap).await {
-                                        error!("Error checking expiration for Send Swap {}: {e:?}", swap.id);
+                                        error!("Error checking expiration for Chain Swap {}: {e:?}", swap.id);
                                     }
                                 }
                             }
-                            Err(e) => error!("Error listing pending send swaps: {e:?}"),
+                            Err(e) => error!("Error listing pending chain swaps: {e:?}"),
                         }
                     },
                     _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting refundable swaps loop");
+                        info!("Received shutdown signal, exiting pending swaps loop");
                         return;
                     }
                 }
             }
         });
+    }
+
+    async fn track_finished_swaps(self: &Arc<LiquidSdk>) {
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
+            let mut interval = tokio::time::interval(Duration::from_secs(60 * 10));
+            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        if let Err(e) = cloned.check_pending_refunded_chain_swaps().await {
+                            error!("Error checking pending refunded chain swaps: {e:?}");
+                        }
+                        if let Err(e) = cloned.check_finished_chain_swaps().await {
+                            error!("Error checking finished chain swaps: {e:?}");
+                        }
+                    },
+                    _ = shutdown_receiver.changed() => {
+                        info!("Received shutdown signal, exiting finished swaps loop");
+                        return;
+                    }
+                }
+            }
+        });
+    }
+
+    async fn check_pending_refunded_chain_swaps(&self) -> Result<()> {
+        info!("Checking pending incoming Chain Swaps with refund txs");
+        let pending_chain_swaps: Vec<ChainSwap> = self
+            .persister
+            .list_pending_chain_swaps()?
+            .into_iter()
+            .filter(|s| s.direction == Direction::Incoming && s.refund_tx_id.is_some())
+            .collect();
+        for swap in pending_chain_swaps {
+            let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+            let script_pubkey = swap_script
+                .to_address(self.config.network.as_bitcoin_chain())
+                .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+                .script_pubkey();
+            let unspent = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .script_list_unspent(script_pubkey.as_script())?;
+            if unspent.is_empty() {
+                // Set the state based on if the claim was successful
+                let to_state = match swap.claim_tx_id {
+                    Some(_) => Complete,
+                    None => Failed,
+                };
+                info!(
+                    "Chain Swap {} has no unspent tx outputs. Setting the swap to {:?}",
+                    swap.id, to_state
+                );
+                self.chain_swap_state_handler
+                    .update_swap_info(&swap.id, to_state, None, None, None, None)
+                    .await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn check_finished_chain_swaps(&self) -> Result<()> {
+        info!("Checking finished incoming Chain Swaps for unspent tx outputs");
+        let finished_chain_swaps: Vec<ChainSwap> = self
+            .persister
+            .list_finished_chain_swaps()?
+            .into_iter()
+            .filter(|s| s.direction == Direction::Incoming)
+            .collect();
+        for swap in finished_chain_swaps {
+            let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+            let script_pubkey = swap_script
+                .to_address(self.config.network.as_bitcoin_chain())
+                .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+                .script_pubkey();
+            let confirmed_unspent_sat: u64 = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .script_list_unspent(script_pubkey.as_script())?
+                .iter()
+                .filter(|u| u.height > 0)
+                .map(|u| u.value)
+                .sum();
+            if confirmed_unspent_sat > 0 {
+                let id = &swap.id;
+                info!("Chain Swap {} has unspent tx outputs of {} sats. Setting the swap to refundable", id, confirmed_unspent_sat);
+                self.chain_swap_state_handler
+                    .update_swap_info(id, Refundable, None, None, None, None)
+                    .await?;
+            }
+        }
+        Ok(())
     }
 
     async fn check_chain_swap_expiration(&self, chain_swap: &ChainSwap) -> Result<()> {
@@ -1310,14 +1408,15 @@ impl LiquidSdk {
         &self,
         req: &PrepareRefundRequest,
     ) -> LiquidSdkResult<PrepareRefundResponse> {
-        let (refund_tx_vsize, refund_tx_fee_sat) = self.chain_swap_state_handler.prepare_refund(
+        let (tx_vsize, tx_fee_sat, refund_tx_id) = self.chain_swap_state_handler.prepare_refund(
             &req.swap_address,
             &req.refund_address,
             req.sat_per_vbyte,
         )?;
         Ok(PrepareRefundResponse {
-            refund_tx_vsize,
-            refund_tx_fee_sat,
+            tx_vsize,
+            tx_fee_sat,
+            refund_tx_id,
         })
     }
 

@@ -704,8 +704,9 @@ typedef struct wire_cst_payment_error {
 } wire_cst_payment_error;
 
 typedef struct wire_cst_prepare_refund_response {
-  uint32_t refund_tx_vsize;
-  uint64_t refund_tx_fee_sat;
+  uint32_t tx_vsize;
+  uint64_t tx_fee_sat;
+  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_prepare_refund_response;
 
 typedef struct wire_cst_receive_onchain_response {

@@ -1513,23 +1513,32 @@ enum BreezLiquidSDKMapper {
     }
 
     static func asPrepareRefundResponse(prepareRefundResponse: [String: Any?]) throws -> PrepareRefundResponse {
-        guard let refundTxVsize = prepareRefundResponse["refundTxVsize"] as? UInt32 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "refundTxVsize", typeName: "PrepareRefundResponse"))
+        guard let txVsize = prepareRefundResponse["txVsize"] as? UInt32 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txVsize", typeName: "PrepareRefundResponse"))
         }
-        guard let refundTxFeeSat = prepareRefundResponse["refundTxFeeSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "refundTxFeeSat", typeName: "PrepareRefundResponse"))
+        guard let txFeeSat = prepareRefundResponse["txFeeSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "txFeeSat", typeName: "PrepareRefundResponse"))
+        }
+        var refundTxId: String?
+        if hasNonNilKey(data: prepareRefundResponse, key: "refundTxId") {
+            guard let refundTxIdTmp = prepareRefundResponse["refundTxId"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "refundTxId"))
+            }
+            refundTxId = refundTxIdTmp
         }
 
         return PrepareRefundResponse(
-            refundTxVsize: refundTxVsize,
-            refundTxFeeSat: refundTxFeeSat
+            txVsize: txVsize,
+            txFeeSat: txFeeSat,
+            refundTxId: refundTxId
         )
     }
 
     static func dictionaryOf(prepareRefundResponse: PrepareRefundResponse) -> [String: Any?] {
         return [
-            "refundTxVsize": prepareRefundResponse.refundTxVsize,
-            "refundTxFeeSat": prepareRefundResponse.refundTxFeeSat,
+            "txVsize": prepareRefundResponse.txVsize,
+            "txFeeSat": prepareRefundResponse.txFeeSat,
+            "refundTxId": prepareRefundResponse.refundTxId == nil ? nil : prepareRefundResponse.refundTxId,
         ]
     }
 

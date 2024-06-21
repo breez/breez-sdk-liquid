@@ -1195,8 +1195,9 @@ impl CstDecode<crate::model::PrepareRefundResponse> for wire_cst_prepare_refund_
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareRefundResponse {
         crate::model::PrepareRefundResponse {
-            refund_tx_vsize: self.refund_tx_vsize.cst_decode(),
-            refund_tx_fee_sat: self.refund_tx_fee_sat.cst_decode(),
+            tx_vsize: self.tx_vsize.cst_decode(),
+            tx_fee_sat: self.tx_fee_sat.cst_decode(),
+            refund_tx_id: self.refund_tx_id.cst_decode(),
         }
     }
 }
@@ -1969,8 +1970,9 @@ impl Default for wire_cst_prepare_refund_request {
 impl NewWithNullPtr for wire_cst_prepare_refund_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            refund_tx_vsize: Default::default(),
-            refund_tx_fee_sat: Default::default(),
+            tx_vsize: Default::default(),
+            tx_fee_sat: Default::default(),
+            refund_tx_id: core::ptr::null_mut(),
         }
     }
 }
@@ -3570,8 +3572,9 @@ pub struct wire_cst_prepare_refund_request {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_refund_response {
-    refund_tx_vsize: u32,
-    refund_tx_fee_sat: u64,
+    tx_vsize: u32,
+    tx_fee_sat: u64,
+    refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

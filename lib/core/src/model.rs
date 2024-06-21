@@ -250,8 +250,9 @@ pub struct PrepareRefundRequest {
 
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundResponse {
-    pub refund_tx_vsize: u32,
-    pub refund_tx_fee_sat: u64,
+    pub tx_vsize: u32,
+    pub tx_fee_sat: u64,
+    pub refund_tx_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
