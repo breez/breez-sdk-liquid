@@ -565,7 +565,11 @@ impl LiquidSdk {
     async fn estimate_onchain_tx_fee(&self, amount_sat: u64, address: &str) -> Result<u64> {
         Ok(self
             .onchain_wallet
-            .build_tx(Some(LOWBALL_FEE_RATE * 1000.0), address, amount_sat)
+            .build_tx(
+                Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
+                address,
+                amount_sat,
+            )
             .await?
             .all_fees()
             .values()

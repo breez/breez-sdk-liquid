@@ -98,7 +98,10 @@ impl ReceiveSwapStateHandler {
                 }
 
                 // looking for lockup script history to verify lockup was broadcasted
-                if let Err(e) = self.verify_lockup_tx(&receive_swap, &transaction).await {
+                if let Err(e) = self
+                    .verify_lockup_tx(&receive_swap, &transaction, false)
+                    .await
+                {
                     return Err(anyhow!(
                         "swapper mempool reported lockup could not be verified. txid: {}, err: {}",
                         transaction.id,
@@ -164,7 +167,10 @@ impl ReceiveSwapStateHandler {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
                 // looking for lockup script history to verify lockup was broadcasted
-                if let Err(e) = self.verify_lockup_tx(&receive_swap, &transaction).await {
+                if let Err(e) = self
+                    .verify_lockup_tx(&receive_swap, &transaction, true)
+                    .await
+                {
                     return Err(anyhow!(
                         "swapper reported lockup could not be verified. txid: {}, err: {}",
                         transaction.id,
@@ -306,6 +312,7 @@ impl ReceiveSwapStateHandler {
         &self,
         receive_swap: &ReceiveSwap,
         swap_update_tx: &SwapUpdateTxDetails,
+        verify_confirmation: bool,
     ) -> Result<()> {
         // looking for lockup script history to verify lockup was broadcasted
         let script_history = self.lockup_script_history(receive_swap).await?;
@@ -313,28 +320,38 @@ impl ReceiveSwapStateHandler {
             .iter()
             .find(|h| h.txid.to_hex().eq(&swap_update_tx.id));
 
-        if lockup_tx_history.is_none() {
-            return Err(anyhow!(
-                "swapper lockup wasn't found, reported txid={} waiting for confirmation",
-                swap_update_tx.id,
-            ));
-        }
+        match lockup_tx_history {
+            Some(history) => {
+                info!("swapper lockup found, verifying transaction content...");
 
-        info!("swapper lockup found, verifying transaction content...");
+                let lockup_tx = utils::deserialize_tx_hex(&swap_update_tx.hex)?;
+                if !lockup_tx
+                    .txid()
+                    .to_hex()
+                    .eq(&lockup_tx_history.unwrap().txid.to_hex())
+                {
+                    return Err(anyhow!(
+                        "swapper reported txid and transaction hex do not match: {} vs {}",
+                        swap_update_tx.id,
+                        lockup_tx.txid().to_hex()
+                    ));
+                }
 
-        let lockup_tx = utils::deserialize_tx_hex(&swap_update_tx.hex)?;
-        if !lockup_tx
-            .txid()
-            .to_hex()
-            .eq(&lockup_tx_history.unwrap().txid.to_hex())
-        {
-            return Err(anyhow!(
-                "swapper reported txid and transaction hex do not match: {} vs {}",
-                swap_update_tx.id,
-                lockup_tx.txid().to_hex()
-            ));
+                if verify_confirmation && history.height <= 0 {
+                    return Err(anyhow!(
+                        "swapper reported lockup was not confirmed, txid={} waiting for confirmation",
+                        swap_update_tx.id,
+                    ));
+                }
+                Ok(())
+            }
+            None => {
+                return Err(anyhow!(
+                    "swapper reported lockup wasn't found, txid={} waiting for confirmation",
+                    swap_update_tx.id,
+                ));
+            }
         }
-        Ok(())
     }
 
     async fn lockup_script_history(&self, receive_swap: &ReceiveSwap) -> Result<Vec<History>> {

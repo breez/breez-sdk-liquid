@@ -36,8 +36,6 @@ struct EsploraTx {
     status: Status,
 }
 
-// TODO some of this fields may be Option in unconfirmed
-
 #[derive(Deserialize)]
 struct Status {
     block_height: Option<i32>,
@@ -64,7 +62,7 @@ impl LiquidChainService for HybridLiquidChainService {
 
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid> {
         let tx_bytes = tx.serialize();
-        info!("tx: {}", tx_bytes.to_hex());
+        info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
         let client = reqwest::Client::new();
         let response = client
             .post(format!("{LIQUID_ESPLORA_URL}/tx"))

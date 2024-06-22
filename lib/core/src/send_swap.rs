@@ -13,7 +13,7 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
-use crate::model::{Config, SendSwap, LOWBALL_FEE_RATE};
+use crate::model::{Config, SendSwap, LOWBALL_FEE_RATE_SAT_PER_VBYTE};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, get_invoice_amount};
@@ -196,7 +196,7 @@ impl SendSwapStateHandler {
         let lockup_tx = self
             .onchain_wallet
             .build_tx(
-                Some(LOWBALL_FEE_RATE * 1000.0),
+                Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
                 &create_response.address,
                 create_response.expected_amount,
             )
