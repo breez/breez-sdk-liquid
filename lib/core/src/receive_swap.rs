@@ -345,12 +345,10 @@ impl ReceiveSwapStateHandler {
                 }
                 Ok(())
             }
-            None => {
-                return Err(anyhow!(
-                    "swapper reported lockup wasn't found, txid={} waiting for confirmation",
-                    swap_update_tx.id,
-                ));
-            }
+            None => Err(anyhow!(
+                "swapper reported lockup wasn't found, txid={} waiting for confirmation",
+                swap_update_tx.id,
+            )),
         }
     }
 
