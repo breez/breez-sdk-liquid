@@ -85,7 +85,7 @@ impl LiquidChainService for HybridLiquidChainService {
             .to_hex();
         let url = format!("{}/scripthash/{}/txs", LIQUID_ESPLORA_URL, script_hash);
         // TODO must handle paging -> https://github.com/blockstream/esplora/blob/master/API.md#addresses
-        let response = get_with_retry(&url, 2).await?;
+        let response = get_with_retry(&url, 3).await?;
         let json: Vec<EsploraTx> = response.json().await?;
 
         let history: Vec<History> = json.into_iter().map(Into::into).collect();
