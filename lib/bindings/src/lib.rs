@@ -132,6 +132,20 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.pay_onchain(&req))
     }
 
+    pub fn prepare_receive_onchain(
+        &self,
+        req: PrepareReceiveOnchainRequest,
+    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
+        rt().block_on(self.sdk.prepare_receive_onchain(&req))
+    }
+
+    pub fn receive_onchain(
+        &self,
+        req: ReceiveOnchainRequest,
+    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        rt().block_on(self.sdk.receive_onchain(&req))
+    }
+
     pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.sdk.list_payments())
     }
@@ -153,6 +167,21 @@ impl BindingLiquidSdk {
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
         rt().block_on(self.sdk.lnurl_auth(req_data))
+    }
+
+    pub fn list_refundables(&self) -> LiquidSdkResult<Vec<RefundableSwap>> {
+        rt().block_on(self.sdk.list_refundables())
+    }
+
+    pub fn prepare_refund(
+        &self,
+        req: PrepareRefundRequest,
+    ) -> LiquidSdkResult<PrepareRefundResponse> {
+        rt().block_on(self.sdk.prepare_refund(&req))
+    }
+
+    pub fn refund(&self, req: RefundRequest) -> Result<RefundResponse, PaymentError> {
+        rt().block_on(self.sdk.refund(&req))
     }
 
     pub fn sync(&self) -> LiquidSdkResult<()> {

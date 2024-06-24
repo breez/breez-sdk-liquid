@@ -43,8 +43,33 @@ pub(crate) enum Command {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
     },
+    /// Receive lbtc and send btc onchain through a swap
+    ReceiveOnchainPayment {
+        /// Amount the payer will send, in satoshi
+        payer_amount_sat: u64,
+    },
     /// List incoming and outgoing payments
     ListPayments,
+    /// List refundable chain swaps
+    ListRefundables,
+    /// Prepare a refund transaction for an incomplete swap
+    PrepareRefund {
+        // Swap address of the lockup
+        swap_address: String,
+        // Btc onchain address to send the refund to
+        refund_address: String,
+        // Fee rate to use
+        sat_per_vbyte: u32,
+    },
+    /// Broadcast a refund transaction for an incomplete swap
+    Refund {
+        // Swap address of the lockup
+        swap_address: String,
+        // Btc onchain address to send the refund to
+        refund_address: String,
+        // Fee rate to use
+        sat_per_vbyte: u32,
+    },
     /// Get the balance and general info of the current instance
     GetInfo,
     /// Sync local data with mempool and onchain data
@@ -201,12 +226,69 @@ pub(crate) async fn handle_command(
                 .await?;
             command_result!(response)
         }
+        Command::ReceiveOnchainPayment { payer_amount_sat } => {
+            let prepare_res = sdk
+                .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
+                    amount_sat: payer_amount_sat,
+                })
+                .await?;
+
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_res.fees_sat
+                ),
+                "Payment receive halted"
+            );
+
+            let response = sdk
+                .receive_onchain(&ReceiveOnchainRequest { prepare_res })
+                .await?;
+            let bip21 = response.bip21.clone();
+
+            let mut result = command_result!(response);
+            result.push('\n');
+            result.push_str(&build_qr_text(&bip21));
+            result
+        }
         Command::GetInfo => {
             command_result!(sdk.get_info().await?)
         }
         Command::ListPayments => {
             let payments = sdk.list_payments().await?;
             command_result!(payments)
+        }
+        Command::ListRefundables => {
+            let refundables = sdk.list_refundables().await?;
+            command_result!(refundables)
+        }
+        Command::PrepareRefund {
+            swap_address,
+            refund_address,
+            sat_per_vbyte,
+        } => {
+            let res = sdk
+                .prepare_refund(&PrepareRefundRequest {
+                    swap_address,
+                    refund_address,
+                    sat_per_vbyte,
+                })
+                .await?;
+            command_result!(res)
+        }
+        Command::Refund {
+            swap_address,
+            refund_address,
+            sat_per_vbyte,
+        } => {
+            let res = sdk
+                .refund(&RefundRequest {
+                    swap_address,
+                    refund_address,
+                    sat_per_vbyte,
+                })
+                .await?;
+            command_result!(res)
         }
         Command::Sync => {
             sdk.sync().await?;

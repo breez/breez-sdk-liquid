@@ -295,11 +295,94 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
+    fun prepareReceiveOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareReceiveOnchainRequest =
+                    asPrepareReceiveOnchainRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveOnchainRequest")) }
+                val res = getBindingLiquidSdk().prepareReceiveOnchain(prepareReceiveOnchainRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun receiveOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val receiveOnchainRequest =
+                    asReceiveOnchainRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ReceiveOnchainRequest")) }
+                val res = getBindingLiquidSdk().receiveOnchain(receiveOnchainRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listPayments(promise: Promise) {
         executor.execute {
             try {
                 val res = getBindingLiquidSdk().listPayments()
                 promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun listRefundables(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().listRefundables()
+                promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun prepareRefund(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareRefundRequest =
+                    asPrepareRefundRequest(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareRefundRequest")) }
+                val res = getBindingLiquidSdk().prepareRefund(prepareRefundRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun refund(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val refundRequest =
+                    asRefundRequest(req) ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "RefundRequest")) }
+                val res = getBindingLiquidSdk().refund(refundRequest)
+                promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }

@@ -21,7 +21,7 @@ use lwk_wollet::elements;
 use serde_json::Value;
 use tokio::sync::{broadcast, watch};
 
-use crate::error::PaymentError;
+use crate::error::{LiquidSdkError, PaymentError};
 use crate::model::{
     ChainSwap, Config, Direction, LiquidNetwork, ReceiveSwap, SendSwap, SwapScriptV2, SwapTxV2,
 };
@@ -62,7 +62,15 @@ pub trait Swapper: Send + Sync {
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
-    /// Refund a cooperatively chain swap
+    /// Prepare the chain swap refund
+    fn prepare_chain_swap_refund(
+        &self,
+        swap: &ChainSwap,
+        output_address: &str,
+        sat_per_vbyte: f32,
+    ) -> Result<(u32, u64), LiquidSdkError>;
+
+    /// Refund a cooperatively chain swap  
     fn refund_chain_swap_cooperative(
         &self,
         swap: &ChainSwap,
@@ -179,7 +187,7 @@ impl BoltzSwapper {
         swap_id: String,
         swap_script: SwapScriptV2,
         refund_address: &String,
-    ) -> Result<SwapTxV2, PaymentError> {
+    ) -> Result<SwapTxV2, LiquidSdkError> {
         let swap_tx = match swap_script {
             SwapScriptV2::Bitcoin(swap_script) => SwapTxV2::Bitcoin(BtcSwapTxV2::new_refund(
                 swap_script.clone(),
@@ -229,7 +237,7 @@ impl BoltzSwapper {
         let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
         let claim_tx_wrapper = BtcSwapTxV2::new_claim(
             claim_swap_script,
-            swap.address.clone(),
+            swap.claim_address.clone(),
             &self.bitcoin_electrum_config,
         )?;
 
@@ -274,7 +282,7 @@ impl BoltzSwapper {
         let swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
         let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
             swap_script,
-            swap.address.clone(),
+            swap.claim_address.clone(),
             &self.liquid_electrum_config,
             self.config.boltz_url.clone(),
             swap.id.clone(),
@@ -471,7 +479,35 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
     }
 
-    /// Refund a cooperatively chain swap
+    /// Prepare the chain swap refund
+    fn prepare_chain_swap_refund(
+        &self,
+        swap: &ChainSwap,
+        output_address: &str,
+        sat_per_vbyte: f32,
+    ) -> Result<(u32, u64), LiquidSdkError> {
+        let refund_keypair = swap.get_refund_keypair()?;
+        let preimage = Preimage::from_str(&swap.preimage)?;
+        let swap_script = swap.get_lockup_swap_script()?;
+        let refund_tx_vsize = match swap.direction {
+            Direction::Incoming => {
+                let refund_tx = self
+                    .new_refund_tx(swap.id.clone(), swap_script, &output_address.into())?
+                    .as_bitcoin_tx()?;
+                refund_tx.size(&refund_keypair, &preimage)? as u32
+            }
+            Direction::Outgoing => {
+                let refund_tx = self
+                    .new_refund_tx(swap.id.clone(), swap_script, &output_address.into())?
+                    .as_liquid_tx()?;
+                refund_tx.size(&refund_keypair, &preimage)? as u32
+            }
+        };
+        let refund_tx_fee_sat = (refund_tx_vsize as f32 * sat_per_vbyte).ceil() as u64;
+        Ok((refund_tx_vsize, refund_tx_fee_sat))
+    }
+
+    /// Refund a cooperatively chain swap  
     fn refund_chain_swap_cooperative(
         &self,
         swap: &ChainSwap,
