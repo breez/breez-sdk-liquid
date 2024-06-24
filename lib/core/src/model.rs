@@ -18,6 +18,8 @@ use crate::receive_swap::{
 };
 use crate::utils;
 
+pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {

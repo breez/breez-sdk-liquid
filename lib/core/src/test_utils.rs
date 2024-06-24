@@ -2,6 +2,7 @@
 use std::sync::Arc;
 
 use crate::{
+    chain::liquid::HybridLiquidChainService,
     chain_swap::ChainSwapStateHandler,
     model::{
         ChainSwap, Config, Direction, LiquidNetwork, PaymentState, PaymentTxData, PaymentType,
@@ -17,7 +18,6 @@ use crate::{
 
 use anyhow::{anyhow, Result};
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
-use lwk_wollet::{ElectrumClient, ElectrumUrl};
 use tempdir::TempDir;
 use tokio::sync::Mutex;
 
@@ -30,11 +30,7 @@ pub(crate) fn new_send_swap_state_handler(
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone()));
-    let chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
-        &config.liquid_electrum_url,
-        true,
-        true,
-    ))?));
+    let chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
     Ok(SendSwapStateHandler::new(
         config,
@@ -51,12 +47,14 @@ pub(crate) fn new_receive_swap_state_handler(
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+    let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
     Ok(ReceiveSwapStateHandler::new(
         config,
         onchain_wallet,
         persister,
         swapper,
+        liquid_chain_service,
     ))
 }
 
@@ -66,11 +64,7 @@ pub(crate) fn new_chain_swap_state_handler(
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone()));
-    let liquid_chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
-        &config.liquid_electrum_url,
-        true,
-        true,
-    ))?));
+    let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
     ChainSwapStateHandler::new(
         config,

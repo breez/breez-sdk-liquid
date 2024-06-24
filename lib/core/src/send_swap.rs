@@ -11,9 +11,9 @@ use lwk_wollet::elements::Transaction;
 use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
-use crate::chain::ChainService;
+use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
-use crate::model::{Config, SendSwap};
+use crate::model::{Config, SendSwap, LOWBALL_FEE_RATE_SAT_PER_VBYTE};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, get_invoice_amount};
@@ -28,7 +28,7 @@ pub(crate) struct SendSwapStateHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
-    chain_service: Arc<Mutex<dyn ChainService>>,
+    chain_service: Arc<Mutex<dyn LiquidChainService>>,
     subscription_notifier: broadcast::Sender<String>,
 }
 
@@ -38,7 +38,7 @@ impl SendSwapStateHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        chain_service: Arc<Mutex<dyn ChainService>>,
+        chain_service: Arc<Mutex<dyn LiquidChainService>>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -196,20 +196,22 @@ impl SendSwapStateHandler {
         let lockup_tx = self
             .onchain_wallet
             .build_tx(
-                None,
+                Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
                 &create_response.address,
                 create_response.expected_amount,
             )
             .await?;
 
+        info!("broadcasting lockup tx {}", lockup_tx.txid());
         let lockup_tx_id = self
             .chain_service
             .lock()
             .await
-            .broadcast(&lockup_tx)?
+            .broadcast(&lockup_tx, Some(swap_id))
+            .await?
             .to_string();
 
-        debug!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+        info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
         Ok(lockup_tx)
     }
 
@@ -285,10 +287,8 @@ impl SendSwapStateHandler {
             .chain_service
             .lock()
             .await
-            .get_scripts_history(&[&swap_script_pk])?
-            .into_iter()
-            .flatten()
-            .collect();
+            .get_script_history(&swap_script_pk)
+            .await?;
 
         // We expect at most 2 txs: lockup and maybe the claim
         ensure_sdk!(
@@ -311,6 +311,7 @@ impl SendSwapStateHandler {
                     .lock()
                     .await
                     .get_transactions(&[claim_tx_id])
+                    .await
                     .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
                     .first()
                     .cloned()
