@@ -384,16 +384,7 @@ impl ChainSwapStateHandler {
 
     async fn claim(&self, chain_swap: &ChainSwap) -> Result<(), PaymentError> {
         debug!("Initiating claim for Chain Swap {}", &chain_swap.id);
-        let refund_address = match chain_swap.direction {
-            Direction::Incoming => {
-                chain_swap
-                    .get_boltz_create_response()?
-                    .lockup_details
-                    .lockup_address
-            }
-            Direction::Outgoing => self.onchain_wallet.next_unused_address().await?.to_string(),
-        };
-        let claim_tx_id = self.swapper.claim_chain_swap(chain_swap, refund_address)?;
+        let claim_tx_id = self.swapper.claim_chain_swap(chain_swap)?;
 
         if chain_swap.direction == Direction::Incoming {
             // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
