@@ -325,11 +325,7 @@ impl ReceiveSwapStateHandler {
                 info!("swapper lockup found, verifying transaction content...");
 
                 let lockup_tx = utils::deserialize_tx_hex(&swap_update_tx.hex)?;
-                if !lockup_tx
-                    .txid()
-                    .to_hex()
-                    .eq(&lockup_tx_history.unwrap().txid.to_hex())
-                {
+                if !lockup_tx.txid().to_hex().eq(&history.txid.to_hex()) {
                     return Err(anyhow!(
                         "swapper reported txid and transaction hex do not match: {} vs {}",
                         swap_update_tx.id,
