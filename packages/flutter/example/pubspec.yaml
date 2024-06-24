@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_rust_bridge: ">=2.0.0-dev.38"
+  flutter_rust_bridge: ^2.0.0
   flutter_breez_liquid: ^0.1.0
   # When depending on this package from a real application you should use:
   #   flutter_breez_liquid: ^x.y.z
