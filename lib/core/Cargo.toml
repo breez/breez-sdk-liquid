@@ -18,7 +18,7 @@ bip39 = { version = "2.0.0", features = ["serde"] }
 boltz-client = { git = "https://github.com/dangeross/boltz-rust", branch = "savage-chain-swaps" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.0.0", features = ["chrono"], optional = true }
+flutter_rust_bridge = { version = "=2.0.0-dev.38", features = ["chrono"], optional = true }
 log = { workspace = true }
 lwk_common = "0.5.1"
 lwk_signer = "0.5.1"
