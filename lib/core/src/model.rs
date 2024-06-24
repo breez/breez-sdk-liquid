@@ -24,6 +24,7 @@ pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
     pub boltz_url: String,
+    pub referral_id: Option<String>,
     pub liquid_electrum_url: String,
     pub bitcoin_electrum_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
@@ -44,6 +45,7 @@ impl Config {
     pub fn mainnet() -> Self {
         Config {
             boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
+            referral_id: None,
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
             working_dir: ".".to_string(),
@@ -57,6 +59,7 @@ impl Config {
     pub fn testnet() -> Self {
         Config {
             boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
+            referral_id: None,
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
             working_dir: ".".to_string(),

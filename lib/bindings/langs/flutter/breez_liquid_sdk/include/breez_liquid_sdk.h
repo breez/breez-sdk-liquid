@@ -14,6 +14,8 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 // EXTRA END
 typedef struct _Dart_Handle* Dart_Handle;
 
+#define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
+
 /**
  * The minimum acceptable fee rate when claiming using zero-conf
  */
@@ -169,6 +171,7 @@ typedef struct wire_cst_liquid_sdk_event {
 
 typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *boltz_url;
+  struct wire_cst_list_prim_u_8_strict *referral_id;
   struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
   struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
   struct wire_cst_list_prim_u_8_strict *working_dir;

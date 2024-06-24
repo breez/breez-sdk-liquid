@@ -361,6 +361,7 @@ impl CstDecode<crate::model::Config> for wire_cst_config {
     fn cst_decode(self) -> crate::model::Config {
         crate::model::Config {
             boltz_url: self.boltz_url.cst_decode(),
+            referral_id: self.referral_id.cst_decode(),
             liquid_electrum_url: self.liquid_electrum_url.cst_decode(),
             bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
             working_dir: self.working_dir.cst_decode(),
@@ -1189,6 +1190,7 @@ impl NewWithNullPtr for wire_cst_config {
     fn new_with_null_ptr() -> Self {
         Self {
             boltz_url: core::ptr::null_mut(),
+            referral_id: core::ptr::null_mut(),
             liquid_electrum_url: core::ptr::null_mut(),
             bitcoin_electrum_url: core::ptr::null_mut(),
             working_dir: core::ptr::null_mut(),
@@ -2280,6 +2282,7 @@ pub struct wire_cst_bitcoin_address_data {
 #[derive(Clone, Copy)]
 pub struct wire_cst_config {
     boltz_url: *mut wire_cst_list_prim_u_8_strict,
+    referral_id: *mut wire_cst_list_prim_u_8_strict,
     liquid_electrum_url: *mut wire_cst_list_prim_u_8_strict,
     bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
     working_dir: *mut wire_cst_list_prim_u_8_strict,

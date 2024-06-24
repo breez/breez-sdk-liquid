@@ -1210,6 +1210,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_config(Config apiObj, wire_cst_config wireObj) {
     wireObj.boltz_url = cst_encode_String(apiObj.boltzUrl);
+    wireObj.referral_id = cst_encode_opt_String(apiObj.referralId);
     wireObj.liquid_electrum_url = cst_encode_String(apiObj.liquidElectrumUrl);
     wireObj.bitcoin_electrum_url = cst_encode_String(apiObj.bitcoinElectrumUrl);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
@@ -3285,6 +3286,8 @@ final class wire_cst_liquid_sdk_event extends ffi.Struct {
 final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> referral_id;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
@@ -3850,6 +3853,8 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
 }
+
+const double LOWBALL_FEE_RATE_SAT_PER_VBYTE = 0.01;
 
 const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
 
