@@ -39,6 +39,8 @@ use crate::{
 };
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
+/// Number of blocks to monitor a swap after its timeout block height
+pub const CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 pub struct LiquidSdk {
     config: Config,
@@ -200,7 +202,7 @@ impl LiquidSdk {
             .await;
         self.track_swap_updates().await;
         self.track_pending_swaps().await;
-        self.track_finished_swaps().await;
+        self.track_chain_swap_transactions().await;
 
         Ok(())
     }
@@ -325,7 +327,7 @@ impl LiquidSdk {
         });
     }
 
-    async fn track_finished_swaps(self: &Arc<LiquidSdk>) {
+    async fn track_chain_swap_transactions(self: &Arc<LiquidSdk>) {
         let cloned = self.clone();
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
@@ -335,15 +337,15 @@ impl LiquidSdk {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
-                        if let Err(e) = cloned.check_pending_refunded_chain_swaps().await {
-                            error!("Error checking pending refunded chain swaps: {e:?}");
+                        if let Err(e) = cloned.check_chain_swap_refund_transactions().await {
+                            error!("Error checking chain swap refund transactions: {e:?}");
                         }
-                        if let Err(e) = cloned.check_finished_chain_swaps().await {
-                            error!("Error checking finished chain swaps: {e:?}");
+                        if let Err(e) = cloned.check_expired_chain_swap_lockup_transactions().await {
+                            error!("Error checking expired chain swap lockup tranactions: {e:?}");
                         }
                     },
                     _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting finished swaps loop");
+                        info!("Received shutdown signal, exiting chain swap transactions loop");
                         return;
                     }
                 }
@@ -351,7 +353,7 @@ impl LiquidSdk {
         });
     }
 
-    async fn check_pending_refunded_chain_swaps(&self) -> Result<()> {
+    async fn check_chain_swap_refund_transactions(&self) -> Result<()> {
         info!("Checking pending incoming Chain Swaps with refund txs");
         let pending_chain_swaps: Vec<ChainSwap> = self
             .persister
@@ -388,15 +390,19 @@ impl LiquidSdk {
         Ok(())
     }
 
-    async fn check_finished_chain_swaps(&self) -> Result<()> {
-        info!("Checking finished incoming Chain Swaps for unspent tx outputs");
-        let finished_chain_swaps: Vec<ChainSwap> = self
+    async fn check_expired_chain_swap_lockup_transactions(&self) -> Result<()> {
+        info!("Checking expired incoming Chain Swaps for unspent tx outputs");
+        let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+        let expired_chain_swaps: Vec<ChainSwap> = self
             .persister
-            .list_finished_chain_swaps()?
+            .list_expired_chain_swaps(Direction::Incoming, current_height)?
             .into_iter()
-            .filter(|s| s.direction == Direction::Incoming)
+            .filter(|s| {
+                current_height
+                    <= s.timeout_block_height + CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS
+            })
             .collect();
-        for swap in finished_chain_swaps {
+        for swap in expired_chain_swaps {
             let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
             let script_pubkey = swap_script
                 .to_address(self.config.network.as_bitcoin_chain())
@@ -1426,6 +1432,12 @@ impl LiquidSdk {
             .refund_incoming_swap(&req.swap_address, &req.refund_address, req.sat_per_vbyte)
             .await?;
         Ok(RefundResponse { refund_tx_id })
+    }
+
+    pub async fn rescan_onchain_swaps(&self) -> LiquidSdkResult<()> {
+        self.check_chain_swap_refund_transactions().await?;
+        self.check_expired_chain_swap_lockup_transactions().await?;
+        Ok(())
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,

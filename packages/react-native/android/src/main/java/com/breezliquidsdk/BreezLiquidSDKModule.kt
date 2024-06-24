@@ -390,6 +390,18 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
+    fun rescanOnchainSwaps(promise: Promise) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().rescanOnchainSwaps()
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun sync(promise: Promise) {
         executor.execute {
             try {

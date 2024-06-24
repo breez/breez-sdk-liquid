@@ -193,6 +193,10 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.refund(&req))
     }
 
+    pub fn rescan_onchain_swaps(&self) -> LiquidSdkResult<()> {
+        rt().block_on(self.sdk.rescan_onchain_swaps())
+    }
+
     pub fn sync(&self) -> LiquidSdkResult<()> {
         rt().block_on(self.sdk.sync()).map_err(Into::into)
     }

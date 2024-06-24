@@ -187,9 +187,25 @@ impl Persister {
         self.list_chain_swaps(con, where_clause)
     }
 
-    pub(crate) fn list_finished_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+    pub(crate) fn list_expired_chain_swaps(
+        &self,
+        direction: Direction,
+        current_height: u32,
+    ) -> Result<Vec<ChainSwap>> {
         let con = self.get_connection()?;
-        self.list_chain_swaps_by_state(&con, vec![PaymentState::Complete, PaymentState::Failed])
+        let query = Self::list_chain_swaps_query(vec![
+            "direction = ?1".to_string(),
+            "timeout_block_height >= ?2".to_string(),
+        ]);
+        let res = con
+            .prepare(&query)?
+            .query_map(
+                params![direction, current_height],
+                Self::sql_row_to_chain_swap,
+            )?
+            .map(|i| i.unwrap())
+            .collect();
+        Ok(res)
     }
 
     pub(crate) fn list_ongoing_chain_swaps(&self, con: &Connection) -> Result<Vec<ChainSwap>> {
@@ -199,6 +215,11 @@ impl Persister {
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
         let con = self.get_connection()?;
         self.list_chain_swaps_by_state(&con, vec![PaymentState::Pending])
+    }
+
+    pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con: Connection = self.get_connection()?;
+        self.list_chain_swaps_by_state(&con, vec![PaymentState::Refundable])
     }
 
     /// Pending Chain swaps, indexed by refund tx id
@@ -214,20 +235,6 @@ impl Persister {
                     .as_ref()
                     .map(|refund_tx_id| (refund_tx_id.clone(), pending_chain_swap.clone()))
             })
-            .collect();
-        Ok(res)
-    }
-
-    pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        let query = Self::list_chain_swaps_query(vec!["state = ?1".to_string()]);
-        let res = con
-            .prepare(&query)?
-            .query_map(
-                params![PaymentState::Refundable],
-                Self::sql_row_to_chain_swap,
-            )?
-            .map(|i| i.unwrap())
             .collect();
         Ok(res)
     }

@@ -580,6 +580,10 @@ export const refund = async (req: RefundRequest): Promise<RefundResponse> => {
     return response
 }
 
+export const rescanOnchainSwaps = async (): Promise<void> => {
+    await BreezLiquidSDK.rescanOnchainSwaps()
+}
+
 export const sync = async (): Promise<void> => {
     await BreezLiquidSDK.sync()
 }

@@ -70,6 +70,8 @@ pub(crate) enum Command {
         // Fee rate to use
         sat_per_vbyte: u32,
     },
+    /// Rescan onchain swaps
+    RescanOnchainSwaps,
     /// Get the balance and general info of the current instance
     GetInfo,
     /// Sync local data with mempool and onchain data
@@ -293,6 +295,10 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
             command_result!(res)
+        }
+        Command::RescanOnchainSwaps => {
+            sdk.rescan_onchain_swaps().await?;
+            command_result!("Rescanned successfully")
         }
         Command::Sync => {
             sdk.sync().await?;

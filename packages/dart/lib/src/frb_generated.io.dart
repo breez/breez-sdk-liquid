@@ -3191,6 +3191,22 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_refund_request>)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps');
+  late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps =
+      _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr.asFunction<void Function(int, int)>();
+
   WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_restore(
     int that,
     ffi.Pointer<wire_cst_restore_request> req,
@@ -4831,3 +4847,5 @@ const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
 const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
+
+const int CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS = 4320;

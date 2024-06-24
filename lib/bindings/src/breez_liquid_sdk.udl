@@ -518,6 +518,9 @@ interface BindingLiquidSdk {
     RefundResponse refund(RefundRequest req);
 
     [Throws=LiquidSdkError]
+    void rescan_onchain_swaps();
+
+    [Throws=LiquidSdkError]
     void sync();
 
     [Throws=LiquidSdkError]
