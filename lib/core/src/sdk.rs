@@ -57,42 +57,45 @@ pub struct LiquidSdk {
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         // If we can fetch a proxy swapper URL, extract referral ID and dynamically set it in the config
-        let referral_id = match &req.config.network {
-            LiquidNetwork::Testnet => None,
+        let (boltz_api_base_url, referral_id) = match &req.config.network {
+            LiquidNetwork::Testnet => (None, None),
             LiquidNetwork::Mainnet => {
                 match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
                     Ok(breez_server) => match breez_server.fetch_boltz_swapper_urls().await {
                         Ok(boltz_swapper_urls) => match boltz_swapper_urls.first().cloned() {
                             Some(first_url) => Url::parse(first_url.as_str())
                                 .map(|url| match url.query() {
-                                    None => None,
+                                    None => (None, None),
                                     Some(query) => {
+                                        let boltz_api_base_url = url
+                                            .domain()
+                                            .map(|domain| format!("https://{domain}/v2"));
                                         let parts: Vec<String> =
                                             query.split('=').map(Into::into).collect();
                                         let referral_id = parts.get(1).cloned();
-                                        referral_id
+                                        (boltz_api_base_url, referral_id)
                                     }
                                 })
-                                .ok()
-                                .flatten(),
+                                .unwrap_or_default(),
                             None => {
                                 warn!("Got no Boltz Swapper URLs from Breez Server");
-                                None
+                                (None, None)
                             }
                         },
                         Err(e) => {
                             warn!("Failed to fetch Boltz Swapper URLs: {e}");
-                            None
+                            (None, None)
                         }
                     },
                     Err(e) => {
                         warn!("Failed to connect to Breez Server: {e}");
-                        None
+                        (None, None)
                     }
                 }
             }
         };
         let config = Config {
+            boltz_url: boltz_api_base_url.unwrap_or(req.config.boltz_url.clone()),
             referral_id,
             ..req.config.clone()
         };
