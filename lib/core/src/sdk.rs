@@ -634,6 +634,12 @@ impl LiquidSdk {
             }
         };
 
+        let payer_amount_sat = receiver_amount_sat + fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
+
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
             fees_sat,
@@ -707,6 +713,13 @@ impl LiquidSdk {
 
         self.ensure_send_is_not_self_transfer(&req.invoice)?;
         self.validate_invoice(&req.invoice)?;
+
+        let amount_sat = get_invoice_amount!(&req.invoice);
+        let payer_amount_sat = amount_sat + req.fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
 
         match self.swapper.check_for_mrh(&req.invoice)? {
             // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
@@ -847,13 +860,21 @@ impl LiquidSdk {
             .estimate_lockup_tx_fee(server_lockup_amount_sat)
             .await?;
 
-        Ok(PreparePayOnchainResponse {
+        let res = PreparePayOnchainResponse {
             amount_sat,
             fees_sat: pair.fees.boltz(server_lockup_amount_sat)
                 + lockup_fees_sat
                 + claim_fees_sat
                 + server_fees_sat,
-        })
+        };
+
+        let payer_amount_sat = res.amount_sat + res.fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
+
+        Ok(res)
     }
 
     pub async fn pay_onchain(
@@ -878,6 +899,12 @@ impl LiquidSdk {
                     + claim_fees_sat
                     + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
+        );
+
+        let payer_amount_sat = req.prepare_res.fees_sat + receiver_amount_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
         );
 
         let preimage = Preimage::new();
