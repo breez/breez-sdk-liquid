@@ -17,7 +17,7 @@ use crate::{
 };
 
 use anyhow::{anyhow, Result};
-use bip39::rand::{self, distributions::Alphanumeric, Rng};
+use lwk_wollet::secp256k1::rand::{self, distributions::Alphanumeric, Rng};
 use lwk_wollet::ElectrumUrl;
 use tempdir::TempDir;
 use tokio::sync::Mutex;

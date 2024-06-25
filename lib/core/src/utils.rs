@@ -25,7 +25,7 @@ pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, Paym
 
 pub(crate) fn generate_keypair() -> boltz_client::Keypair {
     let secp = boltz_client::Secp256k1::new();
-    let mut rng = bip39::rand::rngs::OsRng;
+    let mut rng = lwk_wollet::secp256k1::rand::thread_rng();
     let secret_key = lwk_wollet::secp256k1::SecretKey::new(&mut rng);
     boltz_client::Keypair::from_secret_key(&secp, &secret_key)
 }
