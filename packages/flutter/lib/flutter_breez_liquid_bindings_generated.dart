@@ -107,6 +107,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -122,6 +139,23 @@ class FlutterBreezLiquidBindings {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
+          .asFunction<void Function(int, int)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr
           .asFunction<void Function(int, int)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
@@ -591,6 +625,70 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  void
+      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
   ffi.Pointer<wire_cst_aes_success_action_data_decrypted>
       frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted();
@@ -976,6 +1074,53 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data =
       _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<
+          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+      frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<
+                          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+                      Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<
+              ffi.Pointer<
+                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+                  Function(int)>();
+
+  ffi.Pointer<wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+      frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<
+                          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+                      Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr
+          .asFunction<
+              ffi.Pointer<
+                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+                  Function(int)>();
 
   ffi.Pointer<wire_cst_list_payment> frbgen_breez_liquid_cst_new_list_payment(
     int len,
@@ -1507,6 +1652,22 @@ final class wire_cst_ln_url_pay_success_data extends ffi.Struct {
 
 final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
   external wire_cst_ln_invoice invoice;
+}
+
+final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.UintPtr> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.UintPtr> ptr;
+
+  @ffi.Int32()
+  external int len;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {

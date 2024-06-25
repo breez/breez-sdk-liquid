@@ -106,6 +106,10 @@ pub(crate) enum Command {
         /// LNURL-auth endpoint
         lnurl: String,
     },
+    /// List fiat currencies
+    ListFiat {},
+    /// Fetch available fiat rates
+    FetchFiatRates {},
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -374,6 +378,14 @@ pub(crate) async fn handle_command(
                 _ => Err(anyhow::anyhow!("Unexpected result type")),
             }?;
 
+            command_result!(res)
+        }
+        Command::FetchFiatRates {} => {
+            let res = sdk.fetch_fiat_rates().await?;
+            command_result!(res)
+        }
+        Command::ListFiat {} => {
+            let res = sdk.list_fiat_currencies().await?;
             command_result!(res)
         }
     })

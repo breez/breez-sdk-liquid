@@ -24,6 +24,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr;
 
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_FiatCurrencyPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_RatePtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr;
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
@@ -33,6 +39,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           dynamic raw);
 
   @protected
+  FiatCurrency
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+          dynamic raw);
+
+  @protected
+  Rate dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(dynamic raw);
+
+  @protected
   BindingLiquidSdk
       dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           dynamic raw);
@@ -40,6 +54,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   BindingLiquidSdk dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       dynamic raw);
+
+  @protected
+  FiatCurrency dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      dynamic raw);
+
+  @protected
+  Rate dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(dynamic raw);
 
   @protected
   RustStreamSink<LiquidSdkEvent> dco_decode_StreamSink_liquid_sdk_event_Dco(dynamic raw);
@@ -193,6 +214,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LiquidSdkEvent dco_decode_liquid_sdk_event(dynamic raw);
+
+  @protected
+  List<FiatCurrency>
+      dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+          dynamic raw);
+
+  @protected
+  List<Rate> dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      dynamic raw);
 
   @protected
   List<Payment> dco_decode_list_payment(dynamic raw);
@@ -383,12 +413,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
+  FiatCurrency
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+          SseDeserializer deserializer);
+
+  @protected
+  Rate sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      SseDeserializer deserializer);
+
+  @protected
   BindingLiquidSdk
       sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer);
 
   @protected
   BindingLiquidSdk sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      SseDeserializer deserializer);
+
+  @protected
+  FiatCurrency sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      SseDeserializer deserializer);
+
+  @protected
+  Rate sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
       SseDeserializer deserializer);
 
   @protected
@@ -546,6 +593,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LiquidSdkEvent sse_decode_liquid_sdk_event(SseDeserializer deserializer);
+
+  @protected
+  List<FiatCurrency>
+      sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+          SseDeserializer deserializer);
+
+  @protected
+  List<Rate> sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      SseDeserializer deserializer);
 
   @protected
   List<Payment> sse_decode_list_payment(SseDeserializer deserializer);
@@ -1044,6 +1100,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_url_success_action_data();
     cst_api_fill_to_wire_url_success_action_data(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<
+          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+      cst_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+          List<FiatCurrency> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire
+        .cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+            raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] =
+          cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+              raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+      cst_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+          List<Rate> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans =
+        wire.cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+            raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] =
+          cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(raw[i]);
+    }
+    return ans;
   }
 
   @protected
@@ -2082,12 +2170,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk raw);
 
   @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      FiatCurrency raw);
+
+  @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(Rate raw);
+
+  @protected
   int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw);
 
   @protected
   int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw);
+
+  @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(FiatCurrency raw);
+
+  @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(Rate raw);
 
   @protected
   bool cst_encode_bool(bool raw);
@@ -2130,12 +2231,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk self, SseSerializer serializer);
 
   @protected
+  void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      FiatCurrency self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      Rate self, SseSerializer serializer);
+
+  @protected
   void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer);
 
   @protected
   void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      FiatCurrency self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      Rate self, SseSerializer serializer);
 
   @protected
   void sse_encode_StreamSink_liquid_sdk_event_Dco(
@@ -2298,6 +2415,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_liquid_sdk_event(LiquidSdkEvent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      List<FiatCurrency> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      List<Rate> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_payment(List<Payment> self, SseSerializer serializer);
@@ -2587,6 +2712,22 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
+
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -2602,6 +2743,22 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _wire__crate__bindings__BindingLiquidSdk_get_info =
       _wire__crate__bindings__BindingLiquidSdk_get_infoPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
+  late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
+      _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
@@ -3060,6 +3217,68 @@ class RustLibWire implements BaseWire {
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  void
+      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
   ffi.Pointer<wire_cst_aes_success_action_data_decrypted>
       cst_new_box_autoadd_aes_success_action_data_decrypted() {
     return _cst_new_box_autoadd_aes_success_action_data_decrypted();
@@ -3402,6 +3621,51 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data');
   late final _cst_new_box_autoadd_url_success_action_data = _cst_new_box_autoadd_url_success_action_dataPtr
       .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<
+          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+      cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    int len,
+  ) {
+    return _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+      len,
+    );
+  }
+
+  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Pointer<
+                          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+                      Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency');
+  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency =
+      _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrencyPtr
+          .asFunction<
+              ffi.Pointer<
+                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency>
+                  Function(int)>();
+
+  ffi.Pointer<wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+      cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    int len,
+  ) {
+    return _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+      len,
+    );
+  }
+
+  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Pointer<
+                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+                  Function(ffi.Int32)>>(
+      'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate');
+  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate =
+      _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRatePtr.asFunction<
+          ffi.Pointer<
+                  wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate>
+              Function(int)>();
 
   ffi.Pointer<wire_cst_list_payment> cst_new_list_payment(
     int len,
@@ -3919,6 +4183,22 @@ final class wire_cst_ln_url_pay_success_data extends ffi.Struct {
 
 final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
   external wire_cst_ln_invoice invoice;
+}
+
+final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.UintPtr> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.UintPtr> ptr;
+
+  @ffi.Int32()
+  external int len;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {

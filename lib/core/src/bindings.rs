@@ -6,10 +6,10 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 pub use sdk_common::prelude::{
-    AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData, InputType,
-    LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayErrorData, LnUrlPayRequest,
+    AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData, FiatCurrency,
+    InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayErrorData, LnUrlPayRequest,
     LnUrlPayRequestData, LnUrlWithdrawRequest, LnUrlWithdrawRequestData, MessageSuccessActionData,
-    Network, RouteHint, RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+    Network, Rate, RouteHint, RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
 };
 
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk};
@@ -184,6 +184,14 @@ impl BindingLiquidSdk {
             .await
             .map(Into::into)
             .map_err(Into::into)
+    }
+
+    pub async fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, LiquidSdkError> {
+        self.sdk.fetch_fiat_rates().await
+    }
+
+    pub async fn list_fiat_currencies(&self) -> Result<Vec<FiatCurrency>, LiquidSdkError> {
+        self.sdk.list_fiat_currencies().await
     }
 
     pub async fn list_refundables(&self) -> Result<Vec<RefundableSwap>, LiquidSdkError> {

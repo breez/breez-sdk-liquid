@@ -191,6 +191,44 @@ interface LnUrlAuthError {
     ServiceConnectivity(string err);
 };
 
+dictionary Rate {
+    string coin;
+    f64 value;
+};
+
+dictionary FiatCurrency {
+    string id;
+    CurrencyInfo info;
+};
+
+dictionary Symbol {
+    string? grapheme;
+    string? template;
+    boolean? rtl;
+    u32? position;
+};
+
+dictionary LocaleOverrides {
+    string locale;
+    u32? spacing;
+    Symbol symbol;
+};
+
+dictionary LocalizedName {
+    string locale;
+    string name;
+};
+
+dictionary CurrencyInfo {
+    string name;
+    u32 fraction_size;
+    u32? spacing;
+    Symbol? symbol;
+    Symbol? uniq_symbol;
+    sequence<LocalizedName> localized_name;
+    sequence<LocaleOverrides> locale_overrides;
+};
+
 // END sdk-common mirror imports
 ////////////////////////////////
 
@@ -499,4 +537,10 @@ interface BindingLiquidSdk {
 
     [Throws=LnUrlAuthError]
     LnUrlCallbackStatus lnurl_auth(LnUrlAuthRequestData req_data);
+
+    [Throws=LiquidSdkError]
+    sequence<Rate> fetch_fiat_rates();
+
+    [Throws=LiquidSdkError]
+    sequence<FiatCurrency> list_fiat_currencies();
 };

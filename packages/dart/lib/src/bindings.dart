@@ -39,7 +39,11 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void emptyWalletCache();
 
+  Future<List<Rate>> fetchFiatRates();
+
   Future<GetInfoResponse> getInfo();
+
+  Future<List<FiatCurrency>> listFiatCurrencies();
 
   Future<List<Payment>> listPayments();
 
@@ -75,6 +79,12 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<void> sync();
 }
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>>
+abstract class FiatCurrency implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>>
+abstract class Rate implements RustOpaqueInterface {}
 
 class AesSuccessActionDataDecrypted {
   final String description;

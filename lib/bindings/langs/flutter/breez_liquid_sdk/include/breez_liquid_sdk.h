@@ -330,6 +330,16 @@ typedef struct wire_cst_ln_url_withdraw_success_data {
   struct wire_cst_ln_invoice invoice;
 } wire_cst_ln_url_withdraw_success_data;
 
+typedef struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency {
+  uintptr_t *ptr;
+  int32_t len;
+} wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency;
+
+typedef struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate {
+  uintptr_t *ptr;
+  int32_t len;
+} wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate;
+
 typedef struct wire_cst_list_payment {
   struct wire_cst_payment *ptr;
   int32_t len;
@@ -681,8 +691,14 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int6
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(uintptr_t that);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int64_t port_,
+                                                                                  uintptr_t that);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(int64_t port_,
+                                                                                      uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(int64_t port_,
                                                                                uintptr_t that);
@@ -769,6 +785,14 @@ void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust
 
 void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
+void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(const void *ptr);
+
+void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(const void *ptr);
+
+void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(const void *ptr);
+
+void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(const void *ptr);
+
 struct wire_cst_aes_success_action_data_decrypted *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(void);
 
 struct wire_cst_aes_success_action_data_result *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(void);
@@ -835,6 +859,10 @@ uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_url_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
 
+struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency *frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(int32_t len);
+
+struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate *frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(int32_t len);
+
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
@@ -879,18 +907,26 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_refundable_swap);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);

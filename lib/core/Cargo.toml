@@ -13,7 +13,7 @@ frb = ["dep:flutter_rust_bridge"]
 
 [dependencies]
 anyhow = { workspace = true }
-bip39 = { version = "2.0.0", features = ["serde"] }
+bip39 = "2.0.0"
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
 boltz-client = { git = "https://github.com/dangeross/boltz-rust", branch = "savage-chain-swaps" }
 chrono = "0.4"

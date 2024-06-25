@@ -36,6 +36,26 @@ impl CstDecode<BindingLiquidSdk> for usize {
         ))
     }
 }
+impl CstDecode<FiatCurrency> for usize {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> FiatCurrency {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
+            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>>,
+        >::cst_decode(
+            self
+        ))
+    }
+}
+impl CstDecode<Rate> for usize {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Rate {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
+            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>>,
+        >::cst_decode(
+            self
+        ))
+    }
+}
 impl
     CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
@@ -46,6 +66,26 @@ impl
         self,
     ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
     {
+        unsafe { decode_rust_opaque_nom(self as _) }
+    }
+}
+impl CstDecode<RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>>>
+    for usize
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(
+        self,
+    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>> {
+        unsafe { decode_rust_opaque_nom(self as _) }
+    }
+}
+impl CstDecode<RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>>>
+    for usize
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(
+        self,
+    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>> {
         unsafe { decode_rust_opaque_nom(self as _) }
     }
 }
@@ -544,6 +584,26 @@ impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
         }
     }
 }
+impl CstDecode<Vec<FiatCurrency>> for *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency {
+            // Codec=Cst (C-struct based), see doc to use other codecs
+            fn cst_decode(self) -> Vec<FiatCurrency> {
+                let vec = unsafe {
+        let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+        flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+    };
+    vec.into_iter().map(CstDecode::cst_decode).collect()
+            }
+        }
+impl CstDecode<Vec<Rate>> for *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate {
+            // Codec=Cst (C-struct based), see doc to use other codecs
+            fn cst_decode(self) -> Vec<Rate> {
+                let vec = unsafe {
+        let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+        flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+    };
+    vec.into_iter().map(CstDecode::cst_decode).collect()
+            }
+        }
 impl CstDecode<Vec<crate::model::Payment>> for *mut wire_cst_list_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> Vec<crate::model::Payment> {
@@ -2019,11 +2079,27 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_em
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_get_info_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies_impl(port_, that)
 }
 
 #[no_mangle]
@@ -2237,6 +2313,42 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 ) {
     unsafe {
         StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>>::increment_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<FiatCurrency>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>>::increment_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Rate>>::decrement_strong_count(ptr as _);
     }
 }
 
@@ -2493,6 +2605,21 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dat
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_url_success_action_data::new_with_null_ptr(),
     )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency(len: i32) -> *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency{
+    let wrap = wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency { ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len), len };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate(
+    len: i32,
+) -> *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate
+{
+    let wrap = wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate { ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len), len };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
 }
 
 #[no_mangle]
@@ -2762,6 +2889,20 @@ pub struct wire_cst_LiquidSdkEvent_PaymentSucceeded {
 #[derive(Clone, Copy)]
 pub struct wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation {
     details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFiatCurrency
+{
+    ptr: *mut usize,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRate
+{
+    ptr: *mut usize,
+    len: i32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

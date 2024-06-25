@@ -48,6 +48,7 @@ pub struct LiquidSdk {
     swapper: Arc<dyn Swapper>,
     liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+    fiat_api: Arc<dyn FiatAPI>,
     is_started: RwLock<bool>,
     shutdown_sender: watch::Sender<()>,
     shutdown_receiver: watch::Receiver<()>,
@@ -109,6 +110,8 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?;
 
+        let breez_server = BreezServer::new("https://bs1.breez.technology:443".into(), None)?;
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
@@ -118,6 +121,7 @@ impl LiquidSdk {
             swapper,
             bitcoin_chain_service,
             liquid_chain_service,
+            fiat_api: Arc::new(breez_server),
             is_started: RwLock::new(false),
             shutdown_sender,
             shutdown_receiver,
@@ -1551,6 +1555,20 @@ impl LiquidSdk {
         let linking_keys = linking_key.to_keypair(&Secp256k1::new());
 
         Ok(perform_lnurl_auth(linking_keys, req_data).await?)
+    }
+
+    /// Fetch live rates of fiat currencies, sorted by name
+    pub async fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, LiquidSdkError> {
+        self.fiat_api.fetch_fiat_rates().await.map_err(Into::into)
+    }
+
+    /// List all supported fiat currencies for which there is a known exchange rate.
+    /// List is sorted by the canonical name of the currency
+    pub async fn list_fiat_currencies(&self) -> Result<Vec<FiatCurrency>, LiquidSdkError> {
+        self.fiat_api
+            .list_fiat_currencies()
+            .await
+            .map_err(Into::into)
     }
 
     pub fn default_config(network: LiquidNetwork) -> Config {
