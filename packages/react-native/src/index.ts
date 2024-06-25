@@ -169,6 +169,15 @@ export interface PreparePayOnchainResponse {
     feesSat: number
 }
 
+export interface PrepareReceiveOnchainRequest {
+    amountSat: number
+}
+
+export interface PrepareReceiveOnchainResponse {
+    amountSat: number
+    feesSat: number
+}
+
 export interface PrepareReceiveRequest {
     payerAmountSat: number
 }
@@ -176,6 +185,17 @@ export interface PrepareReceiveRequest {
 export interface PrepareReceiveResponse {
     payerAmountSat: number
     feesSat: number
+}
+
+export interface PrepareRefundRequest {
+    swapAddress: string
+    refundAddress: string
+    satPerVbyte: number
+}
+
+export interface PrepareRefundResponse {
+    refundTxVsize: number
+    refundTxFeeSat: number
 }
 
 export interface PrepareSendRequest {
@@ -187,9 +207,34 @@ export interface PrepareSendResponse {
     feesSat: number
 }
 
+export interface ReceiveOnchainRequest {
+    prepareRes: PrepareReceiveOnchainResponse
+}
+
+export interface ReceiveOnchainResponse {
+    address: string
+    bip21: string
+}
+
 export interface ReceivePaymentResponse {
     id: string
     invoice: string
+}
+
+export interface RefundRequest {
+    swapAddress: string
+    refundAddress: string
+    satPerVbyte: number
+}
+
+export interface RefundResponse {
+    refundTxId: string
+}
+
+export interface RefundableSwap {
+    swapAddress: string
+    timestamp: number
+    amountSat: number
 }
 
 export interface RestoreRequest {
@@ -360,7 +405,8 @@ export enum PaymentState {
     PENDING = "pending",
     COMPLETE = "complete",
     FAILED = "failed",
-    TIMED_OUT = "timedOut"
+    TIMED_OUT = "timedOut",
+    REFUNDABLE = "refundable"
 }
 
 export enum PaymentType {
@@ -466,8 +512,33 @@ export const payOnchain = async (req: PayOnchainRequest): Promise<SendPaymentRes
     return response
 }
 
+export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): Promise<PrepareReceiveOnchainResponse> => {
+    const response = await BreezLiquidSDK.prepareReceiveOnchain(req)
+    return response
+}
+
+export const receiveOnchain = async (req: ReceiveOnchainRequest): Promise<ReceiveOnchainResponse> => {
+    const response = await BreezLiquidSDK.receiveOnchain(req)
+    return response
+}
+
 export const listPayments = async (): Promise<Payment[]> => {
     const response = await BreezLiquidSDK.listPayments()
+    return response
+}
+
+export const listRefundables = async (): Promise<RefundableSwap[]> => {
+    const response = await BreezLiquidSDK.listRefundables()
+    return response
+}
+
+export const prepareRefund = async (req: PrepareRefundRequest): Promise<PrepareRefundResponse> => {
+    const response = await BreezLiquidSDK.prepareRefund(req)
+    return response
+}
+
+export const refund = async (req: RefundRequest): Promise<RefundResponse> => {
+    const response = await BreezLiquidSDK.refund(req)
     return response
 }
 

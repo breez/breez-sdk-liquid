@@ -12,7 +12,7 @@ use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
+use crate::model::PaymentState::{Complete, Created, Failed, Pending, Refundable, TimedOut};
 use crate::model::{Config, SendSwap, LOWBALL_FEE_RATE_SAT_PER_VBYTE};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
@@ -410,18 +410,22 @@ impl SendSwapStateHandler {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
+            (_, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
+            (_, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
 
             (Created | TimedOut, TimedOut) => Ok(()),
             (_, TimedOut) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
+            }),
+
+            (_, Refundable) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
 
             (Complete, Failed) => Err(PaymentError::Generic {
@@ -464,7 +468,6 @@ mod tests {
     async fn test_send_swap_state_transitions() -> Result<()> {
         let (_temp_dir, storage) = new_persister()?;
         let storage = Arc::new(storage);
-
         let send_swap_state_handler = new_send_swap_state_handler(storage.clone())?;
 
         // Test valid combinations of states
@@ -476,6 +479,7 @@ mod tests {
             (Pending, HashSet::from([Pending, Complete, Failed])),
             (TimedOut, HashSet::from([TimedOut, Failed])),
             (Complete, HashSet::from([])),
+            (Refundable, HashSet::from([Failed])),
             (Failed, HashSet::from([Failed])),
         ]);
 
