@@ -54,5 +54,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             created_at INTEGER NOT NULL,
             state INTEGER NOT NULL
         ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS cached_items (
+            key TEXT NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL
+        ) STRICT;",
     ]
 }
