@@ -20,6 +20,7 @@ use log::{debug, info};
 use lwk_wollet::elements;
 use serde_json::Value;
 use tokio::sync::{broadcast, watch};
+use url::Url;
 
 use crate::error::PaymentError;
 use crate::model::{
@@ -147,15 +148,38 @@ pub trait Swapper: Send + Sync {
 
 pub struct BoltzSwapper {
     client: BoltzApiClientV2,
+    referral_id: Option<String>,
     config: Config,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config) -> BoltzSwapper {
+    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> BoltzSwapper {
+        let (boltz_api_base_url, referral_id) = match &config.network {
+            LiquidNetwork::Testnet => (None, None),
+            LiquidNetwork::Mainnet => match &swapper_proxy_url {
+                Some(swapper_proxy_url) => Url::parse(swapper_proxy_url)
+                    .map(|url| match url.query() {
+                        None => (None, None),
+                        Some(query) => {
+                            let api_base_url =
+                                url.domain().map(|domain| format!("https://{domain}/v2"));
+                            let parts: Vec<String> = query.split('=').map(Into::into).collect();
+                            let referral_id = parts.get(1).cloned();
+                            (api_base_url, referral_id)
+                        }
+                    })
+                    .unwrap_or_default(),
+                None => (None, None),
+            },
+        };
+
+        let boltz_url = boltz_api_base_url.unwrap_or(config.boltz_url.clone());
+
         BoltzSwapper {
-            client: BoltzApiClientV2::new(&config.boltz_url),
+            client: BoltzApiClientV2::new(&boltz_url),
+            referral_id,
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
@@ -445,7 +469,11 @@ impl Swapper for BoltzSwapper {
         &self,
         req: CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
-        Ok(self.client.post_chain_req(req)?)
+        let modified_req = CreateChainRequest {
+            referral_id: self.referral_id.clone(),
+            ..req.clone()
+        };
+        Ok(self.client.post_chain_req(modified_req)?)
     }
 
     /// Create a new send swap
@@ -453,7 +481,11 @@ impl Swapper for BoltzSwapper {
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
-        Ok(self.client.post_swap_req(&req)?)
+        let modified_req = CreateSubmarineRequest {
+            referral_id: self.referral_id.clone(),
+            ..req.clone()
+        };
+        Ok(self.client.post_swap_req(&modified_req)?)
     }
 
     /// Get a chain pair information
@@ -621,7 +653,11 @@ impl Swapper for BoltzSwapper {
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
-        Ok(self.client.post_reverse_req(req)?)
+        let modified_req = CreateReverseRequest {
+            referral_id: self.referral_id.clone(),
+            ..req.clone()
+        };
+        Ok(self.client.post_reverse_req(modified_req)?)
     }
 
     // Get a reverse pair information

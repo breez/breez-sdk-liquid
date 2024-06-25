@@ -56,57 +56,21 @@ pub struct LiquidSdk {
 
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        // If we can fetch a proxy swapper URL, extract referral ID and dynamically set it in the config
-        let (boltz_api_base_url, referral_id) = match &req.config.network {
-            LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => {
-                match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
-                    Ok(breez_server) => match breez_server.fetch_boltz_swapper_urls().await {
-                        Ok(boltz_swapper_urls) => match boltz_swapper_urls.first().cloned() {
-                            Some(first_url) => Url::parse(first_url.as_str())
-                                .map(|url| match url.query() {
-                                    None => (None, None),
-                                    Some(query) => {
-                                        let boltz_api_base_url = url
-                                            .domain()
-                                            .map(|domain| format!("https://{domain}/v2"));
-                                        let parts: Vec<String> =
-                                            query.split('=').map(Into::into).collect();
-                                        let referral_id = parts.get(1).cloned();
-                                        (boltz_api_base_url, referral_id)
-                                    }
-                                })
-                                .unwrap_or_default(),
-                            None => {
-                                warn!("Got no Boltz Swapper URLs from Breez Server");
-                                (None, None)
-                            }
-                        },
-                        Err(e) => {
-                            warn!("Failed to fetch Boltz Swapper URLs: {e}");
-                            (None, None)
-                        }
-                    },
-                    Err(e) => {
-                        warn!("Failed to connect to Breez Server: {e}");
-                        (None, None)
-                    }
-                }
-            }
-        };
-        let config = Config {
-            boltz_url: boltz_api_base_url.unwrap_or(req.config.boltz_url.clone()),
-            referral_id,
-            ..req.config.clone()
-        };
+        let breez_server = BreezServer::new("https://bs1.breez.technology:443".into(), None)?;
+        let swapper_urls = breez_server.fetch_boltz_swapper_urls().await?;
+        let maybe_swapper_proxy_url = swapper_urls.first().cloned();
 
-        let sdk = LiquidSdk::new(config, req.mnemonic)?;
+        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, req.mnemonic)?;
         sdk.start().await?;
 
         Ok(sdk)
     }
 
-    fn new(config: Config, mnemonic: String) -> Result<Arc<Self>> {
+    fn new(
+        config: Config,
+        swapper_proxy_url: Option<String>,
+        mnemonic: String,
+    ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
         let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
@@ -115,7 +79,7 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), swapper_proxy_url));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
@@ -866,7 +830,7 @@ impl LiquidSdk {
                     invoice: req.invoice.to_string(),
                     refund_public_key,
                     pair_hash: Some(lbtc_pair.hash),
-                    referral_id: self.config.referral_id.clone(),
+                    referral_id: None,
                 })?;
 
                 let swap_id = &create_response.id;
@@ -961,7 +925,7 @@ impl LiquidSdk {
             user_lock_amount: None,
             server_lock_amount: Some(server_lockup_amount_sat as u32), // TODO update our model
             pair_hash: Some(pair.hash),
-            referral_id: self.config.referral_id.clone(),
+            referral_id: None,
         })?;
 
         let swap_id = &create_response.id;
@@ -1120,7 +1084,7 @@ impl LiquidSdk {
             claim_public_key: keypair.public_key().into(),
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
-            referral_id: self.config.referral_id.clone(),
+            referral_id: None,
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
 

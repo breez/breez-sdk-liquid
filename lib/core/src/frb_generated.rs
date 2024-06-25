@@ -1344,7 +1344,6 @@ impl SseDecode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_boltzUrl = <String>::sse_decode(deserializer);
-        let mut var_referralId = <Option<String>>::sse_decode(deserializer);
         let mut var_liquidElectrumUrl = <String>::sse_decode(deserializer);
         let mut var_bitcoinElectrumUrl = <String>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
@@ -1354,7 +1353,6 @@ impl SseDecode for crate::model::Config {
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         return crate::model::Config {
             boltz_url: var_boltzUrl,
-            referral_id: var_referralId,
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
             working_dir: var_workingDir,
@@ -2543,7 +2541,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.boltz_url.into_into_dart().into_dart(),
-            self.referral_id.into_into_dart().into_dart(),
             self.liquid_electrum_url.into_into_dart().into_dart(),
             self.bitcoin_electrum_url.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
@@ -3723,7 +3720,6 @@ impl SseEncode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.boltz_url, serializer);
-        <Option<String>>::sse_encode(self.referral_id, serializer);
         <String>::sse_encode(self.liquid_electrum_url, serializer);
         <String>::sse_encode(self.bitcoin_electrum_url, serializer);
         <String>::sse_encode(self.working_dir, serializer);

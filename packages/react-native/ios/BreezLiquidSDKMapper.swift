@@ -147,13 +147,6 @@ enum BreezLiquidSDKMapper {
         guard let boltzUrl = config["boltzUrl"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "boltzUrl", typeName: "Config"))
         }
-        var referralId: String?
-        if hasNonNilKey(data: config, key: "referralId") {
-            guard let referralIdTmp = config["referralId"] as? String else {
-                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "referralId"))
-            }
-            referralId = referralIdTmp
-        }
         guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
         }
@@ -184,7 +177,6 @@ enum BreezLiquidSDKMapper {
 
         return Config(
             boltzUrl: boltzUrl,
-            referralId: referralId,
             liquidElectrumUrl: liquidElectrumUrl,
             bitcoinElectrumUrl: bitcoinElectrumUrl,
             workingDir: workingDir,
@@ -198,7 +190,6 @@ enum BreezLiquidSDKMapper {
     static func dictionaryOf(config: Config) -> [String: Any?] {
         return [
             "boltzUrl": config.boltzUrl,
-            "referralId": config.referralId == nil ? nil : config.referralId,
             "liquidElectrumUrl": config.liquidElectrumUrl,
             "bitcoinElectrumUrl": config.bitcoinElectrumUrl,
             "workingDir": config.workingDir,

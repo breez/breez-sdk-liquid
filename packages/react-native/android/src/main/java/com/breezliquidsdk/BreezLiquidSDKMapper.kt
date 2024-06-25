@@ -131,7 +131,6 @@ fun asConfig(config: ReadableMap): Config? {
         return null
     }
     val boltzUrl = config.getString("boltzUrl")!!
-    val referralId = if (hasNonNullKey(config, "referralId")) config.getString("referralId") else null
     val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
     val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
     val workingDir = config.getString("workingDir")!!
@@ -150,7 +149,6 @@ fun asConfig(config: ReadableMap): Config? {
         }
     return Config(
         boltzUrl,
-        referralId,
         liquidElectrumUrl,
         bitcoinElectrumUrl,
         workingDir,
@@ -164,7 +162,6 @@ fun asConfig(config: ReadableMap): Config? {
 fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
         "boltzUrl" to config.boltzUrl,
-        "referralId" to config.referralId,
         "liquidElectrumUrl" to config.liquidElectrumUrl,
         "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
         "workingDir" to config.workingDir,
