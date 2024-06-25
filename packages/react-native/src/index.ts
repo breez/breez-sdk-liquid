@@ -37,7 +37,6 @@ export interface BitcoinAddressData {
 }
 
 export interface Config {
-    boltzUrl: string
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
     workingDir: string
