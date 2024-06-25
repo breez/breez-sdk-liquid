@@ -257,6 +257,119 @@ enum BreezLiquidSDKMapper {
         return connectRequestList.map { v -> [String: Any?] in dictionaryOf(connectRequest: v) }
     }
 
+    static func asCurrencyInfo(currencyInfo: [String: Any?]) throws -> CurrencyInfo {
+        guard let name = currencyInfo["name"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "CurrencyInfo"))
+        }
+        guard let fractionSize = currencyInfo["fractionSize"] as? UInt32 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "fractionSize", typeName: "CurrencyInfo"))
+        }
+        var spacing: UInt32?
+        if hasNonNilKey(data: currencyInfo, key: "spacing") {
+            guard let spacingTmp = currencyInfo["spacing"] as? UInt32 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "spacing"))
+            }
+            spacing = spacingTmp
+        }
+        var symbol: Symbol?
+        if let symbolTmp = currencyInfo["symbol"] as? [String: Any?] {
+            symbol = try asSymbol(symbol: symbolTmp)
+        }
+
+        var uniqSymbol: Symbol?
+        if let uniqSymbolTmp = currencyInfo["uniqSymbol"] as? [String: Any?] {
+            uniqSymbol = try asSymbol(symbol: uniqSymbolTmp)
+        }
+
+        guard let localizedNameTmp = currencyInfo["localizedName"] as? [[String: Any?]] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "localizedName", typeName: "CurrencyInfo"))
+        }
+        let localizedName = try asLocalizedNameList(arr: localizedNameTmp)
+
+        guard let localeOverridesTmp = currencyInfo["localeOverrides"] as? [[String: Any?]] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "localeOverrides", typeName: "CurrencyInfo"))
+        }
+        let localeOverrides = try asLocaleOverridesList(arr: localeOverridesTmp)
+
+        return CurrencyInfo(
+            name: name,
+            fractionSize: fractionSize,
+            spacing: spacing,
+            symbol: symbol,
+            uniqSymbol: uniqSymbol,
+            localizedName: localizedName,
+            localeOverrides: localeOverrides
+        )
+    }
+
+    static func dictionaryOf(currencyInfo: CurrencyInfo) -> [String: Any?] {
+        return [
+            "name": currencyInfo.name,
+            "fractionSize": currencyInfo.fractionSize,
+            "spacing": currencyInfo.spacing == nil ? nil : currencyInfo.spacing,
+            "symbol": currencyInfo.symbol == nil ? nil : dictionaryOf(symbol: currencyInfo.symbol!),
+            "uniqSymbol": currencyInfo.uniqSymbol == nil ? nil : dictionaryOf(symbol: currencyInfo.uniqSymbol!),
+            "localizedName": arrayOf(localizedNameList: currencyInfo.localizedName),
+            "localeOverrides": arrayOf(localeOverridesList: currencyInfo.localeOverrides),
+        ]
+    }
+
+    static func asCurrencyInfoList(arr: [Any]) throws -> [CurrencyInfo] {
+        var list = [CurrencyInfo]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var currencyInfo = try asCurrencyInfo(currencyInfo: val)
+                list.append(currencyInfo)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "CurrencyInfo"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(currencyInfoList: [CurrencyInfo]) -> [Any] {
+        return currencyInfoList.map { v -> [String: Any?] in dictionaryOf(currencyInfo: v) }
+    }
+
+    static func asFiatCurrency(fiatCurrency: [String: Any?]) throws -> FiatCurrency {
+        guard let id = fiatCurrency["id"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "id", typeName: "FiatCurrency"))
+        }
+        guard let infoTmp = fiatCurrency["info"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "info", typeName: "FiatCurrency"))
+        }
+        let info = try asCurrencyInfo(currencyInfo: infoTmp)
+
+        return FiatCurrency(
+            id: id,
+            info: info
+        )
+    }
+
+    static func dictionaryOf(fiatCurrency: FiatCurrency) -> [String: Any?] {
+        return [
+            "id": fiatCurrency.id,
+            "info": dictionaryOf(currencyInfo: fiatCurrency.info),
+        ]
+    }
+
+    static func asFiatCurrencyList(arr: [Any]) throws -> [FiatCurrency] {
+        var list = [FiatCurrency]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var fiatCurrency = try asFiatCurrency(fiatCurrency: val)
+                list.append(fiatCurrency)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "FiatCurrency"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(fiatCurrencyList: [FiatCurrency]) -> [Any] {
+        return fiatCurrencyList.map { v -> [String: Any?] in dictionaryOf(fiatCurrency: v) }
+    }
+
     static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
         guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
@@ -846,6 +959,92 @@ enum BreezLiquidSDKMapper {
         return lnUrlWithdrawSuccessDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawSuccessData: v) }
     }
 
+    static func asLocaleOverrides(localeOverrides: [String: Any?]) throws -> LocaleOverrides {
+        guard let locale = localeOverrides["locale"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "locale", typeName: "LocaleOverrides"))
+        }
+        var spacing: UInt32?
+        if hasNonNilKey(data: localeOverrides, key: "spacing") {
+            guard let spacingTmp = localeOverrides["spacing"] as? UInt32 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "spacing"))
+            }
+            spacing = spacingTmp
+        }
+        guard let symbolTmp = localeOverrides["symbol"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "symbol", typeName: "LocaleOverrides"))
+        }
+        let symbol = try asSymbol(symbol: symbolTmp)
+
+        return LocaleOverrides(
+            locale: locale,
+            spacing: spacing,
+            symbol: symbol
+        )
+    }
+
+    static func dictionaryOf(localeOverrides: LocaleOverrides) -> [String: Any?] {
+        return [
+            "locale": localeOverrides.locale,
+            "spacing": localeOverrides.spacing == nil ? nil : localeOverrides.spacing,
+            "symbol": dictionaryOf(symbol: localeOverrides.symbol),
+        ]
+    }
+
+    static func asLocaleOverridesList(arr: [Any]) throws -> [LocaleOverrides] {
+        var list = [LocaleOverrides]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var localeOverrides = try asLocaleOverrides(localeOverrides: val)
+                list.append(localeOverrides)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LocaleOverrides"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(localeOverridesList: [LocaleOverrides]) -> [Any] {
+        return localeOverridesList.map { v -> [String: Any?] in dictionaryOf(localeOverrides: v) }
+    }
+
+    static func asLocalizedName(localizedName: [String: Any?]) throws -> LocalizedName {
+        guard let locale = localizedName["locale"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "locale", typeName: "LocalizedName"))
+        }
+        guard let name = localizedName["name"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "LocalizedName"))
+        }
+
+        return LocalizedName(
+            locale: locale,
+            name: name
+        )
+    }
+
+    static func dictionaryOf(localizedName: LocalizedName) -> [String: Any?] {
+        return [
+            "locale": localizedName.locale,
+            "name": localizedName.name,
+        ]
+    }
+
+    static func asLocalizedNameList(arr: [Any]) throws -> [LocalizedName] {
+        var list = [LocalizedName]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var localizedName = try asLocalizedName(localizedName: val)
+                list.append(localizedName)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "LocalizedName"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(localizedNameList: [LocalizedName]) -> [Any] {
+        return localizedNameList.map { v -> [String: Any?] in dictionaryOf(localizedName: v) }
+    }
+
     static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
         guard let line = logEntry["line"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "line", typeName: "LogEntry"))
@@ -1426,6 +1625,44 @@ enum BreezLiquidSDKMapper {
         return prepareSendResponseList.map { v -> [String: Any?] in dictionaryOf(prepareSendResponse: v) }
     }
 
+    static func asRate(rate: [String: Any?]) throws -> Rate {
+        guard let coin = rate["coin"] as? String else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "coin", typeName: "Rate"))
+        }
+        guard let value = rate["value"] as? Double else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "value", typeName: "Rate"))
+        }
+
+        return Rate(
+            coin: coin,
+            value: value
+        )
+    }
+
+    static func dictionaryOf(rate: Rate) -> [String: Any?] {
+        return [
+            "coin": rate.coin,
+            "value": rate.value,
+        ]
+    }
+
+    static func asRateList(arr: [Any]) throws -> [Rate] {
+        var list = [Rate]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var rate = try asRate(rate: val)
+                list.append(rate)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Rate"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(rateList: [Rate]) -> [Any] {
+        return rateList.map { v -> [String: Any?] in dictionaryOf(rate: v) }
+    }
+
     static func asReceiveOnchainRequest(receiveOnchainRequest: [String: Any?]) throws -> ReceiveOnchainRequest {
         guard let prepareResTmp = receiveOnchainRequest["prepareRes"] as? [String: Any?] else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareRes", typeName: "ReceiveOnchainRequest"))
@@ -1824,6 +2061,70 @@ enum BreezLiquidSDKMapper {
 
     static func arrayOf(sendPaymentResponseList: [SendPaymentResponse]) -> [Any] {
         return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
+    }
+
+    static func asSymbol(symbol: [String: Any?]) throws -> Symbol {
+        var grapheme: String?
+        if hasNonNilKey(data: symbol, key: "grapheme") {
+            guard let graphemeTmp = symbol["grapheme"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "grapheme"))
+            }
+            grapheme = graphemeTmp
+        }
+        var template: String?
+        if hasNonNilKey(data: symbol, key: "template") {
+            guard let templateTmp = symbol["template"] as? String else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "template"))
+            }
+            template = templateTmp
+        }
+        var rtl: Bool?
+        if hasNonNilKey(data: symbol, key: "rtl") {
+            guard let rtlTmp = symbol["rtl"] as? Bool else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "rtl"))
+            }
+            rtl = rtlTmp
+        }
+        var position: UInt32?
+        if hasNonNilKey(data: symbol, key: "position") {
+            guard let positionTmp = symbol["position"] as? UInt32 else {
+                throw LiquidSdkError.Generic(message: errUnexpectedValue(fieldName: "position"))
+            }
+            position = positionTmp
+        }
+
+        return Symbol(
+            grapheme: grapheme,
+            template: template,
+            rtl: rtl,
+            position: position
+        )
+    }
+
+    static func dictionaryOf(symbol: Symbol) -> [String: Any?] {
+        return [
+            "grapheme": symbol.grapheme == nil ? nil : symbol.grapheme,
+            "template": symbol.template == nil ? nil : symbol.template,
+            "rtl": symbol.rtl == nil ? nil : symbol.rtl,
+            "position": symbol.position == nil ? nil : symbol.position,
+        ]
+    }
+
+    static func asSymbolList(arr: [Any]) throws -> [Symbol] {
+        var list = [Symbol]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var symbol = try asSymbol(symbol: val)
+                list.append(symbol)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Symbol"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(symbolList: [Symbol]) -> [Any] {
+        return symbolList.map { v -> [String: Any?] in dictionaryOf(symbol: v) }
     }
 
     static func asUrlSuccessActionData(urlSuccessActionData: [String: Any?]) throws -> UrlSuccessActionData {
