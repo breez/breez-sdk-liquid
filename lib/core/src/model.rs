@@ -71,6 +71,13 @@ impl Config {
         self.zero_conf_max_amount_sat
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
+
+    pub(crate) fn lowball_fee_rate(&self) -> Option<f32> {
+        match self.network {
+            LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
+            LiquidNetwork::Testnet => None,
+        }
+    }
 }
 
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
