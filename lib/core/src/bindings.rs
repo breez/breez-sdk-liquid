@@ -6,10 +6,11 @@ use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 pub use sdk_common::prelude::{
-    AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData, FiatCurrency,
-    InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayErrorData, LnUrlPayRequest,
-    LnUrlPayRequestData, LnUrlWithdrawRequest, LnUrlWithdrawRequestData, MessageSuccessActionData,
-    Network, Rate, RouteHint, RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+    AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData, CurrencyInfo,
+    FiatCurrency, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayErrorData,
+    LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
+    LocaleOverrides, LocalizedName, MessageSuccessActionData, Network, Rate, RouteHint,
+    RouteHintHop, SuccessActionProcessed, Symbol, UrlSuccessActionData,
 };
 
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk};
@@ -384,6 +385,50 @@ pub struct _LnUrlWithdrawRequest {
     pub data: LnUrlWithdrawRequestData,
     pub amount_msat: u64,
     pub description: Option<String>,
+}
+
+#[frb(mirror(Rate))]
+pub struct _Rate {
+    pub coin: String,
+    pub value: f64,
+}
+
+#[frb(mirror(FiatCurrency))]
+pub struct _FiatCurrency {
+    pub id: String,
+    pub info: CurrencyInfo,
+}
+
+#[frb(mirror(CurrencyInfo))]
+pub struct _CurrencyInfo {
+    pub name: String,
+    pub fraction_size: u32,
+    pub spacing: Option<u32>,
+    pub symbol: Option<Symbol>,
+    pub uniq_symbol: Option<Symbol>,
+    pub localized_name: Vec<LocalizedName>,
+    pub locale_overrides: Vec<LocaleOverrides>,
+}
+
+#[frb(mirror(LocaleOverrides))]
+pub struct _LocaleOverrides {
+    pub locale: String,
+    pub spacing: Option<u32>,
+    pub symbol: Symbol,
+}
+
+#[frb(mirror(LocalizedName))]
+pub struct _LocalizedName {
+    pub locale: String,
+    pub name: String,
+}
+
+#[frb(mirror(Symbol))]
+pub struct _Symbol {
+    pub grapheme: Option<String>,
+    pub template: Option<String>,
+    pub rtl: Option<bool>,
+    pub position: Option<u32>,
 }
 
 /// External structs that cannot be mirrored for FRB, so are therefore duplicated instead
