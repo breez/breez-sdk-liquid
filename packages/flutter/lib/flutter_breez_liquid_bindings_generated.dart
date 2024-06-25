@@ -1318,8 +1318,6 @@ final class wire_cst_liquid_sdk_event extends ffi.Struct {
 }
 
 final class wire_cst_config extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> boltz_url;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;

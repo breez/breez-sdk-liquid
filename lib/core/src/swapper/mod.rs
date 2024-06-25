@@ -12,7 +12,8 @@ use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     self, BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
     CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest, CreateSubmarineResponse,
-    ReversePair, SubmarineClaimTxResponse, SubmarinePair,
+    ReversePair, SubmarineClaimTxResponse, SubmarinePair, BOLTZ_MAINNET_URL_V2,
+    BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, BtcSwapTxV2, Keypair, LBtcSwapTxV2, LockTime};
@@ -153,6 +154,7 @@ pub trait Swapper: Send + Sync {
 
 pub struct BoltzSwapper {
     client: BoltzApiClientV2,
+    boltz_url: String,
     referral_id: Option<String>,
     config: Config,
     liquid_electrum_config: ElectrumConfig,
@@ -180,10 +182,17 @@ impl BoltzSwapper {
             },
         };
 
-        let boltz_url = boltz_api_base_url.unwrap_or(config.boltz_url.clone());
+        let boltz_url = boltz_api_base_url.unwrap_or(
+            match config.network {
+                LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
+                LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
+            }
+            .to_string(),
+        );
 
         BoltzSwapper {
             client: BoltzApiClientV2::new(&boltz_url),
+            boltz_url,
             referral_id,
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
@@ -219,7 +228,7 @@ impl BoltzSwapper {
                 swap_script.clone(),
                 refund_address,
                 &self.liquid_electrum_config,
-                self.config.boltz_url.clone(),
+                self.boltz_url.clone(),
                 swap_id,
             )?),
         };
@@ -315,7 +324,7 @@ impl BoltzSwapper {
             swap_script,
             swap.claim_address.clone(),
             &self.liquid_electrum_config,
-            self.config.boltz_url.clone(),
+            self.boltz_url.clone(),
             swap.id.clone(),
         )?;
 
@@ -705,7 +714,7 @@ impl Swapper for BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.config.boltz_url.clone(),
+            self.boltz_url.clone(),
             swap.id.clone(),
         )?;
 
@@ -737,7 +746,7 @@ impl Swapper for BoltzSwapper {
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
-        Box::new(BoltzStatusStream::new(&self.config.boltz_url))
+        Box::new(BoltzStatusStream::new(&self.boltz_url))
     }
 
     fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {

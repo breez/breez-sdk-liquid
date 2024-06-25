@@ -31,7 +31,6 @@ class BackupRequest {
 
 /// Configuration for the Liquid SDK
 class Config {
-  final String boltzUrl;
   final String liquidElectrumUrl;
   final String bitcoinElectrumUrl;
 
@@ -52,7 +51,6 @@ class Config {
   final BigInt? zeroConfMaxAmountSat;
 
   const Config({
-    required this.boltzUrl,
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
     required this.workingDir,
@@ -64,7 +62,6 @@ class Config {
 
   @override
   int get hashCode =>
-      boltzUrl.hashCode ^
       liquidElectrumUrl.hashCode ^
       bitcoinElectrumUrl.hashCode ^
       workingDir.hashCode ^
@@ -78,7 +75,6 @@ class Config {
       identical(this, other) ||
       other is Config &&
           runtimeType == other.runtimeType &&
-          boltzUrl == other.boltzUrl &&
           liquidElectrumUrl == other.liquidElectrumUrl &&
           bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
           workingDir == other.workingDir &&

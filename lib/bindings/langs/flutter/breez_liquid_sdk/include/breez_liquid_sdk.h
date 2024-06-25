@@ -195,7 +195,6 @@ typedef struct wire_cst_liquid_sdk_event {
 } wire_cst_liquid_sdk_event;
 
 typedef struct wire_cst_config {
-  struct wire_cst_list_prim_u_8_strict *boltz_url;
   struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
   struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
   struct wire_cst_list_prim_u_8_strict *working_dir;
