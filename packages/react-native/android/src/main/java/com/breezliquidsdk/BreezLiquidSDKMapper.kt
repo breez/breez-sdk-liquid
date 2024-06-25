@@ -118,7 +118,6 @@ fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
             arrayOf(
-                "boltzUrl",
                 "liquidElectrumUrl",
                 "bitcoinElectrumUrl",
                 "workingDir",
@@ -130,7 +129,6 @@ fun asConfig(config: ReadableMap): Config? {
     ) {
         return null
     }
-    val boltzUrl = config.getString("boltzUrl")!!
     val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
     val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
     val workingDir = config.getString("workingDir")!!
@@ -148,7 +146,6 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     return Config(
-        boltzUrl,
         liquidElectrumUrl,
         bitcoinElectrumUrl,
         workingDir,
@@ -161,7 +158,6 @@ fun asConfig(config: ReadableMap): Config? {
 
 fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
-        "boltzUrl" to config.boltzUrl,
         "liquidElectrumUrl" to config.liquidElectrumUrl,
         "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
         "workingDir" to config.workingDir,

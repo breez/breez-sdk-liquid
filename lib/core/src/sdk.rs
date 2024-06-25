@@ -58,14 +58,27 @@ pub struct LiquidSdk {
 
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let config = req.config;
-        let sdk = LiquidSdk::new(config, req.mnemonic)?;
+        let maybe_swapper_proxy_url =
+            match BreezServer::new("https://bs1.breez-abc.technology:443".into(), None) {
+                Ok(breez_server) => breez_server
+                    .fetch_boltz_swapper_urls()
+                    .await
+                    .ok()
+                    .and_then(|swapper_urls| swapper_urls.first().cloned()),
+                Err(_) => None,
+            };
+
+        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, req.mnemonic)?;
         sdk.start().await?;
 
         Ok(sdk)
     }
 
-    fn new(config: Config, mnemonic: String) -> Result<Arc<Self>> {
+    fn new(
+        config: Config,
+        swapper_proxy_url: Option<String>,
+        mnemonic: String,
+    ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
         let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
@@ -74,7 +87,11 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+        if let Some(swapper_proxy_url) = swapper_proxy_url {
+            persister.set_swapper_proxy_url(swapper_proxy_url)?;
+        }
+        let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let liquid_chain_service =

@@ -244,7 +244,6 @@ enum PaymentError {
 };
 
 dictionary Config {
-    string boltz_url;
     string liquid_electrum_url;
     string bitcoin_electrum_url;
     string working_dir;

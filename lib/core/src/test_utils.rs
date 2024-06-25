@@ -17,7 +17,7 @@ use crate::{
 };
 
 use anyhow::{anyhow, Result};
-use bip39::rand::{self, distributions::Alphanumeric, Rng};
+use lwk_wollet::secp256k1::rand::{self, distributions::Alphanumeric, Rng};
 use lwk_wollet::ElectrumUrl;
 use tempdir::TempDir;
 use tokio::sync::Mutex;
@@ -30,7 +30,7 @@ pub(crate) fn new_send_swap_state_handler(
 ) -> Result<SendSwapStateHandler> {
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-    let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+    let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
     Ok(SendSwapStateHandler::new(
@@ -47,7 +47,7 @@ pub(crate) fn new_receive_swap_state_handler(
 ) -> Result<ReceiveSwapStateHandler> {
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-    let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+    let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
 
     Ok(ReceiveSwapStateHandler::new(
@@ -64,7 +64,7 @@ pub(crate) fn new_chain_swap_state_handler(
 ) -> Result<ChainSwapStateHandler> {
     let config = Config::testnet();
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-    let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+    let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
     let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
         &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
