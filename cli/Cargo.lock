@@ -2600,8 +2600,8 @@ dependencies = [
 
 [[package]]
 name = "sdk-common"
-version = "0.4.1"
-source = "git+https://github.com/breez/breez-sdk?branch=ok300-chain-api-servers-boltz-swapper#33a53d634db267a1709e3e2be56ad147b4efe3b6"
+version = "0.4.2-rc3"
+source = "git+https://github.com/breez/breez-sdk?branch=main#3ddd68cdc524a4a640463f687f4e4d819069de01"
 dependencies = [
  "aes 0.8.4",
  "anyhow",
