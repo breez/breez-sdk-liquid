@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use crate::{
-    chain::liquid::HybridLiquidChainService,
+    chain::{bitcoin, liquid::HybridLiquidChainService},
     chain_swap::ChainSwapStateHandler,
     model::{
         ChainSwap, Config, Direction, LiquidNetwork, PaymentState, PaymentTxData, PaymentType,
@@ -18,6 +18,7 @@ use crate::{
 
 use anyhow::{anyhow, Result};
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
+use lwk_wollet::ElectrumUrl;
 use tempdir::TempDir;
 use tokio::sync::Mutex;
 
@@ -65,13 +66,16 @@ pub(crate) fn new_chain_swap_state_handler(
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone()));
     let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
+    let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
+        &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
+    )?));
 
     ChainSwapStateHandler::new(
-        config,
         onchain_wallet,
         persister,
         swapper,
         liquid_chain_service,
+        bitcoin_chain_service,
     )
 }
 
@@ -131,7 +135,9 @@ pub(crate) fn new_chain_swap(payment_state: Option<PaymentState>) -> ChainSwap {
     ChainSwap {
         id,
         direction: Direction::Incoming,
-        address: "".to_string(),
+        claim_address: "".to_string(),
+        lockup_address: "".to_string(),
+        timeout_block_height: 0,
         preimage: "".to_string(),
         create_response_json: "{}".to_string(),
         claim_private_key: "".to_string(),

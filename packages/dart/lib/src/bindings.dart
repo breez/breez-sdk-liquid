@@ -43,6 +43,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<Payment>> listPayments();
 
+  Future<List<RefundableSwap>> listRefundables();
+
   Future<LnUrlCallbackStatus> lnurlAuth({required LnUrlAuthRequestData reqData});
 
   Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req});
@@ -53,11 +55,19 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req});
 
+  Future<PrepareReceiveOnchainResponse> prepareReceiveOnchain({required PrepareReceiveOnchainRequest req});
+
   Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req});
+
+  Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req});
 
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req});
 
+  Future<ReceiveOnchainResponse> receiveOnchain({required ReceiveOnchainRequest req});
+
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req});
+
+  Future<RefundResponse> refund({required RefundRequest req});
 
   void restore({required RestoreRequest req});
 

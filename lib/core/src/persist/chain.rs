@@ -21,7 +21,9 @@ impl Persister {
             INSERT INTO chain_swaps (
                 id,
                 direction,
-                address,
+                claim_address,
+                lockup_address,
+                timeout_block_height,
                 preimage,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -33,12 +35,14 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             &chain_swap.id,
             &chain_swap.direction,
-            &chain_swap.address,
+            &chain_swap.claim_address,
+            &chain_swap.lockup_address,
+            &chain_swap.timeout_block_height,
             &chain_swap.preimage,
             &chain_swap.payer_amount_sat,
             &chain_swap.receiver_amount_sat,
@@ -84,7 +88,9 @@ impl Persister {
             SELECT
                 id,
                 direction,
-                address,
+                claim_address,
+                lockup_address,
+                timeout_block_height,
                 preimage,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -114,25 +120,38 @@ impl Persister {
         Ok(res.ok())
     }
 
+    pub(crate) fn fetch_chain_swap_by_lockup_address(
+        &self,
+        lockup_address: &str,
+    ) -> Result<Option<ChainSwap>> {
+        let con: Connection = self.get_connection()?;
+        let query = Self::list_chain_swaps_query(vec!["lockup_address = ?1".to_string()]);
+        let res = con.query_row(&query, [lockup_address], Self::sql_row_to_chain_swap);
+
+        Ok(res.ok())
+    }
+
     fn sql_row_to_chain_swap(row: &Row) -> rusqlite::Result<ChainSwap> {
         Ok(ChainSwap {
             id: row.get(0)?,
             direction: row.get(1)?,
-            address: row.get(2)?,
-            preimage: row.get(3)?,
-            payer_amount_sat: row.get(4)?,
-            receiver_amount_sat: row.get(5)?,
-            accept_zero_conf: row.get(6)?,
-            create_response_json: row.get(7)?,
-            claim_private_key: row.get(8)?,
-            refund_private_key: row.get(9)?,
-            server_lockup_tx_id: row.get(10)?,
-            user_lockup_tx_id: row.get(11)?,
-            claim_fees_sat: row.get(12)?,
-            claim_tx_id: row.get(13)?,
-            refund_tx_id: row.get(14)?,
-            created_at: row.get(15)?,
-            state: row.get(16)?,
+            claim_address: row.get(2)?,
+            lockup_address: row.get(3)?,
+            timeout_block_height: row.get(4)?,
+            preimage: row.get(5)?,
+            payer_amount_sat: row.get(6)?,
+            receiver_amount_sat: row.get(7)?,
+            accept_zero_conf: row.get(8)?,
+            create_response_json: row.get(9)?,
+            claim_private_key: row.get(10)?,
+            refund_private_key: row.get(11)?,
+            server_lockup_tx_id: row.get(12)?,
+            user_lockup_tx_id: row.get(13)?,
+            claim_fees_sat: row.get(14)?,
+            claim_tx_id: row.get(15)?,
+            refund_tx_id: row.get(16)?,
+            created_at: row.get(17)?,
+            state: row.get(18)?,
         })
     }
 
@@ -191,6 +210,20 @@ impl Persister {
                     .as_ref()
                     .map(|refund_tx_id| (refund_tx_id.clone(), pending_chain_swap.clone()))
             })
+            .collect();
+        Ok(res)
+    }
+
+    pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con: Connection = self.get_connection()?;
+        let query = Self::list_chain_swaps_query(vec!["state = ?1".to_string()]);
+        let res = con
+            .prepare(&query)?
+            .query_map(
+                params![PaymentState::Refundable],
+                Self::sql_row_to_chain_swap,
+            )?
+            .map(|i| i.unwrap())
             .collect();
         Ok(res)
     }

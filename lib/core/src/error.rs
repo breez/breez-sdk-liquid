@@ -1,4 +1,5 @@
 use anyhow::Error;
+use lwk_wollet::secp256k1;
 use sdk_common::prelude::LnUrlAuthError;
 
 pub type LiquidSdkResult<T, E = LiquidSdkError> = Result<T, E>;
@@ -31,6 +32,27 @@ pub enum LiquidSdkError {
 impl From<anyhow::Error> for LiquidSdkError {
     fn from(e: Error) -> Self {
         LiquidSdkError::Generic { err: e.to_string() }
+    }
+}
+
+impl From<boltz_client::error::Error> for LiquidSdkError {
+    fn from(err: boltz_client::error::Error) -> Self {
+        match err {
+            boltz_client::error::Error::HTTP(e) => LiquidSdkError::Generic {
+                err: format!("Could not contact servers: {e:?}"),
+            },
+            _ => LiquidSdkError::Generic {
+                err: format!("{err:?}"),
+            },
+        }
+    }
+}
+
+impl From<secp256k1::Error> for LiquidSdkError {
+    fn from(err: secp256k1::Error) -> Self {
+        LiquidSdkError::Generic {
+            err: format!("{err:?}"),
+        }
     }
 }
 

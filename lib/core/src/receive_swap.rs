@@ -12,7 +12,7 @@ use lwk_wollet::History;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::{Complete, Created, Failed, Pending, TimedOut};
+use crate::model::PaymentState::{Complete, Created, Failed, Pending, Refundable, TimedOut};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -287,18 +287,22 @@ impl ReceiveSwapStateHandler {
             }),
 
             (Created | Pending, Pending) => Ok(()),
-            (Complete | Failed | TimedOut, Pending) => Err(PaymentError::Generic {
+            (_, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
             (Created | Pending, Complete) => Ok(()),
-            (Complete | Failed | TimedOut, Complete) => Err(PaymentError::Generic {
+            (_, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
 
             (Created | TimedOut, TimedOut) => Ok(()),
             (_, TimedOut) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
+            }),
+
+            (_, Refundable) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
 
             (Complete, Failed) => Err(PaymentError::Generic {
@@ -416,6 +420,7 @@ mod tests {
             (Pending, HashSet::from([Pending, Complete, Failed])),
             (TimedOut, HashSet::from([TimedOut, Failed])),
             (Complete, HashSet::from([])),
+            (Refundable, HashSet::from([Failed])),
             (Failed, HashSet::from([Failed])),
         ]);
 

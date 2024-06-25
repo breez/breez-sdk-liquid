@@ -121,6 +121,7 @@ impl From<EsploraTx> for History {
             txid: value.txid,
             height: status.block_height.unwrap_or_default(),
             block_hash: status.block_hash,
+            block_timestamp: None,
         }
     }
 }
