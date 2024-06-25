@@ -949,6 +949,74 @@ fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainR
     return list
 }
 
+fun asPrepareReceiveOnchainRequest(prepareReceiveOnchainRequest: ReadableMap): PrepareReceiveOnchainRequest? {
+    if (!validateMandatoryFields(
+            prepareReceiveOnchainRequest,
+            arrayOf(
+                "amountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val amountSat = prepareReceiveOnchainRequest.getDouble("amountSat").toULong()
+    return PrepareReceiveOnchainRequest(
+        amountSat,
+    )
+}
+
+fun readableMapOf(prepareReceiveOnchainRequest: PrepareReceiveOnchainRequest): ReadableMap =
+    readableMapOf(
+        "amountSat" to prepareReceiveOnchainRequest.amountSat,
+    )
+
+fun asPrepareReceiveOnchainRequestList(arr: ReadableArray): List<PrepareReceiveOnchainRequest> {
+    val list = ArrayList<PrepareReceiveOnchainRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareReceiveOnchainRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: ReadableMap): PrepareReceiveOnchainResponse? {
+    if (!validateMandatoryFields(
+            prepareReceiveOnchainResponse,
+            arrayOf(
+                "amountSat",
+                "feesSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val amountSat = prepareReceiveOnchainResponse.getDouble("amountSat").toULong()
+    val feesSat = prepareReceiveOnchainResponse.getDouble("feesSat").toULong()
+    return PrepareReceiveOnchainResponse(
+        amountSat,
+        feesSat,
+    )
+}
+
+fun readableMapOf(prepareReceiveOnchainResponse: PrepareReceiveOnchainResponse): ReadableMap =
+    readableMapOf(
+        "amountSat" to prepareReceiveOnchainResponse.amountSat,
+        "feesSat" to prepareReceiveOnchainResponse.feesSat,
+    )
+
+fun asPrepareReceiveOnchainResponseList(arr: ReadableArray): List<PrepareReceiveOnchainResponse> {
+    val list = ArrayList<PrepareReceiveOnchainResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareReceiveOnchainResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveRequest? {
     if (!validateMandatoryFields(
             prepareReceiveRequest,
@@ -1011,6 +1079,82 @@ fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareRefundRequest(prepareRefundRequest: ReadableMap): PrepareRefundRequest? {
+    if (!validateMandatoryFields(
+            prepareRefundRequest,
+            arrayOf(
+                "swapAddress",
+                "refundAddress",
+                "satPerVbyte",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swapAddress = prepareRefundRequest.getString("swapAddress")!!
+    val refundAddress = prepareRefundRequest.getString("refundAddress")!!
+    val satPerVbyte = prepareRefundRequest.getInt("satPerVbyte").toUInt()
+    return PrepareRefundRequest(
+        swapAddress,
+        refundAddress,
+        satPerVbyte,
+    )
+}
+
+fun readableMapOf(prepareRefundRequest: PrepareRefundRequest): ReadableMap =
+    readableMapOf(
+        "swapAddress" to prepareRefundRequest.swapAddress,
+        "refundAddress" to prepareRefundRequest.refundAddress,
+        "satPerVbyte" to prepareRefundRequest.satPerVbyte,
+    )
+
+fun asPrepareRefundRequestList(arr: ReadableArray): List<PrepareRefundRequest> {
+    val list = ArrayList<PrepareRefundRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareRefundRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareRefundResponse(prepareRefundResponse: ReadableMap): PrepareRefundResponse? {
+    if (!validateMandatoryFields(
+            prepareRefundResponse,
+            arrayOf(
+                "refundTxVsize",
+                "refundTxFeeSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val refundTxVsize = prepareRefundResponse.getInt("refundTxVsize").toUInt()
+    val refundTxFeeSat = prepareRefundResponse.getDouble("refundTxFeeSat").toULong()
+    return PrepareRefundResponse(
+        refundTxVsize,
+        refundTxFeeSat,
+    )
+}
+
+fun readableMapOf(prepareRefundResponse: PrepareRefundResponse): ReadableMap =
+    readableMapOf(
+        "refundTxVsize" to prepareRefundResponse.refundTxVsize,
+        "refundTxFeeSat" to prepareRefundResponse.refundTxFeeSat,
+    )
+
+fun asPrepareRefundResponseList(arr: ReadableArray): List<PrepareRefundResponse> {
+    val list = ArrayList<PrepareRefundResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareRefundResponse(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -1085,6 +1229,74 @@ fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
     return list
 }
 
+fun asReceiveOnchainRequest(receiveOnchainRequest: ReadableMap): ReceiveOnchainRequest? {
+    if (!validateMandatoryFields(
+            receiveOnchainRequest,
+            arrayOf(
+                "prepareRes",
+            ),
+        )
+    ) {
+        return null
+    }
+    val prepareRes = receiveOnchainRequest.getMap("prepareRes")?.let { asPrepareReceiveOnchainResponse(it) }!!
+    return ReceiveOnchainRequest(
+        prepareRes,
+    )
+}
+
+fun readableMapOf(receiveOnchainRequest: ReceiveOnchainRequest): ReadableMap =
+    readableMapOf(
+        "prepareRes" to readableMapOf(receiveOnchainRequest.prepareRes),
+    )
+
+fun asReceiveOnchainRequestList(arr: ReadableArray): List<ReceiveOnchainRequest> {
+    val list = ArrayList<ReceiveOnchainRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asReceiveOnchainRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asReceiveOnchainResponse(receiveOnchainResponse: ReadableMap): ReceiveOnchainResponse? {
+    if (!validateMandatoryFields(
+            receiveOnchainResponse,
+            arrayOf(
+                "address",
+                "bip21",
+            ),
+        )
+    ) {
+        return null
+    }
+    val address = receiveOnchainResponse.getString("address")!!
+    val bip21 = receiveOnchainResponse.getString("bip21")!!
+    return ReceiveOnchainResponse(
+        address,
+        bip21,
+    )
+}
+
+fun readableMapOf(receiveOnchainResponse: ReceiveOnchainResponse): ReadableMap =
+    readableMapOf(
+        "address" to receiveOnchainResponse.address,
+        "bip21" to receiveOnchainResponse.bip21,
+    )
+
+fun asReceiveOnchainResponseList(arr: ReadableArray): List<ReceiveOnchainResponse> {
+    val list = ArrayList<ReceiveOnchainResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asReceiveOnchainResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asReceivePaymentResponse(receivePaymentResponse: ReadableMap): ReceivePaymentResponse? {
     if (!validateMandatoryFields(
             receivePaymentResponse,
@@ -1115,6 +1327,118 @@ fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRefundRequest(refundRequest: ReadableMap): RefundRequest? {
+    if (!validateMandatoryFields(
+            refundRequest,
+            arrayOf(
+                "swapAddress",
+                "refundAddress",
+                "satPerVbyte",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swapAddress = refundRequest.getString("swapAddress")!!
+    val refundAddress = refundRequest.getString("refundAddress")!!
+    val satPerVbyte = refundRequest.getInt("satPerVbyte").toUInt()
+    return RefundRequest(
+        swapAddress,
+        refundAddress,
+        satPerVbyte,
+    )
+}
+
+fun readableMapOf(refundRequest: RefundRequest): ReadableMap =
+    readableMapOf(
+        "swapAddress" to refundRequest.swapAddress,
+        "refundAddress" to refundRequest.refundAddress,
+        "satPerVbyte" to refundRequest.satPerVbyte,
+    )
+
+fun asRefundRequestList(arr: ReadableArray): List<RefundRequest> {
+    val list = ArrayList<RefundRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRefundRequest(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRefundResponse(refundResponse: ReadableMap): RefundResponse? {
+    if (!validateMandatoryFields(
+            refundResponse,
+            arrayOf(
+                "refundTxId",
+            ),
+        )
+    ) {
+        return null
+    }
+    val refundTxId = refundResponse.getString("refundTxId")!!
+    return RefundResponse(
+        refundTxId,
+    )
+}
+
+fun readableMapOf(refundResponse: RefundResponse): ReadableMap =
+    readableMapOf(
+        "refundTxId" to refundResponse.refundTxId,
+    )
+
+fun asRefundResponseList(arr: ReadableArray): List<RefundResponse> {
+    val list = ArrayList<RefundResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRefundResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRefundableSwap(refundableSwap: ReadableMap): RefundableSwap? {
+    if (!validateMandatoryFields(
+            refundableSwap,
+            arrayOf(
+                "swapAddress",
+                "timestamp",
+                "amountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swapAddress = refundableSwap.getString("swapAddress")!!
+    val timestamp = refundableSwap.getInt("timestamp").toUInt()
+    val amountSat = refundableSwap.getDouble("amountSat").toULong()
+    return RefundableSwap(
+        swapAddress,
+        timestamp,
+        amountSat,
+    )
+}
+
+fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
+    readableMapOf(
+        "swapAddress" to refundableSwap.swapAddress,
+        "timestamp" to refundableSwap.timestamp,
+        "amountSat" to refundableSwap.amountSat,
+    )
+
+fun asRefundableSwapList(arr: ReadableArray): List<RefundableSwap> {
+    val list = ArrayList<RefundableSwap>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRefundableSwap(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -1745,6 +2069,7 @@ fun pushToArray(
     when (value) {
         null -> array.pushNull()
         is Payment -> array.pushMap(readableMapOf(value))
+        is RefundableSwap -> array.pushMap(readableMapOf(value))
         is RouteHint -> array.pushMap(readableMapOf(value))
         is RouteHintHop -> array.pushMap(readableMapOf(value))
         is UByte -> array.pushInt(value.toInt())

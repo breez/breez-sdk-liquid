@@ -139,6 +139,20 @@ impl BindingLiquidSdk {
         self.sdk.pay_onchain(&req).await
     }
 
+    pub async fn prepare_receive_onchain(
+        &self,
+        req: PrepareReceiveOnchainRequest,
+    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
+        self.sdk.prepare_receive_onchain(&req).await
+    }
+
+    pub async fn receive_onchain(
+        &self,
+        req: ReceiveOnchainRequest,
+    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        self.sdk.receive_onchain(&req).await
+    }
+
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.sdk.list_payments().await
     }
@@ -170,6 +184,21 @@ impl BindingLiquidSdk {
             .await
             .map(Into::into)
             .map_err(Into::into)
+    }
+
+    pub async fn list_refundables(&self) -> Result<Vec<RefundableSwap>, LiquidSdkError> {
+        self.sdk.list_refundables().await
+    }
+
+    pub async fn prepare_refund(
+        &self,
+        req: PrepareRefundRequest,
+    ) -> Result<PrepareRefundResponse, LiquidSdkError> {
+        self.sdk.prepare_refund(&req).await
+    }
+
+    pub async fn refund(&self, req: RefundRequest) -> Result<RefundResponse, PaymentError> {
+        self.sdk.refund(&req).await
     }
 
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {
