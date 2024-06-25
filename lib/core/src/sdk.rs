@@ -582,14 +582,15 @@ impl LiquidSdk {
     }
 
     /// Estimate the onchain fee for sending the given amount to the given destination address
-    async fn estimate_onchain_tx_fee(&self, amount_sat: u64, address: &str) -> Result<u64> {
+    async fn estimate_onchain_tx_fee(
+        &self,
+        amount_sat: u64,
+        address: &str,
+        fee_rate: Option<f32>,
+    ) -> Result<u64> {
         Ok(self
             .onchain_wallet
-            .build_tx(
-                Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
-                address,
-                amount_sat,
-            )
+            .build_tx(fee_rate, address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -604,7 +605,7 @@ impl LiquidSdk {
             LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
-        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr)
+        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr, self.config.lowball_fee_rate())
             .await
     }
 
@@ -625,8 +626,12 @@ impl LiquidSdk {
 
         let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
             Some((lbtc_address, _)) => {
-                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
-                    .await?
+                self.estimate_onchain_tx_fee(
+                    receiver_amount_sat,
+                    &lbtc_address,
+                    self.config.lowball_fee_rate(),
+                )
+                .await?
             }
             None => {
                 let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
@@ -675,17 +680,22 @@ impl LiquidSdk {
     async fn refund_send(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let amount_sat = get_invoice_amount!(swap.invoice);
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_fees_sat = self
-            .estimate_onchain_tx_fee(amount_sat, &output_address)
+        let cooperative_refund_tx_fees_sat = self
+            .estimate_onchain_tx_fee(amount_sat, &output_address, self.config.lowball_fee_rate())
             .await?;
-        let refund_res =
-            self.swapper
-                .refund_send_swap_cooperative(swap, &output_address, refund_tx_fees_sat);
+        let refund_res = self.swapper.refund_send_swap_cooperative(
+            swap,
+            &output_address,
+            cooperative_refund_tx_fees_sat,
+        );
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
+                let non_cooperative_refund_tx_fees_sat = self
+                    .estimate_onchain_tx_fee(swap.receiver_amount_sat, &output_address, None)
+                    .await?;
                 warn!("Cooperative refund failed: {:?}", e);
-                self.refund_send_non_cooperative(swap, refund_tx_fees_sat)
+                self.refund_send_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
                     .await
             }
         }
