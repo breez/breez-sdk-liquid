@@ -16,6 +16,7 @@ use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElectrumUrl, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
+use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -1475,7 +1476,7 @@ impl LiquidSdk {
                                     .unwrap();
                                 let preimage =
                                     sha256::Hash::from_str(&preimage_str).map_err(|_| {
-                                        sdk_common::prelude::LnUrlPayError::Generic {
+                                        LnUrlPayError::Generic {
                                             err: "Invalid preimage".to_string(),
                                         }
                                     })?;
@@ -1517,7 +1518,7 @@ impl LiquidSdk {
     pub async fn lnurl_withdraw(
         &self,
         req: LnUrlWithdrawRequest,
-    ) -> Result<LnUrlWithdrawResult, sdk_common::prelude::LnUrlWithdrawError> {
+    ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
         let prepare_receive_res = self
             .prepare_receive_payment(&{
                 PrepareReceiveRequest {
