@@ -111,7 +111,7 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?;
 
-        let breez_server = BreezServer::new("https://bs1.breez.technology:443".into(), None)?;
+        let breez_server = BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?;
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
