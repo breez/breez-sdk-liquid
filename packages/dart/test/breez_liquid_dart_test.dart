@@ -9,7 +9,8 @@ void main() {
   group('main', () {
     setUpAll(() async {
       await initApi();
-      ConnectRequest connectRequest = ConnectRequest(mnemonic: "", config: defaultConfig(network: Network.testnet));
+      ConnectRequest connectRequest =
+          ConnectRequest(mnemonic: "", config: defaultConfig(network: LiquidNetwork.testnet));
       sdk = await connect(req: connectRequest);
     });
 
