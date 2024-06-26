@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
-    BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
 use lwk_wollet::ElementsNetwork;
@@ -23,7 +22,6 @@ pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
-    pub boltz_url: String,
     pub liquid_electrum_url: String,
     pub bitcoin_electrum_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
@@ -43,7 +41,6 @@ pub struct Config {
 impl Config {
     pub fn mainnet() -> Self {
         Config {
-            boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
             working_dir: ".".to_string(),
@@ -56,7 +53,6 @@ impl Config {
 
     pub fn testnet() -> Self {
         Config {
-            boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
             working_dir: ".".to_string(),
@@ -70,6 +66,13 @@ impl Config {
     pub fn zero_conf_max_amount_sat(&self) -> u64 {
         self.zero_conf_max_amount_sat
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
+    }
+
+    pub(crate) fn lowball_fee_rate(&self) -> Option<f32> {
+        match self.network {
+            LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
+            LiquidNetwork::Testnet => None,
+        }
     }
 }
 

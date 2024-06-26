@@ -11,7 +11,7 @@ use reqwest::Response;
 use serde::Deserialize;
 use std::str::FromStr;
 
-use crate::model::Config;
+use crate::model::{Config, LiquidNetwork};
 
 const LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 
@@ -44,13 +44,17 @@ struct Status {
 
 pub(crate) struct HybridLiquidChainService {
     electrum_client: ElectrumClient,
+    network: LiquidNetwork,
 }
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         let electrum_client =
             ElectrumClient::new(&ElectrumUrl::new(&config.liquid_electrum_url, true, true))?;
-        Ok(Self { electrum_client })
+        Ok(Self {
+            electrum_client,
+            network: config.network,
+        })
     }
 }
 
@@ -61,17 +65,22 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid> {
-        let tx_bytes = tx.serialize();
-        info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
-        let client = reqwest::Client::new();
-        let response = client
-            .post(format!("{LIQUID_ESPLORA_URL}/tx"))
-            .header("Swap-ID", swap_id.unwrap_or_default())
-            .body(tx_bytes.to_hex())
-            .send()
-            .await?;
-        let txid = Txid::from_str(&response.text().await?)?;
-        Ok(txid)
+        match self.network {
+            LiquidNetwork::Mainnet => {
+                let tx_bytes = tx.serialize();
+                info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
+                let client = reqwest::Client::new();
+                let response = client
+                    .post(format!("{LIQUID_ESPLORA_URL}/tx"))
+                    .header("Swap-ID", swap_id.unwrap_or_default())
+                    .body(tx_bytes.to_hex())
+                    .send()
+                    .await?;
+                let txid = Txid::from_str(&response.text().await?)?;
+                Ok(txid)
+            }
+            LiquidNetwork::Testnet => Ok(self.electrum_client.broadcast(tx)?),
+        }
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
@@ -79,17 +88,26 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        let script = lwk_wollet::elements::bitcoin::Script::from_bytes(script.as_bytes());
-        let script_hash = sha256::Hash::hash(script.as_bytes())
-            .to_byte_array()
-            .to_hex();
-        let url = format!("{}/scripthash/{}/txs", LIQUID_ESPLORA_URL, script_hash);
-        // TODO must handle paging -> https://github.com/blockstream/esplora/blob/master/API.md#addresses
-        let response = get_with_retry(&url, 3).await?;
-        let json: Vec<EsploraTx> = response.json().await?;
+        match self.network {
+            LiquidNetwork::Mainnet => {
+                let script = lwk_wollet::elements::bitcoin::Script::from_bytes(script.as_bytes());
+                let script_hash = sha256::Hash::hash(script.as_bytes())
+                    .to_byte_array()
+                    .to_hex();
+                let url = format!("{}/scripthash/{}/txs", LIQUID_ESPLORA_URL, script_hash);
+                // TODO must handle paging -> https://github.com/blockstream/esplora/blob/master/API.md#addresses
+                let response = get_with_retry(&url, 3).await?;
+                let json: Vec<EsploraTx> = response.json().await?;
 
-        let history: Vec<History> = json.into_iter().map(Into::into).collect();
-        Ok(history)
+                let history: Vec<History> = json.into_iter().map(Into::into).collect();
+                Ok(history)
+            }
+            LiquidNetwork::Testnet => {
+                let mut history_vec = self.electrum_client.get_scripts_history(&[script])?;
+                let h = history_vec.pop();
+                Ok(h.unwrap_or(vec![]))
+            }
+        }
     }
 }
 

@@ -17,17 +17,21 @@ Future<Config> getConfig({
 extension ConfigCopyWith on Config {
   Config copyWith({
     String? boltzUrl,
-    String? electrumUrl,
+    String? liquidElectrumUrl,
+    String? bitcoinElectrumUrl,
     String? workingDir,
     LiquidNetwork? network,
     BigInt? paymentTimeoutSec,
+    double? zeroConfMinFeeRate,
   }) {
     return Config(
       boltzUrl: boltzUrl ?? this.boltzUrl,
-      electrumUrl: electrumUrl ?? this.electrumUrl,
+      liquidElectrumUrl: liquidElectrumUrl ?? this.liquidElectrumUrl,
+      bitcoinElectrumUrl: bitcoinElectrumUrl ?? this.bitcoinElectrumUrl,
       workingDir: workingDir ?? this.workingDir,
       network: network ?? this.network,
       paymentTimeoutSec: paymentTimeoutSec ?? this.paymentTimeoutSec,
+      zeroConfMinFeeRate: zeroConfMinFeeRate ?? this.zeroConfMinFeeRate,
     );
   }
 }

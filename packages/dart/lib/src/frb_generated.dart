@@ -1242,16 +1242,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return Config(
-      boltzUrl: dco_decode_String(arr[0]),
-      liquidElectrumUrl: dco_decode_String(arr[1]),
-      bitcoinElectrumUrl: dco_decode_String(arr[2]),
-      workingDir: dco_decode_String(arr[3]),
-      network: dco_decode_liquid_network(arr[4]),
-      paymentTimeoutSec: dco_decode_u_64(arr[5]),
-      zeroConfMinFeeRate: dco_decode_f_32(arr[6]),
-      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
+      liquidElectrumUrl: dco_decode_String(arr[0]),
+      bitcoinElectrumUrl: dco_decode_String(arr[1]),
+      workingDir: dco_decode_String(arr[2]),
+      network: dco_decode_liquid_network(arr[3]),
+      paymentTimeoutSec: dco_decode_u_64(arr[4]),
+      zeroConfMinFeeRate: dco_decode_f_32(arr[5]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
     );
   }
 
@@ -2611,7 +2610,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Config sse_decode_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_boltzUrl = sse_decode_String(deserializer);
     var var_liquidElectrumUrl = sse_decode_String(deserializer);
     var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
@@ -2620,7 +2618,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_zeroConfMinFeeRate = sse_decode_f_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     return Config(
-        boltzUrl: var_boltzUrl,
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
         workingDir: var_workingDir,
@@ -4065,7 +4062,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_config(Config self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.boltzUrl, serializer);
     sse_encode_String(self.liquidElectrumUrl, serializer);
     sse_encode_String(self.bitcoinElectrumUrl, serializer);
     sse_encode_String(self.workingDir, serializer);
