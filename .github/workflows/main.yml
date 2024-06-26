@@ -204,3 +204,51 @@ jobs:
           else
             echo "No changes in git status"
           fi
+
+  # Create a new plain Rust project, add the Liquid SDK as single dependency and try to compile it.
+  # This tests whether the SDK compiles with the latest version of the dependencies that can be updated.
+  #
+  # See discussion at https://github.com/breez/breez-sdk/pull/971
+  check-sdk-as-dependency:
+    name: Check SDK as Rust dependency in fresh project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install rust
+        run: |
+          rustup set auto-self-update disable
+          rustup toolchain install stable --profile minimal
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
+        with:
+          version: "23.4"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: test-new-project-with-sdk-dependency
+        run: |
+          mkdir new-project
+          cd new-project
+          cargo init --name test_project --vcs none
+          
+          # A project might reference our SDK as a git repository
+          # cargo add --git https://github.com/breez/breez-liquid-sdk breez-liquid-sdk
+          
+          # In this test, we reference the checked out repo (e.g. this PR branch)
+          cargo add --path ../lib/core breez-liquid-sdk
+          
+          # Add the secp256k1-zkp patch: https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits
+          echo "[patch.crates-io]" >> Cargo.toml
+          echo "secp256k1-zkp = {git = 'https://github.com/sanket1729/rust-secp256k1-zkp.git', rev = '60e631c24588a0c9e271badd61959294848c665d'}" >> Cargo.toml
+          # Propagate the patch in Cargo.lock
+          rm Cargo.lock
+          cargo update --package secp256k1-zkp
+          
+          cargo clippy -- -D warnings
