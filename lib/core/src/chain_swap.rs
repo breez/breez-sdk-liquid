@@ -1,3 +1,4 @@
+use std::time::Duration;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -5,18 +6,21 @@ use boltz_client::swaps::boltzv2;
 use boltz_client::swaps::{boltz::ChainSwapStates, boltzv2::CreateChainResponse};
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::Transaction;
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::{broadcast, watch, Mutex};
+use tokio::time::MissedTickBehavior;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain::liquid::LiquidChainService;
 use crate::error::{LiquidSdkError, LiquidSdkResult};
 use crate::model::PaymentState::{Complete, Created, Failed, Pending, Refundable, TimedOut};
-use crate::model::{ChainSwap, Direction, PaymentTxData, PaymentType};
+use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
+use crate::sdk::CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
 
 pub(crate) struct ChainSwapStateHandler {
+    config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
@@ -27,6 +31,7 @@ pub(crate) struct ChainSwapStateHandler {
 
 impl ChainSwapStateHandler {
     pub(crate) fn new(
+        config: Config,
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
@@ -35,6 +40,7 @@ impl ChainSwapStateHandler {
     ) -> Result<Self> {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Ok(Self {
+            config,
             onchain_wallet,
             persister,
             swapper,
@@ -42,6 +48,28 @@ impl ChainSwapStateHandler {
             bitcoin_chain_service,
             subscription_notifier,
         })
+    }
+
+    pub(crate) async fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(60 * 10));
+            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        if let Err(e) = cloned.rescan_chain_swaps().await {
+                            error!("Error checking chain swaps: {e:?}");
+                        }
+                    },
+                    _ = shutdown.changed() => {
+                        info!("Received shutdown signal, exiting chain swap loop");
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     pub(crate) fn subscribe_payment_updates(&self) -> broadcast::Receiver<String> {
@@ -60,6 +88,85 @@ impl ChainSwapStateHandler {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
         }
+    }
+
+    pub(crate) async fn rescan_chain_swaps(&self) -> Result<()> {
+        let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+        let chain_swaps: Vec<ChainSwap> = self
+            .persister
+            .list_chain_swaps()?
+            .into_iter()
+            .filter(|s| s.direction == Direction::Incoming)
+            .collect();
+        info!(
+            "Rescanning {} Chain Swap(s) at height {}",
+            chain_swaps.len(),
+            current_height
+        );
+        for swap in chain_swaps {
+            self.rescan_chain_swap(&swap, current_height).await?
+        }
+        Ok(())
+    }
+
+    async fn get_confirmed_unspent_sat(&self, swap: &ChainSwap) -> Result<u64> {
+        let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+        let script_pubkey = swap_script
+            .to_address(self.config.network.as_bitcoin_chain())
+            .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+            .script_pubkey();
+        Ok(self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .script_list_unspent(script_pubkey.as_script())?
+            .iter()
+            .filter(|u| u.height > 0)
+            .map(|u| u.value)
+            .sum())
+    }
+
+    async fn rescan_chain_swap(&self, swap: &ChainSwap, current_height: u32) -> Result<()> {
+        let monitoring_block_height =
+            swap.timeout_block_height + CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
+        let is_swap_expired = current_height > swap.timeout_block_height;
+        let is_monitoring_expired = current_height > monitoring_block_height;
+
+        match swap.state {
+            Pending if swap.refund_tx_id.is_some() => {
+                // There is a refund tx and the state is Pending. If the funds sent to the
+                // lockup script address are spent then set the state back to Complete/Failed.
+                let confirmed_unspent_sat = self.get_confirmed_unspent_sat(swap).await?;
+                if confirmed_unspent_sat == 0 {
+                    let to_state = match swap.claim_tx_id {
+                        Some(_) => Complete,
+                        None => Failed,
+                    };
+                    info!(
+                        "Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
+                        swap.id, to_state
+                    );
+                    self.update_swap_info(&swap.id, to_state, None, None, None, None)
+                        .await?;
+                }
+            }
+            Created | Complete | Failed if is_swap_expired && !is_monitoring_expired => {
+                // The swap state is either Created, Complete or Failed and we are in the
+                // monitoring period (1 month after expiry). If there are unspent funds
+                // sent to the lockup script address then set the state to Refundable.
+                let confirmed_unspent_sat = self.get_confirmed_unspent_sat(swap).await?;
+                if confirmed_unspent_sat > 0 {
+                    info!(
+                        "Chain Swap {} has {} unspent sats. Setting the swap to refundable",
+                        swap.id, confirmed_unspent_sat
+                    );
+                    self.update_swap_info(&swap.id, Refundable, None, None, None, None)
+                        .await?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
     }
 
     async fn on_new_incoming_status(
