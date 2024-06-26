@@ -6,11 +6,12 @@ use anyhow::Result;
 use breez_liquid_sdk::logger::Logger;
 use breez_liquid_sdk::{
     error::*, model::*, sdk::LiquidSdk, AesSuccessActionDataDecrypted, AesSuccessActionDataResult,
-    BitcoinAddressData, InputType, LNInvoice, LnUrlAuthError, LnUrlAuthRequestData,
-    LnUrlCallbackStatus, LnUrlErrorData, LnUrlPayError, LnUrlPayErrorData, LnUrlPayRequest,
-    LnUrlPayRequestData, LnUrlWithdrawError, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
-    LnUrlWithdrawResult, LnUrlWithdrawSuccessData, MessageSuccessActionData, Network, RouteHint,
-    RouteHintHop, SuccessActionProcessed, UrlSuccessActionData,
+    BitcoinAddressData, CurrencyInfo, FiatCurrency, InputType, LNInvoice, LnUrlAuthError,
+    LnUrlAuthRequestData, LnUrlCallbackStatus, LnUrlErrorData, LnUrlPayError, LnUrlPayErrorData,
+    LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawError, LnUrlWithdrawRequest,
+    LnUrlWithdrawRequestData, LnUrlWithdrawResult, LnUrlWithdrawSuccessData, LocaleOverrides,
+    LocalizedName, MessageSuccessActionData, Network, Rate, RouteHint, RouteHintHop,
+    SuccessActionProcessed, Symbol, UrlSuccessActionData,
 };
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
@@ -167,6 +168,14 @@ impl BindingLiquidSdk {
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
         rt().block_on(self.sdk.lnurl_auth(req_data))
+    }
+
+    pub fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, LiquidSdkError> {
+        rt().block_on(self.sdk.fetch_fiat_rates())
+    }
+
+    pub fn list_fiat_currencies(&self) -> Result<Vec<FiatCurrency>, LiquidSdkError> {
+        rt().block_on(self.sdk.list_fiat_currencies())
     }
 
     pub fn list_refundables(&self) -> LiquidSdkResult<Vec<RefundableSwap>> {

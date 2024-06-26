@@ -84,6 +84,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitcoinAddressData dco_decode_box_autoadd_bitcoin_address_data(dynamic raw);
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
 
   @protected
@@ -162,6 +165,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SuccessActionProcessed dco_decode_box_autoadd_success_action_processed(dynamic raw);
 
   @protected
+  Symbol dco_decode_box_autoadd_symbol(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
   BigInt dco_decode_box_autoadd_u_64(dynamic raw);
 
   @protected
@@ -174,7 +183,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest dco_decode_connect_request(dynamic raw);
 
   @protected
+  CurrencyInfo dco_decode_currency_info(dynamic raw);
+
+  @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FiatCurrency dco_decode_fiat_currency(dynamic raw);
 
   @protected
   GetInfoResponse dco_decode_get_info_response(dynamic raw);
@@ -195,10 +213,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidSdkEvent dco_decode_liquid_sdk_event(dynamic raw);
 
   @protected
+  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
+
+  @protected
+  List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw);
+
+  @protected
+  List<LocalizedName> dco_decode_list_localized_name(dynamic raw);
+
+  @protected
   List<Payment> dco_decode_list_payment(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<Rate> dco_decode_list_rate(dynamic raw);
 
   @protected
   List<RefundableSwap> dco_decode_list_refundable_swap(dynamic raw);
@@ -258,6 +288,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlWithdrawSuccessData dco_decode_ln_url_withdraw_success_data(dynamic raw);
 
   @protected
+  LocaleOverrides dco_decode_locale_overrides(dynamic raw);
+
+  @protected
+  LocalizedName dco_decode_localized_name(dynamic raw);
+
+  @protected
   LogEntry dco_decode_log_entry(dynamic raw);
 
   @protected
@@ -270,7 +306,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
   SuccessActionProcessed? dco_decode_opt_box_autoadd_success_action_processed(dynamic raw);
+
+  @protected
+  Symbol? dco_decode_opt_box_autoadd_symbol(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
@@ -321,6 +366,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PrepareSendResponse dco_decode_prepare_send_response(dynamic raw);
 
   @protected
+  Rate dco_decode_rate(dynamic raw);
+
+  @protected
   ReceiveOnchainRequest dco_decode_receive_onchain_request(dynamic raw);
 
   @protected
@@ -352,6 +400,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SuccessActionProcessed dco_decode_success_action_processed(dynamic raw);
+
+  @protected
+  Symbol dco_decode_symbol(dynamic raw);
 
   @protected
   int dco_decode_u_16(dynamic raw);
@@ -436,6 +487,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitcoinAddressData sse_decode_box_autoadd_bitcoin_address_data(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
 
   @protected
@@ -515,6 +569,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SuccessActionProcessed sse_decode_box_autoadd_success_action_processed(SseDeserializer deserializer);
 
   @protected
+  Symbol sse_decode_box_autoadd_symbol(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
@@ -527,7 +587,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
 
   @protected
+  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
 
   @protected
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer);
@@ -548,10 +617,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidSdkEvent sse_decode_liquid_sdk_event(SseDeserializer deserializer);
 
   @protected
+  List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
+
+  @protected
+  List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer);
+
+  @protected
+  List<LocalizedName> sse_decode_list_localized_name(SseDeserializer deserializer);
+
+  @protected
   List<Payment> sse_decode_list_payment(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<Rate> sse_decode_list_rate(SseDeserializer deserializer);
 
   @protected
   List<RefundableSwap> sse_decode_list_refundable_swap(SseDeserializer deserializer);
@@ -611,6 +692,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LnUrlWithdrawSuccessData sse_decode_ln_url_withdraw_success_data(SseDeserializer deserializer);
 
   @protected
+  LocaleOverrides sse_decode_locale_overrides(SseDeserializer deserializer);
+
+  @protected
+  LocalizedName sse_decode_localized_name(SseDeserializer deserializer);
+
+  @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer);
 
   @protected
@@ -623,7 +710,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer);
+
+  @protected
+  Symbol? sse_decode_opt_box_autoadd_symbol(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
@@ -674,6 +770,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PrepareSendResponse sse_decode_prepare_send_response(SseDeserializer deserializer);
 
   @protected
+  Rate sse_decode_rate(SseDeserializer deserializer);
+
+  @protected
   ReceiveOnchainRequest sse_decode_receive_onchain_request(SseDeserializer deserializer);
 
   @protected
@@ -705,6 +804,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SuccessActionProcessed sse_decode_success_action_processed(SseDeserializer deserializer);
+
+  @protected
+  Symbol sse_decode_symbol(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
@@ -803,6 +905,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_bitcoin_address_data();
     cst_api_fill_to_wire_bitcoin_address_data(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Bool> cst_encode_box_autoadd_bool(bool raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_bool(cst_encode_bool(raw));
   }
 
   @protected
@@ -1032,6 +1140,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_symbol> cst_encode_box_autoadd_symbol(Symbol raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_symbol();
+    cst_api_fill_to_wire_symbol(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint32> cst_encode_box_autoadd_u_32(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_u_32(cst_encode_u_32(raw));
+  }
+
+  @protected
   ffi.Pointer<ffi.Uint64> cst_encode_box_autoadd_u_64(BigInt raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_u_64(cst_encode_u_64(raw));
@@ -1044,6 +1166,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_url_success_action_data();
     cst_api_fill_to_wire_url_success_action_data(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_fiat_currency> cst_encode_list_fiat_currency(List<FiatCurrency> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_fiat_currency(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_fiat_currency(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_locale_overrides> cst_encode_list_locale_overrides(List<LocaleOverrides> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_locale_overrides(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_locale_overrides(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_localized_name> cst_encode_list_localized_name(List<LocalizedName> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_localized_name(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_localized_name(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
   }
 
   @protected
@@ -1061,6 +1213,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_prim_u_8_strict(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_rate> cst_encode_list_rate(List<Rate> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_rate(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_rate(raw[i], ans.ref.ptr[i]);
+    }
     return ans;
   }
 
@@ -1101,10 +1263,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<ffi.Bool> cst_encode_opt_box_autoadd_bool(bool? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_bool(raw);
+  }
+
+  @protected
   ffi.Pointer<wire_cst_success_action_processed> cst_encode_opt_box_autoadd_success_action_processed(
       SuccessActionProcessed? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_success_action_processed(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_symbol> cst_encode_opt_box_autoadd_symbol(Symbol? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_symbol(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
   }
 
   @protected
@@ -1356,6 +1536,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_symbol(Symbol apiObj, ffi.Pointer<wire_cst_symbol> wireObj) {
+    cst_api_fill_to_wire_symbol(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_url_success_action_data(
       UrlSuccessActionData apiObj, ffi.Pointer<wire_cst_url_success_action_data> wireObj) {
     cst_api_fill_to_wire_url_success_action_data(apiObj, wireObj.ref);
@@ -1376,6 +1561,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
     wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
     cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_currency_info(CurrencyInfo apiObj, wire_cst_currency_info wireObj) {
+    wireObj.name = cst_encode_String(apiObj.name);
+    wireObj.fraction_size = cst_encode_u_32(apiObj.fractionSize);
+    wireObj.spacing = cst_encode_opt_box_autoadd_u_32(apiObj.spacing);
+    wireObj.symbol = cst_encode_opt_box_autoadd_symbol(apiObj.symbol);
+    wireObj.uniq_symbol = cst_encode_opt_box_autoadd_symbol(apiObj.uniqSymbol);
+    wireObj.localized_name = cst_encode_list_localized_name(apiObj.localizedName);
+    wireObj.locale_overrides = cst_encode_list_locale_overrides(apiObj.localeOverrides);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_fiat_currency(FiatCurrency apiObj, wire_cst_fiat_currency wireObj) {
+    wireObj.id = cst_encode_String(apiObj.id);
+    cst_api_fill_to_wire_currency_info(apiObj.info, wireObj.info);
   }
 
   @protected
@@ -1788,6 +1990,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_locale_overrides(LocaleOverrides apiObj, wire_cst_locale_overrides wireObj) {
+    wireObj.locale = cst_encode_String(apiObj.locale);
+    wireObj.spacing = cst_encode_opt_box_autoadd_u_32(apiObj.spacing);
+    cst_api_fill_to_wire_symbol(apiObj.symbol, wireObj.symbol);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_localized_name(LocalizedName apiObj, wire_cst_localized_name wireObj) {
+    wireObj.locale = cst_encode_String(apiObj.locale);
+    wireObj.name = cst_encode_String(apiObj.name);
+  }
+
+  @protected
   void cst_api_fill_to_wire_log_entry(LogEntry apiObj, wire_cst_log_entry wireObj) {
     wireObj.line = cst_encode_String(apiObj.line);
     wireObj.level = cst_encode_String(apiObj.level);
@@ -1981,6 +2196,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_rate(Rate apiObj, wire_cst_rate wireObj) {
+    wireObj.coin = cst_encode_String(apiObj.coin);
+    wireObj.value = cst_encode_f_64(apiObj.value);
+  }
+
+  @protected
   void cst_api_fill_to_wire_receive_onchain_request(
       ReceiveOnchainRequest apiObj, wire_cst_receive_onchain_request wireObj) {
     cst_api_fill_to_wire_prepare_receive_onchain_response(apiObj.prepareRes, wireObj.prepare_res);
@@ -2070,6 +2291,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_symbol(Symbol apiObj, wire_cst_symbol wireObj) {
+    wireObj.grapheme = cst_encode_opt_String(apiObj.grapheme);
+    wireObj.template_ = cst_encode_opt_String(apiObj.template);
+    wireObj.rtl = cst_encode_opt_box_autoadd_bool(apiObj.rtl);
+    wireObj.position = cst_encode_opt_box_autoadd_u_32(apiObj.position);
+  }
+
+  @protected
   void cst_api_fill_to_wire_url_success_action_data(
       UrlSuccessActionData apiObj, wire_cst_url_success_action_data wireObj) {
     wireObj.description = cst_encode_String(apiObj.description);
@@ -2093,6 +2322,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double cst_encode_f_32(double raw);
+
+  @protected
+  double cst_encode_f_64(double raw);
 
   @protected
   int cst_encode_i_32(int raw);
@@ -2183,6 +2415,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
 
   @protected
@@ -2266,6 +2501,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_success_action_processed(SuccessActionProcessed self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_symbol(Symbol self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
@@ -2278,7 +2519,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
 
   @protected
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer);
@@ -2299,10 +2549,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_liquid_sdk_event(LiquidSdkEvent self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_localized_name(List<LocalizedName> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_payment(List<Payment> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_rate(List<Rate> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_refundable_swap(List<RefundableSwap> self, SseSerializer serializer);
@@ -2362,6 +2624,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer);
 
   @protected
+  void sse_encode_locale_overrides(LocaleOverrides self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_localized_name(LocalizedName self, SseSerializer serializer);
+
+  @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer);
 
   @protected
@@ -2374,8 +2642,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_success_action_processed(
       SuccessActionProcessed? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_symbol(Symbol? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
@@ -2428,6 +2705,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_prepare_send_response(PrepareSendResponse self, SseSerializer serializer);
 
   @protected
+  void sse_encode_rate(Rate self, SseSerializer serializer);
+
+  @protected
   void sse_encode_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer);
 
   @protected
@@ -2459,6 +2739,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_success_action_processed(SuccessActionProcessed self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_symbol(Symbol self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_16(int self, SseSerializer serializer);
@@ -2586,6 +2869,22 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
+
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -2601,6 +2900,22 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _wire__crate__bindings__BindingLiquidSdk_get_info =
       _wire__crate__bindings__BindingLiquidSdk_get_infoPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
+  late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
+      _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
@@ -3112,6 +3427,20 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_bitcoin_address_data = _cst_new_box_autoadd_bitcoin_address_dataPtr
       .asFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>();
 
+  ffi.Pointer<ffi.Bool> cst_new_box_autoadd_bool(
+    bool value,
+  ) {
+    return _cst_new_box_autoadd_bool(
+      value,
+    );
+  }
+
+  late final _cst_new_box_autoadd_boolPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_bool');
+  late final _cst_new_box_autoadd_bool =
+      _cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+
   ffi.Pointer<wire_cst_connect_request> cst_new_box_autoadd_connect_request() {
     return _cst_new_box_autoadd_connect_request();
   }
@@ -3378,6 +3707,30 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_success_action_processed = _cst_new_box_autoadd_success_action_processedPtr
       .asFunction<ffi.Pointer<wire_cst_success_action_processed> Function()>();
 
+  ffi.Pointer<wire_cst_symbol> cst_new_box_autoadd_symbol() {
+    return _cst_new_box_autoadd_symbol();
+  }
+
+  late final _cst_new_box_autoadd_symbolPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_symbol> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_symbol');
+  late final _cst_new_box_autoadd_symbol =
+      _cst_new_box_autoadd_symbolPtr.asFunction<ffi.Pointer<wire_cst_symbol> Function()>();
+
+  ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(
+    int value,
+  ) {
+    return _cst_new_box_autoadd_u_32(
+      value,
+    );
+  }
+
+  late final _cst_new_box_autoadd_u_32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
+  late final _cst_new_box_autoadd_u_32 =
+      _cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+
   ffi.Pointer<ffi.Uint64> cst_new_box_autoadd_u_64(
     int value,
   ) {
@@ -3401,6 +3754,48 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data');
   late final _cst_new_box_autoadd_url_success_action_data = _cst_new_box_autoadd_url_success_action_dataPtr
       .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<wire_cst_list_fiat_currency> cst_new_list_fiat_currency(
+    int len,
+  ) {
+    return _cst_new_list_fiat_currency(
+      len,
+    );
+  }
+
+  late final _cst_new_list_fiat_currencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_fiat_currency');
+  late final _cst_new_list_fiat_currency =
+      _cst_new_list_fiat_currencyPtr.asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_locale_overrides> cst_new_list_locale_overrides(
+    int len,
+  ) {
+    return _cst_new_list_locale_overrides(
+      len,
+    );
+  }
+
+  late final _cst_new_list_locale_overridesPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_locale_overrides');
+  late final _cst_new_list_locale_overrides = _cst_new_list_locale_overridesPtr
+      .asFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_localized_name> cst_new_list_localized_name(
+    int len,
+  ) {
+    return _cst_new_list_localized_name(
+      len,
+    );
+  }
+
+  late final _cst_new_list_localized_namePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_localized_name> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_localized_name');
+  late final _cst_new_list_localized_name =
+      _cst_new_list_localized_namePtr.asFunction<ffi.Pointer<wire_cst_list_localized_name> Function(int)>();
 
   ffi.Pointer<wire_cst_list_payment> cst_new_list_payment(
     int len,
@@ -3429,6 +3824,20 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_list_prim_u_8_strict');
   late final _cst_new_list_prim_u_8_strict =
       _cst_new_list_prim_u_8_strictPtr.asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_rate> cst_new_list_rate(
+    int len,
+  ) {
+    return _cst_new_list_rate(
+      len,
+    );
+  }
+
+  late final _cst_new_list_ratePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_rate> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_rate');
+  late final _cst_new_list_rate =
+      _cst_new_list_ratePtr.asFunction<ffi.Pointer<wire_cst_list_rate> Function(int)>();
 
   ffi.Pointer<wire_cst_list_refundable_swap> cst_new_list_refundable_swap(
     int len,
@@ -3918,8 +4327,90 @@ final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
   external wire_cst_ln_invoice invoice;
 }
 
+final class wire_cst_symbol extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> grapheme;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> template_;
+
+  external ffi.Pointer<ffi.Bool> rtl;
+
+  external ffi.Pointer<ffi.Uint32> position;
+}
+
+final class wire_cst_localized_name extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> locale;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+}
+
+final class wire_cst_list_localized_name extends ffi.Struct {
+  external ffi.Pointer<wire_cst_localized_name> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_locale_overrides extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> locale;
+
+  external ffi.Pointer<ffi.Uint32> spacing;
+
+  external wire_cst_symbol symbol;
+}
+
+final class wire_cst_list_locale_overrides extends ffi.Struct {
+  external ffi.Pointer<wire_cst_locale_overrides> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_currency_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  @ffi.Uint32()
+  external int fraction_size;
+
+  external ffi.Pointer<ffi.Uint32> spacing;
+
+  external ffi.Pointer<wire_cst_symbol> symbol;
+
+  external ffi.Pointer<wire_cst_symbol> uniq_symbol;
+
+  external ffi.Pointer<wire_cst_list_localized_name> localized_name;
+
+  external ffi.Pointer<wire_cst_list_locale_overrides> locale_overrides;
+}
+
+final class wire_cst_fiat_currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+
+  external wire_cst_currency_info info;
+}
+
+final class wire_cst_list_fiat_currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_fiat_currency> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_list_payment extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_rate extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> coin;
+
+  @ffi.Double()
+  external double value;
+}
+
+final class wire_cst_list_rate extends ffi.Struct {
+  external ffi.Pointer<wire_cst_rate> ptr;
 
   @ffi.Int32()
   external int len;

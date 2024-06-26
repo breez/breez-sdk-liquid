@@ -500,4 +500,28 @@ class BreezLiquidSDKModule(
             }
         }
     }
+
+    @ReactMethod
+    fun fetchFiatRates(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().fetchFiatRates()
+                promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun listFiatCurrencies(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().listFiatCurrencies()
+                promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

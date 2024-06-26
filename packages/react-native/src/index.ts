@@ -51,6 +51,21 @@ export interface ConnectRequest {
     mnemonic: string
 }
 
+export interface CurrencyInfo {
+    name: string
+    fractionSize: number
+    spacing?: number
+    symbol?: SymbolType
+    uniqSymbol?: SymbolType
+    localizedName: LocalizedName[]
+    localeOverrides: LocaleOverrides[]
+}
+
+export interface FiatCurrency {
+    id: string
+    info: CurrencyInfo
+}
+
 export interface GetInfoResponse {
     balanceSat: number
     pendingSendSat: number
@@ -131,6 +146,17 @@ export interface LnUrlWithdrawSuccessData {
     invoice: LnInvoice
 }
 
+export interface LocaleOverrides {
+    locale: string
+    spacing?: number
+    symbol: SymbolType
+}
+
+export interface LocalizedName {
+    locale: string
+    name: string
+}
+
 export interface LogEntry {
     line: string
     level: string
@@ -206,6 +232,11 @@ export interface PrepareSendResponse {
     feesSat: number
 }
 
+export interface Rate {
+    coin: string
+    value: number
+}
+
 export interface ReceiveOnchainRequest {
     prepareRes: PrepareReceiveOnchainResponse
 }
@@ -256,6 +287,13 @@ export interface RouteHintHop {
 
 export interface SendPaymentResponse {
     payment: Payment
+}
+
+export interface SymbolType {
+    grapheme?: string
+    template?: string
+    rtl?: boolean
+    position?: number
 }
 
 export interface UrlSuccessActionData {
@@ -569,5 +607,15 @@ export const lnurlWithdraw = async (req: LnUrlWithdrawRequest): Promise<LnUrlWit
 
 export const lnurlAuth = async (reqData: LnUrlAuthRequestData): Promise<LnUrlCallbackStatus> => {
     const response = await BreezLiquidSDK.lnurlAuth(reqData)
+    return response
+}
+
+export const fetchFiatRates = async (): Promise<Rate[]> => {
+    const response = await BreezLiquidSDK.fetchFiatRates()
+    return response
+}
+
+export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
+    const response = await BreezLiquidSDK.listFiatCurrencies()
     return response
 }

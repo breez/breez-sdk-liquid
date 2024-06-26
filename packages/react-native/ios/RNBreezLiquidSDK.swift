@@ -370,6 +370,26 @@ class RNBreezLiquidSDK: RCTEventEmitter {
         }
     }
 
+    @objc(fetchFiatRates:reject:)
+    func fetchFiatRates(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().fetchFiatRates()
+            resolve(BreezLiquidSDKMapper.arrayOf(rateList: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(listFiatCurrencies:reject:)
+    func listFiatCurrencies(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().listFiatCurrencies()
+            resolve(BreezLiquidSDKMapper.arrayOf(fiatCurrencyList: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

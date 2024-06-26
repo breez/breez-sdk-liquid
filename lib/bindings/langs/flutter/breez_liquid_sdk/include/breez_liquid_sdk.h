@@ -329,10 +329,68 @@ typedef struct wire_cst_ln_url_withdraw_success_data {
   struct wire_cst_ln_invoice invoice;
 } wire_cst_ln_url_withdraw_success_data;
 
+typedef struct wire_cst_symbol {
+  struct wire_cst_list_prim_u_8_strict *grapheme;
+  struct wire_cst_list_prim_u_8_strict *template_;
+  bool *rtl;
+  uint32_t *position;
+} wire_cst_symbol;
+
+typedef struct wire_cst_localized_name {
+  struct wire_cst_list_prim_u_8_strict *locale;
+  struct wire_cst_list_prim_u_8_strict *name;
+} wire_cst_localized_name;
+
+typedef struct wire_cst_list_localized_name {
+  struct wire_cst_localized_name *ptr;
+  int32_t len;
+} wire_cst_list_localized_name;
+
+typedef struct wire_cst_locale_overrides {
+  struct wire_cst_list_prim_u_8_strict *locale;
+  uint32_t *spacing;
+  struct wire_cst_symbol symbol;
+} wire_cst_locale_overrides;
+
+typedef struct wire_cst_list_locale_overrides {
+  struct wire_cst_locale_overrides *ptr;
+  int32_t len;
+} wire_cst_list_locale_overrides;
+
+typedef struct wire_cst_currency_info {
+  struct wire_cst_list_prim_u_8_strict *name;
+  uint32_t fraction_size;
+  uint32_t *spacing;
+  struct wire_cst_symbol *symbol;
+  struct wire_cst_symbol *uniq_symbol;
+  struct wire_cst_list_localized_name *localized_name;
+  struct wire_cst_list_locale_overrides *locale_overrides;
+} wire_cst_currency_info;
+
+typedef struct wire_cst_fiat_currency {
+  struct wire_cst_list_prim_u_8_strict *id;
+  struct wire_cst_currency_info info;
+} wire_cst_fiat_currency;
+
+typedef struct wire_cst_list_fiat_currency {
+  struct wire_cst_fiat_currency *ptr;
+  int32_t len;
+} wire_cst_list_fiat_currency;
+
 typedef struct wire_cst_list_payment {
   struct wire_cst_payment *ptr;
   int32_t len;
 } wire_cst_list_payment;
+
+typedef struct wire_cst_rate {
+  struct wire_cst_list_prim_u_8_strict *coin;
+  double value;
+} wire_cst_rate;
+
+typedef struct wire_cst_list_rate {
+  struct wire_cst_rate *ptr;
+  int32_t len;
+} wire_cst_list_rate;
 
 typedef struct wire_cst_refundable_swap {
   struct wire_cst_list_prim_u_8_strict *swap_address;
@@ -680,8 +738,14 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int6
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(uintptr_t that);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int64_t port_,
+                                                                                  uintptr_t that);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(int64_t port_,
+                                                                                      uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(int64_t port_,
                                                                                uintptr_t that);
@@ -778,6 +842,8 @@ struct wire_cst_binding_event_listener *frbgen_breez_liquid_cst_new_box_autoadd_
 
 struct wire_cst_bitcoin_address_data *frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(void);
 
+bool *frbgen_breez_liquid_cst_new_box_autoadd_bool(bool value);
+
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
 struct wire_cst_liquid_sdk_event *frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(void);
@@ -830,13 +896,25 @@ struct wire_cst_restore_request *frbgen_breez_liquid_cst_new_box_autoadd_restore
 
 struct wire_cst_success_action_processed *frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(void);
 
+struct wire_cst_symbol *frbgen_breez_liquid_cst_new_box_autoadd_symbol(void);
+
+uint32_t *frbgen_breez_liquid_cst_new_box_autoadd_u_32(uint32_t value);
+
 uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_url_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
 
+struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
+
+struct wire_cst_list_locale_overrides *frbgen_breez_liquid_cst_new_list_locale_overrides(int32_t len);
+
+struct wire_cst_list_localized_name *frbgen_breez_liquid_cst_new_list_localized_name(int32_t len);
+
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
+
+struct wire_cst_list_rate *frbgen_breez_liquid_cst_new_list_rate(int32_t len);
 
 struct wire_cst_list_refundable_swap *frbgen_breez_liquid_cst_new_list_refundable_swap(int32_t len);
 
@@ -850,6 +928,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bool);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
@@ -876,10 +955,16 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_refund_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_symbol);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_locale_overrides);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_localized_name);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_rate);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_refundable_swap);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
@@ -889,7 +974,9 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);

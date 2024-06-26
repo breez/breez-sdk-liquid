@@ -181,6 +181,12 @@ impl CstDecode<crate::bindings::BitcoinAddressData> for *mut wire_cst_bitcoin_ad
         CstDecode::<crate::bindings::BitcoinAddressData>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<bool> for *mut bool {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> bool {
+        unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -373,6 +379,19 @@ impl CstDecode<crate::bindings::SuccessActionProcessed> for *mut wire_cst_succes
         CstDecode::<crate::bindings::SuccessActionProcessed>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::bindings::Symbol> for *mut wire_cst_symbol {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::Symbol {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::bindings::Symbol>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<u32> for *mut u32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> u32 {
+        unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
 impl CstDecode<u64> for *mut u64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u64 {
@@ -406,6 +425,29 @@ impl CstDecode<crate::model::ConnectRequest> for wire_cst_connect_request {
         crate::model::ConnectRequest {
             mnemonic: self.mnemonic.cst_decode(),
             config: self.config.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::bindings::CurrencyInfo> for wire_cst_currency_info {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::CurrencyInfo {
+        crate::bindings::CurrencyInfo {
+            name: self.name.cst_decode(),
+            fraction_size: self.fraction_size.cst_decode(),
+            spacing: self.spacing.cst_decode(),
+            symbol: self.symbol.cst_decode(),
+            uniq_symbol: self.uniq_symbol.cst_decode(),
+            localized_name: self.localized_name.cst_decode(),
+            locale_overrides: self.locale_overrides.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::bindings::FiatCurrency> for wire_cst_fiat_currency {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::FiatCurrency {
+        crate::bindings::FiatCurrency {
+            id: self.id.cst_decode(),
+            info: self.info.cst_decode(),
         }
     }
 }
@@ -543,6 +585,36 @@ impl CstDecode<crate::model::LiquidSdkEvent> for wire_cst_liquid_sdk_event {
         }
     }
 }
+impl CstDecode<Vec<crate::bindings::FiatCurrency>> for *mut wire_cst_list_fiat_currency {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::bindings::FiatCurrency> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
+impl CstDecode<Vec<crate::bindings::LocaleOverrides>> for *mut wire_cst_list_locale_overrides {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::bindings::LocaleOverrides> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
+impl CstDecode<Vec<crate::bindings::LocalizedName>> for *mut wire_cst_list_localized_name {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::bindings::LocalizedName> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
 impl CstDecode<Vec<crate::model::Payment>> for *mut wire_cst_list_payment {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> Vec<crate::model::Payment> {
@@ -560,6 +632,16 @@ impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
             let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
             flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
         }
+    }
+}
+impl CstDecode<Vec<crate::bindings::Rate>> for *mut wire_cst_list_rate {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::bindings::Rate> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
     }
 }
 impl CstDecode<Vec<crate::model::RefundableSwap>> for *mut wire_cst_list_refundable_swap {
@@ -919,6 +1001,25 @@ impl CstDecode<crate::bindings::duplicates::LnUrlWithdrawSuccessData>
         }
     }
 }
+impl CstDecode<crate::bindings::LocaleOverrides> for wire_cst_locale_overrides {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::LocaleOverrides {
+        crate::bindings::LocaleOverrides {
+            locale: self.locale.cst_decode(),
+            spacing: self.spacing.cst_decode(),
+            symbol: self.symbol.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::bindings::LocalizedName> for wire_cst_localized_name {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::LocalizedName {
+        crate::bindings::LocalizedName {
+            locale: self.locale.cst_decode(),
+            name: self.name.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::LogEntry> for wire_cst_log_entry {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::LogEntry {
@@ -1116,6 +1217,15 @@ impl CstDecode<crate::model::PrepareSendResponse> for wire_cst_prepare_send_resp
         }
     }
 }
+impl CstDecode<crate::bindings::Rate> for wire_cst_rate {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::Rate {
+        crate::bindings::Rate {
+            coin: self.coin.cst_decode(),
+            value: self.value.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::ReceiveOnchainRequest> for wire_cst_receive_onchain_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ReceiveOnchainRequest {
@@ -1234,6 +1344,17 @@ impl CstDecode<crate::bindings::SuccessActionProcessed> for wire_cst_success_act
         }
     }
 }
+impl CstDecode<crate::bindings::Symbol> for wire_cst_symbol {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::Symbol {
+        crate::bindings::Symbol {
+            grapheme: self.grapheme.cst_decode(),
+            template: self.template.cst_decode(),
+            rtl: self.rtl.cst_decode(),
+            position: self.position.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::bindings::UrlSuccessActionData> for wire_cst_url_success_action_data {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::bindings::UrlSuccessActionData {
@@ -1336,6 +1457,37 @@ impl NewWithNullPtr for wire_cst_connect_request {
     }
 }
 impl Default for wire_cst_connect_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_currency_info {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            name: core::ptr::null_mut(),
+            fraction_size: Default::default(),
+            spacing: core::ptr::null_mut(),
+            symbol: core::ptr::null_mut(),
+            uniq_symbol: core::ptr::null_mut(),
+            localized_name: core::ptr::null_mut(),
+            locale_overrides: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_currency_info {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_fiat_currency {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            id: core::ptr::null_mut(),
+            info: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_fiat_currency {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1625,6 +1777,33 @@ impl Default for wire_cst_ln_url_withdraw_success_data {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_locale_overrides {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            locale: core::ptr::null_mut(),
+            spacing: core::ptr::null_mut(),
+            symbol: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_locale_overrides {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_localized_name {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            locale: core::ptr::null_mut(),
+            name: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_localized_name {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_log_entry {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -1825,6 +2004,19 @@ impl Default for wire_cst_prepare_send_response {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_rate {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            coin: core::ptr::null_mut(),
+            value: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_rate {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_receive_onchain_request {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -1970,6 +2162,21 @@ impl Default for wire_cst_success_action_processed {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_symbol {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            grapheme: core::ptr::null_mut(),
+            template: core::ptr::null_mut(),
+            rtl: core::ptr::null_mut(),
+            position: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_symbol {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_url_success_action_data {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2017,11 +2224,27 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_em
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_get_info_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies_impl(port_, that)
 }
 
 #[no_mangle]
@@ -2279,6 +2502,11 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2481,6 +2709,16 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_success_action_process
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_symbol() -> *mut wire_cst_symbol {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_symbol::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_64(value: u64) -> *mut u64 {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
@@ -2491,6 +2729,48 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dat
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_url_success_action_data::new_with_null_ptr(),
     )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_fiat_currency(
+    len: i32,
+) -> *mut wire_cst_list_fiat_currency {
+    let wrap = wire_cst_list_fiat_currency {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_fiat_currency>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_locale_overrides(
+    len: i32,
+) -> *mut wire_cst_list_locale_overrides {
+    let wrap = wire_cst_list_locale_overrides {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_locale_overrides>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_localized_name(
+    len: i32,
+) -> *mut wire_cst_list_localized_name {
+    let wrap = wire_cst_list_localized_name {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_localized_name>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
 }
 
 #[no_mangle]
@@ -2514,6 +2794,18 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
         len,
     };
     flutter_rust_bridge::for_generated::new_leak_box_ptr(ans)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_rate(len: i32) -> *mut wire_cst_list_rate {
+    let wrap = wire_cst_list_rate {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+            <wire_cst_rate>::new_with_null_ptr(),
+            len,
+        ),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
 }
 
 #[no_mangle]
@@ -2622,6 +2914,23 @@ pub struct wire_cst_config {
 pub struct wire_cst_connect_request {
     mnemonic: *mut wire_cst_list_prim_u_8_strict,
     config: wire_cst_config,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_currency_info {
+    name: *mut wire_cst_list_prim_u_8_strict,
+    fraction_size: u32,
+    spacing: *mut u32,
+    symbol: *mut wire_cst_symbol,
+    uniq_symbol: *mut wire_cst_symbol,
+    localized_name: *mut wire_cst_list_localized_name,
+    locale_overrides: *mut wire_cst_list_locale_overrides,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_fiat_currency {
+    id: *mut wire_cst_list_prim_u_8_strict,
+    info: wire_cst_currency_info,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -2762,6 +3071,24 @@ pub struct wire_cst_LiquidSdkEvent_PaymentWaitingConfirmation {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_list_fiat_currency {
+    ptr: *mut wire_cst_fiat_currency,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_locale_overrides {
+    ptr: *mut wire_cst_locale_overrides,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_localized_name {
+    ptr: *mut wire_cst_localized_name,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_list_payment {
     ptr: *mut wire_cst_payment,
     len: i32,
@@ -2770,6 +3097,12 @@ pub struct wire_cst_list_payment {
 #[derive(Clone, Copy)]
 pub struct wire_cst_list_prim_u_8_strict {
     ptr: *mut u8,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_rate {
+    ptr: *mut wire_cst_rate,
     len: i32,
 }
 #[repr(C)]
@@ -3097,6 +3430,19 @@ pub struct wire_cst_ln_url_withdraw_success_data {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_locale_overrides {
+    locale: *mut wire_cst_list_prim_u_8_strict,
+    spacing: *mut u32,
+    symbol: wire_cst_symbol,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_localized_name {
+    locale: *mut wire_cst_list_prim_u_8_strict,
+    name: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_log_entry {
     line: *mut wire_cst_list_prim_u_8_strict,
     level: *mut wire_cst_list_prim_u_8_strict,
@@ -3240,6 +3586,12 @@ pub struct wire_cst_prepare_send_response {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_rate {
+    coin: *mut wire_cst_list_prim_u_8_strict,
+    value: f64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_receive_onchain_request {
     prepare_res: wire_cst_prepare_receive_onchain_response,
 }
@@ -3328,6 +3680,14 @@ pub struct wire_cst_SuccessActionProcessed_Message {
 #[derive(Clone, Copy)]
 pub struct wire_cst_SuccessActionProcessed_Url {
     data: *mut wire_cst_url_success_action_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_symbol {
+    grapheme: *mut wire_cst_list_prim_u_8_strict,
+    template: *mut wire_cst_list_prim_u_8_strict,
+    rtl: *mut bool,
+    position: *mut u32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

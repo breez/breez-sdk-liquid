@@ -214,6 +214,95 @@ fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
     return list
 }
 
+fun asCurrencyInfo(currencyInfo: ReadableMap): CurrencyInfo? {
+    if (!validateMandatoryFields(
+            currencyInfo,
+            arrayOf(
+                "name",
+                "fractionSize",
+                "localizedName",
+                "localeOverrides",
+            ),
+        )
+    ) {
+        return null
+    }
+    val name = currencyInfo.getString("name")!!
+    val fractionSize = currencyInfo.getInt("fractionSize").toUInt()
+    val spacing = if (hasNonNullKey(currencyInfo, "spacing")) currencyInfo.getInt("spacing").toUInt() else null
+    val symbol = if (hasNonNullKey(currencyInfo, "symbol")) currencyInfo.getMap("symbol")?.let { asSymbol(it) } else null
+    val uniqSymbol = if (hasNonNullKey(currencyInfo, "uniqSymbol")) currencyInfo.getMap("uniqSymbol")?.let { asSymbol(it) } else null
+    val localizedName = currencyInfo.getArray("localizedName")?.let { asLocalizedNameList(it) }!!
+    val localeOverrides = currencyInfo.getArray("localeOverrides")?.let { asLocaleOverridesList(it) }!!
+    return CurrencyInfo(
+        name,
+        fractionSize,
+        spacing,
+        symbol,
+        uniqSymbol,
+        localizedName,
+        localeOverrides,
+    )
+}
+
+fun readableMapOf(currencyInfo: CurrencyInfo): ReadableMap =
+    readableMapOf(
+        "name" to currencyInfo.name,
+        "fractionSize" to currencyInfo.fractionSize,
+        "spacing" to currencyInfo.spacing,
+        "symbol" to currencyInfo.symbol?.let { readableMapOf(it) },
+        "uniqSymbol" to currencyInfo.uniqSymbol?.let { readableMapOf(it) },
+        "localizedName" to readableArrayOf(currencyInfo.localizedName),
+        "localeOverrides" to readableArrayOf(currencyInfo.localeOverrides),
+    )
+
+fun asCurrencyInfoList(arr: ReadableArray): List<CurrencyInfo> {
+    val list = ArrayList<CurrencyInfo>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCurrencyInfo(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asFiatCurrency(fiatCurrency: ReadableMap): FiatCurrency? {
+    if (!validateMandatoryFields(
+            fiatCurrency,
+            arrayOf(
+                "id",
+                "info",
+            ),
+        )
+    ) {
+        return null
+    }
+    val id = fiatCurrency.getString("id")!!
+    val info = fiatCurrency.getMap("info")?.let { asCurrencyInfo(it) }!!
+    return FiatCurrency(
+        id,
+        info,
+    )
+}
+
+fun readableMapOf(fiatCurrency: FiatCurrency): ReadableMap =
+    readableMapOf(
+        "id" to fiatCurrency.id,
+        "info" to readableMapOf(fiatCurrency.info),
+    )
+
+fun asFiatCurrencyList(arr: ReadableArray): List<FiatCurrency> {
+    val list = ArrayList<FiatCurrency>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asFiatCurrency(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
     if (!validateMandatoryFields(
             getInfoResponse,
@@ -701,6 +790,81 @@ fun asLnUrlWithdrawSuccessDataList(arr: ReadableArray): List<LnUrlWithdrawSucces
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawSuccessData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLocaleOverrides(localeOverrides: ReadableMap): LocaleOverrides? {
+    if (!validateMandatoryFields(
+            localeOverrides,
+            arrayOf(
+                "locale",
+                "symbol",
+            ),
+        )
+    ) {
+        return null
+    }
+    val locale = localeOverrides.getString("locale")!!
+    val spacing = if (hasNonNullKey(localeOverrides, "spacing")) localeOverrides.getInt("spacing").toUInt() else null
+    val symbol = localeOverrides.getMap("symbol")?.let { asSymbol(it) }!!
+    return LocaleOverrides(
+        locale,
+        spacing,
+        symbol,
+    )
+}
+
+fun readableMapOf(localeOverrides: LocaleOverrides): ReadableMap =
+    readableMapOf(
+        "locale" to localeOverrides.locale,
+        "spacing" to localeOverrides.spacing,
+        "symbol" to readableMapOf(localeOverrides.symbol),
+    )
+
+fun asLocaleOverridesList(arr: ReadableArray): List<LocaleOverrides> {
+    val list = ArrayList<LocaleOverrides>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLocaleOverrides(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLocalizedName(localizedName: ReadableMap): LocalizedName? {
+    if (!validateMandatoryFields(
+            localizedName,
+            arrayOf(
+                "locale",
+                "name",
+            ),
+        )
+    ) {
+        return null
+    }
+    val locale = localizedName.getString("locale")!!
+    val name = localizedName.getString("name")!!
+    return LocalizedName(
+        locale,
+        name,
+    )
+}
+
+fun readableMapOf(localizedName: LocalizedName): ReadableMap =
+    readableMapOf(
+        "locale" to localizedName.locale,
+        "name" to localizedName.name,
+    )
+
+fun asLocalizedNameList(arr: ReadableArray): List<LocalizedName> {
+    val list = ArrayList<LocalizedName>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLocalizedName(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -1225,6 +1389,42 @@ fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
     return list
 }
 
+fun asRate(rate: ReadableMap): Rate? {
+    if (!validateMandatoryFields(
+            rate,
+            arrayOf(
+                "coin",
+                "value",
+            ),
+        )
+    ) {
+        return null
+    }
+    val coin = rate.getString("coin")!!
+    val value = rate.getDouble("value")
+    return Rate(
+        coin,
+        value,
+    )
+}
+
+fun readableMapOf(rate: Rate): ReadableMap =
+    readableMapOf(
+        "coin" to rate.coin,
+        "value" to rate.value,
+    )
+
+fun asRateList(arr: ReadableArray): List<Rate> {
+    val list = ArrayList<Rate>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRate(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asReceiveOnchainRequest(receiveOnchainRequest: ReadableMap): ReceiveOnchainRequest? {
     if (!validateMandatoryFields(
             receiveOnchainRequest,
@@ -1583,6 +1783,45 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSymbol(symbol: ReadableMap): Symbol? {
+    if (!validateMandatoryFields(
+            symbol,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val grapheme = if (hasNonNullKey(symbol, "grapheme")) symbol.getString("grapheme") else null
+    val template = if (hasNonNullKey(symbol, "template")) symbol.getString("template") else null
+    val rtl = if (hasNonNullKey(symbol, "rtl")) symbol.getBoolean("rtl") else null
+    val position = if (hasNonNullKey(symbol, "position")) symbol.getInt("position").toUInt() else null
+    return Symbol(
+        grapheme,
+        template,
+        rtl,
+        position,
+    )
+}
+
+fun readableMapOf(symbol: Symbol): ReadableMap =
+    readableMapOf(
+        "grapheme" to symbol.grapheme,
+        "template" to symbol.template,
+        "rtl" to symbol.rtl,
+        "position" to symbol.position,
+    )
+
+fun asSymbolList(arr: ReadableArray): List<Symbol> {
+    val list = ArrayList<Symbol>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSymbol(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -2064,7 +2303,11 @@ fun pushToArray(
 ) {
     when (value) {
         null -> array.pushNull()
+        is FiatCurrency -> array.pushMap(readableMapOf(value))
+        is LocaleOverrides -> array.pushMap(readableMapOf(value))
+        is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
+        is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))
         is RouteHint -> array.pushMap(readableMapOf(value))
         is RouteHintHop -> array.pushMap(readableMapOf(value))

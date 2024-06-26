@@ -55,7 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0';
 
   @override
-  int get rustContentHash => 671987080;
+  int get rustContentHash => -1268203752;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -73,7 +73,12 @@ abstract class RustLibApi extends BaseApi {
 
   void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that});
 
+  Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that});
+
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that});
+
+  Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies(
+      {required BindingLiquidSdk that});
 
   Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that});
 
@@ -251,6 +256,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_rate,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_fiat_rates",
+        argNames: ["that"],
+      );
+
+  @override
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -271,6 +300,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkGetInfoConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_get_info",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_fiat_currency,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_list_fiat_currencies",
         argNames: ["that"],
       );
 
@@ -999,6 +1053,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_connect_request(raw);
@@ -1155,6 +1215,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Symbol dco_decode_box_autoadd_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_symbol(raw);
+  }
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
   BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_u_64(raw);
@@ -1194,9 +1266,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CurrencyInfo dco_decode_currency_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return CurrencyInfo(
+      name: dco_decode_String(arr[0]),
+      fractionSize: dco_decode_u_32(arr[1]),
+      spacing: dco_decode_opt_box_autoadd_u_32(arr[2]),
+      symbol: dco_decode_opt_box_autoadd_symbol(arr[3]),
+      uniqSymbol: dco_decode_opt_box_autoadd_symbol(arr[4]),
+      localizedName: dco_decode_list_localized_name(arr[5]),
+      localeOverrides: dco_decode_list_locale_overrides(arr[6]),
+    );
+  }
+
+  @protected
   double dco_decode_f_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  FiatCurrency dco_decode_fiat_currency(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FiatCurrency(
+      id: dco_decode_String(arr[0]),
+      info: dco_decode_currency_info(arr[1]),
+    );
   }
 
   @protected
@@ -1322,6 +1427,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_fiat_currency).toList();
+  }
+
+  @protected
+  List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_locale_overrides).toList();
+  }
+
+  @protected
+  List<LocalizedName> dco_decode_list_localized_name(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_localized_name).toList();
+  }
+
+  @protected
   List<Payment> dco_decode_list_payment(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_payment).toList();
@@ -1331,6 +1454,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<Rate> dco_decode_list_rate(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_rate).toList();
   }
 
   @protected
@@ -1647,6 +1776,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LocaleOverrides dco_decode_locale_overrides(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LocaleOverrides(
+      locale: dco_decode_String(arr[0]),
+      spacing: dco_decode_opt_box_autoadd_u_32(arr[1]),
+      symbol: dco_decode_symbol(arr[2]),
+    );
+  }
+
+  @protected
+  LocalizedName dco_decode_localized_name(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LocalizedName(
+      locale: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
   LogEntry dco_decode_log_entry(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1680,9 +1832,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
   SuccessActionProcessed? dco_decode_opt_box_autoadd_success_action_processed(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_success_action_processed(raw);
+  }
+
+  @protected
+  Symbol? dco_decode_opt_box_autoadd_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_symbol(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
   }
 
   @protected
@@ -1902,6 +2072,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Rate dco_decode_rate(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Rate(
+      coin: dco_decode_String(arr[0]),
+      value: dco_decode_f_64(arr[1]),
+    );
+  }
+
+  @protected
   ReceiveOnchainRequest dco_decode_receive_onchain_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2032,6 +2213,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  Symbol dco_decode_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return Symbol(
+      grapheme: dco_decode_opt_String(arr[0]),
+      template: dco_decode_opt_String(arr[1]),
+      rtl: dco_decode_opt_box_autoadd_bool(arr[2]),
+      position: dco_decode_opt_box_autoadd_u_32(arr[3]),
+    );
   }
 
   @protected
@@ -2227,6 +2421,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bool(deserializer));
+  }
+
+  @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_connect_request(deserializer));
@@ -2384,6 +2584,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Symbol sse_decode_box_autoadd_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_symbol(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_32(deserializer));
+  }
+
+  @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_u_64(deserializer));
@@ -2424,9 +2636,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_fractionSize = sse_decode_u_32(deserializer);
+    var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_symbol = sse_decode_opt_box_autoadd_symbol(deserializer);
+    var var_uniqSymbol = sse_decode_opt_box_autoadd_symbol(deserializer);
+    var var_localizedName = sse_decode_list_localized_name(deserializer);
+    var var_localeOverrides = sse_decode_list_locale_overrides(deserializer);
+    return CurrencyInfo(
+        name: var_name,
+        fractionSize: var_fractionSize,
+        spacing: var_spacing,
+        symbol: var_symbol,
+        uniqSymbol: var_uniqSymbol,
+        localizedName: var_localizedName,
+        localeOverrides: var_localeOverrides);
+  }
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat32();
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_info = sse_decode_currency_info(deserializer);
+    return FiatCurrency(id: var_id, info: var_info);
   }
 
   @protected
@@ -2544,6 +2790,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FiatCurrency>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_fiat_currency(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LocaleOverrides>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_locale_overrides(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LocalizedName> sse_decode_list_localized_name(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LocalizedName>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_localized_name(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<Payment> sse_decode_list_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2560,6 +2842,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<Rate> sse_decode_list_rate(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Rate>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_rate(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -2877,6 +3171,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LocaleOverrides sse_decode_locale_overrides(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_locale = sse_decode_String(deserializer);
+    var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_symbol = sse_decode_symbol(deserializer);
+    return LocaleOverrides(locale: var_locale, spacing: var_spacing, symbol: var_symbol);
+  }
+
+  @protected
+  LocalizedName sse_decode_localized_name(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_locale = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    return LocalizedName(locale: var_locale, name: var_name);
+  }
+
+  @protected
   LogEntry sse_decode_log_entry(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_line = sse_decode_String(deserializer);
@@ -2910,11 +3221,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_bool(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_success_action_processed(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Symbol? sse_decode_opt_box_autoadd_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_symbol(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_32(deserializer));
     } else {
       return null;
     }
@@ -3115,6 +3459,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Rate sse_decode_rate(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_coin = sse_decode_String(deserializer);
+    var var_value = sse_decode_f_64(deserializer);
+    return Rate(coin: var_coin, value: var_value);
+  }
+
+  @protected
   ReceiveOnchainRequest sse_decode_receive_onchain_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_prepareRes = sse_decode_prepare_receive_onchain_response(deserializer);
@@ -3225,6 +3577,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Symbol sse_decode_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_grapheme = sse_decode_opt_String(deserializer);
+    var var_template = sse_decode_opt_String(deserializer);
+    var var_rtl = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_position = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return Symbol(grapheme: var_grapheme, template: var_template, rtl: var_rtl, position: var_position);
+  }
+
+  @protected
   int sse_decode_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint16();
@@ -3299,6 +3661,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   double cst_encode_f_32(double raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  double cst_encode_f_64(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
   }
@@ -3499,6 +3867,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_connect_request(self, serializer);
@@ -3662,6 +4036,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_symbol(Symbol self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_symbol(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self, serializer);
@@ -3693,9 +4079,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_u_32(self.fractionSize, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
+    sse_encode_opt_box_autoadd_symbol(self.symbol, serializer);
+    sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
+    sse_encode_list_localized_name(self.localizedName, serializer);
+    sse_encode_list_locale_overrides(self.localeOverrides, serializer);
+  }
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat32(self);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_currency_info(self.info, serializer);
   }
 
   @protected
@@ -3801,6 +4212,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_fiat_currency(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_locale_overrides(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_localized_name(List<LocalizedName> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_localized_name(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_payment(List<Payment> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -3814,6 +4252,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_rate(List<Rate> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_rate(item, serializer);
+    }
   }
 
   @protected
@@ -4073,6 +4520,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_locale_overrides(LocaleOverrides self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.locale, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
+    sse_encode_symbol(self.symbol, serializer);
+  }
+
+  @protected
+  void sse_encode_localized_name(LocalizedName self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.locale, serializer);
+    sse_encode_String(self.name, serializer);
+  }
+
+  @protected
   void sse_encode_log_entry(LogEntry self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.line, serializer);
@@ -4102,6 +4564,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_success_action_processed(
       SuccessActionProcessed? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -4109,6 +4581,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_success_action_processed(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_symbol(Symbol? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_symbol(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_32(self, serializer);
     }
   }
 
@@ -4280,6 +4772,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_rate(Rate self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.coin, serializer);
+    sse_encode_f_64(self.value, serializer);
+  }
+
+  @protected
   void sse_encode_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_receive_onchain_response(self.prepareRes, serializer);
@@ -4370,6 +4869,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_symbol(Symbol self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.grapheme, serializer);
+    sse_encode_opt_String(self.template, serializer);
+    sse_encode_opt_box_autoadd_bool(self.rtl, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.position, serializer);
+  }
+
+  @protected
   void sse_encode_u_16(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint16(self);
@@ -4444,7 +4952,16 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
         that: this,
       );
 
+  Future<List<Rate>> fetchFiatRates() => RustLib.instance.api.crateBindingsBindingLiquidSdkFetchFiatRates(
+        that: this,
+      );
+
   Future<GetInfoResponse> getInfo() => RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(
+        that: this,
+      );
+
+  Future<List<FiatCurrency>> listFiatCurrencies() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkListFiatCurrencies(
         that: this,
       );
 

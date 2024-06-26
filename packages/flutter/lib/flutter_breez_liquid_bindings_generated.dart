@@ -107,6 +107,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -122,6 +139,23 @@ class FlutterBreezLiquidBindings {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
+          .asFunction<void Function(int, int)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr
           .asFunction<void Function(int, int)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
@@ -649,6 +683,20 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_dataPtr
           .asFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>();
 
+  ffi.Pointer<ffi.Bool> frbgen_breez_liquid_cst_new_box_autoadd_bool(
+    bool value,
+  ) {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_bool(
+      value,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_boolPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_bool');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_bool =
+      _frbgen_breez_liquid_cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+
   ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
   }
@@ -951,6 +999,31 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processedPtr
           .asFunction<ffi.Pointer<wire_cst_success_action_processed> Function()>();
 
+  ffi.Pointer<wire_cst_symbol> frbgen_breez_liquid_cst_new_box_autoadd_symbol() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_symbol();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_symbolPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_symbol> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_symbol');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_symbol =
+      _frbgen_breez_liquid_cst_new_box_autoadd_symbolPtr
+          .asFunction<ffi.Pointer<wire_cst_symbol> Function()>();
+
+  ffi.Pointer<ffi.Uint32> frbgen_breez_liquid_cst_new_box_autoadd_u_32(
+    int value,
+  ) {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_u_32(
+      value,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32 =
+      _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+
   ffi.Pointer<ffi.Uint64> frbgen_breez_liquid_cst_new_box_autoadd_u_64(
     int value,
   ) {
@@ -976,6 +1049,51 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data =
       _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<wire_cst_list_fiat_currency> frbgen_breez_liquid_cst_new_list_fiat_currency(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_fiat_currency(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_fiat_currencyPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_fiat_currency');
+  late final _frbgen_breez_liquid_cst_new_list_fiat_currency =
+      _frbgen_breez_liquid_cst_new_list_fiat_currencyPtr
+          .asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_locale_overrides> frbgen_breez_liquid_cst_new_list_locale_overrides(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_locale_overrides(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_locale_overridesPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_locale_overrides');
+  late final _frbgen_breez_liquid_cst_new_list_locale_overrides =
+      _frbgen_breez_liquid_cst_new_list_locale_overridesPtr
+          .asFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_localized_name> frbgen_breez_liquid_cst_new_list_localized_name(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_localized_name(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_localized_namePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_localized_name> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_localized_name');
+  late final _frbgen_breez_liquid_cst_new_list_localized_name =
+      _frbgen_breez_liquid_cst_new_list_localized_namePtr
+          .asFunction<ffi.Pointer<wire_cst_list_localized_name> Function(int)>();
 
   ffi.Pointer<wire_cst_list_payment> frbgen_breez_liquid_cst_new_list_payment(
     int len,
@@ -1005,6 +1123,20 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_prim_u_8_strict =
       _frbgen_breez_liquid_cst_new_list_prim_u_8_strictPtr
           .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_rate> frbgen_breez_liquid_cst_new_list_rate(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_rate(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_ratePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_rate> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_rate');
+  late final _frbgen_breez_liquid_cst_new_list_rate =
+      _frbgen_breez_liquid_cst_new_list_ratePtr.asFunction<ffi.Pointer<wire_cst_list_rate> Function(int)>();
 
   ffi.Pointer<wire_cst_list_refundable_swap> frbgen_breez_liquid_cst_new_list_refundable_swap(
     int len,
@@ -1507,8 +1639,90 @@ final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
   external wire_cst_ln_invoice invoice;
 }
 
+final class wire_cst_symbol extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> grapheme;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> template_;
+
+  external ffi.Pointer<ffi.Bool> rtl;
+
+  external ffi.Pointer<ffi.Uint32> position;
+}
+
+final class wire_cst_localized_name extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> locale;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+}
+
+final class wire_cst_list_localized_name extends ffi.Struct {
+  external ffi.Pointer<wire_cst_localized_name> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_locale_overrides extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> locale;
+
+  external ffi.Pointer<ffi.Uint32> spacing;
+
+  external wire_cst_symbol symbol;
+}
+
+final class wire_cst_list_locale_overrides extends ffi.Struct {
+  external ffi.Pointer<wire_cst_locale_overrides> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_currency_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  @ffi.Uint32()
+  external int fraction_size;
+
+  external ffi.Pointer<ffi.Uint32> spacing;
+
+  external ffi.Pointer<wire_cst_symbol> symbol;
+
+  external ffi.Pointer<wire_cst_symbol> uniq_symbol;
+
+  external ffi.Pointer<wire_cst_list_localized_name> localized_name;
+
+  external ffi.Pointer<wire_cst_list_locale_overrides> locale_overrides;
+}
+
+final class wire_cst_fiat_currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+
+  external wire_cst_currency_info info;
+}
+
+final class wire_cst_list_fiat_currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_fiat_currency> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_list_payment extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_rate extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> coin;
+
+  @ffi.Double()
+  external double value;
+}
+
+final class wire_cst_list_rate extends ffi.Struct {
+  external ffi.Pointer<wire_cst_rate> ptr;
 
   @ffi.Int32()
   external int len;
