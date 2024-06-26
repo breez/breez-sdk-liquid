@@ -1580,6 +1580,7 @@ impl CstDecode<crate::model::PaymentState> for i32 {
             3 => crate::model::PaymentState::Failed,
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
+            6 => crate::model::PaymentState::RefundPending,
             _ => unreachable!("Invalid variant for PaymentState: {}", self),
         }
     }
@@ -2748,6 +2749,7 @@ impl SseDecode for crate::model::PaymentState {
             3 => crate::model::PaymentState::Failed,
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
+            6 => crate::model::PaymentState::RefundPending,
             _ => unreachable!("Invalid variant for PaymentState: {}", inner),
         };
     }
@@ -4127,6 +4129,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
             Self::Failed => 3.into_dart(),
             Self::TimedOut => 4.into_dart(),
             Self::Refundable => 5.into_dart(),
+            Self::RefundPending => 6.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -5530,6 +5533,7 @@ impl SseEncode for crate::model::PaymentState {
                 crate::model::PaymentState::Failed => 3,
                 crate::model::PaymentState::TimedOut => 4,
                 crate::model::PaymentState::Refundable => 5,
+                crate::model::PaymentState::RefundPending => 6,
                 _ => {
                     unimplemented!("");
                 }

@@ -2803,6 +2803,9 @@ enum BreezLiquidSDKMapper {
         case "refundable":
             return PaymentState.refundable
 
+        case "refundPending":
+            return PaymentState.refundPending
+
         default: throw LiquidSdkError.Generic(message: "Invalid variant \(paymentState) for enum PaymentState")
         }
     }
@@ -2826,6 +2829,9 @@ enum BreezLiquidSDKMapper {
 
         case .refundable:
             return "refundable"
+
+        case .refundPending:
+            return "refundPending"
         }
     }
 

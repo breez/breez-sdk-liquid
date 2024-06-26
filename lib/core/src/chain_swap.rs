@@ -12,7 +12,9 @@ use tokio::time::MissedTickBehavior;
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain::liquid::LiquidChainService;
 use crate::error::{LiquidSdkError, LiquidSdkResult};
-use crate::model::PaymentState::{Complete, Created, Failed, Pending, Refundable, TimedOut};
+use crate::model::PaymentState::{
+    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
+};
 use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
 use crate::sdk::CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
@@ -59,7 +61,7 @@ impl ChainSwapStateHandler {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
-                        if let Err(e) = cloned.rescan_chain_swaps().await {
+                        if let Err(e) = cloned.rescan_incoming_chain_swaps().await {
                             error!("Error checking chain swaps: {e:?}");
                         }
                     },
@@ -90,7 +92,7 @@ impl ChainSwapStateHandler {
         }
     }
 
-    pub(crate) async fn rescan_chain_swaps(&self) -> Result<()> {
+    pub(crate) async fn rescan_incoming_chain_swaps(&self) -> Result<()> {
         let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
         let chain_swaps: Vec<ChainSwap> = self
             .persister
@@ -104,46 +106,56 @@ impl ChainSwapStateHandler {
             current_height
         );
         for swap in chain_swaps {
-            if let Err(e) = self.rescan_chain_swap(&swap, current_height).await {
+            if let Err(e) = self.rescan_incoming_chain_swap(&swap, current_height).await {
                 error!("Error rescanning Chain Swap {}: {e:?}", swap.id);
             }
         }
         Ok(())
     }
 
-    async fn get_confirmed_unspent_sat(&self, swap: &ChainSwap) -> Result<u64> {
-        let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
-        let script_pubkey = swap_script
-            .to_address(self.config.network.as_bitcoin_chain())
-            .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
-            .script_pubkey();
-        Ok(self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .script_list_unspent(script_pubkey.as_script())?
-            .iter()
-            .filter(|u| u.height > 0)
-            .map(|u| u.value)
-            .sum())
-    }
-
-    async fn rescan_chain_swap(&self, swap: &ChainSwap, current_height: u32) -> Result<()> {
+    async fn rescan_incoming_chain_swap(
+        &self,
+        swap: &ChainSwap,
+        current_height: u32,
+    ) -> Result<()> {
         let monitoring_block_height =
             swap.timeout_block_height + CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
         let is_swap_expired = current_height > swap.timeout_block_height;
         let is_monitoring_expired = current_height > monitoring_block_height;
 
-        match swap.state {
-            Pending if swap.refund_tx_id.is_some() => {
-                // There is a refund tx and the state is Pending. If the funds sent to the
-                // lockup script address are spent then set the state back to Complete/Failed.
-                let confirmed_unspent_sat = self.get_confirmed_unspent_sat(swap).await?;
-                if confirmed_unspent_sat == 0 {
-                    let to_state = match swap.claim_tx_id {
-                        Some(_) => Complete,
-                        None => Failed,
-                    };
+        if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
+            let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+            let script_pubkey = swap_script
+                .to_address(self.config.network.as_bitcoin_chain())
+                .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+                .script_pubkey();
+            let confirmed_unspent_sat: u64 = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .script_list_unspent(script_pubkey.as_script())?
+                .iter()
+                .filter(|u| u.height > 0)
+                .map(|u| u.value)
+                .sum();
+            if confirmed_unspent_sat > 0 && swap.state != Refundable {
+                // If there are unspent funds sent to the lockup script address then set
+                // the state to Refundable.
+                info!(
+                    "Chain Swap {} has {} unspent sats. Setting the swap to refundable",
+                    swap.id, confirmed_unspent_sat
+                );
+                self.update_swap_info(&swap.id, Refundable, None, None, None, None)
+                    .await?;
+            } else if confirmed_unspent_sat == 0 {
+                // If the funds sent to the lockup script address are spent then set the
+                // state back to Complete/Failed.
+                let to_state = match swap.claim_tx_id {
+                    Some(_) => Complete,
+                    None => Failed,
+                };
+
+                if to_state != swap.state {
                     info!(
                         "Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
                         swap.id, to_state
@@ -152,21 +164,6 @@ impl ChainSwapStateHandler {
                         .await?;
                 }
             }
-            Created | Complete | Failed if is_swap_expired && !is_monitoring_expired => {
-                // The swap state is either Created, Complete or Failed and we are in the
-                // monitoring period (1 month after expiry). If there are unspent funds
-                // sent to the lockup script address then set the state to Refundable.
-                let confirmed_unspent_sat = self.get_confirmed_unspent_sat(swap).await?;
-                if confirmed_unspent_sat > 0 {
-                    info!(
-                        "Chain Swap {} has {} unspent sats. Setting the swap to refundable",
-                        swap.id, confirmed_unspent_sat
-                    );
-                    self.update_swap_info(&swap.id, Refundable, None, None, None, None)
-                        .await?;
-                }
-            }
-            _ => {}
         }
         Ok(())
     }
@@ -290,9 +287,12 @@ impl ChainSwapStateHandler {
         match swap_state {
             // The swap is created
             ChainSwapStates::Created => {
-                match swap.user_lockup_tx_id.clone() {
-                    // Create the user lockup tx when sending
-                    None => {
+                match (swap.state, swap.user_lockup_tx_id.clone()) {
+                    // The swap timed out before receiving this status
+                    (TimedOut, _) => warn!("Chain Swap {id} timed out, do not broadcast a lockup tx"),
+
+                    // Create the user lockup tx
+                    (_, None) => {
                         let create_response = swap.get_boltz_create_response()?;
                         let user_lockup_tx = self.lockup_funds(id, &create_response).await?;
                         let lockup_tx_id = user_lockup_tx.txid().to_string();
@@ -314,8 +314,8 @@ impl ChainSwapStateHandler {
                             .await?;
                     },
 
-                    // Lockup tx already exists when sending
-                    Some(lockup_tx_id) => warn!("User lockup tx for Chain Swap {id} was already broadcast: txid {lockup_tx_id}"),
+                    // Lockup tx already exists
+                    (_, Some(lockup_tx_id)) => warn!("User lockup tx for Chain Swap {id} was already broadcast: txid {lockup_tx_id}"),
                 };
                 Ok(())
             }
@@ -386,7 +386,7 @@ impl ChainSwapStateHandler {
                                 info!("Broadcast refund tx for Chain Swap {id}. Tx id: {refund_tx_id}");
                                 self.update_swap_info(
                                     id,
-                                    Pending,
+                                    RefundPending,
                                     None,
                                     None,
                                     None,
@@ -587,8 +587,15 @@ impl ChainSwapStateHandler {
             "Broadcast refund tx for Chain Swap {}. Tx id: {refund_tx_id}",
             swap.id
         );
-        self.update_swap_info(&swap.id, Pending, None, None, None, Some(&refund_tx_id))
-            .await?;
+        self.update_swap_info(
+            &swap.id,
+            RefundPending,
+            None,
+            None,
+            None,
+            Some(&refund_tx_id),
+        )
+        .await?;
         Ok(refund_tx_id)
     }
 
@@ -631,8 +638,15 @@ impl ChainSwapStateHandler {
                     "Broadcast refund tx for Chain Swap {}. Tx id: {refund_tx_id}",
                     swap.id
                 );
-                self.update_swap_info(&swap.id, Pending, None, None, None, Some(&refund_tx_id))
-                    .await?;
+                self.update_swap_info(
+                    &swap.id,
+                    RefundPending,
+                    None,
+                    None,
+                    None,
+                    Some(&refund_tx_id),
+                )
+                .await?;
                 Ok(refund_tx_id)
             }
         }
@@ -647,12 +661,12 @@ impl ChainSwapStateHandler {
                 err: "Cannot transition to Created state".to_string(),
             }),
 
-            (Created | Pending | Refundable, Pending) => Ok(()),
+            (Created | Pending, Pending) => Ok(()),
             (_, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
-            (Created | Pending, Complete) => Ok(()),
+            (Created | Pending | RefundPending, Complete) => Ok(()),
             (_, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
@@ -665,6 +679,11 @@ impl ChainSwapStateHandler {
             (Created | Pending | Failed | Complete, Refundable) => Ok(()),
             (_, Refundable) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Refundable state"),
+            }),
+
+            (Pending | Refundable, RefundPending) => Ok(()),
+            (_, RefundPending) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to RefundPending state"),
             }),
 
             (Complete, Failed) => Err(PaymentError::Generic {
@@ -706,11 +725,12 @@ mod tests {
             ),
             (
                 Pending,
-                HashSet::from([Pending, Complete, Refundable, Failed]),
+                HashSet::from([Pending, Complete, Refundable, RefundPending, Failed]),
             ),
             (TimedOut, HashSet::from([Failed])),
             (Complete, HashSet::from([Refundable])),
-            (Refundable, HashSet::from([Pending, Failed])),
+            (Refundable, HashSet::from([RefundPending, Failed])),
+            (RefundPending, HashSet::from([Complete, Failed])),
             (Failed, HashSet::from([Failed, Refundable])),
         ]);
 

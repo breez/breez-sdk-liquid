@@ -446,31 +446,23 @@ impl LiquidSdk {
                                             }
                                         }
                                     }
-                                    Swap::Send(SendSwap { refund_tx_id, .. }) => {
-                                        match refund_tx_id {
-                                            Some(_) => {
-                                                // The refund tx has now been broadcast
-                                                self.notify_event_listeners(
-                                                    LiquidSdkEvent::PaymentRefundPending {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
-                                            }
-                                            None => {
-                                                // The lockup tx is in the mempool/confirmed
-                                                self.notify_event_listeners(
-                                                    LiquidSdkEvent::PaymentPending {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
-                                            }
-                                        }
+                                    Swap::Send(_) => {
+                                        // The lockup tx is in the mempool/confirmed
+                                        self.notify_event_listeners(
+                                            LiquidSdkEvent::PaymentPending { details: payment },
+                                        )
+                                        .await?
                                     }
                                 },
                                 None => debug!("Payment has no swap id"),
                             }
+                        }
+                        RefundPending => {
+                            // The swap state has changed to RefundPending
+                            self.notify_event_listeners(LiquidSdkEvent::PaymentRefundPending {
+                                details: payment,
+                            })
+                            .await?
                         }
                         Failed => match payment.payment_type {
                             PaymentType::Receive => {
@@ -524,12 +516,12 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
-                    Refundable | TimedOut => {}
+                    Refundable | RefundPending | TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
                     Pending => pending_receive_sat += p.amount_sat,
-                    Created | Refundable | Failed | TimedOut => {}
+                    Created | Refundable | RefundPending | Failed | TimedOut => {}
                 },
             }
         }
@@ -830,7 +822,7 @@ impl LiquidSdk {
             Some(swap) => match swap.state {
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                Failed => {
+                RefundPending | Failed => {
                     return Err(PaymentError::InvalidInvoice {
                         err: "Payment has already failed. Please try with another invoice."
                             .to_string(),
@@ -1337,7 +1329,9 @@ impl LiquidSdk {
     }
 
     pub async fn rescan_onchain_swaps(&self) -> LiquidSdkResult<()> {
-        self.chain_swap_state_handler.rescan_chain_swaps().await?;
+        self.chain_swap_state_handler
+            .rescan_incoming_chain_swaps()
+            .await?;
         Ok(())
     }
 
