@@ -72,17 +72,17 @@ impl ElectrumClient {
         info!("Fetching script history for {}", script_hash);
         let mut script_history = vec![];
 
-        let mut retry = 1;
-        while retry < retries {
+        let mut retry = 0;
+        while retry <= retries {
             script_history = self.get_script_history(script)?;
             match script_history.is_empty() {
                 true => {
+                    retry += 1;
                     info!(
                         "Script history for {} got zero transactions, retrying in {} seconds...",
                         script_hash, retry
                     );
                     thread::sleep(Duration::from_secs(retry));
-                    retry += 1;
                 }
                 false => break,
             }
