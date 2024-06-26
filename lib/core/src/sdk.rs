@@ -59,7 +59,7 @@ pub struct LiquidSdk {
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let maybe_swapper_proxy_url =
-            match BreezServer::new("https://bs1.breez-abc.technology:443".into(), None) {
+            match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
                 Ok(breez_server) => breez_server
                     .fetch_boltz_swapper_urls()
                     .await
