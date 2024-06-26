@@ -4,16 +4,16 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::ToHex;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
+use boltz_client::{LockTime, ToHex};
+use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements::LockTime, ElementsNetwork};
-use lwk_wollet::{ElectrumClient, ElectrumUrl};
+use lwk_wollet::{elements, ElectrumUrl, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use tokio::sync::{watch, Mutex, RwLock};
@@ -21,7 +21,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
 
-use crate::chain::ChainService;
+use crate::chain::bitcoin::{self, BitcoinChainService};
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::LiquidSdkError;
 use crate::model::PaymentState::*;
@@ -46,7 +46,8 @@ pub struct LiquidSdk {
     event_manager: Arc<EventManager>,
     status_stream: Arc<dyn SwapperStatusStream>,
     swapper: Arc<dyn Swapper>,
-    chain_service: Arc<Mutex<dyn ChainService>>,
+    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     is_started: RwLock<bool>,
     shutdown_sender: watch::Sender<()>,
     shutdown_receiver: watch::Receiver<()>,
@@ -57,14 +58,27 @@ pub struct LiquidSdk {
 
 impl LiquidSdk {
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let config = req.config;
-        let sdk = LiquidSdk::new(config, req.mnemonic)?;
+        let maybe_swapper_proxy_url =
+            match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
+                Ok(breez_server) => breez_server
+                    .fetch_boltz_swapper_urls()
+                    .await
+                    .ok()
+                    .and_then(|swapper_urls| swapper_urls.first().cloned()),
+                Err(_) => None,
+            };
+
+        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, req.mnemonic)?;
         sdk.start().await?;
 
         Ok(sdk)
     }
 
-    fn new(config: Config, mnemonic: String) -> Result<Arc<Self>> {
+    fn new(
+        config: Config,
+        swapper_proxy_url: Option<String>,
+        mnemonic: String,
+    ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
         let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
@@ -73,14 +87,18 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
+        if let Some(swapper_proxy_url) = swapper_proxy_url {
+            persister.set_swapper_proxy_url(swapper_proxy_url)?;
+        }
+        let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
-        let chain_service = Arc::new(Mutex::new(ElectrumClient::new(&ElectrumUrl::new(
-            &config.liquid_electrum_url,
-            true,
-            true,
-        ))?));
+        let liquid_chain_service =
+            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
+        let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
+            &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
+        )?));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
@@ -89,7 +107,7 @@ impl LiquidSdk {
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
-            chain_service.clone(),
+            liquid_chain_service.clone(),
         );
 
         let receive_swap_state_handler = ReceiveSwapStateHandler::new(
@@ -97,14 +115,15 @@ impl LiquidSdk {
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
+            liquid_chain_service.clone(),
         );
 
         let chain_swap_state_handler = ChainSwapStateHandler::new(
-            config.clone(),
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
-            chain_service.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
         )?;
 
         let sdk = Arc::new(LiquidSdk {
@@ -114,7 +133,8 @@ impl LiquidSdk {
             event_manager,
             status_stream: status_stream.clone(),
             swapper,
-            chain_service,
+            bitcoin_chain_service,
+            liquid_chain_service,
             is_started: RwLock::new(false),
             shutdown_sender,
             shutdown_receiver,
@@ -148,6 +168,7 @@ impl LiquidSdk {
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         // Periodically run sync() in the background
+        // TODO: Check the bitcoin chain for confirmed refund txs
         let sdk_clone = self.clone();
         let mut shutdown_rx_sync_loop = self.shutdown_receiver.clone();
         tokio::spawn(async move {
@@ -301,27 +322,39 @@ impl LiquidSdk {
     async fn check_chain_swap_expiration(&self, chain_swap: &ChainSwap) -> Result<()> {
         if chain_swap.user_lockup_tx_id.is_some() && chain_swap.refund_tx_id.is_none() {
             match chain_swap.direction {
-                Direction::Outgoing => {
-                    let swap_script = chain_swap.get_lockup_swap_script()?.as_liquid_script()?;
-                    let current_height = self.chain_service.lock().await.tip()?.height;
-                    let locktime_from_height = LockTime::from_height(current_height)?;
+                Direction::Incoming => {
+                    let swap_script = chain_swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+                    let current_height =
+                        self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+                    let locktime_from_height =
+                        LockTime::from_height(current_height).map_err(|e| {
+                            PaymentError::Generic {
+                                err: format!(
+                                    "Error getting locktime from height {current_height:?}: {e}",
+                                ),
+                            }
+                        })?;
 
                     info!("Checking Chain Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", chain_swap.id, swap_script.locktime);
-                    if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
-                        let id = &chain_swap.id;
-                        let refund_tx_id = self.refund_chain(chain_swap).await?;
-                        info!("Broadcast refund tx for Chain Swap {id}. Tx id: {refund_tx_id}");
+                    if swap_script.locktime.is_implied_by(locktime_from_height) {
+                        let id: &String = &chain_swap.id;
+                        info!("Chain Swap {} user lockup tx was broadcast. Setting the swap to refundable.", id);
                         self.chain_swap_state_handler
-                            .update_swap_info(id, Pending, None, None, None, Some(&refund_tx_id))
+                            .update_swap_info(id, Refundable, None, None, None, None)
                             .await?;
                     }
                 }
-                _ => {
-                    // TODO: Set the chain swap to refundable when it expires
-                    info!(
-                        "Not checking receive Chain Swap {} expiration",
-                        chain_swap.id
-                    )
+                Direction::Outgoing => {
+                    let swap_script = chain_swap.get_lockup_swap_script()?.as_liquid_script()?;
+                    let current_height = self.liquid_chain_service.lock().await.tip().await?;
+                    let locktime_from_height = elements::LockTime::from_height(current_height)?;
+
+                    info!("Checking Chain Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", chain_swap.id, swap_script.locktime);
+                    if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
+                        self.chain_swap_state_handler
+                            .refund_outgoing_swap(chain_swap)
+                            .await?;
+                    }
                 }
             }
         }
@@ -331,8 +364,8 @@ impl LiquidSdk {
     async fn check_send_swap_expiration(&self, send_swap: &SendSwap) -> Result<()> {
         if send_swap.lockup_tx_id.is_some() && send_swap.refund_tx_id.is_none() {
             let swap_script = send_swap.get_swap_script()?;
-            let current_height = self.chain_service.lock().await.tip()?.height;
-            let locktime_from_height = LockTime::from_height(current_height)?;
+            let current_height = self.liquid_chain_service.lock().await.tip().await?;
+            let locktime_from_height = elements::LockTime::from_height(current_height)?;
 
             info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", send_swap.id, swap_script.locktime);
             if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
@@ -480,12 +513,12 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
-                    TimedOut => {}
+                    Refundable | TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
-                    Failed => {}
-                    _ => pending_receive_sat += p.amount_sat,
+                    Pending => pending_receive_sat += p.amount_sat,
+                    Created | Refundable | Failed | TimedOut => {}
                 },
             }
         }
@@ -566,10 +599,15 @@ impl LiquidSdk {
     }
 
     /// Estimate the onchain fee for sending the given amount to the given destination address
-    async fn estimate_onchain_tx_fee(&self, amount_sat: u64, address: &str) -> Result<u64> {
+    async fn estimate_onchain_tx_fee(
+        &self,
+        amount_sat: u64,
+        address: &str,
+        fee_rate: Option<f32>,
+    ) -> Result<u64> {
         Ok(self
             .onchain_wallet
-            .build_tx(None, address, amount_sat)
+            .build_tx(fee_rate, address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -584,7 +622,7 @@ impl LiquidSdk {
             LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
-        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr)
+        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr, self.config.lowball_fee_rate())
             .await
     }
 
@@ -605,14 +643,24 @@ impl LiquidSdk {
 
         let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
             Some((lbtc_address, _)) => {
-                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
-                    .await?
+                self.estimate_onchain_tx_fee(
+                    receiver_amount_sat,
+                    &lbtc_address,
+                    self.config.lowball_fee_rate(),
+                )
+                .await?
             }
             None => {
                 let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
                 lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
             }
         };
+
+        let payer_amount_sat = receiver_amount_sat + fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
 
         Ok(PrepareSendResponse {
             invoice: req.invoice.clone(),
@@ -646,64 +694,25 @@ impl LiquidSdk {
         Ok(refund_tx_id)
     }
 
-    async fn refund_chain_non_cooperative(
-        &self,
-        swap: &ChainSwap,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        info!(
-            "Initiating non-cooperative refund for Chain Swap {}",
-            &swap.id
-        );
-
-        let current_height = self.onchain_wallet.tip().await.height();
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_id = self.swapper.refund_chain_swap_non_cooperative(
-            swap,
-            broadcast_fees_sat,
-            &output_address,
-            current_height,
-        )?;
-
-        info!(
-            "Successfully broadcast non-cooperative refund for Chain Swap {}, tx: {}",
-            swap.id, refund_tx_id
-        );
-        Ok(refund_tx_id)
-    }
-
-    async fn refund_chain(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_fees_sat = self
-            .estimate_onchain_tx_fee(swap.receiver_amount_sat, &output_address)
-            .await?;
-        let refund_res =
-            self.swapper
-                .refund_chain_swap_cooperative(swap, &output_address, refund_tx_fees_sat);
-        match refund_res {
-            Ok(res) => Ok(res),
-            Err(e) => {
-                warn!("Cooperative refund failed: {:?}", e);
-                self.refund_chain_non_cooperative(swap, refund_tx_fees_sat)
-                    .await
-            }
-        }
-    }
-
     async fn refund_send(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let amount_sat = get_invoice_amount!(swap.invoice);
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_fees_sat = self
-            .estimate_onchain_tx_fee(amount_sat, &output_address)
+        let cooperative_refund_tx_fees_sat = self
+            .estimate_onchain_tx_fee(amount_sat, &output_address, self.config.lowball_fee_rate())
             .await?;
-        let refund_res =
-            self.swapper
-                .refund_send_swap_cooperative(swap, &output_address, refund_tx_fees_sat);
+        let refund_res = self.swapper.refund_send_swap_cooperative(
+            swap,
+            &output_address,
+            cooperative_refund_tx_fees_sat,
+        );
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
+                let non_cooperative_refund_tx_fees_sat = self
+                    .estimate_onchain_tx_fee(swap.receiver_amount_sat, &output_address, None)
+                    .await?;
                 warn!("Cooperative refund failed: {:?}", e);
-                self.refund_send_non_cooperative(swap, refund_tx_fees_sat)
+                self.refund_send_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
                     .await
             }
         }
@@ -731,6 +740,13 @@ impl LiquidSdk {
 
         self.ensure_send_is_not_self_transfer(&req.invoice)?;
         self.validate_invoice(&req.invoice)?;
+
+        let amount_sat = get_invoice_amount!(&req.invoice);
+        let payer_amount_sat = amount_sat + req.fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
 
         match self.swapper.check_for_mrh(&req.invoice)? {
             // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
@@ -865,15 +881,27 @@ impl LiquidSdk {
         let amount_sat = req.amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
+        let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
             .estimate_lockup_tx_fee(server_lockup_amount_sat)
             .await?;
 
-        Ok(PreparePayOnchainResponse {
+        let res = PreparePayOnchainResponse {
             amount_sat,
-            fees_sat: pair.fees.boltz(amount_sat) + lockup_fees_sat + claim_fees_sat,
-        })
+            fees_sat: pair.fees.boltz(server_lockup_amount_sat)
+                + lockup_fees_sat
+                + claim_fees_sat
+                + server_fees_sat,
+        };
+
+        let payer_amount_sat = res.amount_sat + res.fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
+
+        Ok(res)
     }
 
     pub async fn pay_onchain(
@@ -885,6 +913,7 @@ impl LiquidSdk {
         let receiver_amount_sat = req.prepare_res.amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
+        let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
             .estimate_lockup_tx_fee(server_lockup_amount_sat)
@@ -892,8 +921,17 @@ impl LiquidSdk {
 
         ensure_sdk!(
             req.prepare_res.fees_sat
-                == pair.fees.boltz(receiver_amount_sat) + lockup_fees_sat + claim_fees_sat,
+                == pair.fees.boltz(server_lockup_amount_sat)
+                    + lockup_fees_sat
+                    + claim_fees_sat
+                    + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
+        );
+
+        let payer_amount_sat = req.prepare_res.fees_sat + receiver_amount_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
         );
 
         let preimage = Preimage::new();
@@ -926,11 +964,14 @@ impl LiquidSdk {
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_res.fees_sat + receiver_amount_sat;
+        let claim_address = req.address.clone();
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Outgoing,
-            address: req.address.clone(),
+            claim_address,
+            lockup_address: create_response.lockup_details.lockup_address,
+            timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             payer_amount_sat,
             receiver_amount_sat,
@@ -1148,6 +1189,139 @@ impl LiquidSdk {
             id: swap_id,
             invoice: invoice.to_string(),
         })
+    }
+
+    pub async fn prepare_receive_onchain(
+        &self,
+        req: &PrepareReceiveOnchainRequest,
+    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        let amount_sat = req.amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Incoming, amount_sat)?;
+        let claim_fees_sat = pair.fees.claim_estimate();
+        let server_fees_sat = pair.fees.server();
+
+        Ok(PrepareReceiveOnchainResponse {
+            amount_sat,
+            fees_sat: pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat,
+        })
+    }
+
+    pub async fn receive_onchain(
+        &self,
+        req: &ReceiveOnchainRequest,
+    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        let payer_amount_sat = req.prepare_res.amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
+        let claim_fees_sat = pair.fees.claim_estimate();
+        let server_fees_sat = pair.fees.server();
+
+        ensure_sdk!(
+            req.prepare_res.fees_sat
+                == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            PaymentError::InvalidOrExpiredFees
+        );
+
+        let preimage = Preimage::new();
+        let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
+
+        let claim_keypair = utils::generate_keypair();
+        let claim_public_key = boltz_client::PublicKey {
+            compressed: true,
+            inner: claim_keypair.public_key(),
+        };
+        let refund_keypair = utils::generate_keypair();
+        let refund_public_key = boltz_client::PublicKey {
+            compressed: true,
+            inner: refund_keypair.public_key(),
+        };
+        let create_response = self.swapper.create_chain_swap(CreateChainRequest {
+            from: "BTC".to_string(),
+            to: "L-BTC".to_string(),
+            preimage_hash: preimage.sha256,
+            claim_public_key: Some(claim_public_key),
+            refund_public_key: Some(refund_public_key),
+            user_lock_amount: Some(payer_amount_sat as u32), // TODO update our model
+            server_lock_amount: None,
+            pair_hash: Some(pair.hash),
+            referral_id: None,
+        })?;
+
+        let swap_id = create_response.id.clone();
+        let create_response_json =
+            ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
+
+        let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
+        let receiver_amount_sat = payer_amount_sat - req.prepare_res.fees_sat;
+        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let lockup_address = create_response.lockup_details.lockup_address;
+
+        let swap = ChainSwap {
+            id: swap_id.clone(),
+            direction: Direction::Incoming,
+            claim_address,
+            lockup_address: lockup_address.clone(),
+            timeout_block_height: create_response.lockup_details.timeout_block_height,
+            preimage: preimage_str,
+            payer_amount_sat,
+            receiver_amount_sat,
+            claim_fees_sat,
+            accept_zero_conf,
+            create_response_json,
+            claim_private_key: claim_keypair.display_secret().to_string(),
+            refund_private_key: refund_keypair.display_secret().to_string(),
+            server_lockup_tx_id: None,
+            user_lockup_tx_id: None,
+            claim_tx_id: None,
+            refund_tx_id: None,
+            created_at: utils::now(),
+            state: PaymentState::Created,
+        };
+        self.persister.insert_chain_swap(&swap)?;
+        self.status_stream.track_swap_id(&swap.id)?;
+
+        let address = lockup_address;
+        let amount = create_response.lockup_details.amount as f64 / 100_000_000.0;
+        let bip21 = create_response.lockup_details.bip21.unwrap_or(format!(
+            "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
+        ));
+
+        Ok(ReceiveOnchainResponse { address, bip21 })
+    }
+
+    pub async fn list_refundables(&self) -> LiquidSdkResult<Vec<RefundableSwap>> {
+        Ok(self
+            .persister
+            .list_refundable_chain_swaps()?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
+
+    pub async fn prepare_refund(
+        &self,
+        req: &PrepareRefundRequest,
+    ) -> LiquidSdkResult<PrepareRefundResponse> {
+        let (refund_tx_vsize, refund_tx_fee_sat) = self.chain_swap_state_handler.prepare_refund(
+            &req.swap_address,
+            &req.refund_address,
+            req.sat_per_vbyte,
+        )?;
+        Ok(PrepareRefundResponse {
+            refund_tx_vsize,
+            refund_tx_fee_sat,
+        })
+    }
+
+    pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
+        let refund_tx_id = self
+            .chain_swap_state_handler
+            .refund_incoming_swap(&req.swap_address, &req.refund_address, req.sat_per_vbyte)
+            .await?;
+        Ok(RefundResponse { refund_tx_id })
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,

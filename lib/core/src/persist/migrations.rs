@@ -38,7 +38,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         "CREATE TABLE IF NOT EXISTS chain_swaps (
             id TEXT NOT NULL PRIMARY KEY,
             direction INTEGER NOT NULL,
-            address TEXT NOT NULL,
+            claim_address TEXT NOT NULL,
+            lockup_address TEXT NOT NULL,
+            timeout_block_height INTEGER NOT NULL,
             preimage TEXT NOT NULL,
             payer_amount_sat INTEGER NOT NULL,
             receiver_amount_sat INTEGER NOT NULL,
@@ -53,6 +55,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             refund_tx_id TEXT,
             created_at INTEGER NOT NULL,
             state INTEGER NOT NULL
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS cached_items (
+            key TEXT NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL
         ) STRICT;",
     ]
 }

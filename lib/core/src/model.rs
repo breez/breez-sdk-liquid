@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
-    BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
 use lwk_wollet::ElementsNetwork;
@@ -11,17 +10,18 @@ use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::error::PaymentError;
+use crate::error::{LiquidSdkResult, PaymentError};
 use crate::receive_swap::{
     DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
     DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
 };
 use crate::utils;
 
+pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
-    pub boltz_url: String,
     pub liquid_electrum_url: String,
     pub bitcoin_electrum_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
@@ -41,7 +41,6 @@ pub struct Config {
 impl Config {
     pub fn mainnet() -> Self {
         Config {
-            boltz_url: BOLTZ_MAINNET_URL_V2.to_owned(),
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
             working_dir: ".".to_string(),
@@ -54,7 +53,6 @@ impl Config {
 
     pub fn testnet() -> Self {
         Config {
-            boltz_url: BOLTZ_TESTNET_URL_V2.to_owned(),
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
             working_dir: ".".to_string(),
@@ -68,6 +66,13 @@ impl Config {
     pub fn zero_conf_max_amount_sat(&self) -> u64 {
         self.zero_conf_max_amount_sat
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
+    }
+
+    pub(crate) fn lowball_fee_rate(&self) -> Option<f32> {
+        match self.network {
+            LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
+            LiquidNetwork::Testnet => None,
+        }
     }
 }
 
@@ -211,6 +216,59 @@ pub struct PayOnchainRequest {
     pub prepare_res: PreparePayOnchainResponse,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct PrepareReceiveOnchainRequest {
+    pub amount_sat: u64,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PrepareReceiveOnchainResponse {
+    pub amount_sat: u64,
+    pub fees_sat: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReceiveOnchainRequest {
+    pub prepare_res: PrepareReceiveOnchainResponse,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReceiveOnchainResponse {
+    pub address: String,
+    pub bip21: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PrepareRefundRequest {
+    // The address where the swap funds are locked up
+    pub swap_address: String,
+    // The address to refund the swap funds to
+    pub refund_address: String,
+    // The fee rate in sat/vB for the refund transaction
+    pub sat_per_vbyte: u32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PrepareRefundResponse {
+    pub refund_tx_vsize: u32,
+    pub refund_tx_fee_sat: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RefundRequest {
+    // The address where the swap funds are locked up
+    pub swap_address: String,
+    // The address to refund the swap funds to
+    pub refund_address: String,
+    // The fee rate in sat/vB for the refund transaction
+    pub sat_per_vbyte: u32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RefundResponse {
+    pub refund_tx_id: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
@@ -323,7 +381,9 @@ impl FromSql for Direction {
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
-    pub(crate) address: String,
+    pub(crate) claim_address: String,
+    pub(crate) lockup_address: String,
+    pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -345,11 +405,11 @@ pub(crate) struct ChainSwap {
     pub(crate) refund_private_key: String,
 }
 impl ChainSwap {
-    pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
+    pub(crate) fn get_claim_keypair(&self) -> LiquidSdkResult<Keypair> {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
     }
 
-    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, PaymentError> {
+    pub(crate) fn get_refund_keypair(&self) -> LiquidSdkResult<Keypair> {
         utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
     }
 
@@ -366,7 +426,7 @@ impl ChainSwap {
         })
     }
 
-    pub(crate) fn get_claim_swap_script(&self) -> Result<SwapScriptV2, PaymentError> {
+    pub(crate) fn get_claim_swap_script(&self) -> LiquidSdkResult<SwapScriptV2> {
         let chain_swap_details = self.get_boltz_create_response()?.claim_details;
         let our_pubkey = self.get_claim_keypair()?.public_key();
         let swap_script = match self.direction {
@@ -384,7 +444,7 @@ impl ChainSwap {
         Ok(swap_script)
     }
 
-    pub(crate) fn get_lockup_swap_script(&self) -> Result<SwapScriptV2, PaymentError> {
+    pub(crate) fn get_lockup_swap_script(&self) -> LiquidSdkResult<SwapScriptV2> {
         let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
         let our_pubkey = self.get_refund_keypair()?.public_key();
         let swap_script = match self.direction {
@@ -591,6 +651,22 @@ impl ReceiveSwap {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct RefundableSwap {
+    pub swap_address: String,
+    pub timestamp: u32,
+    pub amount_sat: u64,
+}
+impl From<ChainSwap> for RefundableSwap {
+    fn from(swap: ChainSwap) -> Self {
+        Self {
+            swap_address: swap.lockup_address,
+            timestamp: swap.created_at,
+            amount_sat: swap.payer_amount_sat,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
@@ -643,6 +719,12 @@ pub enum PaymentState {
     /// This covers the case when the swap state is still Created and the swap fails to reach the
     /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
     TimedOut = 4,
+
+    /// ## Incoming Chain Swaps
+    ///
+    /// This covers the case when the swap failed for any reason and there is a user lockup tx.
+    /// The swap in this case has to be manually refunded with a provided Bitcoin address
+    Refundable = 5,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -658,6 +740,7 @@ impl FromSql for PaymentState {
                 2 => Ok(PaymentState::Complete),
                 3 => Ok(PaymentState::Failed),
                 4 => Ok(PaymentState::TimedOut),
+                5 => Ok(PaymentState::Refundable),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

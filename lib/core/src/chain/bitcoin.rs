@@ -9,7 +9,7 @@ use lwk_wollet::{
         consensus::{deserialize, serialize},
         BlockHash, Script, Transaction, Txid,
     },
-    ElectrumUrl, History,
+    ElectrumOptions, ElectrumUrl, Error, History,
 };
 
 type Height = u32;
@@ -44,8 +44,13 @@ pub(crate) struct ElectrumClient {
     tip: HeaderNotification,
 }
 impl ElectrumClient {
-    pub fn new(url: &ElectrumUrl) -> Result<Self> {
-        let client = url.build_client()?;
+    pub fn new(url: &ElectrumUrl) -> Result<Self, Error> {
+        Self::with_options(url, ElectrumOptions::default())
+    }
+
+    /// Creates an Electrum client specifying non default options like timeout
+    pub fn with_options(url: &ElectrumUrl, options: ElectrumOptions) -> Result<Self, Error> {
+        let client = url.build_client(&options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;
 
@@ -60,9 +65,21 @@ impl BitcoinChainService for ElectrumClient {
             maybe_popped_header = Some(header)
         }
 
-        if let Some(popped_header) = maybe_popped_header {
-            let tip: HeaderNotification = popped_header.try_into()?;
-            self.tip = tip;
+        match maybe_popped_header {
+            Some(popped_header) => {
+                let tip: HeaderNotification = popped_header.try_into()?;
+                self.tip = tip;
+            }
+            None => {
+                // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
+                // It might be that the client has reconnected and subscriptions don't persist
+                // across connections. Calling `client.ping()` won't help here because the
+                // successful retry will prevent us knowing about the reconnect.
+                if let Ok(header) = self.client.block_headers_subscribe_raw() {
+                    let tip: HeaderNotification = header.try_into()?;
+                    self.tip = tip;
+                }
+            }
         }
 
         Ok(self.tip.clone())

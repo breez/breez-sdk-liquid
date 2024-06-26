@@ -244,7 +244,6 @@ enum PaymentError {
 };
 
 dictionary Config {
-    string boltz_url;
     string liquid_electrum_url;
     string bitcoin_electrum_url;
     string working_dir;
@@ -312,6 +311,24 @@ dictionary PayOnchainRequest {
     PreparePayOnchainResponse prepare_res;
 };
 
+dictionary PrepareReceiveOnchainRequest {
+    u64 amount_sat;
+};
+
+dictionary PrepareReceiveOnchainResponse {
+    u64 amount_sat;
+    u64 fees_sat;
+};
+
+dictionary ReceiveOnchainRequest {
+    PrepareReceiveOnchainResponse prepare_res;
+};
+
+dictionary ReceiveOnchainResponse {
+    string address;
+    string bip21;
+};
+
 dictionary BackupRequest {
     string? backup_path = null;
 };
@@ -345,6 +362,34 @@ enum PaymentState {
     "Complete",
     "Failed",
     "TimedOut",
+    "Refundable",
+};
+
+dictionary RefundableSwap {
+    string swap_address;
+    u32 timestamp;
+    u64 amount_sat;
+};
+
+dictionary PrepareRefundRequest {
+    string swap_address;
+    string refund_address;
+    u32 sat_per_vbyte;
+};
+
+dictionary PrepareRefundResponse {
+    u32 refund_tx_vsize;
+    u64 refund_tx_fee_sat;
+};
+
+dictionary RefundRequest {
+    string swap_address;
+    string refund_address;
+    u32 sat_per_vbyte;
+};
+
+dictionary RefundResponse {
+    string refund_tx_id;
 };
 
 [Enum]
@@ -416,7 +461,22 @@ interface BindingLiquidSdk {
     SendPaymentResponse pay_onchain(PayOnchainRequest req);
 
     [Throws=PaymentError]
+    PrepareReceiveOnchainResponse prepare_receive_onchain(PrepareReceiveOnchainRequest req);
+
+    [Throws=PaymentError]
+    ReceiveOnchainResponse receive_onchain(ReceiveOnchainRequest req);
+
+    [Throws=PaymentError]
     sequence<Payment> list_payments();
+
+    [Throws=LiquidSdkError]
+    sequence<RefundableSwap> list_refundables();
+
+    [Throws=LiquidSdkError]
+    PrepareRefundResponse prepare_refund(PrepareRefundRequest req);
+
+    [Throws=PaymentError]
+    RefundResponse refund(RefundRequest req);
 
     [Throws=LiquidSdkError]
     void sync();

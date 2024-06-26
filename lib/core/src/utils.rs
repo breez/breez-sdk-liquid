@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::error::PaymentError;
+use crate::error::{LiquidSdkResult, PaymentError};
 use anyhow::{anyhow, Result};
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
@@ -25,12 +25,12 @@ pub(crate) fn json_to_pubkey(json: &str) -> Result<boltz_client::PublicKey, Paym
 
 pub(crate) fn generate_keypair() -> boltz_client::Keypair {
     let secp = boltz_client::Secp256k1::new();
-    let mut rng = bip39::rand::rngs::OsRng;
+    let mut rng = lwk_wollet::secp256k1::rand::thread_rng();
     let secret_key = lwk_wollet::secp256k1::SecretKey::new(&mut rng);
     boltz_client::Keypair::from_secret_key(&secp, &secret_key)
 }
 
-pub(crate) fn decode_keypair(secret_key: &str) -> Result<boltz_client::Keypair, lwk_wollet::Error> {
+pub(crate) fn decode_keypair(secret_key: &str) -> LiquidSdkResult<boltz_client::Keypair> {
     let secp = boltz_client::Secp256k1::new();
     let secret_key = lwk_wollet::secp256k1::SecretKey::from_str(secret_key)?;
     Ok(boltz_client::Keypair::from_secret_key(&secp, &secret_key))
