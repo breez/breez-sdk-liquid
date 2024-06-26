@@ -250,8 +250,9 @@ pub struct PrepareRefundRequest {
 
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundResponse {
-    pub refund_tx_vsize: u32,
-    pub refund_tx_fee_sat: u64,
+    pub tx_vsize: u32,
+    pub tx_fee_sat: u64,
+    pub refund_tx_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -681,11 +682,11 @@ pub enum PaymentState {
     ///
     /// ## Send Swaps
     ///
-    /// Covers the cases when
-    /// - our lockup tx was broadcast or
-    /// - a refund was initiated and our refund tx was broadcast
+    /// This is the status when our lockup tx was broadcast
     ///
-    /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
+    /// ## Chain Swaps
+    ///
+    /// This is the status when the user lockup tx was broadcast
     ///
     /// ## No swap data available
     ///
@@ -696,7 +697,7 @@ pub enum PaymentState {
     ///
     /// Covers the case when the claim tx is confirmed.
     ///
-    /// ## Send Swaps
+    /// ## Send and Chain Swaps
     ///
     /// This is the status when the claim tx is broadcast and we see it in the mempool.
     ///
@@ -709,12 +710,12 @@ pub enum PaymentState {
     ///
     /// This is the status when the swap failed for any reason and the Receive could not complete.
     ///
-    /// ## Send Swaps
+    /// ## Send and Chain Swaps
     ///
     /// This is the status when a swap refund was initiated and the refund tx is confirmed.
     Failed = 3,
 
-    /// ## Send Swaps
+    /// ## Send and Outgoing Chain Swaps
     ///
     /// This covers the case when the swap state is still Created and the swap fails to reach the
     /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
@@ -725,6 +726,13 @@ pub enum PaymentState {
     /// This covers the case when the swap failed for any reason and there is a user lockup tx.
     /// The swap in this case has to be manually refunded with a provided Bitcoin address
     Refundable = 5,
+
+    /// ## Send and Chain Swaps
+    ///
+    /// This is the status when a refund was initiated and our refund tx was broadcast
+    ///
+    /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
+    RefundPending = 6,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -741,6 +749,7 @@ impl FromSql for PaymentState {
                 3 => Ok(PaymentState::Failed),
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
+                6 => Ok(PaymentState::RefundPending),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

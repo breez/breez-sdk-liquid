@@ -219,8 +219,9 @@ export interface PrepareRefundRequest {
 }
 
 export interface PrepareRefundResponse {
-    refundTxVsize: number
-    refundTxFeeSat: number
+    txVsize: number
+    txFeeSat: number
+    refundTxId?: string
 }
 
 export interface PrepareSendRequest {
@@ -443,7 +444,8 @@ export enum PaymentState {
     COMPLETE = "complete",
     FAILED = "failed",
     TIMED_OUT = "timedOut",
-    REFUNDABLE = "refundable"
+    REFUNDABLE = "refundable",
+    REFUND_PENDING = "refundPending"
 }
 
 export enum PaymentType {
@@ -577,6 +579,10 @@ export const prepareRefund = async (req: PrepareRefundRequest): Promise<PrepareR
 export const refund = async (req: RefundRequest): Promise<RefundResponse> => {
     const response = await BreezLiquidSDK.refund(req)
     return response
+}
+
+export const rescanOnchainSwaps = async (): Promise<void> => {
+    await BreezLiquidSDK.rescanOnchainSwaps()
 }
 
 export const sync = async (): Promise<void> => {

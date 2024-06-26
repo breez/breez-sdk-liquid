@@ -210,6 +210,10 @@ impl BindingLiquidSdk {
         self.sdk.refund(&req).await
     }
 
+    pub async fn rescan_onchain_swaps(&self) -> Result<(), LiquidSdkError> {
+        self.sdk.rescan_onchain_swaps().await
+    }
+
     pub async fn sync(&self) -> Result<(), LiquidSdkError> {
         self.sdk.sync().await.map_err(Into::into)
     }

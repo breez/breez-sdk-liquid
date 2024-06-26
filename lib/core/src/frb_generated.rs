@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1268203752;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1515195984;
 
 // Section: executor
 
@@ -1023,6 +1023,52 @@ fn wire__crate__bindings__BindingLiquidSdk_refund_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_rescan_onchain_swaps",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::LiquidSdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::rescan_onchain_swaps(
+                            &*api_that_guard,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_restore_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
@@ -1534,6 +1580,7 @@ impl CstDecode<crate::model::PaymentState> for i32 {
             3 => crate::model::PaymentState::Failed,
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
+            6 => crate::model::PaymentState::RefundPending,
             _ => unreachable!("Invalid variant for PaymentState: {}", self),
         }
     }
@@ -2702,6 +2749,7 @@ impl SseDecode for crate::model::PaymentState {
             3 => crate::model::PaymentState::Failed,
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
+            6 => crate::model::PaymentState::RefundPending,
             _ => unreachable!("Invalid variant for PaymentState: {}", inner),
         };
     }
@@ -2802,11 +2850,13 @@ impl SseDecode for crate::model::PrepareRefundRequest {
 impl SseDecode for crate::model::PrepareRefundResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_refundTxVsize = <u32>::sse_decode(deserializer);
-        let mut var_refundTxFeeSat = <u64>::sse_decode(deserializer);
+        let mut var_txVsize = <u32>::sse_decode(deserializer);
+        let mut var_txFeeSat = <u64>::sse_decode(deserializer);
+        let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareRefundResponse {
-            refund_tx_vsize: var_refundTxVsize,
-            refund_tx_fee_sat: var_refundTxFeeSat,
+            tx_vsize: var_txVsize,
+            tx_fee_sat: var_txFeeSat,
+            refund_tx_id: var_refundTxId,
         };
     }
 }
@@ -4079,6 +4129,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
             Self::Failed => 3.into_dart(),
             Self::TimedOut => 4.into_dart(),
             Self::Refundable => 5.into_dart(),
+            Self::RefundPending => 6.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -4245,8 +4296,9 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareRefundRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareRefundResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.refund_tx_vsize.into_into_dart().into_dart(),
-            self.refund_tx_fee_sat.into_into_dart().into_dart(),
+            self.tx_vsize.into_into_dart().into_dart(),
+            self.tx_fee_sat.into_into_dart().into_dart(),
+            self.refund_tx_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5481,6 +5533,7 @@ impl SseEncode for crate::model::PaymentState {
                 crate::model::PaymentState::Failed => 3,
                 crate::model::PaymentState::TimedOut => 4,
                 crate::model::PaymentState::Refundable => 5,
+                crate::model::PaymentState::RefundPending => 6,
                 _ => {
                     unimplemented!("");
                 }
@@ -5563,8 +5616,9 @@ impl SseEncode for crate::model::PrepareRefundRequest {
 impl SseEncode for crate::model::PrepareRefundResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u32>::sse_encode(self.refund_tx_vsize, serializer);
-        <u64>::sse_encode(self.refund_tx_fee_sat, serializer);
+        <u32>::sse_encode(self.tx_vsize, serializer);
+        <u64>::sse_encode(self.tx_fee_sat, serializer);
+        <Option<String>>::sse_encode(self.refund_tx_id, serializer);
     }
 }
 

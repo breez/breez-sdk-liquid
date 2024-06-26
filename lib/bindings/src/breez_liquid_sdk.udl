@@ -401,6 +401,7 @@ enum PaymentState {
     "Failed",
     "TimedOut",
     "Refundable",
+    "RefundPending",
 };
 
 dictionary RefundableSwap {
@@ -416,8 +417,9 @@ dictionary PrepareRefundRequest {
 };
 
 dictionary PrepareRefundResponse {
-    u32 refund_tx_vsize;
-    u64 refund_tx_fee_sat;
+    u32 tx_vsize;
+    u64 tx_fee_sat;
+    string? refund_tx_id = null;
 };
 
 dictionary RefundRequest {
@@ -515,6 +517,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     RefundResponse refund(RefundRequest req);
+
+    [Throws=LiquidSdkError]
+    void rescan_onchain_swaps();
 
     [Throws=LiquidSdkError]
     void sync();

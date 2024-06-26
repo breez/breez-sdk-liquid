@@ -12,7 +12,9 @@ use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::{Complete, Created, Failed, Pending, Refundable, TimedOut};
+use crate::model::PaymentState::{
+    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
+};
 use crate::model::{Config, SendSwap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
@@ -157,8 +159,14 @@ impl SendSwapStateHandler {
 
                             let refund_tx_id = self.refund(&swap).await?;
                             info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
-                            self.update_swap_info(id, Pending, None, None, Some(&refund_tx_id))
-                                .await?;
+                            self.update_swap_info(
+                                id,
+                                RefundPending,
+                                None,
+                                None,
+                                Some(&refund_tx_id),
+                            )
+                            .await?;
                         }
                     },
                     // Do not attempt broadcasting a refund if lockup tx was never sent and swap is
@@ -428,6 +436,11 @@ impl SendSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
 
+            (Pending, RefundPending) => Ok(()),
+            (_, RefundPending) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to RefundPending state"),
+            }),
+
             (Complete, Failed) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Failed state"),
             }),
@@ -476,7 +489,10 @@ mod tests {
                 Created,
                 HashSet::from([Pending, Complete, TimedOut, Failed]),
             ),
-            (Pending, HashSet::from([Pending, Complete, Failed])),
+            (
+                Pending,
+                HashSet::from([Pending, RefundPending, Complete, Failed]),
+            ),
             (TimedOut, HashSet::from([TimedOut, Failed])),
             (Complete, HashSet::from([])),
             (Refundable, HashSet::from([Failed])),

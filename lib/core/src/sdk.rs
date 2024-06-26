@@ -39,6 +39,8 @@ use crate::{
 };
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
+/// Number of blocks to monitor a swap after its timeout block height
+pub const CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 pub struct LiquidSdk {
     config: Config,
@@ -55,7 +57,7 @@ pub struct LiquidSdk {
     shutdown_receiver: watch::Receiver<()>,
     send_swap_state_handler: SendSwapStateHandler,
     receive_swap_state_handler: ReceiveSwapStateHandler,
-    chain_swap_state_handler: ChainSwapStateHandler,
+    chain_swap_state_handler: Arc<ChainSwapStateHandler>,
 }
 
 impl LiquidSdk {
@@ -120,13 +122,14 @@ impl LiquidSdk {
             liquid_chain_service.clone(),
         );
 
-        let chain_swap_state_handler = ChainSwapStateHandler::new(
+        let chain_swap_state_handler = Arc::new(ChainSwapStateHandler::new(
+            config.clone(),
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
-        )?;
+        )?);
 
         let breez_server = BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?;
 
@@ -173,7 +176,6 @@ impl LiquidSdk {
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> LiquidSdkResult<()> {
         // Periodically run sync() in the background
-        // TODO: Check the bitcoin chain for confirmed refund txs
         let sdk_clone = self.clone();
         let mut shutdown_rx_sync_loop = self.shutdown_receiver.clone();
         tokio::spawn(async move {
@@ -198,8 +200,12 @@ impl LiquidSdk {
             .clone()
             .start(reconnect_handler, self.shutdown_receiver.clone())
             .await;
+        self.chain_swap_state_handler
+            .clone()
+            .start(self.shutdown_receiver.clone())
+            .await;
         self.track_swap_updates().await;
-        self.track_refundable_swaps().await;
+        self.track_pending_swaps().await;
 
         Ok(())
     }
@@ -285,7 +291,7 @@ impl LiquidSdk {
         });
     }
 
-    async fn track_refundable_swaps(self: &Arc<LiquidSdk>) {
+    async fn track_pending_swaps(self: &Arc<LiquidSdk>) {
         let cloned = self.clone();
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
@@ -308,15 +314,15 @@ impl LiquidSdk {
                             Ok(pending_chain_swaps) => {
                                 for swap in pending_chain_swaps {
                                     if let Err(e) = cloned.check_chain_swap_expiration(&swap).await {
-                                        error!("Error checking expiration for Send Swap {}: {e:?}", swap.id);
+                                        error!("Error checking expiration for Chain Swap {}: {e:?}", swap.id);
                                     }
                                 }
                             }
-                            Err(e) => error!("Error listing pending send swaps: {e:?}"),
+                            Err(e) => error!("Error listing pending chain swaps: {e:?}"),
                         }
                     },
                     _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting refundable swaps loop");
+                        info!("Received shutdown signal, exiting pending swaps loop");
                         return;
                     }
                 }
@@ -440,31 +446,23 @@ impl LiquidSdk {
                                             }
                                         }
                                     }
-                                    Swap::Send(SendSwap { refund_tx_id, .. }) => {
-                                        match refund_tx_id {
-                                            Some(_) => {
-                                                // The refund tx has now been broadcast
-                                                self.notify_event_listeners(
-                                                    LiquidSdkEvent::PaymentRefundPending {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
-                                            }
-                                            None => {
-                                                // The lockup tx is in the mempool/confirmed
-                                                self.notify_event_listeners(
-                                                    LiquidSdkEvent::PaymentPending {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
-                                            }
-                                        }
+                                    Swap::Send(_) => {
+                                        // The lockup tx is in the mempool/confirmed
+                                        self.notify_event_listeners(
+                                            LiquidSdkEvent::PaymentPending { details: payment },
+                                        )
+                                        .await?
                                     }
                                 },
                                 None => debug!("Payment has no swap id"),
                             }
+                        }
+                        RefundPending => {
+                            // The swap state has changed to RefundPending
+                            self.notify_event_listeners(LiquidSdkEvent::PaymentRefundPending {
+                                details: payment,
+                            })
+                            .await?
                         }
                         Failed => match payment.payment_type {
                             PaymentType::Receive => {
@@ -518,12 +516,12 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
-                    Refundable | TimedOut => {}
+                    Refundable | RefundPending | TimedOut => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
                     Pending => pending_receive_sat += p.amount_sat,
-                    Created | Refundable | Failed | TimedOut => {}
+                    Created | Refundable | RefundPending | Failed | TimedOut => {}
                 },
             }
         }
@@ -824,7 +822,7 @@ impl LiquidSdk {
             Some(swap) => match swap.state {
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                Failed => {
+                RefundPending | Failed => {
                     return Err(PaymentError::InvalidInvoice {
                         err: "Payment has already failed. Please try with another invoice."
                             .to_string(),
@@ -1310,14 +1308,15 @@ impl LiquidSdk {
         &self,
         req: &PrepareRefundRequest,
     ) -> LiquidSdkResult<PrepareRefundResponse> {
-        let (refund_tx_vsize, refund_tx_fee_sat) = self.chain_swap_state_handler.prepare_refund(
+        let (tx_vsize, tx_fee_sat, refund_tx_id) = self.chain_swap_state_handler.prepare_refund(
             &req.swap_address,
             &req.refund_address,
             req.sat_per_vbyte,
         )?;
         Ok(PrepareRefundResponse {
-            refund_tx_vsize,
-            refund_tx_fee_sat,
+            tx_vsize,
+            tx_fee_sat,
+            refund_tx_id,
         })
     }
 
@@ -1327,6 +1326,13 @@ impl LiquidSdk {
             .refund_incoming_swap(&req.swap_address, &req.refund_address, req.sat_per_vbyte)
             .await?;
         Ok(RefundResponse { refund_tx_id })
+    }
+
+    pub async fn rescan_onchain_swaps(&self) -> LiquidSdkResult<()> {
+        self.chain_swap_state_handler
+            .rescan_incoming_chain_swaps()
+            .await?;
+        Ok(())
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,

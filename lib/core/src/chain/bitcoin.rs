@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use electrum_client::{Client, ElectrumApi, HeaderNotification};
+use electrum_client::{Client, ElectrumApi, GetBalanceRes, HeaderNotification};
 use lwk_wollet::{
     bitcoin::{
-        self,
         block::Header,
         consensus::{deserialize, serialize},
         BlockHash, Script, Transaction, Txid,
@@ -37,6 +36,9 @@ pub trait BitcoinChainService: Send + Sync {
 
     /// Get the transactions involved in a list of scripts
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+
+    /// Return the confirmed and unconfirmed balances of a script hash
+    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
 }
 
 pub(crate) struct ElectrumClient {
@@ -91,13 +93,8 @@ impl BitcoinChainService for ElectrumClient {
     }
 
     fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        let txids: Vec<bitcoin::Txid> = txids
-            .iter()
-            .map(|t| bitcoin::Txid::from_raw_hash(t.to_raw_hash()))
-            .collect();
-
         let mut result = vec![];
-        for tx in self.client.batch_transaction_get_raw(&txids)? {
+        for tx in self.client.batch_transaction_get_raw(txids)? {
             let tx: Transaction = deserialize(&tx)?;
             result.push(tx);
         }
@@ -118,16 +115,15 @@ impl BitcoinChainService for ElectrumClient {
     }
 
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        let scripts: Vec<&bitcoin::Script> = scripts
-            .iter()
-            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
-            .collect();
-
         Ok(self
             .client
-            .batch_script_get_history(&scripts)?
+            .batch_script_get_history(scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
             .collect())
+    }
+
+    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
+        Ok(self.client.script_get_balance(script)?)
     }
 }

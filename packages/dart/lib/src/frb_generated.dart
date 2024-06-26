@@ -55,7 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0';
 
   @override
-  int get rustContentHash => -1268203752;
+  int get rustContentHash => 1515195984;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -119,6 +119,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<RefundResponse> crateBindingsBindingLiquidSdkRefund(
       {required BindingLiquidSdk that, required RefundRequest req});
+
+  Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that});
 
   void crateBindingsBindingLiquidSdkRestore({required BindingLiquidSdk that, required RestoreRequest req});
 
@@ -687,6 +689,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkRefundConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_refund",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_liquid_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_rescan_onchain_swaps",
+        argNames: ["that"],
       );
 
   @override
@@ -2043,10 +2069,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareRefundResponse dco_decode_prepare_refund_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareRefundResponse(
-      refundTxVsize: dco_decode_u_32(arr[0]),
-      refundTxFeeSat: dco_decode_u_64(arr[1]),
+      txVsize: dco_decode_u_32(arr[0]),
+      txFeeSat: dco_decode_u_64(arr[1]),
+      refundTxId: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -3438,9 +3465,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PrepareRefundResponse sse_decode_prepare_refund_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_refundTxVsize = sse_decode_u_32(deserializer);
-    var var_refundTxFeeSat = sse_decode_u_64(deserializer);
-    return PrepareRefundResponse(refundTxVsize: var_refundTxVsize, refundTxFeeSat: var_refundTxFeeSat);
+    var var_txVsize = sse_decode_u_32(deserializer);
+    var var_txFeeSat = sse_decode_u_64(deserializer);
+    var var_refundTxId = sse_decode_opt_String(deserializer);
+    return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId);
   }
 
   @protected
@@ -4754,8 +4782,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_prepare_refund_response(PrepareRefundResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_32(self.refundTxVsize, serializer);
-    sse_encode_u_64(self.refundTxFeeSat, serializer);
+    sse_encode_u_32(self.txVsize, serializer);
+    sse_encode_u_64(self.txFeeSat, serializer);
+    sse_encode_opt_String(self.refundTxId, serializer);
   }
 
   @protected
@@ -5009,6 +5038,10 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<RefundResponse> refund({required RefundRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkRefund(that: this, req: req);
+
+  Future<void> rescanOnchainSwaps() => RustLib.instance.api.crateBindingsBindingLiquidSdkRescanOnchainSwaps(
+        that: this,
+      );
 
   void restore({required RestoreRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkRestore(that: this, req: req);

@@ -367,11 +367,11 @@ enum PaymentState {
   ///
   /// ## Send Swaps
   ///
-  /// Covers the cases when
-  /// - our lockup tx was broadcast or
-  /// - a refund was initiated and our refund tx was broadcast
+  /// This is the status when our lockup tx was broadcast
   ///
-  /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
+  /// ## Chain Swaps
+  ///
+  /// This is the status when the user lockup tx was broadcast
   ///
   /// ## No swap data available
   ///
@@ -382,7 +382,7 @@ enum PaymentState {
   ///
   /// Covers the case when the claim tx is confirmed.
   ///
-  /// ## Send Swaps
+  /// ## Send and Chain Swaps
   ///
   /// This is the status when the claim tx is broadcast and we see it in the mempool.
   ///
@@ -395,12 +395,12 @@ enum PaymentState {
   ///
   /// This is the status when the swap failed for any reason and the Receive could not complete.
   ///
-  /// ## Send Swaps
+  /// ## Send and Chain Swaps
   ///
   /// This is the status when a swap refund was initiated and the refund tx is confirmed.
   failed,
 
-  /// ## Send Swaps
+  /// ## Send and Outgoing Chain Swaps
   ///
   /// This covers the case when the swap state is still Created and the swap fails to reach the
   /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
@@ -411,6 +411,13 @@ enum PaymentState {
   /// This covers the case when the swap failed for any reason and there is a user lockup tx.
   /// The swap in this case has to be manually refunded with a provided Bitcoin address
   refundable,
+
+  /// ## Send and Chain Swaps
+  ///
+  /// This is the status when a refund was initiated and our refund tx was broadcast
+  ///
+  /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
+  refundPending,
   ;
 }
 
@@ -560,24 +567,27 @@ class PrepareRefundRequest {
 }
 
 class PrepareRefundResponse {
-  final int refundTxVsize;
-  final BigInt refundTxFeeSat;
+  final int txVsize;
+  final BigInt txFeeSat;
+  final String? refundTxId;
 
   const PrepareRefundResponse({
-    required this.refundTxVsize,
-    required this.refundTxFeeSat,
+    required this.txVsize,
+    required this.txFeeSat,
+    this.refundTxId,
   });
 
   @override
-  int get hashCode => refundTxVsize.hashCode ^ refundTxFeeSat.hashCode;
+  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ refundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareRefundResponse &&
           runtimeType == other.runtimeType &&
-          refundTxVsize == other.refundTxVsize &&
-          refundTxFeeSat == other.refundTxFeeSat;
+          txVsize == other.txVsize &&
+          txFeeSat == other.txFeeSat &&
+          refundTxId == other.refundTxId;
 }
 
 class PrepareSendRequest {

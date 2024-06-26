@@ -28,6 +28,11 @@ typedef struct _Dart_Handle* Dart_Handle;
  */
 #define DEFAULT_ZERO_CONF_MAX_SAT 100000
 
+/**
+ * Number of blocks to monitor a swap after its timeout block height
+ */
+#define CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS 4320
+
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
   int32_t len;
@@ -704,8 +709,9 @@ typedef struct wire_cst_payment_error {
 } wire_cst_payment_error;
 
 typedef struct wire_cst_prepare_refund_response {
-  uint32_t refund_tx_vsize;
-  uint64_t refund_tx_fee_sat;
+  uint32_t tx_vsize;
+  uint64_t tx_fee_sat;
+  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_prepare_refund_response;
 
 typedef struct wire_cst_receive_onchain_response {
@@ -800,6 +806,9 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(int64_t port_,
                                                                         uintptr_t that,
                                                                         struct wire_cst_refund_request *req);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(int64_t port_,
+                                                                                      uintptr_t that);
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(uintptr_t that,
                                                                                          struct wire_cst_restore_request *req);
@@ -991,6 +1000,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);

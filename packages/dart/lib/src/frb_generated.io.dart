@@ -2178,8 +2178,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_refund_response(
       PrepareRefundResponse apiObj, wire_cst_prepare_refund_response wireObj) {
-    wireObj.refund_tx_vsize = cst_encode_u_32(apiObj.refundTxVsize);
-    wireObj.refund_tx_fee_sat = cst_encode_u_64(apiObj.refundTxFeeSat);
+    wireObj.tx_vsize = cst_encode_u_32(apiObj.txVsize);
+    wireObj.tx_fee_sat = cst_encode_u_64(apiObj.txFeeSat);
+    wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
   }
 
   @protected
@@ -3189,6 +3190,22 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_refund =
       _wire__crate__bindings__BindingLiquidSdk_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_refund_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps');
+  late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps =
+      _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr.asFunction<void Function(int, int)>();
 
   WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_restore(
     int that,
@@ -4795,10 +4812,12 @@ final class wire_cst_payment_error extends ffi.Struct {
 
 final class wire_cst_prepare_refund_response extends ffi.Struct {
   @ffi.Uint32()
-  external int refund_tx_vsize;
+  external int tx_vsize;
 
   @ffi.Uint64()
-  external int refund_tx_fee_sat;
+  external int tx_fee_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
 
 final class wire_cst_receive_onchain_response extends ffi.Struct {
@@ -4828,3 +4847,5 @@ const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
 const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
+
+const int CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS = 4320;

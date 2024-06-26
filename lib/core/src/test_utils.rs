@@ -71,6 +71,7 @@ pub(crate) fn new_chain_swap_state_handler(
     )?));
 
     ChainSwapStateHandler::new(
+        config,
         onchain_wallet,
         persister,
         swapper,
