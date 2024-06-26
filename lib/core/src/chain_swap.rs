@@ -104,7 +104,9 @@ impl ChainSwapStateHandler {
             current_height
         );
         for swap in chain_swaps {
-            self.rescan_chain_swap(&swap, current_height).await?
+            if let Err(e) = self.rescan_chain_swap(&swap, current_height).await {
+                error!("Error rescanning Chain Swap {}: {e:?}", swap.id);
+            }
         }
         Ok(())
     }
