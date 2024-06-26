@@ -138,9 +138,10 @@ impl ChainSwapStateHandler {
                 "Chain Swap {} has {} confirmed and {} unconfirmed sats",
                 swap.id, script_balance.confirmed, script_balance.unconfirmed
             );
+
             if script_balance.confirmed > 0
+                && script_balance.unconfirmed == 0
                 && swap.state != Refundable
-                && swap.state != RefundPending
             {
                 // If there are unspent funds sent to the lockup script address then set
                 // the state to Refundable.
@@ -679,7 +680,7 @@ impl ChainSwapStateHandler {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
-            (Created | Pending | Failed | Complete, Refundable) => Ok(()),
+            (Created | Pending | RefundPending | Failed | Complete, Refundable) => Ok(()),
             (_, Refundable) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
@@ -733,7 +734,7 @@ mod tests {
             (TimedOut, HashSet::from([Failed])),
             (Complete, HashSet::from([Refundable])),
             (Refundable, HashSet::from([RefundPending, Failed])),
-            (RefundPending, HashSet::from([Complete, Failed])),
+            (RefundPending, HashSet::from([Refundable, Complete, Failed])),
             (Failed, HashSet::from([Failed, Refundable])),
         ]);
 
