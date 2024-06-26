@@ -138,7 +138,8 @@ impl ChainSwapStateHandler {
                 .filter(|u| u.height > 0)
                 .map(|u| u.value)
                 .sum();
-            if confirmed_unspent_sat > 0 && swap.state != Refundable {
+            if confirmed_unspent_sat > 0 && swap.state != Refundable && swap.state != RefundPending
+            {
                 // If there are unspent funds sent to the lockup script address then set
                 // the state to Refundable.
                 info!(
