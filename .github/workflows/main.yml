@@ -247,5 +247,8 @@ jobs:
           # Add the secp256k1-zkp patch: https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits
           echo "[patch.crates-io]" >> Cargo.toml
           echo "secp256k1-zkp = {git = 'https://github.com/sanket1729/rust-secp256k1-zkp.git', rev = '60e631c24588a0c9e271badd61959294848c665d'}" >> Cargo.toml
+          # Propagate the patch in Cargo.lock
+          rm Cargo.lock
+          cargo update --package secp256k1-zkp
           
           cargo clippy -- -D warnings
