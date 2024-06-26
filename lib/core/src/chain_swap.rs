@@ -129,26 +129,28 @@ impl ChainSwapStateHandler {
                 .to_address(self.config.network.as_bitcoin_chain())
                 .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
                 .script_pubkey();
-            let confirmed_unspent_sat: u64 = self
+            let script_balance = self
                 .bitcoin_chain_service
                 .lock()
                 .await
-                .script_list_unspent(script_pubkey.as_script())?
-                .iter()
-                .filter(|u| u.height > 0)
-                .map(|u| u.value)
-                .sum();
-            if confirmed_unspent_sat > 0 && swap.state != Refundable && swap.state != RefundPending
+                .script_get_balance(script_pubkey.as_script())?;
+            info!(
+                "Chain Swap {} has {} confirmed and {} unconfirmed sats",
+                swap.id, script_balance.confirmed, script_balance.unconfirmed
+            );
+            if script_balance.confirmed > 0
+                && swap.state != Refundable
+                && swap.state != RefundPending
             {
                 // If there are unspent funds sent to the lockup script address then set
                 // the state to Refundable.
                 info!(
                     "Chain Swap {} has {} unspent sats. Setting the swap to refundable",
-                    swap.id, confirmed_unspent_sat
+                    swap.id, script_balance.confirmed
                 );
                 self.update_swap_info(&swap.id, Refundable, None, None, None, None)
                     .await?;
-            } else if confirmed_unspent_sat == 0 {
+            } else if script_balance.confirmed == 0 {
                 // If the funds sent to the lockup script address are spent then set the
                 // state back to Complete/Failed.
                 let to_state = match swap.claim_tx_id {

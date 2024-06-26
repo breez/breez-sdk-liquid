@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use electrum_client::{Client, ElectrumApi, HeaderNotification, ListUnspentRes};
+use electrum_client::{Client, ElectrumApi, GetBalanceRes, HeaderNotification};
 use lwk_wollet::{
     bitcoin::{
         block::Header,
@@ -12,28 +12,6 @@ use lwk_wollet::{
 };
 
 type Height = u32;
-
-#[allow(dead_code)]
-pub struct Unspent {
-    /// Confirmation height of the transaction that created this output.
-    pub height: usize,
-    /// Txid of the transaction
-    pub tx_hash: Txid,
-    /// Index of the output in the transaction.
-    pub tx_pos: usize,
-    /// Value of the output.
-    pub value: u64,
-}
-impl From<ListUnspentRes> for Unspent {
-    fn from(value: ListUnspentRes) -> Self {
-        Unspent {
-            height: value.height,
-            tx_hash: value.tx_hash,
-            tx_pos: value.tx_pos,
-            value: value.value,
-        }
-    }
-}
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -59,8 +37,8 @@ pub trait BitcoinChainService: Send + Sync {
     /// Get the transactions involved in a list of scripts
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
 
-    /// Get a list of unspend outputs
-    fn script_list_unspent(&self, script: &Script) -> Result<Vec<Unspent>>;
+    /// Return the confirmed and unconfirmed balances of a script hash
+    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
 }
 
 pub(crate) struct ElectrumClient {
@@ -145,12 +123,7 @@ impl BitcoinChainService for ElectrumClient {
             .collect())
     }
 
-    fn script_list_unspent(&self, script: &Script) -> Result<Vec<Unspent>> {
-        Ok(self
-            .client
-            .script_list_unspent(script)?
-            .into_iter()
-            .map(Into::into)
-            .collect())
+    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
+        Ok(self.client.script_get_balance(script)?)
     }
 }
