@@ -881,24 +881,24 @@ impl LiquidSdk {
     ) -> Result<PreparePayOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let amount_sat = req.amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Outgoing, amount_sat)?;
+        let receiver_amount_sat = req.receiver_amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
-        let server_lockup_amount_sat = amount_sat + claim_fees_sat;
+        let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
             .estimate_lockup_tx_fee(server_lockup_amount_sat)
             .await?;
 
         let res = PreparePayOnchainResponse {
-            amount_sat,
+            receiver_amount_sat,
             fees_sat: pair.fees.boltz(server_lockup_amount_sat)
                 + lockup_fees_sat
                 + claim_fees_sat
                 + server_fees_sat,
         };
 
-        let payer_amount_sat = res.amount_sat + res.fees_sat;
+        let payer_amount_sat = res.receiver_amount_sat + res.fees_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -913,7 +913,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let receiver_amount_sat = req.prepare_res.amount_sat;
+        let receiver_amount_sat = req.prepare_res.receiver_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
@@ -1200,14 +1200,14 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let amount_sat = req.amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Incoming, amount_sat)?;
+        let payer_amount_sat = req.payer_amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         Ok(PrepareReceiveOnchainResponse {
-            amount_sat,
-            fees_sat: pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat,
+            payer_amount_sat,
+            fees_sat: pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
         })
     }
 
@@ -1217,7 +1217,7 @@ impl LiquidSdk {
     ) -> Result<ReceiveOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.prepare_res.amount_sat;
+        let payer_amount_sat = req.prepare_res.payer_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();

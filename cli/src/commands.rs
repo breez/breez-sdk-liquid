@@ -36,7 +36,7 @@ pub(crate) enum Command {
         address: String,
 
         /// Amount that will be received, in satoshi
-        amount_sat: u64,
+        receiver_amount_sat: u64,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -210,10 +210,12 @@ pub(crate) async fn handle_command(
         }
         Command::SendOnchainPayment {
             address,
-            amount_sat,
+            receiver_amount_sat,
         } => {
             let prepare_res = sdk
-                .prepare_pay_onchain(&PreparePayOnchainRequest { amount_sat })
+                .prepare_pay_onchain(&PreparePayOnchainRequest {
+                    receiver_amount_sat,
+                })
                 .await?;
 
             wait_confirmation!(
@@ -234,9 +236,7 @@ pub(crate) async fn handle_command(
         }
         Command::ReceiveOnchainPayment { payer_amount_sat } => {
             let prepare_res = sdk
-                .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
-                    amount_sat: payer_amount_sat,
-                })
+                .prepare_receive_onchain(&PrepareReceiveOnchainRequest { payer_amount_sat })
                 .await?;
 
             wait_confirmation!(

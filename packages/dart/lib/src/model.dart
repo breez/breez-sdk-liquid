@@ -428,78 +428,80 @@ enum PaymentType {
 }
 
 class PreparePayOnchainRequest {
-  final BigInt amountSat;
+  final BigInt receiverAmountSat;
 
   const PreparePayOnchainRequest({
-    required this.amountSat,
+    required this.receiverAmountSat,
   });
 
   @override
-  int get hashCode => amountSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PreparePayOnchainRequest && runtimeType == other.runtimeType && amountSat == other.amountSat;
+      other is PreparePayOnchainRequest &&
+          runtimeType == other.runtimeType &&
+          receiverAmountSat == other.receiverAmountSat;
 }
 
 class PreparePayOnchainResponse {
-  final BigInt amountSat;
+  final BigInt receiverAmountSat;
   final BigInt feesSat;
 
   const PreparePayOnchainResponse({
-    required this.amountSat,
+    required this.receiverAmountSat,
     required this.feesSat,
   });
 
   @override
-  int get hashCode => amountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainResponse &&
           runtimeType == other.runtimeType &&
-          amountSat == other.amountSat &&
+          receiverAmountSat == other.receiverAmountSat &&
           feesSat == other.feesSat;
 }
 
 class PrepareReceiveOnchainRequest {
-  final BigInt amountSat;
+  final BigInt payerAmountSat;
 
   const PrepareReceiveOnchainRequest({
-    required this.amountSat,
+    required this.payerAmountSat,
   });
 
   @override
-  int get hashCode => amountSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveOnchainRequest &&
           runtimeType == other.runtimeType &&
-          amountSat == other.amountSat;
+          payerAmountSat == other.payerAmountSat;
 }
 
 class PrepareReceiveOnchainResponse {
-  final BigInt amountSat;
+  final BigInt payerAmountSat;
   final BigInt feesSat;
 
   const PrepareReceiveOnchainResponse({
-    required this.amountSat,
+    required this.payerAmountSat,
     required this.feesSat,
   });
 
   @override
-  int get hashCode => amountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveOnchainResponse &&
           runtimeType == other.runtimeType &&
-          amountSat == other.amountSat &&
+          payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat;
 }
 

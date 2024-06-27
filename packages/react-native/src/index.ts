@@ -186,20 +186,20 @@ export interface Payment {
 }
 
 export interface PreparePayOnchainRequest {
-    amountSat: number
+    receiverAmountSat: number
 }
 
 export interface PreparePayOnchainResponse {
-    amountSat: number
+    receiverAmountSat: number
     feesSat: number
 }
 
 export interface PrepareReceiveOnchainRequest {
-    amountSat: number
+    payerAmountSat: number
 }
 
 export interface PrepareReceiveOnchainResponse {
-    amountSat: number
+    payerAmountSat: number
     feesSat: number
 }
 

@@ -336,11 +336,11 @@ dictionary ReceivePaymentResponse {
 };
 
 dictionary PreparePayOnchainRequest {
-    u64 amount_sat;
+    u64 receiver_amount_sat;
 };
 
 dictionary PreparePayOnchainResponse {
-    u64 amount_sat;
+    u64 receiver_amount_sat;
     u64 fees_sat;
 };
 
@@ -350,11 +350,11 @@ dictionary PayOnchainRequest {
 };
 
 dictionary PrepareReceiveOnchainRequest {
-    u64 amount_sat;
+    u64 payer_amount_sat;
 };
 
 dictionary PrepareReceiveOnchainResponse {
-    u64 amount_sat;
+    u64 payer_amount_sat;
     u64 fees_sat;
 };
 

@@ -83,7 +83,7 @@ typedef struct wire_cst_ln_url_withdraw_request {
 } wire_cst_ln_url_withdraw_request;
 
 typedef struct wire_cst_prepare_pay_onchain_response {
-  uint64_t amount_sat;
+  uint64_t receiver_amount_sat;
   uint64_t fees_sat;
 } wire_cst_prepare_pay_onchain_response;
 
@@ -93,11 +93,11 @@ typedef struct wire_cst_pay_onchain_request {
 } wire_cst_pay_onchain_request;
 
 typedef struct wire_cst_prepare_pay_onchain_request {
-  uint64_t amount_sat;
+  uint64_t receiver_amount_sat;
 } wire_cst_prepare_pay_onchain_request;
 
 typedef struct wire_cst_prepare_receive_onchain_request {
-  uint64_t amount_sat;
+  uint64_t payer_amount_sat;
 } wire_cst_prepare_receive_onchain_request;
 
 typedef struct wire_cst_prepare_receive_request {
@@ -115,7 +115,7 @@ typedef struct wire_cst_prepare_send_request {
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_onchain_response {
-  uint64_t amount_sat;
+  uint64_t payer_amount_sat;
   uint64_t fees_sat;
 } wire_cst_prepare_receive_onchain_response;
 

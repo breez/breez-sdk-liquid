@@ -2770,9 +2770,9 @@ impl SseDecode for crate::model::PaymentType {
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
-            amount_sat: var_amountSat,
+            receiver_amount_sat: var_receiverAmountSat,
         };
     }
 }
@@ -2780,10 +2780,10 @@ impl SseDecode for crate::model::PreparePayOnchainRequest {
 impl SseDecode for crate::model::PreparePayOnchainResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainResponse {
-            amount_sat: var_amountSat,
+            receiver_amount_sat: var_receiverAmountSat,
             fees_sat: var_feesSat,
         };
     }
@@ -2792,9 +2792,9 @@ impl SseDecode for crate::model::PreparePayOnchainResponse {
 impl SseDecode for crate::model::PrepareReceiveOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveOnchainRequest {
-            amount_sat: var_amountSat,
+            payer_amount_sat: var_payerAmountSat,
         };
     }
 }
@@ -2802,10 +2802,10 @@ impl SseDecode for crate::model::PrepareReceiveOnchainRequest {
 impl SseDecode for crate::model::PrepareReceiveOnchainResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveOnchainResponse {
-            amount_sat: var_amountSat,
+            payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
         };
     }
@@ -4159,7 +4159,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentType> for crate::mod
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.amount_sat.into_into_dart().into_dart()].into_dart()
+        [self.receiver_amount_sat.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4177,7 +4177,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PreparePayOnchainRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.amount_sat.into_into_dart().into_dart(),
+            self.receiver_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -4197,7 +4197,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PreparePayOnchainResponse>
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.amount_sat.into_into_dart().into_dart()].into_dart()
+        [self.payer_amount_sat.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4215,7 +4215,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveOnchainReques
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveOnchainResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.amount_sat.into_into_dart().into_dart(),
+            self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -5562,14 +5562,14 @@ impl SseEncode for crate::model::PaymentType {
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.amount_sat, serializer);
+        <u64>::sse_encode(self.receiver_amount_sat, serializer);
     }
 }
 
 impl SseEncode for crate::model::PreparePayOnchainResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.amount_sat, serializer);
+        <u64>::sse_encode(self.receiver_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
     }
 }
@@ -5577,14 +5577,14 @@ impl SseEncode for crate::model::PreparePayOnchainResponse {
 impl SseEncode for crate::model::PrepareReceiveOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.amount_sat, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
     }
 }
 
 impl SseEncode for crate::model::PrepareReceiveOnchainResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.amount_sat, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
     }
 }

@@ -1130,7 +1130,7 @@ impl CstDecode<crate::model::PreparePayOnchainRequest> for wire_cst_prepare_pay_
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
         crate::model::PreparePayOnchainRequest {
-            amount_sat: self.amount_sat.cst_decode(),
+            receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
         }
     }
 }
@@ -1138,7 +1138,7 @@ impl CstDecode<crate::model::PreparePayOnchainResponse> for wire_cst_prepare_pay
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PreparePayOnchainResponse {
         crate::model::PreparePayOnchainResponse {
-            amount_sat: self.amount_sat.cst_decode(),
+            receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
     }
@@ -1149,7 +1149,7 @@ impl CstDecode<crate::model::PrepareReceiveOnchainRequest>
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveOnchainRequest {
         crate::model::PrepareReceiveOnchainRequest {
-            amount_sat: self.amount_sat.cst_decode(),
+            payer_amount_sat: self.payer_amount_sat.cst_decode(),
         }
     }
 }
@@ -1159,7 +1159,7 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveOnchainResponse {
         crate::model::PrepareReceiveOnchainResponse {
-            amount_sat: self.amount_sat.cst_decode(),
+            payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
     }
@@ -1881,7 +1881,7 @@ impl Default for wire_cst_payment_error {
 impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
     fn new_with_null_ptr() -> Self {
         Self {
-            amount_sat: Default::default(),
+            receiver_amount_sat: Default::default(),
         }
     }
 }
@@ -1893,7 +1893,7 @@ impl Default for wire_cst_prepare_pay_onchain_request {
 impl NewWithNullPtr for wire_cst_prepare_pay_onchain_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            amount_sat: Default::default(),
+            receiver_amount_sat: Default::default(),
             fees_sat: Default::default(),
         }
     }
@@ -1906,7 +1906,7 @@ impl Default for wire_cst_prepare_pay_onchain_response {
 impl NewWithNullPtr for wire_cst_prepare_receive_onchain_request {
     fn new_with_null_ptr() -> Self {
         Self {
-            amount_sat: Default::default(),
+            payer_amount_sat: Default::default(),
         }
     }
 }
@@ -1918,7 +1918,7 @@ impl Default for wire_cst_prepare_receive_onchain_request {
 impl NewWithNullPtr for wire_cst_prepare_receive_onchain_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            amount_sat: Default::default(),
+            payer_amount_sat: Default::default(),
             fees_sat: Default::default(),
         }
     }
@@ -3540,23 +3540,23 @@ pub struct wire_cst_PaymentError_SignerError {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_pay_onchain_request {
-    amount_sat: u64,
+    receiver_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_pay_onchain_response {
-    amount_sat: u64,
+    receiver_amount_sat: u64,
     fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_receive_onchain_request {
-    amount_sat: u64,
+    payer_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_receive_onchain_response {
-    amount_sat: u64,
+    payer_amount_sat: u64,
     fees_sat: u64,
 }
 #[repr(C)]

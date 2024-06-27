@@ -2131,26 +2131,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
-    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
   }
 
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_response(
       PreparePayOnchainResponse apiObj, wire_cst_prepare_pay_onchain_response wireObj) {
-    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
   }
 
   @protected
   void cst_api_fill_to_wire_prepare_receive_onchain_request(
       PrepareReceiveOnchainRequest apiObj, wire_cst_prepare_receive_onchain_request wireObj) {
-    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
   }
 
   @protected
   void cst_api_fill_to_wire_prepare_receive_onchain_response(
       PrepareReceiveOnchainResponse apiObj, wire_cst_prepare_receive_onchain_response wireObj) {
-    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
   }
 
@@ -3996,7 +3996,7 @@ final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
 
 final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int receiver_amount_sat;
 
   @ffi.Uint64()
   external int fees_sat;
@@ -4010,12 +4010,12 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int receiver_amount_sat;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int payer_amount_sat;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
@@ -4038,7 +4038,7 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
 
 final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int payer_amount_sat;
 
   @ffi.Uint64()
   external int fees_sat;

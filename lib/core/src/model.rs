@@ -201,12 +201,12 @@ pub struct SendPaymentResponse {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
-    pub amount_sat: u64,
+    pub receiver_amount_sat: u64,
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainResponse {
-    pub amount_sat: u64,
+    pub receiver_amount_sat: u64,
     pub fees_sat: u64,
 }
 
@@ -218,12 +218,12 @@ pub struct PayOnchainRequest {
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainRequest {
-    pub amount_sat: u64,
+    pub payer_amount_sat: u64,
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainResponse {
-    pub amount_sat: u64,
+    pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
 
