@@ -8,7 +8,19 @@
 
 import React, { useState } from "react"
 import { SafeAreaView, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native"
-import { addEventListener, connect, defaultConfig, getInfo, Network, removeEventListener } from "@breeztech/react-native-breez-liquid-sdk"
+import {
+    addEventListener,
+    connect,
+    defaultConfig,
+    getInfo,
+    listPayments,
+    Network,
+    removeEventListener,
+    prepareReceivePayment,
+    prepareSendPayment,
+    receivePayment,
+    sendPayment
+} from "@breeztech/react-native-breez-liquid-sdk"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 
@@ -39,9 +51,11 @@ const App = () => {
 
     React.useEffect(() => {
         let listenerId = null
+        let bolt11Invoice = null
 
         const asyncFn = async () => {
             try {
+                // Get the mnemonic
                 let mnemonic = await getSecureItem(MNEMONIC_STORE)
 
                 if (mnemonic == null) {
@@ -49,17 +63,50 @@ const App = () => {
                     setSecureItem(MNEMONIC_STORE, mnemonic)
                 }
 
-                const config = await defaultConfig(Network.TESTNET)
+                // Connect using the config
+                const config = await defaultConfig(Network.MAINNET)
                 addLine("defaultConfig", JSON.stringify(config))
 
                 await connect({ config, mnemonic })
                 addLine("connect", null)
 
+                // Get wallet info
+                let getInfoRes = await getInfo()
+                addLine("getInfo", JSON.stringify(getInfoRes))
+
+                // Historical payments list
+                let payments = listPayments()
+
+                // Register for events
                 listenerId = await addEventListener(eventHandler)
                 addLine("addEventListener", listenerId)
 
-                let walletInfo = await getInfo()
-                addLine("getInfo", JSON.stringify(walletInfo))
+                /* Receive lightning payment */
+
+                let prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000 })
+                addLine("prepareReceivePayment", JSON.stringify(prepareReceiveRes))
+                // Get the fees required for this payment
+                addLine("Payment fees", `${prepareReceiveRes.feesSat}`)
+
+                let receivePaymentRes = await receivePayment(prepareReceiveRes)
+                addLine("receivePayment", JSON.stringify(receivePaymentRes))
+                // Wait for payer to pay.... once successfully paid an event of `paymentSucceeded` will be emitted.
+                addLine("Bolt11 invoice", `${receivePaymentRes.invoice}`)
+
+                /* Send lightning payment */
+
+                // Set the `bolt11Invoice` to enable sending in the example app
+                if (bolt11Invoice) {
+                    let prepareSendRes = await prepareSendPayment({ invoice: bolt11Invoice })
+                    addLine("prepareSendPayment", JSON.stringify(prepareSendRes))
+                    // Get the fees required for this payment
+                    addLine("Payment fees", `${prepareSendRes.feesSat}`)
+
+                    let sendPaymentRes = await sendPayment(prepareSendRes)
+                    addLine("sendPayment", JSON.stringify(sendPaymentRes))
+                    // Once successfully paid an event of `paymentSucceeded` will be emitted.
+                    addLine("Payment", `${sendPaymentRes.payment}`)
+                }
             } catch (e) {
                 addLine("error", e.toString())
                 console.log(`Error: ${JSON.stringify(e)}`)
