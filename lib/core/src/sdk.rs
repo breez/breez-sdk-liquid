@@ -1208,8 +1208,8 @@ impl LiquidSdk {
         Ok(PrepareReceiveOnchainResponse {
             amount_sat,
             fees_sat: pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat,
-            min_payer_amount_sat: pair.limits.maximal,
-            max_payer_amount_sat: pair.limits.minimal,
+            min_payer_amount_sat: pair.limits.minimal,
+            max_payer_amount_sat: pair.limits.maximal,
         })
     }
 
