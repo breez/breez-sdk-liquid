@@ -432,12 +432,12 @@ impl ChainSwap {
         let our_pubkey = self.get_claim_keypair()?.public_key();
         let swap_script = match self.direction {
             Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
-                Side::To,
+                Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
             Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
-                Side::To,
+                Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
@@ -450,12 +450,12 @@ impl ChainSwap {
         let our_pubkey = self.get_refund_keypair()?.public_key();
         let swap_script = match self.direction {
             Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
-                Side::From,
+                Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
             Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
-                Side::From,
+                Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),

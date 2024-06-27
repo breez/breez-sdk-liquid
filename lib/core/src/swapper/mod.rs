@@ -273,12 +273,12 @@ impl BoltzSwapper {
 
         let claim_tx_details = self.client.get_chain_claim_tx_details(&swap.id)?;
         match swap.direction {
-            Direction::Incoming => refund_tx_wrapper.as_bitcoin_tx()?.partial_sig(
+            Direction::Incoming => refund_tx_wrapper.as_bitcoin_tx()?.partial_sign(
                 &refund_keypair,
                 &claim_tx_details.pub_nonce,
                 &claim_tx_details.transaction_hash,
             ),
-            Direction::Outgoing => refund_tx_wrapper.as_liquid_tx()?.partial_sig(
+            Direction::Outgoing => refund_tx_wrapper.as_liquid_tx()?.partial_sign(
                 &refund_keypair,
                 &claim_tx_details.pub_nonce,
                 &claim_tx_details.transaction_hash,
@@ -670,7 +670,7 @@ impl Swapper for BoltzSwapper {
 
         self.validate_send_swap_preimage(swap_id, &swap.invoice, &claim_tx_response.preimage)?;
 
-        let (partial_sig, pub_nonce) = refund_tx.partial_sig(
+        let (partial_sig, pub_nonce) = refund_tx.partial_sign(
             &keypair,
             &claim_tx_response.pub_nonce,
             &claim_tx_response.transaction_hash,
