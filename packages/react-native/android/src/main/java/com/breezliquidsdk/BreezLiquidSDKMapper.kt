@@ -134,7 +134,7 @@ fun asConfig(config: ReadableMap): Config? {
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
-    val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate")
+    val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate").toFloat()
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,
@@ -2331,6 +2331,7 @@ fun pushToMap(
         is Boolean -> map.putBoolean(key, value)
         is Byte -> map.putInt(key, value.toInt())
         is Double -> map.putDouble(key, value)
+        is Float -> map.putDouble(key, value.toDouble())
         is Int -> map.putInt(key, value)
         is Long -> map.putDouble(key, value.toDouble())
         is ReadableArray -> map.putArray(key, value)
