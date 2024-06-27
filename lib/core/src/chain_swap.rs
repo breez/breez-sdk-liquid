@@ -2,8 +2,9 @@ use std::time::Duration;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use boltz_client::swaps::boltzv2;
+use boltz_client::swaps::boltzv2::{self, SwapUpdateTxDetails};
 use boltz_client::swaps::{boltz::ChainSwapStates, boltzv2::CreateChainResponse};
+use boltz_client::Secp256k1;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::Transaction;
 use tokio::sync::{broadcast, watch, Mutex};
@@ -199,31 +200,75 @@ impl ChainSwapStateHandler {
                 Ok(())
             }
 
-            // Boltz announced the server lockup tx is in the mempool or has been confirmed.
-            // If it's a zero conf swap or confirmed, proceed to cooperative claim
-            ChainSwapStates::TransactionServerMempool
-            | ChainSwapStates::TransactionServerConfirmed => {
+            // Boltz announced the server lockup tx is in the mempool.
+            // Verify the transaction and claim if zero-conf
+            ChainSwapStates::TransactionServerMempool => {
                 match swap.claim_tx_id.clone() {
-                    None => match (swap.accept_zero_conf, swap_state) {
-                        (true, _) | (_, ChainSwapStates::TransactionServerConfirmed) => {
-                            if let Some(transaction) = update.transaction.clone() {
-                                self.update_swap_info(
-                                    id,
-                                    Pending,
-                                    Some(&transaction.id),
-                                    None,
-                                    None,
-                                    None,
-                                )
-                                .await?;
-                            }
+                    None => {
+                        let Some(transaction) = update.transaction.clone() else {
+                            return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                        };
+
+                        if let Err(e) = self.verify_lockup_tx(swap, &transaction, false).await {
+                            warn!("Server lockup mempool transaction for incoming Chain Swap {} could not be verified. txid: {}, err: {}",
+                                swap.id,
+                                transaction.id,
+                                e);
+                            return Err(anyhow!(
+                                "Could not verify transaction {}: {e}",
+                                transaction.id
+                            ));
+                        }
+
+                        info!("Server lockup mempool transaction was verified for incoming Chain Swap {}", swap.id);
+                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
+                            .await?;
+
+                        if swap.accept_zero_conf {
                             self.claim(swap).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
                         }
-                        _ => info!("Waiting for server lockup confirmation for Chain Swap {id}"),
-                    },
+                    }
+                    Some(claim_tx_id) => {
+                        warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")
+                    }
+                };
+                Ok(())
+            }
+
+            // Boltz announced the server lockup tx has been confirmed.
+            // Verify the transaction and claim
+            ChainSwapStates::TransactionServerConfirmed => {
+                match swap.claim_tx_id.clone() {
+                    None => {
+                        let Some(transaction) = update.transaction.clone() else {
+                            return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                        };
+
+                        if let Err(e) = self.verify_lockup_tx(swap, &transaction, true).await {
+                            warn!("Server lockup transaction for incoming Chain Swap {} could not be verified. txid: {}, err: {}",
+                                swap.id,
+                                transaction.id,
+                                e);
+                            return Err(anyhow!(
+                                "Could not verify transaction {}: {e}",
+                                transaction.id
+                            ));
+                        }
+
+                        info!(
+                            "Server lockup transaction was verified for incoming Chain Swap {}",
+                            swap.id
+                        );
+                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
+                            .await?;
+                        self.claim(swap).await.map_err(|e| {
+                            error!("Could not cooperate Chain Swap {id} claim: {e}");
+                            anyhow!("Could not post claim details. Err: {e:?}")
+                        })?;
+                    }
                     Some(claim_tx_id) => {
                         warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
@@ -338,31 +383,75 @@ impl ChainSwapStateHandler {
                 Ok(())
             }
 
-            // Boltz announced the server lockup tx is in the mempool or has been confirmed.
-            // If it's a zero conf swap or confirmed, proceed to cooperative claim
-            ChainSwapStates::TransactionServerMempool
-            | ChainSwapStates::TransactionServerConfirmed => {
+            // Boltz announced the server lockup tx is in the mempool.
+            // Verify the transaction and claim if zero-conf
+            ChainSwapStates::TransactionServerMempool => {
                 match swap.claim_tx_id.clone() {
-                    None => match (swap.accept_zero_conf, swap_state) {
-                        (true, _) | (_, ChainSwapStates::TransactionServerConfirmed) => {
-                            if let Some(transaction) = update.transaction.clone() {
-                                self.update_swap_info(
-                                    id,
-                                    Pending,
-                                    Some(&transaction.id),
-                                    None,
-                                    None,
-                                    None,
-                                )
-                                .await?;
-                            }
+                    None => {
+                        let Some(transaction) = update.transaction.clone() else {
+                            return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                        };
+
+                        if let Err(e) = self.verify_lockup_tx(swap, &transaction, false).await {
+                            warn!("Server lockup mempool transaction for outgoing Chain Swap {} could not be verified. txid: {}, err: {}",
+                                swap.id,
+                                transaction.id,
+                                e);
+                            return Err(anyhow!(
+                                "Could not verify transaction {}: {e}",
+                                transaction.id
+                            ));
+                        }
+
+                        info!("Server lockup mempool transaction was verified for outgoing Chain Swap {}", swap.id);
+                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
+                            .await?;
+
+                        if swap.accept_zero_conf {
                             self.claim(swap).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
                         }
-                        _ => info!("Waiting for server lockup confirmation for Chain Swap {id}"),
-                    },
+                    }
+                    Some(claim_tx_id) => {
+                        warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")
+                    }
+                };
+                Ok(())
+            }
+
+            // Boltz announced the server lockup tx has been confirmed.
+            // Verify the transaction and claim
+            ChainSwapStates::TransactionServerConfirmed => {
+                match swap.claim_tx_id.clone() {
+                    None => {
+                        let Some(transaction) = update.transaction.clone() else {
+                            return Err(anyhow!("Unexpected payload from Boltz status stream"));
+                        };
+
+                        if let Err(e) = self.verify_lockup_tx(swap, &transaction, true).await {
+                            warn!("Server lockup transaction for outgoing Chain Swap {} could not be verified. txid: {}, err: {}",
+                                swap.id,
+                                transaction.id,
+                                e);
+                            return Err(anyhow!(
+                                "Could not verify transaction {}: {e}",
+                                transaction.id
+                            ));
+                        }
+
+                        info!(
+                            "Server lockup transaction was verified for outgoing Chain Swap {}",
+                            swap.id
+                        );
+                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
+                            .await?;
+                        self.claim(swap).await.map_err(|e| {
+                            error!("Could not cooperate Chain Swap {id} claim: {e}");
+                            anyhow!("Could not post claim details. Err: {e:?}")
+                        })?;
+                    }
                     Some(claim_tx_id) => {
                         warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
@@ -696,6 +785,119 @@ impl ChainSwapStateHandler {
 
             (_, Failed) => Ok(()),
         }
+    }
+
+    async fn verify_lockup_tx(
+        &self,
+        chain_swap: &ChainSwap,
+        swap_update_tx: &SwapUpdateTxDetails,
+        verify_confirmation: bool,
+    ) -> Result<()> {
+        match chain_swap.direction {
+            Direction::Incoming => {
+                self.verify_incoming_lockup_tx(chain_swap, swap_update_tx, verify_confirmation)
+                    .await
+            }
+            Direction::Outgoing => {
+                self.verify_outgoing_lockup_tx(chain_swap, swap_update_tx, verify_confirmation)
+                    .await
+            }
+        }
+    }
+
+    async fn verify_incoming_lockup_tx(
+        &self,
+        chain_swap: &ChainSwap,
+        swap_update_tx: &SwapUpdateTxDetails,
+        verify_confirmation: bool,
+    ) -> Result<()> {
+        let swap_script = chain_swap.get_claim_swap_script()?;
+        let claim_details = chain_swap.get_boltz_create_response()?.claim_details;
+        // Verify transaction
+        let liquid_swap_script = swap_script.as_liquid_script()?;
+        let address = liquid_swap_script
+            .to_address(self.config.network.into())
+            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let tx = self
+            .liquid_chain_service
+            .lock()
+            .await
+            .verify_tx(
+                &address,
+                &swap_update_tx.id,
+                &swap_update_tx.hex,
+                verify_confirmation,
+            )
+            .await?;
+        // Verify RBF
+        let rbf_explicit = tx.input.iter().any(|tx_in| tx_in.sequence.is_rbf());
+        if !verify_confirmation && rbf_explicit {
+            return Err(anyhow!("Transaction signals RBF"));
+        }
+        // Verify amount
+        let secp = Secp256k1::new();
+        let to_address_output = tx
+            .output
+            .iter()
+            .filter(|tx_out| tx_out.script_pubkey == address.script_pubkey());
+        let mut value = 0;
+        for tx_out in to_address_output {
+            value += tx_out
+                .unblind(&secp, liquid_swap_script.blinding_key.secret_key())?
+                .value;
+        }
+        if value < claim_details.amount as u64 {
+            return Err(anyhow!(
+                "Transaction value {value} sats is less than {} sats",
+                claim_details.amount
+            ));
+        }
+        Ok(())
+    }
+
+    async fn verify_outgoing_lockup_tx(
+        &self,
+        chain_swap: &ChainSwap,
+        swap_update_tx: &SwapUpdateTxDetails,
+        verify_confirmation: bool,
+    ) -> Result<()> {
+        let swap_script = chain_swap.get_claim_swap_script()?;
+        let claim_details = chain_swap.get_boltz_create_response()?.claim_details;
+        // Verify transaction
+        let address = swap_script
+            .as_bitcoin_script()?
+            .to_address(self.config.network.as_bitcoin_chain())
+            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let tx = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .verify_tx(
+                &address,
+                &swap_update_tx.id,
+                &swap_update_tx.hex,
+                verify_confirmation,
+            )
+            .await?;
+        // Verify RBF
+        let rbf_explicit = tx.input.iter().any(|input| input.sequence.is_rbf());
+        if !verify_confirmation && rbf_explicit {
+            return Err(anyhow!("Transaction signals RBF"));
+        }
+        // Verify amount
+        let value: u64 = tx
+            .output
+            .iter()
+            .filter(|tx_out| tx_out.script_pubkey == address.script_pubkey())
+            .map(|tx_out| tx_out.value.to_sat())
+            .sum();
+        if value < claim_details.amount as u64 {
+            return Err(anyhow!(
+                "Transaction value {value} sats is less than {} sats",
+                claim_details.amount
+            ));
+        }
+        Ok(())
     }
 }
 

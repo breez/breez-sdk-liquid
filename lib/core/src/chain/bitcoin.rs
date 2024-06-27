@@ -1,20 +1,22 @@
-use std::collections::HashMap;
+use std::{thread, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use async_trait::async_trait;
+use boltz_client::{Address, ToHex};
 use electrum_client::{Client, ElectrumApi, GetBalanceRes, HeaderNotification};
+use log::info;
 use lwk_wollet::{
     bitcoin::{
-        block::Header,
         consensus::{deserialize, serialize},
-        BlockHash, Script, Transaction, Txid,
+        Script, Transaction, Txid,
     },
+    hashes::{sha256, Hash},
     ElectrumOptions, ElectrumUrl, Error, History,
 };
 
-type Height = u32;
-
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
+#[async_trait]
 pub trait BitcoinChainService: Send + Sync {
     /// Get the blockchain latest block
     fn tip(&mut self) -> Result<HeaderNotification>;
@@ -25,20 +27,20 @@ pub trait BitcoinChainService: Send + Sync {
     /// Get a list of transactions
     fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
-    /// Get a list of block headers
-    ///
-    /// Optionally pass the blockhash if already known
-    fn get_headers(
-        &self,
-        heights: &[Height],
-        height_blockhash: &HashMap<Height, BlockHash>,
-    ) -> Result<Vec<Header>>;
-
-    /// Get the transactions involved in a list of scripts
-    fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+    /// Get the transactions involved for a script
+    fn get_script_history(&self, script: &Script) -> Result<Vec<History>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
+
+    /// Verify that a transaction appears in the address script history
+    async fn verify_tx(
+        &self,
+        address: &Address,
+        tx_id: &str,
+        tx_hex: &str,
+        verify_confirmation: bool,
+    ) -> Result<Transaction>;
 }
 
 pub(crate) struct ElectrumClient {
@@ -58,8 +60,38 @@ impl ElectrumClient {
 
         Ok(Self { client, tip })
     }
+
+    async fn get_script_history_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<Vec<History>> {
+        let script_hash = sha256::Hash::hash(script.as_bytes())
+            .to_byte_array()
+            .to_hex();
+        info!("Fetching script history for {}", script_hash);
+        let mut script_history = vec![];
+
+        let mut retry = 0;
+        while retry <= retries {
+            script_history = self.get_script_history(script)?;
+            match script_history.is_empty() {
+                true => {
+                    retry += 1;
+                    info!(
+                        "Script history for {} got zero transactions, retrying in {} seconds...",
+                        script_hash, retry
+                    );
+                    thread::sleep(Duration::from_secs(retry));
+                }
+                false => break,
+            }
+        }
+        Ok(script_history)
+    }
 }
 
+#[async_trait]
 impl BitcoinChainService for ElectrumClient {
     fn tip(&mut self) -> Result<HeaderNotification> {
         let mut maybe_popped_header = None;
@@ -101,29 +133,56 @@ impl BitcoinChainService for ElectrumClient {
         Ok(result)
     }
 
-    fn get_headers(
-        &self,
-        heights: &[Height],
-        _: &HashMap<Height, BlockHash>,
-    ) -> Result<Vec<Header>> {
-        let mut result = vec![];
-        for header in self.client.batch_block_header_raw(heights)? {
-            let header: Header = deserialize(&header)?;
-            result.push(header);
-        }
-        Ok(result)
-    }
-
-    fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
         Ok(self
             .client
-            .batch_script_get_history(scripts)?
+            .script_get_history(script)?
             .into_iter()
-            .map(|e| e.into_iter().map(Into::into).collect())
+            .map(Into::into)
             .collect())
     }
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
         Ok(self.client.script_get_balance(script)?)
+    }
+
+    async fn verify_tx(
+        &self,
+        address: &Address,
+        tx_id: &str,
+        tx_hex: &str,
+        verify_confirmation: bool,
+    ) -> Result<Transaction> {
+        let script_pubkey = address.script_pubkey();
+        let script = script_pubkey.as_script();
+
+        let script_history = self.get_script_history_with_retry(script, 5).await?;
+        let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
+
+        match lockup_tx_history {
+            Some(history) => {
+                info!("Bitcoin transaction found, verifying transaction content...");
+                let tx: Transaction = deserialize(&hex::decode(tx_hex)?)?;
+                if !tx.txid().to_hex().eq(&history.txid.to_hex()) {
+                    return Err(anyhow!(
+                        "Bitcoin transaction id and hex do not match: {} vs {}",
+                        tx_id,
+                        tx.txid().to_hex()
+                    ));
+                }
+
+                if verify_confirmation && history.height <= 0 {
+                    return Err(anyhow!(
+                        "Bitcoin transaction was not confirmed, txid={} waiting for confirmation",
+                        tx_id,
+                    ));
+                }
+                Ok(tx)
+            }
+            None => Err(anyhow!(
+                "Bitcoin transaction was not found, txid={} waiting for broadcast",
+                tx_id,
+            )),
+        }
     }
 }

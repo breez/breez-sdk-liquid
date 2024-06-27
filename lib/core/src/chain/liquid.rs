@@ -1,17 +1,22 @@
+use std::{str::FromStr, thread, time::Duration};
+
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
 use log::info;
+use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
-    elements::{pset::serialize::Serialize, BlockHash, Script, Transaction, Txid},
+    elements::{pset::serialize::Serialize, Address, BlockHash, Script, Transaction, Txid},
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
 use reqwest::Response;
 use serde::Deserialize;
-use std::str::FromStr;
 
-use crate::model::{Config, LiquidNetwork};
+use crate::{
+    model::{Config, LiquidNetwork},
+    utils,
+};
 
 const LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 
@@ -28,6 +33,15 @@ pub trait LiquidChainService: Send + Sync {
 
     /// Get the transactions involved in a list of scripts including lowball
     async fn get_script_history(&self, scripts: &Script) -> Result<Vec<History>>;
+
+    /// Verify that a transaction appears in the address script history
+    async fn verify_tx(
+        &self,
+        address: &Address,
+        tx_id: &str,
+        tx_hex: &str,
+        verify_confirmation: bool,
+    ) -> Result<Transaction>;
 }
 
 #[derive(Deserialize)]
@@ -55,6 +69,35 @@ impl HybridLiquidChainService {
             electrum_client,
             network: config.network,
         })
+    }
+
+    async fn get_script_history_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<Vec<History>> {
+        let script_hash = sha256::Hash::hash(script.as_bytes())
+            .to_byte_array()
+            .to_hex();
+        info!("Fetching script history for {}", script_hash);
+        let mut script_history = vec![];
+
+        let mut retry = 0;
+        while retry <= retries {
+            script_history = self.get_script_history(script).await?;
+            match script_history.is_empty() {
+                true => {
+                    retry += 1;
+                    info!(
+                        "Script history for {} got zero transactions, retrying in {} seconds...",
+                        script_hash, retry
+                    );
+                    thread::sleep(Duration::from_secs(retry));
+                }
+                false => break,
+            }
+        }
+        Ok(script_history)
     }
 }
 
@@ -109,6 +152,48 @@ impl LiquidChainService for HybridLiquidChainService {
             }
         }
     }
+
+    async fn verify_tx(
+        &self,
+        address: &Address,
+        tx_id: &str,
+        tx_hex: &str,
+        verify_confirmation: bool,
+    ) -> Result<Transaction> {
+        let script = Script::from_hex(
+            hex::encode(address.to_unconfidential().script_pubkey().as_bytes()).as_str(),
+        )
+        .map_err(|e| anyhow!("Failed to get script from address {e:?}"))?;
+
+        let script_history = self.get_script_history_with_retry(&script, 5).await?;
+        let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
+
+        match lockup_tx_history {
+            Some(history) => {
+                info!("Liquid transaction found, verifying transaction content...");
+                let tx: Transaction = utils::deserialize_tx_hex(tx_hex)?;
+                if !tx.txid().to_hex().eq(&history.txid.to_hex()) {
+                    return Err(anyhow!(
+                        "Liquid transaction id and hex do not match: {} vs {}",
+                        tx_id,
+                        tx.txid().to_hex()
+                    ));
+                }
+
+                if verify_confirmation && history.height <= 0 {
+                    return Err(anyhow!(
+                        "Liquid transaction was not confirmed, txid={} waiting for confirmation",
+                        tx_id,
+                    ));
+                }
+                Ok(tx)
+            }
+            None => Err(anyhow!(
+                "Liquid transaction was not found, txid={} waiting for broadcast",
+                tx_id,
+            )),
+        }
+    }
 }
 
 async fn get_with_retry(url: &str, retries: usize) -> Result<Response> {
@@ -125,7 +210,7 @@ async fn get_with_retry(url: &str, retries: usize) -> Result<Response> {
             }
             let secs = 1 << attempt;
 
-            std::thread::sleep(std::time::Duration::from_secs(secs));
+            thread::sleep(Duration::from_secs(secs));
         } else {
             return Ok(response);
         }
