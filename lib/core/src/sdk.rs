@@ -1015,7 +1015,7 @@ impl LiquidSdk {
                 _ = &mut timeout_fut => match maybe_payment {
                     Some(payment) => return Ok(payment),
                     None => {
-                        debug!("Timeout occured without payment, set swap to timed out");
+                        debug!("Timeout occurred without payment, set swap to timed out");
                         match swap {
                             Swap::Send(_) => self.send_swap_state_handler.update_swap_info(&swap_id, TimedOut, None, None, None).await?,
                             Swap::Chain(_) => self.chain_swap_state_handler.update_swap_info(&swap_id, TimedOut, None, None, None, None).await?,
