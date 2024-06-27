@@ -81,6 +81,10 @@ init *args:
 	melos bootstrap {{args}}
 	melos pub-upgrade
 
+# Install Breez Liquid SDK dependencies
+init-sdk:
+	brew install protobuf
+
 # (melos) Generate docs for packages in workspace
 docs:
 	melos docs
