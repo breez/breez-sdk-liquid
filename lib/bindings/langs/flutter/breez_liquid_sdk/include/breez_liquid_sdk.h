@@ -117,6 +117,8 @@ typedef struct wire_cst_prepare_send_request {
 typedef struct wire_cst_prepare_receive_onchain_response {
   uint64_t amount_sat;
   uint64_t fees_sat;
+  uint64_t min_payer_amount_sat;
+  uint64_t max_payer_amount_sat;
 } wire_cst_prepare_receive_onchain_response;
 
 typedef struct wire_cst_receive_onchain_request {

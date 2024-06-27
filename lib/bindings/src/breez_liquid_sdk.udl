@@ -356,6 +356,8 @@ dictionary PrepareReceiveOnchainRequest {
 dictionary PrepareReceiveOnchainResponse {
     u64 amount_sat;
     u64 fees_sat;
+    u64 min_payer_amount_sat;
+    u64 max_payer_amount_sat;
 };
 
 dictionary ReceiveOnchainRequest {

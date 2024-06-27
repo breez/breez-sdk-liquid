@@ -2152,6 +2152,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PrepareReceiveOnchainResponse apiObj, wire_cst_prepare_receive_onchain_response wireObj) {
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.min_payer_amount_sat = cst_encode_u_64(apiObj.minPayerAmountSat);
+    wireObj.max_payer_amount_sat = cst_encode_u_64(apiObj.maxPayerAmountSat);
   }
 
   @protected
@@ -4042,6 +4044,12 @@ final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int fees_sat;
+
+  @ffi.Uint64()
+  external int min_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int max_payer_amount_sat;
 }
 
 final class wire_cst_receive_onchain_request extends ffi.Struct {

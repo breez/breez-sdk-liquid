@@ -2025,10 +2025,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceiveOnchainResponse dco_decode_prepare_receive_onchain_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return PrepareReceiveOnchainResponse(
       amountSat: dco_decode_u_64(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
+      minPayerAmountSat: dco_decode_u_64(arr[2]),
+      maxPayerAmountSat: dco_decode_u_64(arr[3]),
     );
   }
 
@@ -3434,7 +3436,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
-    return PrepareReceiveOnchainResponse(amountSat: var_amountSat, feesSat: var_feesSat);
+    var var_minPayerAmountSat = sse_decode_u_64(deserializer);
+    var var_maxPayerAmountSat = sse_decode_u_64(deserializer);
+    return PrepareReceiveOnchainResponse(
+        amountSat: var_amountSat,
+        feesSat: var_feesSat,
+        minPayerAmountSat: var_minPayerAmountSat,
+        maxPayerAmountSat: var_maxPayerAmountSat);
   }
 
   @protected
@@ -4756,6 +4764,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_u_64(self.minPayerAmountSat, serializer);
+    sse_encode_u_64(self.maxPayerAmountSat, serializer);
   }
 
   @protected

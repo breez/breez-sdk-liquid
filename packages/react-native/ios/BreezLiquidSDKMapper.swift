@@ -1368,10 +1368,18 @@ enum BreezLiquidSDKMapper {
         guard let feesSat = prepareReceiveOnchainResponse["feesSat"] as? UInt64 else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareReceiveOnchainResponse"))
         }
+        guard let minPayerAmountSat = prepareReceiveOnchainResponse["minPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minPayerAmountSat", typeName: "PrepareReceiveOnchainResponse"))
+        }
+        guard let maxPayerAmountSat = prepareReceiveOnchainResponse["maxPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSat", typeName: "PrepareReceiveOnchainResponse"))
+        }
 
         return PrepareReceiveOnchainResponse(
             amountSat: amountSat,
-            feesSat: feesSat
+            feesSat: feesSat,
+            minPayerAmountSat: minPayerAmountSat,
+            maxPayerAmountSat: maxPayerAmountSat
         )
     }
 
@@ -1379,6 +1387,8 @@ enum BreezLiquidSDKMapper {
         return [
             "amountSat": prepareReceiveOnchainResponse.amountSat,
             "feesSat": prepareReceiveOnchainResponse.feesSat,
+            "minPayerAmountSat": prepareReceiveOnchainResponse.minPayerAmountSat,
+            "maxPayerAmountSat": prepareReceiveOnchainResponse.maxPayerAmountSat,
         ]
     }
 

@@ -1161,6 +1161,8 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
         crate::model::PrepareReceiveOnchainResponse {
             amount_sat: self.amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
+            min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
+            max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
         }
     }
 }
@@ -1920,6 +1922,8 @@ impl NewWithNullPtr for wire_cst_prepare_receive_onchain_response {
         Self {
             amount_sat: Default::default(),
             fees_sat: Default::default(),
+            min_payer_amount_sat: Default::default(),
+            max_payer_amount_sat: Default::default(),
         }
     }
 }
@@ -3558,6 +3562,8 @@ pub struct wire_cst_prepare_receive_onchain_request {
 pub struct wire_cst_prepare_receive_onchain_response {
     amount_sat: u64,
     fees_sat: u64,
+    min_payer_amount_sat: u64,
+    max_payer_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

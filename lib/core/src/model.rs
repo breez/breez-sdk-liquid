@@ -225,6 +225,10 @@ pub struct PrepareReceiveOnchainRequest {
 pub struct PrepareReceiveOnchainResponse {
     pub amount_sat: u64,
     pub fees_sat: u64,
+    /// Minimum amount of sats the Payer should send
+    pub min_payer_amount_sat: u64,
+    /// Maximum amount of sats the Payer should send
+    pub max_payer_amount_sat: u64,
 }
 
 #[derive(Debug, Serialize)]

@@ -201,6 +201,8 @@ export interface PrepareReceiveOnchainRequest {
 export interface PrepareReceiveOnchainResponse {
     amountSat: number
     feesSat: number
+    minPayerAmountSat: number
+    maxPayerAmountSat: number
 }
 
 export interface PrepareReceiveRequest {

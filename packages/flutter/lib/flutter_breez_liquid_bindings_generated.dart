@@ -1354,6 +1354,12 @@ final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int fees_sat;
+
+  @ffi.Uint64()
+  external int min_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int max_payer_amount_sat;
 }
 
 final class wire_cst_receive_onchain_request extends ffi.Struct {

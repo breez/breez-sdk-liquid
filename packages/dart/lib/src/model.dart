@@ -486,13 +486,22 @@ class PrepareReceiveOnchainResponse {
   final BigInt amountSat;
   final BigInt feesSat;
 
+  /// Minimum amount of sats the Payer should send
+  final BigInt minPayerAmountSat;
+
+  /// Maximum amount of sats the Payer should send
+  final BigInt maxPayerAmountSat;
+
   const PrepareReceiveOnchainResponse({
     required this.amountSat,
     required this.feesSat,
+    required this.minPayerAmountSat,
+    required this.maxPayerAmountSat,
   });
 
   @override
-  int get hashCode => amountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      amountSat.hashCode ^ feesSat.hashCode ^ minPayerAmountSat.hashCode ^ maxPayerAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -500,7 +509,9 @@ class PrepareReceiveOnchainResponse {
       other is PrepareReceiveOnchainResponse &&
           runtimeType == other.runtimeType &&
           amountSat == other.amountSat &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSat == other.maxPayerAmountSat;
 }
 
 class PrepareReceiveRequest {

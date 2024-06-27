@@ -2804,9 +2804,13 @@ impl SseDecode for crate::model::PrepareReceiveOnchainResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_minPayerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_maxPayerAmountSat = <u64>::sse_decode(deserializer);
         return crate::model::PrepareReceiveOnchainResponse {
             amount_sat: var_amountSat,
             fees_sat: var_feesSat,
+            min_payer_amount_sat: var_minPayerAmountSat,
+            max_payer_amount_sat: var_maxPayerAmountSat,
         };
     }
 }
@@ -4217,6 +4221,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveOnchainRespon
         [
             self.amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.min_payer_amount_sat.into_into_dart().into_dart(),
+            self.max_payer_amount_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5586,6 +5592,8 @@ impl SseEncode for crate::model::PrepareReceiveOnchainResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <u64>::sse_encode(self.min_payer_amount_sat, serializer);
+        <u64>::sse_encode(self.max_payer_amount_sat, serializer);
     }
 }
 

@@ -1147,6 +1147,8 @@ fun asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: ReadableMap):
             arrayOf(
                 "amountSat",
                 "feesSat",
+                "minPayerAmountSat",
+                "maxPayerAmountSat",
             ),
         )
     ) {
@@ -1154,9 +1156,13 @@ fun asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: ReadableMap):
     }
     val amountSat = prepareReceiveOnchainResponse.getDouble("amountSat").toULong()
     val feesSat = prepareReceiveOnchainResponse.getDouble("feesSat").toULong()
+    val minPayerAmountSat = prepareReceiveOnchainResponse.getDouble("minPayerAmountSat").toULong()
+    val maxPayerAmountSat = prepareReceiveOnchainResponse.getDouble("maxPayerAmountSat").toULong()
     return PrepareReceiveOnchainResponse(
         amountSat,
         feesSat,
+        minPayerAmountSat,
+        maxPayerAmountSat,
     )
 }
 
@@ -1164,6 +1170,8 @@ fun readableMapOf(prepareReceiveOnchainResponse: PrepareReceiveOnchainResponse):
     readableMapOf(
         "amountSat" to prepareReceiveOnchainResponse.amountSat,
         "feesSat" to prepareReceiveOnchainResponse.feesSat,
+        "minPayerAmountSat" to prepareReceiveOnchainResponse.minPayerAmountSat,
+        "maxPayerAmountSat" to prepareReceiveOnchainResponse.maxPayerAmountSat,
     )
 
 fun asPrepareReceiveOnchainResponseList(arr: ReadableArray): List<PrepareReceiveOnchainResponse> {
