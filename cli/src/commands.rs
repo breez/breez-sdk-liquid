@@ -5,9 +5,7 @@ use std::thread;
 use std::time::Duration;
 
 use anyhow::Result;
-use breez_liquid_sdk::model::*;
-use breez_liquid_sdk::sdk::LiquidSdk;
-use breez_liquid_sdk::*;
+use breez_liquid_sdk::prelude::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};

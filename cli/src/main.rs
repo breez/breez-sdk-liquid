@@ -4,10 +4,7 @@ mod persist;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
-use breez_liquid_sdk::{
-    model::*,
-    sdk::{LiquidSdk, DEFAULT_DATA_DIR},
-};
+use breez_liquid_sdk::prelude::*;
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};

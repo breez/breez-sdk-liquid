@@ -18,3 +18,11 @@ pub(crate) mod utils;
 pub(crate) mod wallet;
 
 pub use sdk_common::prelude::*;
+
+#[allow(ambiguous_glob_reexports)]
+#[rustfmt::skip]
+pub mod prelude {
+    pub use crate::*;
+    pub use crate::model::*;
+    pub use crate::sdk::*;
+}
