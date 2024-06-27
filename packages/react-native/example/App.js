@@ -85,7 +85,7 @@ const App = () => {
 
                 let prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000 })
                 addLine("prepareReceivePayment", JSON.stringify(prepareReceiveRes))
-                // Get the fees requred for this payment
+                // Get the fees required for this payment
                 addLine("Payment fees", `${prepareReceiveRes.feesSat}`)
 
                 let receivePaymentRes = await receivePayment(prepareReceiveRes)
@@ -99,7 +99,7 @@ const App = () => {
                 if (bolt11Invoice) {
                     let prepareSendRes = await prepareSendPayment({ invoice: bolt11Invoice })
                     addLine("prepareSendPayment", JSON.stringify(prepareSendRes))
-                    // Get the fees requred for this payment
+                    // Get the fees required for this payment
                     addLine("Payment fees", `${prepareSendRes.feesSat}`)
 
                     let sendPaymentRes = await sendPayment(prepareSendRes)
