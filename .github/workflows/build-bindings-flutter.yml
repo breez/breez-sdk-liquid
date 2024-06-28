@@ -83,7 +83,7 @@ jobs:
       run: |
         mkdir -p dist
         cp lib/bindings/langs/flutter/platform-build/android.tar.gz dist
-        cp lib/bindings/langs/flutter/platform-build/breez_liquid_sdk.xcframework.zip dist
+        cp lib/bindings/langs/flutter/platform-build/breez_sdk_liquid.xcframework.zip dist
         cp lib/bindings/langs/flutter/platform-build/other.tar.gz dist
 
     - name: Archive Flutter bindings
@@ -100,7 +100,7 @@ jobs:
       - name: Create dummy files
         run: |
           touch android.tar.gz
-          touch breez_liquid_sdk.xcframework.zip
+          touch breez_sdk_liquid.xcframework.zip
           touch other.tar.gz
 
       - name: Archive Flutter dummy bindings

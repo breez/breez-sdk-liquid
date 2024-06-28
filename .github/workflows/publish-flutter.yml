@@ -59,7 +59,7 @@ jobs:
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/lib .
-          cp -r ../build/lib/bindings/langs/flutter/breez_liquid_sdk/include/breez_liquid_sdk.h ios/Classes
+          cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquid/include/breez_sdk_liquid.h ios/Classes
           cp ../build/packages/flutter/analysis_options.yaml .
           cp ../build/packages/flutter/pubspec.yaml .
           cp ../build/packages/flutter/pubspec_overrides.yaml .
@@ -117,7 +117,7 @@ jobs:
           repository: breez/breez-liquid-sdk-flutter
           files: |
             bindings/android.tar.gz
-            bindings/breez_liquid_sdk.xcframework.zip
+            bindings/breez_sdk_liquid.xcframework.zip
             bindings/other.tar.gz
           tag_name: v${{ inputs.package-version || '0.0.1' }}
           generate_release_notes: false

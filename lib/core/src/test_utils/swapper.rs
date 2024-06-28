@@ -13,7 +13,7 @@ use boltz_client::{
 use sdk_common::invoice::parse_invoice;
 
 use crate::{
-    error::{LiquidSdkError, PaymentError},
+    error::{PaymentError, SdkError},
     model::{ChainSwap, Direction, ReceiveSwap, SendSwap},
     swapper::Swapper,
     test_utils::generate_random_string,
@@ -168,7 +168,7 @@ impl Swapper for MockSwapper {
         _swap: &ChainSwap,
         _output_address: &str,
         _sat_per_vbyte: f32,
-    ) -> Result<(u32, u64), LiquidSdkError> {
+    ) -> Result<(u32, u64), SdkError> {
         // Ok((2500, 100))
         unimplemented!()
     }

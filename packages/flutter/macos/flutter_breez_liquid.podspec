@@ -4,7 +4,7 @@ release_tag_name = "breez_liquid-#{tag_name}"
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.
-framework_name = 'breez_liquid_sdk.xcframework'
+framework_name = 'breez_sdk_liquid.xcframework'
 remote_zip_name = "#{framework_name}.zip"
 url = "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/#{tag_name}/#{remote_zip_name}"
 local_zip_name = "#{release_tag_name}.zip"
