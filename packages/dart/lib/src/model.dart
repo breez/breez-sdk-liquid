@@ -229,6 +229,36 @@ class LogEntry {
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
 }
 
+class PayOnchainLimitsResponse {
+  /// Maximum swap amount for the swap to be valid
+  final BigInt maxPayerAmountSat;
+
+  /// Minimum swap amount for the swap to be valid
+  final BigInt minPayerAmountSat;
+
+  /// Maximum swap amount which the swapper will accept for zero-conf
+  final BigInt maxPayerAmountSatZeroConf;
+
+  const PayOnchainLimitsResponse({
+    required this.maxPayerAmountSat,
+    required this.minPayerAmountSat,
+    required this.maxPayerAmountSatZeroConf,
+  });
+
+  @override
+  int get hashCode =>
+      maxPayerAmountSat.hashCode ^ minPayerAmountSat.hashCode ^ maxPayerAmountSatZeroConf.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PayOnchainLimitsResponse &&
+          runtimeType == other.runtimeType &&
+          maxPayerAmountSat == other.maxPayerAmountSat &&
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSatZeroConf == other.maxPayerAmountSatZeroConf;
+}
+
 class PayOnchainRequest {
   final String address;
   final PreparePayOnchainResponse prepareRes;

@@ -939,6 +939,46 @@ fun asMessageSuccessActionDataList(arr: ReadableArray): List<MessageSuccessActio
     return list
 }
 
+fun asPayOnchainLimitsResponse(payOnchainLimitsResponse: ReadableMap): PayOnchainLimitsResponse? {
+    if (!validateMandatoryFields(
+            payOnchainLimitsResponse,
+            arrayOf(
+                "maxPayerAmountSat",
+                "minPayerAmountSat",
+                "maxPayerAmountSatZeroConf",
+            ),
+        )
+    ) {
+        return null
+    }
+    val maxPayerAmountSat = payOnchainLimitsResponse.getDouble("maxPayerAmountSat").toULong()
+    val minPayerAmountSat = payOnchainLimitsResponse.getDouble("minPayerAmountSat").toULong()
+    val maxPayerAmountSatZeroConf = payOnchainLimitsResponse.getDouble("maxPayerAmountSatZeroConf").toULong()
+    return PayOnchainLimitsResponse(
+        maxPayerAmountSat,
+        minPayerAmountSat,
+        maxPayerAmountSatZeroConf,
+    )
+}
+
+fun readableMapOf(payOnchainLimitsResponse: PayOnchainLimitsResponse): ReadableMap =
+    readableMapOf(
+        "maxPayerAmountSat" to payOnchainLimitsResponse.maxPayerAmountSat,
+        "minPayerAmountSat" to payOnchainLimitsResponse.minPayerAmountSat,
+        "maxPayerAmountSatZeroConf" to payOnchainLimitsResponse.maxPayerAmountSatZeroConf,
+    )
+
+fun asPayOnchainLimitsResponseList(arr: ReadableArray): List<PayOnchainLimitsResponse> {
+    val list = ArrayList<PayOnchainLimitsResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPayOnchainLimitsResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPayOnchainRequest(payOnchainRequest: ReadableMap): PayOnchainRequest? {
     if (!validateMandatoryFields(
             payOnchainRequest,

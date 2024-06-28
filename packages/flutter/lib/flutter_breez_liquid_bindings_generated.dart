@@ -272,6 +272,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limitsPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     int port_,
     int that,
@@ -2067,6 +2084,17 @@ final class wire_cst_log_entry extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> line;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> level;
+}
+
+final class wire_cst_pay_onchain_limits_response extends ffi.Struct {
+  @ffi.Uint64()
+  external int max_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int min_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int max_payer_amount_sat_zero_conf;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

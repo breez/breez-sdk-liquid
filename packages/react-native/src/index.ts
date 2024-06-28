@@ -166,6 +166,12 @@ export interface MessageSuccessActionData {
     message: string
 }
 
+export interface PayOnchainLimitsResponse {
+    maxPayerAmountSat: number
+    minPayerAmountSat: number
+    maxPayerAmountSatZeroConf: number
+}
+
 export interface PayOnchainRequest {
     address: string
     prepareRes: PreparePayOnchainResponse
@@ -538,6 +544,11 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
+    return response
+}
+
+export const payOnchainLimits = async (): Promise<PayOnchainLimitsResponse> => {
+    const response = await BreezLiquidSDK.payOnchainLimits()
     return response
 }
 

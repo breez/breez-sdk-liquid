@@ -875,6 +875,17 @@ impl LiquidSdk {
             .map(|payment| SendPaymentResponse { payment })
     }
 
+    /// Fetch the current limits for Onchain Send swaps
+    pub async fn pay_onchain_limits(&self) -> Result<PayOnchainLimitsResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        self.swapper
+            .get_chain_pairs(Direction::Outgoing)?
+            .ok_or(PaymentError::PairsNotFound)
+            .map(|pair| pair.limits)
+            .map(Into::into)
+    }
+
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,

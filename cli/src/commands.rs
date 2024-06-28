@@ -28,6 +28,8 @@ pub(crate) enum Command {
         #[arg(short, long)]
         delay: Option<u64>,
     },
+    /// Fetch the current limits for Send Onchain payments
+    SendOnchainLimits,
     /// Send lbtc and receive btc onchain through a swap
     SendOnchainPayment {
         /// Btc onchain address to send to
@@ -178,6 +180,10 @@ pub(crate) async fn handle_command(
             result.push('\n');
             result.push_str(&build_qr_text(&invoice));
             result
+        }
+        Command::SendOnchainLimits => {
+            let limits = sdk.pay_onchain_limits().await?;
+            command_result!(limits)
         }
         Command::SendPayment { bolt11, delay } => {
             let prepare_response = sdk
