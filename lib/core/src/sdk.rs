@@ -876,7 +876,7 @@ impl LiquidSdk {
     }
 
     /// Fetch the current limits for Onchain Send swaps
-    pub async fn pay_onchain_limits(&self) -> Result<PayOnchainLimitsResponse, PaymentError> {
+    pub async fn pay_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.ensure_is_started().await?;
 
         self.swapper
@@ -1203,6 +1203,19 @@ impl LiquidSdk {
             id: swap_id,
             invoice: invoice.to_string(),
         })
+    }
+
+    /// Fetch the current limits for Onchain Receive swaps
+    pub async fn receive_onchain_limits(
+        &self,
+    ) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        self.swapper
+            .get_chain_pairs(Direction::Incoming)?
+            .ok_or(PaymentError::PairsNotFound)
+            .map(|pair| pair.limits)
+            .map(Into::into)
     }
 
     pub async fn prepare_receive_onchain(

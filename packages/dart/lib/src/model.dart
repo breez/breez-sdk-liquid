@@ -229,7 +229,7 @@ class LogEntry {
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
 }
 
-class PayOnchainLimitsResponse {
+class OnchainPaymentLimitsResponse {
   /// Maximum swap amount for the swap to be valid
   final BigInt maxPayerAmountSat;
 
@@ -239,7 +239,7 @@ class PayOnchainLimitsResponse {
   /// Maximum swap amount which the swapper will accept for zero-conf
   final BigInt maxPayerAmountSatZeroConf;
 
-  const PayOnchainLimitsResponse({
+  const OnchainPaymentLimitsResponse({
     required this.maxPayerAmountSat,
     required this.minPayerAmountSat,
     required this.maxPayerAmountSatZeroConf,
@@ -252,7 +252,7 @@ class PayOnchainLimitsResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PayOnchainLimitsResponse &&
+      other is OnchainPaymentLimitsResponse &&
           runtimeType == other.runtimeType &&
           maxPayerAmountSat == other.maxPayerAmountSat &&
           minPayerAmountSat == other.minPayerAmountSat &&

@@ -664,11 +664,11 @@ typedef struct wire_cst_log_entry {
   struct wire_cst_list_prim_u_8_strict *level;
 } wire_cst_log_entry;
 
-typedef struct wire_cst_pay_onchain_limits_response {
+typedef struct wire_cst_onchain_payment_limits_response {
   uint64_t max_payer_amount_sat;
   uint64_t min_payer_amount_sat;
   uint64_t max_payer_amount_sat_zero_conf;
-} wire_cst_pay_onchain_limits_response;
+} wire_cst_onchain_payment_limits_response;
 
 typedef struct wire_cst_PaymentError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
@@ -807,6 +807,9 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_pa
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(int64_t port_,
                                                                                  uintptr_t that,
                                                                                  struct wire_cst_receive_onchain_request *req);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(int64_t port_,
+                                                                                        uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(int64_t port_,
                                                                                  uintptr_t that,
@@ -1008,6 +1011,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);

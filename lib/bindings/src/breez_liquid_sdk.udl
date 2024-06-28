@@ -335,7 +335,7 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
-dictionary PayOnchainLimitsResponse {
+dictionary OnchainPaymentLimitsResponse {
     u64 max_payer_amount_sat;
     u64 min_payer_amount_sat;
     u64 max_payer_amount_sat_zero_conf;
@@ -501,13 +501,16 @@ interface BindingLiquidSdk {
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
 
     [Throws=PaymentError]
-    PayOnchainLimitsResponse pay_onchain_limits();
+    OnchainPaymentLimitsResponse pay_onchain_limits();
 
     [Throws=PaymentError]
     PreparePayOnchainResponse prepare_pay_onchain(PreparePayOnchainRequest req);
 
     [Throws=PaymentError]
     SendPaymentResponse pay_onchain(PayOnchainRequest req);
+
+    [Throws=PaymentError]
+    OnchainPaymentLimitsResponse receive_onchain_limits();
 
     [Throws=PaymentError]
     PrepareReceiveOnchainResponse prepare_receive_onchain(PrepareReceiveOnchainRequest req);

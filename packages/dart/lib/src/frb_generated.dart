@@ -55,7 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0';
 
   @override
-  int get rustContentHash => 150054343;
+  int get rustContentHash => -740833575;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -96,7 +96,7 @@ abstract class RustLibApi extends BaseApi {
   Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain(
       {required BindingLiquidSdk that, required PayOnchainRequest req});
 
-  Future<PayOnchainLimitsResponse> crateBindingsBindingLiquidSdkPayOnchainLimits(
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkPayOnchainLimits(
       {required BindingLiquidSdk that});
 
   Future<PreparePayOnchainResponse> crateBindingsBindingLiquidSdkPreparePayOnchain(
@@ -116,6 +116,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain(
       {required BindingLiquidSdk that, required ReceiveOnchainRequest req});
+
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkReceiveOnchainLimits(
+      {required BindingLiquidSdk that});
 
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
       {required BindingLiquidSdk that, required PrepareReceiveResponse req});
@@ -487,7 +490,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<PayOnchainLimitsResponse> crateBindingsBindingLiquidSdkPayOnchainLimits(
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkPayOnchainLimits(
       {required BindingLiquidSdk that}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -497,7 +500,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return wire.wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(port_, arg0);
       },
       codec: DcoCodec(
-        decodeSuccessData: dco_decode_pay_onchain_limits_response,
+        decodeSuccessData: dco_decode_onchain_payment_limits_response,
         decodeErrorData: dco_decode_payment_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkPayOnchainLimitsConstMeta,
@@ -665,6 +668,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkReceiveOnchainConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_receive_onchain",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkReceiveOnchainLimits(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_onchain_payment_limits_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkReceiveOnchainLimitsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkReceiveOnchainLimitsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_receive_onchain_limits",
+        argNames: ["that"],
       );
 
   @override
@@ -1880,6 +1908,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return OnchainPaymentLimitsResponse(
+      maxPayerAmountSat: dco_decode_u_64(arr[0]),
+      minPayerAmountSat: dco_decode_u_64(arr[1]),
+      maxPayerAmountSatZeroConf: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
   String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_String(raw);
@@ -1913,18 +1953,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
-  }
-
-  @protected
-  PayOnchainLimitsResponse dco_decode_pay_onchain_limits_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return PayOnchainLimitsResponse(
-      maxPayerAmountSat: dco_decode_u_64(arr[0]),
-      minPayerAmountSat: dco_decode_u_64(arr[1]),
-      maxPayerAmountSatZeroConf: dco_decode_u_64(arr[2]),
-    );
   }
 
   @protected
@@ -3277,6 +3305,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_maxPayerAmountSat = sse_decode_u_64(deserializer);
+    var var_minPayerAmountSat = sse_decode_u_64(deserializer);
+    var var_maxPayerAmountSatZeroConf = sse_decode_u_64(deserializer);
+    return OnchainPaymentLimitsResponse(
+        maxPayerAmountSat: var_maxPayerAmountSat,
+        minPayerAmountSat: var_minPayerAmountSat,
+        maxPayerAmountSatZeroConf: var_maxPayerAmountSatZeroConf);
+  }
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3340,18 +3380,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
-  }
-
-  @protected
-  PayOnchainLimitsResponse sse_decode_pay_onchain_limits_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_maxPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_minPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_maxPayerAmountSatZeroConf = sse_decode_u_64(deserializer);
-    return PayOnchainLimitsResponse(
-        maxPayerAmountSat: var_maxPayerAmountSat,
-        minPayerAmountSat: var_minPayerAmountSat,
-        maxPayerAmountSatZeroConf: var_maxPayerAmountSatZeroConf);
   }
 
   @protected
@@ -4634,6 +4662,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_onchain_payment_limits_response(
+      OnchainPaymentLimitsResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.maxPayerAmountSat, serializer);
+    sse_encode_u_64(self.minPayerAmountSat, serializer);
+    sse_encode_u_64(self.maxPayerAmountSatZeroConf, serializer);
+  }
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4692,14 +4729,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_u_64(self, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_pay_onchain_limits_response(PayOnchainLimitsResponse self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.maxPayerAmountSat, serializer);
-    sse_encode_u_64(self.minPayerAmountSat, serializer);
-    sse_encode_u_64(self.maxPayerAmountSatZeroConf, serializer);
   }
 
   @protected
@@ -5075,7 +5104,7 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
 
-  Future<PayOnchainLimitsResponse> payOnchainLimits() =>
+  Future<OnchainPaymentLimitsResponse> payOnchainLimits() =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchainLimits(
         that: this,
       );
@@ -5097,6 +5126,11 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<ReceiveOnchainResponse> receiveOnchain({required ReceiveOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceiveOnchain(that: this, req: req);
+
+  Future<OnchainPaymentLimitsResponse> receiveOnchainLimits() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkReceiveOnchainLimits(
+        that: this,
+      );
 
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req);

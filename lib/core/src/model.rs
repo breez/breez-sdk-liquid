@@ -185,7 +185,7 @@ pub struct ReceivePaymentResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct PayOnchainLimitsResponse {
+pub struct OnchainPaymentLimitsResponse {
     /// Maximum swap amount for the swap to be valid
     pub max_payer_amount_sat: u64,
     /// Minimum swap amount for the swap to be valid
@@ -193,7 +193,7 @@ pub struct PayOnchainLimitsResponse {
     /// Maximum swap amount which the swapper will accept for zero-conf
     pub max_payer_amount_sat_zero_conf: u64,
 }
-impl From<PairLimits> for PayOnchainLimitsResponse {
+impl From<PairLimits> for OnchainPaymentLimitsResponse {
     fn from(pair_limits: PairLimits) -> Self {
         Self {
             max_payer_amount_sat: pair_limits.maximal,

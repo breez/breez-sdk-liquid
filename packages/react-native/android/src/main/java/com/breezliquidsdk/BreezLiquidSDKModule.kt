@@ -307,6 +307,18 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
+    fun receiveOnchainLimits(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().receiveOnchainLimits()
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun prepareReceiveOnchain(
         req: ReadableMap,
         promise: Promise,

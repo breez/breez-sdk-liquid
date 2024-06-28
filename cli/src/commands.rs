@@ -43,6 +43,8 @@ pub(crate) enum Command {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
     },
+    /// Fetch the current limits for Receive Onchain payments
+    ReceiveOnchainLimits,
     /// Receive lbtc and send btc onchain through a swap
     ReceiveOnchainPayment {
         /// Amount the payer will send, in satoshi
@@ -235,6 +237,10 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
             command_result!(response)
+        }
+        Command::ReceiveOnchainLimits => {
+            let limits = sdk.receive_onchain_limits().await?;
+            command_result!(limits)
         }
         Command::ReceiveOnchainPayment { payer_amount_sat } => {
             let prepare_res = sdk

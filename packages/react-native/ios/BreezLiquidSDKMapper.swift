@@ -1110,47 +1110,47 @@ enum BreezLiquidSDKMapper {
         return messageSuccessActionDataList.map { v -> [String: Any?] in dictionaryOf(messageSuccessActionData: v) }
     }
 
-    static func asPayOnchainLimitsResponse(payOnchainLimitsResponse: [String: Any?]) throws -> PayOnchainLimitsResponse {
-        guard let maxPayerAmountSat = payOnchainLimitsResponse["maxPayerAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSat", typeName: "PayOnchainLimitsResponse"))
+    static func asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: [String: Any?]) throws -> OnchainPaymentLimitsResponse {
+        guard let maxPayerAmountSat = onchainPaymentLimitsResponse["maxPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let minPayerAmountSat = payOnchainLimitsResponse["minPayerAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minPayerAmountSat", typeName: "PayOnchainLimitsResponse"))
+        guard let minPayerAmountSat = onchainPaymentLimitsResponse["minPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let maxPayerAmountSatZeroConf = payOnchainLimitsResponse["maxPayerAmountSatZeroConf"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSatZeroConf", typeName: "PayOnchainLimitsResponse"))
+        guard let maxPayerAmountSatZeroConf = onchainPaymentLimitsResponse["maxPayerAmountSatZeroConf"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
         }
 
-        return PayOnchainLimitsResponse(
+        return OnchainPaymentLimitsResponse(
             maxPayerAmountSat: maxPayerAmountSat,
             minPayerAmountSat: minPayerAmountSat,
             maxPayerAmountSatZeroConf: maxPayerAmountSatZeroConf
         )
     }
 
-    static func dictionaryOf(payOnchainLimitsResponse: PayOnchainLimitsResponse) -> [String: Any?] {
+    static func dictionaryOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse) -> [String: Any?] {
         return [
-            "maxPayerAmountSat": payOnchainLimitsResponse.maxPayerAmountSat,
-            "minPayerAmountSat": payOnchainLimitsResponse.minPayerAmountSat,
-            "maxPayerAmountSatZeroConf": payOnchainLimitsResponse.maxPayerAmountSatZeroConf,
+            "maxPayerAmountSat": onchainPaymentLimitsResponse.maxPayerAmountSat,
+            "minPayerAmountSat": onchainPaymentLimitsResponse.minPayerAmountSat,
+            "maxPayerAmountSatZeroConf": onchainPaymentLimitsResponse.maxPayerAmountSatZeroConf,
         ]
     }
 
-    static func asPayOnchainLimitsResponseList(arr: [Any]) throws -> [PayOnchainLimitsResponse] {
-        var list = [PayOnchainLimitsResponse]()
+    static func asOnchainPaymentLimitsResponseList(arr: [Any]) throws -> [OnchainPaymentLimitsResponse] {
+        var list = [OnchainPaymentLimitsResponse]()
         for value in arr {
             if let val = value as? [String: Any?] {
-                var payOnchainLimitsResponse = try asPayOnchainLimitsResponse(payOnchainLimitsResponse: val)
-                list.append(payOnchainLimitsResponse)
+                var onchainPaymentLimitsResponse = try asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: val)
+                list.append(onchainPaymentLimitsResponse)
             } else {
-                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "PayOnchainLimitsResponse"))
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "OnchainPaymentLimitsResponse"))
             }
         }
         return list
     }
 
-    static func arrayOf(payOnchainLimitsResponseList: [PayOnchainLimitsResponse]) -> [Any] {
-        return payOnchainLimitsResponseList.map { v -> [String: Any?] in dictionaryOf(payOnchainLimitsResponse: v) }
+    static func arrayOf(onchainPaymentLimitsResponseList: [OnchainPaymentLimitsResponse]) -> [Any] {
+        return onchainPaymentLimitsResponseList.map { v -> [String: Any?] in dictionaryOf(onchainPaymentLimitsResponse: v) }
     }
 
     static func asPayOnchainRequest(payOnchainRequest: [String: Any?]) throws -> PayOnchainRequest {
