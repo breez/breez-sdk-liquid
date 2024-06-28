@@ -43,21 +43,21 @@ pub const DEFAULT_DATA_DIR: &str = ".data";
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 pub struct LiquidSdk {
-    config: Config,
-    onchain_wallet: Arc<dyn OnchainWallet>,
-    persister: Arc<Persister>,
-    event_manager: Arc<EventManager>,
-    status_stream: Arc<dyn SwapperStatusStream>,
-    swapper: Arc<dyn Swapper>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
-    bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
-    fiat_api: Arc<dyn FiatAPI>,
-    is_started: RwLock<bool>,
-    shutdown_sender: watch::Sender<()>,
-    shutdown_receiver: watch::Receiver<()>,
-    send_swap_state_handler: SendSwapStateHandler,
-    receive_swap_state_handler: ReceiveSwapStateHandler,
-    chain_swap_state_handler: Arc<ChainSwapStateHandler>,
+    pub(crate) config: Config,
+    pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
+    pub(crate) persister: Arc<Persister>,
+    pub(crate) event_manager: Arc<EventManager>,
+    pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
+    pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    pub(crate) bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+    pub(crate) fiat_api: Arc<dyn FiatAPI>,
+    pub(crate) is_started: RwLock<bool>,
+    pub(crate) shutdown_sender: watch::Sender<()>,
+    pub(crate) shutdown_receiver: watch::Receiver<()>,
+    pub(crate) send_swap_state_handler: SendSwapStateHandler,
+    pub(crate) receive_swap_state_handler: ReceiveSwapStateHandler,
+    pub(crate) chain_swap_state_handler: Arc<ChainSwapStateHandler>,
 }
 
 impl LiquidSdk {
@@ -1672,5 +1672,128 @@ impl ReconnectHandler for SwapperReconnectHandler {
             }
             Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use anyhow::{anyhow, Result};
+    use boltz_client::{
+        boltzv2,
+        swaps::boltz::{
+            RevSwapStates::{self, *},
+            SubSwapStates::{self, *},
+        },
+    };
+
+    use crate::{
+        model::PaymentState,
+        sdk::LiquidSdk,
+        test_utils::{
+            persist::{new_persister, new_receive_swap, new_send_swap},
+            sdk::new_liquid_sdk,
+            status_stream::MockStatusStream,
+        },
+    };
+
+    #[tokio::test]
+    async fn test_receive_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(persister.clone(), status_stream.clone())?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify the swap becomes invalid after final states are received
+            let unrecoverable_states: [RevSwapStates; 4] = [
+                RevSwapStates::SwapExpired,
+                InvoiceExpired,
+                TransactionFailed,
+                TransactionRefunded,
+            ];
+
+            for status in unrecoverable_states {
+                let receive_swap = new_receive_swap(None);
+                persister.insert_receive_swap(&receive_swap).unwrap();
+
+                status_stream
+                    .clone()
+                    .send_mock_update(boltzv2::Update {
+                        id: receive_swap.id.clone(),
+                        status: status.to_string(),
+                        transaction: None,
+                        zero_conf_rejected: None,
+                    })
+                    .await
+                    .unwrap();
+
+                let persisted_swap = persister
+                    .fetch_receive_swap(&receive_swap.id)
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve receive swap"))
+                    .unwrap();
+                assert_eq!(persisted_swap.state, PaymentState::Failed);
+            }
+        })
+        .await
+        .unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_send_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(persister.clone(), status_stream.clone())?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify the swap becomes invalid after final states are received
+            let unrecoverable_states: [SubSwapStates; 3] = [
+                TransactionLockupFailed,
+                InvoiceFailedToPay,
+                SubSwapStates::SwapExpired,
+            ];
+
+            for status in unrecoverable_states {
+                let send_swap = new_send_swap(None);
+                persister.insert_send_swap(&send_swap).unwrap();
+
+                status_stream
+                    .clone()
+                    .send_mock_update(boltzv2::Update {
+                        id: send_swap.id.clone(),
+                        status: status.to_string(),
+                        transaction: None,
+                        zero_conf_rejected: None,
+                    })
+                    .await
+                    .unwrap();
+
+                let persisted_swap = persister
+                    .fetch_send_swap_by_id(&send_swap.id)
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve send swap"))
+                    .unwrap();
+                assert_eq!(persisted_swap.state, PaymentState::Failed);
+            }
+        })
+        .await
+        .unwrap();
+
+        Ok(())
     }
 }

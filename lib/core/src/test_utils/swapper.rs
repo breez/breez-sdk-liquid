@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-use std::str::FromStr;
-
 use boltz_client::{
     boltzv2::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -9,11 +7,7 @@ use boltz_client::{
         ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse, SubmarineFees,
         SubmarinePair, SwapTree,
     },
-    PublicKey, Serialize,
-};
-use lwk_wollet::{
-    elements::{encode::deserialize, Transaction},
-    hashes::hex::DisplayHex,
+    PublicKey,
 };
 use sdk_common::invoice::parse_invoice;
 
@@ -24,9 +18,15 @@ use crate::{
     test_utils::generate_random_string,
 };
 
+use super::{status_stream::MockStatusStream, TEST_TX_TXID};
+
 pub struct MockSwapper {}
 
 impl MockSwapper {
+    pub(crate) fn new() -> Self {
+        MockSwapper {}
+    }
+
     fn mock_swap_tree() -> SwapTree {
         SwapTree {
             claim_leaf: Leaf {
@@ -41,7 +41,7 @@ impl MockSwapper {
     }
 
     fn mock_public_key() -> PublicKey {
-        PublicKey::from_str("").unwrap()
+        todo!()
     }
 
     fn mock_swap_details() -> ChainSwapDetails {
@@ -56,12 +56,6 @@ impl MockSwapper {
             claim_address: None,
             bip21: None,
         }
-    }
-
-    fn mock_tx() -> Result<Transaction, PaymentError> {
-        Ok(deserialize(b"").map_err(|err| PaymentError::LwkError {
-            err: err.to_string(),
-        })?)
     }
 }
 
@@ -146,7 +140,8 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _sat_per_vbyte: f32,
     ) -> Result<(u32, u64), LiquidSdkError> {
-        Ok((2500, 100))
+        // Ok((2500, 100))
+        todo!()
     }
 
     fn refund_chain_swap_cooperative(
@@ -155,7 +150,8 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn refund_send_swap_cooperative(
@@ -164,7 +160,8 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn refund_chain_swap_non_cooperative(
@@ -174,7 +171,8 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn refund_send_swap_non_cooperative(
@@ -184,7 +182,8 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn get_send_claim_tx_details(
@@ -195,14 +194,13 @@ impl Swapper for MockSwapper {
             preimage: "".to_string(),
             pub_nonce: "".to_string(),
             public_key: Self::mock_public_key(),
-            transaction_hash: Self::mock_tx()?
-                .serialize()
-                .to_hex_string(lwk_wollet::hashes::hex::Case::Lower),
+            transaction_hash: "".to_string(),
         })
     }
 
     fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn claim_send_swap_cooperative(
@@ -253,7 +251,8 @@ impl Swapper for MockSwapper {
         _swap: &ReceiveSwap,
         _claim_address: String,
     ) -> Result<String, PaymentError> {
-        Ok(Self::mock_tx()?.txid().to_string())
+        // Ok(TEST_TX_TXID.to_string())
+        todo!()
     }
 
     fn broadcast_tx(
@@ -263,15 +262,16 @@ impl Swapper for MockSwapper {
     ) -> Result<serde_json::Value, PaymentError> {
         Ok(serde_json::Value::Object(serde_json::Map::from_iter([(
             "id".to_string(),
-            serde_json::Value::String(Self::mock_tx()?.txid().to_string()),
+            serde_json::Value::String(TEST_TX_TXID.to_string()),
         )])))
     }
 
     fn create_status_stream(&self) -> Box<dyn crate::swapper::SwapperStatusStream> {
-        todo!();
+        Box::new(MockStatusStream::new())
     }
 
     fn check_for_mrh(&self, _invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
-        Ok(Some(("".to_string(), 0.0)))
+        // Ok(Some(("".to_string(), 0.0)))
+        todo!()
     }
 }

@@ -11,11 +11,9 @@ use crate::{
 };
 
 pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
-    let id = generate_random_string(4);
-    let invoice = generate_random_string(4);
     SendSwap {
-        id,
-        invoice,
+        id: generate_random_string(4),
+        invoice: generate_random_string(4),
         preimage: None,
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
@@ -29,9 +27,8 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
 }
 
 pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSwap {
-    let id = generate_random_string(4);
     ReceiveSwap {
-        id,
+        id: generate_random_string(4),
         preimage: "".to_string(),
         create_response_json: "{}".to_string(),
         claim_private_key: "".to_string(),
@@ -59,9 +56,8 @@ pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
 }
 
 pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
-    let tx_id = generate_random_string(4);
     PaymentTxData {
-        tx_id,
+        tx_id: generate_random_string(4),
         timestamp: None,
         amount_sat: 0,
         fees_sat: 0,

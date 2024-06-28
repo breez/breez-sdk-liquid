@@ -45,6 +45,11 @@ impl Persister {
         Ok(())
     }
 
+    #[cfg(test)]
+    pub(crate) fn get_database_dir(&self) -> &PathBuf {
+        &self.main_db_dir
+    }
+
     fn migrate_main_db(&self) -> Result<()> {
         let migrations = Migrations::new(current_migrations().into_iter().map(M::up).collect());
         let mut conn = self.get_connection()?;

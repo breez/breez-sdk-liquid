@@ -163,6 +163,7 @@ impl ReceiveSwapStateHandler {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
+
                 // looking for lockup script history to verify lockup was broadcasted
                 if let Err(e) = self
                     .verify_lockup_tx(&receive_swap, &transaction, true)
