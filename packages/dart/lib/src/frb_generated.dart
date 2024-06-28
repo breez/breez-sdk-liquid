@@ -112,7 +112,7 @@ abstract class RustLibApi extends BaseApi {
       {required BindingLiquidSdk that, required PrepareSendRequest req});
 
   Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain(
-      {required BindingLiquidSdk that, required ReceiveOnchainRequest req});
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainResponse req});
 
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
       {required BindingLiquidSdk that, required PrepareReceiveResponse req});
@@ -615,13 +615,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain(
-      {required BindingLiquidSdk that, required ReceiveOnchainRequest req}) {
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainResponse req}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        var arg1 = cst_encode_box_autoadd_receive_onchain_request(req);
+        var arg1 = cst_encode_box_autoadd_prepare_receive_onchain_response(req);
         return wire.wire__crate__bindings__BindingLiquidSdk_receive_onchain(port_, arg0, arg1);
       },
       codec: DcoCodec(
@@ -1187,6 +1187,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PrepareReceiveOnchainResponse dco_decode_box_autoadd_prepare_receive_onchain_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_receive_onchain_response(raw);
+  }
+
+  @protected
   PrepareReceiveRequest dco_decode_box_autoadd_prepare_receive_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_prepare_receive_request(raw);
@@ -1214,12 +1220,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendResponse dco_decode_box_autoadd_prepare_send_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_prepare_send_response(raw);
-  }
-
-  @protected
-  ReceiveOnchainRequest dco_decode_box_autoadd_receive_onchain_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_receive_onchain_request(raw);
   }
 
   @protected
@@ -1996,7 +1996,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return PreparePayOnchainRequest(
-      amountSat: dco_decode_u_64(arr[0]),
+      receiverAmountSat: dco_decode_u_64(arr[0]),
     );
   }
 
@@ -2006,7 +2006,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PreparePayOnchainResponse(
-      amountSat: dco_decode_u_64(arr[0]),
+      receiverAmountSat: dco_decode_u_64(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
     );
   }
@@ -2017,7 +2017,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return PrepareReceiveOnchainRequest(
-      amountSat: dco_decode_u_64(arr[0]),
+      payerAmountSat: dco_decode_u_64(arr[0]),
     );
   }
 
@@ -2027,7 +2027,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PrepareReceiveOnchainResponse(
-      amountSat: dco_decode_u_64(arr[0]),
+      payerAmountSat: dco_decode_u_64(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
     );
   }
@@ -2106,16 +2106,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return Rate(
       coin: dco_decode_String(arr[0]),
       value: dco_decode_f_64(arr[1]),
-    );
-  }
-
-  @protected
-  ReceiveOnchainRequest dco_decode_receive_onchain_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return ReceiveOnchainRequest(
-      prepareRes: dco_decode_prepare_receive_onchain_response(arr[0]),
     );
   }
 
@@ -2557,6 +2547,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PrepareReceiveOnchainResponse sse_decode_box_autoadd_prepare_receive_onchain_response(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_receive_onchain_response(deserializer));
+  }
+
+  @protected
   PrepareReceiveRequest sse_decode_box_autoadd_prepare_receive_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_prepare_receive_request(deserializer));
@@ -2584,12 +2581,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendResponse sse_decode_box_autoadd_prepare_send_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_prepare_send_response(deserializer));
-  }
-
-  @protected
-  ReceiveOnchainRequest sse_decode_box_autoadd_receive_onchain_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_receive_onchain_request(deserializer));
   }
 
   @protected
@@ -3410,31 +3401,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PreparePayOnchainRequest sse_decode_prepare_pay_onchain_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_amountSat = sse_decode_u_64(deserializer);
-    return PreparePayOnchainRequest(amountSat: var_amountSat);
+    var var_receiverAmountSat = sse_decode_u_64(deserializer);
+    return PreparePayOnchainRequest(receiverAmountSat: var_receiverAmountSat);
   }
 
   @protected
   PreparePayOnchainResponse sse_decode_prepare_pay_onchain_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_amountSat = sse_decode_u_64(deserializer);
+    var var_receiverAmountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
-    return PreparePayOnchainResponse(amountSat: var_amountSat, feesSat: var_feesSat);
+    return PreparePayOnchainResponse(receiverAmountSat: var_receiverAmountSat, feesSat: var_feesSat);
   }
 
   @protected
   PrepareReceiveOnchainRequest sse_decode_prepare_receive_onchain_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_amountSat = sse_decode_u_64(deserializer);
-    return PrepareReceiveOnchainRequest(amountSat: var_amountSat);
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
+    return PrepareReceiveOnchainRequest(payerAmountSat: var_payerAmountSat);
   }
 
   @protected
   PrepareReceiveOnchainResponse sse_decode_prepare_receive_onchain_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_amountSat = sse_decode_u_64(deserializer);
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
-    return PrepareReceiveOnchainResponse(amountSat: var_amountSat, feesSat: var_feesSat);
+    return PrepareReceiveOnchainResponse(payerAmountSat: var_payerAmountSat, feesSat: var_feesSat);
   }
 
   @protected
@@ -3492,13 +3483,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_coin = sse_decode_String(deserializer);
     var var_value = sse_decode_f_64(deserializer);
     return Rate(coin: var_coin, value: var_value);
-  }
-
-  @protected
-  ReceiveOnchainRequest sse_decode_receive_onchain_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_prepareRes = sse_decode_prepare_receive_onchain_response(deserializer);
-    return ReceiveOnchainRequest(prepareRes: var_prepareRes);
   }
 
   @protected
@@ -4008,6 +3992,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_prepare_receive_onchain_response(
+      PrepareReceiveOnchainResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_receive_onchain_response(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_prepare_receive_request(PrepareReceiveRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_receive_request(self, serializer);
@@ -4036,12 +4027,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_prepare_send_response(PrepareSendResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_send_response(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_receive_onchain_request(self, serializer);
   }
 
   @protected
@@ -4733,13 +4718,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_prepare_pay_onchain_request(PreparePayOnchainRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.receiverAmountSat, serializer);
   }
 
   @protected
   void sse_encode_prepare_pay_onchain_response(PreparePayOnchainResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.receiverAmountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
   }
 
@@ -4747,14 +4732,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_prepare_receive_onchain_request(
       PrepareReceiveOnchainRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.payerAmountSat, serializer);
   }
 
   @protected
   void sse_encode_prepare_receive_onchain_response(
       PrepareReceiveOnchainResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.payerAmountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
   }
 
@@ -4805,12 +4790,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.coin, serializer);
     sse_encode_f_64(self.value, serializer);
-  }
-
-  @protected
-  void sse_encode_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepare_receive_onchain_response(self.prepareRes, serializer);
   }
 
   @protected
@@ -5030,7 +5009,7 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareSendPayment(that: this, req: req);
 
-  Future<ReceiveOnchainResponse> receiveOnchain({required ReceiveOnchainRequest req}) =>
+  Future<ReceiveOnchainResponse> receiveOnchain({required PrepareReceiveOnchainResponse req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceiveOnchain(that: this, req: req);
 
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req}) =>

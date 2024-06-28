@@ -1045,21 +1045,21 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
     if (!validateMandatoryFields(
             preparePayOnchainRequest,
             arrayOf(
-                "amountSat",
+                "receiverAmountSat",
             ),
         )
     ) {
         return null
     }
-    val amountSat = preparePayOnchainRequest.getDouble("amountSat").toULong()
+    val receiverAmountSat = preparePayOnchainRequest.getDouble("receiverAmountSat").toULong()
     return PreparePayOnchainRequest(
-        amountSat,
+        receiverAmountSat,
     )
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
-        "amountSat" to preparePayOnchainRequest.amountSat,
+        "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
@@ -1077,24 +1077,24 @@ fun asPreparePayOnchainResponse(preparePayOnchainResponse: ReadableMap): Prepare
     if (!validateMandatoryFields(
             preparePayOnchainResponse,
             arrayOf(
-                "amountSat",
+                "receiverAmountSat",
                 "feesSat",
             ),
         )
     ) {
         return null
     }
-    val amountSat = preparePayOnchainResponse.getDouble("amountSat").toULong()
+    val receiverAmountSat = preparePayOnchainResponse.getDouble("receiverAmountSat").toULong()
     val feesSat = preparePayOnchainResponse.getDouble("feesSat").toULong()
     return PreparePayOnchainResponse(
-        amountSat,
+        receiverAmountSat,
         feesSat,
     )
 }
 
 fun readableMapOf(preparePayOnchainResponse: PreparePayOnchainResponse): ReadableMap =
     readableMapOf(
-        "amountSat" to preparePayOnchainResponse.amountSat,
+        "receiverAmountSat" to preparePayOnchainResponse.receiverAmountSat,
         "feesSat" to preparePayOnchainResponse.feesSat,
     )
 
@@ -1113,21 +1113,21 @@ fun asPrepareReceiveOnchainRequest(prepareReceiveOnchainRequest: ReadableMap): P
     if (!validateMandatoryFields(
             prepareReceiveOnchainRequest,
             arrayOf(
-                "amountSat",
+                "payerAmountSat",
             ),
         )
     ) {
         return null
     }
-    val amountSat = prepareReceiveOnchainRequest.getDouble("amountSat").toULong()
+    val payerAmountSat = prepareReceiveOnchainRequest.getDouble("payerAmountSat").toULong()
     return PrepareReceiveOnchainRequest(
-        amountSat,
+        payerAmountSat,
     )
 }
 
 fun readableMapOf(prepareReceiveOnchainRequest: PrepareReceiveOnchainRequest): ReadableMap =
     readableMapOf(
-        "amountSat" to prepareReceiveOnchainRequest.amountSat,
+        "payerAmountSat" to prepareReceiveOnchainRequest.payerAmountSat,
     )
 
 fun asPrepareReceiveOnchainRequestList(arr: ReadableArray): List<PrepareReceiveOnchainRequest> {
@@ -1145,24 +1145,24 @@ fun asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: ReadableMap):
     if (!validateMandatoryFields(
             prepareReceiveOnchainResponse,
             arrayOf(
-                "amountSat",
+                "payerAmountSat",
                 "feesSat",
             ),
         )
     ) {
         return null
     }
-    val amountSat = prepareReceiveOnchainResponse.getDouble("amountSat").toULong()
+    val payerAmountSat = prepareReceiveOnchainResponse.getDouble("payerAmountSat").toULong()
     val feesSat = prepareReceiveOnchainResponse.getDouble("feesSat").toULong()
     return PrepareReceiveOnchainResponse(
-        amountSat,
+        payerAmountSat,
         feesSat,
     )
 }
 
 fun readableMapOf(prepareReceiveOnchainResponse: PrepareReceiveOnchainResponse): ReadableMap =
     readableMapOf(
-        "amountSat" to prepareReceiveOnchainResponse.amountSat,
+        "payerAmountSat" to prepareReceiveOnchainResponse.payerAmountSat,
         "feesSat" to prepareReceiveOnchainResponse.feesSat,
     )
 
@@ -1422,38 +1422,6 @@ fun asRateList(arr: ReadableArray): List<Rate> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asRate(value)!!)
-            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asReceiveOnchainRequest(receiveOnchainRequest: ReadableMap): ReceiveOnchainRequest? {
-    if (!validateMandatoryFields(
-            receiveOnchainRequest,
-            arrayOf(
-                "prepareRes",
-            ),
-        )
-    ) {
-        return null
-    }
-    val prepareRes = receiveOnchainRequest.getMap("prepareRes")?.let { asPrepareReceiveOnchainResponse(it) }!!
-    return ReceiveOnchainRequest(
-        prepareRes,
-    )
-}
-
-fun readableMapOf(receiveOnchainRequest: ReceiveOnchainRequest): ReadableMap =
-    readableMapOf(
-        "prepareRes" to readableMapOf(receiveOnchainRequest.prepareRes),
-    )
-
-fun asReceiveOnchainRequestList(arr: ReadableArray): List<ReceiveOnchainRequest> {
-    val list = ArrayList<ReceiveOnchainRequest>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asReceiveOnchainRequest(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
