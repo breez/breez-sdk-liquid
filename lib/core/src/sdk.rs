@@ -40,7 +40,7 @@ use crate::{
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
-pub const CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
+pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 pub struct LiquidSdk {
     config: Config,
