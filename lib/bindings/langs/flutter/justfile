@@ -43,14 +43,14 @@ ffigen:
 build *args:
 	cargo build --package breez-liquid-sdk --manifest-path ../../../core/Cargo.toml --features frb {{args}}
 
-build-apple *args:
-	dart scripts/build_apple.dart {{args}}
+build-apple profile='frb-min':
+	dart scripts/build_apple.dart --profile {{profile}}
 
-build-android profile='release':
-	bash scripts/build-android.sh {{profile}}
+build-android profile='frb-min':
+	bash scripts/build-android.sh --profile {{profile}}
 
-build-other *args:
-	dart scripts/build_other.dart {{args}}
+build-other profile='frb-min':
+	dart scripts/build_other.dart --profile {{profile}}
 
 # (melos) Run tests on packages in workspace
 test build='false':

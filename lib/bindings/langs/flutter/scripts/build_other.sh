@@ -4,7 +4,7 @@
 
 # Setup
 BUILD_DIR=platform-build
-mkdir $BUILD_DIR
+mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 # Install build dependencies
@@ -18,7 +18,7 @@ zig_build () {
     local PROFILE="$4"
     rustup target add "$TARGET"
     cargo zigbuild --package breez-liquid-sdk --target "$TARGET" --profile $PROFILE
-    mkdir "$PLATFORM_NAME"
+    mkdir -p "$PLATFORM_NAME"
     cp "../../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
 }
 
@@ -29,7 +29,7 @@ win_build () {
     local PROFILE="$4"
     rustup target add "$TARGET"
     cargo xwin build --package breez-liquid-sdk --target "$TARGET" --profile $PROFILE
-    mkdir "$PLATFORM_NAME"
+    mkdir -p "$PLATFORM_NAME"
     cp "../../../../target/$TARGET/$PROFILE/$LIBNAME" "$PLATFORM_NAME/"
 }
 
