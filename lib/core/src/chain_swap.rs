@@ -17,7 +17,7 @@ use crate::model::PaymentState::{
     Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
 };
 use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
-use crate::sdk::CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
+use crate::sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
@@ -120,7 +120,7 @@ impl ChainSwapStateHandler {
         current_height: u32,
     ) -> Result<()> {
         let monitoring_block_height =
-            swap.timeout_block_height + CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
+            swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
         let is_swap_expired = current_height > swap.timeout_block_height;
         let is_monitoring_expired = current_height > monitoring_block_height;
 
