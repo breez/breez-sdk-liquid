@@ -301,7 +301,9 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::{new_payment_tx_data, new_persister, new_receive_swap, new_send_swap};
+    use crate::test_utils::persist::{
+        new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
+    };
 
     use super::{PaymentState, PaymentType};
 

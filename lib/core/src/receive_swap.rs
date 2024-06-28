@@ -352,7 +352,10 @@ mod tests {
 
     use crate::{
         model::PaymentState::{self, *},
-        test_utils::{new_persister, new_receive_swap, new_receive_swap_state_handler},
+        test_utils::{
+            persist::{new_persister, new_receive_swap},
+            receive_swap::new_receive_swap_state_handler,
+        },
     };
 
     #[tokio::test]
