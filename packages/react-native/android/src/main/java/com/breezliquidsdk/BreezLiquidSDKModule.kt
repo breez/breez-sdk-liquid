@@ -319,10 +319,10 @@ class BreezLiquidSDKModule(
     ) {
         executor.execute {
             try {
-                val receiveOnchainRequest =
-                    asReceiveOnchainRequest(req)
-                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "ReceiveOnchainRequest")) }
-                val res = getBindingLiquidSdk().receiveOnchain(receiveOnchainRequest)
+                val prepareReceiveOnchainResponse =
+                    asPrepareReceiveOnchainResponse(req)
+                        ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveOnchainResponse")) }
+                val res = getBindingLiquidSdk().receiveOnchain(prepareReceiveOnchainResponse)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

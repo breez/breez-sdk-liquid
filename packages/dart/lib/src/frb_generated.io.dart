@@ -138,6 +138,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PrepareReceiveOnchainRequest dco_decode_box_autoadd_prepare_receive_onchain_request(dynamic raw);
 
   @protected
+  PrepareReceiveOnchainResponse dco_decode_box_autoadd_prepare_receive_onchain_response(dynamic raw);
+
+  @protected
   PrepareReceiveRequest dco_decode_box_autoadd_prepare_receive_request(dynamic raw);
 
   @protected
@@ -151,9 +154,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PrepareSendResponse dco_decode_box_autoadd_prepare_send_response(dynamic raw);
-
-  @protected
-  ReceiveOnchainRequest dco_decode_box_autoadd_receive_onchain_request(dynamic raw);
 
   @protected
   RefundRequest dco_decode_box_autoadd_refund_request(dynamic raw);
@@ -369,9 +369,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Rate dco_decode_rate(dynamic raw);
 
   @protected
-  ReceiveOnchainRequest dco_decode_receive_onchain_request(dynamic raw);
-
-  @protected
   ReceiveOnchainResponse dco_decode_receive_onchain_response(dynamic raw);
 
   @protected
@@ -542,6 +539,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  PrepareReceiveOnchainResponse sse_decode_box_autoadd_prepare_receive_onchain_response(
+      SseDeserializer deserializer);
+
+  @protected
   PrepareReceiveRequest sse_decode_box_autoadd_prepare_receive_request(SseDeserializer deserializer);
 
   @protected
@@ -555,9 +556,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PrepareSendResponse sse_decode_box_autoadd_prepare_send_response(SseDeserializer deserializer);
-
-  @protected
-  ReceiveOnchainRequest sse_decode_box_autoadd_receive_onchain_request(SseDeserializer deserializer);
 
   @protected
   RefundRequest sse_decode_box_autoadd_refund_request(SseDeserializer deserializer);
@@ -771,9 +769,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Rate sse_decode_rate(SseDeserializer deserializer);
-
-  @protected
-  ReceiveOnchainRequest sse_decode_receive_onchain_request(SseDeserializer deserializer);
 
   @protected
   ReceiveOnchainResponse sse_decode_receive_onchain_response(SseDeserializer deserializer);
@@ -1061,6 +1056,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_prepare_receive_onchain_response>
+      cst_encode_box_autoadd_prepare_receive_onchain_response(PrepareReceiveOnchainResponse raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_prepare_receive_onchain_response();
+    cst_api_fill_to_wire_prepare_receive_onchain_response(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_prepare_receive_request> cst_encode_box_autoadd_prepare_receive_request(
       PrepareReceiveRequest raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -1102,15 +1106,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_prepare_send_response();
     cst_api_fill_to_wire_prepare_send_response(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_receive_onchain_request> cst_encode_box_autoadd_receive_onchain_request(
-      ReceiveOnchainRequest raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_receive_onchain_request();
-    cst_api_fill_to_wire_receive_onchain_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -1482,6 +1477,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_prepare_receive_onchain_response(
+      PrepareReceiveOnchainResponse apiObj, ffi.Pointer<wire_cst_prepare_receive_onchain_response> wireObj) {
+    cst_api_fill_to_wire_prepare_receive_onchain_response(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_prepare_receive_request(
       PrepareReceiveRequest apiObj, ffi.Pointer<wire_cst_prepare_receive_request> wireObj) {
     cst_api_fill_to_wire_prepare_receive_request(apiObj, wireObj.ref);
@@ -1509,12 +1510,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_box_autoadd_prepare_send_response(
       PrepareSendResponse apiObj, ffi.Pointer<wire_cst_prepare_send_response> wireObj) {
     cst_api_fill_to_wire_prepare_send_response(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_receive_onchain_request(
-      ReceiveOnchainRequest apiObj, ffi.Pointer<wire_cst_receive_onchain_request> wireObj) {
-    cst_api_fill_to_wire_receive_onchain_request(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2203,12 +2198,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_receive_onchain_request(
-      ReceiveOnchainRequest apiObj, wire_cst_receive_onchain_request wireObj) {
-    cst_api_fill_to_wire_prepare_receive_onchain_response(apiObj.prepareRes, wireObj.prepare_res);
-  }
-
-  @protected
   void cst_api_fill_to_wire_receive_onchain_response(
       ReceiveOnchainResponse apiObj, wire_cst_receive_onchain_response wireObj) {
     wireObj.address = cst_encode_String(apiObj.address);
@@ -2475,6 +2464,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PrepareReceiveOnchainRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_prepare_receive_onchain_response(
+      PrepareReceiveOnchainResponse self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_prepare_receive_request(PrepareReceiveRequest self, SseSerializer serializer);
 
   @protected
@@ -2488,9 +2481,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_prepare_send_response(PrepareSendResponse self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_refund_request(RefundRequest self, SseSerializer serializer);
@@ -2707,9 +2697,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_rate(Rate self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_receive_onchain_request(ReceiveOnchainRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_receive_onchain_response(ReceiveOnchainResponse self, SseSerializer serializer);
@@ -3134,7 +3121,7 @@ class RustLibWire implements BaseWire {
   void wire__crate__bindings__BindingLiquidSdk_receive_onchain(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_receive_onchain_request> req,
+    ffi.Pointer<wire_cst_prepare_receive_onchain_response> req,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_receive_onchain(
       port_,
@@ -3145,11 +3132,12 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_receive_onchain_request>)>>(
+              ffi.Void Function(
+                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain');
   late final _wire__crate__bindings__BindingLiquidSdk_receive_onchain =
       _wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_receive_onchain_request>)>();
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_receive_payment(
     int port_,
@@ -3634,6 +3622,18 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_prepare_receive_onchain_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_request> Function()>();
 
+  ffi.Pointer<wire_cst_prepare_receive_onchain_response>
+      cst_new_box_autoadd_prepare_receive_onchain_response() {
+    return _cst_new_box_autoadd_prepare_receive_onchain_response();
+  }
+
+  late final _cst_new_box_autoadd_prepare_receive_onchain_responsePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response');
+  late final _cst_new_box_autoadd_prepare_receive_onchain_response =
+      _cst_new_box_autoadd_prepare_receive_onchain_responsePtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>();
+
   ffi.Pointer<wire_cst_prepare_receive_request> cst_new_box_autoadd_prepare_receive_request() {
     return _cst_new_box_autoadd_prepare_receive_request();
   }
@@ -3683,16 +3683,6 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response');
   late final _cst_new_box_autoadd_prepare_send_response = _cst_new_box_autoadd_prepare_send_responsePtr
       .asFunction<ffi.Pointer<wire_cst_prepare_send_response> Function()>();
-
-  ffi.Pointer<wire_cst_receive_onchain_request> cst_new_box_autoadd_receive_onchain_request() {
-    return _cst_new_box_autoadd_receive_onchain_request();
-  }
-
-  late final _cst_new_box_autoadd_receive_onchain_requestPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_receive_onchain_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request');
-  late final _cst_new_box_autoadd_receive_onchain_request = _cst_new_box_autoadd_receive_onchain_requestPtr
-      .asFunction<ffi.Pointer<wire_cst_receive_onchain_request> Function()>();
 
   ffi.Pointer<wire_cst_refund_request> cst_new_box_autoadd_refund_request() {
     return _cst_new_box_autoadd_refund_request();
@@ -4042,10 +4032,6 @@ final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int fees_sat;
-}
-
-final class wire_cst_receive_onchain_request extends ffi.Struct {
-  external wire_cst_prepare_receive_onchain_response prepare_res;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {

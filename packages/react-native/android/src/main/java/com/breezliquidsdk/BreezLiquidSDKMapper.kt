@@ -1428,38 +1428,6 @@ fun asRateList(arr: ReadableArray): List<Rate> {
     return list
 }
 
-fun asReceiveOnchainRequest(receiveOnchainRequest: ReadableMap): ReceiveOnchainRequest? {
-    if (!validateMandatoryFields(
-            receiveOnchainRequest,
-            arrayOf(
-                "prepareRes",
-            ),
-        )
-    ) {
-        return null
-    }
-    val prepareRes = receiveOnchainRequest.getMap("prepareRes")?.let { asPrepareReceiveOnchainResponse(it) }!!
-    return ReceiveOnchainRequest(
-        prepareRes,
-    )
-}
-
-fun readableMapOf(receiveOnchainRequest: ReceiveOnchainRequest): ReadableMap =
-    readableMapOf(
-        "prepareRes" to readableMapOf(receiveOnchainRequest.prepareRes),
-    )
-
-fun asReceiveOnchainRequestList(arr: ReadableArray): List<ReceiveOnchainRequest> {
-    val list = ArrayList<ReceiveOnchainRequest>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asReceiveOnchainRequest(value)!!)
-            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
 fun asReceiveOnchainResponse(receiveOnchainResponse: ReadableMap): ReceiveOnchainResponse? {
     if (!validateMandatoryFields(
             receiveOnchainResponse,

@@ -247,9 +247,7 @@ pub(crate) async fn handle_command(
                 "Payment receive halted"
             );
 
-            let response = sdk
-                .receive_onchain(&ReceiveOnchainRequest { prepare_res })
-                .await?;
+            let response = sdk.receive_onchain(&prepare_res).await?;
             let bip21 = response.bip21.clone();
 
             let mut result = command_result!(response);

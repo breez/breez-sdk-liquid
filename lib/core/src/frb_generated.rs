@@ -883,7 +883,7 @@ fn wire__crate__bindings__BindingLiquidSdk_receive_onchain_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    req: impl CstDecode<crate::model::ReceiveOnchainRequest>,
+    req: impl CstDecode<crate::model::PrepareReceiveOnchainResponse>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -2895,17 +2895,6 @@ impl SseDecode for crate::bindings::Rate {
     }
 }
 
-impl SseDecode for crate::model::ReceiveOnchainRequest {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_prepareRes =
-            <crate::model::PrepareReceiveOnchainResponse>::sse_decode(deserializer);
-        return crate::model::ReceiveOnchainRequest {
-            prepare_res: var_prepareRes,
-        };
-    }
-}
-
 impl SseDecode for crate::model::ReceiveOnchainResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4374,23 +4363,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Rate>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::ReceiveOnchainRequest {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.prepare_res.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::ReceiveOnchainRequest
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceiveOnchainRequest>
-    for crate::model::ReceiveOnchainRequest
-{
-    fn into_into_dart(self) -> crate::model::ReceiveOnchainRequest {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::ReceiveOnchainResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5642,13 +5614,6 @@ impl SseEncode for crate::bindings::Rate {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.coin, serializer);
         <f64>::sse_encode(self.value, serializer);
-    }
-}
-
-impl SseEncode for crate::model::ReceiveOnchainRequest {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::model::PrepareReceiveOnchainResponse>::sse_encode(self.prepare_res, serializer);
     }
 }
 

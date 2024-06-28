@@ -238,10 +238,6 @@ export interface Rate {
     value: number
 }
 
-export interface ReceiveOnchainRequest {
-    prepareRes: PrepareReceiveOnchainResponse
-}
-
 export interface ReceiveOnchainResponse {
     address: string
     bip21: string
@@ -556,7 +552,7 @@ export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): 
     return response
 }
 
-export const receiveOnchain = async (req: ReceiveOnchainRequest): Promise<ReceiveOnchainResponse> => {
+export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promise<ReceiveOnchainResponse> => {
     const response = await BreezLiquidSDK.receiveOnchain(req)
     return response
 }

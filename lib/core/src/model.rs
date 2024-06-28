@@ -228,11 +228,6 @@ pub struct PrepareReceiveOnchainResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ReceiveOnchainRequest {
-    pub prepare_res: PrepareReceiveOnchainResponse,
-}
-
-#[derive(Debug, Serialize)]
 pub struct ReceiveOnchainResponse {
     pub address: String,
     pub bip21: String,

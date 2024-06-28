@@ -629,22 +629,6 @@ class PrepareSendResponse {
           feesSat == other.feesSat;
 }
 
-class ReceiveOnchainRequest {
-  final PrepareReceiveOnchainResponse prepareRes;
-
-  const ReceiveOnchainRequest({
-    required this.prepareRes,
-  });
-
-  @override
-  int get hashCode => prepareRes.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ReceiveOnchainRequest && runtimeType == other.runtimeType && prepareRes == other.prepareRes;
-}
-
 class ReceiveOnchainResponse {
   final String address;
   final String bip21;

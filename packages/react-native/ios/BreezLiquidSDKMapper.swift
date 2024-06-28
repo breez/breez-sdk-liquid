@@ -1667,39 +1667,6 @@ enum BreezLiquidSDKMapper {
         return rateList.map { v -> [String: Any?] in dictionaryOf(rate: v) }
     }
 
-    static func asReceiveOnchainRequest(receiveOnchainRequest: [String: Any?]) throws -> ReceiveOnchainRequest {
-        guard let prepareResTmp = receiveOnchainRequest["prepareRes"] as? [String: Any?] else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareRes", typeName: "ReceiveOnchainRequest"))
-        }
-        let prepareRes = try asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: prepareResTmp)
-
-        return ReceiveOnchainRequest(
-            prepareRes: prepareRes)
-    }
-
-    static func dictionaryOf(receiveOnchainRequest: ReceiveOnchainRequest) -> [String: Any?] {
-        return [
-            "prepareRes": dictionaryOf(prepareReceiveOnchainResponse: receiveOnchainRequest.prepareRes),
-        ]
-    }
-
-    static func asReceiveOnchainRequestList(arr: [Any]) throws -> [ReceiveOnchainRequest] {
-        var list = [ReceiveOnchainRequest]()
-        for value in arr {
-            if let val = value as? [String: Any?] {
-                var receiveOnchainRequest = try asReceiveOnchainRequest(receiveOnchainRequest: val)
-                list.append(receiveOnchainRequest)
-            } else {
-                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "ReceiveOnchainRequest"))
-            }
-        }
-        return list
-    }
-
-    static func arrayOf(receiveOnchainRequestList: [ReceiveOnchainRequest]) -> [Any] {
-        return receiveOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(receiveOnchainRequest: v) }
-    }
-
     static func asReceiveOnchainResponse(receiveOnchainResponse: [String: Any?]) throws -> ReceiveOnchainResponse {
         guard let address = receiveOnchainResponse["address"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "ReceiveOnchainResponse"))

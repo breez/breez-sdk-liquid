@@ -316,6 +316,15 @@ impl CstDecode<crate::model::PrepareReceiveOnchainRequest>
         CstDecode::<crate::model::PrepareReceiveOnchainRequest>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
+    for *mut wire_cst_prepare_receive_onchain_response
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareReceiveOnchainResponse {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PrepareReceiveOnchainResponse>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
@@ -349,13 +358,6 @@ impl CstDecode<crate::model::PrepareSendResponse> for *mut wire_cst_prepare_send
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::PrepareSendResponse>::cst_decode(*wrap).into()
-    }
-}
-impl CstDecode<crate::model::ReceiveOnchainRequest> for *mut wire_cst_receive_onchain_request {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::ReceiveOnchainRequest {
-        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::ReceiveOnchainRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::RefundRequest> for *mut wire_cst_refund_request {
@@ -1227,14 +1229,6 @@ impl CstDecode<crate::bindings::Rate> for wire_cst_rate {
         }
     }
 }
-impl CstDecode<crate::model::ReceiveOnchainRequest> for wire_cst_receive_onchain_request {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::ReceiveOnchainRequest {
-        crate::model::ReceiveOnchainRequest {
-            prepare_res: self.prepare_res.cst_decode(),
-        }
-    }
-}
 impl CstDecode<crate::model::ReceiveOnchainResponse> for wire_cst_receive_onchain_response {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ReceiveOnchainResponse {
@@ -2019,18 +2013,6 @@ impl Default for wire_cst_rate {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_receive_onchain_request {
-    fn new_with_null_ptr() -> Self {
-        Self {
-            prepare_res: Default::default(),
-        }
-    }
-}
-impl Default for wire_cst_receive_onchain_request {
-    fn default() -> Self {
-        Self::new_with_null_ptr()
-    }
-}
 impl NewWithNullPtr for wire_cst_receive_onchain_response {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2350,7 +2332,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_receive_onchain_request,
+    req: *mut wire_cst_prepare_receive_onchain_response,
 ) {
     wire__crate__bindings__BindingLiquidSdk_receive_onchain_impl(port_, that, req)
 }
@@ -2647,6 +2629,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchai
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response(
+) -> *mut wire_cst_prepare_receive_onchain_response {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_prepare_receive_onchain_response::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
 ) -> *mut wire_cst_prepare_receive_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2683,14 +2673,6 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 ) -> *mut wire_cst_prepare_send_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_response::new_with_null_ptr(),
-    )
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request(
-) -> *mut wire_cst_receive_onchain_request {
-    flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_receive_onchain_request::new_with_null_ptr(),
     )
 }
 
@@ -3600,11 +3582,6 @@ pub struct wire_cst_prepare_send_response {
 pub struct wire_cst_rate {
     coin: *mut wire_cst_list_prim_u_8_strict,
     value: f64,
-}
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct wire_cst_receive_onchain_request {
-    prepare_res: wire_cst_prepare_receive_onchain_response,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

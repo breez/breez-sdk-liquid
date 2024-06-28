@@ -1213,18 +1213,17 @@ impl LiquidSdk {
 
     pub async fn receive_onchain(
         &self,
-        req: &ReceiveOnchainRequest,
+        req: &PrepareReceiveOnchainResponse,
     ) -> Result<ReceiveOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.prepare_res.payer_amount_sat;
+        let payer_amount_sat = req.payer_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            req.prepare_res.fees_sat
-                == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            req.fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1258,7 +1257,7 @@ impl LiquidSdk {
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
         let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - req.prepare_res.fees_sat;
+        let receiver_amount_sat = payer_amount_sat - req.fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let lockup_address = create_response.lockup_details.lockup_address;
 
