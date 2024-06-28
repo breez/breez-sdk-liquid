@@ -259,10 +259,10 @@ class BreezLiquidSDKModule(
     }
 
     @ReactMethod
-    fun payOnchainLimits(promise: Promise) {
+    fun fetchOnchainLimits(promise: Promise) {
         executor.execute {
             try {
-                val res = getBindingLiquidSdk().payOnchainLimits()
+                val res = getBindingLiquidSdk().fetchOnchainLimits()
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -299,18 +299,6 @@ class BreezLiquidSDKModule(
                     asPayOnchainRequest(req)
                         ?: run { throw LiquidSdkException.Generic(errMissingMandatoryField("req", "PayOnchainRequest")) }
                 val res = getBindingLiquidSdk().payOnchain(payOnchainRequest)
-                promise.resolve(readableMapOf(res))
-            } catch (e: Exception) {
-                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun receiveOnchainLimits(promise: Promise) {
-        executor.execute {
-            try {
-                val res = getBindingLiquidSdk().receiveOnchainLimits()
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

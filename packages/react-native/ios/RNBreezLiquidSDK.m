@@ -73,7 +73,7 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    payOnchainLimits: (RCTPromiseResolveBlock)resolve
+    fetchOnchainLimits: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
@@ -86,11 +86,6 @@ RCT_EXTERN_METHOD(
 RCT_EXTERN_METHOD(
     payOnchain: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    receiveOnchainLimits: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

@@ -1111,28 +1111,43 @@ enum BreezLiquidSDKMapper {
     }
 
     static func asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: [String: Any?]) throws -> OnchainPaymentLimitsResponse {
-        guard let maxPayerAmountSat = onchainPaymentLimitsResponse["maxPayerAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        guard let sendMinPayerAmountSat = onchainPaymentLimitsResponse["sendMinPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMinPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let minPayerAmountSat = onchainPaymentLimitsResponse["minPayerAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        guard let sendMaxPayerAmountSat = onchainPaymentLimitsResponse["sendMaxPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMaxPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let maxPayerAmountSatZeroConf = onchainPaymentLimitsResponse["maxPayerAmountSatZeroConf"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxPayerAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
+        guard let sendMaxPayerAmountSatZeroConf = onchainPaymentLimitsResponse["sendMaxPayerAmountSatZeroConf"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMaxPayerAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
+        }
+        guard let receiveMinPayerAmountSat = onchainPaymentLimitsResponse["receiveMinPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMinPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        }
+        guard let receiveMaxPayerAmountSat = onchainPaymentLimitsResponse["receiveMaxPayerAmountSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMaxPayerAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        }
+        guard let receiveMaxPayerAmountSatZeroConf = onchainPaymentLimitsResponse["receiveMaxPayerAmountSatZeroConf"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMaxPayerAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
         }
 
         return OnchainPaymentLimitsResponse(
-            maxPayerAmountSat: maxPayerAmountSat,
-            minPayerAmountSat: minPayerAmountSat,
-            maxPayerAmountSatZeroConf: maxPayerAmountSatZeroConf
+            sendMinPayerAmountSat: sendMinPayerAmountSat,
+            sendMaxPayerAmountSat: sendMaxPayerAmountSat,
+            sendMaxPayerAmountSatZeroConf: sendMaxPayerAmountSatZeroConf,
+            receiveMinPayerAmountSat: receiveMinPayerAmountSat,
+            receiveMaxPayerAmountSat: receiveMaxPayerAmountSat,
+            receiveMaxPayerAmountSatZeroConf: receiveMaxPayerAmountSatZeroConf
         )
     }
 
     static func dictionaryOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse) -> [String: Any?] {
         return [
-            "maxPayerAmountSat": onchainPaymentLimitsResponse.maxPayerAmountSat,
-            "minPayerAmountSat": onchainPaymentLimitsResponse.minPayerAmountSat,
-            "maxPayerAmountSatZeroConf": onchainPaymentLimitsResponse.maxPayerAmountSatZeroConf,
+            "sendMinPayerAmountSat": onchainPaymentLimitsResponse.sendMinPayerAmountSat,
+            "sendMaxPayerAmountSat": onchainPaymentLimitsResponse.sendMaxPayerAmountSat,
+            "sendMaxPayerAmountSatZeroConf": onchainPaymentLimitsResponse.sendMaxPayerAmountSatZeroConf,
+            "receiveMinPayerAmountSat": onchainPaymentLimitsResponse.receiveMinPayerAmountSat,
+            "receiveMaxPayerAmountSat": onchainPaymentLimitsResponse.receiveMaxPayerAmountSat,
+            "receiveMaxPayerAmountSatZeroConf": onchainPaymentLimitsResponse.receiveMaxPayerAmountSatZeroConf,
         ]
     }
 

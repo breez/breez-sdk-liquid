@@ -1043,9 +1043,16 @@ impl CstDecode<crate::model::OnchainPaymentLimitsResponse>
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::OnchainPaymentLimitsResponse {
         crate::model::OnchainPaymentLimitsResponse {
-            max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
-            min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
-            max_payer_amount_sat_zero_conf: self.max_payer_amount_sat_zero_conf.cst_decode(),
+            send_min_payer_amount_sat: self.send_min_payer_amount_sat.cst_decode(),
+            send_max_payer_amount_sat: self.send_max_payer_amount_sat.cst_decode(),
+            send_max_payer_amount_sat_zero_conf: self
+                .send_max_payer_amount_sat_zero_conf
+                .cst_decode(),
+            receive_min_payer_amount_sat: self.receive_min_payer_amount_sat.cst_decode(),
+            receive_max_payer_amount_sat: self.receive_max_payer_amount_sat.cst_decode(),
+            receive_max_payer_amount_sat_zero_conf: self
+                .receive_max_payer_amount_sat_zero_conf
+                .cst_decode(),
         }
     }
 }
@@ -1845,9 +1852,12 @@ impl Default for wire_cst_message_success_action_data {
 impl NewWithNullPtr for wire_cst_onchain_payment_limits_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            max_payer_amount_sat: Default::default(),
-            min_payer_amount_sat: Default::default(),
-            max_payer_amount_sat_zero_conf: Default::default(),
+            send_min_payer_amount_sat: Default::default(),
+            send_max_payer_amount_sat: Default::default(),
+            send_max_payer_amount_sat_zero_conf: Default::default(),
+            receive_min_payer_amount_sat: Default::default(),
+            receive_max_payer_amount_sat: Default::default(),
+            receive_max_payer_amount_sat_zero_conf: Default::default(),
         }
     }
 }
@@ -2260,6 +2270,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fe
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(port_, that)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,
@@ -2328,14 +2346,6 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pa
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(
-    port_: i64,
-    that: usize,
-) {
-    wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits_impl(port_, that)
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     port_: i64,
     that: usize,
@@ -2387,14 +2397,6 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
     req: *mut wire_cst_receive_onchain_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_receive_onchain_impl(port_, that, req)
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(
-    port_: i64,
-    that: usize,
-) {
-    wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits_impl(port_, that)
 }
 
 #[no_mangle]
@@ -3507,9 +3509,12 @@ pub struct wire_cst_message_success_action_data {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_onchain_payment_limits_response {
-    max_payer_amount_sat: u64,
-    min_payer_amount_sat: u64,
-    max_payer_amount_sat_zero_conf: u64,
+    send_min_payer_amount_sat: u64,
+    send_max_payer_amount_sat: u64,
+    send_max_payer_amount_sat_zero_conf: u64,
+    receive_min_payer_amount_sat: u64,
+    receive_max_payer_amount_sat: u64,
+    receive_max_payer_amount_sat_zero_conf: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use boltz_client::boltzv2::PairLimits;
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltzv2::{
     CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -186,21 +185,19 @@ pub struct ReceivePaymentResponse {
 
 #[derive(Debug, Serialize)]
 pub struct OnchainPaymentLimitsResponse {
-    /// Maximum swap amount for the swap to be valid
-    pub max_payer_amount_sat: u64,
-    /// Minimum swap amount for the swap to be valid
-    pub min_payer_amount_sat: u64,
-    /// Maximum swap amount which the swapper will accept for zero-conf
-    pub max_payer_amount_sat_zero_conf: u64,
-}
-impl From<PairLimits> for OnchainPaymentLimitsResponse {
-    fn from(pair_limits: PairLimits) -> Self {
-        Self {
-            max_payer_amount_sat: pair_limits.maximal,
-            min_payer_amount_sat: pair_limits.minimal,
-            max_payer_amount_sat_zero_conf: pair_limits.maximal_zero_conf,
-        }
-    }
+    /// Minimum swap amount for a Send Swap to be valid
+    pub send_min_payer_amount_sat: u64,
+    /// Maximum swap amount for a Send Swap to be valid
+    pub send_max_payer_amount_sat: u64,
+    /// Maximum swap amount which the swapper will accept for zero-conf Send Swaps
+    pub send_max_payer_amount_sat_zero_conf: u64,
+
+    /// Minimum swap amount for a Receive Swap to be valid
+    pub receive_min_payer_amount_sat: u64,
+    /// Maximum swap amount for a Receive Swap to be valid
+    pub receive_max_payer_amount_sat: u64,
+    /// Maximum swap amount which the swapper will accept for zero-conf Receive Swaps
+    pub receive_max_payer_amount_sat_zero_conf: u64,
 }
 
 #[derive(Debug, Serialize, Clone)]

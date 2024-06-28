@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -740833575;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1351340125;
 
 // Section: executor
 
@@ -251,6 +251,52 @@ fn wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(
                         let output_ok =
                             crate::bindings::BindingLiquidSdk::fetch_fiat_rates(&*api_that_guard)
                                 .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_fetch_onchain_limits",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::fetch_onchain_limits(
+                            &*api_that_guard,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -633,51 +679,6 @@ fn wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(
         },
     )
 }
-fn wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "BindingLiquidSdk_pay_onchain_limits",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            move |context| async move {
-                transform_result_dco::<_, _, crate::error::PaymentError>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_that_guard =
-                                        Some(api_that.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok =
-                            crate::bindings::BindingLiquidSdk::pay_onchain_limits(&*api_that_guard)
-                                .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
 fn wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -962,52 +963,6 @@ fn wire__crate__bindings__BindingLiquidSdk_receive_onchain_impl(
                         let output_ok = crate::bindings::BindingLiquidSdk::receive_onchain(
                             &*api_that_guard,
                             api_req,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
-    >,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "BindingLiquidSdk_receive_onchain_limits",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            move |context| async move {
-                transform_result_dco::<_, _, crate::error::PaymentError>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_that_guard =
-                                        Some(api_that.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::bindings::BindingLiquidSdk::receive_onchain_limits(
-                            &*api_that_guard,
                         )
                         .await?;
                         Ok(output_ok)
@@ -2644,13 +2599,19 @@ impl SseDecode for crate::bindings::Network {
 impl SseDecode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_maxPayerAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_minPayerAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_maxPayerAmountSatZeroConf = <u64>::sse_decode(deserializer);
+        let mut var_sendMinPayerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_sendMaxPayerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_sendMaxPayerAmountSatZeroConf = <u64>::sse_decode(deserializer);
+        let mut var_receiveMinPayerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiveMaxPayerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiveMaxPayerAmountSatZeroConf = <u64>::sse_decode(deserializer);
         return crate::model::OnchainPaymentLimitsResponse {
-            max_payer_amount_sat: var_maxPayerAmountSat,
-            min_payer_amount_sat: var_minPayerAmountSat,
-            max_payer_amount_sat_zero_conf: var_maxPayerAmountSatZeroConf,
+            send_min_payer_amount_sat: var_sendMinPayerAmountSat,
+            send_max_payer_amount_sat: var_sendMaxPayerAmountSat,
+            send_max_payer_amount_sat_zero_conf: var_sendMaxPayerAmountSatZeroConf,
+            receive_min_payer_amount_sat: var_receiveMinPayerAmountSat,
+            receive_max_payer_amount_sat: var_receiveMaxPayerAmountSat,
+            receive_max_payer_amount_sat_zero_conf: var_receiveMaxPayerAmountSatZeroConf,
         };
     }
 }
@@ -4131,9 +4092,18 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Network>>
 impl flutter_rust_bridge::IntoDart for crate::model::OnchainPaymentLimitsResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.max_payer_amount_sat.into_into_dart().into_dart(),
-            self.min_payer_amount_sat.into_into_dart().into_dart(),
-            self.max_payer_amount_sat_zero_conf
+            self.send_min_payer_amount_sat.into_into_dart().into_dart(),
+            self.send_max_payer_amount_sat.into_into_dart().into_dart(),
+            self.send_max_payer_amount_sat_zero_conf
+                .into_into_dart()
+                .into_dart(),
+            self.receive_min_payer_amount_sat
+                .into_into_dart()
+                .into_dart(),
+            self.receive_max_payer_amount_sat
+                .into_into_dart()
+                .into_dart(),
+            self.receive_max_payer_amount_sat_zero_conf
                 .into_into_dart()
                 .into_dart(),
         ]
@@ -5496,9 +5466,12 @@ impl SseEncode for crate::bindings::Network {
 impl SseEncode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.max_payer_amount_sat, serializer);
-        <u64>::sse_encode(self.min_payer_amount_sat, serializer);
-        <u64>::sse_encode(self.max_payer_amount_sat_zero_conf, serializer);
+        <u64>::sse_encode(self.send_min_payer_amount_sat, serializer);
+        <u64>::sse_encode(self.send_max_payer_amount_sat, serializer);
+        <u64>::sse_encode(self.send_max_payer_amount_sat_zero_conf, serializer);
+        <u64>::sse_encode(self.receive_min_payer_amount_sat, serializer);
+        <u64>::sse_encode(self.receive_max_payer_amount_sat, serializer);
+        <u64>::sse_encode(self.receive_max_payer_amount_sat_zero_conf, serializer);
     }
 }
 

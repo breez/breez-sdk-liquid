@@ -2023,9 +2023,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_onchain_payment_limits_response(
       OnchainPaymentLimitsResponse apiObj, wire_cst_onchain_payment_limits_response wireObj) {
-    wireObj.max_payer_amount_sat = cst_encode_u_64(apiObj.maxPayerAmountSat);
-    wireObj.min_payer_amount_sat = cst_encode_u_64(apiObj.minPayerAmountSat);
-    wireObj.max_payer_amount_sat_zero_conf = cst_encode_u_64(apiObj.maxPayerAmountSatZeroConf);
+    wireObj.send_min_payer_amount_sat = cst_encode_u_64(apiObj.sendMinPayerAmountSat);
+    wireObj.send_max_payer_amount_sat = cst_encode_u_64(apiObj.sendMaxPayerAmountSat);
+    wireObj.send_max_payer_amount_sat_zero_conf = cst_encode_u_64(apiObj.sendMaxPayerAmountSatZeroConf);
+    wireObj.receive_min_payer_amount_sat = cst_encode_u_64(apiObj.receiveMinPayerAmountSat);
+    wireObj.receive_max_payer_amount_sat = cst_encode_u_64(apiObj.receiveMaxPayerAmountSat);
+    wireObj.receive_max_payer_amount_sat_zero_conf = cst_encode_u_64(apiObj.receiveMaxPayerAmountSatZeroConf);
   }
 
   @protected
@@ -2904,6 +2907,22 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
       _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr.asFunction<void Function(int, int)>();
+
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -3048,22 +3067,6 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
 
-  void wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(
-    int port_,
-    int that,
-  ) {
-    return _wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire__crate__bindings__BindingLiquidSdk_pay_onchain_limitsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits');
-  late final _wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits =
-      _wire__crate__bindings__BindingLiquidSdk_pay_onchain_limitsPtr.asFunction<void Function(int, int)>();
-
   void wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     int port_,
     int that,
@@ -3184,23 +3187,6 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_receive_onchain =
       _wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_receive_onchain_request>)>();
-
-  void wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(
-    int port_,
-    int that,
-  ) {
-    return _wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(
-      port_,
-      that,
-    );
-  }
-
-  late final _wire__crate__bindings__BindingLiquidSdk_receive_onchain_limitsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits');
-  late final _wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits =
-      _wire__crate__bindings__BindingLiquidSdk_receive_onchain_limitsPtr
-          .asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_receive_payment(
     int port_,
@@ -4810,13 +4796,22 @@ final class wire_cst_log_entry extends ffi.Struct {
 
 final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   @ffi.Uint64()
-  external int max_payer_amount_sat;
+  external int send_min_payer_amount_sat;
 
   @ffi.Uint64()
-  external int min_payer_amount_sat;
+  external int send_max_payer_amount_sat;
 
   @ffi.Uint64()
-  external int max_payer_amount_sat_zero_conf;
+  external int send_max_payer_amount_sat_zero_conf;
+
+  @ffi.Uint64()
+  external int receive_min_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int receive_max_payer_amount_sat;
+
+  @ffi.Uint64()
+  external int receive_max_payer_amount_sat_zero_conf;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

@@ -122,8 +122,8 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.receive_payment(&req))
     }
 
-    pub fn pay_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
-        rt().block_on(self.sdk.pay_onchain_limits())
+    pub fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
+        rt().block_on(self.sdk.fetch_onchain_limits())
     }
 
     pub fn prepare_pay_onchain(
@@ -135,10 +135,6 @@ impl BindingLiquidSdk {
 
     pub fn pay_onchain(&self, req: PayOnchainRequest) -> Result<SendPaymentResponse, PaymentError> {
         rt().block_on(self.sdk.pay_onchain(&req))
-    }
-
-    pub fn receive_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
-        rt().block_on(self.sdk.receive_onchain_limits())
     }
 
     pub fn prepare_receive_onchain(

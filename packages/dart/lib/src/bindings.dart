@@ -41,6 +41,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<Rate>> fetchFiatRates();
 
+  Future<OnchainPaymentLimitsResponse> fetchOnchainLimits();
+
   Future<GetInfoResponse> getInfo();
 
   Future<List<FiatCurrency>> listFiatCurrencies();
@@ -57,8 +59,6 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 
-  Future<OnchainPaymentLimitsResponse> payOnchainLimits();
-
   Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req});
 
   Future<PrepareReceiveOnchainResponse> prepareReceiveOnchain({required PrepareReceiveOnchainRequest req});
@@ -70,8 +70,6 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req});
 
   Future<ReceiveOnchainResponse> receiveOnchain({required ReceiveOnchainRequest req});
-
-  Future<OnchainPaymentLimitsResponse> receiveOnchainLimits();
 
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req});
 

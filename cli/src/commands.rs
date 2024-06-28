@@ -28,8 +28,8 @@ pub(crate) enum Command {
         #[arg(short, long)]
         delay: Option<u64>,
     },
-    /// Fetch the current limits for Send Onchain payments
-    SendOnchainLimits,
+    /// Fetch the current limits for Onchain Send and Receive payments
+    FetchOnchainLimits,
     /// Send lbtc and receive btc onchain through a swap
     SendOnchainPayment {
         /// Btc onchain address to send to
@@ -43,8 +43,6 @@ pub(crate) enum Command {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
     },
-    /// Fetch the current limits for Receive Onchain payments
-    ReceiveOnchainLimits,
     /// Receive lbtc and send btc onchain through a swap
     ReceiveOnchainPayment {
         /// Amount the payer will send, in satoshi
@@ -183,8 +181,8 @@ pub(crate) async fn handle_command(
             result.push_str(&build_qr_text(&invoice));
             result
         }
-        Command::SendOnchainLimits => {
-            let limits = sdk.pay_onchain_limits().await?;
+        Command::FetchOnchainLimits => {
+            let limits = sdk.fetch_onchain_limits().await?;
             command_result!(limits)
         }
         Command::SendPayment { bolt11, delay } => {
@@ -237,10 +235,6 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
             command_result!(response)
-        }
-        Command::ReceiveOnchainLimits => {
-            let limits = sdk.receive_onchain_limits().await?;
-            command_result!(limits)
         }
         Command::ReceiveOnchainPayment { payer_amount_sat } => {
             let prepare_res = sdk

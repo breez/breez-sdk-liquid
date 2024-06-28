@@ -665,9 +665,12 @@ typedef struct wire_cst_log_entry {
 } wire_cst_log_entry;
 
 typedef struct wire_cst_onchain_payment_limits_response {
-  uint64_t max_payer_amount_sat;
-  uint64_t min_payer_amount_sat;
-  uint64_t max_payer_amount_sat_zero_conf;
+  uint64_t send_min_payer_amount_sat;
+  uint64_t send_max_payer_amount_sat;
+  uint64_t send_max_payer_amount_sat_zero_conf;
+  uint64_t receive_min_payer_amount_sat;
+  uint64_t receive_max_payer_amount_sat;
+  uint64_t receive_max_payer_amount_sat_zero_conf;
 } wire_cst_onchain_payment_limits_response;
 
 typedef struct wire_cst_PaymentError_Generic {
@@ -753,6 +756,9 @@ WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int64_t port_,
                                                                                   uintptr_t that);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(int64_t port_,
+                                                                                      uintptr_t that);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that);
 
@@ -781,9 +787,6 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(int
                                                                              uintptr_t that,
                                                                              struct wire_cst_pay_onchain_request *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits(int64_t port_,
-                                                                                    uintptr_t that);
-
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(int64_t port_,
                                                                                      uintptr_t that,
                                                                                      struct wire_cst_prepare_pay_onchain_request *req);
@@ -807,9 +810,6 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_pa
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(int64_t port_,
                                                                                  uintptr_t that,
                                                                                  struct wire_cst_receive_onchain_request *req);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits(int64_t port_,
-                                                                                        uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(int64_t port_,
                                                                                  uintptr_t that,
@@ -996,6 +996,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
@@ -1004,14 +1005,12 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);
