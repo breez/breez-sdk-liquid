@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 
 use crate::chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService};
@@ -49,10 +49,12 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _address: &boltz_client::ElementsAddress,
         _tx_id: &str,
-        _tx_hex: &str,
+        tx_hex: &str,
         _verify_confirmation: bool,
     ) -> Result<lwk_wollet::elements::Transaction> {
-        todo!()
+        let hex_slice = <Vec<u8> as lwk_wollet::elements::hex::FromHex>::from_hex(tx_hex)
+            .map_err(|e| anyhow!("Could not deserialize transaction: {e}"))?;
+        Ok(lwk_wollet::elements::encode::deserialize(&hex_slice)?)
     }
 }
 

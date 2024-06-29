@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+use std::sync::RwLock;
+
 use boltz_client::{
     boltzv2::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -20,11 +22,14 @@ use crate::{
 
 use super::{status_stream::MockStatusStream, TEST_TX_TXID};
 
-pub struct MockSwapper {}
+#[derive(Default)]
+pub struct MockSwapper {
+    pub(crate) claim_tx_id: RwLock<Option<String>>,
+}
 
 impl MockSwapper {
     pub(crate) fn new() -> Self {
-        MockSwapper {}
+        MockSwapper::default()
     }
 
     fn mock_swap_tree() -> SwapTree {
@@ -251,8 +256,12 @@ impl Swapper for MockSwapper {
         _swap: &ReceiveSwap,
         _claim_address: String,
     ) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
-        todo!()
+        Ok(self
+            .claim_tx_id
+            .read()
+            .unwrap()
+            .clone()
+            .unwrap_or("".to_string()))
     }
 
     fn broadcast_tx(

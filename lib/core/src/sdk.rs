@@ -1681,12 +1681,13 @@ mod tests {
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
-        boltzv2,
+        boltzv2::{self, SwapUpdateTxDetails},
         swaps::boltz::{
             RevSwapStates::{self, *},
             SubSwapStates::{self, *},
         },
     };
+    use lwk_wollet::{elements::encode::serialize, hashes::hex::DisplayHex};
 
     use crate::{
         model::PaymentState,
@@ -1695,6 +1696,7 @@ mod tests {
             persist::{new_persister, new_receive_swap, new_send_swap},
             sdk::new_liquid_sdk,
             status_stream::MockStatusStream,
+            swapper::MockSwapper,
         },
     };
 
@@ -1702,10 +1704,14 @@ mod tests {
     async fn test_receive_swap_update_tracking() -> Result<()> {
         let (_tmp_dir, persister) = new_persister()?;
         let persister = Arc::new(persister);
-
+        let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
-        let sdk = Arc::new(new_liquid_sdk(persister.clone(), status_stream.clone())?);
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
 
         LiquidSdk::track_swap_updates(&sdk).await;
 
@@ -1740,6 +1746,79 @@ mod tests {
                     .ok_or(anyhow!("Could not retrieve receive swap"))
                     .unwrap();
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
+
+                // Check that `TransactionMempool` correctly triggers claim,
+                // which in turn sets the `claim_tx_id`
+                let receive_swap = new_receive_swap(None);
+                persister.insert_receive_swap(&receive_swap).unwrap();
+
+                let address = sdk
+                    .onchain_wallet
+                    .next_unused_address()
+                    .await
+                    .unwrap()
+                    .to_string();
+                let mock_tx = sdk
+                    .onchain_wallet
+                    .build_tx(None, &address, 1000)
+                    .await
+                    .unwrap();
+                let mock_lockup_tx_id = mock_tx.txid().to_string();
+
+                // Set claim_tx_id to a custom value, so we can later ensure it is
+                // set correctly
+                let claim_tx_id = "test-claim-tx-id".to_string();
+                *swapper.claim_tx_id.write().unwrap() = Some(claim_tx_id.clone());
+
+                status_stream
+                    .clone()
+                    .send_mock_update(boltzv2::Update {
+                        id: receive_swap.id.clone(),
+                        status: RevSwapStates::TransactionMempool.to_string(),
+                        transaction: Some(SwapUpdateTxDetails {
+                            id: mock_lockup_tx_id.clone(),
+                            hex: serialize(&mock_tx).to_lower_hex_string(),
+                        }),
+                        zero_conf_rejected: None,
+                    })
+                    .await
+                    .unwrap();
+
+                let persisted_swap = persister
+                    .fetch_receive_swap(&receive_swap.id)
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve receive swap"))
+                    .unwrap();
+                assert_eq!(persisted_swap.claim_tx_id, Some(claim_tx_id));
+
+                // Check that `TransactionConfirmed` correctly triggers claim,
+                // which in turn sets the `claim_tx_id`
+                let receive_swap = new_receive_swap(None);
+                persister.insert_receive_swap(&receive_swap).unwrap();
+
+                let claim_tx_id = "test-claim-tx-id-2".to_string();
+                *swapper.claim_tx_id.write().unwrap() = Some(claim_tx_id.clone());
+
+                status_stream
+                    .clone()
+                    .send_mock_update(boltzv2::Update {
+                        id: receive_swap.id.clone(),
+                        status: RevSwapStates::TransactionConfirmed.to_string(),
+                        transaction: Some(SwapUpdateTxDetails {
+                            id: mock_lockup_tx_id,
+                            hex: serialize(&mock_tx).to_lower_hex_string(),
+                        }),
+                        zero_conf_rejected: None,
+                    })
+                    .await
+                    .unwrap();
+
+                let persisted_swap = persister
+                    .fetch_receive_swap(&receive_swap.id)
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve receive swap"))
+                    .unwrap();
+                assert_eq!(persisted_swap.claim_tx_id, Some(claim_tx_id));
             }
         })
         .await
@@ -1752,10 +1831,14 @@ mod tests {
     async fn test_send_swap_update_tracking() -> Result<()> {
         let (_tmp_dir, persister) = new_persister()?;
         let persister = Arc::new(persister);
-
+        let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
-        let sdk = Arc::new(new_liquid_sdk(persister.clone(), status_stream.clone())?);
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
 
         LiquidSdk::track_swap_updates(&sdk).await;
 

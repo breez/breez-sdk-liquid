@@ -20,6 +20,7 @@ use super::{
 
 pub(crate) fn new_liquid_sdk(
     persister: Arc<Persister>,
+    swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
 ) -> Result<LiquidSdk> {
     let mut config = Config::testnet();
@@ -30,7 +31,6 @@ pub(crate) fn new_liquid_sdk(
         .to_string();
 
     let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
-    let swapper = Arc::new(MockSwapper::new());
 
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));

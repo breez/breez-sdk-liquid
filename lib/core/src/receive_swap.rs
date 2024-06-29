@@ -84,10 +84,6 @@ impl ReceiveSwapStateHandler {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
 
-                let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
-                    .await?;
-
                 if let Some(claim_tx_id) = receive_swap.claim_tx_id {
                     return Err(anyhow!(
                         "Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}"
@@ -106,6 +102,11 @@ impl ReceiveSwapStateHandler {
                     ));
                 }
                 info!("swapper lockup was verified");
+
+                let lockup_tx_id = &transaction.id;
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
+                    .await?;
+
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
 
                 // If the amount is greater than the zero-conf limit
@@ -321,7 +322,7 @@ impl ReceiveSwapStateHandler {
         verify_confirmation: bool,
     ) -> Result<()> {
         // Looking for lockup script history to verify lockup was broadcasted
-        let script = receive_swap.get_swap_script()?;
+        let script = receive_swap.get_swap_script().unwrap();
         let address =
             script
                 .to_address(self.config.network.into())
