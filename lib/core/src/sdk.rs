@@ -1693,6 +1693,7 @@ mod tests {
         model::PaymentState,
         sdk::LiquidSdk,
         test_utils::{
+            create_mock_tx,
             persist::{new_persister, new_receive_swap, new_send_swap},
             sdk::new_liquid_sdk,
             status_stream::MockStatusStream,
@@ -1752,24 +1753,11 @@ mod tests {
                 let receive_swap = new_receive_swap(None);
                 persister.insert_receive_swap(&receive_swap).unwrap();
 
-                let address = sdk
-                    .onchain_wallet
-                    .next_unused_address()
-                    .await
-                    .unwrap()
-                    .to_string();
-                let mock_tx = sdk
-                    .onchain_wallet
-                    .build_tx(None, &address, 1000)
-                    .await
-                    .unwrap();
+                let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
                 let mock_lockup_tx_id = mock_tx.txid().to_string();
 
                 // Set claim_tx_id to a custom value, so we can later ensure it is
                 // set correctly
-                let claim_tx_id = "test-claim-tx-id".to_string();
-                *swapper.claim_tx_id.write().unwrap() = Some(claim_tx_id.clone());
-
                 status_stream
                     .clone()
                     .send_mock_update(boltzv2::Update {
@@ -1789,15 +1777,12 @@ mod tests {
                     .unwrap()
                     .ok_or(anyhow!("Could not retrieve receive swap"))
                     .unwrap();
-                assert_eq!(persisted_swap.claim_tx_id, Some(claim_tx_id));
+                assert!(persisted_swap.claim_tx_id.is_some());
 
                 // Check that `TransactionConfirmed` correctly triggers claim,
                 // which in turn sets the `claim_tx_id`
                 let receive_swap = new_receive_swap(None);
                 persister.insert_receive_swap(&receive_swap).unwrap();
-
-                let claim_tx_id = "test-claim-tx-id-2".to_string();
-                *swapper.claim_tx_id.write().unwrap() = Some(claim_tx_id.clone());
 
                 status_stream
                     .clone()
@@ -1818,7 +1803,7 @@ mod tests {
                     .unwrap()
                     .ok_or(anyhow!("Could not retrieve receive swap"))
                     .unwrap();
-                assert_eq!(persisted_swap.claim_tx_id, Some(claim_tx_id));
+                assert!(persisted_swap.claim_tx_id.is_some());
             }
         })
         .await
@@ -1873,6 +1858,54 @@ mod tests {
                     .unwrap();
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
             }
+
+            // Verify that `InvoiceSet` correctly sets the state to `Pending` and
+            // assigns the `lockup_tx_id` to the payment
+            let send_swap = new_send_swap(None);
+            persister.insert_send_swap(&send_swap).unwrap();
+
+            status_stream
+                .clone()
+                .send_mock_update(boltzv2::Update {
+                    id: send_swap.id.clone(),
+                    status: InvoiceSet.to_string(),
+                    transaction: None,
+                    zero_conf_rejected: None,
+                })
+                .await
+                .unwrap();
+
+            let persisted_swap = persister
+                .fetch_send_swap_by_id(&send_swap.id)
+                .unwrap()
+                .ok_or(anyhow!("Could not retrieve send swap"))
+                .unwrap();
+            assert_eq!(persisted_swap.state, PaymentState::Pending);
+            assert!(persisted_swap.lockup_tx_id.is_some());
+
+            // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
+            // and stores the preimage
+            let send_swap = new_send_swap(None);
+            persister.insert_send_swap(&send_swap).unwrap();
+
+            status_stream
+                .clone()
+                .send_mock_update(boltzv2::Update {
+                    id: send_swap.id.clone(),
+                    status: TransactionClaimPending.to_string(),
+                    transaction: None,
+                    zero_conf_rejected: None,
+                })
+                .await
+                .unwrap();
+
+            let persisted_swap = persister
+                .fetch_send_swap_by_id(&send_swap.id)
+                .unwrap()
+                .ok_or(anyhow!("Could not retrieve send swap"))
+                .unwrap();
+            assert_eq!(persisted_swap.state, PaymentState::Complete);
+            assert!(persisted_swap.preimage.is_some());
         })
         .await
         .unwrap();

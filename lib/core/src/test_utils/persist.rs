@@ -1,6 +1,15 @@
 #![cfg(test)]
 
 use anyhow::{anyhow, Result};
+use bip39::rand::{self, RngCore};
+use sdk_common::{
+    bitcoin::{
+        hashes::{sha256, Hash},
+        secp256k1::{Secp256k1, SecretKey},
+    },
+    lightning::ln::PaymentSecret,
+    lightning_invoice::{Currency, InvoiceBuilder},
+};
 use tempdir::TempDir;
 
 use crate::{
@@ -10,19 +19,54 @@ use crate::{
     utils,
 };
 
+fn new_secret_key() -> SecretKey {
+    let mut rng = rand::thread_rng();
+    let mut buf = [0u8; 32];
+    rng.fill_bytes(&mut buf);
+    SecretKey::from_slice(&buf).expect("Expected valid secret key")
+}
+
 pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
+    let private_key = new_secret_key();
+
+    let invoice = InvoiceBuilder::new(Currency::BitcoinTestnet)
+        .description("Test invoice".into())
+        .payment_hash(sha256::Hash::from_slice(&[0; 32][..]).expect("Expecting valid hash"))
+        .payment_secret(PaymentSecret([42u8; 32]))
+        .current_timestamp()
+        .min_final_cltv_expiry_delta(144)
+        .build_signed(|hash| Secp256k1::new().sign_ecdsa_recoverable(hash, &private_key))
+        .expect("Expected valid invoice");
+
     SendSwap {
         id: generate_random_string(4),
-        invoice: generate_random_string(4),
+        invoice: invoice.to_string(),
         preimage: None,
-        payer_amount_sat: 0,
-        receiver_amount_sat: 0,
-        create_response_json: "{}".to_string(),
+        payer_amount_sat: 1149,
+        receiver_amount_sat: 1000,
+        create_response_json: r#"{
+            "accept_zero_conf": true,
+            "address": "tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z",
+            "bip21": "liquidtestnet:tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z?amount=0.00001149&label=Send%20to%20BTC%20lightning&assetid=144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49",
+            "claim_public_key": "023bb9487e9b3faebad3d358b1c24ca91a6ce9ed8417ac5e0b65fa4918f644b08b",
+            "expected_amount": 1149,
+            "swap_tree": {
+                "claim_leaf": {
+                    "output": "a9144d716c8c50228c1fc07a2e354bfa51899ded90f088203bb9487e9b3faebad3d358b1c24ca91a6ce9ed8417ac5e0b65fa4918f644b08bac",
+                    "version": 196
+                },
+                "refund_leaf": {
+                    "output": "20a1d004d26c27c219fd005212596a0c0eb3be3a48f84443a13199c26568624634ad03f56c16b1",
+                    "version": 196
+                }
+            },
+            "blinding_key": "1eabe70f75a3c92e1ce1e4108a014a275a4b03415234c87d8670e29d70059326"
+        }"#.to_string(),
         lockup_tx_id: None,
         refund_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
-        refund_private_key: "".to_string(),
+        refund_private_key: "945affeef55f12227f1d4a3f80a17062a05b229ddc5a01591eb5ddf882df92e3".to_string(),
     }
 }
 

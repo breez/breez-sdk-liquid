@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-use std::sync::RwLock;
-
 use boltz_client::{
     boltzv2::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -9,6 +7,7 @@ use boltz_client::{
         ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse, SubmarineFees,
         SubmarinePair, SwapTree,
     },
+    util::secrets::Preimage,
     PublicKey,
 };
 use sdk_common::invoice::parse_invoice;
@@ -18,14 +17,13 @@ use crate::{
     model::{ChainSwap, Direction, ReceiveSwap, SendSwap},
     swapper::Swapper,
     test_utils::generate_random_string,
+    utils,
 };
 
-use super::{status_stream::MockStatusStream, TEST_TX_TXID};
+use super::status_stream::MockStatusStream;
 
 #[derive(Default)]
-pub struct MockSwapper {
-    pub(crate) claim_tx_id: RwLock<Option<String>>,
-}
+pub struct MockSwapper {}
 
 impl MockSwapper {
     pub(crate) fn new() -> Self {
@@ -46,7 +44,7 @@ impl MockSwapper {
     }
 
     fn mock_public_key() -> PublicKey {
-        todo!()
+        utils::generate_keypair().public_key().into()
     }
 
     fn mock_swap_details() -> ChainSwapDetails {
@@ -155,7 +153,6 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
         todo!()
     }
 
@@ -165,7 +162,6 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
         todo!()
     }
 
@@ -176,7 +172,6 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
         todo!()
     }
 
@@ -187,7 +182,6 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
         todo!()
     }
 
@@ -196,7 +190,9 @@ impl Swapper for MockSwapper {
         _swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError> {
         Ok(SubmarineClaimTxResponse {
-            preimage: "".to_string(),
+            preimage: Preimage::new()
+                .to_string()
+                .expect("Expected valid preimage"),
             pub_nonce: "".to_string(),
             public_key: Self::mock_public_key(),
             transaction_hash: "".to_string(),
@@ -204,7 +200,6 @@ impl Swapper for MockSwapper {
     }
 
     fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        // Ok(TEST_TX_TXID.to_string())
         todo!()
     }
 
@@ -256,22 +251,18 @@ impl Swapper for MockSwapper {
         _swap: &ReceiveSwap,
         _claim_address: String,
     ) -> Result<String, PaymentError> {
-        Ok(self
-            .claim_tx_id
-            .read()
-            .unwrap()
-            .clone()
-            .unwrap_or("".to_string()))
+        Ok("mock-tx-id".to_string())
     }
 
     fn broadcast_tx(
         &self,
         _chain: boltz_client::network::Chain,
-        _tx_hex: &str,
+        tx_hex: &str,
     ) -> Result<serde_json::Value, PaymentError> {
+        let tx = utils::deserialize_tx_hex(tx_hex)?;
         Ok(serde_json::Value::Object(serde_json::Map::from_iter([(
             "id".to_string(),
-            serde_json::Value::String(TEST_TX_TXID.to_string()),
+            serde_json::Value::String(tx.txid().to_string()),
         )])))
     }
 

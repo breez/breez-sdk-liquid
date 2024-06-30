@@ -1,6 +1,11 @@
 #![cfg(test)]
 
+use std::sync::Arc;
+
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
+use lwk_wollet::elements::Transaction;
+
+use crate::wallet::OnchainWallet;
 
 pub(crate) mod chain;
 pub(crate) mod chain_swap;
@@ -14,8 +19,6 @@ pub(crate) mod wallet;
 
 pub(crate) const TEST_MNEMONIC: &str =
     "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-pub(crate) const TEST_TX_TXID: &str =
-    "59dd7a0bce4f3310272ff352402291bc555f141149812d8f573f62e7fdc19cc4";
 
 pub(crate) fn generate_random_string(size: usize) -> String {
     rand::thread_rng()
@@ -23,4 +26,11 @@ pub(crate) fn generate_random_string(size: usize) -> String {
         .take(size)
         .map(char::from)
         .collect()
+}
+
+pub(crate) async fn create_mock_tx(
+    onchain_wallet: Arc<dyn OnchainWallet>,
+) -> anyhow::Result<Transaction> {
+    let address = onchain_wallet.next_unused_address().await?.to_string();
+    Ok(onchain_wallet.build_tx(None, &address, 1000).await?)
 }

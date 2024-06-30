@@ -1,19 +1,19 @@
 #![cfg(test)]
 
-use std::str::FromStr;
-
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService};
+use crate::{
+    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    utils,
+};
 
-use super::TEST_TX_TXID;
-
+#[derive(Default)]
 pub(crate) struct MockLiquidChainService {}
 
 impl MockLiquidChainService {
     pub(crate) fn new() -> Self {
-        MockLiquidChainService {}
+        MockLiquidChainService::default()
     }
 }
 
@@ -25,10 +25,10 @@ impl LiquidChainService for MockLiquidChainService {
 
     async fn broadcast(
         &self,
-        _tx: &lwk_wollet::elements::Transaction,
+        tx: &lwk_wollet::elements::Transaction,
         _swap_id: Option<&str>,
     ) -> Result<lwk_wollet::elements::Txid> {
-        Ok(lwk_wollet::elements::Txid::from_str(TEST_TX_TXID)?)
+        Ok(tx.txid())
     }
 
     async fn get_transactions(
@@ -52,9 +52,7 @@ impl LiquidChainService for MockLiquidChainService {
         tx_hex: &str,
         _verify_confirmation: bool,
     ) -> Result<lwk_wollet::elements::Transaction> {
-        let hex_slice = <Vec<u8> as lwk_wollet::elements::hex::FromHex>::from_hex(tx_hex)
-            .map_err(|e| anyhow!("Could not deserialize transaction: {e}"))?;
-        Ok(lwk_wollet::elements::encode::deserialize(&hex_slice)?)
+        utils::deserialize_tx_hex(tx_hex)
     }
 }
 
