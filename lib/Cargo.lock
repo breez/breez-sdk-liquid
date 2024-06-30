@@ -440,7 +440,7 @@ dependencies = [
 
 [[package]]
 name = "bindings-react-native"
-version = "0.0.1"
+version = "0.1.1-dev1"
 dependencies = [
  "anyhow",
  "askama 0.11.1",
@@ -623,7 +623,7 @@ dependencies = [
 
 [[package]]
 name = "breez-liquid-sdk"
-version = "0.0.1"
+version = "0.1.1-dev1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -660,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "breez-liquid-sdk-bindings"
-version = "0.0.1"
+version = "0.1.1-dev1"
 dependencies = [
  "anyhow",
  "breez-liquid-sdk",

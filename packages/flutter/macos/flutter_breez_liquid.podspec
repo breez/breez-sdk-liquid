@@ -21,7 +21,7 @@ cd -
 
 Pod::Spec.new do |spec|
   spec.name          = 'flutter_breez_liquid'
-  spec.version       = '0.1.0'
+  spec.version       = '0.1.1-dev1'
   spec.license       = { :file => '../LICENSE' }
   spec.homepage      = 'https://breez.technology'
   spec.authors       = { 'Breez' => 'contact@breez.technology' }

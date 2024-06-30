@@ -1,6 +1,6 @@
 {
   "name": "@breeztech/react-native-breez-liquid-sdk",
-  "version": "0.0.1",
+  "version": "0.1.1-dev1",
   "description": "React Native Breez Liquid SDK",
   "repository": "https://github.com/breez/breez-liquid-sdk",
   "author": "Breez <contact@breez.technology> (https://github.com/breez)",
