@@ -47,7 +47,7 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::new_persister;
+    use crate::test_utils::persist::new_persister;
 
     #[test]
     fn test_cached_items() -> Result<()> {
