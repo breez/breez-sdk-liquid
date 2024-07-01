@@ -378,7 +378,7 @@ class FlutterBreezLiquidBindings {
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_receive_onchain_request> req,
+    ffi.Pointer<wire_cst_prepare_receive_onchain_response> req,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
       port_,
@@ -389,11 +389,12 @@ class FlutterBreezLiquidBindings {
 
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_receive_onchain_request>)>>(
+              ffi.Void Function(
+                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_receive_onchain_request>)>();
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     int port_,
@@ -911,6 +912,18 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_request> Function()>();
 
+  ffi.Pointer<wire_cst_prepare_receive_onchain_response>
+      frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response =
+      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>();
+
   ffi.Pointer<wire_cst_prepare_receive_request>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request();
@@ -969,18 +982,6 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response =
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_response> Function()>();
-
-  ffi.Pointer<wire_cst_receive_onchain_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request();
-  }
-
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_requestPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_receive_onchain_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_receive_onchain_requestPtr
-          .asFunction<ffi.Pointer<wire_cst_receive_onchain_request> Function()>();
 
   ffi.Pointer<wire_cst_refund_request> frbgen_breez_liquid_cst_new_box_autoadd_refund_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_refund_request();
@@ -1308,7 +1309,7 @@ final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
 
 final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int receiver_amount_sat;
 
   @ffi.Uint64()
   external int fees_sat;
@@ -1322,12 +1323,12 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int receiver_amount_sat;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int payer_amount_sat;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
@@ -1350,14 +1351,10 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
 
 final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
   @ffi.Uint64()
-  external int amount_sat;
+  external int payer_amount_sat;
 
   @ffi.Uint64()
   external int fees_sat;
-}
-
-final class wire_cst_receive_onchain_request extends ffi.Struct {
-  external wire_cst_prepare_receive_onchain_response prepare_res;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -2163,4 +2160,4 @@ const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
 
-const int CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS = 4320;
+const int CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS = 4320;

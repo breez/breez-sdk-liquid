@@ -31,7 +31,7 @@ typedef struct _Dart_Handle* Dart_Handle;
 /**
  * Number of blocks to monitor a swap after its timeout block height
  */
-#define CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS 4320
+#define CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS 4320
 
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
