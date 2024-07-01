@@ -15,13 +15,13 @@ use crate::{
     utils,
 };
 
-use super::{generate_random_string, wallet::new_onchain_wallet};
+use super::{generate_random_string, wallet::MockWallet};
 
 pub(crate) fn new_chain_swap_state_handler(
     persister: Arc<Persister>,
 ) -> Result<ChainSwapStateHandler> {
     let config = Config::testnet();
-    let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
+    let onchain_wallet = Arc::new(MockWallet::new());
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
     let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(

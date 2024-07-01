@@ -15,7 +15,7 @@ use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     status_stream::MockStatusStream,
     swapper::MockSwapper,
-    wallet::new_onchain_wallet,
+    wallet::MockWallet,
 };
 
 pub(crate) fn new_liquid_sdk(
@@ -30,7 +30,7 @@ pub(crate) fn new_liquid_sdk(
         .ok_or(anyhow!("An invalid SDK directory was specified"))?
         .to_string();
 
-    let onchain_wallet = Arc::new(new_onchain_wallet(&config)?);
+    let onchain_wallet = Arc::new(MockWallet::new());
 
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));

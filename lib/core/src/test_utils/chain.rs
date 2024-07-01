@@ -20,7 +20,7 @@ impl MockLiquidChainService {
 #[async_trait]
 impl LiquidChainService for MockLiquidChainService {
     async fn tip(&mut self) -> Result<u32> {
-        todo!()
+        unimplemented!()
     }
 
     async fn broadcast(
@@ -35,14 +35,14 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _txids: &[lwk_wollet::elements::Txid],
     ) -> Result<Vec<lwk_wollet::elements::Transaction>> {
-        todo!()
+        unimplemented!()
     }
 
     async fn get_script_history(
         &self,
         _scripts: &lwk_wollet::elements::Script,
     ) -> Result<Vec<lwk_wollet::History>> {
-        todo!()
+        unimplemented!()
     }
 
     async fn verify_tx(
@@ -67,35 +67,35 @@ impl MockBitcoinChainService {
 #[async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
     fn tip(&mut self) -> Result<electrum_client::HeaderNotification> {
-        todo!()
+        unimplemented!()
     }
 
     fn broadcast(
         &self,
         _tx: &boltz_client::bitcoin::Transaction,
     ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
-        todo!()
+        unimplemented!()
     }
 
     fn get_transactions(
         &self,
         _txids: &[boltz_client::bitcoin::Txid],
     ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
-        todo!()
+        unimplemented!()
     }
 
     fn get_script_history(
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<Vec<lwk_wollet::History>> {
-        todo!()
+        unimplemented!()
     }
 
     fn script_get_balance(
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<electrum_client::GetBalanceRes> {
-        todo!()
+        unimplemented!()
     }
 
     async fn verify_tx(
@@ -105,6 +105,6 @@ impl BitcoinChainService for MockBitcoinChainService {
         _tx_hex: &str,
         _verify_confirmation: bool,
     ) -> Result<boltz_client::bitcoin::Transaction> {
-        todo!()
+        unimplemented!()
     }
 }

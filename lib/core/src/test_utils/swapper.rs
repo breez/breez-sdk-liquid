@@ -144,7 +144,7 @@ impl Swapper for MockSwapper {
         _sat_per_vbyte: f32,
     ) -> Result<(u32, u64), LiquidSdkError> {
         // Ok((2500, 100))
-        todo!()
+        unimplemented!()
     }
 
     fn refund_chain_swap_cooperative(
@@ -153,7 +153,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        todo!()
+        unimplemented!()
     }
 
     fn refund_send_swap_cooperative(
@@ -162,7 +162,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        todo!()
+        unimplemented!()
     }
 
     fn refund_chain_swap_non_cooperative(
@@ -172,7 +172,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        todo!()
+        unimplemented!()
     }
 
     fn refund_send_swap_non_cooperative(
@@ -182,7 +182,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        todo!()
+        unimplemented!()
     }
 
     fn get_send_claim_tx_details(
@@ -200,7 +200,7 @@ impl Swapper for MockSwapper {
     }
 
     fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        todo!()
+        unimplemented!()
     }
 
     fn claim_send_swap_cooperative(
@@ -272,6 +272,6 @@ impl Swapper for MockSwapper {
 
     fn check_for_mrh(&self, _invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
         // Ok(Some(("".to_string(), 0.0)))
-        todo!()
+        unimplemented!()
     }
 }

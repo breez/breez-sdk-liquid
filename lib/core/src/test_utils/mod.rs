@@ -17,9 +17,6 @@ pub(crate) mod status_stream;
 pub(crate) mod swapper;
 pub(crate) mod wallet;
 
-pub(crate) const TEST_MNEMONIC: &str =
-    "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-
 pub(crate) fn generate_random_string(size: usize) -> String {
     rand::thread_rng()
         .sample_iter(&Alphanumeric)

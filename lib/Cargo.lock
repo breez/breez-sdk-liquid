@@ -636,6 +636,7 @@ dependencies = [
  "futures-util",
  "glob",
  "hex",
+ "lazy_static",
  "log",
  "lwk_common",
  "lwk_signer",
