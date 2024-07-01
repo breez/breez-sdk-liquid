@@ -74,8 +74,8 @@ impl SendSwapStateHandler {
             Ok(SubSwapStates::InvoiceSet) => {
                 match (swap.state, swap.lockup_tx_id.clone()) {
                     (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
-                        let create_response = swap.get_boltz_create_response().unwrap();
-                        let lockup_tx = self.lockup_funds(id, &create_response).await.unwrap();
+                        let create_response = swap.get_boltz_create_response()?;
+                        let lockup_tx = self.lockup_funds(id, &create_response).await?;
                         let lockup_tx_id = lockup_tx.txid().to_string();
                         let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
 

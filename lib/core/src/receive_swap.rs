@@ -322,7 +322,7 @@ impl ReceiveSwapStateHandler {
         verify_confirmation: bool,
     ) -> Result<()> {
         // Looking for lockup script history to verify lockup was broadcasted
-        let script = receive_swap.get_swap_script().unwrap();
+        let script = receive_swap.get_swap_script()?;
         let address =
             script
                 .to_address(self.config.network.into())
