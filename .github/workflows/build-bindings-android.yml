@@ -49,6 +49,12 @@ jobs:
         rustup target add ${{ matrix.target }}
         cargo install cargo-ndk
 
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: "27.2"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        
     - uses: Swatinem/rust-cache@v2
       with:
         workspaces: lib

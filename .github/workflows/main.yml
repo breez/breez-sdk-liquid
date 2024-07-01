@@ -41,9 +41,9 @@ jobs:
             cli -> target
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
         with:
-          version: "23.4"
+          version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Rust Clippy
@@ -66,9 +66,9 @@ jobs:
             cli -> target
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
         with:
-          version: "23.4"
+          version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run sdk-core tests
@@ -89,9 +89,9 @@ jobs:
             cli -> target
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
         with:
-          version: "23.4"
+          version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build bindings
@@ -227,9 +227,9 @@ jobs:
             lib -> target
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
         with:
-          version: "23.4"
+          version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: test-new-project-with-sdk-dependency
