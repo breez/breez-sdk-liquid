@@ -13,8 +13,8 @@ import {
     connect,
     defaultConfig,
     getInfo,
+    LiquidNetwork,
     listPayments,
-    Network,
     removeEventListener,
     prepareReceivePayment,
     prepareSendPayment,
@@ -64,7 +64,7 @@ const App = () => {
                 }
 
                 // Connect using the config
-                const config = await defaultConfig(Network.MAINNET)
+                const config = await defaultConfig(LiquidNetwork.MAINNET)
                 addLine("defaultConfig", JSON.stringify(config))
 
                 await connect({ config, mnemonic })
