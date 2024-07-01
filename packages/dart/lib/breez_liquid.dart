@@ -4,6 +4,7 @@ library;
 export 'src/bindings.dart';
 export 'src/model.dart';
 export 'src/error.dart';
+export 'src/bindings/duplicates.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'src/frb_generated.dart';
