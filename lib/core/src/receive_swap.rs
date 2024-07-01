@@ -61,7 +61,7 @@ impl ReceiveSwapStateHandler {
         let swap_state = &update.status;
         let receive_swap = self
             .persister
-            .fetch_receive_swap(id)?
+            .fetch_receive_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
@@ -224,7 +224,7 @@ impl ReceiveSwapStateHandler {
 
         let swap = self
             .persister
-            .fetch_receive_swap(swap_id)
+            .fetch_receive_swap_by_id(swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),

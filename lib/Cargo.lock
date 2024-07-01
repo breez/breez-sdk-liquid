@@ -641,6 +641,7 @@ dependencies = [
  "lwk_signer",
  "lwk_wollet",
  "openssl",
+ "paste",
  "reqwest 0.11.20",
  "rusqlite",
  "rusqlite_migration",

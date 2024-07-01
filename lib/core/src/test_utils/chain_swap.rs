@@ -38,11 +38,14 @@ pub(crate) fn new_chain_swap_state_handler(
     )
 }
 
-pub(crate) fn new_chain_swap(payment_state: Option<PaymentState>) -> ChainSwap {
+pub(crate) fn new_chain_swap(
+    direction: Direction,
+    payment_state: Option<PaymentState>,
+) -> ChainSwap {
     let id = generate_random_string(4);
     ChainSwap {
         id,
-        direction: Direction::Incoming,
+        direction,
         claim_address: "".to_string(),
         lockup_address: "".to_string(),
         timeout_block_height: 0,

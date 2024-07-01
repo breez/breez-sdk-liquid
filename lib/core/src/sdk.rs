@@ -1682,17 +1682,15 @@ mod tests {
     use anyhow::{anyhow, Result};
     use boltz_client::{
         boltzv2::{self, SwapUpdateTxDetails},
-        swaps::boltz::{
-            RevSwapStates::{self, *},
-            SubSwapStates::{self, *},
-        },
+        swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
     use lwk_wollet::{elements::encode::serialize, hashes::hex::DisplayHex};
 
     use crate::{
-        model::PaymentState,
+        model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
+            chain_swap::new_chain_swap,
             create_mock_tx,
             persist::{new_persister, new_receive_swap, new_send_swap},
             sdk::new_liquid_sdk,
@@ -1700,6 +1698,56 @@ mod tests {
             swapper::MockSwapper,
         },
     };
+    use paste::paste;
+
+    macro_rules! trigger_swap_update {
+        (
+            $type:literal,
+            $direction:expr,
+            $persister:expr,
+            $status_stream:expr,
+            $status:expr,
+            $transaction:expr,
+            $zero_conf_rejected:expr
+        ) => {{
+            let swap = match $type {
+                "chain" => {
+                    let swap = new_chain_swap($direction.unwrap(), None);
+                    $persister.insert_chain_swap(&swap).unwrap();
+                    Swap::Chain(swap)
+                }
+                "send" => {
+                    let swap = new_send_swap(None);
+                    $persister.insert_send_swap(&swap).unwrap();
+                    Swap::Send(swap)
+                }
+                "receive" => {
+                    let swap = new_receive_swap(None);
+                    $persister.insert_receive_swap(&swap).unwrap();
+                    Swap::Receive(swap)
+                }
+                _ => panic!(),
+            };
+
+            $status_stream
+                .clone()
+                .send_mock_update(boltzv2::Update {
+                    id: swap.id(),
+                    status: $status.to_string(),
+                    transaction: $transaction,
+                    zero_conf_rejected: $zero_conf_rejected,
+                })
+                .await
+                .unwrap();
+
+            paste! {
+                $persister.[<fetch _ $type _swap_by_id>](&swap.id())
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve {} swap", $type))
+                    .unwrap()
+            }
+        }};
+    }
 
     #[tokio::test]
     async fn test_receive_swap_update_tracking() -> Result<()> {
@@ -1721,88 +1769,44 @@ mod tests {
             // Verify the swap becomes invalid after final states are received
             let unrecoverable_states: [RevSwapStates; 4] = [
                 RevSwapStates::SwapExpired,
-                InvoiceExpired,
-                TransactionFailed,
-                TransactionRefunded,
+                RevSwapStates::InvoiceExpired,
+                RevSwapStates::TransactionFailed,
+                RevSwapStates::TransactionRefunded,
             ];
 
             for status in unrecoverable_states {
-                let receive_swap = new_receive_swap(None);
-                persister.insert_receive_swap(&receive_swap).unwrap();
-
-                status_stream
-                    .clone()
-                    .send_mock_update(boltzv2::Update {
-                        id: receive_swap.id.clone(),
-                        status: status.to_string(),
-                        transaction: None,
-                        zero_conf_rejected: None,
-                    })
-                    .await
-                    .unwrap();
-
-                let persisted_swap = persister
-                    .fetch_receive_swap(&receive_swap.id)
-                    .unwrap()
-                    .ok_or(anyhow!("Could not retrieve receive swap"))
-                    .unwrap();
+                let persisted_swap = trigger_swap_update!(
+                    "receive",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    None,
+                    None
+                );
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
+            }
 
-                // Check that `TransactionMempool` correctly triggers claim,
-                // which in turn sets the `claim_tx_id`
-                let receive_swap = new_receive_swap(None);
-                persister.insert_receive_swap(&receive_swap).unwrap();
-
+            // Check that `TransactionMempool` and `TransactionConfirmed` correctly trigger the claim,
+            // which in turn sets the `claim_tx_id`
+            for status in [
+                RevSwapStates::TransactionMempool,
+                RevSwapStates::TransactionConfirmed,
+            ] {
                 let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
                 let mock_lockup_tx_id = mock_tx.txid().to_string();
-
-                // Set claim_tx_id to a custom value, so we can later ensure it is
-                // set correctly
-                status_stream
-                    .clone()
-                    .send_mock_update(boltzv2::Update {
-                        id: receive_swap.id.clone(),
-                        status: RevSwapStates::TransactionMempool.to_string(),
-                        transaction: Some(SwapUpdateTxDetails {
-                            id: mock_lockup_tx_id.clone(),
-                            hex: serialize(&mock_tx).to_lower_hex_string(),
-                        }),
-                        zero_conf_rejected: None,
-                    })
-                    .await
-                    .unwrap();
-
-                let persisted_swap = persister
-                    .fetch_receive_swap(&receive_swap.id)
-                    .unwrap()
-                    .ok_or(anyhow!("Could not retrieve receive swap"))
-                    .unwrap();
-                assert!(persisted_swap.claim_tx_id.is_some());
-
-                // Check that `TransactionConfirmed` correctly triggers claim,
-                // which in turn sets the `claim_tx_id`
-                let receive_swap = new_receive_swap(None);
-                persister.insert_receive_swap(&receive_swap).unwrap();
-
-                status_stream
-                    .clone()
-                    .send_mock_update(boltzv2::Update {
-                        id: receive_swap.id.clone(),
-                        status: RevSwapStates::TransactionConfirmed.to_string(),
-                        transaction: Some(SwapUpdateTxDetails {
-                            id: mock_lockup_tx_id,
-                            hex: serialize(&mock_tx).to_lower_hex_string(),
-                        }),
-                        zero_conf_rejected: None,
-                    })
-                    .await
-                    .unwrap();
-
-                let persisted_swap = persister
-                    .fetch_receive_swap(&receive_swap.id)
-                    .unwrap()
-                    .ok_or(anyhow!("Could not retrieve receive swap"))
-                    .unwrap();
+                let persisted_swap = trigger_swap_update!(
+                    "receive",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    Some(SwapUpdateTxDetails {
+                        id: mock_lockup_tx_id.clone(),
+                        hex: serialize(&mock_tx).to_lower_hex_string(),
+                    }),
+                    None
+                );
                 assert!(persisted_swap.claim_tx_id.is_some());
             }
         })
@@ -1831,81 +1835,141 @@ mod tests {
         tokio::spawn(async move {
             // Verify the swap becomes invalid after final states are received
             let unrecoverable_states: [SubSwapStates; 3] = [
-                TransactionLockupFailed,
-                InvoiceFailedToPay,
+                SubSwapStates::TransactionLockupFailed,
+                SubSwapStates::InvoiceFailedToPay,
                 SubSwapStates::SwapExpired,
             ];
 
             for status in unrecoverable_states {
-                let send_swap = new_send_swap(None);
-                persister.insert_send_swap(&send_swap).unwrap();
-
-                status_stream
-                    .clone()
-                    .send_mock_update(boltzv2::Update {
-                        id: send_swap.id.clone(),
-                        status: status.to_string(),
-                        transaction: None,
-                        zero_conf_rejected: None,
-                    })
-                    .await
-                    .unwrap();
-
-                let persisted_swap = persister
-                    .fetch_send_swap_by_id(&send_swap.id)
-                    .unwrap()
-                    .ok_or(anyhow!("Could not retrieve send swap"))
-                    .unwrap();
+                let persisted_swap = trigger_swap_update!(
+                    "send",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    None,
+                    None
+                );
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
             }
 
             // Verify that `InvoiceSet` correctly sets the state to `Pending` and
             // assigns the `lockup_tx_id` to the payment
-            let send_swap = new_send_swap(None);
-            persister.insert_send_swap(&send_swap).unwrap();
-
-            status_stream
-                .clone()
-                .send_mock_update(boltzv2::Update {
-                    id: send_swap.id.clone(),
-                    status: InvoiceSet.to_string(),
-                    transaction: None,
-                    zero_conf_rejected: None,
-                })
-                .await
-                .unwrap();
-
-            let persisted_swap = persister
-                .fetch_send_swap_by_id(&send_swap.id)
-                .unwrap()
-                .ok_or(anyhow!("Could not retrieve send swap"))
-                .unwrap();
+            let persisted_swap = trigger_swap_update!(
+                "send",
+                None,
+                persister,
+                status_stream,
+                SubSwapStates::InvoiceSet,
+                None,
+                None
+            );
             assert_eq!(persisted_swap.state, PaymentState::Pending);
             assert!(persisted_swap.lockup_tx_id.is_some());
 
             // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
             // and stores the preimage
-            let send_swap = new_send_swap(None);
-            persister.insert_send_swap(&send_swap).unwrap();
-
-            status_stream
-                .clone()
-                .send_mock_update(boltzv2::Update {
-                    id: send_swap.id.clone(),
-                    status: TransactionClaimPending.to_string(),
-                    transaction: None,
-                    zero_conf_rejected: None,
-                })
-                .await
-                .unwrap();
-
-            let persisted_swap = persister
-                .fetch_send_swap_by_id(&send_swap.id)
-                .unwrap()
-                .ok_or(anyhow!("Could not retrieve send swap"))
-                .unwrap();
+            let persisted_swap = trigger_swap_update!(
+                "send",
+                None,
+                persister,
+                status_stream,
+                SubSwapStates::TransactionClaimPending,
+                None,
+                None
+            );
             assert_eq!(persisted_swap.state, PaymentState::Complete);
             assert!(persisted_swap.preimage.is_some());
+        })
+        .await
+        .unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_chain_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Checks that work for both incoming and outgoing chain swaps
+
+            let unrecoverable_states: [ChainSwapStates; 4] = [
+                ChainSwapStates::TransactionFailed,
+                ChainSwapStates::TransactionLockupFailed,
+                ChainSwapStates::TransactionRefunded,
+                ChainSwapStates::SwapExpired,
+            ];
+
+            for direction in [Direction::Incoming, Direction::Outgoing] {
+                // Verify the swap becomes invalid after final states are received
+                for status in &unrecoverable_states {
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        Some(direction),
+                        persister,
+                        status_stream,
+                        status,
+                        None,
+                        None
+                    );
+                    assert!(
+                        persisted_swap.state == PaymentState::Failed
+                            || persisted_swap.state == PaymentState::Refundable,
+                    );
+                }
+
+                // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
+                // `user_lockup_tx_id` and `accept_zero_conf`
+                for status in [
+                    ChainSwapStates::TransactionMempool,
+                    ChainSwapStates::TransactionConfirmed,
+                ] {
+                    let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
+                    let mock_lockup_tx_id = mock_tx.txid().to_string();
+
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        Some(direction),
+                        persister,
+                        status_stream,
+                        status,
+                        Some(SwapUpdateTxDetails {
+                            id: mock_lockup_tx_id.clone(),
+                            hex: serialize(&mock_tx).to_lower_hex_string(),
+                        }),
+                        Some(true)
+                    );
+                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_lockup_tx_id));
+                    assert_eq!(persisted_swap.accept_zero_conf, false);
+                }
+            }
+
+            // Verify that `Created` correctly sets the payment as `Pending` and creates
+            // the `user_lockup_tx_id`
+            // let persisted_swap = trigger_swap_update!(
+            //     "chain",
+            //     Some(Direction::Outgoing),
+            //     persister,
+            //     status_stream,
+            //     ChainSwapStates::Created,
+            //     None,
+            //     None
+            // );
+            // assert_eq!(persisted_swap.state, PaymentState::Pending);
+            // assert!(persisted_swap.user_lockup_tx_id.is_some());
         })
         .await
         .unwrap();

@@ -60,7 +60,7 @@ impl Persister {
     pub(crate) fn fetch_swap_by_id(&self, id: &str) -> Result<Swap> {
         match self.fetch_send_swap_by_id(id) {
             Ok(Some(send_swap)) => Ok(Swap::Send(send_swap)),
-            _ => match self.fetch_receive_swap(id) {
+            _ => match self.fetch_receive_swap_by_id(id) {
                 Ok(Some(receive_swap)) => Ok(Swap::Receive(receive_swap)),
                 _ => match self.fetch_chain_swap_by_id(id) {
                     Ok(Some(chain_swap)) => Ok(Swap::Chain(chain_swap)),
