@@ -1135,12 +1135,12 @@ impl LiquidSdk {
             bip21_lbtc_address == mrh_addr_str,
             PaymentError::receive_error("Invoice has incorrect address in MRH")
         );
-        // The swap fee savings are passed on to the Sender: MRH amount = invoice amount - fees
-        let expected_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
+        // The swap fee savings are passed on to the Sender: MRH amount <= invoice amount - fees
+        let expected_max_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
         ensure_sdk!(
-            received_bip21_amount_sat == expected_bip21_amount_sat,
+            received_bip21_amount_sat <= expected_max_bip21_amount_sat,
             PaymentError::receive_error(&format!(
-                "Invoice has incorrect amount in MRH: expected {expected_bip21_amount_sat} sat, MRH has {received_bip21_amount_sat} sat",
+                "Invoice has incorrect amount in MRH: expected at most {received_bip21_amount_sat} sat, MRH has {received_bip21_amount_sat} sat",
             ))
         );
 
