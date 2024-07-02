@@ -82,9 +82,9 @@ jobs:
     - name: Copy build output
       run: |
         mkdir -p dist
-        cp lib/bindings/flutter/platform-build/android.tar.gz dist
-        cp lib/bindings/flutter/platform-build/breez_liquid_sdk.xcframework.zip dist
-        cp lib/bindings/flutter/platform-build/other.tar.gz dist
+        cp lib/bindings/langs/flutter/platform-build/android.tar.gz dist
+        cp lib/bindings/langs/flutter/platform-build/breez_liquid_sdk.xcframework.zip dist
+        cp lib/bindings/langs/flutter/platform-build/other.tar.gz dist
 
     - name: Archive Flutter bindings
       uses: actions/upload-artifact@v3
