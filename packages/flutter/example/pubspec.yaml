@@ -12,7 +12,9 @@ dependencies:
     sdk: flutter
 
   flutter_rust_bridge: ^2.0.0
-  flutter_breez_liquid: ^0.1.0
+  flutter_breez_liquid:
+    git:
+      url: https://github.com/breez/breez-liquid-sdk-flutter
   # When depending on this package from a real application you should use:
   #   flutter_breez_liquid: ^x.y.z
   # See https://dart.dev/tools/pub/dependencies#version-constraints
