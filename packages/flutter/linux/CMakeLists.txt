@@ -1,4 +1,5 @@
-set(LibraryVersion "breez_liquid-v0.1.0") # generated; do not edit
+set(TagName "0.1.0") # generated; do not edit
+set(LibraryVersion "breez_liquid-v${TagName}")
 
 # The Flutter tooling requires that developers have CMake 3.10 or later
 # installed. You should not increase this version, as doing so will cause
@@ -14,7 +15,7 @@ set(LibRoot "${CMAKE_CURRENT_SOURCE_DIR}/${LibraryVersion}")
 set(ArchivePath "${LibRoot}.tar.gz")
 if(NOT EXISTS ${ArchivePath})
   file(DOWNLOAD
-    "https://github.com/breez/breez-liquid-sdk/releases/download/${LibraryVersion}/other.tar.gz"
+    "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/${TagName}/other.tar.gz"
     ${ArchivePath}
     TLS_VERIFY ON
   )

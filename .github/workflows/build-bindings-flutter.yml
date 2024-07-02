@@ -1,0 +1,110 @@
+name: Build bindings for Flutter
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      use-dummy-binaries:
+        description: 'If true, creates dummy binaries rather than real binaries'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    if: ${{ !inputs.use-dummy-binaries }}
+    runs-on: macOS-latest
+    name: Build Flutter bindings 
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with: 
+        ref: ${{ inputs.ref }}
+        repository: ${{ inputs.repository || github.repository }}
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: "27.2"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install Zig
+      uses: goto-bus-stop/setup-zig@v2
+        
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: lib
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+    - run: flutter --version
+
+    - name: Set up just
+      uses: extractions/setup-just@v2
+
+    - name: Set up Melos
+      uses: bluefireteam/melos-action@v3
+      with:
+        run-bootstrap: false
+    
+    - name: Initialize the workspace
+      working-directory: lib/bindings/langs/flutter/
+      run: |
+        just clean
+        just init
+    
+    - name: Install flutter_rust_bridge_codegen dependencies
+      working-directory: lib/bindings/langs/flutter/
+      run: just frb
+
+    - name: Build bindings 
+      working-directory: lib/bindings/langs/flutter/
+      run: just build
+
+    - name: Build language packages
+      working-directory: lib/bindings/langs/flutter/
+      run: melos build
+
+    - name: Copy build output
+      run: |
+        mkdir -p dist
+        cp lib/bindings/flutter/platform-build/android.tar.gz dist
+        cp lib/bindings/flutter/platform-build/breez_liquid_sdk.xcframework.zip dist
+        cp lib/bindings/flutter/platform-build/other.tar.gz dist
+
+    - name: Archive Flutter bindings
+      uses: actions/upload-artifact@v3
+      with:
+        name: bindings-flutter
+        path: dist/*
+
+  build-dummies:
+    if: ${{ inputs.use-dummy-binaries }}
+    runs-on: macOS-latest
+    name: Build Flutter dummy bindings
+    steps:
+      - name: Create dummy files
+        run: |
+          touch android.tar.gz
+          touch breez_liquid_sdk.xcframework.zip
+          touch other.tar.gz
+
+      - name: Archive Flutter dummy bindings
+        uses: actions/upload-artifact@v3
+        with:
+          name: bindings-flutter
+          path: ./*

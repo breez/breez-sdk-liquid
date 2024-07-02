@@ -53,33 +53,31 @@ jobs:
           rm -r ios
           rm -r android
           rm -r lib
-          cp -r ../build/lib/bindings/langs/flutter/ios .
-          mv ios/breez_liquid_sdk.podspec.production ios/breez_liquid_sdk.podspec
-          cp -r ../build/lib/bindings/langs/flutter/android .
-          mv langs/android/build.gradle.production langs/android/build.gradle
-          cp -r ../build/lib/bindings/langs/flutter/lib .
-          cp ../build/lib/bindings/langs/flutter/pubspec.yaml .
-          cp ../build/lib/bindings/langs/flutter/pubspec.lock .
+          cp -r ../build/packages/flutter/ios .
+          cp -r ../build/packages/flutter/android .
+          cp -r ../build/packages/flutter/lib .
+          cp ../build/packages/flutter/pubspec.yaml .
+          cp ../build/packages/flutter/pubspec.lock .
 
       - name: Copy docs
         working-directory: dist
         run: |
-          cp ../build/lib/bindings/langs/flutter/README.pub.md README.md || true
-          cp ../build/lib/bindings/langs/flutter/CHANGELOG.md . || true
+          cp ../build/packages/flutter/README.md . || true
+          cp ../build/packages/flutter/CHANGELOG.md . || true
 
       - uses: actions/download-artifact@v3
         with:
-          name: bindings-swift
-          path: dist/ios/bindings-swift/Sources/BreezLiquidSDK/
+          name: bindings-flutter
+          path: bindings/
 
       - name: Set package version
         working-directory: dist
         run: |
           sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
-          sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" langs/android/build.gradle
-          sed -i.bak -e "s/^tag_version = .*/tag_version = '${{ inputs.package-version }}'/" ios/breez_liquid_sdk.podspec
+          sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
+          sed -i.bak -e "s/^tag_name = .*/tag_name = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
           rm pubspec.yaml.bak
-          rm langs/android/build.gradle.bak
+          rm android/build.gradle.bak
           rm ios/breez_liquid_sdk.podspec.bak
 
       - name: Archive flutter release
@@ -101,3 +99,17 @@ jobs:
           git push
           git tag v${{ inputs.package-version }} -m "v${{ inputs.package-version }}"
           git push --tags
+
+      - name: Release and attach binary artifacts
+        if: ${{ inputs.publish }}
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: breez/breez-liquid-sdk-flutter
+          files: |
+            bindings/android.tar.gz
+            bindings/breez_liquid_sdk.xcframework.zip
+            bindings/other.tar.gz
+          tag_name: ${{ inputs.package-version || '0.0.1' }}
+          generate_release_notes: false
+          token: ${{ secrets.SWIFT_RELEASE_TOKEN }}
+          prerelease: true

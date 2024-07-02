@@ -98,6 +98,7 @@ jobs:
       bindings-windows: ${{ !!needs.pre-setup.outputs.csharp-package-version || !!needs.pre-setup.outputs.golang-package-version || !!needs.pre-setup.outputs.python-package-version }}
       bindings-darwin: ${{ !!needs.pre-setup.outputs.csharp-package-version || !!needs.pre-setup.outputs.golang-package-version || !!needs.pre-setup.outputs.python-package-version || !!needs.pre-setup.outputs.swift-package-version }}
       bindings-linux: ${{ !!needs.pre-setup.outputs.csharp-package-version || !!needs.pre-setup.outputs.golang-package-version || !!needs.pre-setup.outputs.python-package-version }}
+      bindings-flutter: ${{ !!needs.pre-setup.outputs.flutter-package-version }}
       bindings-android: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.golang-package-version }}
       bindings-ios: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.swift-package-version }}
       kotlin: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.flutter-package-version }}
@@ -146,6 +147,15 @@ jobs:
     needs: setup
     if: ${{ needs.setup.outputs.bindings-linux == 'true' }}
     uses: ./.github/workflows/build-bindings-linux.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
+
+  build-bindings-flutter:
+    needs: setup
+    if: ${{ needs.setup.outputs.bindings-flutter == 'true' }}
+    uses: ./.github/workflows/build-bindings-flutter.yml
     with:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
@@ -248,20 +258,20 @@ jobs:
     secrets:
       BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}
       BREEZ_MVN_PASSWORD: ${{ secrets.BREEZ_MVN_PASSWORD }}
-  
-#  publish-flutter:
-#    needs:
-#      - setup
-#      - build-language-bindings
-#    if: ${{ needs.setup.outputs.flutter == 'true' }}
-#    uses: ./.github/workflows/publish-flutter.yml
-#    with:
-#      repository: ${{ needs.setup.outputs.repository }}
-#      ref: ${{ needs.setup.outputs.ref }}
-#      package-version: ${{ needs.setup.outputs.flutter-package-version }}
-#      publish: ${{ needs.setup.outputs.publish == 'true' }}
-#    secrets:
-#      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
+    
+  publish-flutter:
+    needs:
+      - setup
+      - build-bindings-flutter
+    if: ${{ needs.setup.outputs.flutter == 'true' }}
+    uses: ./.github/workflows/publish-flutter.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      package-version: ${{ needs.setup.outputs.flutter-package-version }}
+      publish: ${{ needs.setup.outputs.publish == 'true' }}
+    secrets:
+      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
 
   # react native version x.y.z will at runtime require
   # ios and android packages x.y.z being published already.

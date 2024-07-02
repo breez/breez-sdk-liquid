@@ -1,10 +1,11 @@
-release_tag_name = 'breez_liquid-v0.1.0' # generated; do not edit
+tag_name = '0.1.0' # generated; do not edit
+release_tag_name = "breez_liquid-v#{tag_name}"
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.
 framework_name = 'breez_liquid_sdk.xcframework'
 remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/breez/breez-liquid-sdk/releases/download/#{release_tag_name}/#{remote_zip_name}"
+url = "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/#{tag_name}/#{remote_zip_name}.zip"
 local_zip_name = "#{release_tag_name}.zip"
 `
 cd Frameworks
@@ -21,7 +22,7 @@ cd -
 
 Pod::Spec.new do |spec|
   spec.name          = 'flutter_breez_liquid'
-  spec.version       = '0.1.0'
+  spec.version       = "#{tag_name}"
   spec.license       = { :file => '../LICENSE' }
   spec.homepage      = 'https://breez.technology'
   spec.authors       = { 'Breez' => 'contact@breez.technology' }
