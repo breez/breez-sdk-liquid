@@ -6,3 +6,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - lib/flutter_breez_liquid_bindings_generated.dart
+    - '**.freezed.dart'
+    - '**.io.dart'
+    - 'lib/src/**/'
+    - 'example/**'

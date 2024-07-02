@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURR_VERSION=breez_liquid-v`awk '/^version: /{print $2}' ../../../packages/dart/pubspec.yaml`
+CURR_VERSION=breez_liquid-v`awk '/^version: /{print $2}' ../../../packages/flutter/pubspec.yaml`
 
 # iOS & macOS
 APPLE_HEADER="release_tag_name = '$CURR_VERSION' # generated; do not edit"

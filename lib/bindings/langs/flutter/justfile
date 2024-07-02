@@ -1,4 +1,4 @@
-curr_version := "breez_liquid-v" + `awk '/^version: /{print $2}' ../../../../packages/dart/pubspec.yaml`
+curr_version := "breez_liquid-v" + `awk '/^version: /{print $2}' ../../../../packages/flutter/pubspec.yaml`
 frb_bin := "flutter_rust_bridge_codegen generate"
 
 export CARGO_TERM_COLOR := "always"
@@ -31,7 +31,7 @@ gen: codegen && ffigen
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	{{frb_bin}}
-	cd ../../../../packages/dart/lib/src && dart format -l 110 .
+	cd ../../../../packages/flutter/lib/src && dart format -l 110 .
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../../packages/flutter/macos/Classes/breez_liquid_sdk.h
 

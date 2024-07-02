@@ -33,13 +33,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
-  breez_liquid:
-    dependency: "direct overridden"
-    description:
-      path: "../../dart"
-      relative: true
-    source: path
-    version: "0.1.0"
   build_cli_annotations:
     dependency: transitive
     description:
@@ -56,14 +49,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
-  cli_util:
-    dependency: transitive
-    description:
-      name: cli_util
-      sha256: c05b7406fdabc7a49a3929d4af76bcaccbbffcbcdcf185b082e1ae07da323d19
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.1"
   clock:
     dependency: transitive
     description:
@@ -112,22 +97,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  ffigen:
-    dependency: transitive
-    description:
-      name: ffigen
-      sha256: dead012f29db2be71ea152458f5eab600de98fbc244e01088ae6bf2616bceca7
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.0.0"
-  file:
-    dependency: transitive
-    description:
-      name: file
-      sha256: "5fc22d7c25582e38ad9a8515372cd9a93834027aacf1801cf01164dac0ffa08c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -222,14 +191,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
-  glob:
-    dependency: transitive
-    description:
-      name: glob
-      sha256: "0e7014b3b7d4dac1ca4d6114f82bf1782ee86745b9b42a92c9289c23d8a0ab63"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.2"
   hex:
     dependency: transitive
     description:
@@ -294,14 +255,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
-  logging:
-    dependency: transitive
-    description:
-      name: logging
-      sha256: "623a88c9594aa774443aa3eb2d41807a48486b5613e67599fb4c41c0ad47c340"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.0"
   matcher:
     dependency: transitive
     description:
@@ -334,14 +287,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1"
-  package_config:
-    dependency: transitive
-    description:
-      name: package_config
-      sha256: "1c5b77ccc91e4823a5af61ee74e6b972db1ef98c2ff5a18d3161c982a55448bd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
   path:
     dependency: transitive
     description:
@@ -438,14 +383,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
-  quiver:
-    dependency: transitive
-    description:
-      name: quiver
-      sha256: b1c1ac5ce6688d77f65f3375a9abb9319b3cb32486bdc7a1e0fdf004d7ba4e47
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.1"
   rxdart:
     dependency: "direct main"
     description:
@@ -555,22 +492,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
-  yaml:
-    dependency: transitive
-    description:
-      name: yaml
-      sha256: "75769501ea3489fca56601ff33454fe45507ea3bfb014161abc3b43ae25989d5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.2"
-  yaml_edit:
-    dependency: transitive
-    description:
-      name: yaml_edit
-      sha256: e9c1a3543d2da0db3e90270dbb1e4eebc985ee5e3ffe468d83224472b2194a5f
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.1"
 sdks:
   dart: ">=3.4.0 <4.0.0"
   flutter: ">=3.22.0"

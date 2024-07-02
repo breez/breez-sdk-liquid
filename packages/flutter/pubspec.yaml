@@ -1,5 +1,5 @@
 name: flutter_breez_liquid
-description: Flutter wrapper around Dart bindings for the Breez Liquid SDK
+description: Flutter bindings for the Breez Liquid SDK
 version: 0.1.0
 homepage: https://breez.technology
 
@@ -10,8 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  breez_liquid: ^0.1.0
-  ffigen: ">=8.0.0 <=11.0.0"
+
+  ffi: ^2.1.2
+  flutter_rust_bridge: ^2.0.0
+  freezed_annotation: ^2.4.1
+
+  meta: ^1.12.0 # meta is pinned to version 1.12.0 by integration_test from the flutter SDK.
 
 dev_dependencies:
   flutter_test:
@@ -19,6 +23,12 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+  build_runner: ^2.4.10
+  ffigen: ">=8.0.0 <=11.0.0"
+  freezed: ^2.5.2
+
+  path: ^1.9.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
