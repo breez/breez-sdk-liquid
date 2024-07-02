@@ -589,7 +589,7 @@ impl LiquidSdk {
     ) -> Result<ChainPair, PaymentError> {
         let pair = self
             .swapper
-            .get_chain_pairs(direction)?
+            .get_chain_pair(direction)?
             .ok_or(PaymentError::PairsNotFound)?;
 
         pair.limits.within(amount_sat)?;
@@ -879,14 +879,11 @@ impl LiquidSdk {
     pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let send_limits = self
-            .swapper
-            .get_chain_pairs(Direction::Outgoing)?
+        let (pair_outgoing, pair_incoming) = self.swapper.get_chain_pairs()?;
+        let send_limits = pair_outgoing
             .ok_or(PaymentError::PairsNotFound)
             .map(|pair| pair.limits)?;
-        let receive_limits = self
-            .swapper
-            .get_chain_pairs(Direction::Incoming)?
+        let receive_limits = pair_incoming
             .ok_or(PaymentError::PairsNotFound)
             .map(|pair| pair.limits)?;
 

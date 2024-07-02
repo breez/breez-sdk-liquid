@@ -59,8 +59,11 @@ pub trait Swapper: Send + Sync {
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError>;
 
-    /// Get a chain pair information
-    fn get_chain_pairs(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError>;
+    /// Get the current rate, limits and fees for a given swap direction
+    fn get_chain_pair(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError>;
+
+    /// Get the current rate, limits and fees for both swap directions
+    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError>;
 
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
@@ -501,14 +504,20 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.post_swap_req(&modified_req)?)
     }
 
-    /// Get a chain pair information
-    fn get_chain_pairs(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError> {
+    fn get_chain_pair(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError> {
         let pairs = self.client.get_chain_pairs()?;
         let pair = match direction {
             Direction::Incoming => pairs.get_btc_to_lbtc_pair(),
             Direction::Outgoing => pairs.get_lbtc_to_btc_pair(),
         };
         Ok(pair)
+    }
+
+    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
+        let pairs = self.client.get_chain_pairs()?;
+        let pair_outgoing = pairs.get_lbtc_to_btc_pair();
+        let pair_incoming = pairs.get_btc_to_lbtc_pair();
+        Ok((pair_outgoing, pair_incoming))
     }
 
     /// Get a submarine pair information
