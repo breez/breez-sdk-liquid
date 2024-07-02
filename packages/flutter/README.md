@@ -1,92 +1,40 @@
-# flutter_breez_liquid
+# Breez Liquid SDK plugin
 
-A new Flutter FFI plugin project.
+[![pub package](https://img.shields.io/pub/v/breez_liquid_sdk.svg)](https://pub.dev/packages/breez_liquid_sdk)
 
-## Getting Started
+## Table of contents
+- [Description](#description)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Documentation](#documentation)
 
-This project is a starting point for a Flutter
-[FFI plugin](https://docs.flutter.dev/development/platform-integration/c-interop),
-a specialized package that includes native code directly invoked with Dart FFI.
+## Description
 
-## Project structure
+This is a Flutter package that wraps the Dart bindings of [Breez Liquid SDK](https://github.com/breez/breez-liquid-sdk?tab=readme-ov-file#readme).
 
-This template uses the following structure:
+## Installation
+To use this plugin, add `breez_liquid_sdk` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).
 
-* `src`: Contains the native source code, and a CMakeLists.txt file for building
-  that source code into a dynamic library.
+## Usage
 
-* `lib`: Contains the Dart code that defines the API of the plugin, and which
-  calls into the native code using `dart:ffi`.
+To start using this package first import it in your Dart file.
 
-* platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
-  for building and bundling the native code library with the platform application.
+```dart
+import 'package:flutter_breez_liquid/flutter_breez_liquid.dart';
+```
+Call `initialize()` to initialize Breez Liquid SDK, preferably on `main.dart`:
 
-## Building and bundling native code
+```dart
+import 'package:flutter_breez_liquid/flutter_breez_liquid.dart' as liquid_sdk;
 
-The `pubspec.yaml` specifies FFI plugins as follows:
-
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        ffiPlugin: true
+void main() async {
+    // Initialize library
+    await liquid_sdk.initialize();
+}
 ```
 
-This configuration invokes the native build for the various target platforms
-and bundles the binaries in Flutter applications using these FFI plugins.
+Please refer to Dart examples on Breez Liquid SDK documentation for more information on features & capabilities of the Breez Liquid SDK.
 
-This can be combined with dartPluginClass, such as when FFI is used for the
-implementation of one platform in a federated plugin:
+## Documentation
 
-```yaml
-  plugin:
-    implements: some_other_plugin
-    platforms:
-      some_platform:
-        dartPluginClass: SomeClass
-        ffiPlugin: true
-```
-
-A plugin can have both FFI and method channels:
-
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        pluginClass: SomeName
-        ffiPlugin: true
-```
-
-The native build systems that are invoked by FFI (and method channel) plugins are:
-
-* For Android: Gradle, which invokes the Android NDK for native builds.
-  * See the documentation in android/build.gradle.
-* For iOS and MacOS: Xcode, via CocoaPods.
-  * See the documentation in ios/flutter_breez_liquid.podspec.
-  * See the documentation in macos/flutter_breez_liquid.podspec.
-* For Linux and Windows: CMake.
-  * See the documentation in linux/CMakeLists.txt.
-  * See the documentation in windows/CMakeLists.txt.
-
-## Binding to native code
-
-To use the native code, bindings in Dart are needed.
-To avoid writing these by hand, they are generated from the header file
-(`src/flutter_breez_liquid.h`) by `package:ffigen`.
-Regenerate the bindings by running `flutter pub run ffigen --config ffigen.yaml`.
-
-## Invoking native code
-
-Very short-running native functions can be directly invoked from any isolate.
-For example, see `sum` in `lib/flutter_breez_liquid.dart`.
-
-Longer-running functions should be invoked on a helper isolate to avoid
-dropping frames in Flutter applications.
-For example, see `sumAsync` in `lib/flutter_breez_liquid.dart`.
-
-## Flutter help
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
+- [Official Breez Liquid SDK documentation](https://sdk-doc-liquid.breez.technology/)
