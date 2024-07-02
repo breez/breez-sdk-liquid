@@ -1,0 +1,85 @@
+name: Publish Dart Package
+on:   
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      package-version:
+        description: 'version for the dart package (MAJOR.MINOR.BUILD) (no v prefix)'
+        required: true
+        type: string
+      publish:
+        description: 'value indicating whether to commit/tag a release.'
+        required: true
+        type: boolean
+        default: true
+    secrets:
+      REPO_SSH_KEY:
+        description: 'ssh key to commit to the breez-liquid-sdk-dart repository'
+        required: true
+
+jobs:
+  build-tag-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout breez-liquid-sdk-dart repo
+        uses: actions/checkout@v3
+        with:
+          repository: breez/breez-liquid-sdk-dart
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
+          path: dist
+
+      - name: Checkout breez-liquid-sdk repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+          path: build
+
+      - name: Copy package files
+        working-directory: dist
+        run: |
+          rm -r lib
+          cp -r ../build/packages/dart/lib .
+          cp ../build/packages/dart/analysis_options.yaml .
+          cp ../build/packages/dart/pubspec.yaml .
+          cp ../build/packages/dart/pubspec.lock .
+
+      - name: Copy docs
+        working-directory: dist
+        run: |
+          cp ../build/packages/dart/README.md . || true
+          cp ../build/packages/dart/CHANGELOG.md . || true
+
+      - name: Set package version
+        working-directory: dist
+        run: |
+          sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
+          rm pubspec.yaml.bak
+
+      - name: Archive Dart release
+        uses: actions/upload-artifact@v3
+        with:
+          name: breez-liquid-sdk-dart-${{ inputs.package-version || github.sha }}
+          path: |
+            dist/*
+            !dist/.git
+
+      - name: Tag the Dart package
+        working-directory: dist
+        if: ${{ inputs.publish }}
+        run: |
+          git config --global user.email github-actions@github.com
+          git config --global user.name github-actions
+          git add .
+          git commit -m "Update Dart package to version v${{ inputs.package-version }}"
+          git push
+          git tag v${{ inputs.package-version }} -m "v${{ inputs.package-version }}"
+          git push --tags

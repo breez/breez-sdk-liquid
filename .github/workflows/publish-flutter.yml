@@ -50,13 +50,15 @@ jobs:
       - name: Copy package files
         working-directory: dist
         run: |
-          rm -r ios
           rm -r android
+          rm -r ios
           rm -r lib
-          cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/android .
+          cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/lib .
+          cp ../build/packages/flutter/analysis_options.yaml .
           cp ../build/packages/flutter/pubspec.yaml .
+          cp ../build/packages/flutter/pubspec_overrides.yaml .
           cp ../build/packages/flutter/pubspec.lock .
 
       - name: Copy docs
@@ -74,9 +76,11 @@ jobs:
         working-directory: dist
         run: |
           sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
+          sed -i.bak -e 's/path:.*/git:\n\t\t\turl: git@github.com:breez\/breez-liquid-sdk-dart.git\n\t\t\tref: ${{ inputs.package-version }}/' pubspec_overrides.yaml
           sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
           sed -i.bak -e "s/^tag_name = .*/tag_name = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
           rm pubspec.yaml.bak
+          rm pubspec_overrides.yaml.bak
           rm android/build.gradle.bak
           rm ios/breez_liquid_sdk.podspec.bak
 
@@ -95,7 +99,7 @@ jobs:
           git config --global user.email github-actions@github.com
           git config --global user.name github-actions
           git add .
-          git commit -m "Update Breez SDK Flutter package to version v${{ inputs.package-version }}"
+          git commit -m "Update Flutter package to version v${{ inputs.package-version }}"
           git push
           git tag v${{ inputs.package-version }} -m "v${{ inputs.package-version }}"
           git push --tags

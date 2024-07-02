@@ -208,6 +208,19 @@ jobs:
 #      skip-tests: true
 #    secrets:
 #      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    
+  publish-dart:
+    needs:
+      - setup
+    if: ${{ needs.setup.outputs.flutter == 'true' }}
+    uses: ./.github/workflows/publish-dart.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      package-version: ${{ needs.setup.outputs.flutter-package-version }}
+      publish: ${{ needs.setup.outputs.publish == 'true' }}
+    secrets:
+      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
 #
 #  publish-golang:
 #    needs:
@@ -263,6 +276,7 @@ jobs:
     needs:
       - setup
       - build-bindings-flutter
+      - publish-dart
     if: ${{ needs.setup.outputs.flutter == 'true' }}
     uses: ./.github/workflows/publish-flutter.yml
     with:
