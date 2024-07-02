@@ -286,6 +286,7 @@ jobs:
       publish: ${{ needs.setup.outputs.publish == 'true' }}
     secrets:
       REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
+      SWIFT_RELEASE_TOKEN: ${{ secrets.SWIFT_RELEASE_TOKEN }}
 
   # react native version x.y.z will at runtime require
   # ios and android packages x.y.z being published already.

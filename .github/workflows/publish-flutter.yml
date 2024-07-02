@@ -23,6 +23,9 @@ on:
       REPO_SSH_KEY:
         description: 'ssh key to commit to the breez-liquid-sdk-flutter repository'
         required: true
+      SWIFT_RELEASE_TOKEN:
+        description: 'github token to release to the breez-liquid-sdk-flutter repository'
+        required: true
 
 jobs:
   build-tag-release:
