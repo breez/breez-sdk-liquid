@@ -64,8 +64,9 @@ jobs:
       - name: Copy docs
         working-directory: dist
         run: |
-          cp ../build/packages/flutter/README.md . || true
           cp ../build/packages/flutter/CHANGELOG.md . || true
+          cp ../build/packages/flutter/LICENSE . || true
+          cp ../build/packages/flutter/README.md . || true
 
       - uses: actions/download-artifact@v3
         with:
