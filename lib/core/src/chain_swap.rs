@@ -17,7 +17,7 @@ use crate::model::PaymentState::{
     Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
 };
 use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
-use crate::sdk::CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
+use crate::sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
@@ -120,7 +120,7 @@ impl ChainSwapStateHandler {
         current_height: u32,
     ) -> Result<()> {
         let monitoring_block_height =
-            swap.timeout_block_height + CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS;
+            swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
         let is_swap_expired = current_height > swap.timeout_block_height;
         let is_monitoring_expired = current_height > monitoring_block_height;
 
@@ -911,8 +911,14 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
-        model::PaymentState::{self, *},
-        test_utils::{new_chain_swap, new_chain_swap_state_handler, new_persister},
+        model::{
+            Direction,
+            PaymentState::{self, *},
+        },
+        test_utils::{
+            chain_swap::{new_chain_swap, new_chain_swap_state_handler},
+            persist::new_persister,
+        },
     };
 
     #[tokio::test]
@@ -942,7 +948,7 @@ mod tests {
 
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
-                let chain_swap = new_chain_swap(Some(*first_state));
+                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
@@ -965,7 +971,7 @@ mod tests {
 
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
-                let chain_swap = new_chain_swap(Some(*first_state));
+                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler

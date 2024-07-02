@@ -40,24 +40,24 @@ use crate::{
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
-pub const CHAIN_SWAP_MONTIORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
+pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 pub struct LiquidSdk {
-    config: Config,
-    onchain_wallet: Arc<dyn OnchainWallet>,
-    persister: Arc<Persister>,
-    event_manager: Arc<EventManager>,
-    status_stream: Arc<dyn SwapperStatusStream>,
-    swapper: Arc<dyn Swapper>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
-    bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
-    fiat_api: Arc<dyn FiatAPI>,
-    is_started: RwLock<bool>,
-    shutdown_sender: watch::Sender<()>,
-    shutdown_receiver: watch::Receiver<()>,
-    send_swap_state_handler: SendSwapStateHandler,
-    receive_swap_state_handler: ReceiveSwapStateHandler,
-    chain_swap_state_handler: Arc<ChainSwapStateHandler>,
+    pub(crate) config: Config,
+    pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
+    pub(crate) persister: Arc<Persister>,
+    pub(crate) event_manager: Arc<EventManager>,
+    pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
+    pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    pub(crate) bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+    pub(crate) fiat_api: Arc<dyn FiatAPI>,
+    pub(crate) is_started: RwLock<bool>,
+    pub(crate) shutdown_sender: watch::Sender<()>,
+    pub(crate) shutdown_receiver: watch::Receiver<()>,
+    pub(crate) send_swap_state_handler: SendSwapStateHandler,
+    pub(crate) receive_swap_state_handler: ReceiveSwapStateHandler,
+    pub(crate) chain_swap_state_handler: Arc<ChainSwapStateHandler>,
 }
 
 impl LiquidSdk {
@@ -903,24 +903,24 @@ impl LiquidSdk {
     ) -> Result<PreparePayOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let amount_sat = req.amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Outgoing, amount_sat)?;
+        let receiver_amount_sat = req.receiver_amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
-        let server_lockup_amount_sat = amount_sat + claim_fees_sat;
+        let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
             .estimate_lockup_tx_fee(server_lockup_amount_sat)
             .await?;
 
         let res = PreparePayOnchainResponse {
-            amount_sat,
+            receiver_amount_sat,
             fees_sat: pair.fees.boltz(server_lockup_amount_sat)
                 + lockup_fees_sat
                 + claim_fees_sat
                 + server_fees_sat,
         };
 
-        let payer_amount_sat = res.amount_sat + res.fees_sat;
+        let payer_amount_sat = res.receiver_amount_sat + res.fees_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -935,7 +935,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let receiver_amount_sat = req.prepare_res.amount_sat;
+        let receiver_amount_sat = req.prepare_res.receiver_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
@@ -1037,7 +1037,7 @@ impl LiquidSdk {
                 _ = &mut timeout_fut => match maybe_payment {
                     Some(payment) => return Ok(payment),
                     None => {
-                        debug!("Timeout occured without payment, set swap to timed out");
+                        debug!("Timeout occurred without payment, set swap to timed out");
                         match swap {
                             Swap::Send(_) => self.send_swap_state_handler.update_swap_info(&swap_id, TimedOut, None, None, None).await?,
                             Swap::Chain(_) => self.chain_swap_state_handler.update_swap_info(&swap_id, TimedOut, None, None, None, None).await?,
@@ -1222,31 +1222,30 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let amount_sat = req.amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Incoming, amount_sat)?;
+        let payer_amount_sat = req.payer_amount_sat;
+        let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         Ok(PrepareReceiveOnchainResponse {
-            amount_sat,
-            fees_sat: pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat,
+            payer_amount_sat,
+            fees_sat: pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
         })
     }
 
     pub async fn receive_onchain(
         &self,
-        req: &ReceiveOnchainRequest,
+        req: &PrepareReceiveOnchainResponse,
     ) -> Result<ReceiveOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.prepare_res.amount_sat;
+        let payer_amount_sat = req.payer_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            req.prepare_res.fees_sat
-                == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            req.fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1280,7 +1279,7 @@ impl LiquidSdk {
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
         let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - req.prepare_res.fees_sat;
+        let receiver_amount_sat = payer_amount_sat - req.fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let lockup_address = create_response.lockup_details.lockup_address;
 
@@ -1695,5 +1694,308 @@ impl ReconnectHandler for SwapperReconnectHandler {
             }
             Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use anyhow::{anyhow, Result};
+    use boltz_client::{
+        boltzv2::{self, SwapUpdateTxDetails},
+        swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
+    };
+    use lwk_wollet::{elements::encode::serialize, hashes::hex::DisplayHex};
+
+    use crate::{
+        model::{Direction, PaymentState, Swap},
+        sdk::LiquidSdk,
+        test_utils::{
+            chain_swap::new_chain_swap,
+            create_mock_tx,
+            persist::{new_persister, new_receive_swap, new_send_swap},
+            sdk::new_liquid_sdk,
+            status_stream::MockStatusStream,
+            swapper::MockSwapper,
+        },
+    };
+    use paste::paste;
+
+    macro_rules! trigger_swap_update {
+        (
+            $type:literal,
+            $direction:expr,
+            $persister:expr,
+            $status_stream:expr,
+            $status:expr,
+            $transaction:expr,
+            $zero_conf_rejected:expr
+        ) => {{
+            let swap = match $type {
+                "chain" => {
+                    let swap = new_chain_swap($direction.unwrap(), None);
+                    $persister.insert_chain_swap(&swap).unwrap();
+                    Swap::Chain(swap)
+                }
+                "send" => {
+                    let swap = new_send_swap(None);
+                    $persister.insert_send_swap(&swap).unwrap();
+                    Swap::Send(swap)
+                }
+                "receive" => {
+                    let swap = new_receive_swap(None);
+                    $persister.insert_receive_swap(&swap).unwrap();
+                    Swap::Receive(swap)
+                }
+                _ => panic!(),
+            };
+
+            $status_stream
+                .clone()
+                .send_mock_update(boltzv2::Update {
+                    id: swap.id(),
+                    status: $status.to_string(),
+                    transaction: $transaction,
+                    zero_conf_rejected: $zero_conf_rejected,
+                })
+                .await
+                .unwrap();
+
+            paste! {
+                $persister.[<fetch _ $type _swap_by_id>](&swap.id())
+                    .unwrap()
+                    .ok_or(anyhow!("Could not retrieve {} swap", $type))
+                    .unwrap()
+            }
+        }};
+    }
+
+    #[tokio::test]
+    async fn test_receive_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify the swap becomes invalid after final states are received
+            let unrecoverable_states: [RevSwapStates; 4] = [
+                RevSwapStates::SwapExpired,
+                RevSwapStates::InvoiceExpired,
+                RevSwapStates::TransactionFailed,
+                RevSwapStates::TransactionRefunded,
+            ];
+
+            for status in unrecoverable_states {
+                let persisted_swap = trigger_swap_update!(
+                    "receive",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    None,
+                    None
+                );
+                assert_eq!(persisted_swap.state, PaymentState::Failed);
+            }
+
+            // Check that `TransactionMempool` and `TransactionConfirmed` correctly trigger the claim,
+            // which in turn sets the `claim_tx_id`
+            for status in [
+                RevSwapStates::TransactionMempool,
+                RevSwapStates::TransactionConfirmed,
+            ] {
+                let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
+                let mock_lockup_tx_id = mock_tx.txid().to_string();
+                let persisted_swap = trigger_swap_update!(
+                    "receive",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    Some(SwapUpdateTxDetails {
+                        id: mock_lockup_tx_id.clone(),
+                        hex: serialize(&mock_tx).to_lower_hex_string(),
+                    }),
+                    None
+                );
+                assert!(persisted_swap.claim_tx_id.is_some());
+            }
+        })
+        .await
+        .unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_send_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify the swap becomes invalid after final states are received
+            let unrecoverable_states: [SubSwapStates; 3] = [
+                SubSwapStates::TransactionLockupFailed,
+                SubSwapStates::InvoiceFailedToPay,
+                SubSwapStates::SwapExpired,
+            ];
+
+            for status in unrecoverable_states {
+                let persisted_swap = trigger_swap_update!(
+                    "send",
+                    None,
+                    persister,
+                    status_stream,
+                    status,
+                    None,
+                    None
+                );
+                assert_eq!(persisted_swap.state, PaymentState::Failed);
+            }
+
+            // Verify that `InvoiceSet` correctly sets the state to `Pending` and
+            // assigns the `lockup_tx_id` to the payment
+            let persisted_swap = trigger_swap_update!(
+                "send",
+                None,
+                persister,
+                status_stream,
+                SubSwapStates::InvoiceSet,
+                None,
+                None
+            );
+            assert_eq!(persisted_swap.state, PaymentState::Pending);
+            assert!(persisted_swap.lockup_tx_id.is_some());
+
+            // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
+            // and stores the preimage
+            let persisted_swap = trigger_swap_update!(
+                "send",
+                None,
+                persister,
+                status_stream,
+                SubSwapStates::TransactionClaimPending,
+                None,
+                None
+            );
+            assert_eq!(persisted_swap.state, PaymentState::Complete);
+            assert!(persisted_swap.preimage.is_some());
+        })
+        .await
+        .unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_chain_swap_update_tracking() -> Result<()> {
+        let (_tmp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+
+        let sdk = Arc::new(new_liquid_sdk(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Checks that work for both incoming and outgoing chain swaps
+
+            let unrecoverable_states: [ChainSwapStates; 4] = [
+                ChainSwapStates::TransactionFailed,
+                ChainSwapStates::TransactionLockupFailed,
+                ChainSwapStates::TransactionRefunded,
+                ChainSwapStates::SwapExpired,
+            ];
+
+            for direction in [Direction::Incoming, Direction::Outgoing] {
+                // Verify the swap becomes invalid after final states are received
+                for status in &unrecoverable_states {
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        Some(direction),
+                        persister,
+                        status_stream,
+                        status,
+                        None,
+                        None
+                    );
+                    assert!(
+                        persisted_swap.state == PaymentState::Failed
+                            || persisted_swap.state == PaymentState::Refundable,
+                    );
+                }
+
+                // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
+                // `user_lockup_tx_id` and `accept_zero_conf`
+                for status in [
+                    ChainSwapStates::TransactionMempool,
+                    ChainSwapStates::TransactionConfirmed,
+                ] {
+                    let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
+                    let mock_lockup_tx_id = mock_tx.txid().to_string();
+
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        Some(direction),
+                        persister,
+                        status_stream,
+                        status,
+                        Some(SwapUpdateTxDetails {
+                            id: mock_lockup_tx_id.clone(),
+                            hex: serialize(&mock_tx).to_lower_hex_string(),
+                        }),
+                        Some(true)
+                    );
+                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_lockup_tx_id));
+                    assert_eq!(persisted_swap.accept_zero_conf, false);
+                }
+            }
+
+            // Verify that `Created` correctly sets the payment as `Pending` and creates
+            // the `user_lockup_tx_id`
+            // let persisted_swap = trigger_swap_update!(
+            //     "chain",
+            //     Some(Direction::Outgoing),
+            //     persister,
+            //     status_stream,
+            //     ChainSwapStates::Created,
+            //     None,
+            //     None
+            // );
+            // assert_eq!(persisted_swap.state, PaymentState::Pending);
+            // assert!(persisted_swap.user_lockup_tx_id.is_some());
+        })
+        .await
+        .unwrap();
+
+        Ok(())
     }
 }

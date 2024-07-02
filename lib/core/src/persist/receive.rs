@@ -76,7 +76,7 @@ impl Persister {
         )
     }
 
-    pub(crate) fn fetch_receive_swap(&self, id: &str) -> Result<Option<ReceiveSwap>> {
+    pub(crate) fn fetch_receive_swap_by_id(&self, id: &str) -> Result<Option<ReceiveSwap>> {
         let con: Connection = self.get_connection()?;
         let query = Self::list_receive_swaps_query(vec!["id = ?1".to_string()]);
         let res = con.query_row(&query, [id], Self::sql_row_to_receive_swap);
@@ -253,7 +253,7 @@ impl InternalCreateReverseResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::{new_persister, new_receive_swap};
+    use crate::test_utils::persist::{new_persister, new_receive_swap};
 
     use super::PaymentState;
 
@@ -265,7 +265,7 @@ mod tests {
 
         storage.insert_receive_swap(&receive_swap)?;
         // Fetch swap by id
-        assert!(storage.fetch_receive_swap(&receive_swap.id).is_ok());
+        assert!(storage.fetch_receive_swap_by_id(&receive_swap.id).is_ok());
         // Fetch swap by invoice
         assert!(storage
             .fetch_receive_swap_by_invoice(&receive_swap.invoice)
@@ -314,7 +314,7 @@ mod tests {
         storage.try_handle_receive_swap_update(&receive_swap.id, new_state, claim_tx_id, None)?;
 
         let updated_receive_swap = storage
-            .fetch_receive_swap(&receive_swap.id)?
+            .fetch_receive_swap_by_id(&receive_swap.id)?
             .ok_or(anyhow!("Could not find Receive swap in database"))?;
 
         assert_eq!(new_state, updated_receive_swap.state);

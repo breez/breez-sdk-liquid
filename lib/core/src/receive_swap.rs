@@ -61,7 +61,7 @@ impl ReceiveSwapStateHandler {
         let swap_state = &update.status;
         let receive_swap = self
             .persister
-            .fetch_receive_swap(id)?
+            .fetch_receive_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
@@ -84,10 +84,6 @@ impl ReceiveSwapStateHandler {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
 
-                let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
-                    .await?;
-
                 if let Some(claim_tx_id) = receive_swap.claim_tx_id {
                     return Err(anyhow!(
                         "Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}"
@@ -106,6 +102,11 @@ impl ReceiveSwapStateHandler {
                     ));
                 }
                 info!("swapper lockup was verified");
+
+                let lockup_tx_id = &transaction.id;
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
+                    .await?;
+
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
 
                 // If the amount is greater than the zero-conf limit
@@ -163,6 +164,7 @@ impl ReceiveSwapStateHandler {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
+
                 // looking for lockup script history to verify lockup was broadcasted
                 if let Err(e) = self
                     .verify_lockup_tx(&receive_swap, &transaction, true)
@@ -222,7 +224,7 @@ impl ReceiveSwapStateHandler {
 
         let swap = self
             .persister
-            .fetch_receive_swap(swap_id)
+            .fetch_receive_swap_by_id(swap_id)
             .map_err(|_| PaymentError::PersistError)?
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),
@@ -352,7 +354,10 @@ mod tests {
 
     use crate::{
         model::PaymentState::{self, *},
-        test_utils::{new_persister, new_receive_swap, new_receive_swap_state_handler},
+        test_utils::{
+            persist::{new_persister, new_receive_swap},
+            receive_swap::new_receive_swap_state_handler,
+        },
     };
 
     #[tokio::test]

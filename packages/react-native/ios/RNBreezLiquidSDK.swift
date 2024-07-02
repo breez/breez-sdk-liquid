@@ -106,7 +106,7 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     @objc(setLogger:reject:)
     func setLogger(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            try BreezLiquidSDK.setLogger(Logger: BreezLiquidSDKLogger())
+            try BreezLiquidSDK.setLogger(logger: BreezLiquidSDKLogger())
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
@@ -254,8 +254,8 @@ class RNBreezLiquidSDK: RCTEventEmitter {
     @objc(receiveOnchain:resolve:reject:)
     func receiveOnchain(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let receiveOnchainRequest = try BreezLiquidSDKMapper.asReceiveOnchainRequest(receiveOnchainRequest: req)
-            var res = try getBindingLiquidSdk().receiveOnchain(req: receiveOnchainRequest)
+            let prepareReceiveOnchainResponse = try BreezLiquidSDKMapper.asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: req)
+            var res = try getBindingLiquidSdk().receiveOnchain(req: prepareReceiveOnchainResponse)
             resolve(BreezLiquidSDKMapper.dictionaryOf(receiveOnchainResponse: res))
         } catch let err {
             rejectErr(err: err, reject: reject)

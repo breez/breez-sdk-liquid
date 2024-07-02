@@ -275,7 +275,7 @@ impl InternalCreateSubmarineResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::{new_persister, new_send_swap};
+    use crate::test_utils::persist::{new_persister, new_send_swap};
 
     use super::PaymentState;
 

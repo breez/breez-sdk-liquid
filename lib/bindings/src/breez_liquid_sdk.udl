@@ -345,11 +345,11 @@ dictionary OnchainPaymentLimitsResponse {
 };
 
 dictionary PreparePayOnchainRequest {
-    u64 amount_sat;
+    u64 receiver_amount_sat;
 };
 
 dictionary PreparePayOnchainResponse {
-    u64 amount_sat;
+    u64 receiver_amount_sat;
     u64 fees_sat;
 };
 
@@ -359,16 +359,12 @@ dictionary PayOnchainRequest {
 };
 
 dictionary PrepareReceiveOnchainRequest {
-    u64 amount_sat;
+    u64 payer_amount_sat;
 };
 
 dictionary PrepareReceiveOnchainResponse {
-    u64 amount_sat;
+    u64 payer_amount_sat;
     u64 fees_sat;
-};
-
-dictionary ReceiveOnchainRequest {
-    PrepareReceiveOnchainResponse prepare_res;
 };
 
 dictionary ReceiveOnchainResponse {
@@ -516,7 +512,7 @@ interface BindingLiquidSdk {
     PrepareReceiveOnchainResponse prepare_receive_onchain(PrepareReceiveOnchainRequest req);
 
     [Throws=PaymentError]
-    ReceiveOnchainResponse receive_onchain(ReceiveOnchainRequest req);
+    ReceiveOnchainResponse receive_onchain(PrepareReceiveOnchainResponse req);
 
     [Throws=PaymentError]
     sequence<Payment> list_payments();

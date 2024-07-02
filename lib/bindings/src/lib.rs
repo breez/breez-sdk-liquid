@@ -146,7 +146,7 @@ impl BindingLiquidSdk {
 
     pub fn receive_onchain(
         &self,
-        req: ReceiveOnchainRequest,
+        req: PrepareReceiveOnchainResponse,
     ) -> Result<ReceiveOnchainResponse, PaymentError> {
         rt().block_on(self.sdk.receive_onchain(&req))
     }

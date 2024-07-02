@@ -15,7 +15,7 @@ frb = ["dep:flutter_rust_bridge"]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
 #boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a05731cc33030ada9ae14afcafe0cded22842ba6" }
-boltz-client = { git = "https://github.com/dangeross/boltz-rust", branch = "savage-chain-swaps" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", branch = "yse-breez-latest" }
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.0.0", features = ["chrono"], optional = true }
@@ -44,6 +44,8 @@ reqwest = { version = "=0.11.20", features = ["json"] }
 electrum-client = { version = "0.19.0" }
 
 [dev-dependencies]
+lazy_static = "1.5.0"
+paste = "1.0.15"
 tempdir = "0.3.7"
 uuid = { version = "1.8.0", features = ["v4"] }
 

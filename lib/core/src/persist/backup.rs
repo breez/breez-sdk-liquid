@@ -39,8 +39,8 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
-        persist::PaymentState,
-        test_utils::{new_persister, new_receive_swap, new_send_swap},
+        model::PaymentState,
+        test_utils::persist::{new_persister, new_receive_swap, new_send_swap},
     };
 
     #[test]

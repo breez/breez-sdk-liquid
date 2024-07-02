@@ -153,7 +153,7 @@ impl BindingLiquidSdk {
 
     pub async fn receive_onchain(
         &self,
-        req: ReceiveOnchainRequest,
+        req: PrepareReceiveOnchainResponse,
     ) -> Result<ReceiveOnchainResponse, PaymentError> {
         self.sdk.receive_onchain(&req).await
     }

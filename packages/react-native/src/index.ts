@@ -195,20 +195,20 @@ export interface Payment {
 }
 
 export interface PreparePayOnchainRequest {
-    amountSat: number
+    receiverAmountSat: number
 }
 
 export interface PreparePayOnchainResponse {
-    amountSat: number
+    receiverAmountSat: number
     feesSat: number
 }
 
 export interface PrepareReceiveOnchainRequest {
-    amountSat: number
+    payerAmountSat: number
 }
 
 export interface PrepareReceiveOnchainResponse {
-    amountSat: number
+    payerAmountSat: number
     feesSat: number
 }
 
@@ -245,10 +245,6 @@ export interface PrepareSendResponse {
 export interface Rate {
     coin: string
     value: number
-}
-
-export interface ReceiveOnchainRequest {
-    prepareRes: PrepareReceiveOnchainResponse
 }
 
 export interface ReceiveOnchainResponse {
@@ -570,7 +566,7 @@ export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): 
     return response
 }
 
-export const receiveOnchain = async (req: ReceiveOnchainRequest): Promise<ReceiveOnchainResponse> => {
+export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promise<ReceiveOnchainResponse> => {
     const response = await BreezLiquidSDK.receiveOnchain(req)
     return response
 }
