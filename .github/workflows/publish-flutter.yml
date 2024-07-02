@@ -50,9 +50,9 @@ jobs:
       - name: Copy package files
         working-directory: dist
         run: |
-          rm -r android
-          rm -r ios
-          rm -r lib
+          rm -rf android
+          rm -rf ios
+          rm -rf lib
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/lib .

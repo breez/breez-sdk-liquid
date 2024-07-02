@@ -46,7 +46,7 @@ jobs:
       - name: Copy package files
         working-directory: dist
         run: |
-          rm -r lib
+          rm -rf lib
           cp -r ../build/packages/dart/lib .
           cp ../build/packages/dart/analysis_options.yaml .
           cp ../build/packages/dart/pubspec.yaml .
