@@ -17,6 +17,50 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$LnUrlAuthError {
   String get err => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlAuthError_Generic value) generic,
+    required TResult Function(LnUrlAuthError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlAuthError_ServiceConnectivity value) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlAuthError_Generic value)? generic,
+    TResult? Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlAuthError_Generic value)? generic,
+    TResult Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $LnUrlAuthErrorCopyWith<LnUrlAuthError> get copyWith => throw _privateConstructorUsedError;
@@ -115,6 +159,74 @@ class _$LnUrlAuthError_GenericImpl extends LnUrlAuthError_Generic {
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_GenericImplCopyWith<_$LnUrlAuthError_GenericImpl> get copyWith =>
       __$$LnUrlAuthError_GenericImplCopyWithImpl<_$LnUrlAuthError_GenericImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return generic(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return generic?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlAuthError_Generic value) generic,
+    required TResult Function(LnUrlAuthError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlAuthError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return generic(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlAuthError_Generic value)? generic,
+    TResult? Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return generic?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlAuthError_Generic value)? generic,
+    TResult Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlAuthError_Generic extends LnUrlAuthError {
@@ -190,6 +302,74 @@ class _$LnUrlAuthError_InvalidUriImpl extends LnUrlAuthError_InvalidUri {
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_InvalidUriImplCopyWith<_$LnUrlAuthError_InvalidUriImpl> get copyWith =>
       __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<_$LnUrlAuthError_InvalidUriImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidUri(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlAuthError_Generic value) generic,
+    required TResult Function(LnUrlAuthError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlAuthError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidUri(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlAuthError_Generic value)? generic,
+    TResult? Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlAuthError_Generic value)? generic,
+    TResult Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlAuthError_InvalidUri extends LnUrlAuthError {
@@ -267,6 +447,74 @@ class _$LnUrlAuthError_ServiceConnectivityImpl extends LnUrlAuthError_ServiceCon
   _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
       __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<_$LnUrlAuthError_ServiceConnectivityImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return serviceConnectivity(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlAuthError_Generic value) generic,
+    required TResult Function(LnUrlAuthError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlAuthError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return serviceConnectivity(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlAuthError_Generic value)? generic,
+    TResult? Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlAuthError_Generic value)? generic,
+    TResult Function(LnUrlAuthError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlAuthError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
@@ -283,7 +531,46 @@ abstract class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
 }
 
 /// @nodoc
-mixin _$LnUrlCallbackStatus {}
+mixin _$LnUrlCallbackStatus {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlCallbackStatus_Ok value) ok,
+    required TResult Function(LnUrlCallbackStatus_ErrorStatus value) errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult? Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $LnUrlCallbackStatusCopyWith<$Res> {
@@ -336,6 +623,68 @@ class _$LnUrlCallbackStatus_OkImpl extends LnUrlCallbackStatus_Ok {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) {
+    return ok();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) {
+    return ok?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlCallbackStatus_Ok value) ok,
+    required TResult Function(LnUrlCallbackStatus_ErrorStatus value) errorStatus,
+  }) {
+    return ok(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult? Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+  }) {
+    return ok?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlCallbackStatus_Ok extends LnUrlCallbackStatus {
@@ -404,6 +753,68 @@ class _$LnUrlCallbackStatus_ErrorStatusImpl extends LnUrlCallbackStatus_ErrorSta
   _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
       __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<_$LnUrlCallbackStatus_ErrorStatusImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) {
+    return errorStatus(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) {
+    return errorStatus?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (errorStatus != null) {
+      return errorStatus(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlCallbackStatus_Ok value) ok,
+    required TResult Function(LnUrlCallbackStatus_ErrorStatus value) errorStatus,
+  }) {
+    return errorStatus(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult? Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+  }) {
+    return errorStatus?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlCallbackStatus_Ok value)? ok,
+    TResult Function(LnUrlCallbackStatus_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (errorStatus != null) {
+      return errorStatus(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
@@ -418,7 +829,106 @@ abstract class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
 }
 
 /// @nodoc
-mixin _$LnUrlPayError {}
+mixin _$LnUrlPayError {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $LnUrlPayErrorCopyWith<$Res> {
@@ -470,6 +980,128 @@ class _$LnUrlPayError_AlreadyPaidImpl extends LnUrlPayError_AlreadyPaid {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return alreadyPaid();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return alreadyPaid?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (alreadyPaid != null) {
+      return alreadyPaid();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return alreadyPaid(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return alreadyPaid?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (alreadyPaid != null) {
+      return alreadyPaid(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_AlreadyPaid extends LnUrlPayError {
@@ -537,6 +1169,128 @@ class _$LnUrlPayError_GenericImpl extends LnUrlPayError_Generic {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_GenericImplCopyWith<_$LnUrlPayError_GenericImpl> get copyWith =>
       __$$LnUrlPayError_GenericImplCopyWithImpl<_$LnUrlPayError_GenericImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return generic(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return generic?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return generic(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return generic?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_Generic extends LnUrlPayError {
@@ -609,6 +1363,128 @@ class _$LnUrlPayError_InvalidAmountImpl extends LnUrlPayError_InvalidAmount {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidAmountImplCopyWith<_$LnUrlPayError_InvalidAmountImpl> get copyWith =>
       __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<_$LnUrlPayError_InvalidAmountImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidAmount(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidAmount?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidAmount != null) {
+      return invalidAmount(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidAmount(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidAmount?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidAmount != null) {
+      return invalidAmount(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_InvalidAmount extends LnUrlPayError {
@@ -681,6 +1557,128 @@ class _$LnUrlPayError_InvalidInvoiceImpl extends LnUrlPayError_InvalidInvoice {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidInvoiceImplCopyWith<_$LnUrlPayError_InvalidInvoiceImpl> get copyWith =>
       __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<_$LnUrlPayError_InvalidInvoiceImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidInvoice(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidInvoice?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidInvoice(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidInvoice?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_InvalidInvoice extends LnUrlPayError {
@@ -754,6 +1752,128 @@ class _$LnUrlPayError_InvalidNetworkImpl extends LnUrlPayError_InvalidNetwork {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidNetworkImplCopyWith<_$LnUrlPayError_InvalidNetworkImpl> get copyWith =>
       __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<_$LnUrlPayError_InvalidNetworkImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidNetwork(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidNetwork?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidNetwork != null) {
+      return invalidNetwork(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidNetwork(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidNetwork?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidNetwork != null) {
+      return invalidNetwork(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_InvalidNetwork extends LnUrlPayError {
@@ -827,6 +1947,128 @@ class _$LnUrlPayError_InvalidUriImpl extends LnUrlPayError_InvalidUri {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidUriImplCopyWith<_$LnUrlPayError_InvalidUriImpl> get copyWith =>
       __$$LnUrlPayError_InvalidUriImplCopyWithImpl<_$LnUrlPayError_InvalidUriImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidUri(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidUri(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_InvalidUri extends LnUrlPayError {
@@ -899,6 +2141,128 @@ class _$LnUrlPayError_InvoiceExpiredImpl extends LnUrlPayError_InvoiceExpired {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvoiceExpiredImplCopyWith<_$LnUrlPayError_InvoiceExpiredImpl> get copyWith =>
       __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<_$LnUrlPayError_InvoiceExpiredImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invoiceExpired(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invoiceExpired?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invoiceExpired != null) {
+      return invoiceExpired(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invoiceExpired(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invoiceExpired?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invoiceExpired != null) {
+      return invoiceExpired(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_InvoiceExpired extends LnUrlPayError {
@@ -972,6 +2336,128 @@ class _$LnUrlPayError_PaymentFailedImpl extends LnUrlPayError_PaymentFailed {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_PaymentFailedImplCopyWith<_$LnUrlPayError_PaymentFailedImpl> get copyWith =>
       __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<_$LnUrlPayError_PaymentFailedImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return paymentFailed(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return paymentFailed?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (paymentFailed != null) {
+      return paymentFailed(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return paymentFailed(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return paymentFailed?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (paymentFailed != null) {
+      return paymentFailed(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_PaymentFailed extends LnUrlPayError {
@@ -1044,6 +2530,128 @@ class _$LnUrlPayError_PaymentTimeoutImpl extends LnUrlPayError_PaymentTimeout {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_PaymentTimeoutImplCopyWith<_$LnUrlPayError_PaymentTimeoutImpl> get copyWith =>
       __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<_$LnUrlPayError_PaymentTimeoutImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return paymentTimeout(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return paymentTimeout?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (paymentTimeout != null) {
+      return paymentTimeout(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return paymentTimeout(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return paymentTimeout?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (paymentTimeout != null) {
+      return paymentTimeout(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_PaymentTimeout extends LnUrlPayError {
@@ -1117,6 +2725,128 @@ class _$LnUrlPayError_RouteNotFoundImpl extends LnUrlPayError_RouteNotFound {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_RouteNotFoundImplCopyWith<_$LnUrlPayError_RouteNotFoundImpl> get copyWith =>
       __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<_$LnUrlPayError_RouteNotFoundImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return routeNotFound(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return routeNotFound?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (routeNotFound != null) {
+      return routeNotFound(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return routeNotFound(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return routeNotFound?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (routeNotFound != null) {
+      return routeNotFound(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_RouteNotFound extends LnUrlPayError {
@@ -1190,6 +2920,128 @@ class _$LnUrlPayError_RouteTooExpensiveImpl extends LnUrlPayError_RouteTooExpens
   _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
       __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<_$LnUrlPayError_RouteTooExpensiveImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return routeTooExpensive(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return routeTooExpensive?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (routeTooExpensive != null) {
+      return routeTooExpensive(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return routeTooExpensive(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return routeTooExpensive?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (routeTooExpensive != null) {
+      return routeTooExpensive(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
@@ -1264,6 +3116,128 @@ class _$LnUrlPayError_ServiceConnectivityImpl extends LnUrlPayError_ServiceConne
   _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
       __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<_$LnUrlPayError_ServiceConnectivityImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyPaid,
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidNetwork,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceExpired,
+    required TResult Function(String err) paymentFailed,
+    required TResult Function(String err) paymentTimeout,
+    required TResult Function(String err) routeNotFound,
+    required TResult Function(String err) routeTooExpensive,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return serviceConnectivity(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyPaid,
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidNetwork,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceExpired,
+    TResult? Function(String err)? paymentFailed,
+    TResult? Function(String err)? paymentTimeout,
+    TResult? Function(String err)? routeNotFound,
+    TResult? Function(String err)? routeTooExpensive,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyPaid,
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidNetwork,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceExpired,
+    TResult Function(String err)? paymentFailed,
+    TResult Function(String err)? paymentTimeout,
+    TResult Function(String err)? routeNotFound,
+    TResult Function(String err)? routeTooExpensive,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(LnUrlPayError_Generic value) generic,
+    required TResult Function(LnUrlPayError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlPayError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlPayError_InvalidNetwork value) invalidNetwork,
+    required TResult Function(LnUrlPayError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlPayError_InvoiceExpired value) invoiceExpired,
+    required TResult Function(LnUrlPayError_PaymentFailed value) paymentFailed,
+    required TResult Function(LnUrlPayError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(LnUrlPayError_RouteNotFound value) routeNotFound,
+    required TResult Function(LnUrlPayError_RouteTooExpensive value) routeTooExpensive,
+    required TResult Function(LnUrlPayError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return serviceConnectivity(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(LnUrlPayError_Generic value)? generic,
+    TResult? Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult? Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult? Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult? Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult? Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult? Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(LnUrlPayError_Generic value)? generic,
+    TResult Function(LnUrlPayError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlPayError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlPayError_InvalidNetwork value)? invalidNetwork,
+    TResult Function(LnUrlPayError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlPayError_InvoiceExpired value)? invoiceExpired,
+    TResult Function(LnUrlPayError_PaymentFailed value)? paymentFailed,
+    TResult Function(LnUrlPayError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(LnUrlPayError_RouteNotFound value)? routeNotFound,
+    TResult Function(LnUrlPayError_RouteTooExpensive value)? routeTooExpensive,
+    TResult Function(LnUrlPayError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
@@ -1280,6 +3254,68 @@ abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
 /// @nodoc
 mixin _$LnUrlWithdrawError {
   String get err => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $LnUrlWithdrawErrorCopyWith<LnUrlWithdrawError> get copyWith => throw _privateConstructorUsedError;
@@ -1378,6 +3414,92 @@ class _$LnUrlWithdrawError_GenericImpl extends LnUrlWithdrawError_Generic {
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_GenericImplCopyWith<_$LnUrlWithdrawError_GenericImpl> get copyWith =>
       __$$LnUrlWithdrawError_GenericImplCopyWithImpl<_$LnUrlWithdrawError_GenericImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return generic(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return generic?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return generic(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return generic?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_Generic extends LnUrlWithdrawError {
@@ -1455,6 +3577,92 @@ class _$LnUrlWithdrawError_InvalidAmountImpl extends LnUrlWithdrawError_InvalidA
   _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<_$LnUrlWithdrawError_InvalidAmountImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidAmount(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidAmount?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidAmount != null) {
+      return invalidAmount(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidAmount(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidAmount?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidAmount != null) {
+      return invalidAmount(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
@@ -1533,6 +3741,92 @@ class _$LnUrlWithdrawError_InvalidInvoiceImpl extends LnUrlWithdrawError_Invalid
   _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<_$LnUrlWithdrawError_InvalidInvoiceImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidInvoice(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidInvoice?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidInvoice(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidInvoice?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
@@ -1611,6 +3905,92 @@ class _$LnUrlWithdrawError_InvalidUriImpl extends LnUrlWithdrawError_InvalidUri 
   _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<_$LnUrlWithdrawError_InvalidUriImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invalidUri(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invalidUri(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invalidUri?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invalidUri != null) {
+      return invalidUri(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
@@ -1691,6 +4071,92 @@ class _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl extends LnUrlWithdrawError_
   _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
       get copyWith => __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<
           _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return invoiceNoRoutingHints(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return invoiceNoRoutingHints?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invoiceNoRoutingHints != null) {
+      return invoiceNoRoutingHints(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return invoiceNoRoutingHints(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return invoiceNoRoutingHints?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (invoiceNoRoutingHints != null) {
+      return invoiceNoRoutingHints(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawError {
@@ -1771,6 +4237,92 @@ class _$LnUrlWithdrawError_ServiceConnectivityImpl extends LnUrlWithdrawError_Se
   _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
       get copyWith => __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<
           _$LnUrlWithdrawError_ServiceConnectivityImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String err) generic,
+    required TResult Function(String err) invalidAmount,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function(String err) invalidUri,
+    required TResult Function(String err) invoiceNoRoutingHints,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return serviceConnectivity(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String err)? generic,
+    TResult? Function(String err)? invalidAmount,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function(String err)? invalidUri,
+    TResult? Function(String err)? invoiceNoRoutingHints,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String err)? generic,
+    TResult Function(String err)? invalidAmount,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function(String err)? invalidUri,
+    TResult Function(String err)? invoiceNoRoutingHints,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawError_Generic value) generic,
+    required TResult Function(LnUrlWithdrawError_InvalidAmount value) invalidAmount,
+    required TResult Function(LnUrlWithdrawError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(LnUrlWithdrawError_InvalidUri value) invalidUri,
+    required TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value) invoiceNoRoutingHints,
+    required TResult Function(LnUrlWithdrawError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return serviceConnectivity(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult? Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult? Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult? Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult? Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawError_Generic value)? generic,
+    TResult Function(LnUrlWithdrawError_InvalidAmount value)? invalidAmount,
+    TResult Function(LnUrlWithdrawError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(LnUrlWithdrawError_InvalidUri value)? invalidUri,
+    TResult Function(LnUrlWithdrawError_InvoiceNoRoutingHints value)? invoiceNoRoutingHints,
+    TResult Function(LnUrlWithdrawError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError {
@@ -1789,6 +4341,44 @@ abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError
 /// @nodoc
 mixin _$LnUrlWithdrawResult {
   Object get data => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawSuccessData data) ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawResult_Ok value) ok,
+    required TResult Function(LnUrlWithdrawResult_ErrorStatus value) errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult? Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -1868,6 +4458,68 @@ class _$LnUrlWithdrawResult_OkImpl extends LnUrlWithdrawResult_Ok {
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawResult_OkImplCopyWith<_$LnUrlWithdrawResult_OkImpl> get copyWith =>
       __$$LnUrlWithdrawResult_OkImplCopyWithImpl<_$LnUrlWithdrawResult_OkImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawSuccessData data) ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) {
+    return ok(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) {
+    return ok?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawResult_Ok value) ok,
+    required TResult Function(LnUrlWithdrawResult_ErrorStatus value) errorStatus,
+  }) {
+    return ok(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult? Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+  }) {
+    return ok?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (ok != null) {
+      return ok(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
@@ -1943,6 +4595,68 @@ class _$LnUrlWithdrawResult_ErrorStatusImpl extends LnUrlWithdrawResult_ErrorSta
   _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
       __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<_$LnUrlWithdrawResult_ErrorStatusImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawSuccessData data) ok,
+    required TResult Function(LnUrlErrorData data) errorStatus,
+  }) {
+    return errorStatus(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult? Function(LnUrlErrorData data)? errorStatus,
+  }) {
+    return errorStatus?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawSuccessData data)? ok,
+    TResult Function(LnUrlErrorData data)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (errorStatus != null) {
+      return errorStatus(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlWithdrawResult_Ok value) ok,
+    required TResult Function(LnUrlWithdrawResult_ErrorStatus value) errorStatus,
+  }) {
+    return errorStatus(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult? Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+  }) {
+    return errorStatus?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlWithdrawResult_Ok value)? ok,
+    TResult Function(LnUrlWithdrawResult_ErrorStatus value)? errorStatus,
+    required TResult orElse(),
+  }) {
+    if (errorStatus != null) {
+      return errorStatus(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlWithdrawResult_ErrorStatus extends LnUrlWithdrawResult {

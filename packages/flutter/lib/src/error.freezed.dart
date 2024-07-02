@@ -15,7 +15,58 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$LiquidSdkError {}
+mixin _$LiquidSdkError {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyStarted,
+    required TResult Function(String err) generic,
+    required TResult Function() notStarted,
+    required TResult Function(String err) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyStarted,
+    TResult? Function(String err)? generic,
+    TResult? Function()? notStarted,
+    TResult? Function(String err)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyStarted,
+    TResult Function(String err)? generic,
+    TResult Function()? notStarted,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkError_AlreadyStarted value) alreadyStarted,
+    required TResult Function(LiquidSdkError_Generic value) generic,
+    required TResult Function(LiquidSdkError_NotStarted value) notStarted,
+    required TResult Function(LiquidSdkError_ServiceConnectivity value) serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult? Function(LiquidSdkError_Generic value)? generic,
+    TResult? Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult? Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult Function(LiquidSdkError_Generic value)? generic,
+    TResult Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $LiquidSdkErrorCopyWith<$Res> {
@@ -68,6 +119,80 @@ class _$LiquidSdkError_AlreadyStartedImpl extends LiquidSdkError_AlreadyStarted 
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyStarted,
+    required TResult Function(String err) generic,
+    required TResult Function() notStarted,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return alreadyStarted();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyStarted,
+    TResult? Function(String err)? generic,
+    TResult? Function()? notStarted,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return alreadyStarted?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyStarted,
+    TResult Function(String err)? generic,
+    TResult Function()? notStarted,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (alreadyStarted != null) {
+      return alreadyStarted();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkError_AlreadyStarted value) alreadyStarted,
+    required TResult Function(LiquidSdkError_Generic value) generic,
+    required TResult Function(LiquidSdkError_NotStarted value) notStarted,
+    required TResult Function(LiquidSdkError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return alreadyStarted(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult? Function(LiquidSdkError_Generic value)? generic,
+    TResult? Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult? Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return alreadyStarted?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult Function(LiquidSdkError_Generic value)? generic,
+    TResult Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (alreadyStarted != null) {
+      return alreadyStarted(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkError_AlreadyStarted extends LiquidSdkError {
@@ -135,6 +260,80 @@ class _$LiquidSdkError_GenericImpl extends LiquidSdkError_Generic {
   @pragma('vm:prefer-inline')
   _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
       __$$LiquidSdkError_GenericImplCopyWithImpl<_$LiquidSdkError_GenericImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyStarted,
+    required TResult Function(String err) generic,
+    required TResult Function() notStarted,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return generic(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyStarted,
+    TResult? Function(String err)? generic,
+    TResult? Function()? notStarted,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return generic?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyStarted,
+    TResult Function(String err)? generic,
+    TResult Function()? notStarted,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkError_AlreadyStarted value) alreadyStarted,
+    required TResult Function(LiquidSdkError_Generic value) generic,
+    required TResult Function(LiquidSdkError_NotStarted value) notStarted,
+    required TResult Function(LiquidSdkError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return generic(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult? Function(LiquidSdkError_Generic value)? generic,
+    TResult? Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult? Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return generic?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult Function(LiquidSdkError_Generic value)? generic,
+    TResult Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkError_Generic extends LiquidSdkError {
@@ -181,6 +380,80 @@ class _$LiquidSdkError_NotStartedImpl extends LiquidSdkError_NotStarted {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyStarted,
+    required TResult Function(String err) generic,
+    required TResult Function() notStarted,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return notStarted();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyStarted,
+    TResult? Function(String err)? generic,
+    TResult? Function()? notStarted,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return notStarted?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyStarted,
+    TResult Function(String err)? generic,
+    TResult Function()? notStarted,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (notStarted != null) {
+      return notStarted();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkError_AlreadyStarted value) alreadyStarted,
+    required TResult Function(LiquidSdkError_Generic value) generic,
+    required TResult Function(LiquidSdkError_NotStarted value) notStarted,
+    required TResult Function(LiquidSdkError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return notStarted(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult? Function(LiquidSdkError_Generic value)? generic,
+    TResult? Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult? Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return notStarted?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult Function(LiquidSdkError_Generic value)? generic,
+    TResult Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (notStarted != null) {
+      return notStarted(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkError_NotStarted extends LiquidSdkError {
@@ -249,6 +522,80 @@ class _$LiquidSdkError_ServiceConnectivityImpl extends LiquidSdkError_ServiceCon
   _$$LiquidSdkError_ServiceConnectivityImplCopyWith<_$LiquidSdkError_ServiceConnectivityImpl> get copyWith =>
       __$$LiquidSdkError_ServiceConnectivityImplCopyWithImpl<_$LiquidSdkError_ServiceConnectivityImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyStarted,
+    required TResult Function(String err) generic,
+    required TResult Function() notStarted,
+    required TResult Function(String err) serviceConnectivity,
+  }) {
+    return serviceConnectivity(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyStarted,
+    TResult? Function(String err)? generic,
+    TResult? Function()? notStarted,
+    TResult? Function(String err)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyStarted,
+    TResult Function(String err)? generic,
+    TResult Function()? notStarted,
+    TResult Function(String err)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkError_AlreadyStarted value) alreadyStarted,
+    required TResult Function(LiquidSdkError_Generic value) generic,
+    required TResult Function(LiquidSdkError_NotStarted value) notStarted,
+    required TResult Function(LiquidSdkError_ServiceConnectivity value) serviceConnectivity,
+  }) {
+    return serviceConnectivity(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult? Function(LiquidSdkError_Generic value)? generic,
+    TResult? Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult? Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+  }) {
+    return serviceConnectivity?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkError_AlreadyStarted value)? alreadyStarted,
+    TResult Function(LiquidSdkError_Generic value)? generic,
+    TResult Function(LiquidSdkError_NotStarted value)? notStarted,
+    TResult Function(LiquidSdkError_ServiceConnectivity value)? serviceConnectivity,
+    required TResult orElse(),
+  }) {
+    if (serviceConnectivity != null) {
+      return serviceConnectivity(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkError_ServiceConnectivity extends LiquidSdkError {
@@ -263,7 +610,142 @@ abstract class LiquidSdkError_ServiceConnectivity extends LiquidSdkError {
 }
 
 /// @nodoc
-mixin _$PaymentError {}
+mixin _$PaymentError {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $PaymentErrorCopyWith<$Res> {
@@ -315,6 +797,164 @@ class _$PaymentError_AlreadyClaimedImpl extends PaymentError_AlreadyClaimed {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return alreadyClaimed();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return alreadyClaimed?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (alreadyClaimed != null) {
+      return alreadyClaimed();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return alreadyClaimed(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return alreadyClaimed?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (alreadyClaimed != null) {
+      return alreadyClaimed(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_AlreadyClaimed extends PaymentError {
@@ -356,6 +996,164 @@ class _$PaymentError_AlreadyPaidImpl extends PaymentError_AlreadyPaid {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return alreadyPaid();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return alreadyPaid?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (alreadyPaid != null) {
+      return alreadyPaid();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return alreadyPaid(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return alreadyPaid?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (alreadyPaid != null) {
+      return alreadyPaid(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_AlreadyPaid extends PaymentError {
@@ -397,6 +1195,164 @@ class _$PaymentError_PaymentInProgressImpl extends PaymentError_PaymentInProgres
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return paymentInProgress();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return paymentInProgress?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (paymentInProgress != null) {
+      return paymentInProgress();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return paymentInProgress(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return paymentInProgress?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (paymentInProgress != null) {
+      return paymentInProgress(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_PaymentInProgress extends PaymentError {
@@ -438,6 +1394,164 @@ class _$PaymentError_AmountOutOfRangeImpl extends PaymentError_AmountOutOfRange 
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return amountOutOfRange();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return amountOutOfRange?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (amountOutOfRange != null) {
+      return amountOutOfRange();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return amountOutOfRange(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return amountOutOfRange?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (amountOutOfRange != null) {
+      return amountOutOfRange(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_AmountOutOfRange extends PaymentError {
@@ -505,6 +1619,164 @@ class _$PaymentError_GenericImpl extends PaymentError_Generic {
   @pragma('vm:prefer-inline')
   _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl> get copyWith =>
       __$$PaymentError_GenericImplCopyWithImpl<_$PaymentError_GenericImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return generic(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return generic?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return generic(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return generic?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (generic != null) {
+      return generic(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_Generic extends PaymentError {
@@ -551,6 +1823,164 @@ class _$PaymentError_InvalidOrExpiredFeesImpl extends PaymentError_InvalidOrExpi
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return invalidOrExpiredFees();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return invalidOrExpiredFees?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidOrExpiredFees != null) {
+      return invalidOrExpiredFees();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return invalidOrExpiredFees(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return invalidOrExpiredFees?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidOrExpiredFees != null) {
+      return invalidOrExpiredFees(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_InvalidOrExpiredFees extends PaymentError {
@@ -592,6 +2022,164 @@ class _$PaymentError_InsufficientFundsImpl extends PaymentError_InsufficientFund
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return insufficientFunds();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return insufficientFunds?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (insufficientFunds != null) {
+      return insufficientFunds();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return insufficientFunds(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return insufficientFunds?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (insufficientFunds != null) {
+      return insufficientFunds(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_InsufficientFunds extends PaymentError {
@@ -659,6 +2247,164 @@ class _$PaymentError_InvalidInvoiceImpl extends PaymentError_InvalidInvoice {
   @pragma('vm:prefer-inline')
   _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
       __$$PaymentError_InvalidInvoiceImplCopyWithImpl<_$PaymentError_InvalidInvoiceImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return invalidInvoice(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return invalidInvoice?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return invalidInvoice(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return invalidInvoice?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidInvoice != null) {
+      return invalidInvoice(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_InvalidInvoice extends PaymentError {
@@ -705,6 +2451,164 @@ class _$PaymentError_InvalidPreimageImpl extends PaymentError_InvalidPreimage {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return invalidPreimage();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return invalidPreimage?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidPreimage != null) {
+      return invalidPreimage();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return invalidPreimage(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return invalidPreimage?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (invalidPreimage != null) {
+      return invalidPreimage(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_InvalidPreimage extends PaymentError {
@@ -772,6 +2676,164 @@ class _$PaymentError_LwkErrorImpl extends PaymentError_LwkError {
   @pragma('vm:prefer-inline')
   _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl> get copyWith =>
       __$$PaymentError_LwkErrorImplCopyWithImpl<_$PaymentError_LwkErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return lwkError(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return lwkError?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (lwkError != null) {
+      return lwkError(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return lwkError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return lwkError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (lwkError != null) {
+      return lwkError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_LwkError extends PaymentError {
@@ -818,6 +2880,164 @@ class _$PaymentError_PairsNotFoundImpl extends PaymentError_PairsNotFound {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return pairsNotFound();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return pairsNotFound?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (pairsNotFound != null) {
+      return pairsNotFound();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return pairsNotFound(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return pairsNotFound?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (pairsNotFound != null) {
+      return pairsNotFound(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_PairsNotFound extends PaymentError {
@@ -859,6 +3079,164 @@ class _$PaymentError_PaymentTimeoutImpl extends PaymentError_PaymentTimeout {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return paymentTimeout();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return paymentTimeout?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (paymentTimeout != null) {
+      return paymentTimeout();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return paymentTimeout(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return paymentTimeout?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (paymentTimeout != null) {
+      return paymentTimeout(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_PaymentTimeout extends PaymentError {
@@ -900,6 +3278,164 @@ class _$PaymentError_PersistErrorImpl extends PaymentError_PersistError {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return persistError();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return persistError?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (persistError != null) {
+      return persistError();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return persistError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return persistError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (persistError != null) {
+      return persistError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_PersistError extends PaymentError {
@@ -967,6 +3503,164 @@ class _$PaymentError_ReceiveErrorImpl extends PaymentError_ReceiveError {
   @pragma('vm:prefer-inline')
   _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
       __$$PaymentError_ReceiveErrorImplCopyWithImpl<_$PaymentError_ReceiveErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return receiveError(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return receiveError?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (receiveError != null) {
+      return receiveError(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return receiveError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return receiveError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (receiveError != null) {
+      return receiveError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_ReceiveError extends PaymentError {
@@ -1047,6 +3741,164 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
   @pragma('vm:prefer-inline')
   _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
       __$$PaymentError_RefundedImplCopyWithImpl<_$PaymentError_RefundedImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return refunded(err, refundTxId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return refunded?.call(err, refundTxId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (refunded != null) {
+      return refunded(err, refundTxId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return refunded(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return refunded?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (refunded != null) {
+      return refunded(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_Refunded extends PaymentError {
@@ -1097,6 +3949,164 @@ class _$PaymentError_SelfTransferNotSupportedImpl extends PaymentError_SelfTrans
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return selfTransferNotSupported();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return selfTransferNotSupported?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (selfTransferNotSupported != null) {
+      return selfTransferNotSupported();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return selfTransferNotSupported(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return selfTransferNotSupported?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (selfTransferNotSupported != null) {
+      return selfTransferNotSupported(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_SelfTransferNotSupported extends PaymentError {
@@ -1164,6 +4174,164 @@ class _$PaymentError_SendErrorImpl extends PaymentError_SendError {
   @pragma('vm:prefer-inline')
   _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl> get copyWith =>
       __$$PaymentError_SendErrorImplCopyWithImpl<_$PaymentError_SendErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return sendError(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return sendError?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (sendError != null) {
+      return sendError(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return sendError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return sendError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (sendError != null) {
+      return sendError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_SendError extends PaymentError {
@@ -1236,6 +4404,164 @@ class _$PaymentError_SignerErrorImpl extends PaymentError_SignerError {
   @pragma('vm:prefer-inline')
   _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl> get copyWith =>
       __$$PaymentError_SignerErrorImplCopyWithImpl<_$PaymentError_SignerErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() alreadyClaimed,
+    required TResult Function() alreadyPaid,
+    required TResult Function() paymentInProgress,
+    required TResult Function() amountOutOfRange,
+    required TResult Function(String err) generic,
+    required TResult Function() invalidOrExpiredFees,
+    required TResult Function() insufficientFunds,
+    required TResult Function(String err) invalidInvoice,
+    required TResult Function() invalidPreimage,
+    required TResult Function(String err) lwkError,
+    required TResult Function() pairsNotFound,
+    required TResult Function() paymentTimeout,
+    required TResult Function() persistError,
+    required TResult Function(String err) receiveError,
+    required TResult Function(String err, String refundTxId) refunded,
+    required TResult Function() selfTransferNotSupported,
+    required TResult Function(String err) sendError,
+    required TResult Function(String err) signerError,
+  }) {
+    return signerError(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? alreadyClaimed,
+    TResult? Function()? alreadyPaid,
+    TResult? Function()? paymentInProgress,
+    TResult? Function()? amountOutOfRange,
+    TResult? Function(String err)? generic,
+    TResult? Function()? invalidOrExpiredFees,
+    TResult? Function()? insufficientFunds,
+    TResult? Function(String err)? invalidInvoice,
+    TResult? Function()? invalidPreimage,
+    TResult? Function(String err)? lwkError,
+    TResult? Function()? pairsNotFound,
+    TResult? Function()? paymentTimeout,
+    TResult? Function()? persistError,
+    TResult? Function(String err)? receiveError,
+    TResult? Function(String err, String refundTxId)? refunded,
+    TResult? Function()? selfTransferNotSupported,
+    TResult? Function(String err)? sendError,
+    TResult? Function(String err)? signerError,
+  }) {
+    return signerError?.call(err);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? alreadyClaimed,
+    TResult Function()? alreadyPaid,
+    TResult Function()? paymentInProgress,
+    TResult Function()? amountOutOfRange,
+    TResult Function(String err)? generic,
+    TResult Function()? invalidOrExpiredFees,
+    TResult Function()? insufficientFunds,
+    TResult Function(String err)? invalidInvoice,
+    TResult Function()? invalidPreimage,
+    TResult Function(String err)? lwkError,
+    TResult Function()? pairsNotFound,
+    TResult Function()? paymentTimeout,
+    TResult Function()? persistError,
+    TResult Function(String err)? receiveError,
+    TResult Function(String err, String refundTxId)? refunded,
+    TResult Function()? selfTransferNotSupported,
+    TResult Function(String err)? sendError,
+    TResult Function(String err)? signerError,
+    required TResult orElse(),
+  }) {
+    if (signerError != null) {
+      return signerError(err);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(PaymentError_AlreadyClaimed value) alreadyClaimed,
+    required TResult Function(PaymentError_AlreadyPaid value) alreadyPaid,
+    required TResult Function(PaymentError_PaymentInProgress value) paymentInProgress,
+    required TResult Function(PaymentError_AmountOutOfRange value) amountOutOfRange,
+    required TResult Function(PaymentError_Generic value) generic,
+    required TResult Function(PaymentError_InvalidOrExpiredFees value) invalidOrExpiredFees,
+    required TResult Function(PaymentError_InsufficientFunds value) insufficientFunds,
+    required TResult Function(PaymentError_InvalidInvoice value) invalidInvoice,
+    required TResult Function(PaymentError_InvalidPreimage value) invalidPreimage,
+    required TResult Function(PaymentError_LwkError value) lwkError,
+    required TResult Function(PaymentError_PairsNotFound value) pairsNotFound,
+    required TResult Function(PaymentError_PaymentTimeout value) paymentTimeout,
+    required TResult Function(PaymentError_PersistError value) persistError,
+    required TResult Function(PaymentError_ReceiveError value) receiveError,
+    required TResult Function(PaymentError_Refunded value) refunded,
+    required TResult Function(PaymentError_SelfTransferNotSupported value) selfTransferNotSupported,
+    required TResult Function(PaymentError_SendError value) sendError,
+    required TResult Function(PaymentError_SignerError value) signerError,
+  }) {
+    return signerError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult? Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult? Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult? Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult? Function(PaymentError_Generic value)? generic,
+    TResult? Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult? Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult? Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult? Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult? Function(PaymentError_LwkError value)? lwkError,
+    TResult? Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult? Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult? Function(PaymentError_PersistError value)? persistError,
+    TResult? Function(PaymentError_ReceiveError value)? receiveError,
+    TResult? Function(PaymentError_Refunded value)? refunded,
+    TResult? Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult? Function(PaymentError_SendError value)? sendError,
+    TResult? Function(PaymentError_SignerError value)? signerError,
+  }) {
+    return signerError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(PaymentError_AlreadyClaimed value)? alreadyClaimed,
+    TResult Function(PaymentError_AlreadyPaid value)? alreadyPaid,
+    TResult Function(PaymentError_PaymentInProgress value)? paymentInProgress,
+    TResult Function(PaymentError_AmountOutOfRange value)? amountOutOfRange,
+    TResult Function(PaymentError_Generic value)? generic,
+    TResult Function(PaymentError_InvalidOrExpiredFees value)? invalidOrExpiredFees,
+    TResult Function(PaymentError_InsufficientFunds value)? insufficientFunds,
+    TResult Function(PaymentError_InvalidInvoice value)? invalidInvoice,
+    TResult Function(PaymentError_InvalidPreimage value)? invalidPreimage,
+    TResult Function(PaymentError_LwkError value)? lwkError,
+    TResult Function(PaymentError_PairsNotFound value)? pairsNotFound,
+    TResult Function(PaymentError_PaymentTimeout value)? paymentTimeout,
+    TResult Function(PaymentError_PersistError value)? persistError,
+    TResult Function(PaymentError_ReceiveError value)? receiveError,
+    TResult Function(PaymentError_Refunded value)? refunded,
+    TResult Function(PaymentError_SelfTransferNotSupported value)? selfTransferNotSupported,
+    TResult Function(PaymentError_SendError value)? sendError,
+    TResult Function(PaymentError_SignerError value)? signerError,
+    required TResult orElse(),
+  }) {
+    if (signerError != null) {
+      return signerError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class PaymentError_SignerError extends PaymentError {

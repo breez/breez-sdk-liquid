@@ -1,7 +1,8 @@
 targets:
   $default:
-    builders:
-      freezed:
-        options:
-          map: false
-          when: false
+    sources:
+      exclude:
+        # Exclude symlinks for iOS, Linux & Windows builds
+        - example/ios/.symlinks/**
+        - example/linux/flutter/ephemeral/.plugin_symlinks/**
+        - example/windows/flutter/ephemeral/.plugin_symlinks/**

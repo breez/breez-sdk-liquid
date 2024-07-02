@@ -15,7 +15,76 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$LiquidSdkEvent {}
+mixin _$LiquidSdkEvent {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $LiquidSdkEventCopyWith<$Res> {
@@ -94,6 +163,98 @@ class _$LiquidSdkEvent_PaymentFailedImpl extends LiquidSdkEvent_PaymentFailed {
   @pragma('vm:prefer-inline')
   _$$LiquidSdkEvent_PaymentFailedImplCopyWith<_$LiquidSdkEvent_PaymentFailedImpl> get copyWith =>
       __$$LiquidSdkEvent_PaymentFailedImplCopyWithImpl<_$LiquidSdkEvent_PaymentFailedImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentFailed(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentFailed?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentFailed != null) {
+      return paymentFailed(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentFailed(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentFailed?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentFailed != null) {
+      return paymentFailed(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentFailed extends LiquidSdkEvent {
@@ -168,6 +329,98 @@ class _$LiquidSdkEvent_PaymentPendingImpl extends LiquidSdkEvent_PaymentPending 
   _$$LiquidSdkEvent_PaymentPendingImplCopyWith<_$LiquidSdkEvent_PaymentPendingImpl> get copyWith =>
       __$$LiquidSdkEvent_PaymentPendingImplCopyWithImpl<_$LiquidSdkEvent_PaymentPendingImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentPending(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentPending?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentPending != null) {
+      return paymentPending(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentPending(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentPending?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentPending != null) {
+      return paymentPending(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentPending extends LiquidSdkEvent {
@@ -242,6 +495,98 @@ class _$LiquidSdkEvent_PaymentRefundedImpl extends LiquidSdkEvent_PaymentRefunde
   _$$LiquidSdkEvent_PaymentRefundedImplCopyWith<_$LiquidSdkEvent_PaymentRefundedImpl> get copyWith =>
       __$$LiquidSdkEvent_PaymentRefundedImplCopyWithImpl<_$LiquidSdkEvent_PaymentRefundedImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentRefunded(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentRefunded?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentRefunded != null) {
+      return paymentRefunded(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentRefunded(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentRefunded?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentRefunded != null) {
+      return paymentRefunded(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentRefunded extends LiquidSdkEvent {
@@ -317,6 +662,98 @@ class _$LiquidSdkEvent_PaymentRefundPendingImpl extends LiquidSdkEvent_PaymentRe
       get copyWith =>
           __$$LiquidSdkEvent_PaymentRefundPendingImplCopyWithImpl<_$LiquidSdkEvent_PaymentRefundPendingImpl>(
               this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentRefundPending(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentRefundPending?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentRefundPending != null) {
+      return paymentRefundPending(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentRefundPending(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentRefundPending?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentRefundPending != null) {
+      return paymentRefundPending(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentRefundPending extends LiquidSdkEvent {
@@ -391,6 +828,98 @@ class _$LiquidSdkEvent_PaymentSucceededImpl extends LiquidSdkEvent_PaymentSuccee
   _$$LiquidSdkEvent_PaymentSucceededImplCopyWith<_$LiquidSdkEvent_PaymentSucceededImpl> get copyWith =>
       __$$LiquidSdkEvent_PaymentSucceededImplCopyWithImpl<_$LiquidSdkEvent_PaymentSucceededImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentSucceeded(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentSucceeded?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentSucceeded != null) {
+      return paymentSucceeded(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentSucceeded(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentSucceeded?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentSucceeded != null) {
+      return paymentSucceeded(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentSucceeded extends LiquidSdkEvent {
@@ -467,6 +996,98 @@ class _$LiquidSdkEvent_PaymentWaitingConfirmationImpl extends LiquidSdkEvent_Pay
   _$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWith<_$LiquidSdkEvent_PaymentWaitingConfirmationImpl>
       get copyWith => __$$LiquidSdkEvent_PaymentWaitingConfirmationImplCopyWithImpl<
           _$LiquidSdkEvent_PaymentWaitingConfirmationImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return paymentWaitingConfirmation(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return paymentWaitingConfirmation?.call(details);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentWaitingConfirmation != null) {
+      return paymentWaitingConfirmation(details);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return paymentWaitingConfirmation(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return paymentWaitingConfirmation?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (paymentWaitingConfirmation != null) {
+      return paymentWaitingConfirmation(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_PaymentWaitingConfirmation extends LiquidSdkEvent {
@@ -514,6 +1135,98 @@ class _$LiquidSdkEvent_SyncedImpl extends LiquidSdkEvent_Synced {
 
   @override
   int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(Payment details) paymentFailed,
+    required TResult Function(Payment details) paymentPending,
+    required TResult Function(Payment details) paymentRefunded,
+    required TResult Function(Payment details) paymentRefundPending,
+    required TResult Function(Payment details) paymentSucceeded,
+    required TResult Function(Payment details) paymentWaitingConfirmation,
+    required TResult Function() synced,
+  }) {
+    return synced();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(Payment details)? paymentFailed,
+    TResult? Function(Payment details)? paymentPending,
+    TResult? Function(Payment details)? paymentRefunded,
+    TResult? Function(Payment details)? paymentRefundPending,
+    TResult? Function(Payment details)? paymentSucceeded,
+    TResult? Function(Payment details)? paymentWaitingConfirmation,
+    TResult? Function()? synced,
+  }) {
+    return synced?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(Payment details)? paymentFailed,
+    TResult Function(Payment details)? paymentPending,
+    TResult Function(Payment details)? paymentRefunded,
+    TResult Function(Payment details)? paymentRefundPending,
+    TResult Function(Payment details)? paymentSucceeded,
+    TResult Function(Payment details)? paymentWaitingConfirmation,
+    TResult Function()? synced,
+    required TResult orElse(),
+  }) {
+    if (synced != null) {
+      return synced();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LiquidSdkEvent_PaymentFailed value) paymentFailed,
+    required TResult Function(LiquidSdkEvent_PaymentPending value) paymentPending,
+    required TResult Function(LiquidSdkEvent_PaymentRefunded value) paymentRefunded,
+    required TResult Function(LiquidSdkEvent_PaymentRefundPending value) paymentRefundPending,
+    required TResult Function(LiquidSdkEvent_PaymentSucceeded value) paymentSucceeded,
+    required TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value) paymentWaitingConfirmation,
+    required TResult Function(LiquidSdkEvent_Synced value) synced,
+  }) {
+    return synced(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult? Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult? Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult? Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult? Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult? Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult? Function(LiquidSdkEvent_Synced value)? synced,
+  }) {
+    return synced?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LiquidSdkEvent_PaymentFailed value)? paymentFailed,
+    TResult Function(LiquidSdkEvent_PaymentPending value)? paymentPending,
+    TResult Function(LiquidSdkEvent_PaymentRefunded value)? paymentRefunded,
+    TResult Function(LiquidSdkEvent_PaymentRefundPending value)? paymentRefundPending,
+    TResult Function(LiquidSdkEvent_PaymentSucceeded value)? paymentSucceeded,
+    TResult Function(LiquidSdkEvent_PaymentWaitingConfirmation value)? paymentWaitingConfirmation,
+    TResult Function(LiquidSdkEvent_Synced value)? synced,
+    required TResult orElse(),
+  }) {
+    if (synced != null) {
+      return synced(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LiquidSdkEvent_Synced extends LiquidSdkEvent {
@@ -524,6 +1237,50 @@ abstract class LiquidSdkEvent_Synced extends LiquidSdkEvent {
 /// @nodoc
 mixin _$LnUrlPayResult {
   Object get data => throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlPaySuccessData data) endpointSuccess,
+    required TResult Function(LnUrlErrorData data) endpointError,
+    required TResult Function(LnUrlPayErrorData data) payError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult? Function(LnUrlErrorData data)? endpointError,
+    TResult? Function(LnUrlPayErrorData data)? payError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult Function(LnUrlErrorData data)? endpointError,
+    TResult Function(LnUrlPayErrorData data)? payError,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayResult_EndpointSuccess value) endpointSuccess,
+    required TResult Function(LnUrlPayResult_EndpointError value) endpointError,
+    required TResult Function(LnUrlPayResult_PayError value) payError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult? Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult? Function(LnUrlPayResult_PayError value)? payError,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult Function(LnUrlPayResult_PayError value)? payError,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -604,6 +1361,74 @@ class _$LnUrlPayResult_EndpointSuccessImpl extends LnUrlPayResult_EndpointSucces
   _$$LnUrlPayResult_EndpointSuccessImplCopyWith<_$LnUrlPayResult_EndpointSuccessImpl> get copyWith =>
       __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl<_$LnUrlPayResult_EndpointSuccessImpl>(
           this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlPaySuccessData data) endpointSuccess,
+    required TResult Function(LnUrlErrorData data) endpointError,
+    required TResult Function(LnUrlPayErrorData data) payError,
+  }) {
+    return endpointSuccess(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult? Function(LnUrlErrorData data)? endpointError,
+    TResult? Function(LnUrlPayErrorData data)? payError,
+  }) {
+    return endpointSuccess?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult Function(LnUrlErrorData data)? endpointError,
+    TResult Function(LnUrlPayErrorData data)? payError,
+    required TResult orElse(),
+  }) {
+    if (endpointSuccess != null) {
+      return endpointSuccess(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayResult_EndpointSuccess value) endpointSuccess,
+    required TResult Function(LnUrlPayResult_EndpointError value) endpointError,
+    required TResult Function(LnUrlPayResult_PayError value) payError,
+  }) {
+    return endpointSuccess(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult? Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult? Function(LnUrlPayResult_PayError value)? payError,
+  }) {
+    return endpointSuccess?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult Function(LnUrlPayResult_PayError value)? payError,
+    required TResult orElse(),
+  }) {
+    if (endpointSuccess != null) {
+      return endpointSuccess(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayResult_EndpointSuccess extends LnUrlPayResult {
@@ -678,6 +1503,74 @@ class _$LnUrlPayResult_EndpointErrorImpl extends LnUrlPayResult_EndpointError {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayResult_EndpointErrorImplCopyWith<_$LnUrlPayResult_EndpointErrorImpl> get copyWith =>
       __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl<_$LnUrlPayResult_EndpointErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlPaySuccessData data) endpointSuccess,
+    required TResult Function(LnUrlErrorData data) endpointError,
+    required TResult Function(LnUrlPayErrorData data) payError,
+  }) {
+    return endpointError(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult? Function(LnUrlErrorData data)? endpointError,
+    TResult? Function(LnUrlPayErrorData data)? payError,
+  }) {
+    return endpointError?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult Function(LnUrlErrorData data)? endpointError,
+    TResult Function(LnUrlPayErrorData data)? payError,
+    required TResult orElse(),
+  }) {
+    if (endpointError != null) {
+      return endpointError(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayResult_EndpointSuccess value) endpointSuccess,
+    required TResult Function(LnUrlPayResult_EndpointError value) endpointError,
+    required TResult Function(LnUrlPayResult_PayError value) payError,
+  }) {
+    return endpointError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult? Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult? Function(LnUrlPayResult_PayError value)? payError,
+  }) {
+    return endpointError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult Function(LnUrlPayResult_PayError value)? payError,
+    required TResult orElse(),
+  }) {
+    if (endpointError != null) {
+      return endpointError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayResult_EndpointError extends LnUrlPayResult {
@@ -752,6 +1645,74 @@ class _$LnUrlPayResult_PayErrorImpl extends LnUrlPayResult_PayError {
   @pragma('vm:prefer-inline')
   _$$LnUrlPayResult_PayErrorImplCopyWith<_$LnUrlPayResult_PayErrorImpl> get copyWith =>
       __$$LnUrlPayResult_PayErrorImplCopyWithImpl<_$LnUrlPayResult_PayErrorImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(LnUrlPaySuccessData data) endpointSuccess,
+    required TResult Function(LnUrlErrorData data) endpointError,
+    required TResult Function(LnUrlPayErrorData data) payError,
+  }) {
+    return payError(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult? Function(LnUrlErrorData data)? endpointError,
+    TResult? Function(LnUrlPayErrorData data)? payError,
+  }) {
+    return payError?.call(data);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(LnUrlPaySuccessData data)? endpointSuccess,
+    TResult Function(LnUrlErrorData data)? endpointError,
+    TResult Function(LnUrlPayErrorData data)? payError,
+    required TResult orElse(),
+  }) {
+    if (payError != null) {
+      return payError(data);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(LnUrlPayResult_EndpointSuccess value) endpointSuccess,
+    required TResult Function(LnUrlPayResult_EndpointError value) endpointError,
+    required TResult Function(LnUrlPayResult_PayError value) payError,
+  }) {
+    return payError(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult? Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult? Function(LnUrlPayResult_PayError value)? payError,
+  }) {
+    return payError?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(LnUrlPayResult_EndpointSuccess value)? endpointSuccess,
+    TResult Function(LnUrlPayResult_EndpointError value)? endpointError,
+    TResult Function(LnUrlPayResult_PayError value)? payError,
+    required TResult orElse(),
+  }) {
+    if (payError != null) {
+      return payError(this);
+    }
+    return orElse();
+  }
 }
 
 abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
