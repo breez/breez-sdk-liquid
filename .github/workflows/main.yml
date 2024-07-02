@@ -155,17 +155,22 @@ jobs:
       - name: Set up just
         uses: extractions/setup-just@v2
       
-
       - name: Set up Melos
         uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: false
-      
+
       - name: Initialize the workspace
         working-directory: lib/bindings/langs/flutter/
         run: |
           just clean
           just init
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Install flutter_rust_bridge_codegen dependencies
         working-directory: lib/bindings/langs/flutter/
