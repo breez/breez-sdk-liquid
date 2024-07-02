@@ -11,6 +11,7 @@ bootstrap frb='true' build='false':
 	just clean
 	@if {{frb}} == true; then just frb; fi
 	just init
+	just init-sdk
 	just gen
 	@if {{build}} == true; then just build; fi
 	@if {{build}} == true; then melos build; fi
