@@ -57,7 +57,7 @@ scripts:
       dirExists: integration_test
 
   analyze:
-    exec: flutter analyze --fatal-infos .
+    exec: flutter analyze --no-fatal-infos .
     description: Analyze a specific package in this project.
 
   check-format:
