@@ -1,11 +1,11 @@
 name: breez_liquid_sdk
 repository: https://github.com/breez/breez-liquid-sdk
 packages:
-  - ../../../packages/**
+  - ../../../../packages/**
   - scripts
 ignore:
   # e.g. ignore example apps
-  - ../../../packages/**/example/**
+  - ../../../../packages/**/example/**
 
 commands:
   bootstrap:
