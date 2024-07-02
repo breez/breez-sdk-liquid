@@ -82,7 +82,7 @@ jobs:
           rm pubspec.yaml.bak
           rm pubspec_overrides.yaml.bak
           rm android/build.gradle.bak
-          rm ios/breez_liquid_sdk.podspec.bak
+          rm ios/flutter_breez_liquid.podspec.bak
 
       - name: Archive flutter release
         uses: actions/upload-artifact@v3
