@@ -11,6 +11,7 @@ bootstrap frb='true' build='false':
 	just clean
 	@if {{frb}} == true; then just frb; fi
 	just init
+	just init-sdk
 	just gen
 	@if {{build}} == true; then just build; fi
 	@if {{build}} == true; then melos build; fi
@@ -30,6 +31,7 @@ gen: codegen && ffigen
 
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
+	mkdir -p ../../../../packages/flutter/lib/src
 	{{frb_bin}}
 	cd ../../../../packages/dart/lib/src && dart format -l 110 .
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../../packages/flutter/ios/Classes/breez_liquid_sdk.h

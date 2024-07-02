@@ -8,7 +8,7 @@ This guide assumes you have the following tools installed on any development mac
 - [Flutter](https://docs.flutter.dev/get-started/install)
 - [rustup](https://rustup.rs)
 - [just](https://github.com/casey/just?tab=readme-ov-file#installation) command runner.
-  - [Melos](https://melos.invertase.dev) which will be installed as part of `just bootstrap`.
+  - [Melos](https://melos.invertase.dev) which will be installed as part of `just bootstrap true`.
 
 ### Optional
 If you would like to build your binaries (for Flutter devices) locally in addition to CI 

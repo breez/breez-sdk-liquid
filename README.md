@@ -3,19 +3,19 @@
 - `lib`: [lib/README.md](lib/core/README.md)
 - `cli`: [cli/README.md](cli/README.md)
 - Bindings
-  - `python`: [lib/bindings/README.md]()
+  - `python`: [lib/bindings/README.md](lib/bindings/README.md)
 
 ## Roadmap
-- [x] Send/Recieve Lightning payments
-- [x] cli inteface
-- [x] Foreigh languages bindings
-- [ ] Export/Import sdk data
+- [x] Send/Receive Lightning payments
+- [x] CLI Interface
+- [x] Foreign languages bindings
+- [ ] Export/Import SDK data
 - [ ] Pay BTC onchain
 - [ ] Receive via on-chain address
 - [ ] LNURL-Pay
 - [ ] Receive via Lightning address
 - [ ] LNURL-Withdraw
-- [ ] Realtime sync
+- [ ] Real-time sync
 - [ ] Send to a Lightning address 
 - [ ] Webhook for receiving payments
 - [ ] Offline receive via notifications

@@ -155,17 +155,22 @@ jobs:
       - name: Set up just
         uses: extractions/setup-just@v2
       
-
       - name: Set up Melos
         uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: false
-      
+
       - name: Initialize the workspace
         working-directory: lib/bindings/langs/flutter/
         run: |
           just clean
           just init
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Install flutter_rust_bridge_codegen dependencies
         working-directory: lib/bindings/langs/flutter/
@@ -173,18 +178,16 @@ jobs:
 
       - name: Generate Dart/Flutter bindings
         working-directory: lib/bindings/langs/flutter/
-        continue-on-error: true
-        run: |
-          just codegen
+        run: just codegen
 
       - name: Generate FFI bindings
         working-directory: lib/bindings/langs/flutter/
-        continue-on-error: true
-        run: |
-          just ffigen
+        if: ${{ success() || failure() }}
+        run: just ffigen
 
       - name: Static Analysis
         working-directory: lib/bindings/langs/flutter/
+        if: ${{ success() || failure() }}
         run: melos analyze
 
       - name: Check Formatting

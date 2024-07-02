@@ -16,7 +16,6 @@ Future<Config> getConfig({
 
 extension ConfigCopyWith on Config {
   Config copyWith({
-    String? boltzUrl,
     String? liquidElectrumUrl,
     String? bitcoinElectrumUrl,
     String? workingDir,
@@ -25,7 +24,6 @@ extension ConfigCopyWith on Config {
     double? zeroConfMinFeeRate,
   }) {
     return Config(
-      boltzUrl: boltzUrl ?? this.boltzUrl,
       liquidElectrumUrl: liquidElectrumUrl ?? this.liquidElectrumUrl,
       bitcoinElectrumUrl: bitcoinElectrumUrl ?? this.bitcoinElectrumUrl,
       workingDir: workingDir ?? this.workingDir,
