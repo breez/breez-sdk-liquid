@@ -30,6 +30,7 @@ gen: codegen && ffigen
 
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
+	mkdir -p ../../../../packages/flutter/lib/src
 	{{frb_bin}}
 	cd ../../../../packages/dart/lib/src && dart format -l 110 .
 	-ln -sf $(pwd)/breez_liquid_sdk/include/breez_liquid_sdk.h ../../../../packages/flutter/ios/Classes/breez_liquid_sdk.h
