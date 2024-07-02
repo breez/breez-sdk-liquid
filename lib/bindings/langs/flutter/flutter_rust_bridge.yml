@@ -8,3 +8,4 @@ web: false
 full_dep: true
 add_mod_to_lib: false
 dart_format_line_length: 110
+build_runner: false
