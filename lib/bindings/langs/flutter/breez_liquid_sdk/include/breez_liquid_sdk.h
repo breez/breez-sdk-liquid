@@ -728,284 +728,284 @@ typedef struct wire_cst_send_payment_response {
   struct wire_cst_payment payment;
 } wire_cst_send_payment_response;
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(int64_t port_,
+                                                                                            uintptr_t that,
+                                                                                            struct wire_cst_list_prim_u_8_strict *listener);
+
+WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(uintptr_t that,
+                                                                                                struct wire_cst_backup_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int64_t port_,
+                                                                                    uintptr_t that);
+
+WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int64_t port_,
+                                                                                          uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
+                                                                                  uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(int64_t port_,
+                                                                                              uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(int64_t port_,
+                                                                                       uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(int64_t port_,
+                                                                                          uintptr_t that);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(int64_t port_,
                                                                                     uintptr_t that,
-                                                                                    struct wire_cst_list_prim_u_8_strict *listener);
+                                                                                    struct wire_cst_ln_url_auth_request_data *req_data);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(uintptr_t that,
-                                                                                        struct wire_cst_backup_request *req);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(int64_t port_,
+                                                                                   uintptr_t that,
+                                                                                   struct wire_cst_ln_url_pay_request *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int64_t port_,
-                                                                            uintptr_t that);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(int64_t port_,
+                                                                                        uintptr_t that,
+                                                                                        struct wire_cst_ln_url_withdraw_request *req);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int64_t port_,
-                                                                                  uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
-                                                                          uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(int64_t port_,
-                                                                                      uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(int64_t port_,
-                                                                               uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(int64_t port_,
-                                                                                  uintptr_t that);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(int64_t port_,
-                                                                            uintptr_t that,
-                                                                            struct wire_cst_ln_url_auth_request_data *req_data);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(int64_t port_,
-                                                                           uintptr_t that,
-                                                                           struct wire_cst_ln_url_pay_request *req);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(int64_t port_,
-                                                                                uintptr_t that,
-                                                                                struct wire_cst_ln_url_withdraw_request *req);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(int64_t port_,
-                                                                             uintptr_t that,
-                                                                             struct wire_cst_pay_onchain_request *req);
-
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(int64_t port_,
                                                                                      uintptr_t that,
-                                                                                     struct wire_cst_prepare_pay_onchain_request *req);
+                                                                                     struct wire_cst_pay_onchain_request *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(int64_t port_,
+                                                                                             uintptr_t that,
+                                                                                             struct wire_cst_prepare_pay_onchain_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(int64_t port_,
+                                                                                                 uintptr_t that,
+                                                                                                 struct wire_cst_prepare_receive_onchain_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(int64_t port_,
+                                                                                                 uintptr_t that,
+                                                                                                 struct wire_cst_prepare_receive_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(int64_t port_,
+                                                                                        uintptr_t that,
+                                                                                        struct wire_cst_prepare_refund_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(int64_t port_,
+                                                                                              uintptr_t that,
+                                                                                              struct wire_cst_prepare_send_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(int64_t port_,
                                                                                          uintptr_t that,
-                                                                                         struct wire_cst_prepare_receive_onchain_request *req);
+                                                                                         struct wire_cst_prepare_receive_onchain_response *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(int64_t port_,
                                                                                          uintptr_t that,
-                                                                                         struct wire_cst_prepare_receive_request *req);
+                                                                                         struct wire_cst_prepare_receive_response *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(int64_t port_,
                                                                                 uintptr_t that,
-                                                                                struct wire_cst_prepare_refund_request *req);
+                                                                                struct wire_cst_refund_request *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(int64_t port_,
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(int64_t port_,
+                                                                                              uintptr_t that);
+
+WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(uintptr_t that,
+                                                                                                 struct wire_cst_restore_request *req);
+
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(int64_t port_,
                                                                                       uintptr_t that,
-                                                                                      struct wire_cst_prepare_send_request *req);
+                                                                                      struct wire_cst_prepare_send_response *req);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(int64_t port_,
-                                                                                 uintptr_t that,
-                                                                                 struct wire_cst_prepare_receive_onchain_response *req);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(int64_t port_,
+                                                                              uintptr_t that);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(int64_t port_,
-                                                                                 uintptr_t that,
-                                                                                 struct wire_cst_prepare_receive_response *req);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(int64_t port_,
+                                                                                        struct wire_cst_binding_event_listener *that,
+                                                                                        struct wire_cst_liquid_sdk_event *e);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(int64_t port_,
-                                                                        uintptr_t that,
-                                                                        struct wire_cst_refund_request *req);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream(int64_t port_,
+                                                                         struct wire_cst_list_prim_u_8_strict *s);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(int64_t port_,
-                                                                                      uintptr_t that);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__connect(int64_t port_,
+                                                                struct wire_cst_connect_request *req);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(uintptr_t that,
-                                                                                         struct wire_cst_restore_request *req);
+WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__default_config(int32_t network);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(int64_t port_,
-                                                                              uintptr_t that,
-                                                                              struct wire_cst_prepare_send_response *req);
+void frbgen_flutter_breez_liquid_wire__crate__bindings__parse(int64_t port_,
+                                                              struct wire_cst_list_prim_u_8_strict *input);
 
-void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(int64_t port_,
-                                                                      uintptr_t that);
+WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
 
-void frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(int64_t port_,
-                                                                                struct wire_cst_binding_event_listener *that,
-                                                                                struct wire_cst_liquid_sdk_event *e);
+void frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
-void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(int64_t port_,
-                                                                 struct wire_cst_list_prim_u_8_strict *s);
+void frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
-void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
-                                                        struct wire_cst_connect_request *req);
+struct wire_cst_aes_success_action_data_decrypted *frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(void);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network);
+struct wire_cst_aes_success_action_data_result *frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(void);
 
-void frbgen_breez_liquid_wire__crate__bindings__parse(int64_t port_,
-                                                      struct wire_cst_list_prim_u_8_strict *input);
+struct wire_cst_backup_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request(void);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
+struct wire_cst_binding_event_listener *frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener(void);
 
-void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
+struct wire_cst_bitcoin_address_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(void);
 
-void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
+bool *frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool(bool value);
 
-struct wire_cst_aes_success_action_data_decrypted *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(void);
+struct wire_cst_connect_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
-struct wire_cst_aes_success_action_data_result *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(void);
+struct wire_cst_liquid_sdk_event *frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(void);
 
-struct wire_cst_backup_request *frbgen_breez_liquid_cst_new_box_autoadd_backup_request(void);
+struct wire_cst_ln_invoice *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice(void);
 
-struct wire_cst_binding_event_listener *frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(void);
+struct wire_cst_ln_url_auth_request_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(void);
 
-struct wire_cst_bitcoin_address_data *frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(void);
+struct wire_cst_ln_url_error_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data(void);
 
-bool *frbgen_breez_liquid_cst_new_box_autoadd_bool(bool value);
+struct wire_cst_ln_url_pay_error_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(void);
 
-struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
+struct wire_cst_ln_url_pay_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request(void);
 
-struct wire_cst_liquid_sdk_event *frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(void);
+struct wire_cst_ln_url_pay_request_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(void);
 
-struct wire_cst_ln_invoice *frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice(void);
+struct wire_cst_ln_url_pay_success_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data(void);
 
-struct wire_cst_ln_url_auth_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(void);
+struct wire_cst_ln_url_withdraw_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request(void);
 
-struct wire_cst_ln_url_error_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data(void);
+struct wire_cst_ln_url_withdraw_request_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(void);
 
-struct wire_cst_ln_url_pay_error_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(void);
+struct wire_cst_ln_url_withdraw_success_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data(void);
 
-struct wire_cst_ln_url_pay_request *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request(void);
+struct wire_cst_message_success_action_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data(void);
 
-struct wire_cst_ln_url_pay_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(void);
+struct wire_cst_pay_onchain_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request(void);
 
-struct wire_cst_ln_url_pay_success_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data(void);
+struct wire_cst_payment *frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment(void);
 
-struct wire_cst_ln_url_withdraw_request *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request(void);
+struct wire_cst_prepare_pay_onchain_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(void);
 
-struct wire_cst_ln_url_withdraw_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(void);
+struct wire_cst_prepare_receive_onchain_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request(void);
 
-struct wire_cst_ln_url_withdraw_success_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data(void);
+struct wire_cst_prepare_receive_onchain_response *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response(void);
 
-struct wire_cst_message_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data(void);
+struct wire_cst_prepare_receive_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request(void);
 
-struct wire_cst_pay_onchain_request *frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request(void);
+struct wire_cst_prepare_receive_response *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response(void);
 
-struct wire_cst_payment *frbgen_breez_liquid_cst_new_box_autoadd_payment(void);
+struct wire_cst_prepare_refund_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request(void);
 
-struct wire_cst_prepare_pay_onchain_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(void);
+struct wire_cst_prepare_send_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request(void);
 
-struct wire_cst_prepare_receive_onchain_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request(void);
+struct wire_cst_prepare_send_response *frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response(void);
 
-struct wire_cst_prepare_receive_onchain_response *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response(void);
+struct wire_cst_refund_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request(void);
 
-struct wire_cst_prepare_receive_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(void);
+struct wire_cst_restore_request *frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request(void);
 
-struct wire_cst_prepare_receive_response *frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response(void);
+struct wire_cst_success_action_processed *frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed(void);
 
-struct wire_cst_prepare_refund_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request(void);
+struct wire_cst_symbol *frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol(void);
 
-struct wire_cst_prepare_send_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request(void);
+uint32_t *frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32(uint32_t value);
 
-struct wire_cst_prepare_send_response *frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(void);
+uint64_t *frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
-struct wire_cst_refund_request *frbgen_breez_liquid_cst_new_box_autoadd_refund_request(void);
+struct wire_cst_url_success_action_data *frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
 
-struct wire_cst_restore_request *frbgen_breez_liquid_cst_new_box_autoadd_restore_request(void);
+struct wire_cst_list_fiat_currency *frbgen_flutter_breez_liquid_cst_new_list_fiat_currency(int32_t len);
 
-struct wire_cst_success_action_processed *frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(void);
+struct wire_cst_list_locale_overrides *frbgen_flutter_breez_liquid_cst_new_list_locale_overrides(int32_t len);
 
-struct wire_cst_symbol *frbgen_breez_liquid_cst_new_box_autoadd_symbol(void);
+struct wire_cst_list_localized_name *frbgen_flutter_breez_liquid_cst_new_list_localized_name(int32_t len);
 
-uint32_t *frbgen_breez_liquid_cst_new_box_autoadd_u_32(uint32_t value);
+struct wire_cst_list_payment *frbgen_flutter_breez_liquid_cst_new_list_payment(int32_t len);
 
-uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
+struct wire_cst_list_prim_u_8_strict *frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
 
-struct wire_cst_url_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
+struct wire_cst_list_rate *frbgen_flutter_breez_liquid_cst_new_list_rate(int32_t len);
 
-struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
+struct wire_cst_list_refundable_swap *frbgen_flutter_breez_liquid_cst_new_list_refundable_swap(int32_t len);
 
-struct wire_cst_list_locale_overrides *frbgen_breez_liquid_cst_new_list_locale_overrides(int32_t len);
+struct wire_cst_list_route_hint *frbgen_flutter_breez_liquid_cst_new_list_route_hint(int32_t len);
 
-struct wire_cst_list_localized_name *frbgen_breez_liquid_cst_new_list_localized_name(int32_t len);
-
-struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
-
-struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
-
-struct wire_cst_list_rate *frbgen_breez_liquid_cst_new_list_rate(int32_t len);
-
-struct wire_cst_list_refundable_swap *frbgen_breez_liquid_cst_new_list_refundable_swap(int32_t len);
-
-struct wire_cst_list_route_hint *frbgen_breez_liquid_cst_new_list_route_hint(int32_t len);
-
-struct wire_cst_list_route_hint_hop *frbgen_breez_liquid_cst_new_list_route_hint_hop(int32_t len);
+struct wire_cst_list_route_hint_hop *frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop(int32_t len);
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bool);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_refund_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_symbol);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_locale_overrides);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_localized_name);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_rate);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_refundable_swap);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__breez_log_stream);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__default_config);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_fiat_currency);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_locale_overrides);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_localized_name);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_rate);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_refundable_swap);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_route_hint);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__connect);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__default_config);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__parse);
+    dummy_var ^= ((int64_t) (void*) frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;
 }

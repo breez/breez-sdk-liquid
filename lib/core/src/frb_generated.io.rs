@@ -2176,7 +2176,7 @@ impl Default for wire_cst_url_success_action_data {
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
     port_: i64,
     that: usize,
     listener: *mut wire_cst_list_prim_u_8_strict,
@@ -2185,7 +2185,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ad
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
     that: usize,
     req: *mut wire_cst_backup_request,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
@@ -2193,7 +2193,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ba
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
     port_: i64,
     that: usize,
 ) {
@@ -2201,14 +2201,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_di
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     that: usize,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(that)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
     port_: i64,
     that: usize,
 ) {
@@ -2216,7 +2216,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fe
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     port_: i64,
     that: usize,
 ) {
@@ -2224,7 +2224,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ge
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
     port_: i64,
     that: usize,
 ) {
@@ -2232,7 +2232,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_li
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     port_: i64,
     that: usize,
 ) {
@@ -2240,7 +2240,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_li
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
     port_: i64,
     that: usize,
 ) {
@@ -2248,7 +2248,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_li
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
     port_: i64,
     that: usize,
     req_data: *mut wire_cst_ln_url_auth_request_data,
@@ -2257,7 +2257,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ln
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
     port_: i64,
     that: usize,
     req: *mut wire_cst_ln_url_pay_request,
@@ -2266,7 +2266,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ln
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
     port_: i64,
     that: usize,
     req: *mut wire_cst_ln_url_withdraw_request,
@@ -2275,7 +2275,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ln
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
     port_: i64,
     that: usize,
     req: *mut wire_cst_pay_onchain_request,
@@ -2284,7 +2284,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pa
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_pay_onchain_request,
@@ -2293,7 +2293,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_receive_onchain_request,
@@ -2302,7 +2302,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_receive_request,
@@ -2311,7 +2311,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_refund_request,
@@ -2320,7 +2320,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_send_request,
@@ -2329,7 +2329,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_receive_onchain_response,
@@ -2338,7 +2338,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_receive_response,
@@ -2347,7 +2347,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
     port_: i64,
     that: usize,
     req: *mut wire_cst_refund_request,
@@ -2356,7 +2356,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
     port_: i64,
     that: usize,
 ) {
@@ -2364,7 +2364,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
     that: usize,
     req: *mut wire_cst_restore_request,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
@@ -2372,7 +2372,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
     port_: i64,
     that: usize,
     req: *mut wire_cst_prepare_send_response,
@@ -2381,7 +2381,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_se
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
     port_: i64,
     that: usize,
 ) {
@@ -2389,7 +2389,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sy
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
     port_: i64,
     that: *mut wire_cst_binding_event_listener,
     e: *mut wire_cst_liquid_sdk_event,
@@ -2398,7 +2398,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__binding_event_liste
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream(
     port_: i64,
     s: *mut wire_cst_list_prim_u_8_strict,
 ) {
@@ -2406,7 +2406,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__connect(
     port_: i64,
     req: *mut wire_cst_connect_request,
 ) {
@@ -2414,14 +2414,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__default_config(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__default_config(
     network: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     wire__crate__bindings__default_config_impl(network)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__parse(
     port_: i64,
     input: *mut wire_cst_list_prim_u_8_strict,
 ) {
@@ -2429,14 +2429,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+pub extern "C" fn frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice(
     input: *mut wire_cst_list_prim_u_8_strict,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     wire__crate__bindings__parse_invoice_impl(input)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+pub extern "C" fn frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
@@ -2445,7 +2445,7 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+pub extern "C" fn frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ptr: *const std::ffi::c_void,
 ) {
     unsafe {
@@ -2454,7 +2454,7 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(
 ) -> *mut wire_cst_aes_success_action_data_decrypted {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_aes_success_action_data_decrypted::new_with_null_ptr(),
@@ -2462,7 +2462,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_dat
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(
 ) -> *mut wire_cst_aes_success_action_data_result {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_aes_success_action_data_result::new_with_null_ptr(),
@@ -2470,7 +2470,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_dat
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_backup_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request(
 ) -> *mut wire_cst_backup_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_backup_request::new_with_null_ptr(),
@@ -2478,7 +2478,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_backup_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener(
 ) -> *mut wire_cst_binding_event_listener {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_binding_event_listener::new_with_null_ptr(),
@@ -2486,7 +2486,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(
 ) -> *mut wire_cst_bitcoin_address_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_bitcoin_address_data::new_with_null_ptr(),
@@ -2494,12 +2494,12 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool(value: bool) -> *mut bool {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_connect_request::new_with_null_ptr(),
@@ -2507,7 +2507,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(
 ) -> *mut wire_cst_liquid_sdk_event {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_liquid_sdk_event::new_with_null_ptr(),
@@ -2515,12 +2515,13 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice() -> *mut wire_cst_ln_invoice {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice(
+) -> *mut wire_cst_ln_invoice {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_ln_invoice::new_with_null_ptr())
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(
 ) -> *mut wire_cst_ln_url_auth_request_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_auth_request_data::new_with_null_ptr(),
@@ -2528,7 +2529,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_da
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data(
 ) -> *mut wire_cst_ln_url_error_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_error_data::new_with_null_ptr(),
@@ -2536,7 +2537,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(
 ) -> *mut wire_cst_ln_url_pay_error_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_pay_error_data::new_with_null_ptr(),
@@ -2544,7 +2545,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request(
 ) -> *mut wire_cst_ln_url_pay_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_pay_request::new_with_null_ptr(),
@@ -2552,7 +2553,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data(
 ) -> *mut wire_cst_ln_url_pay_request_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_pay_request_data::new_with_null_ptr(),
@@ -2560,7 +2561,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_dat
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data(
 ) -> *mut wire_cst_ln_url_pay_success_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_pay_success_data::new_with_null_ptr(),
@@ -2568,7 +2569,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_dat
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request(
 ) -> *mut wire_cst_ln_url_withdraw_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_withdraw_request::new_with_null_ptr(),
@@ -2576,7 +2577,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_reques
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data(
 ) -> *mut wire_cst_ln_url_withdraw_request_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_withdraw_request_data::new_with_null_ptr(),
@@ -2584,7 +2585,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_reques
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data(
 ) -> *mut wire_cst_ln_url_withdraw_success_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_ln_url_withdraw_success_data::new_with_null_ptr(),
@@ -2592,7 +2593,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_succes
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data(
 ) -> *mut wire_cst_message_success_action_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_message_success_action_data::new_with_null_ptr(),
@@ -2600,7 +2601,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_message_success_action
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request(
 ) -> *mut wire_cst_pay_onchain_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_pay_onchain_request::new_with_null_ptr(),
@@ -2608,12 +2609,13 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment
+{
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(
 ) -> *mut wire_cst_prepare_pay_onchain_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_pay_onchain_request::new_with_null_ptr(),
@@ -2621,7 +2623,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_re
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request(
 ) -> *mut wire_cst_prepare_receive_onchain_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_receive_onchain_request::new_with_null_ptr(),
@@ -2629,7 +2631,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchai
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response(
 ) -> *mut wire_cst_prepare_receive_onchain_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_receive_onchain_response::new_with_null_ptr(),
@@ -2637,7 +2639,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchai
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
 ) -> *mut wire_cst_prepare_receive_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_receive_request::new_with_null_ptr(),
@@ -2645,7 +2647,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_reques
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response(
 ) -> *mut wire_cst_prepare_receive_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_receive_response::new_with_null_ptr(),
@@ -2653,7 +2655,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_respon
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request(
 ) -> *mut wire_cst_prepare_refund_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_refund_request::new_with_null_ptr(),
@@ -2661,7 +2663,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request(
 ) -> *mut wire_cst_prepare_send_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_request::new_with_null_ptr(),
@@ -2669,7 +2671,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 ) -> *mut wire_cst_prepare_send_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_response::new_with_null_ptr(),
@@ -2677,7 +2679,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_refund_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request(
 ) -> *mut wire_cst_refund_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_refund_request::new_with_null_ptr(),
@@ -2685,7 +2687,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_refund_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_restore_request(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request(
 ) -> *mut wire_cst_restore_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_restore_request::new_with_null_ptr(),
@@ -2693,7 +2695,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_restore_request(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed(
 ) -> *mut wire_cst_success_action_processed {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_success_action_processed::new_with_null_ptr(),
@@ -2701,22 +2703,22 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_success_action_process
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_symbol() -> *mut wire_cst_symbol {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol() -> *mut wire_cst_symbol {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_symbol::new_with_null_ptr())
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32(value: u32) -> *mut u32 {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_u_64(value: u64) -> *mut u64 {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64(value: u64) -> *mut u64 {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data(
 ) -> *mut wire_cst_url_success_action_data {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_url_success_action_data::new_with_null_ptr(),
@@ -2724,7 +2726,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dat
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_fiat_currency(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_fiat_currency(
     len: i32,
 ) -> *mut wire_cst_list_fiat_currency {
     let wrap = wire_cst_list_fiat_currency {
@@ -2738,7 +2740,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_fiat_currency(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_locale_overrides(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_locale_overrides(
     len: i32,
 ) -> *mut wire_cst_list_locale_overrides {
     let wrap = wire_cst_list_locale_overrides {
@@ -2752,7 +2754,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_locale_overrides(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_localized_name(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_localized_name(
     len: i32,
 ) -> *mut wire_cst_list_localized_name {
     let wrap = wire_cst_list_localized_name {
@@ -2766,7 +2768,9 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_localized_name(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment(len: i32) -> *mut wire_cst_list_payment {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_payment(
+    len: i32,
+) -> *mut wire_cst_list_payment {
     let wrap = wire_cst_list_payment {
         ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
             <wire_cst_payment>::new_with_null_ptr(),
@@ -2778,7 +2782,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment(len: i32) -> *mut wir
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict(
     len: i32,
 ) -> *mut wire_cst_list_prim_u_8_strict {
     let ans = wire_cst_list_prim_u_8_strict {
@@ -2789,7 +2793,9 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_rate(len: i32) -> *mut wire_cst_list_rate {
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_rate(
+    len: i32,
+) -> *mut wire_cst_list_rate {
     let wrap = wire_cst_list_rate {
         ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
             <wire_cst_rate>::new_with_null_ptr(),
@@ -2801,7 +2807,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_rate(len: i32) -> *mut wire_c
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_refundable_swap(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_refundable_swap(
     len: i32,
 ) -> *mut wire_cst_list_refundable_swap {
     let wrap = wire_cst_list_refundable_swap {
@@ -2815,7 +2821,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_refundable_swap(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_route_hint(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_route_hint(
     len: i32,
 ) -> *mut wire_cst_list_route_hint {
     let wrap = wire_cst_list_route_hint {
@@ -2829,7 +2835,7 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_route_hint(
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_list_route_hint_hop(
+pub extern "C" fn frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop(
     len: i32,
 ) -> *mut wire_cst_list_route_hint_hop {
     let wrap = wire_cst_list_route_hint_hop {

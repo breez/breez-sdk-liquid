@@ -37,1167 +37,1184 @@ class FlutterBreezLiquidBindings {
   late final _store_dart_post_cobject =
       _store_dart_post_cobjectPtr.asFunction<void Function(DartPostCObjectFnType)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
     int port_,
     int that,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> listener,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
       port_,
       that,
       listener,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
-  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
+  WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
     int that,
     ffi.Pointer<wire_cst_backup_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
           ffi
           .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backupPtr
           .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_backup_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnectPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnectPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnectPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnectPtr
           .asFunction<void Function(int, int)>();
 
-  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+  WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr =
       _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
     int port_,
     int that,
     ffi.Pointer<wire_cst_ln_url_auth_request_data> req_data,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth(
       port_,
       that,
       req_data,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
     int port_,
     int that,
     ffi.Pointer<wire_cst_ln_url_pay_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_pay_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_pay_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
     int port_,
     int that,
     ffi.Pointer<wire_cst_ln_url_withdraw_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
     int port_,
     int that,
     ffi.Pointer<wire_cst_pay_onchain_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_pay_onchain_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_pay_onchain_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_pay_onchain_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_pay_onchain_request>)>>(
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_pay_onchain_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_receive_onchain_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr =
       _lookup<
               ffi.NativeFunction<
                   ffi.Void Function(
                       ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_request>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_onchain_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_receive_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr =
       _lookup<
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_request>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_refund_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_refund_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_refund_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_send_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_send_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_send_request>)>>(
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_send_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_receive_onchain_response> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(
+                      ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_receive_response> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_response>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_response>)>>(
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
     int port_,
     int that,
     ffi.Pointer<wire_cst_refund_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refundPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refundPtr = _lookup<
           ffi
           .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_refund_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refundPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_refund_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr
           .asFunction<void Function(int, int)>();
 
-  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
+  WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
     int that,
     ffi.Pointer<wire_cst_restore_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore(
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restorePtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restorePtr = _lookup<
           ffi
           .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_restore_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restorePtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restorePtr
           .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_restore_request>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
     int port_,
     int that,
     ffi.Pointer<wire_cst_prepare_send_response> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
       port_,
       that,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_send_response>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_send_response>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
     int port_,
     int that,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
       port_,
       that,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync =
-      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
           .asFunction<void Function(int, int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
     int port_,
     ffi.Pointer<wire_cst_binding_event_listener> that,
     ffi.Pointer<wire_cst_liquid_sdk_event> e,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
       port_,
       that,
       e,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr = _lookup<
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_binding_event_listener>,
                   ffi.Pointer<wire_cst_liquid_sdk_event>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event');
-  late final _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event =
-      _frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr.asFunction<
+      'frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_event =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__binding_event_listener_on_eventPtr.asFunction<
           void Function(
               int, ffi.Pointer<wire_cst_binding_event_listener>, ffi.Pointer<wire_cst_liquid_sdk_event>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> s,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream(
       port_,
       s,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__breez_log_streamPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_streamPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__breez_log_stream');
-  late final _frbgen_breez_liquid_wire__crate__bindings__breez_log_stream =
-      _frbgen_breez_liquid_wire__crate__bindings__breez_log_streamPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_stream =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__breez_log_streamPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__connect(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__connect(
     int port_,
     ffi.Pointer<wire_cst_connect_request> req,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__connect(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__connect(
       port_,
       req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__connectPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__connectPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_connect_request>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__connect');
-  late final _frbgen_breez_liquid_wire__crate__bindings__connect =
-      _frbgen_breez_liquid_wire__crate__bindings__connectPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__connect');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__connect =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__connectPtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
 
-  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(
+  WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__default_config(
     int network,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__default_config(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__default_config(
       network,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__default_configPtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__default_configPtr =
       _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__default_config');
-  late final _frbgen_breez_liquid_wire__crate__bindings__default_config =
-      _frbgen_breez_liquid_wire__crate__bindings__default_configPtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__default_config');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__default_config =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__default_configPtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
-  void frbgen_breez_liquid_wire__crate__bindings__parse(
+  void frbgen_flutter_breez_liquid_wire__crate__bindings__parse(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__parse(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__parse(
       port_,
       input,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__parsePtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__parsePtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__parse');
-  late final _frbgen_breez_liquid_wire__crate__bindings__parse =
-      _frbgen_breez_liquid_wire__crate__bindings__parsePtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__parse');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__parse =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__parsePtr
           .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
-  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+  WireSyncRust2DartDco frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice(
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
   ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
+    return _frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice(
       input,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr =
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoicePtr =
       _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__parse_invoice');
-  late final _frbgen_breez_liquid_wire__crate__bindings__parse_invoice =
-      _frbgen_breez_liquid_wire__crate__bindings__parse_invoicePtr
+          'frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice');
+  late final _frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoice =
+      _frbgen_flutter_breez_liquid_wire__crate__bindings__parse_invoicePtr
           .asFunction<WireSyncRust2DartDco Function(ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void
-      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+    return _frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       ptr,
     );
   }
 
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr =
+  late final _frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk');
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk =
-      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
+          'frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk');
+  late final _frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk =
+      _frbgen_flutter_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
-      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
     ffi.Pointer<ffi.Void> ptr,
   ) {
-    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+    return _frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       ptr,
     );
   }
 
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr =
+  late final _frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk');
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk =
-      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
+          'frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk');
+  late final _frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk =
+      _frbgen_flutter_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   ffi.Pointer<wire_cst_aes_success_action_data_decrypted>
-      frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decryptedPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decryptedPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_aes_success_action_data_decrypted> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted =
-      _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decryptedPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decryptedPtr
           .asFunction<ffi.Pointer<wire_cst_aes_success_action_data_decrypted> Function()>();
 
   ffi.Pointer<wire_cst_aes_success_action_data_result>
-      frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_aes_success_action_data_result> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result =
-      _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr
           .asFunction<ffi.Pointer<wire_cst_aes_success_action_data_result> Function()>();
 
-  ffi.Pointer<wire_cst_backup_request> frbgen_breez_liquid_cst_new_box_autoadd_backup_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_backup_request();
+  ffi.Pointer<wire_cst_backup_request> frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_backup_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_backup_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_backup_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_backup_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_backup_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_backup_requestPtr
           .asFunction<ffi.Pointer<wire_cst_backup_request> Function()>();
 
   ffi.Pointer<wire_cst_binding_event_listener>
-      frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener =
-      _frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listener =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_binding_event_listenerPtr
           .asFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>();
 
-  ffi.Pointer<wire_cst_bitcoin_address_data> frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data();
+  ffi.Pointer<wire_cst_bitcoin_address_data>
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bitcoin_address_dataPtr
           .asFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>();
 
-  ffi.Pointer<ffi.Bool> frbgen_breez_liquid_cst_new_box_autoadd_bool(
+  ffi.Pointer<ffi.Bool> frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool(
     bool value,
   ) {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_bool(
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool(
       value,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_boolPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_boolPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_bool');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_bool =
-      _frbgen_breez_liquid_cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_bool =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_boolPtr
+          .asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
 
-  ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
+  ffi.Pointer<wire_cst_connect_request> frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_connect_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_connect_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_connect_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
-  ffi.Pointer<wire_cst_liquid_sdk_event> frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event();
+  ffi.Pointer<wire_cst_liquid_sdk_event> frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_liquid_sdk_event> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_event =
-      _frbgen_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_event =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_liquid_sdk_eventPtr
           .asFunction<ffi.Pointer<wire_cst_liquid_sdk_event> Function()>();
 
-  ffi.Pointer<wire_cst_ln_invoice> frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice();
+  ffi.Pointer<wire_cst_ln_invoice> frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoicePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoicePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_invoice> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoicePtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoice =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_invoicePtr
           .asFunction<ffi.Pointer<wire_cst_ln_invoice> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_auth_request_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_auth_request_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_auth_request_data> Function()>();
 
-  ffi.Pointer<wire_cst_ln_url_error_data> frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data();
+  ffi.Pointer<wire_cst_ln_url_error_data>
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_error_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_error_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_error_data> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_pay_error_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_pay_error_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_pay_error_data> Function()>();
 
-  ffi.Pointer<wire_cst_ln_url_pay_request> frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request();
+  ffi.Pointer<wire_cst_ln_url_pay_request>
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_pay_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_requestPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_pay_request> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_pay_request_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_pay_request_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_request_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_pay_request_data> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_pay_success_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_pay_success_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_pay_success_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_pay_success_data> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_withdraw_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_requestPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_withdraw_request_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_request_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_request_data> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_withdraw_success_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_url_withdraw_success_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_ln_url_withdraw_success_dataPtr
           .asFunction<ffi.Pointer<wire_cst_ln_url_withdraw_success_data> Function()>();
 
   ffi.Pointer<wire_cst_message_success_action_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_message_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>();
 
-  ffi.Pointer<wire_cst_pay_onchain_request> frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request();
+  ffi.Pointer<wire_cst_pay_onchain_request>
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pay_onchain_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_pay_onchain_requestPtr
           .asFunction<ffi.Pointer<wire_cst_pay_onchain_request> Function()>();
 
-  ffi.Pointer<wire_cst_payment> frbgen_breez_liquid_cst_new_box_autoadd_payment() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_payment();
+  ffi.Pointer<wire_cst_payment> frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_paymentPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_paymentPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_payment> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_payment');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_payment =
-      _frbgen_breez_liquid_cst_new_box_autoadd_paymentPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_payment =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_paymentPtr
           .asFunction<ffi.Pointer<wire_cst_payment> Function()>();
 
   ffi.Pointer<wire_cst_prepare_pay_onchain_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_pay_onchain_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_pay_onchain_request> Function()>();
 
   ffi.Pointer<wire_cst_prepare_receive_onchain_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_request> Function()>();
 
   ffi.Pointer<wire_cst_prepare_receive_onchain_response>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_response =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_onchain_responsePtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_onchain_response> Function()>();
 
   ffi.Pointer<wire_cst_prepare_receive_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_request> Function()>();
 
   ffi.Pointer<wire_cst_prepare_receive_response>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_responsePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_responsePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_receive_response> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_responsePtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_response =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_receive_responsePtr
           .asFunction<ffi.Pointer<wire_cst_prepare_receive_response> Function()>();
 
   ffi.Pointer<wire_cst_prepare_refund_request>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_refund_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_refund_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_refund_request> Function()>();
 
-  ffi.Pointer<wire_cst_prepare_send_request> frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request();
+  ffi.Pointer<wire_cst_prepare_send_request>
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_send_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_request> Function()>();
 
   ffi.Pointer<wire_cst_prepare_send_response>
-      frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_send_response> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response =
-      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_response =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_prepare_send_responsePtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_response> Function()>();
 
-  ffi.Pointer<wire_cst_refund_request> frbgen_breez_liquid_cst_new_box_autoadd_refund_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_refund_request();
+  ffi.Pointer<wire_cst_refund_request> frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_refund_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_refund_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_refund_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_refund_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_refund_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_refund_requestPtr
           .asFunction<ffi.Pointer<wire_cst_refund_request> Function()>();
 
-  ffi.Pointer<wire_cst_restore_request> frbgen_breez_liquid_cst_new_box_autoadd_restore_request() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_restore_request();
+  ffi.Pointer<wire_cst_restore_request> frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_restore_requestPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_requestPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_restore_request> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_restore_request');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_restore_request =
-      _frbgen_breez_liquid_cst_new_box_autoadd_restore_requestPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_request =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_restore_requestPtr
           .asFunction<ffi.Pointer<wire_cst_restore_request> Function()>();
 
   ffi.Pointer<wire_cst_success_action_processed>
-      frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processedPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processedPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_success_action_processed> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed =
-      _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processedPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processed =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_success_action_processedPtr
           .asFunction<ffi.Pointer<wire_cst_success_action_processed> Function()>();
 
-  ffi.Pointer<wire_cst_symbol> frbgen_breez_liquid_cst_new_box_autoadd_symbol() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_symbol();
+  ffi.Pointer<wire_cst_symbol> frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_symbolPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbolPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_symbol> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_symbol');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_symbol =
-      _frbgen_breez_liquid_cst_new_box_autoadd_symbolPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbol =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_symbolPtr
           .asFunction<ffi.Pointer<wire_cst_symbol> Function()>();
 
-  ffi.Pointer<ffi.Uint32> frbgen_breez_liquid_cst_new_box_autoadd_u_32(
+  ffi.Pointer<ffi.Uint32> frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32(
     int value,
   ) {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_u_32(
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32(
       value,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32Ptr =
       _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_32 =
-      _frbgen_breez_liquid_cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32 =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_32Ptr
+          .asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
 
-  ffi.Pointer<ffi.Uint64> frbgen_breez_liquid_cst_new_box_autoadd_u_64(
+  ffi.Pointer<ffi.Uint64> frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64(
     int value,
   ) {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_u_64(
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64(
       value,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_64Ptr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64Ptr =
       _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint64> Function(ffi.Uint64)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_u_64');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_u_64 =
-      _frbgen_breez_liquid_cst_new_box_autoadd_u_64Ptr.asFunction<ffi.Pointer<ffi.Uint64> Function(int)>();
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64 =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_u_64Ptr
+          .asFunction<ffi.Pointer<ffi.Uint64> Function(int)>();
 
   ffi.Pointer<wire_cst_url_success_action_data>
-      frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data();
+      frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data() {
+    return _frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data();
   }
 
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data =
-      _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
+          'frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data');
+  late final _frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_data =
+      _frbgen_flutter_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
 
-  ffi.Pointer<wire_cst_list_fiat_currency> frbgen_breez_liquid_cst_new_list_fiat_currency(
+  ffi.Pointer<wire_cst_list_fiat_currency> frbgen_flutter_breez_liquid_cst_new_list_fiat_currency(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_fiat_currency(
+    return _frbgen_flutter_breez_liquid_cst_new_list_fiat_currency(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_fiat_currencyPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_fiat_currencyPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_fiat_currency');
-  late final _frbgen_breez_liquid_cst_new_list_fiat_currency =
-      _frbgen_breez_liquid_cst_new_list_fiat_currencyPtr
+          'frbgen_flutter_breez_liquid_cst_new_list_fiat_currency');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_fiat_currency =
+      _frbgen_flutter_breez_liquid_cst_new_list_fiat_currencyPtr
           .asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_locale_overrides> frbgen_breez_liquid_cst_new_list_locale_overrides(
+  ffi.Pointer<wire_cst_list_locale_overrides> frbgen_flutter_breez_liquid_cst_new_list_locale_overrides(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_locale_overrides(
+    return _frbgen_flutter_breez_liquid_cst_new_list_locale_overrides(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_locale_overridesPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_locale_overridesPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_locale_overrides');
-  late final _frbgen_breez_liquid_cst_new_list_locale_overrides =
-      _frbgen_breez_liquid_cst_new_list_locale_overridesPtr
+          'frbgen_flutter_breez_liquid_cst_new_list_locale_overrides');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_locale_overrides =
+      _frbgen_flutter_breez_liquid_cst_new_list_locale_overridesPtr
           .asFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_localized_name> frbgen_breez_liquid_cst_new_list_localized_name(
+  ffi.Pointer<wire_cst_list_localized_name> frbgen_flutter_breez_liquid_cst_new_list_localized_name(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_localized_name(
+    return _frbgen_flutter_breez_liquid_cst_new_list_localized_name(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_localized_namePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_localized_namePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_localized_name> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_localized_name');
-  late final _frbgen_breez_liquid_cst_new_list_localized_name =
-      _frbgen_breez_liquid_cst_new_list_localized_namePtr
+          'frbgen_flutter_breez_liquid_cst_new_list_localized_name');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_localized_name =
+      _frbgen_flutter_breez_liquid_cst_new_list_localized_namePtr
           .asFunction<ffi.Pointer<wire_cst_list_localized_name> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_payment> frbgen_breez_liquid_cst_new_list_payment(
+  ffi.Pointer<wire_cst_list_payment> frbgen_flutter_breez_liquid_cst_new_list_payment(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_payment(
+    return _frbgen_flutter_breez_liquid_cst_new_list_payment(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_paymentPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_paymentPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_payment');
-  late final _frbgen_breez_liquid_cst_new_list_payment = _frbgen_breez_liquid_cst_new_list_paymentPtr
-      .asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
+          'frbgen_flutter_breez_liquid_cst_new_list_payment');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_payment =
+      _frbgen_flutter_breez_liquid_cst_new_list_paymentPtr
+          .asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_prim_u_8_strict> frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
+    return _frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_prim_u_8_strictPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strictPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_prim_u_8_strict');
-  late final _frbgen_breez_liquid_cst_new_list_prim_u_8_strict =
-      _frbgen_breez_liquid_cst_new_list_prim_u_8_strictPtr
+          'frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strict =
+      _frbgen_flutter_breez_liquid_cst_new_list_prim_u_8_strictPtr
           .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_rate> frbgen_breez_liquid_cst_new_list_rate(
+  ffi.Pointer<wire_cst_list_rate> frbgen_flutter_breez_liquid_cst_new_list_rate(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_rate(
+    return _frbgen_flutter_breez_liquid_cst_new_list_rate(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_ratePtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_ratePtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_rate> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_rate');
-  late final _frbgen_breez_liquid_cst_new_list_rate =
-      _frbgen_breez_liquid_cst_new_list_ratePtr.asFunction<ffi.Pointer<wire_cst_list_rate> Function(int)>();
+          'frbgen_flutter_breez_liquid_cst_new_list_rate');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_rate =
+      _frbgen_flutter_breez_liquid_cst_new_list_ratePtr
+          .asFunction<ffi.Pointer<wire_cst_list_rate> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_refundable_swap> frbgen_breez_liquid_cst_new_list_refundable_swap(
+  ffi.Pointer<wire_cst_list_refundable_swap> frbgen_flutter_breez_liquid_cst_new_list_refundable_swap(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_refundable_swap(
+    return _frbgen_flutter_breez_liquid_cst_new_list_refundable_swap(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_refundable_swapPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_refundable_swapPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_refundable_swap> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_refundable_swap');
-  late final _frbgen_breez_liquid_cst_new_list_refundable_swap =
-      _frbgen_breez_liquid_cst_new_list_refundable_swapPtr
+          'frbgen_flutter_breez_liquid_cst_new_list_refundable_swap');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_refundable_swap =
+      _frbgen_flutter_breez_liquid_cst_new_list_refundable_swapPtr
           .asFunction<ffi.Pointer<wire_cst_list_refundable_swap> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_route_hint> frbgen_breez_liquid_cst_new_list_route_hint(
+  ffi.Pointer<wire_cst_list_route_hint> frbgen_flutter_breez_liquid_cst_new_list_route_hint(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_route_hint(
+    return _frbgen_flutter_breez_liquid_cst_new_list_route_hint(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_route_hintPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_route_hintPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_route_hint');
-  late final _frbgen_breez_liquid_cst_new_list_route_hint = _frbgen_breez_liquid_cst_new_list_route_hintPtr
-      .asFunction<ffi.Pointer<wire_cst_list_route_hint> Function(int)>();
+          'frbgen_flutter_breez_liquid_cst_new_list_route_hint');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_route_hint =
+      _frbgen_flutter_breez_liquid_cst_new_list_route_hintPtr
+          .asFunction<ffi.Pointer<wire_cst_list_route_hint> Function(int)>();
 
-  ffi.Pointer<wire_cst_list_route_hint_hop> frbgen_breez_liquid_cst_new_list_route_hint_hop(
+  ffi.Pointer<wire_cst_list_route_hint_hop> frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop(
     int len,
   ) {
-    return _frbgen_breez_liquid_cst_new_list_route_hint_hop(
+    return _frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop(
       len,
     );
   }
 
-  late final _frbgen_breez_liquid_cst_new_list_route_hint_hopPtr =
+  late final _frbgen_flutter_breez_liquid_cst_new_list_route_hint_hopPtr =
       _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_route_hint_hop');
-  late final _frbgen_breez_liquid_cst_new_list_route_hint_hop =
-      _frbgen_breez_liquid_cst_new_list_route_hint_hopPtr
+          'frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop');
+  late final _frbgen_flutter_breez_liquid_cst_new_list_route_hint_hop =
+      _frbgen_flutter_breez_liquid_cst_new_list_route_hint_hopPtr
           .asFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(int)>();
 
   int dummy_method_to_enforce_bundling() {
