@@ -50,7 +50,6 @@ jobs:
           cp -r ../build/packages/dart/lib .
           cp ../build/packages/dart/analysis_options.yaml .
           cp ../build/packages/dart/pubspec.yaml .
-          cp ../build/packages/dart/pubspec.lock .
 
       - name: Copy docs
         working-directory: dist
