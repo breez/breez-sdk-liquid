@@ -891,12 +891,12 @@ impl LiquidSdk {
             .map(|pair| pair.limits)?;
 
         Ok(OnchainPaymentLimitsResponse {
-            send_min_payer_amount_sat: send_limits.minimal,
-            send_max_payer_amount_sat: send_limits.maximal,
-            send_max_payer_amount_sat_zero_conf: send_limits.maximal_zero_conf,
-            receive_min_payer_amount_sat: receive_limits.minimal,
-            receive_max_payer_amount_sat: receive_limits.maximal,
-            receive_max_payer_amount_sat_zero_conf: receive_limits.maximal_zero_conf,
+            send_min_amount_sat: send_limits.minimal,
+            send_max_amount_sat: send_limits.maximal,
+            send_max_amount_sat_zero_conf: send_limits.maximal_zero_conf,
+            receive_min_amount_sat: receive_limits.minimal,
+            receive_max_amount_sat: receive_limits.maximal,
+            receive_max_amount_sat_zero_conf: receive_limits.maximal_zero_conf,
         })
     }
 

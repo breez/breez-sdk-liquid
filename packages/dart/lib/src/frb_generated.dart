@@ -1885,12 +1885,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return OnchainPaymentLimitsResponse(
-      sendMinPayerAmountSat: dco_decode_u_64(arr[0]),
-      sendMaxPayerAmountSat: dco_decode_u_64(arr[1]),
-      sendMaxPayerAmountSatZeroConf: dco_decode_u_64(arr[2]),
-      receiveMinPayerAmountSat: dco_decode_u_64(arr[3]),
-      receiveMaxPayerAmountSat: dco_decode_u_64(arr[4]),
-      receiveMaxPayerAmountSatZeroConf: dco_decode_u_64(arr[5]),
+      sendMinAmountSat: dco_decode_u_64(arr[0]),
+      sendMaxAmountSat: dco_decode_u_64(arr[1]),
+      sendMaxAmountSatZeroConf: dco_decode_u_64(arr[2]),
+      receiveMinAmountSat: dco_decode_u_64(arr[3]),
+      receiveMaxAmountSat: dco_decode_u_64(arr[4]),
+      receiveMaxAmountSatZeroConf: dco_decode_u_64(arr[5]),
     );
   }
 
@@ -3282,19 +3282,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_sendMinPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_sendMaxPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_sendMaxPayerAmountSatZeroConf = sse_decode_u_64(deserializer);
-    var var_receiveMinPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_receiveMaxPayerAmountSat = sse_decode_u_64(deserializer);
-    var var_receiveMaxPayerAmountSatZeroConf = sse_decode_u_64(deserializer);
+    var var_sendMinAmountSat = sse_decode_u_64(deserializer);
+    var var_sendMaxAmountSat = sse_decode_u_64(deserializer);
+    var var_sendMaxAmountSatZeroConf = sse_decode_u_64(deserializer);
+    var var_receiveMinAmountSat = sse_decode_u_64(deserializer);
+    var var_receiveMaxAmountSat = sse_decode_u_64(deserializer);
+    var var_receiveMaxAmountSatZeroConf = sse_decode_u_64(deserializer);
     return OnchainPaymentLimitsResponse(
-        sendMinPayerAmountSat: var_sendMinPayerAmountSat,
-        sendMaxPayerAmountSat: var_sendMaxPayerAmountSat,
-        sendMaxPayerAmountSatZeroConf: var_sendMaxPayerAmountSatZeroConf,
-        receiveMinPayerAmountSat: var_receiveMinPayerAmountSat,
-        receiveMaxPayerAmountSat: var_receiveMaxPayerAmountSat,
-        receiveMaxPayerAmountSatZeroConf: var_receiveMaxPayerAmountSatZeroConf);
+        sendMinAmountSat: var_sendMinAmountSat,
+        sendMaxAmountSat: var_sendMaxAmountSat,
+        sendMaxAmountSatZeroConf: var_sendMaxAmountSatZeroConf,
+        receiveMinAmountSat: var_receiveMinAmountSat,
+        receiveMaxAmountSat: var_receiveMaxAmountSat,
+        receiveMaxAmountSatZeroConf: var_receiveMaxAmountSatZeroConf);
   }
 
   @protected
@@ -4646,12 +4646,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_onchain_payment_limits_response(
       OnchainPaymentLimitsResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.sendMinPayerAmountSat, serializer);
-    sse_encode_u_64(self.sendMaxPayerAmountSat, serializer);
-    sse_encode_u_64(self.sendMaxPayerAmountSatZeroConf, serializer);
-    sse_encode_u_64(self.receiveMinPayerAmountSat, serializer);
-    sse_encode_u_64(self.receiveMaxPayerAmountSat, serializer);
-    sse_encode_u_64(self.receiveMaxPayerAmountSatZeroConf, serializer);
+    sse_encode_u_64(self.sendMinAmountSat, serializer);
+    sse_encode_u_64(self.sendMaxAmountSat, serializer);
+    sse_encode_u_64(self.sendMaxAmountSatZeroConf, serializer);
+    sse_encode_u_64(self.receiveMinAmountSat, serializer);
+    sse_encode_u_64(self.receiveMaxAmountSat, serializer);
+    sse_encode_u_64(self.receiveMaxAmountSatZeroConf, serializer);
   }
 
   @protected

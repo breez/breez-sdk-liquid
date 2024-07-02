@@ -336,12 +336,12 @@ dictionary ReceivePaymentResponse {
 };
 
 dictionary OnchainPaymentLimitsResponse {
-    u64 send_min_payer_amount_sat;
-    u64 send_max_payer_amount_sat;
-    u64 send_max_payer_amount_sat_zero_conf;
-    u64 receive_min_payer_amount_sat;
-    u64 receive_max_payer_amount_sat;
-    u64 receive_max_payer_amount_sat_zero_conf;
+    u64 send_min_amount_sat;
+    u64 send_max_amount_sat;
+    u64 send_max_amount_sat_zero_conf;
+    u64 receive_min_amount_sat;
+    u64 receive_max_amount_sat;
+    u64 receive_max_amount_sat_zero_conf;
 };
 
 dictionary PreparePayOnchainRequest {

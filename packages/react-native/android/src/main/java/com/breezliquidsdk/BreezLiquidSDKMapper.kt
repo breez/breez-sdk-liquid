@@ -943,41 +943,41 @@ fun asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: ReadableMap): O
     if (!validateMandatoryFields(
             onchainPaymentLimitsResponse,
             arrayOf(
-                "sendMinPayerAmountSat",
-                "sendMaxPayerAmountSat",
-                "sendMaxPayerAmountSatZeroConf",
-                "receiveMinPayerAmountSat",
-                "receiveMaxPayerAmountSat",
-                "receiveMaxPayerAmountSatZeroConf",
+                "sendMinAmountSat",
+                "sendMaxAmountSat",
+                "sendMaxAmountSatZeroConf",
+                "receiveMinAmountSat",
+                "receiveMaxAmountSat",
+                "receiveMaxAmountSatZeroConf",
             ),
         )
     ) {
         return null
     }
-    val sendMinPayerAmountSat = onchainPaymentLimitsResponse.getDouble("sendMinPayerAmountSat").toULong()
-    val sendMaxPayerAmountSat = onchainPaymentLimitsResponse.getDouble("sendMaxPayerAmountSat").toULong()
-    val sendMaxPayerAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("sendMaxPayerAmountSatZeroConf").toULong()
-    val receiveMinPayerAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMinPayerAmountSat").toULong()
-    val receiveMaxPayerAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMaxPayerAmountSat").toULong()
-    val receiveMaxPayerAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("receiveMaxPayerAmountSatZeroConf").toULong()
+    val sendMinAmountSat = onchainPaymentLimitsResponse.getDouble("sendMinAmountSat").toULong()
+    val sendMaxAmountSat = onchainPaymentLimitsResponse.getDouble("sendMaxAmountSat").toULong()
+    val sendMaxAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("sendMaxAmountSatZeroConf").toULong()
+    val receiveMinAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMinAmountSat").toULong()
+    val receiveMaxAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMaxAmountSat").toULong()
+    val receiveMaxAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("receiveMaxAmountSatZeroConf").toULong()
     return OnchainPaymentLimitsResponse(
-        sendMinPayerAmountSat,
-        sendMaxPayerAmountSat,
-        sendMaxPayerAmountSatZeroConf,
-        receiveMinPayerAmountSat,
-        receiveMaxPayerAmountSat,
-        receiveMaxPayerAmountSatZeroConf,
+        sendMinAmountSat,
+        sendMaxAmountSat,
+        sendMaxAmountSatZeroConf,
+        receiveMinAmountSat,
+        receiveMaxAmountSat,
+        receiveMaxAmountSatZeroConf,
     )
 }
 
 fun readableMapOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse): ReadableMap =
     readableMapOf(
-        "sendMinPayerAmountSat" to onchainPaymentLimitsResponse.sendMinPayerAmountSat,
-        "sendMaxPayerAmountSat" to onchainPaymentLimitsResponse.sendMaxPayerAmountSat,
-        "sendMaxPayerAmountSatZeroConf" to onchainPaymentLimitsResponse.sendMaxPayerAmountSatZeroConf,
-        "receiveMinPayerAmountSat" to onchainPaymentLimitsResponse.receiveMinPayerAmountSat,
-        "receiveMaxPayerAmountSat" to onchainPaymentLimitsResponse.receiveMaxPayerAmountSat,
-        "receiveMaxPayerAmountSatZeroConf" to onchainPaymentLimitsResponse.receiveMaxPayerAmountSatZeroConf,
+        "sendMinAmountSat" to onchainPaymentLimitsResponse.sendMinAmountSat,
+        "sendMaxAmountSat" to onchainPaymentLimitsResponse.sendMaxAmountSat,
+        "sendMaxAmountSatZeroConf" to onchainPaymentLimitsResponse.sendMaxAmountSatZeroConf,
+        "receiveMinAmountSat" to onchainPaymentLimitsResponse.receiveMinAmountSat,
+        "receiveMaxAmountSat" to onchainPaymentLimitsResponse.receiveMaxAmountSat,
+        "receiveMaxAmountSatZeroConf" to onchainPaymentLimitsResponse.receiveMaxAmountSatZeroConf,
     )
 
 fun asOnchainPaymentLimitsResponseList(arr: ReadableArray): List<OnchainPaymentLimitsResponse> {

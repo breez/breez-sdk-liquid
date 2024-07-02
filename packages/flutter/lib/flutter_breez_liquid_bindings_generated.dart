@@ -2088,22 +2088,22 @@ final class wire_cst_log_entry extends ffi.Struct {
 
 final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   @ffi.Uint64()
-  external int send_min_payer_amount_sat;
+  external int send_min_amount_sat;
 
   @ffi.Uint64()
-  external int send_max_payer_amount_sat;
+  external int send_max_amount_sat;
 
   @ffi.Uint64()
-  external int send_max_payer_amount_sat_zero_conf;
+  external int send_max_amount_sat_zero_conf;
 
   @ffi.Uint64()
-  external int receive_min_payer_amount_sat;
+  external int receive_min_amount_sat;
 
   @ffi.Uint64()
-  external int receive_max_payer_amount_sat;
+  external int receive_max_amount_sat;
 
   @ffi.Uint64()
-  external int receive_max_payer_amount_sat_zero_conf;
+  external int receive_max_amount_sat_zero_conf;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

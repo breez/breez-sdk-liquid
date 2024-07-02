@@ -2023,12 +2023,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_onchain_payment_limits_response(
       OnchainPaymentLimitsResponse apiObj, wire_cst_onchain_payment_limits_response wireObj) {
-    wireObj.send_min_payer_amount_sat = cst_encode_u_64(apiObj.sendMinPayerAmountSat);
-    wireObj.send_max_payer_amount_sat = cst_encode_u_64(apiObj.sendMaxPayerAmountSat);
-    wireObj.send_max_payer_amount_sat_zero_conf = cst_encode_u_64(apiObj.sendMaxPayerAmountSatZeroConf);
-    wireObj.receive_min_payer_amount_sat = cst_encode_u_64(apiObj.receiveMinPayerAmountSat);
-    wireObj.receive_max_payer_amount_sat = cst_encode_u_64(apiObj.receiveMaxPayerAmountSat);
-    wireObj.receive_max_payer_amount_sat_zero_conf = cst_encode_u_64(apiObj.receiveMaxPayerAmountSatZeroConf);
+    wireObj.send_min_amount_sat = cst_encode_u_64(apiObj.sendMinAmountSat);
+    wireObj.send_max_amount_sat = cst_encode_u_64(apiObj.sendMaxAmountSat);
+    wireObj.send_max_amount_sat_zero_conf = cst_encode_u_64(apiObj.sendMaxAmountSatZeroConf);
+    wireObj.receive_min_amount_sat = cst_encode_u_64(apiObj.receiveMinAmountSat);
+    wireObj.receive_max_amount_sat = cst_encode_u_64(apiObj.receiveMaxAmountSat);
+    wireObj.receive_max_amount_sat_zero_conf = cst_encode_u_64(apiObj.receiveMaxAmountSatZeroConf);
   }
 
   @protected
@@ -4796,22 +4796,22 @@ final class wire_cst_log_entry extends ffi.Struct {
 
 final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   @ffi.Uint64()
-  external int send_min_payer_amount_sat;
+  external int send_min_amount_sat;
 
   @ffi.Uint64()
-  external int send_max_payer_amount_sat;
+  external int send_max_amount_sat;
 
   @ffi.Uint64()
-  external int send_max_payer_amount_sat_zero_conf;
+  external int send_max_amount_sat_zero_conf;
 
   @ffi.Uint64()
-  external int receive_min_payer_amount_sat;
+  external int receive_min_amount_sat;
 
   @ffi.Uint64()
-  external int receive_max_payer_amount_sat;
+  external int receive_max_amount_sat;
 
   @ffi.Uint64()
-  external int receive_max_payer_amount_sat_zero_conf;
+  external int receive_max_amount_sat_zero_conf;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

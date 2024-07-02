@@ -230,53 +230,53 @@ class LogEntry {
 }
 
 class OnchainPaymentLimitsResponse {
-  /// Minimum swap amount for a Send Swap to be valid
-  final BigInt sendMinPayerAmountSat;
+  /// Minimum swap amount for a Send Payment to be valid
+  final BigInt sendMinAmountSat;
 
-  /// Maximum swap amount for a Send Swap to be valid
-  final BigInt sendMaxPayerAmountSat;
+  /// Maximum swap amount for a Send Payment to be valid
+  final BigInt sendMaxAmountSat;
 
-  /// Maximum swap amount which the swapper will accept for zero-conf Send Swaps
-  final BigInt sendMaxPayerAmountSatZeroConf;
+  /// Maximum swap amount which the swapper will accept for zero-conf Send Payments
+  final BigInt sendMaxAmountSatZeroConf;
 
-  /// Minimum swap amount for a Receive Swap to be valid
-  final BigInt receiveMinPayerAmountSat;
+  /// Minimum swap amount for a Receive Payment to be valid
+  final BigInt receiveMinAmountSat;
 
-  /// Maximum swap amount for a Receive Swap to be valid
-  final BigInt receiveMaxPayerAmountSat;
+  /// Maximum swap amount for a Receive Payment to be valid
+  final BigInt receiveMaxAmountSat;
 
-  /// Maximum swap amount which the swapper will accept for zero-conf Receive Swaps
-  final BigInt receiveMaxPayerAmountSatZeroConf;
+  /// Maximum swap amount which the swapper will accept for zero-conf Receive Payments
+  final BigInt receiveMaxAmountSatZeroConf;
 
   const OnchainPaymentLimitsResponse({
-    required this.sendMinPayerAmountSat,
-    required this.sendMaxPayerAmountSat,
-    required this.sendMaxPayerAmountSatZeroConf,
-    required this.receiveMinPayerAmountSat,
-    required this.receiveMaxPayerAmountSat,
-    required this.receiveMaxPayerAmountSatZeroConf,
+    required this.sendMinAmountSat,
+    required this.sendMaxAmountSat,
+    required this.sendMaxAmountSatZeroConf,
+    required this.receiveMinAmountSat,
+    required this.receiveMaxAmountSat,
+    required this.receiveMaxAmountSatZeroConf,
   });
 
   @override
   int get hashCode =>
-      sendMinPayerAmountSat.hashCode ^
-      sendMaxPayerAmountSat.hashCode ^
-      sendMaxPayerAmountSatZeroConf.hashCode ^
-      receiveMinPayerAmountSat.hashCode ^
-      receiveMaxPayerAmountSat.hashCode ^
-      receiveMaxPayerAmountSatZeroConf.hashCode;
+      sendMinAmountSat.hashCode ^
+      sendMaxAmountSat.hashCode ^
+      sendMaxAmountSatZeroConf.hashCode ^
+      receiveMinAmountSat.hashCode ^
+      receiveMaxAmountSat.hashCode ^
+      receiveMaxAmountSatZeroConf.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is OnchainPaymentLimitsResponse &&
           runtimeType == other.runtimeType &&
-          sendMinPayerAmountSat == other.sendMinPayerAmountSat &&
-          sendMaxPayerAmountSat == other.sendMaxPayerAmountSat &&
-          sendMaxPayerAmountSatZeroConf == other.sendMaxPayerAmountSatZeroConf &&
-          receiveMinPayerAmountSat == other.receiveMinPayerAmountSat &&
-          receiveMaxPayerAmountSat == other.receiveMaxPayerAmountSat &&
-          receiveMaxPayerAmountSatZeroConf == other.receiveMaxPayerAmountSatZeroConf;
+          sendMinAmountSat == other.sendMinAmountSat &&
+          sendMaxAmountSat == other.sendMaxAmountSat &&
+          sendMaxAmountSatZeroConf == other.sendMaxAmountSatZeroConf &&
+          receiveMinAmountSat == other.receiveMinAmountSat &&
+          receiveMaxAmountSat == other.receiveMaxAmountSat &&
+          receiveMaxAmountSatZeroConf == other.receiveMaxAmountSatZeroConf;
 }
 
 class PayOnchainRequest {

@@ -167,12 +167,12 @@ export interface MessageSuccessActionData {
 }
 
 export interface OnchainPaymentLimitsResponse {
-    sendMinPayerAmountSat: number
-    sendMaxPayerAmountSat: number
-    sendMaxPayerAmountSatZeroConf: number
-    receiveMinPayerAmountSat: number
-    receiveMaxPayerAmountSat: number
-    receiveMaxPayerAmountSatZeroConf: number
+    sendMinAmountSat: number
+    sendMaxAmountSat: number
+    sendMaxAmountSatZeroConf: number
+    receiveMinAmountSat: number
+    receiveMaxAmountSat: number
+    receiveMaxAmountSatZeroConf: number
 }
 
 export interface PayOnchainRequest {

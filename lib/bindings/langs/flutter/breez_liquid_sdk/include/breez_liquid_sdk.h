@@ -665,12 +665,12 @@ typedef struct wire_cst_log_entry {
 } wire_cst_log_entry;
 
 typedef struct wire_cst_onchain_payment_limits_response {
-  uint64_t send_min_payer_amount_sat;
-  uint64_t send_max_payer_amount_sat;
-  uint64_t send_max_payer_amount_sat_zero_conf;
-  uint64_t receive_min_payer_amount_sat;
-  uint64_t receive_max_payer_amount_sat;
-  uint64_t receive_max_payer_amount_sat_zero_conf;
+  uint64_t send_min_amount_sat;
+  uint64_t send_max_amount_sat;
+  uint64_t send_max_amount_sat_zero_conf;
+  uint64_t receive_min_amount_sat;
+  uint64_t receive_max_amount_sat;
+  uint64_t receive_max_amount_sat_zero_conf;
 } wire_cst_onchain_payment_limits_response;
 
 typedef struct wire_cst_PaymentError_Generic {
