@@ -128,3 +128,40 @@ class ToggleFlashlightButton extends StatelessWidget {
     );
   }
 }
+
+class CancelScanButton extends StatelessWidget {
+  const CancelScanButton({required this.controller, super.key});
+
+  final MobileScannerController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(12.0),
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.8),
+        ),
+      ),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.only(
+            right: 35,
+            left: 35,
+          ),
+        ),
+        onPressed: () async {
+          controller.stop().then((_) => Navigator.of(context).pop());
+        },
+        child: const Text(
+          "CANCEL",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
