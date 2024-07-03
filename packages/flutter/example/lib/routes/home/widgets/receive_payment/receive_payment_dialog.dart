@@ -60,10 +60,14 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
                 if (invoice != null) ...[
                   AspectRatio(
                     aspectRatio: 1,
-                    child: QrImageView(
-                      embeddedImage: const AssetImage("assets/icons/app_icon.png"),
-                      data: invoice!.toUpperCase(),
-                      size: 200.0,
+                    child: SizedBox(
+                      width: 200.0,
+                      height: 200.0,
+                      child: QrImageView(
+                        embeddedImage: const AssetImage("assets/icons/app_icon.png"),
+                        data: invoice!.toUpperCase(),
+                        size: 200.0,
+                      ),
                     ),
                   ),
                   if (payerAmountSat != null && feesSat != null) ...[
