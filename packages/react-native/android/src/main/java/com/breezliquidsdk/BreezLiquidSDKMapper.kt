@@ -420,6 +420,46 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     return list
 }
 
+fun asLimits(limits: ReadableMap): Limits? {
+    if (!validateMandatoryFields(
+            limits,
+            arrayOf(
+                "minSat",
+                "maxSat",
+                "maxZeroConfSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val minSat = limits.getDouble("minSat").toULong()
+    val maxSat = limits.getDouble("maxSat").toULong()
+    val maxZeroConfSat = limits.getDouble("maxZeroConfSat").toULong()
+    return Limits(
+        minSat,
+        maxSat,
+        maxZeroConfSat,
+    )
+}
+
+fun readableMapOf(limits: Limits): ReadableMap =
+    readableMapOf(
+        "minSat" to limits.minSat,
+        "maxSat" to limits.maxSat,
+        "maxZeroConfSat" to limits.maxZeroConfSat,
+    )
+
+fun asLimitsList(arr: ReadableArray): List<Limits> {
+    val list = ArrayList<Limits>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLimits(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlAuthRequestData(lnUrlAuthRequestData: ReadableMap): LnUrlAuthRequestData? {
     if (!validateMandatoryFields(
             lnUrlAuthRequestData,
@@ -943,41 +983,25 @@ fun asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: ReadableMap): O
     if (!validateMandatoryFields(
             onchainPaymentLimitsResponse,
             arrayOf(
-                "sendMinAmountSat",
-                "sendMaxAmountSat",
-                "sendMaxAmountSatZeroConf",
-                "receiveMinAmountSat",
-                "receiveMaxAmountSat",
-                "receiveMaxAmountSatZeroConf",
+                "send",
+                "receive",
             ),
         )
     ) {
         return null
     }
-    val sendMinAmountSat = onchainPaymentLimitsResponse.getDouble("sendMinAmountSat").toULong()
-    val sendMaxAmountSat = onchainPaymentLimitsResponse.getDouble("sendMaxAmountSat").toULong()
-    val sendMaxAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("sendMaxAmountSatZeroConf").toULong()
-    val receiveMinAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMinAmountSat").toULong()
-    val receiveMaxAmountSat = onchainPaymentLimitsResponse.getDouble("receiveMaxAmountSat").toULong()
-    val receiveMaxAmountSatZeroConf = onchainPaymentLimitsResponse.getDouble("receiveMaxAmountSatZeroConf").toULong()
+    val send = onchainPaymentLimitsResponse.getMap("send")?.let { asLimits(it) }!!
+    val receive = onchainPaymentLimitsResponse.getMap("receive")?.let { asLimits(it) }!!
     return OnchainPaymentLimitsResponse(
-        sendMinAmountSat,
-        sendMaxAmountSat,
-        sendMaxAmountSatZeroConf,
-        receiveMinAmountSat,
-        receiveMaxAmountSat,
-        receiveMaxAmountSatZeroConf,
+        send,
+        receive,
     )
 }
 
 fun readableMapOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse): ReadableMap =
     readableMapOf(
-        "sendMinAmountSat" to onchainPaymentLimitsResponse.sendMinAmountSat,
-        "sendMaxAmountSat" to onchainPaymentLimitsResponse.sendMaxAmountSat,
-        "sendMaxAmountSatZeroConf" to onchainPaymentLimitsResponse.sendMaxAmountSatZeroConf,
-        "receiveMinAmountSat" to onchainPaymentLimitsResponse.receiveMinAmountSat,
-        "receiveMaxAmountSat" to onchainPaymentLimitsResponse.receiveMaxAmountSat,
-        "receiveMaxAmountSatZeroConf" to onchainPaymentLimitsResponse.receiveMaxAmountSatZeroConf,
+        "send" to readableMapOf(onchainPaymentLimitsResponse.send),
+        "receive" to readableMapOf(onchainPaymentLimitsResponse.receive),
     )
 
 fun asOnchainPaymentLimitsResponseList(arr: ReadableArray): List<OnchainPaymentLimitsResponse> {

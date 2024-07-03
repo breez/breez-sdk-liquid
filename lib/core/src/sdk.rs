@@ -888,12 +888,16 @@ impl LiquidSdk {
             .map(|pair| pair.limits)?;
 
         Ok(OnchainPaymentLimitsResponse {
-            send_min_amount_sat: send_limits.minimal,
-            send_max_amount_sat: send_limits.maximal,
-            send_max_amount_sat_zero_conf: send_limits.maximal_zero_conf,
-            receive_min_amount_sat: receive_limits.minimal,
-            receive_max_amount_sat: receive_limits.maximal,
-            receive_max_amount_sat_zero_conf: receive_limits.maximal_zero_conf,
+            send: Limits {
+                min_sat: send_limits.minimal,
+                max_sat: send_limits.maximal,
+                max_zero_conf_sat: send_limits.maximal_zero_conf,
+            },
+            receive: Limits {
+                min_sat: receive_limits.minimal,
+                max_sat: receive_limits.maximal,
+                max_zero_conf_sat: receive_limits.maximal_zero_conf,
+            },
         })
     }
 

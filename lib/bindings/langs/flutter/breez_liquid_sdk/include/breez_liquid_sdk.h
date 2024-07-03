@@ -459,6 +459,12 @@ typedef struct wire_cst_input_type {
   union InputTypeKind kind;
 } wire_cst_input_type;
 
+typedef struct wire_cst_limits {
+  uint64_t min_sat;
+  uint64_t max_sat;
+  uint64_t max_zero_conf_sat;
+} wire_cst_limits;
+
 typedef struct wire_cst_LiquidSdkError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LiquidSdkError_Generic;
@@ -661,12 +667,8 @@ typedef struct wire_cst_log_entry {
 } wire_cst_log_entry;
 
 typedef struct wire_cst_onchain_payment_limits_response {
-  uint64_t send_min_amount_sat;
-  uint64_t send_max_amount_sat;
-  uint64_t send_max_amount_sat_zero_conf;
-  uint64_t receive_min_amount_sat;
-  uint64_t receive_max_amount_sat;
-  uint64_t receive_max_amount_sat_zero_conf;
+  struct wire_cst_limits send;
+  struct wire_cst_limits receive;
 } wire_cst_onchain_payment_limits_response;
 
 typedef struct wire_cst_PaymentError_Generic {

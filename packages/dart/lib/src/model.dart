@@ -138,6 +138,30 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+class Limits {
+  final BigInt minSat;
+  final BigInt maxSat;
+  final BigInt maxZeroConfSat;
+
+  const Limits({
+    required this.minSat,
+    required this.maxSat,
+    required this.maxZeroConfSat,
+  });
+
+  @override
+  int get hashCode => minSat.hashCode ^ maxSat.hashCode ^ maxZeroConfSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Limits &&
+          runtimeType == other.runtimeType &&
+          minSat == other.minSat &&
+          maxSat == other.maxSat &&
+          maxZeroConfSat == other.maxZeroConfSat;
+}
+
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
 /// Bitcoin network used.
 enum LiquidNetwork {
@@ -230,53 +254,27 @@ class LogEntry {
 }
 
 class OnchainPaymentLimitsResponse {
-  /// Minimum swap amount for a Send Payment to be valid
-  final BigInt sendMinAmountSat;
+  /// Amount limits for a Send Onchain Payment to be valid
+  final Limits send;
 
-  /// Maximum swap amount for a Send Payment to be valid
-  final BigInt sendMaxAmountSat;
-
-  /// Maximum swap amount which the swapper will accept for zero-conf Send Payments
-  final BigInt sendMaxAmountSatZeroConf;
-
-  /// Minimum swap amount for a Receive Payment to be valid
-  final BigInt receiveMinAmountSat;
-
-  /// Maximum swap amount for a Receive Payment to be valid
-  final BigInt receiveMaxAmountSat;
-
-  /// Maximum swap amount which the swapper will accept for zero-conf Receive Payments
-  final BigInt receiveMaxAmountSatZeroConf;
+  /// Amount limits for a Receive Onchain Payment to be valid
+  final Limits receive;
 
   const OnchainPaymentLimitsResponse({
-    required this.sendMinAmountSat,
-    required this.sendMaxAmountSat,
-    required this.sendMaxAmountSatZeroConf,
-    required this.receiveMinAmountSat,
-    required this.receiveMaxAmountSat,
-    required this.receiveMaxAmountSatZeroConf,
+    required this.send,
+    required this.receive,
   });
 
   @override
-  int get hashCode =>
-      sendMinAmountSat.hashCode ^
-      sendMaxAmountSat.hashCode ^
-      sendMaxAmountSatZeroConf.hashCode ^
-      receiveMinAmountSat.hashCode ^
-      receiveMaxAmountSat.hashCode ^
-      receiveMaxAmountSatZeroConf.hashCode;
+  int get hashCode => send.hashCode ^ receive.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is OnchainPaymentLimitsResponse &&
           runtimeType == other.runtimeType &&
-          sendMinAmountSat == other.sendMinAmountSat &&
-          sendMaxAmountSat == other.sendMaxAmountSat &&
-          sendMaxAmountSatZeroConf == other.sendMaxAmountSatZeroConf &&
-          receiveMinAmountSat == other.receiveMinAmountSat &&
-          receiveMaxAmountSat == other.receiveMaxAmountSat &&
-          receiveMaxAmountSatZeroConf == other.receiveMaxAmountSatZeroConf;
+          send == other.send &&
+          receive == other.receive;
 }
 
 class PayOnchainRequest {

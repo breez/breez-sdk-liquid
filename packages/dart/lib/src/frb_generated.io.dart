@@ -204,6 +204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType dco_decode_input_type(dynamic raw);
 
   @protected
+  Limits dco_decode_limits(dynamic raw);
+
+  @protected
   LiquidNetwork dco_decode_liquid_network(dynamic raw);
 
   @protected
@@ -607,6 +610,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   InputType sse_decode_input_type(SseDeserializer deserializer);
+
+  @protected
+  Limits sse_decode_limits(SseDeserializer deserializer);
 
   @protected
   LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
@@ -1642,6 +1648,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_limits(Limits apiObj, wire_cst_limits wireObj) {
+    wireObj.min_sat = cst_encode_u_64(apiObj.minSat);
+    wireObj.max_sat = cst_encode_u_64(apiObj.maxSat);
+    wireObj.max_zero_conf_sat = cst_encode_u_64(apiObj.maxZeroConfSat);
+  }
+
+  @protected
   void cst_api_fill_to_wire_liquid_sdk_error(LiquidSdkError apiObj, wire_cst_liquid_sdk_error wireObj) {
     if (apiObj is LiquidSdkError_AlreadyStarted) {
       wireObj.tag = 0;
@@ -2018,12 +2031,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_onchain_payment_limits_response(
       OnchainPaymentLimitsResponse apiObj, wire_cst_onchain_payment_limits_response wireObj) {
-    wireObj.send_min_amount_sat = cst_encode_u_64(apiObj.sendMinAmountSat);
-    wireObj.send_max_amount_sat = cst_encode_u_64(apiObj.sendMaxAmountSat);
-    wireObj.send_max_amount_sat_zero_conf = cst_encode_u_64(apiObj.sendMaxAmountSatZeroConf);
-    wireObj.receive_min_amount_sat = cst_encode_u_64(apiObj.receiveMinAmountSat);
-    wireObj.receive_max_amount_sat = cst_encode_u_64(apiObj.receiveMaxAmountSat);
-    wireObj.receive_max_amount_sat_zero_conf = cst_encode_u_64(apiObj.receiveMaxAmountSatZeroConf);
+    cst_api_fill_to_wire_limits(apiObj.send, wireObj.send);
+    cst_api_fill_to_wire_limits(apiObj.receive, wireObj.receive);
   }
 
   @protected
@@ -2546,6 +2555,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_input_type(InputType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_limits(Limits self, SseSerializer serializer);
 
   @protected
   void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
@@ -4543,6 +4555,17 @@ final class wire_cst_input_type extends ffi.Struct {
   external InputTypeKind kind;
 }
 
+final class wire_cst_limits extends ffi.Struct {
+  @ffi.Uint64()
+  external int min_sat;
+
+  @ffi.Uint64()
+  external int max_sat;
+
+  @ffi.Uint64()
+  external int max_zero_conf_sat;
+}
+
 final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -4781,23 +4804,9 @@ final class wire_cst_log_entry extends ffi.Struct {
 }
 
 final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
-  @ffi.Uint64()
-  external int send_min_amount_sat;
+  external wire_cst_limits send;
 
-  @ffi.Uint64()
-  external int send_max_amount_sat;
-
-  @ffi.Uint64()
-  external int send_max_amount_sat_zero_conf;
-
-  @ffi.Uint64()
-  external int receive_min_amount_sat;
-
-  @ffi.Uint64()
-  external int receive_max_amount_sat;
-
-  @ffi.Uint64()
-  external int receive_max_amount_sat_zero_conf;
+  external wire_cst_limits receive;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

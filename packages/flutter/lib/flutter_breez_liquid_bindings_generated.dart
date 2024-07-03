@@ -1846,6 +1846,17 @@ final class wire_cst_input_type extends ffi.Struct {
   external InputTypeKind kind;
 }
 
+final class wire_cst_limits extends ffi.Struct {
+  @ffi.Uint64()
+  external int min_sat;
+
+  @ffi.Uint64()
+  external int max_sat;
+
+  @ffi.Uint64()
+  external int max_zero_conf_sat;
+}
+
 final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -2084,23 +2095,9 @@ final class wire_cst_log_entry extends ffi.Struct {
 }
 
 final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
-  @ffi.Uint64()
-  external int send_min_amount_sat;
+  external wire_cst_limits send;
 
-  @ffi.Uint64()
-  external int send_max_amount_sat;
-
-  @ffi.Uint64()
-  external int send_max_amount_sat_zero_conf;
-
-  @ffi.Uint64()
-  external int receive_min_amount_sat;
-
-  @ffi.Uint64()
-  external int receive_max_amount_sat;
-
-  @ffi.Uint64()
-  external int receive_max_amount_sat_zero_conf;
+  external wire_cst_limits receive;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

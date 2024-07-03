@@ -1967,6 +1967,20 @@ impl SseDecode for crate::bindings::InputType {
     }
 }
 
+impl SseDecode for crate::model::Limits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_minSat = <u64>::sse_decode(deserializer);
+        let mut var_maxSat = <u64>::sse_decode(deserializer);
+        let mut var_maxZeroConfSat = <u64>::sse_decode(deserializer);
+        return crate::model::Limits {
+            min_sat: var_minSat,
+            max_sat: var_maxSat,
+            max_zero_conf_sat: var_maxZeroConfSat,
+        };
+    }
+}
+
 impl SseDecode for crate::model::LiquidNetwork {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2599,19 +2613,11 @@ impl SseDecode for crate::bindings::Network {
 impl SseDecode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_sendMinAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_sendMaxAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_sendMaxAmountSatZeroConf = <u64>::sse_decode(deserializer);
-        let mut var_receiveMinAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_receiveMaxAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_receiveMaxAmountSatZeroConf = <u64>::sse_decode(deserializer);
+        let mut var_send = <crate::model::Limits>::sse_decode(deserializer);
+        let mut var_receive = <crate::model::Limits>::sse_decode(deserializer);
         return crate::model::OnchainPaymentLimitsResponse {
-            send_min_amount_sat: var_sendMinAmountSat,
-            send_max_amount_sat: var_sendMaxAmountSat,
-            send_max_amount_sat_zero_conf: var_sendMaxAmountSatZeroConf,
-            receive_min_amount_sat: var_receiveMinAmountSat,
-            receive_max_amount_sat: var_receiveMaxAmountSat,
-            receive_max_amount_sat_zero_conf: var_receiveMaxAmountSatZeroConf,
+            send: var_send,
+            receive: var_receive,
         };
     }
 }
@@ -3465,6 +3471,23 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::InputType>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::Limits {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.min_sat.into_into_dart().into_dart(),
+            self.max_sat.into_into_dart().into_dart(),
+            self.max_zero_conf_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::Limits {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::Limits> for crate::model::Limits {
+    fn into_into_dart(self) -> crate::model::Limits {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::LiquidNetwork {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -4081,16 +4104,8 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Network>>
 impl flutter_rust_bridge::IntoDart for crate::model::OnchainPaymentLimitsResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.send_min_amount_sat.into_into_dart().into_dart(),
-            self.send_max_amount_sat.into_into_dart().into_dart(),
-            self.send_max_amount_sat_zero_conf
-                .into_into_dart()
-                .into_dart(),
-            self.receive_min_amount_sat.into_into_dart().into_dart(),
-            self.receive_max_amount_sat.into_into_dart().into_dart(),
-            self.receive_max_amount_sat_zero_conf
-                .into_into_dart()
-                .into_dart(),
+            self.send.into_into_dart().into_dart(),
+            self.receive.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4928,6 +4943,15 @@ impl SseEncode for crate::bindings::InputType {
     }
 }
 
+impl SseEncode for crate::model::Limits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u64>::sse_encode(self.min_sat, serializer);
+        <u64>::sse_encode(self.max_sat, serializer);
+        <u64>::sse_encode(self.max_zero_conf_sat, serializer);
+    }
+}
+
 impl SseEncode for crate::model::LiquidNetwork {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5434,12 +5458,8 @@ impl SseEncode for crate::bindings::Network {
 impl SseEncode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.send_min_amount_sat, serializer);
-        <u64>::sse_encode(self.send_max_amount_sat, serializer);
-        <u64>::sse_encode(self.send_max_amount_sat_zero_conf, serializer);
-        <u64>::sse_encode(self.receive_min_amount_sat, serializer);
-        <u64>::sse_encode(self.receive_max_amount_sat, serializer);
-        <u64>::sse_encode(self.receive_max_amount_sat_zero_conf, serializer);
+        <crate::model::Limits>::sse_encode(self.send, serializer);
+        <crate::model::Limits>::sse_encode(self.receive, serializer);
     }
 }
 

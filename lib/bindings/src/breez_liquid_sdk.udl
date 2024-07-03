@@ -335,13 +335,15 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
+dictionary Limits {
+    u64 min_sat;
+    u64 max_sat;
+    u64 max_zero_conf_sat;
+};
+
 dictionary OnchainPaymentLimitsResponse {
-    u64 send_min_amount_sat;
-    u64 send_max_amount_sat;
-    u64 send_max_amount_sat_zero_conf;
-    u64 receive_min_amount_sat;
-    u64 receive_max_amount_sat;
-    u64 receive_max_amount_sat_zero_conf;
+    Limits send;
+    Limits receive;
 };
 
 dictionary PreparePayOnchainRequest {

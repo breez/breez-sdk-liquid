@@ -184,20 +184,18 @@ pub struct ReceivePaymentResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct OnchainPaymentLimitsResponse {
-    /// Minimum swap amount for a Send Payment to be valid
-    pub send_min_amount_sat: u64,
-    /// Maximum swap amount for a Send Payment to be valid
-    pub send_max_amount_sat: u64,
-    /// Maximum swap amount which the swapper will accept for zero-conf Send Payments
-    pub send_max_amount_sat_zero_conf: u64,
+pub struct Limits {
+    pub min_sat: u64,
+    pub max_sat: u64,
+    pub max_zero_conf_sat: u64,
+}
 
-    /// Minimum swap amount for a Receive Payment to be valid
-    pub receive_min_amount_sat: u64,
-    /// Maximum swap amount for a Receive Payment to be valid
-    pub receive_max_amount_sat: u64,
-    /// Maximum swap amount which the swapper will accept for zero-conf Receive Payments
-    pub receive_max_amount_sat_zero_conf: u64,
+#[derive(Debug, Serialize)]
+pub struct OnchainPaymentLimitsResponse {
+    /// Amount limits for a Send Onchain Payment to be valid
+    pub send: Limits,
+    /// Amount limits for a Receive Onchain Payment to be valid
+    pub receive: Limits,
 }
 
 #[derive(Debug, Serialize, Clone)]

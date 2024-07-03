@@ -88,6 +88,12 @@ export interface LnInvoice {
     minFinalCltvExpiryDelta: number
 }
 
+export interface Limits {
+    minSat: number
+    maxSat: number
+    maxZeroConfSat: number
+}
+
 export interface LnUrlAuthRequestData {
     k1: string
     domain: string
@@ -167,12 +173,8 @@ export interface MessageSuccessActionData {
 }
 
 export interface OnchainPaymentLimitsResponse {
-    sendMinAmountSat: number
-    sendMaxAmountSat: number
-    sendMaxAmountSatZeroConf: number
-    receiveMinAmountSat: number
-    receiveMaxAmountSat: number
-    receiveMaxAmountSatZeroConf: number
+    send: Limits
+    receive: Limits
 }
 
 export interface PayOnchainRequest {

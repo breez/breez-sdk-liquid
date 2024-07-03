@@ -517,6 +517,49 @@ enum BreezLiquidSDKMapper {
         return lnInvoiceList.map { v -> [String: Any?] in dictionaryOf(lnInvoice: v) }
     }
 
+    static func asLimits(limits: [String: Any?]) throws -> Limits {
+        guard let minSat = limits["minSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "minSat", typeName: "Limits"))
+        }
+        guard let maxSat = limits["maxSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxSat", typeName: "Limits"))
+        }
+        guard let maxZeroConfSat = limits["maxZeroConfSat"] as? UInt64 else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "maxZeroConfSat", typeName: "Limits"))
+        }
+
+        return Limits(
+            minSat: minSat,
+            maxSat: maxSat,
+            maxZeroConfSat: maxZeroConfSat
+        )
+    }
+
+    static func dictionaryOf(limits: Limits) -> [String: Any?] {
+        return [
+            "minSat": limits.minSat,
+            "maxSat": limits.maxSat,
+            "maxZeroConfSat": limits.maxZeroConfSat,
+        ]
+    }
+
+    static func asLimitsList(arr: [Any]) throws -> [Limits] {
+        var list = [Limits]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var limits = try asLimits(limits: val)
+                list.append(limits)
+            } else {
+                throw LiquidSdkError.Generic(message: errUnexpectedType(typeName: "Limits"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(limitsList: [Limits]) -> [Any] {
+        return limitsList.map { v -> [String: Any?] in dictionaryOf(limits: v) }
+    }
+
     static func asLnUrlAuthRequestData(lnUrlAuthRequestData: [String: Any?]) throws -> LnUrlAuthRequestData {
         guard let k1 = lnUrlAuthRequestData["k1"] as? String else {
             throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "k1", typeName: "LnUrlAuthRequestData"))
@@ -1111,43 +1154,26 @@ enum BreezLiquidSDKMapper {
     }
 
     static func asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: [String: Any?]) throws -> OnchainPaymentLimitsResponse {
-        guard let sendMinAmountSat = onchainPaymentLimitsResponse["sendMinAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMinAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        guard let sendTmp = onchainPaymentLimitsResponse["send"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "send", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let sendMaxAmountSat = onchainPaymentLimitsResponse["sendMaxAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMaxAmountSat", typeName: "OnchainPaymentLimitsResponse"))
+        let send = try asLimits(limits: sendTmp)
+
+        guard let receiveTmp = onchainPaymentLimitsResponse["receive"] as? [String: Any?] else {
+            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receive", typeName: "OnchainPaymentLimitsResponse"))
         }
-        guard let sendMaxAmountSatZeroConf = onchainPaymentLimitsResponse["sendMaxAmountSatZeroConf"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "sendMaxAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
-        }
-        guard let receiveMinAmountSat = onchainPaymentLimitsResponse["receiveMinAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMinAmountSat", typeName: "OnchainPaymentLimitsResponse"))
-        }
-        guard let receiveMaxAmountSat = onchainPaymentLimitsResponse["receiveMaxAmountSat"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMaxAmountSat", typeName: "OnchainPaymentLimitsResponse"))
-        }
-        guard let receiveMaxAmountSatZeroConf = onchainPaymentLimitsResponse["receiveMaxAmountSatZeroConf"] as? UInt64 else {
-            throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "receiveMaxAmountSatZeroConf", typeName: "OnchainPaymentLimitsResponse"))
-        }
+        let receive = try asLimits(limits: receiveTmp)
 
         return OnchainPaymentLimitsResponse(
-            sendMinAmountSat: sendMinAmountSat,
-            sendMaxAmountSat: sendMaxAmountSat,
-            sendMaxAmountSatZeroConf: sendMaxAmountSatZeroConf,
-            receiveMinAmountSat: receiveMinAmountSat,
-            receiveMaxAmountSat: receiveMaxAmountSat,
-            receiveMaxAmountSatZeroConf: receiveMaxAmountSatZeroConf
+            send: send,
+            receive: receive
         )
     }
 
     static func dictionaryOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse) -> [String: Any?] {
         return [
-            "sendMinAmountSat": onchainPaymentLimitsResponse.sendMinAmountSat,
-            "sendMaxAmountSat": onchainPaymentLimitsResponse.sendMaxAmountSat,
-            "sendMaxAmountSatZeroConf": onchainPaymentLimitsResponse.sendMaxAmountSatZeroConf,
-            "receiveMinAmountSat": onchainPaymentLimitsResponse.receiveMinAmountSat,
-            "receiveMaxAmountSat": onchainPaymentLimitsResponse.receiveMaxAmountSat,
-            "receiveMaxAmountSatZeroConf": onchainPaymentLimitsResponse.receiveMaxAmountSatZeroConf,
+            "send": dictionaryOf(limits: onchainPaymentLimitsResponse.send),
+            "receive": dictionaryOf(limits: onchainPaymentLimitsResponse.receive),
         ]
     }
 
