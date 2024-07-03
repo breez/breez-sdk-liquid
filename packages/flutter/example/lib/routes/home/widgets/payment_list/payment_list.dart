@@ -30,7 +30,7 @@ class PaymentList extends StatelessWidget {
           );
         }
 
-        final paymentList = paymentsSnapshot.data!;
+        List<Payment> paymentList = paymentsSnapshot.data!.reversed.toList();
 
         return RefreshIndicator(
           onRefresh: () async {
