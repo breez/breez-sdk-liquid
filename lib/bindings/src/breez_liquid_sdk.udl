@@ -341,6 +341,11 @@ dictionary Limits {
     u64 max_zero_conf_sat;
 };
 
+dictionary LightningPaymentLimitsResponse {
+    Limits send;
+    Limits receive;
+};
+
 dictionary OnchainPaymentLimitsResponse {
     Limits send;
     Limits receive;
@@ -500,6 +505,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=PaymentError]
+    LightningPaymentLimitsResponse fetch_lightning_limits();
 
     [Throws=PaymentError]
     OnchainPaymentLimitsResponse fetch_onchain_limits();

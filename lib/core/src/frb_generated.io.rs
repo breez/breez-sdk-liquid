@@ -520,6 +520,17 @@ impl CstDecode<crate::bindings::InputType> for wire_cst_input_type {
         }
     }
 }
+impl CstDecode<crate::model::LightningPaymentLimitsResponse>
+    for wire_cst_lightning_payment_limits_response
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::LightningPaymentLimitsResponse {
+        crate::model::LightningPaymentLimitsResponse {
+            send: self.send.cst_decode(),
+            receive: self.receive.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::Limits> for wire_cst_limits {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::Limits {
@@ -1536,6 +1547,19 @@ impl Default for wire_cst_input_type {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_lightning_payment_limits_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            send: Default::default(),
+            receive: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_lightning_payment_limits_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_limits {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2261,6 +2285,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fe
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits_impl(port_, that)
 }
 
 #[no_mangle]
@@ -3046,6 +3078,12 @@ pub struct wire_cst_InputType_LnUrlAuth {
 #[derive(Clone, Copy)]
 pub struct wire_cst_InputType_LnUrlError {
     data: *mut wire_cst_ln_url_error_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_lightning_payment_limits_response {
+    send: wire_cst_limits,
+    receive: wire_cst_limits,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

@@ -126,6 +126,12 @@ impl BindingLiquidSdk {
         self.sdk.receive_payment(&req).await
     }
 
+    pub async fn fetch_lightning_limits(
+        &self,
+    ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
+        self.sdk.fetch_lightning_limits().await
+    }
+
     pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.sdk.fetch_onchain_limits().await
     }

@@ -204,6 +204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType dco_decode_input_type(dynamic raw);
 
   @protected
+  LightningPaymentLimitsResponse dco_decode_lightning_payment_limits_response(dynamic raw);
+
+  @protected
   Limits dco_decode_limits(dynamic raw);
 
   @protected
@@ -610,6 +613,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   InputType sse_decode_input_type(SseDeserializer deserializer);
+
+  @protected
+  LightningPaymentLimitsResponse sse_decode_lightning_payment_limits_response(SseDeserializer deserializer);
 
   @protected
   Limits sse_decode_limits(SseDeserializer deserializer);
@@ -1648,6 +1654,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse apiObj, wire_cst_lightning_payment_limits_response wireObj) {
+    cst_api_fill_to_wire_limits(apiObj.send, wireObj.send);
+    cst_api_fill_to_wire_limits(apiObj.receive, wireObj.receive);
+  }
+
+  @protected
   void cst_api_fill_to_wire_limits(Limits apiObj, wire_cst_limits wireObj) {
     wireObj.min_sat = cst_encode_u_64(apiObj.minSat);
     wireObj.max_sat = cst_encode_u_64(apiObj.maxSat);
@@ -2557,6 +2570,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_input_type(InputType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse self, SseSerializer serializer);
+
+  @protected
   void sse_encode_limits(Limits self, SseSerializer serializer);
 
   @protected
@@ -2905,6 +2922,23 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
       _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr
+          .asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
     int port_,
@@ -4564,6 +4598,12 @@ final class wire_cst_limits extends ffi.Struct {
 
   @ffi.Uint64()
   external int max_zero_conf_sat;
+}
+
+final class wire_cst_lightning_payment_limits_response extends ffi.Struct {
+  external wire_cst_limits send;
+
+  external wire_cst_limits receive;
 }
 
 final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {

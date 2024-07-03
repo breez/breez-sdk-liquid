@@ -191,6 +191,14 @@ pub struct Limits {
 }
 
 #[derive(Debug, Serialize)]
+pub struct LightningPaymentLimitsResponse {
+    /// Amount limits for a Send Payment to be valid
+    pub send: Limits,
+    /// Amount limits for a Receive Payment to be valid
+    pub receive: Limits,
+}
+
+#[derive(Debug, Serialize)]
 pub struct OnchainPaymentLimitsResponse {
     /// Amount limits for a Send Onchain Payment to be valid
     pub send: Limits,

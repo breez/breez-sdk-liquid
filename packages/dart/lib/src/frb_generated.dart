@@ -55,7 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0';
 
   @override
-  int get rustContentHash => 1351340125;
+  int get rustContentHash => -1318462354;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_liquid_sdk',
@@ -74,6 +74,9 @@ abstract class RustLibApi extends BaseApi {
   void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that});
 
   Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that});
+
+  Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits(
+      {required BindingLiquidSdk that});
 
   Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits(
       {required BindingLiquidSdk that});
@@ -281,6 +284,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_fetch_fiat_rates",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_lightning_payment_limits_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_lightning_limits",
         argNames: ["that"],
       );
 
@@ -1416,6 +1444,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  LightningPaymentLimitsResponse dco_decode_lightning_payment_limits_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LightningPaymentLimitsResponse(
+      send: dco_decode_limits(arr[0]),
+      receive: dco_decode_limits(arr[1]),
+    );
   }
 
   @protected
@@ -2797,6 +2836,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  LightningPaymentLimitsResponse sse_decode_lightning_payment_limits_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_send = sse_decode_limits(deserializer);
+    var var_receive = sse_decode_limits(deserializer);
+    return LightningPaymentLimitsResponse(send: var_send, receive: var_receive);
   }
 
   @protected
@@ -4239,6 +4286,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_limits(self.send, serializer);
+    sse_encode_limits(self.receive, serializer);
+  }
+
+  @protected
   void sse_encode_limits(Limits self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.minSat, serializer);
@@ -5045,6 +5100,11 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
       );
 
   Future<List<Rate>> fetchFiatRates() => RustLib.instance.api.crateBindingsBindingLiquidSdkFetchFiatRates(
+        that: this,
+      );
+
+  Future<LightningPaymentLimitsResponse> fetchLightningLimits() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkFetchLightningLimits(
         that: this,
       );
 

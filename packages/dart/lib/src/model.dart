@@ -138,6 +138,30 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+class LightningPaymentLimitsResponse {
+  /// Amount limits for a Send Payment to be valid
+  final Limits send;
+
+  /// Amount limits for a Receive Payment to be valid
+  final Limits receive;
+
+  const LightningPaymentLimitsResponse({
+    required this.send,
+    required this.receive,
+  });
+
+  @override
+  int get hashCode => send.hashCode ^ receive.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LightningPaymentLimitsResponse &&
+          runtimeType == other.runtimeType &&
+          send == other.send &&
+          receive == other.receive;
+}
+
 class Limits {
   final BigInt minSat;
   final BigInt maxSat;

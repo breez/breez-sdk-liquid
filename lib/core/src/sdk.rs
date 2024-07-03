@@ -875,6 +875,38 @@ impl LiquidSdk {
             .map(|payment| SendPaymentResponse { payment })
     }
 
+    /// Fetch the current limits for Send and Receive swaps
+    pub async fn fetch_lightning_limits(
+        &self,
+    ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        let submarine_pair = self
+            .swapper
+            .get_submarine_pairs()?
+            .ok_or(PaymentError::PairsNotFound)?;
+        let send_limits = submarine_pair.limits;
+
+        let reverse_pair = self
+            .swapper
+            .get_reverse_swap_pairs()?
+            .ok_or(PaymentError::PairsNotFound)?;
+        let receive_limits = reverse_pair.limits;
+
+        Ok(LightningPaymentLimitsResponse {
+            send: Limits {
+                min_sat: send_limits.minimal,
+                max_sat: send_limits.maximal,
+                max_zero_conf_sat: send_limits.maximal_zero_conf,
+            },
+            receive: Limits {
+                min_sat: receive_limits.minimal,
+                max_sat: receive_limits.maximal,
+                max_zero_conf_sat: self.config.zero_conf_max_amount_sat(),
+            },
+        })
+    }
+
     /// Fetch the current limits for Onchain Send and Receive swaps
     pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.ensure_is_started().await?;

@@ -41,6 +41,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<Rate>> fetchFiatRates();
 
+  Future<LightningPaymentLimitsResponse> fetchLightningLimits();
+
   Future<OnchainPaymentLimitsResponse> fetchOnchainLimits();
 
   Future<GetInfoResponse> getInfo();

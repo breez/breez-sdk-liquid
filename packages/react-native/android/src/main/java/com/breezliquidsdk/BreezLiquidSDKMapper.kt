@@ -420,6 +420,42 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     return list
 }
 
+fun asLightningPaymentLimitsResponse(lightningPaymentLimitsResponse: ReadableMap): LightningPaymentLimitsResponse? {
+    if (!validateMandatoryFields(
+            lightningPaymentLimitsResponse,
+            arrayOf(
+                "send",
+                "receive",
+            ),
+        )
+    ) {
+        return null
+    }
+    val send = lightningPaymentLimitsResponse.getMap("send")?.let { asLimits(it) }!!
+    val receive = lightningPaymentLimitsResponse.getMap("receive")?.let { asLimits(it) }!!
+    return LightningPaymentLimitsResponse(
+        send,
+        receive,
+    )
+}
+
+fun readableMapOf(lightningPaymentLimitsResponse: LightningPaymentLimitsResponse): ReadableMap =
+    readableMapOf(
+        "send" to readableMapOf(lightningPaymentLimitsResponse.send),
+        "receive" to readableMapOf(lightningPaymentLimitsResponse.receive),
+    )
+
+fun asLightningPaymentLimitsResponseList(arr: ReadableArray): List<LightningPaymentLimitsResponse> {
+    val list = ArrayList<LightningPaymentLimitsResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLightningPaymentLimitsResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLimits(limits: ReadableMap): Limits? {
     if (!validateMandatoryFields(
             limits,

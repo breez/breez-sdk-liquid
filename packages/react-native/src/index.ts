@@ -88,6 +88,11 @@ export interface LnInvoice {
     minFinalCltvExpiryDelta: number
 }
 
+export interface LightningPaymentLimitsResponse {
+    send: Limits
+    receive: Limits
+}
+
 export interface Limits {
     minSat: number
     maxSat: number
@@ -545,6 +550,11 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
+    return response
+}
+
+export const fetchLightningLimits = async (): Promise<LightningPaymentLimitsResponse> => {
+    const response = await BreezLiquidSDK.fetchLightningLimits()
     return response
 }
 
