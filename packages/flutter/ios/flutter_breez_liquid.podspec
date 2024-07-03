@@ -1,4 +1,5 @@
-tag_name = 'v0.1.0' # generated; do not edit
+version = '0.1.0' # generated; do not edit
+tag_name = "v#{version}"
 release_tag_name = "breez_liquid-#{tag_name}"
 
 # We cannot distribute the XCFramework alongside the library directly,
@@ -10,7 +11,7 @@ local_zip_name = "#{release_tag_name}.zip"
 
 Pod::Spec.new do |spec|
   spec.name          = 'flutter_breez_liquid'
-  spec.version       = "#{tag_name}"
+  spec.version       = "#{version}"
   spec.license       = { :file => '../LICENSE' }
   spec.homepage      = 'https://breez.technology'
   spec.authors       = { 'Breez' => 'contact@breez.technology' }
