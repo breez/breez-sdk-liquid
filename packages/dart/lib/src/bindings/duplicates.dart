@@ -156,6 +156,9 @@ sealed class LnUrlWithdrawResult with _$LnUrlWithdrawResult {
   const factory LnUrlWithdrawResult.ok({
     required LnUrlWithdrawSuccessData data,
   }) = LnUrlWithdrawResult_Ok;
+  const factory LnUrlWithdrawResult.timeout({
+    required LnUrlWithdrawSuccessData data,
+  }) = LnUrlWithdrawResult_Timeout;
   const factory LnUrlWithdrawResult.errorStatus({
     required LnUrlErrorData data,
   }) = LnUrlWithdrawResult_ErrorStatus;

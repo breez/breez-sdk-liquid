@@ -1883,6 +1883,80 @@ abstract class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
 }
 
 /// @nodoc
+abstract class _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
+  factory _$$LnUrlWithdrawResult_TimeoutImplCopyWith(
+          _$LnUrlWithdrawResult_TimeoutImpl value, $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) then) =
+      __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LnUrlWithdrawSuccessData data});
+}
+
+/// @nodoc
+class __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>
+    extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_TimeoutImpl>
+    implements _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
+  __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl(
+      _$LnUrlWithdrawResult_TimeoutImpl _value, $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$LnUrlWithdrawResult_TimeoutImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as LnUrlWithdrawSuccessData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$LnUrlWithdrawResult_TimeoutImpl extends LnUrlWithdrawResult_Timeout {
+  const _$LnUrlWithdrawResult_TimeoutImpl({required this.data}) : super._();
+
+  @override
+  final LnUrlWithdrawSuccessData data;
+
+  @override
+  String toString() {
+    return 'LnUrlWithdrawResult.timeout(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$LnUrlWithdrawResult_TimeoutImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
+      __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<_$LnUrlWithdrawResult_TimeoutImpl>(this, _$identity);
+}
+
+abstract class LnUrlWithdrawResult_Timeout extends LnUrlWithdrawResult {
+  const factory LnUrlWithdrawResult_Timeout({required final LnUrlWithdrawSuccessData data}) =
+      _$LnUrlWithdrawResult_TimeoutImpl;
+  const LnUrlWithdrawResult_Timeout._() : super._();
+
+  @override
+  LnUrlWithdrawSuccessData get data;
+  @JsonKey(ignore: true)
+  _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
   factory _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith(_$LnUrlWithdrawResult_ErrorStatusImpl value,
           $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) then) =

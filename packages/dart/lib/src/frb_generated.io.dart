@@ -2002,9 +2002,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Ok.data = pre_data;
       return;
     }
+    if (apiObj is LnUrlWithdrawResult_Timeout) {
+      var pre_data = cst_encode_box_autoadd_ln_url_withdraw_success_data(apiObj.data);
+      wireObj.tag = 1;
+      wireObj.kind.Timeout.data = pre_data;
+      return;
+    }
     if (apiObj is LnUrlWithdrawResult_ErrorStatus) {
       var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
-      wireObj.tag = 1;
+      wireObj.tag = 2;
       wireObj.kind.ErrorStatus.data = pre_data;
       return;
     }
@@ -4820,12 +4826,18 @@ final class wire_cst_LnUrlWithdrawResult_Ok extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
 }
 
+final class wire_cst_LnUrlWithdrawResult_Timeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
+}
+
 final class wire_cst_LnUrlWithdrawResult_ErrorStatus extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
 final class LnUrlWithdrawResultKind extends ffi.Union {
   external wire_cst_LnUrlWithdrawResult_Ok Ok;
+
+  external wire_cst_LnUrlWithdrawResult_Timeout Timeout;
 
   external wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
 }

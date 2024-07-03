@@ -1862,6 +1862,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),
         );
       case 1:
+        return LnUrlWithdrawResult_Timeout(
+          data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),
+        );
+      case 2:
         return LnUrlWithdrawResult_ErrorStatus(
           data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
@@ -3281,6 +3285,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
         return LnUrlWithdrawResult_Ok(data: var_data);
       case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
+        return LnUrlWithdrawResult_Timeout(data: var_data);
+      case 2:
         var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
         return LnUrlWithdrawResult_ErrorStatus(data: var_data);
       default:
@@ -4649,8 +4656,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LnUrlWithdrawResult_Ok(data: final data):
         sse_encode_i_32(0, serializer);
         sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
-      case LnUrlWithdrawResult_ErrorStatus(data: final data):
+      case LnUrlWithdrawResult_Timeout(data: final data):
         sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
+      case LnUrlWithdrawResult_ErrorStatus(data: final data):
+        sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_url_error_data(data, serializer);
       default:
         throw UnimplementedError('');

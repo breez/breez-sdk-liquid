@@ -652,12 +652,17 @@ typedef struct wire_cst_LnUrlWithdrawResult_Ok {
   struct wire_cst_ln_url_withdraw_success_data *data;
 } wire_cst_LnUrlWithdrawResult_Ok;
 
+typedef struct wire_cst_LnUrlWithdrawResult_Timeout {
+  struct wire_cst_ln_url_withdraw_success_data *data;
+} wire_cst_LnUrlWithdrawResult_Timeout;
+
 typedef struct wire_cst_LnUrlWithdrawResult_ErrorStatus {
   struct wire_cst_ln_url_error_data *data;
 } wire_cst_LnUrlWithdrawResult_ErrorStatus;
 
 typedef union LnUrlWithdrawResultKind {
   struct wire_cst_LnUrlWithdrawResult_Ok Ok;
+  struct wire_cst_LnUrlWithdrawResult_Timeout Timeout;
   struct wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
 } LnUrlWithdrawResultKind;
 

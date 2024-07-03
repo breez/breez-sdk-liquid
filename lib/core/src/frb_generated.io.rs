@@ -1005,6 +1005,12 @@ impl CstDecode<crate::bindings::duplicates::LnUrlWithdrawResult>
                 }
             }
             1 => {
+                let ans = unsafe { self.kind.Timeout };
+                crate::bindings::duplicates::LnUrlWithdrawResult::Timeout {
+                    data: ans.data.cst_decode(),
+                }
+            }
+            2 => {
                 let ans = unsafe { self.kind.ErrorStatus };
                 crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus {
                     data: ans.data.cst_decode(),
@@ -3503,12 +3509,18 @@ pub struct wire_cst_ln_url_withdraw_result {
 #[derive(Clone, Copy)]
 pub union LnUrlWithdrawResultKind {
     Ok: wire_cst_LnUrlWithdrawResult_Ok,
+    Timeout: wire_cst_LnUrlWithdrawResult_Timeout,
     ErrorStatus: wire_cst_LnUrlWithdrawResult_ErrorStatus,
     nil__: (),
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_LnUrlWithdrawResult_Ok {
+    data: *mut wire_cst_ln_url_withdraw_success_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlWithdrawResult_Timeout {
     data: *mut wire_cst_ln_url_withdraw_success_data,
 }
 #[repr(C)]

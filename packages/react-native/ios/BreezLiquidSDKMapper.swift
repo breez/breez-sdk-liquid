@@ -2775,6 +2775,14 @@ enum BreezLiquidSDKMapper {
 
             return LnUrlWithdrawResult.ok(data: _data)
         }
+        if type == "timeout" {
+            guard let dataTmp = lnUrlWithdrawResult["data"] as? [String: Any?] else {
+                throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlWithdrawResult"))
+            }
+            let _data = try asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: dataTmp)
+
+            return LnUrlWithdrawResult.timeout(data: _data)
+        }
         if type == "errorStatus" {
             guard let dataTmp = lnUrlWithdrawResult["data"] as? [String: Any?] else {
                 throw LiquidSdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlWithdrawResult"))
@@ -2794,6 +2802,14 @@ enum BreezLiquidSDKMapper {
         ):
             return [
                 "type": "ok",
+                "data": dictionaryOf(lnUrlWithdrawSuccessData: data),
+            ]
+
+        case let .timeout(
+            data
+        ):
+            return [
+                "type": "timeout",
                 "data": dictionaryOf(lnUrlWithdrawSuccessData: data),
             ]
 

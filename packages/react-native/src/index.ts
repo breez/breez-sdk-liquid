@@ -432,11 +432,15 @@ export type LnUrlPayResult = {
 
 export enum LnUrlWithdrawResultVariant {
     OK = "ok",
+    TIMEOUT = "timeout",
     ERROR_STATUS = "errorStatus"
 }
 
 export type LnUrlWithdrawResult = {
     type: LnUrlWithdrawResultVariant.OK,
+    data: LnUrlWithdrawSuccessData
+} | {
+    type: LnUrlWithdrawResultVariant.TIMEOUT,
     data: LnUrlWithdrawSuccessData
 } | {
     type: LnUrlWithdrawResultVariant.ERROR_STATUS,

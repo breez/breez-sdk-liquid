@@ -2094,12 +2094,18 @@ final class wire_cst_LnUrlWithdrawResult_Ok extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
 }
 
+final class wire_cst_LnUrlWithdrawResult_Timeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
+}
+
 final class wire_cst_LnUrlWithdrawResult_ErrorStatus extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
 final class LnUrlWithdrawResultKind extends ffi.Union {
   external wire_cst_LnUrlWithdrawResult_Ok Ok;
+
+  external wire_cst_LnUrlWithdrawResult_Timeout Timeout;
 
   external wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
 }

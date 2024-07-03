@@ -157,6 +157,7 @@ interface LnUrlWithdrawError {
 [Enum]
 interface LnUrlWithdrawResult {
     Ok(LnUrlWithdrawSuccessData data);
+    Timeout(LnUrlWithdrawSuccessData data);
     ErrorStatus(LnUrlErrorData data);
 };
 

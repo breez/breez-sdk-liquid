@@ -615,6 +615,7 @@ pub mod duplicates {
     #[derive(Clone, Serialize)]
     pub enum LnUrlWithdrawResult {
         Ok { data: LnUrlWithdrawSuccessData },
+        Timeout { data: LnUrlWithdrawSuccessData },
         ErrorStatus { data: LnUrlErrorData },
     }
     impl From<sdk_common::prelude::LnUrlWithdrawResult> for LnUrlWithdrawResult {
@@ -622,6 +623,9 @@ pub mod duplicates {
             match value {
                 sdk_common::prelude::LnUrlWithdrawResult::Ok { data } => {
                     Self::Ok { data: data.into() }
+                }
+                sdk_common::prelude::LnUrlWithdrawResult::Timeout { data } => {
+                    Self::Timeout { data: data.into() }
                 }
                 sdk_common::prelude::LnUrlWithdrawResult::ErrorStatus { data } => {
                     Self::ErrorStatus { data }

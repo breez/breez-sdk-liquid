@@ -2584,6 +2584,15 @@ impl SseDecode for crate::bindings::duplicates::LnUrlWithdrawResult {
                 return crate::bindings::duplicates::LnUrlWithdrawResult::Ok { data: var_data };
             }
             1 => {
+                let mut var_data =
+                    <crate::bindings::duplicates::LnUrlWithdrawSuccessData>::sse_decode(
+                        deserializer,
+                    );
+                return crate::bindings::duplicates::LnUrlWithdrawResult::Timeout {
+                    data: var_data,
+                };
+            }
+            2 => {
                 let mut var_data = <crate::bindings::LnUrlErrorData>::sse_decode(deserializer);
                 return crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus {
                     data: var_data,
@@ -4043,8 +4052,11 @@ impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlWithdra
             crate::bindings::duplicates::LnUrlWithdrawResult::Ok { data } => {
                 [0.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+            crate::bindings::duplicates::LnUrlWithdrawResult::Timeout { data } => {
                 [1.into_dart(), data.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+                [2.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -5474,8 +5486,14 @@ impl SseEncode for crate::bindings::duplicates::LnUrlWithdrawResult {
                     data, serializer,
                 );
             }
-            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+            crate::bindings::duplicates::LnUrlWithdrawResult::Timeout { data } => {
                 <i32>::sse_encode(1, serializer);
+                <crate::bindings::duplicates::LnUrlWithdrawSuccessData>::sse_encode(
+                    data, serializer,
+                );
+            }
+            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+                <i32>::sse_encode(2, serializer);
                 <crate::bindings::LnUrlErrorData>::sse_encode(data, serializer);
             }
             _ => {
