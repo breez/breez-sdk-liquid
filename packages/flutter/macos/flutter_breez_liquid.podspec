@@ -1,5 +1,5 @@
-tag_name = '0.1.0' # generated; do not edit
-release_tag_name = "breez_liquid-v#{tag_name}"
+tag_name = 'v0.1.0' # generated; do not edit
+release_tag_name = "breez_liquid-#{tag_name}"
 
 # We cannot distribute the XCFramework alongside the library directly,
 # so we have to fetch the correct version here.

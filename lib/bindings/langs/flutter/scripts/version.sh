@@ -1,6 +1,6 @@
 #!/bin/bash
 ROOT="../../../.."
-TAG_NAME=`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
+TAG_NAME=v`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
 
 # iOS & macOS
 APPLE_HEADER="tag_name = '$TAG_NAME' # generated; do not edit"

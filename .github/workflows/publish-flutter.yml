@@ -81,8 +81,8 @@ jobs:
           sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
           sed -i.bak -e 's/path:.*/git:\n      url: git@github.com:breez\/breez-liquid-sdk-dart.git\n      ref: ${{ inputs.package-version }}/' pubspec_overrides.yaml
           sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
-          sed -i.bak -e 's/set(TagName.*/set(TagName "${{ inputs.package-version }}")/' android/CMakeLists.txt
-          sed -i.bak -e "s/^tag_name = .*/tag_name = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
+          sed -i.bak -e 's/set(TagName.*/set(TagName "v${{ inputs.package-version }}")/' android/CMakeLists.txt
+          sed -i.bak -e "s/^tag_name = .*/tag_name = 'v${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
           rm pubspec.yaml.bak
           rm pubspec_overrides.yaml.bak
           rm android/build.gradle.bak
