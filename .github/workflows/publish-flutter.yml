@@ -118,7 +118,7 @@ jobs:
             bindings/android.tar.gz
             bindings/breez_liquid_sdk.xcframework.zip
             bindings/other.tar.gz
-          tag_name: ${{ inputs.package-version || '0.0.1' }}
+          tag_name: v${{ inputs.package-version || '0.0.1' }}
           generate_release_notes: false
           token: ${{ secrets.SWIFT_RELEASE_TOKEN }}
           prerelease: true
