@@ -5,20 +5,8 @@ release_tag_name = "breez_liquid-v#{tag_name}"
 # so we have to fetch the correct version here.
 framework_name = 'breez_liquid_sdk.xcframework'
 remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/#{tag_name}/#{remote_zip_name}.zip"
+url = "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/#{tag_name}/#{remote_zip_name}"
 local_zip_name = "#{release_tag_name}.zip"
-`
-cd Frameworks
-rm -rf #{framework_name}
-
-if [ ! -f #{local_zip_name} ]
-then
-  curl -L #{url} -o #{local_zip_name}
-fi
-
-unzip #{local_zip_name}
-cd -
-`
 
 Pod::Spec.new do |spec|
   spec.name          = 'flutter_breez_liquid'
@@ -33,6 +21,19 @@ Pod::Spec.new do |spec|
   spec.public_header_files = 'Classes/**/*.h'
   spec.vendored_frameworks = "Frameworks/#{framework_name}"
 
+  spec.prepare_command = <<-CMD
+    cd Frameworks
+    rm -rf #{framework_name}
+
+    if [ ! -f #{local_zip_name} ]
+    then
+      wget #{url} -O #{local_zip_name} || curl -L #{url} -o #{local_zip_name}
+    fi
+
+    unzip #{local_zip_name}
+    cd -
+  CMD
+  
   spec.ios.deployment_target = '12.0'
   spec.osx.deployment_target = '10.11'
 end
