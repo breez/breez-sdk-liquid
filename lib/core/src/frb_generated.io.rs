@@ -520,6 +520,27 @@ impl CstDecode<crate::bindings::InputType> for wire_cst_input_type {
         }
     }
 }
+impl CstDecode<crate::model::LightningPaymentLimitsResponse>
+    for wire_cst_lightning_payment_limits_response
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::LightningPaymentLimitsResponse {
+        crate::model::LightningPaymentLimitsResponse {
+            send: self.send.cst_decode(),
+            receive: self.receive.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::Limits> for wire_cst_limits {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::Limits {
+        crate::model::Limits {
+            min_sat: self.min_sat.cst_decode(),
+            max_sat: self.max_sat.cst_decode(),
+            max_zero_conf_sat: self.max_zero_conf_sat.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::error::LiquidSdkError> for wire_cst_liquid_sdk_error {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::error::LiquidSdkError {
@@ -984,6 +1005,12 @@ impl CstDecode<crate::bindings::duplicates::LnUrlWithdrawResult>
                 }
             }
             1 => {
+                let ans = unsafe { self.kind.Timeout };
+                crate::bindings::duplicates::LnUrlWithdrawResult::Timeout {
+                    data: ans.data.cst_decode(),
+                }
+            }
+            2 => {
                 let ans = unsafe { self.kind.ErrorStatus };
                 crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus {
                     data: ans.data.cst_decode(),
@@ -1036,6 +1063,17 @@ impl CstDecode<crate::bindings::MessageSuccessActionData> for wire_cst_message_s
     fn cst_decode(self) -> crate::bindings::MessageSuccessActionData {
         crate::bindings::MessageSuccessActionData {
             message: self.message.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::OnchainPaymentLimitsResponse>
+    for wire_cst_onchain_payment_limits_response
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::OnchainPaymentLimitsResponse {
+        crate::model::OnchainPaymentLimitsResponse {
+            send: self.send.cst_decode(),
+            receive: self.receive.cst_decode(),
         }
     }
 }
@@ -1515,6 +1553,33 @@ impl Default for wire_cst_input_type {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_lightning_payment_limits_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            send: Default::default(),
+            receive: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_lightning_payment_limits_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_limits {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            min_sat: Default::default(),
+            max_sat: Default::default(),
+            max_zero_conf_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_limits {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_liquid_sdk_error {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -1820,6 +1885,19 @@ impl NewWithNullPtr for wire_cst_message_success_action_data {
     }
 }
 impl Default for wire_cst_message_success_action_data {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_onchain_payment_limits_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            send: Default::default(),
+            receive: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_onchain_payment_limits_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2213,6 +2291,22 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fe
     that: usize,
 ) {
     wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits_impl(port_, that)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(port_, that)
 }
 
 #[no_mangle]
@@ -2993,6 +3087,19 @@ pub struct wire_cst_InputType_LnUrlError {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_lightning_payment_limits_response {
+    send: wire_cst_limits,
+    receive: wire_cst_limits,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_limits {
+    min_sat: u64,
+    max_sat: u64,
+    max_zero_conf_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_liquid_sdk_error {
     tag: i32,
     kind: LiquidSdkErrorKind,
@@ -3402,12 +3509,18 @@ pub struct wire_cst_ln_url_withdraw_result {
 #[derive(Clone, Copy)]
 pub union LnUrlWithdrawResultKind {
     Ok: wire_cst_LnUrlWithdrawResult_Ok,
+    Timeout: wire_cst_LnUrlWithdrawResult_Timeout,
     ErrorStatus: wire_cst_LnUrlWithdrawResult_ErrorStatus,
     nil__: (),
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_LnUrlWithdrawResult_Ok {
+    data: *mut wire_cst_ln_url_withdraw_success_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_LnUrlWithdrawResult_Timeout {
     data: *mut wire_cst_ln_url_withdraw_success_data,
 }
 #[repr(C)]
@@ -3443,6 +3556,12 @@ pub struct wire_cst_log_entry {
 #[derive(Clone, Copy)]
 pub struct wire_cst_message_success_action_data {
     message: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_onchain_payment_limits_response {
+    send: wire_cst_limits,
+    receive: wire_cst_limits,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

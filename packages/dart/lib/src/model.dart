@@ -138,6 +138,54 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+class LightningPaymentLimitsResponse {
+  /// Amount limits for a Send Payment to be valid
+  final Limits send;
+
+  /// Amount limits for a Receive Payment to be valid
+  final Limits receive;
+
+  const LightningPaymentLimitsResponse({
+    required this.send,
+    required this.receive,
+  });
+
+  @override
+  int get hashCode => send.hashCode ^ receive.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LightningPaymentLimitsResponse &&
+          runtimeType == other.runtimeType &&
+          send == other.send &&
+          receive == other.receive;
+}
+
+class Limits {
+  final BigInt minSat;
+  final BigInt maxSat;
+  final BigInt maxZeroConfSat;
+
+  const Limits({
+    required this.minSat,
+    required this.maxSat,
+    required this.maxZeroConfSat,
+  });
+
+  @override
+  int get hashCode => minSat.hashCode ^ maxSat.hashCode ^ maxZeroConfSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Limits &&
+          runtimeType == other.runtimeType &&
+          minSat == other.minSat &&
+          maxSat == other.maxSat &&
+          maxZeroConfSat == other.maxZeroConfSat;
+}
+
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
 /// Bitcoin network used.
 enum LiquidNetwork {
@@ -227,6 +275,30 @@ class LogEntry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
+}
+
+class OnchainPaymentLimitsResponse {
+  /// Amount limits for a Send Onchain Payment to be valid
+  final Limits send;
+
+  /// Amount limits for a Receive Onchain Payment to be valid
+  final Limits receive;
+
+  const OnchainPaymentLimitsResponse({
+    required this.send,
+    required this.receive,
+  });
+
+  @override
+  int get hashCode => send.hashCode ^ receive.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OnchainPaymentLimitsResponse &&
+          runtimeType == other.runtimeType &&
+          send == other.send &&
+          receive == other.receive;
 }
 
 class PayOnchainRequest {

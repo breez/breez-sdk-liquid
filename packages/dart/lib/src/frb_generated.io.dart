@@ -204,6 +204,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType dco_decode_input_type(dynamic raw);
 
   @protected
+  LightningPaymentLimitsResponse dco_decode_lightning_payment_limits_response(dynamic raw);
+
+  @protected
+  Limits dco_decode_limits(dynamic raw);
+
+  @protected
   LiquidNetwork dco_decode_liquid_network(dynamic raw);
 
   @protected
@@ -301,6 +307,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Network dco_decode_network(dynamic raw);
+
+  @protected
+  OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -606,6 +615,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InputType sse_decode_input_type(SseDeserializer deserializer);
 
   @protected
+  LightningPaymentLimitsResponse sse_decode_lightning_payment_limits_response(SseDeserializer deserializer);
+
+  @protected
+  Limits sse_decode_limits(SseDeserializer deserializer);
+
+  @protected
   LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
 
   @protected
@@ -703,6 +718,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Network sse_decode_network(SseDeserializer deserializer);
+
+  @protected
+  OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -1636,6 +1654,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse apiObj, wire_cst_lightning_payment_limits_response wireObj) {
+    cst_api_fill_to_wire_limits(apiObj.send, wireObj.send);
+    cst_api_fill_to_wire_limits(apiObj.receive, wireObj.receive);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_limits(Limits apiObj, wire_cst_limits wireObj) {
+    wireObj.min_sat = cst_encode_u_64(apiObj.minSat);
+    wireObj.max_sat = cst_encode_u_64(apiObj.maxSat);
+    wireObj.max_zero_conf_sat = cst_encode_u_64(apiObj.maxZeroConfSat);
+  }
+
+  @protected
   void cst_api_fill_to_wire_liquid_sdk_error(LiquidSdkError apiObj, wire_cst_liquid_sdk_error wireObj) {
     if (apiObj is LiquidSdkError_AlreadyStarted) {
       wireObj.tag = 0;
@@ -1970,9 +2002,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Ok.data = pre_data;
       return;
     }
+    if (apiObj is LnUrlWithdrawResult_Timeout) {
+      var pre_data = cst_encode_box_autoadd_ln_url_withdraw_success_data(apiObj.data);
+      wireObj.tag = 1;
+      wireObj.kind.Timeout.data = pre_data;
+      return;
+    }
     if (apiObj is LnUrlWithdrawResult_ErrorStatus) {
       var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
-      wireObj.tag = 1;
+      wireObj.tag = 2;
       wireObj.kind.ErrorStatus.data = pre_data;
       return;
     }
@@ -2007,6 +2045,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_message_success_action_data(
       MessageSuccessActionData apiObj, wire_cst_message_success_action_data wireObj) {
     wireObj.message = cst_encode_String(apiObj.message);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_onchain_payment_limits_response(
+      OnchainPaymentLimitsResponse apiObj, wire_cst_onchain_payment_limits_response wireObj) {
+    cst_api_fill_to_wire_limits(apiObj.send, wireObj.send);
+    cst_api_fill_to_wire_limits(apiObj.receive, wireObj.receive);
   }
 
   @protected
@@ -2531,6 +2576,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_input_type(InputType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_limits(Limits self, SseSerializer serializer);
+
+  @protected
   void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
 
   @protected
@@ -2628,6 +2680,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_network(Network self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_onchain_payment_limits_response(
+      OnchainPaymentLimitsResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
@@ -2872,6 +2928,39 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
       _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr
+          .asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
@@ -4506,6 +4595,23 @@ final class wire_cst_input_type extends ffi.Struct {
   external InputTypeKind kind;
 }
 
+final class wire_cst_limits extends ffi.Struct {
+  @ffi.Uint64()
+  external int min_sat;
+
+  @ffi.Uint64()
+  external int max_sat;
+
+  @ffi.Uint64()
+  external int max_zero_conf_sat;
+}
+
+final class wire_cst_lightning_payment_limits_response extends ffi.Struct {
+  external wire_cst_limits send;
+
+  external wire_cst_limits receive;
+}
+
 final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -4720,12 +4826,18 @@ final class wire_cst_LnUrlWithdrawResult_Ok extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
 }
 
+final class wire_cst_LnUrlWithdrawResult_Timeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
+}
+
 final class wire_cst_LnUrlWithdrawResult_ErrorStatus extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
 final class LnUrlWithdrawResultKind extends ffi.Union {
   external wire_cst_LnUrlWithdrawResult_Ok Ok;
+
+  external wire_cst_LnUrlWithdrawResult_Timeout Timeout;
 
   external wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
 }
@@ -4741,6 +4853,12 @@ final class wire_cst_log_entry extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> line;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> level;
+}
+
+final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
+  external wire_cst_limits send;
+
+  external wire_cst_limits receive;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

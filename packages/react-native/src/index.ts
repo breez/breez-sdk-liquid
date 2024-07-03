@@ -88,6 +88,17 @@ export interface LnInvoice {
     minFinalCltvExpiryDelta: number
 }
 
+export interface LightningPaymentLimitsResponse {
+    send: Limits
+    receive: Limits
+}
+
+export interface Limits {
+    minSat: number
+    maxSat: number
+    maxZeroConfSat: number
+}
+
 export interface LnUrlAuthRequestData {
     k1: string
     domain: string
@@ -164,6 +175,11 @@ export interface LogEntry {
 
 export interface MessageSuccessActionData {
     message: string
+}
+
+export interface OnchainPaymentLimitsResponse {
+    send: Limits
+    receive: Limits
 }
 
 export interface PayOnchainRequest {
@@ -416,11 +432,15 @@ export type LnUrlPayResult = {
 
 export enum LnUrlWithdrawResultVariant {
     OK = "ok",
+    TIMEOUT = "timeout",
     ERROR_STATUS = "errorStatus"
 }
 
 export type LnUrlWithdrawResult = {
     type: LnUrlWithdrawResultVariant.OK,
+    data: LnUrlWithdrawSuccessData
+} | {
+    type: LnUrlWithdrawResultVariant.TIMEOUT,
     data: LnUrlWithdrawSuccessData
 } | {
     type: LnUrlWithdrawResultVariant.ERROR_STATUS,
@@ -534,6 +554,16 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
     const response = await BreezLiquidSDK.receivePayment(req)
+    return response
+}
+
+export const fetchLightningLimits = async (): Promise<LightningPaymentLimitsResponse> => {
+    const response = await BreezLiquidSDK.fetchLightningLimits()
+    return response
+}
+
+export const fetchOnchainLimits = async (): Promise<OnchainPaymentLimitsResponse> => {
+    const response = await BreezLiquidSDK.fetchOnchainLimits()
     return response
 }
 

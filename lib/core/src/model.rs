@@ -183,6 +183,29 @@ pub struct ReceivePaymentResponse {
     pub invoice: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct Limits {
+    pub min_sat: u64,
+    pub max_sat: u64,
+    pub max_zero_conf_sat: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LightningPaymentLimitsResponse {
+    /// Amount limits for a Send Payment to be valid
+    pub send: Limits,
+    /// Amount limits for a Receive Payment to be valid
+    pub receive: Limits,
+}
+
+#[derive(Debug, Serialize)]
+pub struct OnchainPaymentLimitsResponse {
+    /// Amount limits for a Send Onchain Payment to be valid
+    pub send: Limits,
+    /// Amount limits for a Receive Onchain Payment to be valid
+    pub receive: Limits,
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     pub invoice: String,

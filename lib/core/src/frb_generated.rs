@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1515195984;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1318462354;
 
 // Section: executor
 
@@ -251,6 +251,98 @@ fn wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates_impl(
                         let output_ok =
                             crate::bindings::BindingLiquidSdk::fetch_fiat_rates(&*api_that_guard)
                                 .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_fetch_lightning_limits",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::fetch_lightning_limits(
+                            &*api_that_guard,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_fetch_onchain_limits",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::fetch_onchain_limits(
+                            &*api_that_guard,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1921,6 +2013,32 @@ impl SseDecode for crate::bindings::InputType {
     }
 }
 
+impl SseDecode for crate::model::LightningPaymentLimitsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_send = <crate::model::Limits>::sse_decode(deserializer);
+        let mut var_receive = <crate::model::Limits>::sse_decode(deserializer);
+        return crate::model::LightningPaymentLimitsResponse {
+            send: var_send,
+            receive: var_receive,
+        };
+    }
+}
+
+impl SseDecode for crate::model::Limits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_minSat = <u64>::sse_decode(deserializer);
+        let mut var_maxSat = <u64>::sse_decode(deserializer);
+        let mut var_maxZeroConfSat = <u64>::sse_decode(deserializer);
+        return crate::model::Limits {
+            min_sat: var_minSat,
+            max_sat: var_maxSat,
+            max_zero_conf_sat: var_maxZeroConfSat,
+        };
+    }
+}
+
 impl SseDecode for crate::model::LiquidNetwork {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2466,6 +2584,15 @@ impl SseDecode for crate::bindings::duplicates::LnUrlWithdrawResult {
                 return crate::bindings::duplicates::LnUrlWithdrawResult::Ok { data: var_data };
             }
             1 => {
+                let mut var_data =
+                    <crate::bindings::duplicates::LnUrlWithdrawSuccessData>::sse_decode(
+                        deserializer,
+                    );
+                return crate::bindings::duplicates::LnUrlWithdrawResult::Timeout {
+                    data: var_data,
+                };
+            }
+            2 => {
                 let mut var_data = <crate::bindings::LnUrlErrorData>::sse_decode(deserializer);
                 return crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus {
                     data: var_data,
@@ -2546,6 +2673,18 @@ impl SseDecode for crate::bindings::Network {
             2 => crate::bindings::Network::Signet,
             3 => crate::bindings::Network::Regtest,
             _ => unreachable!("Invalid variant for Network: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::model::OnchainPaymentLimitsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_send = <crate::model::Limits>::sse_decode(deserializer);
+        let mut var_receive = <crate::model::Limits>::sse_decode(deserializer);
+        return crate::model::OnchainPaymentLimitsResponse {
+            send: var_send,
+            receive: var_receive,
         };
     }
 }
@@ -3399,6 +3538,44 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::InputType>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LightningPaymentLimitsResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.send.into_into_dart().into_dart(),
+            self.receive.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::LightningPaymentLimitsResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LightningPaymentLimitsResponse>
+    for crate::model::LightningPaymentLimitsResponse
+{
+    fn into_into_dart(self) -> crate::model::LightningPaymentLimitsResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::Limits {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.min_sat.into_into_dart().into_dart(),
+            self.max_sat.into_into_dart().into_dart(),
+            self.max_zero_conf_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::Limits {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::Limits> for crate::model::Limits {
+    fn into_into_dart(self) -> crate::model::Limits {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::LiquidNetwork {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -3875,8 +4052,11 @@ impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlWithdra
             crate::bindings::duplicates::LnUrlWithdrawResult::Ok { data } => {
                 [0.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+            crate::bindings::duplicates::LnUrlWithdrawResult::Timeout { data } => {
                 [1.into_dart(), data.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+                [2.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -4009,6 +4189,27 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Network>>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::Network> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::OnchainPaymentLimitsResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.send.into_into_dart().into_dart(),
+            self.receive.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::OnchainPaymentLimitsResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::OnchainPaymentLimitsResponse>
+    for crate::model::OnchainPaymentLimitsResponse
+{
+    fn into_into_dart(self) -> crate::model::OnchainPaymentLimitsResponse {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -4833,6 +5034,23 @@ impl SseEncode for crate::bindings::InputType {
     }
 }
 
+impl SseEncode for crate::model::LightningPaymentLimitsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::Limits>::sse_encode(self.send, serializer);
+        <crate::model::Limits>::sse_encode(self.receive, serializer);
+    }
+}
+
+impl SseEncode for crate::model::Limits {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u64>::sse_encode(self.min_sat, serializer);
+        <u64>::sse_encode(self.max_sat, serializer);
+        <u64>::sse_encode(self.max_zero_conf_sat, serializer);
+    }
+}
+
 impl SseEncode for crate::model::LiquidNetwork {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5268,8 +5486,14 @@ impl SseEncode for crate::bindings::duplicates::LnUrlWithdrawResult {
                     data, serializer,
                 );
             }
-            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+            crate::bindings::duplicates::LnUrlWithdrawResult::Timeout { data } => {
                 <i32>::sse_encode(1, serializer);
+                <crate::bindings::duplicates::LnUrlWithdrawSuccessData>::sse_encode(
+                    data, serializer,
+                );
+            }
+            crate::bindings::duplicates::LnUrlWithdrawResult::ErrorStatus { data } => {
+                <i32>::sse_encode(2, serializer);
                 <crate::bindings::LnUrlErrorData>::sse_encode(data, serializer);
             }
             _ => {
@@ -5333,6 +5557,14 @@ impl SseEncode for crate::bindings::Network {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for crate::model::OnchainPaymentLimitsResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::Limits>::sse_encode(self.send, serializer);
+        <crate::model::Limits>::sse_encode(self.receive, serializer);
     }
 }
 

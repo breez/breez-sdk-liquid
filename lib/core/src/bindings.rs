@@ -126,6 +126,16 @@ impl BindingLiquidSdk {
         self.sdk.receive_payment(&req).await
     }
 
+    pub async fn fetch_lightning_limits(
+        &self,
+    ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
+        self.sdk.fetch_lightning_limits().await
+    }
+
+    pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
+        self.sdk.fetch_onchain_limits().await
+    }
+
     pub async fn prepare_pay_onchain(
         &self,
         req: PreparePayOnchainRequest,
@@ -605,6 +615,7 @@ pub mod duplicates {
     #[derive(Clone, Serialize)]
     pub enum LnUrlWithdrawResult {
         Ok { data: LnUrlWithdrawSuccessData },
+        Timeout { data: LnUrlWithdrawSuccessData },
         ErrorStatus { data: LnUrlErrorData },
     }
     impl From<sdk_common::prelude::LnUrlWithdrawResult> for LnUrlWithdrawResult {
@@ -612,6 +623,9 @@ pub mod duplicates {
             match value {
                 sdk_common::prelude::LnUrlWithdrawResult::Ok { data } => {
                     Self::Ok { data: data.into() }
+                }
+                sdk_common::prelude::LnUrlWithdrawResult::Timeout { data } => {
+                    Self::Timeout { data: data.into() }
                 }
                 sdk_common::prelude::LnUrlWithdrawResult::ErrorStatus { data } => {
                     Self::ErrorStatus { data }

@@ -157,6 +157,7 @@ interface LnUrlWithdrawError {
 [Enum]
 interface LnUrlWithdrawResult {
     Ok(LnUrlWithdrawSuccessData data);
+    Timeout(LnUrlWithdrawSuccessData data);
     ErrorStatus(LnUrlErrorData data);
 };
 
@@ -335,6 +336,22 @@ dictionary ReceivePaymentResponse {
     string invoice;
 };
 
+dictionary Limits {
+    u64 min_sat;
+    u64 max_sat;
+    u64 max_zero_conf_sat;
+};
+
+dictionary LightningPaymentLimitsResponse {
+    Limits send;
+    Limits receive;
+};
+
+dictionary OnchainPaymentLimitsResponse {
+    Limits send;
+    Limits receive;
+};
+
 dictionary PreparePayOnchainRequest {
     u64 receiver_amount_sat;
 };
@@ -489,6 +506,12 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+
+    [Throws=PaymentError]
+    LightningPaymentLimitsResponse fetch_lightning_limits();
+
+    [Throws=PaymentError]
+    OnchainPaymentLimitsResponse fetch_onchain_limits();
 
     [Throws=PaymentError]
     PreparePayOnchainResponse prepare_pay_onchain(PreparePayOnchainRequest req);

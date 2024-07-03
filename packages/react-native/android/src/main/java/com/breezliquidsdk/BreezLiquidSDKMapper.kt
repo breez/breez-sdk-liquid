@@ -420,6 +420,82 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     return list
 }
 
+fun asLightningPaymentLimitsResponse(lightningPaymentLimitsResponse: ReadableMap): LightningPaymentLimitsResponse? {
+    if (!validateMandatoryFields(
+            lightningPaymentLimitsResponse,
+            arrayOf(
+                "send",
+                "receive",
+            ),
+        )
+    ) {
+        return null
+    }
+    val send = lightningPaymentLimitsResponse.getMap("send")?.let { asLimits(it) }!!
+    val receive = lightningPaymentLimitsResponse.getMap("receive")?.let { asLimits(it) }!!
+    return LightningPaymentLimitsResponse(
+        send,
+        receive,
+    )
+}
+
+fun readableMapOf(lightningPaymentLimitsResponse: LightningPaymentLimitsResponse): ReadableMap =
+    readableMapOf(
+        "send" to readableMapOf(lightningPaymentLimitsResponse.send),
+        "receive" to readableMapOf(lightningPaymentLimitsResponse.receive),
+    )
+
+fun asLightningPaymentLimitsResponseList(arr: ReadableArray): List<LightningPaymentLimitsResponse> {
+    val list = ArrayList<LightningPaymentLimitsResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLightningPaymentLimitsResponse(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asLimits(limits: ReadableMap): Limits? {
+    if (!validateMandatoryFields(
+            limits,
+            arrayOf(
+                "minSat",
+                "maxSat",
+                "maxZeroConfSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val minSat = limits.getDouble("minSat").toULong()
+    val maxSat = limits.getDouble("maxSat").toULong()
+    val maxZeroConfSat = limits.getDouble("maxZeroConfSat").toULong()
+    return Limits(
+        minSat,
+        maxSat,
+        maxZeroConfSat,
+    )
+}
+
+fun readableMapOf(limits: Limits): ReadableMap =
+    readableMapOf(
+        "minSat" to limits.minSat,
+        "maxSat" to limits.maxSat,
+        "maxZeroConfSat" to limits.maxZeroConfSat,
+    )
+
+fun asLimitsList(arr: ReadableArray): List<Limits> {
+    val list = ArrayList<Limits>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLimits(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlAuthRequestData(lnUrlAuthRequestData: ReadableMap): LnUrlAuthRequestData? {
     if (!validateMandatoryFields(
             lnUrlAuthRequestData,
@@ -933,6 +1009,42 @@ fun asMessageSuccessActionDataList(arr: ReadableArray): List<MessageSuccessActio
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asMessageSuccessActionData(value)!!)
+            else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: ReadableMap): OnchainPaymentLimitsResponse? {
+    if (!validateMandatoryFields(
+            onchainPaymentLimitsResponse,
+            arrayOf(
+                "send",
+                "receive",
+            ),
+        )
+    ) {
+        return null
+    }
+    val send = onchainPaymentLimitsResponse.getMap("send")?.let { asLimits(it) }!!
+    val receive = onchainPaymentLimitsResponse.getMap("receive")?.let { asLimits(it) }!!
+    return OnchainPaymentLimitsResponse(
+        send,
+        receive,
+    )
+}
+
+fun readableMapOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse): ReadableMap =
+    readableMapOf(
+        "send" to readableMapOf(onchainPaymentLimitsResponse.send),
+        "receive" to readableMapOf(onchainPaymentLimitsResponse.receive),
+    )
+
+fun asOnchainPaymentLimitsResponseList(arr: ReadableArray): List<OnchainPaymentLimitsResponse> {
+    val list = ArrayList<OnchainPaymentLimitsResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asOnchainPaymentLimitsResponse(value)!!)
             else -> throw LiquidSdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -2128,6 +2240,9 @@ fun asLnUrlWithdrawResult(lnUrlWithdrawResult: ReadableMap): LnUrlWithdrawResult
     if (type == "ok") {
         return LnUrlWithdrawResult.Ok(lnUrlWithdrawResult.getMap("data")?.let { asLnUrlWithdrawSuccessData(it) }!!)
     }
+    if (type == "timeout") {
+        return LnUrlWithdrawResult.Timeout(lnUrlWithdrawResult.getMap("data")?.let { asLnUrlWithdrawSuccessData(it) }!!)
+    }
     if (type == "errorStatus") {
         return LnUrlWithdrawResult.ErrorStatus(lnUrlWithdrawResult.getMap("data")?.let { asLnUrlErrorData(it) }!!)
     }
@@ -2139,6 +2254,10 @@ fun readableMapOf(lnUrlWithdrawResult: LnUrlWithdrawResult): ReadableMap? {
     when (lnUrlWithdrawResult) {
         is LnUrlWithdrawResult.Ok -> {
             pushToMap(map, "type", "ok")
+            pushToMap(map, "data", readableMapOf(lnUrlWithdrawResult.data))
+        }
+        is LnUrlWithdrawResult.Timeout -> {
+            pushToMap(map, "type", "timeout")
             pushToMap(map, "data", readableMapOf(lnUrlWithdrawResult.data))
         }
         is LnUrlWithdrawResult.ErrorStatus -> {

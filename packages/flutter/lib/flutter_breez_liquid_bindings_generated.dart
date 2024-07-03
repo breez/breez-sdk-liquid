@@ -124,6 +124,40 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr
+          .asFunction<void Function(int, int)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
     int that,
@@ -1829,6 +1863,23 @@ final class wire_cst_input_type extends ffi.Struct {
   external InputTypeKind kind;
 }
 
+final class wire_cst_limits extends ffi.Struct {
+  @ffi.Uint64()
+  external int min_sat;
+
+  @ffi.Uint64()
+  external int max_sat;
+
+  @ffi.Uint64()
+  external int max_zero_conf_sat;
+}
+
+final class wire_cst_lightning_payment_limits_response extends ffi.Struct {
+  external wire_cst_limits send;
+
+  external wire_cst_limits receive;
+}
+
 final class wire_cst_LiquidSdkError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -2043,12 +2094,18 @@ final class wire_cst_LnUrlWithdrawResult_Ok extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
 }
 
+final class wire_cst_LnUrlWithdrawResult_Timeout extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_success_data> data;
+}
+
 final class wire_cst_LnUrlWithdrawResult_ErrorStatus extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_error_data> data;
 }
 
 final class LnUrlWithdrawResultKind extends ffi.Union {
   external wire_cst_LnUrlWithdrawResult_Ok Ok;
+
+  external wire_cst_LnUrlWithdrawResult_Timeout Timeout;
 
   external wire_cst_LnUrlWithdrawResult_ErrorStatus ErrorStatus;
 }
@@ -2064,6 +2121,12 @@ final class wire_cst_log_entry extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> line;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> level;
+}
+
+final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
+  external wire_cst_limits send;
+
+  external wire_cst_limits receive;
 }
 
 final class wire_cst_PaymentError_Generic extends ffi.Struct {

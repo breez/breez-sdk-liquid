@@ -99,7 +99,10 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn get_chain_pairs(&self, _direction: Direction) -> Result<Option<ChainPair>, PaymentError> {
+    fn get_chain_pair(
+        &self,
+        _direction: Direction,
+    ) -> anyhow::Result<Option<ChainPair>, PaymentError> {
         Ok(Some(ChainPair {
             hash: generate_random_string(10),
             rate: 0.0,
@@ -119,6 +122,29 @@ impl Swapper for MockSwapper {
                 },
             },
         }))
+    }
+
+    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
+        let test_pair = Some(ChainPair {
+            hash: generate_random_string(10),
+            rate: 0.0,
+            limits: PairLimits {
+                maximal: u64::MAX,
+                minimal: 0,
+                maximal_zero_conf: 100_000,
+            },
+            fees: ChainFees {
+                percentage: 0.1,
+                miner_fees: ChainMinerFees {
+                    server: 100,
+                    user: PairMinerFees {
+                        lockup: 100,
+                        claim: 100,
+                    },
+                },
+            },
+        });
+        Ok((test_pair.clone(), test_pair))
     }
 
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
