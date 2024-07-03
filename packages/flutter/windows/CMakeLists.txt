@@ -1,4 +1,5 @@
-set(LibraryVersion "breez_liquid-v0.1.0") # generated; do not edit
+set(TagName "v0.1.0") # generated; do not edit
+set(LibraryVersion "breez_liquid-${TagName}")
 
 # TODO Remove this workaround once Flutter supports Windows ARM.
 # https://github.com/flutter/flutter/issues/116196
@@ -19,7 +20,7 @@ set(LibRoot "${CMAKE_CURRENT_SOURCE_DIR}/${LibraryVersion}")
 set(ArchivePath "${LibRoot}.tar.gz")
 if(NOT EXISTS ${ArchivePath})
   file(DOWNLOAD
-    "https://github.com/breez/breez-liquid-sdk/releases/download/${LibraryVersion}/other.tar.gz"
+    "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/${TagName}/other.tar.gz"
     ${ArchivePath}
     TLS_VERIFY ON
   )
