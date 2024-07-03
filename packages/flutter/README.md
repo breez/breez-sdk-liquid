@@ -3,10 +3,29 @@
 [![pub package](https://img.shields.io/pub/v/breez_liquid_sdk.svg)](https://pub.dev/packages/breez_liquid_sdk)
 
 ## Table of contents
+- [Platform Support](#platform-support)
+- [Requirements](#requirements)
 - [Description](#description)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Documentation](#documentation)
+
+## Platform Support
+
+| Android | iOS | MacOS | Web | Linux | Windows |
+| :-----: | :-: | :---: | :-: | :---: | :----: |
+|   ✅    | ❎  |  ❎   | ❎  |  ❎   |   ❎   |
+
+## Requirements
+
+- Flutter >=3.10.0
+- Dart >=3.4.0 <4.0.0
+- iOS >=12.0
+- MacOS >=10.11
+- Android `compileSDK` 31
+- Java 1.8
+- Android Gradle Plugin >=7.1.2
+- Gradle wrapper >=7.4
 
 ## Description
 
