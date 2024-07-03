@@ -59,6 +59,7 @@ jobs:
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/lib .
+          cp -r ../build/lib/bindings/langs/flutter/breez_liquid_sdk/include/breez_liquid_sdk.h ios/Classes
           cp ../build/packages/flutter/analysis_options.yaml .
           cp ../build/packages/flutter/pubspec.yaml .
           cp ../build/packages/flutter/pubspec_overrides.yaml .
