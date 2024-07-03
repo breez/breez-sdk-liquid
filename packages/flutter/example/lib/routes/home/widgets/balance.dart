@@ -19,9 +19,6 @@ class Balance extends StatelessWidget {
           return const Center(child: Text('Loading...'));
         }
 
-        if (walletInfoSnapshot.requireData.balanceSat != BigInt.zero) {
-          return const Center(child: Text('No balance.'));
-        }
         final walletInfo = walletInfoSnapshot.data!;
 
         return Center(
