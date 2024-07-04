@@ -20,6 +20,7 @@
     "!android/.idea",
     "!android/build",
     "!example",
+    "!lib/typescript/example",
     "!ios/build",
     "!**/__tests__",
     "!**/__fixtures__",
@@ -68,6 +69,7 @@
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
     ]
   },
