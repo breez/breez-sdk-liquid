@@ -2,7 +2,9 @@ use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{LiquidSdkResult, PaymentError};
-use crate::prelude::{Config, SendSwap, STANDARD_FEE_RATE_SAT_PER_VBYTE};
+use crate::prelude::{
+    Config, SendSwap, LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
+};
 use anyhow::{anyhow, Result};
 use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::Amount;
@@ -57,7 +59,7 @@ pub(crate) fn estimate_refund_fees(
     swap: &SendSwap,
     config: &Config,
     output_address: &str,
-    is_lowball: bool,
+    is_cooperative: bool,
 ) -> Result<u64, PaymentError> {
     let swap_script = swap.get_swap_script()?;
     let electrum_config = ElectrumConfig::new(
@@ -77,10 +79,8 @@ pub(crate) fn estimate_refund_fees(
     let dummy_fees = Amount::from_sat(100);
     let dummy_tx = swap_tx.sign_refund(&swap.get_refund_keypair()?, dummy_fees, None)?;
 
-    let fee_rate = if is_lowball {
-        config
-            .lowball_fee_rate()
-            .unwrap_or(STANDARD_FEE_RATE_SAT_PER_VBYTE)
+    let fee_rate = if is_cooperative {
+        LOWBALL_FEE_RATE_SAT_PER_VBYTE
     } else {
         STANDARD_FEE_RATE_SAT_PER_VBYTE
     };

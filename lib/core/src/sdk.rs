@@ -700,7 +700,7 @@ impl LiquidSdk {
     async fn refund_send(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let cooperative_refund_tx_fees_sat =
-            utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
+            utils::estimate_refund_fees(swap, &self.config, &output_address, true)?;
         let refund_res = self.swapper.refund_send_swap_cooperative(
             swap,
             &output_address,
