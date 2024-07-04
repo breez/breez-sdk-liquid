@@ -625,8 +625,12 @@ impl LiquidSdk {
             LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
         };
 
-        self.estimate_onchain_tx_fee(amount_sat, temp_p2tr_addr, self.config.lowball_fee_rate())
-            .await
+        self.estimate_onchain_tx_fee(
+            amount_sat,
+            temp_p2tr_addr,
+            self.config.lowball_fee_rate_msat_per_vbyte(),
+        )
+        .await
     }
 
     pub async fn prepare_send_payment(
@@ -649,7 +653,7 @@ impl LiquidSdk {
                 self.estimate_onchain_tx_fee(
                     receiver_amount_sat,
                     &lbtc_address,
-                    self.config.lowball_fee_rate(),
+                    self.config.lowball_fee_rate_msat_per_vbyte(),
                 )
                 .await?
             }

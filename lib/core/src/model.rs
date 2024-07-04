@@ -69,7 +69,7 @@ impl Config {
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 
-    pub(crate) fn lowball_fee_rate(&self) -> Option<f32> {
+    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
         match self.network {
             LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
             LiquidNetwork::Testnet => None,
