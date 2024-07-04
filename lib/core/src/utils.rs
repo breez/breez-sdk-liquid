@@ -86,7 +86,7 @@ pub(crate) fn estimate_refund_fees(
         LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
         LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
     });
-    let (fee_rate, cooperative) = if is_cooperative {
+    let (fee_rate, cooperative) = if is_cooperative && config.network == LiquidNetwork::Mainnet {
         (
             LOWBALL_FEE_RATE_SAT_PER_VBYTE,
             Some(Cooperative {
