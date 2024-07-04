@@ -698,11 +698,9 @@ impl LiquidSdk {
     }
 
     async fn refund_send(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let amount_sat = get_invoice_amount!(swap.invoice);
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let cooperative_refund_tx_fees_sat = self
-            .estimate_onchain_tx_fee(amount_sat, &output_address, self.config.lowball_fee_rate())
-            .await?;
+        let cooperative_refund_tx_fees_sat =
+            utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
         let refund_res = self.swapper.refund_send_swap_cooperative(
             swap,
             &output_address,
@@ -711,9 +709,8 @@ impl LiquidSdk {
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
-                let non_cooperative_refund_tx_fees_sat = self
-                    .estimate_onchain_tx_fee(swap.receiver_amount_sat, &output_address, None)
-                    .await?;
+                let non_cooperative_refund_tx_fees_sat =
+                    utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
                 warn!("Cooperative refund failed: {:?}", e);
                 self.refund_send_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
                     .await

@@ -18,7 +18,7 @@ use crate::model::PaymentState::{
 use crate::model::{Config, SendSwap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
-use crate::{ensure_sdk, get_invoice_amount};
+use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError,
     model::{PaymentState, PaymentTxData, PaymentType},
@@ -359,25 +359,24 @@ impl SendSwapStateHandler {
     }
 
     async fn refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let amount_sat = get_invoice_amount!(swap.invoice);
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
-        let fee = self
-            .onchain_wallet
-            .build_tx(None, &output_address, amount_sat)
-            .await?
-            .all_fees()
-            .values()
-            .sum();
+        let cooperative_refund_tx_fees_sat =
+            utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
+        let refund_res = self.swapper.refund_send_swap_cooperative(
+            swap,
+            &output_address,
+            cooperative_refund_tx_fees_sat,
+        );
 
-        let refund_res = self
-            .swapper
-            .refund_send_swap_cooperative(swap, &output_address, fee);
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
                 warn!("Cooperative refund failed: {:?}", e);
-                self.refund_non_cooperative(swap, fee).await
+                let non_cooperative_refund_tx_fees_sat =
+                    utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
+                self.refund_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
+                    .await
             }
         }
     }
