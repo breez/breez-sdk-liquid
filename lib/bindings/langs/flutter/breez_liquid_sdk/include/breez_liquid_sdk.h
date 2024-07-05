@@ -14,6 +14,8 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 // EXTRA END
 typedef struct _Dart_Handle* Dart_Handle;
 
+#define STANDARD_FEE_RATE_SAT_PER_VBYTE 0.1
+
 #define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
 
 /**
