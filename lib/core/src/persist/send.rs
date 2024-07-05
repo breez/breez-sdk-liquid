@@ -161,11 +161,21 @@ impl Persister {
     }
 
     pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let mut where_clause: Vec<String> = Vec::new();
+        where_clause.push(format!(
+            "state in ({})",
+            [PaymentState::Pending, PaymentState::RefundPending]
+                .iter()
+                .map(|t| format!("'{}'", *t as i8))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+
         let con: Connection = self.get_connection()?;
-        let query = Self::list_send_swaps_query(vec!["state = ?1".to_string()]);
+        let query = Self::list_send_swaps_query(where_clause);
         let res = con
             .prepare(&query)?
-            .query_map(params![PaymentState::Pending], Self::sql_row_to_send_swap)?
+            .query_map(params![], Self::sql_row_to_send_swap)?
             .map(|i| i.unwrap())
             .collect();
         Ok(res)
