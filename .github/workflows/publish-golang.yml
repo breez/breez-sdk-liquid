@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout breez-liquid-sdk-go repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: breez/breez-liquid-sdk-go
           ssh-key: ${{ secrets.REPO_SSH_KEY }}

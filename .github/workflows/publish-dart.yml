@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout breez-liquid-sdk-dart repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: breez/breez-liquid-sdk-dart
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
@@ -37,7 +37,7 @@ jobs:
           path: dist
 
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}

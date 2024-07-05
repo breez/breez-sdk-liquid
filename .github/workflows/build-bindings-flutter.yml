@@ -29,7 +29,7 @@ jobs:
     name: Build Flutter bindings 
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with: 
         ref: ${{ inputs.ref }}
         repository: ${{ inputs.repository || github.repository }}
