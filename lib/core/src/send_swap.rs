@@ -188,7 +188,7 @@ impl SendSwapStateHandler {
                                     break;
                                 }
 
-                                if refund_attempts == MAX_REFUND_ATTEMPTS - 1 {
+                                if refund_attempts == MAX_REFUND_ATTEMPTS {
                                     warn!("Failed to issue refunds: max attempts reached.")
                                 }
                             }
