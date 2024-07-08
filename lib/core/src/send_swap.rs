@@ -1,3 +1,4 @@
+use std::time::Duration;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -18,12 +19,16 @@ use crate::model::PaymentState::{
 use crate::model::{Config, SendSwap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
-use crate::{ensure_sdk, get_invoice_amount};
+use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError,
     model::{PaymentState, PaymentTxData, PaymentType},
     persist::Persister,
 };
+
+pub(crate) const MAX_REFUND_ATTEMPTS: u8 = 6;
+pub(crate) const REFUND_REATTEMPT_DELAY_SECS: u64 = 10;
+
 #[derive(Clone)]
 pub(crate) struct SendSwapStateHandler {
     config: Config,
@@ -150,25 +155,45 @@ impl SendSwapStateHandler {
                 | SubSwapStates::SwapExpired,
             ) => {
                 match swap.lockup_tx_id {
-                    Some(_) => match swap.refund_tx_id {
-                        Some(refund_tx_id) => warn!(
+                    Some(_) => {
+                        match swap.refund_tx_id {
+                            Some(refund_tx_id) => warn!(
                         "Refund tx for Send Swap {id} was already broadcast: txid {refund_tx_id}"
                     ),
-                        None => {
-                            warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has been broadcast. Attempting refund.");
+                            None => {
+                                warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has been broadcast. Attempting refund.");
 
-                            let refund_tx_id = self.refund(&swap).await?;
-                            info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
-                            self.update_swap_info(
-                                id,
-                                RefundPending,
-                                None,
-                                None,
-                                Some(&refund_tx_id),
-                            )
-                            .await?;
+                                let mut refund_attempts = 0;
+                                while refund_attempts < MAX_REFUND_ATTEMPTS {
+                                    let refund_tx_id = match self.refund(&swap).await {
+                                        Ok(refund_tx_id) => refund_tx_id,
+                                        Err(e) => {
+                                            warn!("Could not refund yet: {e:?}. Re-attempting in {REFUND_REATTEMPT_DELAY_SECS} seconds.");
+                                            refund_attempts += 1;
+                                            std::thread::sleep(Duration::from_secs(
+                                                REFUND_REATTEMPT_DELAY_SECS,
+                                            ));
+                                            continue;
+                                        }
+                                    };
+                                    info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
+                                    self.update_swap_info(
+                                        id,
+                                        RefundPending,
+                                        None,
+                                        None,
+                                        Some(&refund_tx_id),
+                                    )
+                                    .await?;
+                                    break;
+                                }
+
+                                if refund_attempts == MAX_REFUND_ATTEMPTS {
+                                    warn!("Failed to issue refunds: max attempts reached.")
+                                }
+                            }
                         }
-                    },
+                    }
                     // Do not attempt broadcasting a refund if lockup tx was never sent and swap is
                     // unrecoverable. We resolve the payment as failed.
                     None => {
@@ -204,7 +229,7 @@ impl SendSwapStateHandler {
         let lockup_tx = self
             .onchain_wallet
             .build_tx(
-                self.config.lowball_fee_rate(),
+                self.config.lowball_fee_rate_msat_per_vbyte(),
                 &create_response.address,
                 create_response.expected_amount,
             )
@@ -359,25 +384,24 @@ impl SendSwapStateHandler {
     }
 
     async fn refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let amount_sat = get_invoice_amount!(swap.invoice);
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
-        let fee = self
-            .onchain_wallet
-            .build_tx(None, &output_address, amount_sat)
-            .await?
-            .all_fees()
-            .values()
-            .sum();
+        let cooperative_refund_tx_fees_sat =
+            utils::estimate_refund_fees(swap, &self.config, &output_address, true)?;
+        let refund_res = self.swapper.refund_send_swap_cooperative(
+            swap,
+            &output_address,
+            cooperative_refund_tx_fees_sat,
+        );
 
-        let refund_res = self
-            .swapper
-            .refund_send_swap_cooperative(swap, &output_address, fee);
         match refund_res {
             Ok(res) => Ok(res),
             Err(e) => {
                 warn!("Cooperative refund failed: {:?}", e);
-                self.refund_non_cooperative(swap, fee).await
+                let non_cooperative_refund_tx_fees_sat =
+                    utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
+                self.refund_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
+                    .await
             }
         }
     }

@@ -2215,6 +2215,8 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
 
+const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
+
 const double LOWBALL_FEE_RATE_SAT_PER_VBYTE = 0.01;
 
 const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;

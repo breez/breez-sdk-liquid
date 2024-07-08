@@ -388,13 +388,9 @@ impl BoltzSwapper {
                     Amount::from_sat(broadcast_fees_sat),
                     is_cooperative,
                 )?;
-                let is_lowball = match self.config.network {
-                    LiquidNetwork::Mainnet => None,
-                    LiquidNetwork::Testnet => {
-                        Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
-                    }
-                };
-                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, is_lowball)?
+                // We attempt lowball broadcast when constructing the tx cooperatively
+                let lowball = Some((&self.client, self.config.network.into()));
+                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, lowball)?
             }
         };
         info!(
@@ -462,13 +458,8 @@ impl BoltzSwapper {
                     Amount::from_sat(broadcast_fees_sat),
                     None,
                 )?;
-                let is_lowball = match self.config.network {
-                    LiquidNetwork::Mainnet => None,
-                    LiquidNetwork::Testnet => {
-                        Some((&self.client, boltz_client::network::Chain::LiquidTestnet))
-                    }
-                };
-                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, is_lowball)?
+                // We cannot broadcast lowball when constructing a non-cooperative tx
+                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, None)?
             }
         };
         info!(
