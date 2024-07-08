@@ -15,7 +15,7 @@ void main() async {
   final credentialsManager = CredentialsManager(keyChain: KeyChain());
   final mnemonic = await credentialsManager.restoreMnemonic();
   if (mnemonic.isNotEmpty) {
-    reconnect(liquidSDK: liquidSDK, mnemonic: mnemonic);
+    await reconnect(liquidSDK: liquidSDK, mnemonic: mnemonic);
   }
   runApp(App(credentialsManager: credentialsManager, liquidSDK: liquidSDK));
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/qr_scan/scan_overlay.dart';
+import 'package:flutter_breez_liquid_example/routes/home/widgets/qr_scan/scanner_button_widgets.dart';
 import 'package:flutter_breez_liquid_example/routes/home/widgets/qr_scan/scanner_error_widget.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -82,6 +83,7 @@ class _BarcodeScannerState extends State<BarcodeScanner> with WidgetsBindingObse
     var scanWindowDimension = MediaQuery.of(context).size.width - 72;
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
           MobileScanner(
             scanWindow: Rect.fromCenter(
@@ -97,6 +99,18 @@ class _BarcodeScannerState extends State<BarcodeScanner> with WidgetsBindingObse
               return const ScanOverlay();
             },
             fit: BoxFit.cover,
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: CancelScanButton(controller: controller),
+                )
+              ],
+            ),
           ),
         ],
       ),
