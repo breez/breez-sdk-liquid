@@ -1,3 +1,4 @@
+use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
@@ -1424,12 +1425,13 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Lists the SDK payments. The payments are determined based on onchain transactions and swaps.
+    /// Lists the SDK payments in reverse chronological order.
+    /// The payments are determined based on onchain transactions and swaps.
     pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 
         let mut payments: Vec<Payment> = self.persister.get_payments()?;
-        payments.sort_by_key(|p| p.timestamp);
+        payments.sort_by_key(|p| Reverse(p.timestamp));
         Ok(payments)
     }
 
