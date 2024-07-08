@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout breez-liquid-sdk-flutter repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: breez/breez-liquid-sdk-flutter
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
@@ -40,7 +40,7 @@ jobs:
           path: dist
 
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
@@ -71,7 +71,7 @@ jobs:
           cp ../build/packages/flutter/LICENSE . || true
           cp ../build/packages/flutter/README.md . || true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-flutter
           path: bindings/
@@ -91,7 +91,7 @@ jobs:
           rm ios/flutter_breez_liquid.podspec.bak
 
       - name: Archive flutter release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: breez-liquid-sdk-flutter-${{ inputs.package-version || github.sha }}
           path: |

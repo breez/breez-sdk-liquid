@@ -32,7 +32,7 @@ jobs:
     runs-on: macOS-latest
     steps:
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
@@ -42,12 +42,12 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-android-jniLibs
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/jniLibs
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-kotlin-multiplatform
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src
@@ -57,17 +57,17 @@ jobs:
         run: |
           cp -r langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios-sim
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-apple-ios
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64
@@ -79,7 +79,7 @@ jobs:
         run: ./gradlew :breez-liquid-sdk-kmp:assemble
 
       - name: Archive aar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kotlin-multiplatform-release.aar
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/build/outputs/aar/breez-liquid-sdk-kmp-release.aar

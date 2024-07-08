@@ -198,7 +198,10 @@ impl Persister {
 
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
         let con: Connection = self.get_connection()?;
-        self.list_chain_swaps_by_state(&con, vec![PaymentState::Pending])
+        self.list_chain_swaps_by_state(
+            &con,
+            vec![PaymentState::Pending, PaymentState::RefundPending],
+        )
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {

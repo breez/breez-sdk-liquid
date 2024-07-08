@@ -35,13 +35,13 @@ jobs:
     runs-on: macOS-13
     steps:
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           path: build
 
       - name: Checkout breez-liquid-sdk-swift repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: breez/breez-liquid-sdk-swift
           ref: main
@@ -50,25 +50,25 @@ jobs:
           path: dist
 
       - name: Download swift bindings
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-swift
           path: swift
 
       - name: Download aarch64-apple-ios
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios
           path: aarch64-apple-ios
       
       - name: Download ios-universal-sim
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-ios-universal-sim
           path: ios-universal-sim
     
       - name: Download darwin-universal
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-darwin-universal
           path: darwin-universal
