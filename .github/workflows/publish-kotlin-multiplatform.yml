@@ -79,7 +79,7 @@ jobs:
         run: ./gradlew :breez-liquid-sdk-kmp:assemble
 
       - name: Archive aar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kotlin-multiplatform-release.aar
           path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/build/outputs/aar/breez-liquid-sdk-kmp-release.aar

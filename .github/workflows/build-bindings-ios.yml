@@ -67,7 +67,7 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
     
     - name: Archive release
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bindings-${{ matrix.target }}
         path: lib/target/${{ matrix.target }}/release/libbreez_liquid_sdk_bindings.a
@@ -103,13 +103,13 @@ jobs:
         lipo -create -output ios-universal-sim/libbreez_liquid_sdk_bindings.a aarch64-apple-ios-sim/libbreez_liquid_sdk_bindings.a x86_64-apple-ios/libbreez_liquid_sdk_bindings.a
 
     - name: Archive ios-universal
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bindings-ios-universal
         path: ios-universal/libbreez_liquid_sdk_bindings.a
 
     - name: Archive ios-universal-sim
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bindings-ios-universal-sim
         path: ios-universal-sim/libbreez_liquid_sdk_bindings.a
@@ -133,7 +133,7 @@ jobs:
           touch libbreez_liquid_sdk_bindings.a
 
       - name: Upload dummy ios ${{ matrix.target }} artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
           path: ./*

@@ -93,7 +93,7 @@ jobs:
         run: dotnet pack --configuration Release Breez.Liquid.Sdk.csproj
 
       - name: Archive the package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Breez.Liquid.Sdk.${{ inputs.package-version || '0.0.1' }}.nupkg
           path: lib/bindings/langs/csharp/src/bin/Release/Breez.Liquid.Sdk.*.nupkg

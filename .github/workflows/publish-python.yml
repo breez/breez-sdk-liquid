@@ -75,7 +75,7 @@ jobs:
         run: python3 -m zipfile --list *.whl || true
 
       - name: Archive the wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-wheel-${{ matrix.python }}-macos
           path: lib/bindings/langs/python/dist/*.whl
@@ -121,7 +121,7 @@ jobs:
         working-directory: lib/bindings/langs/python
         run: python3 setup.py bdist_wheel --plat-name manylinux_2_31_${{ matrix.arch }} --verbose
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: python-wheel-${{ matrix.python }}-manylinux_2_31_${{ matrix.arch }}
           path: lib/bindings/langs/python/dist/*.whl
@@ -189,7 +189,7 @@ jobs:
         working-directory: lib/bindings/langs/python
         run: python -m setup bdist_wheel --plat-name ${{ matrix.arch }} --verbose
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: python-wheel-${{ matrix.python }}-${{ matrix.arch }}
           path: lib/bindings/langs/python/dist/*.whl

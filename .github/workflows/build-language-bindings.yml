@@ -86,14 +86,14 @@ jobs:
   
       - name: Archive Kotlin binding
         if: ${{ inputs.kotlin }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-kotlin
           path: lib/bindings/ffi/kotlin/breez_liquid_sdk/breez_liquid_sdk.kt
 
       - name: Archive Kotlin multiplatform binding
         if: ${{ inputs.kotlin }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-kotlin-multiplatform
           path: lib/bindings/ffi/kmp/*
@@ -107,7 +107,7 @@ jobs:
       
       - name: Archive Swift binding
         if: ${{ inputs.swift }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-swift
           path: lib/bindings/langs/swift/Sources/BreezLiquidSDK/*
@@ -120,7 +120,7 @@ jobs:
     
       - name: Archive Python binding
         if: ${{ inputs.python }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-python
           path: lib/bindings/ffi/python/breez_liquid_sdk.py
@@ -134,7 +134,7 @@ jobs:
 #      
 #      - name: Archive C# binding
 #        if: ${{ inputs.csharp }}
-#        uses: actions/upload-artifact@v3
+#        uses: actions/upload-artifact@v4
 #        with:
 #          name: bindings-csharp
 #          path: lib/bindings/ffi/csharp/breez_liquid_sdk.cs
@@ -148,7 +148,7 @@ jobs:
 #  
 #      - name: Archive golang binding
 #        if: ${{ inputs.golang }}
-#        uses: actions/upload-artifact@v3
+#        uses: actions/upload-artifact@v4
 #        with:
 #          name: bindings-golang
 #          path: lib/bindings/ffi/golang/breez/breez_liquid_sdk/breez_liquid_sdk.*

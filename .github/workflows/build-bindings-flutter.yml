@@ -87,7 +87,7 @@ jobs:
         cp lib/bindings/langs/flutter/platform-build/other.tar.gz dist
 
     - name: Archive Flutter bindings
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bindings-flutter
         path: dist/*
@@ -104,7 +104,7 @@ jobs:
           touch other.tar.gz
 
       - name: Archive Flutter dummy bindings
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-flutter
           path: ./*

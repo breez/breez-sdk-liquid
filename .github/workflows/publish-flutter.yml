@@ -91,7 +91,7 @@ jobs:
           rm ios/flutter_breez_liquid.podspec.bak
 
       - name: Archive flutter release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: breez-liquid-sdk-flutter-${{ inputs.package-version || github.sha }}
           path: |

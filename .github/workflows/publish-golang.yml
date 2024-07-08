@@ -82,7 +82,7 @@ jobs:
           path: breez_liquid_sdk/lib/windows-amd64
 
       - name: Archive Go release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: breez-liquid-sdk-go-${{ inputs.package-version || github.sha }}
           path: |

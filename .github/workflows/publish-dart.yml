@@ -65,7 +65,7 @@ jobs:
           rm pubspec.yaml.bak
 
       - name: Archive Dart release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: breez-liquid-sdk-dart-${{ inputs.package-version || github.sha }}
           path: |

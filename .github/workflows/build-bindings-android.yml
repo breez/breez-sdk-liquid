@@ -78,7 +78,7 @@ jobs:
       run: cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${{ matrix.target }}/libc++_shared.so dist
 
     - name: Archive release
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bindings-${{ matrix.target }}
         path: dist/*
@@ -109,7 +109,7 @@ jobs:
           path: x86_64
       
       - name: Archive jniLibs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-android-jniLibs
           path: ./*
@@ -133,7 +133,7 @@ jobs:
           touch libc++_shared.so.so
 
       - name: Upload dummy Android ${{ matrix.target }} artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
           path: ./*
@@ -164,7 +164,7 @@ jobs:
           path: x86_64
       
       - name: Archive jniLibs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bindings-android-jniLibs
           path: ./*
