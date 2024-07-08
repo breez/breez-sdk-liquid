@@ -123,7 +123,7 @@ fun asConfig(config: ReadableMap): Config? {
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
-                "zeroConfMinFeeRate",
+                "zeroConfMinFeeRateMsat",
             ),
         )
     ) {
@@ -134,7 +134,7 @@ fun asConfig(config: ReadableMap): Config? {
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
-    val zeroConfMinFeeRate = config.getDouble("zeroConfMinFeeRate").toFloat()
+    val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,
@@ -151,7 +151,7 @@ fun asConfig(config: ReadableMap): Config? {
         workingDir,
         network,
         paymentTimeoutSec,
-        zeroConfMinFeeRate,
+        zeroConfMinFeeRateMsat,
         zeroConfMaxAmountSat,
     )
 }
@@ -163,7 +163,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
-        "zeroConfMinFeeRate" to config.zeroConfMinFeeRate,
+        "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
     )
 

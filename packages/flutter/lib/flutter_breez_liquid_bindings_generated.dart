@@ -1510,8 +1510,8 @@ final class wire_cst_config extends ffi.Struct {
   @ffi.Uint64()
   external int payment_timeout_sec;
 
-  @ffi.Float()
-  external double zero_conf_min_fee_rate;
+  @ffi.Uint32()
+  external int zero_conf_min_fee_rate_msat;
 
   external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
 }
@@ -2219,9 +2219,9 @@ const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LOWBALL_FEE_RATE_SAT_PER_VBYTE = 0.01;
 
-const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
+const int DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 100;
 
-const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
+const int DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 10;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
 

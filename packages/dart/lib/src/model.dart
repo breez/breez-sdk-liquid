@@ -43,8 +43,8 @@ class Config {
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
   final BigInt paymentTimeoutSec;
 
-  /// Zero-conf minimum accepted fee-rate in sat/vbyte
-  final double zeroConfMinFeeRate;
+  /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
+  final int zeroConfMinFeeRateMsat;
 
   /// Maximum amount in satoshi to accept zero-conf payments with
   /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
@@ -56,7 +56,7 @@ class Config {
     required this.workingDir,
     required this.network,
     required this.paymentTimeoutSec,
-    required this.zeroConfMinFeeRate,
+    required this.zeroConfMinFeeRateMsat,
     this.zeroConfMaxAmountSat,
   });
 
@@ -67,7 +67,7 @@ class Config {
       workingDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
-      zeroConfMinFeeRate.hashCode ^
+      zeroConfMinFeeRateMsat.hashCode ^
       zeroConfMaxAmountSat.hashCode;
 
   @override
@@ -80,7 +80,7 @@ class Config {
           workingDir == other.workingDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
-          zeroConfMinFeeRate == other.zeroConfMinFeeRate &&
+          zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat;
 }
 

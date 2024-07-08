@@ -288,7 +288,7 @@ dictionary Config {
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
-    f32 zero_conf_min_fee_rate;
+    u32 zero_conf_min_fee_rate_msat;
     u64? zero_conf_max_amount_sat;
 };
 

@@ -21,9 +21,9 @@ typedef struct _Dart_Handle* Dart_Handle;
 /**
  * The minimum acceptable fee rate when claiming using zero-conf
  */
-#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET 0.1
+#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET 100
 
-#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET 0.01
+#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET 10
 
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
@@ -203,7 +203,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *working_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
-  float zero_conf_min_fee_rate;
+  uint32_t zero_conf_min_fee_rate_msat;
   uint64_t *zero_conf_max_amount_sat;
 } wire_cst_config;
 
