@@ -1,26 +1,22 @@
-# breez-liquid-sdk
+# Breez Liquid SDK
 
-## Prerequisites
+To get started with the Breez Liquid SDK, follow [these examples](https://sdk-doc-liquid.breez.technology/).
 
-Your system must have the sqlite3 development files installed:
-
-```bash
-# On Debian
-sudo apt install libsqlite3-dev
-```
-## Features
-
-### Backup/Restore
-The wallet provides the ability to `backup` and `restore` ongoing swaps via the corresponding methods:
+## Getting Started
 ```rust
-let mnemonic = "...";
-let data_dir = None;
-let network = Network::Liquid;
-let breez_wallet = Wallet::connect(mnemonic, data_dir, network)?;
+let mnemonic = Mnemonic::generate_in(Language::English, 12)?;
 
-breez_wallet.backup()?;  // Backs up the pending swaps under `{data_dir}/backup{-testnet}.sql`. Overwrites previous versions.
-let backup_path = None;  // Can also be Some(String), a path pointing to the database. Default is `{data_dir}/backup{-testnet}.sql`
-breez_wallet.restore(backup_path)?;   // Restores the specified backup
+// Create the default config
+let mut config = LiquidSdk::default_config(LiquidNetwork::Mainnet);
+
+// Customize the config object according to your needs
+config.working_dir = "path to an existing directory".into();
+
+let connect_request = ConnectRequest {
+    mnemonic: mnemonic.to_string(),
+    config,
+};
+let sdk = LiquidSdk::connect(connect_request).await?;
 ```
 
 ## Tests
