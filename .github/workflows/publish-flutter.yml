@@ -71,7 +71,7 @@ jobs:
           cp ../build/packages/flutter/LICENSE . || true
           cp ../build/packages/flutter/README.md . || true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-flutter
           path: bindings/

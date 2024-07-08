@@ -74,12 +74,12 @@ jobs:
     needs: build
     name: build darwin-universal
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: bindings-aarch64-apple-darwin
         path: aarch64-apple-darwin
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: bindings-x86_64-apple-darwin
         path: x86_64-apple-darwin

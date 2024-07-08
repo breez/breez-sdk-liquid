@@ -50,25 +50,25 @@ jobs:
           path: dist
 
       - name: Download swift bindings
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-swift
           path: swift
 
       - name: Download aarch64-apple-ios
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios
           path: aarch64-apple-ios
       
       - name: Download ios-universal-sim
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-ios-universal-sim
           path: ios-universal-sim
     
       - name: Download darwin-universal
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bindings-darwin-universal
           path: darwin-universal
