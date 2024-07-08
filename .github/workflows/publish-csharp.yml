@@ -34,42 +34,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
  
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-csharp
           path: lib/bindings/langs/csharp/src
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-darwin
           path: lib/bindings/langs/csharp/src/runtimes/osx-arm64/native
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-apple-darwin
           path: lib/bindings/langs/csharp/src/runtimes/osx-x64/native
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-unknown-linux-gnu
           path: lib/bindings/langs/csharp/src/runtimes/linux-arm64/native
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-unknown-linux-gnu
           path: lib/bindings/langs/csharp/src/runtimes/linux-x64/native
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-pc-windows-msvc
           path: lib/bindings/langs/csharp/src/runtimes/win-x64/native
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-i686-pc-windows-msvc
           path: lib/bindings/langs/csharp/src/runtimes/win-x86/native
@@ -93,7 +93,7 @@ jobs:
         run: dotnet pack --configuration Release Breez.Liquid.Sdk.csproj
 
       - name: Archive the package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Breez.Liquid.Sdk.${{ inputs.package-version || '0.0.1' }}.nupkg
           path: lib/bindings/langs/csharp/src/bin/Release/Breez.Liquid.Sdk.*.nupkg
@@ -112,12 +112,12 @@ jobs:
     steps:
       - name: Checkout breez-liquid-sdk repo
         if: ${{ !inputs.skip-tests }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: ${{ !inputs.skip-tests }}
         with:
           name: Breez.Liquid.Sdk.${{ inputs.package-version || '0.0.1' }}.nupkg
@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download archived package
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Breez.Liquid.Sdk.${{ inputs.package-version }}.nupkg
 

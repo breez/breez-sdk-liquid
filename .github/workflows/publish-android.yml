@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout breez-liquid-sdk repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
@@ -42,12 +42,12 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-android-jniLibs
           path: lib/bindings/langs/android/lib/src/main/jniLibs
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: bindings-kotlin
           path: lib/bindings/langs/android/lib/src/main/kotlin
@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew assemble
 
       - name: Archive aar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-release.aar
           path: lib/bindings/langs/android/lib/build/outputs/aar/lib-release.aar
