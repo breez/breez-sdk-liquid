@@ -169,8 +169,10 @@ impl Persister {
                 ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
-            WHERE                                -- Filter out refund txs from Payment tx list
+            WHERE                                -- Filter out refund txs from Send Swaps
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
+            AND                                  -- Filter out refund txs from Chain Swaps
+                ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
             AND {}
             ",
             where_clause.unwrap_or("true")
