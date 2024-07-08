@@ -383,7 +383,7 @@ impl SendSwapStateHandler {
         Ok(())
     }
 
-    async fn refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
+    pub(crate) async fn refund(&self, swap: &SendSwap) -> Result<String, PaymentError> {
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
         let cooperative_refund_tx_fees_sat =

@@ -9,7 +9,7 @@ use boltz_client::{LockTime, ToHex};
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -381,7 +381,7 @@ impl LiquidSdk {
             info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", send_swap.id, swap_script.locktime);
             if utils::is_locktime_expired(locktime_from_height, swap_script.locktime) {
                 let id = &send_swap.id;
-                let refund_tx_id = self.refund_send(send_swap).await?;
+                let refund_tx_id = self.send_swap_state_handler.refund(send_swap).await?;
                 info!("Broadcast refund tx for Send Swap {id}. Tx id: {refund_tx_id}");
                 self.send_swap_state_handler
                     .update_swap_info(id, Pending, None, None, Some(&refund_tx_id))
@@ -673,53 +673,6 @@ impl LiquidSdk {
             invoice: req.invoice.clone(),
             fees_sat,
         })
-    }
-
-    async fn refund_send_non_cooperative(
-        &self,
-        swap: &SendSwap,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        info!(
-            "Initiating non-cooperative refund for Send Swap {}",
-            &swap.id
-        );
-
-        let current_height = self.onchain_wallet.tip().await.height();
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let refund_tx_id = self.swapper.refund_send_swap_non_cooperative(
-            swap,
-            broadcast_fees_sat,
-            &output_address,
-            current_height,
-        )?;
-
-        info!(
-            "Successfully broadcast non-cooperative refund for Send Swap {}, tx: {}",
-            swap.id, refund_tx_id
-        );
-        Ok(refund_tx_id)
-    }
-
-    async fn refund_send(&self, swap: &SendSwap) -> Result<String, PaymentError> {
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let cooperative_refund_tx_fees_sat =
-            utils::estimate_refund_fees(swap, &self.config, &output_address, true)?;
-        let refund_res = self.swapper.refund_send_swap_cooperative(
-            swap,
-            &output_address,
-            cooperative_refund_tx_fees_sat,
-        );
-        match refund_res {
-            Ok(res) => Ok(res),
-            Err(e) => {
-                let non_cooperative_refund_tx_fees_sat =
-                    utils::estimate_refund_fees(swap, &self.config, &output_address, false)?;
-                warn!("Cooperative refund failed: {:?}", e);
-                self.refund_send_non_cooperative(swap, non_cooperative_refund_tx_fees_sat)
-                    .await
-            }
-        }
     }
 
     fn ensure_send_is_not_self_transfer(&self, invoice: &str) -> Result<(), PaymentError> {
