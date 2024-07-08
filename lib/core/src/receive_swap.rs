@@ -17,9 +17,6 @@ use crate::{
     wallet::OnchainWallet,
 };
 
-/// The minimum acceptable fee rate when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: f32 = 0.1;
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: f32 = 0.01;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 100_000;
 

@@ -11,10 +11,7 @@ use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{LiquidSdkResult, PaymentError};
-use crate::receive_swap::{
-    DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
-    DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
-};
+use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
 
 pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f32 = 0.1;
@@ -32,8 +29,6 @@ pub struct Config {
     pub network: LiquidNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
-    /// Zero-conf minimum accepted fee-rate in sat/vbyte
-    pub zero_conf_min_fee_rate: f32,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
@@ -47,7 +42,6 @@ impl Config {
             working_dir: ".".to_string(),
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
         }
     }
@@ -59,7 +53,6 @@ impl Config {
             working_dir: ".".to_string(),
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
         }
     }

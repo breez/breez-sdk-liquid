@@ -42,7 +42,6 @@ export interface Config {
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
-    zeroConfMinFeeRate: number
     zeroConfMaxAmountSat?: number
 }
 

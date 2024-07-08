@@ -186,9 +186,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CurrencyInfo dco_decode_currency_info(dynamic raw);
 
   @protected
-  double dco_decode_f_32(dynamic raw);
-
-  @protected
   double dco_decode_f_64(dynamic raw);
 
   @protected
@@ -595,9 +592,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
-
-  @protected
-  double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -1566,7 +1560,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
-    wireObj.zero_conf_min_fee_rate = cst_encode_f_32(apiObj.zeroConfMinFeeRate);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
   }
 
@@ -2356,9 +2349,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool cst_encode_bool(bool raw);
 
   @protected
-  double cst_encode_f_32(double raw);
-
-  @protected
   double cst_encode_f_64(double raw);
 
   @protected
@@ -2556,9 +2546,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_f_32(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -4242,9 +4229,6 @@ final class wire_cst_config extends ffi.Struct {
   @ffi.Uint64()
   external int payment_timeout_sec;
 
-  @ffi.Float()
-  external double zero_conf_min_fee_rate;
-
   external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
 }
 
@@ -4947,10 +4931,6 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LOWBALL_FEE_RATE_SAT_PER_VBYTE = 0.01;
-
-const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 0.1;
-
-const double DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET = 0.01;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 100000;
 
