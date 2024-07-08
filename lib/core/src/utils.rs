@@ -86,8 +86,9 @@ pub(crate) fn estimate_refund_fees(
         LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
         LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
     });
-    let (fee_rate, cooperative) = if is_cooperative && config.network == LiquidNetwork::Mainnet {
-        (
+
+    let (fee_rate, cooperative) = match (config.network, is_cooperative) {
+        (LiquidNetwork::Mainnet, true) => (
             LOWBALL_FEE_RATE_SAT_PER_VBYTE,
             Some(Cooperative {
                 boltz_api,
@@ -95,9 +96,17 @@ pub(crate) fn estimate_refund_fees(
                 pub_nonce: None,
                 partial_sig: None,
             }),
-        )
-    } else {
-        (STANDARD_FEE_RATE_SAT_PER_VBYTE, None)
+        ),
+        (LiquidNetwork::Testnet, true) => (
+            STANDARD_FEE_RATE_SAT_PER_VBYTE,
+            Some(Cooperative {
+                boltz_api,
+                swap_id: swap.id.clone(),
+                pub_nonce: None,
+                partial_sig: None,
+            }),
+        ),
+        (_, false) => (STANDARD_FEE_RATE_SAT_PER_VBYTE, None),
     };
     let dummy_tx = swap_tx.sign_refund(&swap.get_refund_keypair()?, dummy_fees, cooperative)?;
 
