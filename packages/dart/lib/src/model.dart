@@ -197,6 +197,42 @@ enum LiquidNetwork {
   ;
 }
 
+/// Represents a list payments request.
+class ListPaymentsRequest {
+  final List<PaymentType>? filters;
+
+  /// Epoch time, in seconds
+  final PlatformInt64? fromTimestamp;
+
+  /// Epoch time, in seconds
+  final PlatformInt64? toTimestamp;
+  final int? offset;
+  final int? limit;
+
+  const ListPaymentsRequest({
+    this.filters,
+    this.fromTimestamp,
+    this.toTimestamp,
+    this.offset,
+    this.limit,
+  });
+
+  @override
+  int get hashCode =>
+      filters.hashCode ^ fromTimestamp.hashCode ^ toTimestamp.hashCode ^ offset.hashCode ^ limit.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ListPaymentsRequest &&
+          runtimeType == other.runtimeType &&
+          filters == other.filters &&
+          fromTimestamp == other.fromTimestamp &&
+          toTimestamp == other.toTimestamp &&
+          offset == other.offset &&
+          limit == other.limit;
+}
+
 @freezed
 sealed class LnUrlPayResult with _$LnUrlPayResult {
   const LnUrlPayResult._();

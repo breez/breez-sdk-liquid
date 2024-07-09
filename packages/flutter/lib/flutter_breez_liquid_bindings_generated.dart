@@ -195,19 +195,22 @@ class FlutterBreezLiquidBindings {
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     int port_,
     int that,
+    ffi.Pointer<wire_cst_list_payments_request> req,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
       port_,
       that,
+      req,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_payments_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr
-          .asFunction<void Function(int, int)>();
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_payments_request>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables(
     int port_,
@@ -760,6 +763,32 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
+  ffi.Pointer<ffi.Int64> frbgen_breez_liquid_cst_new_box_autoadd_i_64(
+    int value,
+  ) {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_i_64(
+      value,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_i_64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int64> Function(ffi.Int64)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_i_64');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_i_64 =
+      _frbgen_breez_liquid_cst_new_box_autoadd_i_64Ptr.asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_payments_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_list_payments_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payments_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_list_payments_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_list_payments_request> Function()>();
+
   ffi.Pointer<wire_cst_ln_invoice> frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice();
   }
@@ -1161,6 +1190,21 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_payment = _frbgen_breez_liquid_cst_new_list_paymentPtr
       .asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_payment_type> frbgen_breez_liquid_cst_new_list_payment_type(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_payment_type(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_payment_typePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_type> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_payment_type');
+  late final _frbgen_breez_liquid_cst_new_list_payment_type =
+      _frbgen_breez_liquid_cst_new_list_payment_typePtr
+          .asFunction<ffi.Pointer<wire_cst_list_payment_type> Function(int)>();
+
   ffi.Pointer<wire_cst_list_prim_u_8_strict> frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
     int len,
   ) {
@@ -1271,6 +1315,25 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
 
 final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
+}
+
+final class wire_cst_list_payment_type extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_payments_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_payment_type> filters;
+
+  external ffi.Pointer<ffi.Int64> from_timestamp;
+
+  external ffi.Pointer<ffi.Int64> to_timestamp;
+
+  external ffi.Pointer<ffi.Uint32> offset;
+
+  external ffi.Pointer<ffi.Uint32> limit;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {

@@ -107,7 +107,8 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    listPayments: (RCTPromiseResolveBlock)resolve
+    listPayments: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

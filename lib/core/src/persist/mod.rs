@@ -5,6 +5,7 @@ mod migrations;
 pub(crate) mod receive;
 pub(crate) mod send;
 
+use std::collections::HashSet;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use anyhow::{anyhow, Result};
@@ -124,7 +125,12 @@ impl Persister {
         .concat())
     }
 
-    fn select_payment_query(&self, where_clause: Option<&str>) -> String {
+    fn select_payment_query(
+        &self,
+        where_clause: Option<&str>,
+        offset: Option<u32>,
+        limit: Option<u32>,
+    ) -> String {
         format!(
             "
             SELECT
@@ -174,8 +180,13 @@ impl Persister {
             AND                                  -- Filter out refund txs from Chain Swaps
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
             AND {}
+            ORDER BY ptx.timestamp DESC
+            LIMIT {}
+            OFFSET {}
             ",
-            where_clause.unwrap_or("true")
+            where_clause.unwrap_or("true"),
+            limit.unwrap_or(u32::MAX),
+            offset.unwrap_or(0),
         )
     }
 
@@ -284,18 +295,25 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some("ptx.tx_id = ?1")),
+                &self.select_payment_query(Some("ptx.tx_id = ?1"), None, None),
                 params![id],
                 |row| self.sql_row_to_payment(row),
             )
             .optional()?)
     }
 
-    pub fn get_payments(&self) -> Result<Vec<Payment>> {
-        let con = self.get_connection()?;
+    pub fn get_payments(&self, req: &ListPaymentsRequest) -> Result<Vec<Payment>> {
+        let where_clause =
+            filter_to_where_clause(req.filters.clone(), req.from_timestamp, req.to_timestamp);
+        let maybe_where_clause = match where_clause.is_empty() {
+            false => Some(where_clause.as_str()),
+            true => None,
+        };
 
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
-        let mut stmt = con.prepare(&self.select_payment_query(None))?;
+        let con = self.get_connection()?;
+        let mut stmt =
+            con.prepare(&self.select_payment_query(maybe_where_clause, req.offset, req.limit))?;
         let payments: Vec<Payment> = stmt
             .query_map(params![], |row| self.sql_row_to_payment(row))?
             .map(|i| i.unwrap())
@@ -304,12 +322,57 @@ impl Persister {
     }
 }
 
+fn filter_to_where_clause(
+    type_filters: Option<Vec<PaymentType>>,
+    from_timestamp: Option<i64>,
+    to_timestamp: Option<i64>,
+) -> String {
+    let mut where_clause: Vec<String> = Vec::new();
+
+    if let Some(t) = from_timestamp {
+        where_clause.push(format!("ptx.timestamp >= {t}"));
+    };
+    if let Some(t) = to_timestamp {
+        where_clause.push(format!("ptx.timestamp <= {t}"));
+    };
+
+    if let Some(filters) = type_filters {
+        if !filters.is_empty() {
+            let mut type_filter_clause: HashSet<PaymentType> = HashSet::new();
+            for type_filter in filters {
+                match type_filter {
+                    PaymentType::Send => {
+                        type_filter_clause.insert(PaymentType::Send);
+                    }
+                    PaymentType::Receive => {
+                        type_filter_clause.insert(PaymentType::Receive);
+                    }
+                }
+            }
+
+            where_clause.push(format!(
+                "ptx.payment_type in ({})",
+                type_filter_clause
+                    .iter()
+                    .map(|t| format!("'{}'", t))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+    }
+
+    where_clause.join(" and ")
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::persist::{
-        new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
+    use crate::{
+        prelude::ListPaymentsRequest,
+        test_utils::persist::{
+            new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
+        },
     };
 
     use super::{PaymentState, PaymentType};
@@ -321,7 +384,12 @@ mod tests {
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(payment_tx_data.clone())?;
 
-        assert!(storage.get_payments()?.first().is_some());
+        assert!(storage
+            .get_payments(&ListPaymentsRequest {
+                ..Default::default()
+            })?
+            .first()
+            .is_some());
         assert!(storage.get_payment(payment_tx_data.tx_id)?.is_some());
 
         Ok(())

@@ -1,4 +1,3 @@
-use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
@@ -496,7 +495,12 @@ impl LiquidSdk {
         let mut confirmed_sent_sat = 0;
         let mut confirmed_received_sat = 0;
 
-        for p in self.list_payments().await? {
+        for p in self
+            .list_payments(&ListPaymentsRequest {
+                ..Default::default()
+            })
+            .await?
+        {
             match p.payment_type {
                 PaymentType::Send => match p.status {
                     Complete => confirmed_sent_sat += p.amount_sat,
@@ -1346,7 +1350,9 @@ impl LiquidSdk {
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         let payments_before_sync: HashMap<String, Payment> = self
-            .list_payments()
+            .list_payments(&ListPaymentsRequest {
+                ..Default::default()
+            })
             .await?
             .into_iter()
             .filter_map(|payment| {
@@ -1427,12 +1433,13 @@ impl LiquidSdk {
 
     /// Lists the SDK payments in reverse chronological order.
     /// The payments are determined based on onchain transactions and swaps.
-    pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
+    pub async fn list_payments(
+        &self,
+        req: &ListPaymentsRequest,
+    ) -> Result<Vec<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 
-        let mut payments: Vec<Payment> = self.persister.get_payments()?;
-        payments.sort_by_key(|p| Reverse(p.timestamp));
-        Ok(payments)
+        Ok(self.persister.get_payments(req)?)
     }
 
     /// Empties all Liquid Wallet caches for this network type.

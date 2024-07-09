@@ -164,8 +164,11 @@ impl BindingLiquidSdk {
         self.sdk.receive_onchain(&req).await
     }
 
-    pub async fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
-        self.sdk.list_payments().await
+    pub async fn list_payments(
+        &self,
+        req: ListPaymentsRequest,
+    ) -> Result<Vec<Payment>, PaymentError> {
+        self.sdk.list_payments(&req).await
     }
 
     pub async fn lnurl_pay(

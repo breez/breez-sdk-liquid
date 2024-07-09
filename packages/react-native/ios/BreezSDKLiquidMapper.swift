@@ -601,6 +601,77 @@ enum BreezSDKLiquidMapper {
         return limitsList.map { v -> [String: Any?] in dictionaryOf(limits: v) }
     }
 
+    static func asListPaymentsRequest(listPaymentsRequest: [String: Any?]) throws -> ListPaymentsRequest {
+        var filters: [PaymentType]?
+        if let filtersTmp = listPaymentsRequest["filters"] as? [String] {
+            filters = try asPaymentTypeList(arr: filtersTmp)
+        }
+
+        var fromTimestamp: Int64?
+        if hasNonNilKey(data: listPaymentsRequest, key: "fromTimestamp") {
+            guard let fromTimestampTmp = listPaymentsRequest["fromTimestamp"] as? Int64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "fromTimestamp"))
+            }
+            fromTimestamp = fromTimestampTmp
+        }
+        var toTimestamp: Int64?
+        if hasNonNilKey(data: listPaymentsRequest, key: "toTimestamp") {
+            guard let toTimestampTmp = listPaymentsRequest["toTimestamp"] as? Int64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "toTimestamp"))
+            }
+            toTimestamp = toTimestampTmp
+        }
+        var offset: UInt32?
+        if hasNonNilKey(data: listPaymentsRequest, key: "offset") {
+            guard let offsetTmp = listPaymentsRequest["offset"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "offset"))
+            }
+            offset = offsetTmp
+        }
+        var limit: UInt32?
+        if hasNonNilKey(data: listPaymentsRequest, key: "limit") {
+            guard let limitTmp = listPaymentsRequest["limit"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "limit"))
+            }
+            limit = limitTmp
+        }
+
+        return ListPaymentsRequest(
+            filters: filters,
+            fromTimestamp: fromTimestamp,
+            toTimestamp: toTimestamp,
+            offset: offset,
+            limit: limit
+        )
+    }
+
+    static func dictionaryOf(listPaymentsRequest: ListPaymentsRequest) -> [String: Any?] {
+        return [
+            "filters": listPaymentsRequest.filters == nil ? nil : arrayOf(paymentTypeList: listPaymentsRequest.filters!),
+            "fromTimestamp": listPaymentsRequest.fromTimestamp == nil ? nil : listPaymentsRequest.fromTimestamp,
+            "toTimestamp": listPaymentsRequest.toTimestamp == nil ? nil : listPaymentsRequest.toTimestamp,
+            "offset": listPaymentsRequest.offset == nil ? nil : listPaymentsRequest.offset,
+            "limit": listPaymentsRequest.limit == nil ? nil : listPaymentsRequest.limit,
+        ]
+    }
+
+    static func asListPaymentsRequestList(arr: [Any]) throws -> [ListPaymentsRequest] {
+        var list = [ListPaymentsRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var listPaymentsRequest = try asListPaymentsRequest(listPaymentsRequest: val)
+                list.append(listPaymentsRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "ListPaymentsRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(listPaymentsRequestList: [ListPaymentsRequest]) -> [Any] {
+        return listPaymentsRequestList.map { v -> [String: Any?] in dictionaryOf(listPaymentsRequest: v) }
+    }
+
     static func asLnUrlAuthRequestData(lnUrlAuthRequestData: [String: Any?]) throws -> LnUrlAuthRequestData {
         guard let k1 = lnUrlAuthRequestData["k1"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "k1", typeName: "LnUrlAuthRequestData"))

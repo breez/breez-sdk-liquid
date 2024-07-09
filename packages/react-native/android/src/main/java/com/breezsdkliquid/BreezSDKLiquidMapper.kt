@@ -496,6 +496,64 @@ fun asLimitsList(arr: ReadableArray): List<Limits> {
     return list
 }
 
+fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest? {
+    if (!validateMandatoryFields(
+            listPaymentsRequest,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val filters =
+        if (hasNonNullKey(listPaymentsRequest, "filters")) {
+            listPaymentsRequest.getArray("filters")?.let {
+                asPaymentTypeList(it)
+            }
+        } else {
+            null
+        }
+    val fromTimestamp =
+        if (hasNonNullKey(
+                listPaymentsRequest,
+                "fromTimestamp",
+            )
+        ) {
+            listPaymentsRequest.getDouble("fromTimestamp").toLong()
+        } else {
+            null
+        }
+    val toTimestamp = if (hasNonNullKey(listPaymentsRequest, "toTimestamp")) listPaymentsRequest.getDouble("toTimestamp").toLong() else null
+    val offset = if (hasNonNullKey(listPaymentsRequest, "offset")) listPaymentsRequest.getInt("offset").toUInt() else null
+    val limit = if (hasNonNullKey(listPaymentsRequest, "limit")) listPaymentsRequest.getInt("limit").toUInt() else null
+    return ListPaymentsRequest(
+        filters,
+        fromTimestamp,
+        toTimestamp,
+        offset,
+        limit,
+    )
+}
+
+fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
+    readableMapOf(
+        "filters" to listPaymentsRequest.filters?.let { readableArrayOf(it) },
+        "fromTimestamp" to listPaymentsRequest.fromTimestamp,
+        "toTimestamp" to listPaymentsRequest.toTimestamp,
+        "offset" to listPaymentsRequest.offset,
+        "limit" to listPaymentsRequest.limit,
+    )
+
+fun asListPaymentsRequestList(arr: ReadableArray): List<ListPaymentsRequest> {
+    val list = ArrayList<ListPaymentsRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asListPaymentsRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asLnUrlAuthRequestData(lnUrlAuthRequestData: ReadableMap): LnUrlAuthRequestData? {
     if (!validateMandatoryFields(
             lnUrlAuthRequestData,
@@ -2397,6 +2455,7 @@ fun pushToArray(
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
+        is PaymentType -> array.pushString(value.name.lowercase())
         is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))
         is RouteHint -> array.pushMap(readableMapOf(value))

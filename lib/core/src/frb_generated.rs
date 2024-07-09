@@ -446,6 +446,7 @@ fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
+    req: impl CstDecode<crate::model::ListPaymentsRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -455,6 +456,7 @@ fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
         },
         move || {
             let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
             move |context| async move {
                 transform_result_dco::<_, _, crate::error::PaymentError>(
                     (move || async move {
@@ -475,9 +477,11 @@ fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
                             }
                         }
                         let api_that_guard = api_that_guard.unwrap();
-                        let output_ok =
-                            crate::bindings::BindingLiquidSdk::list_payments(&*api_that_guard)
-                                .await?;
+                        let output_ok = crate::bindings::BindingLiquidSdk::list_payments(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1634,6 +1638,12 @@ impl CstDecode<i32> for i32 {
         self
     }
 }
+impl CstDecode<i64> for i64 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> i64 {
+        self
+    }
+}
 impl CstDecode<crate::model::LiquidNetwork> for i32 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::LiquidNetwork {
@@ -1947,6 +1957,13 @@ impl SseDecode for i32 {
     }
 }
 
+impl SseDecode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i64::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for crate::bindings::InputType {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2083,6 +2100,36 @@ impl SseDecode for Vec<crate::model::Payment> {
             ans_.push(<crate::model::Payment>::sse_decode(deserializer));
         }
         return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::model::PaymentType> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::PaymentType>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for crate::model::ListPaymentsRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_filters = <Option<Vec<crate::model::PaymentType>>>::sse_decode(deserializer);
+        let mut var_fromTimestamp = <Option<i64>>::sse_decode(deserializer);
+        let mut var_toTimestamp = <Option<i64>>::sse_decode(deserializer);
+        let mut var_offset = <Option<u32>>::sse_decode(deserializer);
+        let mut var_limit = <Option<u32>>::sse_decode(deserializer);
+        return crate::model::ListPaymentsRequest {
+            filters: var_filters,
+            from_timestamp: var_fromTimestamp,
+            to_timestamp: var_toTimestamp,
+            offset: var_offset,
+            limit: var_limit,
+        };
     }
 }
 
@@ -2621,6 +2668,17 @@ impl SseDecode for Option<bool> {
     }
 }
 
+impl SseDecode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2661,6 +2719,17 @@ impl SseDecode for Option<u64> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<u64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<crate::model::PaymentType>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::model::PaymentType>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -3579,6 +3648,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidNetwork>
     for crate::model::LiquidNetwork
 {
     fn into_into_dart(self) -> crate::model::LiquidNetwork {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ListPaymentsRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.filters.into_into_dart().into_dart(),
+            self.from_timestamp.into_into_dart().into_dart(),
+            self.to_timestamp.into_into_dart().into_dart(),
+            self.offset.into_into_dart().into_dart(),
+            self.limit.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::ListPaymentsRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ListPaymentsRequest>
+    for crate::model::ListPaymentsRequest
+{
+    fn into_into_dart(self) -> crate::model::ListPaymentsRequest {
         self
     }
 }
@@ -4969,6 +5062,13 @@ impl SseEncode for i32 {
     }
 }
 
+impl SseEncode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
+    }
+}
+
 impl SseEncode for crate::bindings::InputType {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5082,6 +5182,27 @@ impl SseEncode for Vec<crate::model::Payment> {
         for item in self {
             <crate::model::Payment>::sse_encode(item, serializer);
         }
+    }
+}
+
+impl SseEncode for Vec<crate::model::PaymentType> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::PaymentType>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::model::ListPaymentsRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<Vec<crate::model::PaymentType>>>::sse_encode(self.filters, serializer);
+        <Option<i64>>::sse_encode(self.from_timestamp, serializer);
+        <Option<i64>>::sse_encode(self.to_timestamp, serializer);
+        <Option<u32>>::sse_encode(self.offset, serializer);
+        <Option<u32>>::sse_encode(self.limit, serializer);
     }
 }
 
@@ -5503,6 +5624,16 @@ impl SseEncode for Option<bool> {
     }
 }
 
+impl SseEncode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5539,6 +5670,16 @@ impl SseEncode for Option<u64> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <u64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<crate::model::PaymentType>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::model::PaymentType>>::sse_encode(value, serializer);
         }
     }
 }

@@ -155,8 +155,8 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.receive_onchain(&req))
     }
 
-    pub fn list_payments(&self) -> Result<Vec<Payment>, PaymentError> {
-        rt().block_on(self.sdk.list_payments())
+    pub fn list_payments(&self, req: ListPaymentsRequest) -> Result<Vec<Payment>, PaymentError> {
+        rt().block_on(self.sdk.list_payments(&req))
     }
 
     pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {

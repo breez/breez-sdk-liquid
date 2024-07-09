@@ -51,7 +51,23 @@ pub(crate) enum Command {
         payer_amount_sat: u64,
     },
     /// List incoming and outgoing payments
-    ListPayments,
+    ListPayments {
+        /// The optional from unix timestamp
+        #[clap(name = "from_timestamp", short = 'f', long = "from")]
+        from_timestamp: Option<i64>,
+
+        /// The optional to unix timestamp
+        #[clap(name = "to_timestamp", short = 't', long = "to")]
+        to_timestamp: Option<i64>,
+
+        /// Optional limit of listed payments
+        #[clap(short = 'l', long = "limit")]
+        limit: Option<u32>,
+
+        /// Optional offset in payments
+        #[clap(short = 'o', long = "offset")]
+        offset: Option<u32>,
+    },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -268,8 +284,21 @@ pub(crate) async fn handle_command(
         Command::GetInfo => {
             command_result!(sdk.get_info().await?)
         }
-        Command::ListPayments => {
-            let payments = sdk.list_payments().await?;
+        Command::ListPayments {
+            from_timestamp,
+            to_timestamp,
+            limit,
+            offset,
+        } => {
+            let payments = sdk
+                .list_payments(&ListPaymentsRequest {
+                    filters: None,
+                    from_timestamp,
+                    to_timestamp,
+                    limit,
+                    offset,
+                })
+                .await?;
             command_result!(payments)
         }
         Command::ListRefundables => {
