@@ -1431,7 +1431,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Lists the SDK payments in reverse chronological order.
+    /// Lists the SDK payments in reverse chronological order, from newest to oldest.
     /// The payments are determined based on onchain transactions and swaps.
     pub async fn list_payments(
         &self,
