@@ -745,7 +745,7 @@ impl LiquidSdk {
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
-            timestamp: None,
+            timestamp: Some(utils::now()),
             amount_sat: payer_amount_sat,
             fees_sat: onchain_fees_sat,
             payment_type: PaymentType::Send,
