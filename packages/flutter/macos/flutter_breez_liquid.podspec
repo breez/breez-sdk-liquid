@@ -6,7 +6,7 @@ release_tag_name = "breez_liquid-#{tag_name}"
 # so we have to fetch the correct version here.
 framework_name = 'breez_sdk_liquid.xcframework'
 remote_zip_name = "#{framework_name}.zip"
-url = "https://github.com/breez/breez-liquid-sdk-flutter/releases/download/#{tag_name}/#{remote_zip_name}"
+url = "https://github.com/breez/breez-sdk-liquid-flutter/releases/download/#{tag_name}/#{remote_zip_name}"
 local_zip_name = "#{release_tag_name}.zip"
 
 Pod::Spec.new do |spec|

@@ -20,7 +20,7 @@ import {
     prepareSendPayment,
     receivePayment,
     sendPayment
-} from "@breeztech/react-native-breez-liquid-sdk"
+} from "@breeztech/react-native-breez-sdk-liquid"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 

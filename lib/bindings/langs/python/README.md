@@ -13,7 +13,7 @@ import breez_sdk_liquid
 ## Python Package
 
 Run the GitHub workflow 'Publish Python Bindings' when creating a new release of Breez Liquid SDK.
-It will create wheels for the following Python versions and Platforms and upload them to [PyPi.org](https://pypi.org/project/breez-liquid-sdk/).
+It will create wheels for the following Python versions and Platforms and upload them to [PyPi.org](https://pypi.org/project/breez-sdk-liquid/).
 
 ### Supported Wheels
 

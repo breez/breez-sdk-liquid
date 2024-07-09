@@ -61,7 +61,7 @@ jobs:
   build-language-bindings:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}

@@ -120,13 +120,13 @@ publishing {
                     licenses {
                         license {
                             name.set("MIT")
-                            url.set("https://github.com/breez/breez-liquid-sdk/blob/main/LICENSE")
+                            url.set("https://github.com/breez/breez-sdk-liquid/blob/main/LICENSE")
                         }
                     }
                     scm {
-                        connection.set("scm:git:github.com/breez/breez-liquid-sdk.git")
-                        developerConnection.set("scm:git:ssh://github.com/breez/breez-liquid-sdk.git")
-                        url.set("https://github.com/breez/breez-liquid-sdk")
+                        connection.set("scm:git:github.com/breez/breez-sdk-liquid.git")
+                        developerConnection.set("scm:git:ssh://github.com/breez/breez-sdk-liquid.git")
+                        url.set("https://github.com/breez/breez-sdk-liquid")
                     }
                 }
             }

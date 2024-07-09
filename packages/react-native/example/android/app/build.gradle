@@ -269,7 +269,7 @@ android {
 }
 
 dependencies {
-    implementation project(':breeztech_react-native-breez-liquid-sdk')
+    implementation project(':breeztech_react-native-breez-sdk-liquid')
 
     implementation project(':react-native-build-config')
 

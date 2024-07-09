@@ -75,7 +75,7 @@ To use the locally built bindings instead of integrating them remotely, make the
 		- Rename `BreezSDKLiquid.podspec.dev` to `BreezSDKLiquid.podspec`
 - For Android:
 	- Comment out the following line from the dependencies section in `packages/react-native/android/build.gradle`:
-		- `implementation("com.github.breez:breez-liquid-sdk:${getVersionFromNpmPackage()}") { exclude group:"net.java.dev.jna" }`
+		- `implementation("com.github.breez:breez-sdk-liquid:${getVersionFromNpmPackage()}") { exclude group:"net.java.dev.jna" }`
 
 Reinstall the dependencies in the example project and run it.
 It will now use the locally built bindings.
@@ -85,10 +85,10 @@ It will now use the locally built bindings.
 To test locally built bindings in the example app, the npm dependencies need to be updated to use the local package.
 In `packages/react-native/example/package.json` replace the current version with `file:../`:
 ```json
-    "@breeztech/react-native-breez-liquid-sdk": "file:../",
+    "@breeztech/react-native-breez-sdk-liquid": "file:../",
 ```
 
-Run the npm/yarn install to download dependences for both the react-native-breez-liquid-sdk package and the example app:
+Run the npm/yarn install to download dependences for both the react-native-breez-sdk-liquid package and the example app:
 ```bash
 yarn bootstrap
 ```

@@ -34,6 +34,9 @@ class _$LnUrlPayResultCopyWithImpl<$Res, $Val extends LnUrlPayResult>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -53,6 +56,8 @@ class __$$LnUrlPayResult_EndpointSuccessImplCopyWithImpl<$Res>
       _$LnUrlPayResult_EndpointSuccessImpl _value, $Res Function(_$LnUrlPayResult_EndpointSuccessImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -91,7 +96,9 @@ class _$LnUrlPayResult_EndpointSuccessImpl extends LnUrlPayResult_EndpointSucces
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayResult_EndpointSuccessImplCopyWith<_$LnUrlPayResult_EndpointSuccessImpl> get copyWith =>
@@ -106,7 +113,10 @@ abstract class LnUrlPayResult_EndpointSuccess extends LnUrlPayResult {
 
   @override
   LnUrlPaySuccessData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayResult_EndpointSuccessImplCopyWith<_$LnUrlPayResult_EndpointSuccessImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -128,6 +138,8 @@ class __$$LnUrlPayResult_EndpointErrorImplCopyWithImpl<$Res>
       _$LnUrlPayResult_EndpointErrorImpl _value, $Res Function(_$LnUrlPayResult_EndpointErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -166,7 +178,9 @@ class _$LnUrlPayResult_EndpointErrorImpl extends LnUrlPayResult_EndpointError {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayResult_EndpointErrorImplCopyWith<_$LnUrlPayResult_EndpointErrorImpl> get copyWith =>
@@ -180,7 +194,10 @@ abstract class LnUrlPayResult_EndpointError extends LnUrlPayResult {
 
   @override
   LnUrlErrorData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayResult_EndpointErrorImplCopyWith<_$LnUrlPayResult_EndpointErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -202,6 +219,8 @@ class __$$LnUrlPayResult_PayErrorImplCopyWithImpl<$Res>
       _$LnUrlPayResult_PayErrorImpl _value, $Res Function(_$LnUrlPayResult_PayErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -240,7 +259,9 @@ class _$LnUrlPayResult_PayErrorImpl extends LnUrlPayResult_PayError {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayResult_PayErrorImplCopyWith<_$LnUrlPayResult_PayErrorImpl> get copyWith =>
@@ -254,7 +275,10 @@ abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
 
   @override
   LnUrlPayErrorData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayResult_PayErrorImplCopyWith<_$LnUrlPayResult_PayErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -276,6 +300,9 @@ class _$SdkEventCopyWithImpl<$Res, $Val extends SdkEvent> implements $SdkEventCo
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -295,6 +322,8 @@ class __$$SdkEvent_PaymentFailedImplCopyWithImpl<$Res>
       _$SdkEvent_PaymentFailedImpl _value, $Res Function(_$SdkEvent_PaymentFailedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -333,7 +362,9 @@ class _$SdkEvent_PaymentFailedImpl extends SdkEvent_PaymentFailed {
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentFailedImplCopyWith<_$SdkEvent_PaymentFailedImpl> get copyWith =>
@@ -345,7 +376,10 @@ abstract class SdkEvent_PaymentFailed extends SdkEvent {
   const SdkEvent_PaymentFailed._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentFailedImplCopyWith<_$SdkEvent_PaymentFailedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -367,6 +401,8 @@ class __$$SdkEvent_PaymentPendingImplCopyWithImpl<$Res>
       _$SdkEvent_PaymentPendingImpl _value, $Res Function(_$SdkEvent_PaymentPendingImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -405,7 +441,9 @@ class _$SdkEvent_PaymentPendingImpl extends SdkEvent_PaymentPending {
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentPendingImplCopyWith<_$SdkEvent_PaymentPendingImpl> get copyWith =>
@@ -417,7 +455,10 @@ abstract class SdkEvent_PaymentPending extends SdkEvent {
   const SdkEvent_PaymentPending._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentPendingImplCopyWith<_$SdkEvent_PaymentPendingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -439,6 +480,8 @@ class __$$SdkEvent_PaymentRefundedImplCopyWithImpl<$Res>
       _$SdkEvent_PaymentRefundedImpl _value, $Res Function(_$SdkEvent_PaymentRefundedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -477,7 +520,9 @@ class _$SdkEvent_PaymentRefundedImpl extends SdkEvent_PaymentRefunded {
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentRefundedImplCopyWith<_$SdkEvent_PaymentRefundedImpl> get copyWith =>
@@ -489,7 +534,10 @@ abstract class SdkEvent_PaymentRefunded extends SdkEvent {
   const SdkEvent_PaymentRefunded._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentRefundedImplCopyWith<_$SdkEvent_PaymentRefundedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -511,6 +559,8 @@ class __$$SdkEvent_PaymentRefundPendingImplCopyWithImpl<$Res>
       _$SdkEvent_PaymentRefundPendingImpl _value, $Res Function(_$SdkEvent_PaymentRefundPendingImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -549,7 +599,9 @@ class _$SdkEvent_PaymentRefundPendingImpl extends SdkEvent_PaymentRefundPending 
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentRefundPendingImplCopyWith<_$SdkEvent_PaymentRefundPendingImpl> get copyWith =>
@@ -563,7 +615,10 @@ abstract class SdkEvent_PaymentRefundPending extends SdkEvent {
   const SdkEvent_PaymentRefundPending._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentRefundPendingImplCopyWith<_$SdkEvent_PaymentRefundPendingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -585,6 +640,8 @@ class __$$SdkEvent_PaymentSucceededImplCopyWithImpl<$Res>
       _$SdkEvent_PaymentSucceededImpl _value, $Res Function(_$SdkEvent_PaymentSucceededImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -623,7 +680,9 @@ class _$SdkEvent_PaymentSucceededImpl extends SdkEvent_PaymentSucceeded {
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentSucceededImplCopyWith<_$SdkEvent_PaymentSucceededImpl> get copyWith =>
@@ -635,7 +694,10 @@ abstract class SdkEvent_PaymentSucceeded extends SdkEvent {
   const SdkEvent_PaymentSucceeded._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentSucceededImplCopyWith<_$SdkEvent_PaymentSucceededImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -657,6 +719,8 @@ class __$$SdkEvent_PaymentWaitingConfirmationImplCopyWithImpl<$Res>
       $Res Function(_$SdkEvent_PaymentWaitingConfirmationImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -695,7 +759,9 @@ class _$SdkEvent_PaymentWaitingConfirmationImpl extends SdkEvent_PaymentWaitingC
   @override
   int get hashCode => Object.hash(runtimeType, details);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SdkEvent_PaymentWaitingConfirmationImplCopyWith<_$SdkEvent_PaymentWaitingConfirmationImpl>
@@ -710,7 +776,10 @@ abstract class SdkEvent_PaymentWaitingConfirmation extends SdkEvent {
   const SdkEvent_PaymentWaitingConfirmation._() : super._();
 
   Payment get details;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SdkEvent_PaymentWaitingConfirmationImplCopyWith<_$SdkEvent_PaymentWaitingConfirmationImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -728,6 +797,9 @@ class __$$SdkEvent_SyncedImplCopyWithImpl<$Res> extends _$SdkEventCopyWithImpl<$
   __$$SdkEvent_SyncedImplCopyWithImpl(
       _$SdkEvent_SyncedImpl _value, $Res Function(_$SdkEvent_SyncedImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc

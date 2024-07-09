@@ -322,7 +322,7 @@
 					"\"${PODS_ROOT}/Headers/Public/fmt\"",
 					"\"${PODS_ROOT}/Headers/Public/glog\"",
 					"\"${PODS_ROOT}/Headers/Public/libevent\"",
-					"\"${PODS_ROOT}/Headers/Public/react-native-breez-liquid-sdk\"",
+					"\"${PODS_ROOT}/Headers/Public/react-native-breez-sdk-liquid\"",
 					"\"$(PODS_ROOT)/DoubleConversion\"",
 					"\"$(PODS_ROOT)/boost\"",
 					"\"$(PODS_ROOT)/Headers/Private/React-Core\"",
@@ -373,7 +373,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/fmt\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/glog\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/libevent\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-breez-liquid-sdk\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-breez-sdk-liquid\"",
 					/usr/lib/swift,
 				);
 				OTHER_LDFLAGS = (
@@ -436,7 +436,7 @@
 					"\"${PODS_ROOT}/Headers/Public/fmt\"",
 					"\"${PODS_ROOT}/Headers/Public/glog\"",
 					"\"${PODS_ROOT}/Headers/Public/libevent\"",
-					"\"${PODS_ROOT}/Headers/Public/react-native-breez-liquid-sdk\"",
+					"\"${PODS_ROOT}/Headers/Public/react-native-breez-sdk-liquid\"",
 					"\"$(PODS_ROOT)/DoubleConversion\"",
 					"\"$(PODS_ROOT)/boost\"",
 					"\"$(PODS_ROOT)/Headers/Private/React-Core\"",
@@ -480,7 +480,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/fmt\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/glog\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/libevent\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-breez-liquid-sdk\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-breez-sdk-liquid\"",
 					/usr/lib/swift,
 				);
 				OTHER_LDFLAGS = (

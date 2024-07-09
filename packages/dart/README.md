@@ -10,7 +10,7 @@
 
 ## Description
 
-This is a Dart package that wraps the Dart bindings of [Breez Liquid SDK](https://github.com/breez/breez-liquid-sdk?tab=readme-ov-file#readme).
+This is a Dart package that wraps the Dart bindings of [Breez Liquid SDK](https://github.com/breez/breez-sdk-liquid?tab=readme-ov-file#readme).
 
 ## Installation
 To use this plugin, add `breez_sdk_liquid` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).

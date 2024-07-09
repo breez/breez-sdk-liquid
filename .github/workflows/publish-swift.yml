@@ -21,10 +21,10 @@ on:
         default: false
     secrets:
       REPO_SSH_KEY:
-        description: 'ssh key to commit to the breez-liquid-sdk-swift repository'
+        description: 'ssh key to commit to the breez-sdk-liquid-swift repository'
         required: true
       SWIFT_RELEASE_TOKEN:
-        description: 'github token to release to the breez-liquid-sdk-swift repository'
+        description: 'github token to release to the breez-sdk-liquid-swift repository'
         required: true
       COCOAPODS_TRUNK_TOKEN:
         description: 'cocoapods trunk token'
@@ -34,16 +34,16 @@ jobs:
   build-swift-package:
     runs-on: macOS-13
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           path: build
 
-      - name: Checkout breez-liquid-sdk-swift repo
+      - name: Checkout breez-sdk-liquid-swift repo
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-liquid-sdk-swift
+          repository: breez/breez-sdk-liquid-swift
           ref: main
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
@@ -93,7 +93,7 @@ jobs:
       - name: Update Swift Package definition
         working-directory: build/lib/bindings/langs/swift
         run: |
-          sed 's#.binaryTarget(name: "breez_sdk_liquidFFI", path: "./breez_sdk_liquidFFI.xcframework"),#.binaryTarget(name: "breez_sdk_liquidFFI", url: "https://github.com/breez/breez-liquid-sdk-swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_sdk_liquidFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezSDKLiquidTests", dependencies: \["BreezSDKLiquid"\]),/d' Package.swift > ../../../../../dist/Package.swift
+          sed 's#.binaryTarget(name: "breez_sdk_liquidFFI", path: "./breez_sdk_liquidFFI.xcframework"),#.binaryTarget(name: "breez_sdk_liquidFFI", url: "https://github.com/breez/breez-sdk-liquid-swift/releases/download/${{ inputs.package-version || '0.0.1' }}/breez_sdk_liquidFFI.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),#;/.testTarget(name: "BreezSDKLiquidTests", dependencies: \["BreezSDKLiquid"\]),/d' Package.swift > ../../../../../dist/Package.swift
           cp -r Sources ../../../../../dist
 
       - name: Update Cocoapods definitions
@@ -121,7 +121,7 @@ jobs:
         if: ${{ inputs.publish }}
         uses: softprops/action-gh-release@v2
         with:
-          repository: breez/breez-liquid-sdk-swift
+          repository: breez/breez-sdk-liquid-swift
           files: |
             build/lib/bindings/langs/swift/breez_sdk_liquidFFI.xcframework.zip
           tag_name: ${{ inputs.package-version || '0.0.1' }}

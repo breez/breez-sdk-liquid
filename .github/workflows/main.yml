@@ -242,7 +242,7 @@ jobs:
           cargo init --name test_project --vcs none
           
           # A project might reference our SDK as a git repository
-          # cargo add --git https://github.com/breez/breez-liquid-sdk breez-sdk-liquid
+          # cargo add --git https://github.com/breez/breez-sdk-liquid breez-sdk-liquid
           
           # In this test, we reference the checked out repo (e.g. this PR branch)
           cargo add --path ../lib/core breez-sdk-liquid

@@ -21,25 +21,25 @@ on:
         default: true
     secrets:
       REPO_SSH_KEY:
-        description: 'ssh key to commit to the breez-liquid-sdk-flutter repository'
+        description: 'ssh key to commit to the breez-sdk-liquid-flutter repository'
         required: true
       SWIFT_RELEASE_TOKEN:
-        description: 'github token to release to the breez-liquid-sdk-flutter repository'
+        description: 'github token to release to the breez-sdk-liquid-flutter repository'
         required: true
 
 jobs:
   build-tag-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk-flutter repo
+      - name: Checkout breez-sdk-liquid-flutter repo
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-liquid-sdk-flutter
+          repository: breez/breez-sdk-liquid-flutter
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
           path: dist
 
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -80,7 +80,7 @@ jobs:
         working-directory: dist
         run: |
           sed -i.bak -e 's/version:.*/version: ${{ inputs.package-version }}/' pubspec.yaml
-          sed -i.bak -e 's/path:.*/git:\n      url: git@github.com:breez\/breez-liquid-sdk-dart.git\n      ref: ${{ inputs.package-version }}/' pubspec_overrides.yaml
+          sed -i.bak -e 's/path:.*/git:\n      url: git@github.com:breez\/breez-sdk-liquid-dart.git\n      ref: ${{ inputs.package-version }}/' pubspec_overrides.yaml
           sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
           sed -i.bak -e 's/set(TagName.*/set(TagName "v${{ inputs.package-version }}")/' android/CMakeLists.txt
           sed -i.bak -e "s/^version = .*/version = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
@@ -93,7 +93,7 @@ jobs:
       - name: Archive flutter release
         uses: actions/upload-artifact@v4
         with:
-          name: breez-liquid-sdk-flutter-${{ inputs.package-version || github.sha }}
+          name: breez-sdk-liquid-flutter-${{ inputs.package-version || github.sha }}
           path: |
             dist/*
             !dist/.git
@@ -114,7 +114,7 @@ jobs:
         if: ${{ inputs.publish }}
         uses: softprops/action-gh-release@v2
         with:
-          repository: breez/breez-liquid-sdk-flutter
+          repository: breez/breez-sdk-liquid-flutter
           files: |
             bindings/android.tar.gz
             bindings/breez_sdk_liquid.xcframework.zip

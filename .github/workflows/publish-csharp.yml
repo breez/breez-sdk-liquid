@@ -33,7 +33,7 @@ jobs:
   build-package:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -110,7 +110,7 @@ jobs:
           macOS-latest,
         ]
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         if: ${{ !inputs.skip-tests }}
         uses: actions/checkout@v4
         with:

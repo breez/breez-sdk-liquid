@@ -24,10 +24,10 @@ jobs:
   build-tag-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk-go repo
+      - name: Checkout breez-sdk-liquid-go repo
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-liquid-sdk-go
+          repository: breez/breez-sdk-liquid-go
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
 
@@ -84,7 +84,7 @@ jobs:
       - name: Archive Go release
         uses: actions/upload-artifact@v4
         with:
-          name: breez-liquid-sdk-go-${{ inputs.package-version || github.sha }}
+          name: breez-sdk-liquid-go-${{ inputs.package-version || github.sha }}
           path: |
             ./*
             !./.git
