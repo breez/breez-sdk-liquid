@@ -4,8 +4,8 @@ import 'package:flutter_breez_liquid_example/routes/home/widgets/mnemonics_dialo
 import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
 
 class HomePageDrawer extends StatefulWidget {
-  final CredentialsManager credentialsManager;
   final BindingLiquidSdk liquidSDK;
+  final CredentialsManager credentialsManager;
 
   const HomePageDrawer({super.key, required this.liquidSDK, required this.credentialsManager});
 

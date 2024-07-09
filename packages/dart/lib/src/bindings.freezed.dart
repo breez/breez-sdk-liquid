@@ -33,6 +33,9 @@ class _$AesSuccessActionDataResultCopyWithImpl<$Res, $Val extends AesSuccessActi
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -53,6 +56,8 @@ class __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>
       $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -91,7 +96,9 @@ class _$AesSuccessActionDataResult_DecryptedImpl extends AesSuccessActionDataRes
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
@@ -105,7 +112,10 @@ abstract class AesSuccessActionDataResult_Decrypted extends AesSuccessActionData
   const AesSuccessActionDataResult_Decrypted._() : super._();
 
   AesSuccessActionDataDecrypted get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -129,6 +139,8 @@ class __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>
       $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -167,7 +179,9 @@ class _$AesSuccessActionDataResult_ErrorStatusImpl extends AesSuccessActionDataR
   @override
   int get hashCode => Object.hash(runtimeType, reason);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
@@ -181,7 +195,10 @@ abstract class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDa
   const AesSuccessActionDataResult_ErrorStatus._() : super._();
 
   String get reason;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of AesSuccessActionDataResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -203,6 +220,9 @@ class _$InputTypeCopyWithImpl<$Res, $Val extends InputType> implements $InputTyp
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -222,6 +242,8 @@ class __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>
       _$InputType_BitcoinAddressImpl _value, $Res Function(_$InputType_BitcoinAddressImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -260,7 +282,9 @@ class _$InputType_BitcoinAddressImpl extends InputType_BitcoinAddress {
   @override
   int get hashCode => Object.hash(runtimeType, address);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_BitcoinAddressImplCopyWith<_$InputType_BitcoinAddressImpl> get copyWith =>
@@ -273,7 +297,10 @@ abstract class InputType_BitcoinAddress extends InputType {
   const InputType_BitcoinAddress._() : super._();
 
   BitcoinAddressData get address;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_BitcoinAddressImplCopyWith<_$InputType_BitcoinAddressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -294,6 +321,8 @@ class __$$InputType_Bolt11ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl
       _$InputType_Bolt11Impl _value, $Res Function(_$InputType_Bolt11Impl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -332,7 +361,9 @@ class _$InputType_Bolt11Impl extends InputType_Bolt11 {
   @override
   int get hashCode => Object.hash(runtimeType, invoice);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_Bolt11ImplCopyWith<_$InputType_Bolt11Impl> get copyWith =>
@@ -344,7 +375,10 @@ abstract class InputType_Bolt11 extends InputType {
   const InputType_Bolt11._() : super._();
 
   LNInvoice get invoice;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_Bolt11ImplCopyWith<_$InputType_Bolt11Impl> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -364,6 +398,8 @@ class __$$InputType_NodeIdImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl
       _$InputType_NodeIdImpl _value, $Res Function(_$InputType_NodeIdImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -402,7 +438,9 @@ class _$InputType_NodeIdImpl extends InputType_NodeId {
   @override
   int get hashCode => Object.hash(runtimeType, nodeId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_NodeIdImplCopyWith<_$InputType_NodeIdImpl> get copyWith =>
@@ -414,7 +452,10 @@ abstract class InputType_NodeId extends InputType {
   const InputType_NodeId._() : super._();
 
   String get nodeId;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_NodeIdImplCopyWith<_$InputType_NodeIdImpl> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -432,6 +473,8 @@ class __$$InputType_UrlImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$R
   __$$InputType_UrlImplCopyWithImpl(_$InputType_UrlImpl _value, $Res Function(_$InputType_UrlImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -470,7 +513,9 @@ class _$InputType_UrlImpl extends InputType_Url {
   @override
   int get hashCode => Object.hash(runtimeType, url);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_UrlImplCopyWith<_$InputType_UrlImpl> get copyWith =>
@@ -482,7 +527,10 @@ abstract class InputType_Url extends InputType {
   const InputType_Url._() : super._();
 
   String get url;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_UrlImplCopyWith<_$InputType_UrlImpl> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -503,6 +551,8 @@ class __$$InputType_LnUrlPayImplCopyWithImpl<$Res>
       _$InputType_LnUrlPayImpl _value, $Res Function(_$InputType_LnUrlPayImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -541,7 +591,9 @@ class _$InputType_LnUrlPayImpl extends InputType_LnUrlPay {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_LnUrlPayImplCopyWith<_$InputType_LnUrlPayImpl> get copyWith =>
@@ -553,7 +605,10 @@ abstract class InputType_LnUrlPay extends InputType {
   const InputType_LnUrlPay._() : super._();
 
   LnUrlPayRequestData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_LnUrlPayImplCopyWith<_$InputType_LnUrlPayImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -575,6 +630,8 @@ class __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>
       _$InputType_LnUrlWithdrawImpl _value, $Res Function(_$InputType_LnUrlWithdrawImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -613,7 +670,9 @@ class _$InputType_LnUrlWithdrawImpl extends InputType_LnUrlWithdraw {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_LnUrlWithdrawImplCopyWith<_$InputType_LnUrlWithdrawImpl> get copyWith =>
@@ -626,7 +685,10 @@ abstract class InputType_LnUrlWithdraw extends InputType {
   const InputType_LnUrlWithdraw._() : super._();
 
   LnUrlWithdrawRequestData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_LnUrlWithdrawImplCopyWith<_$InputType_LnUrlWithdrawImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -648,6 +710,8 @@ class __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>
       _$InputType_LnUrlAuthImpl _value, $Res Function(_$InputType_LnUrlAuthImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -686,7 +750,9 @@ class _$InputType_LnUrlAuthImpl extends InputType_LnUrlAuth {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_LnUrlAuthImplCopyWith<_$InputType_LnUrlAuthImpl> get copyWith =>
@@ -698,7 +764,10 @@ abstract class InputType_LnUrlAuth extends InputType {
   const InputType_LnUrlAuth._() : super._();
 
   LnUrlAuthRequestData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_LnUrlAuthImplCopyWith<_$InputType_LnUrlAuthImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -720,6 +789,8 @@ class __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>
       _$InputType_LnUrlErrorImpl _value, $Res Function(_$InputType_LnUrlErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -758,7 +829,9 @@ class _$InputType_LnUrlErrorImpl extends InputType_LnUrlError {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InputType_LnUrlErrorImplCopyWith<_$InputType_LnUrlErrorImpl> get copyWith =>
@@ -770,7 +843,10 @@ abstract class InputType_LnUrlError extends InputType {
   const InputType_LnUrlError._() : super._();
 
   LnUrlErrorData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_LnUrlErrorImplCopyWith<_$InputType_LnUrlErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -794,6 +870,9 @@ class _$SuccessActionProcessedCopyWithImpl<$Res, $Val extends SuccessActionProce
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -815,6 +894,8 @@ class __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>
       _$SuccessActionProcessed_AesImpl _value, $Res Function(_$SuccessActionProcessed_AesImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -828,6 +909,8 @@ class __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>
     ));
   }
 
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $AesSuccessActionDataResultCopyWith<$Res> get result {
@@ -861,7 +944,9 @@ class _$SuccessActionProcessed_AesImpl extends SuccessActionProcessed_Aes {
   @override
   int get hashCode => Object.hash(runtimeType, result);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SuccessActionProcessed_AesImplCopyWith<_$SuccessActionProcessed_AesImpl> get copyWith =>
@@ -874,7 +959,10 @@ abstract class SuccessActionProcessed_Aes extends SuccessActionProcessed {
   const SuccessActionProcessed_Aes._() : super._();
 
   AesSuccessActionDataResult get result;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SuccessActionProcessed_AesImplCopyWith<_$SuccessActionProcessed_AesImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -896,6 +984,8 @@ class __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>
       _$SuccessActionProcessed_MessageImpl _value, $Res Function(_$SuccessActionProcessed_MessageImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -934,7 +1024,9 @@ class _$SuccessActionProcessed_MessageImpl extends SuccessActionProcessed_Messag
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SuccessActionProcessed_MessageImplCopyWith<_$SuccessActionProcessed_MessageImpl> get copyWith =>
@@ -948,7 +1040,10 @@ abstract class SuccessActionProcessed_Message extends SuccessActionProcessed {
   const SuccessActionProcessed_Message._() : super._();
 
   MessageSuccessActionData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SuccessActionProcessed_MessageImplCopyWith<_$SuccessActionProcessed_MessageImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -970,6 +1065,8 @@ class __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>
       _$SuccessActionProcessed_UrlImpl _value, $Res Function(_$SuccessActionProcessed_UrlImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1008,7 +1105,9 @@ class _$SuccessActionProcessed_UrlImpl extends SuccessActionProcessed_Url {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SuccessActionProcessed_UrlImplCopyWith<_$SuccessActionProcessed_UrlImpl> get copyWith =>
@@ -1021,7 +1120,10 @@ abstract class SuccessActionProcessed_Url extends SuccessActionProcessed {
   const SuccessActionProcessed_Url._() : super._();
 
   UrlSuccessActionData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SuccessActionProcessed
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SuccessActionProcessed_UrlImplCopyWith<_$SuccessActionProcessed_UrlImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -10,10 +10,14 @@ import 'package:flutter_breez_liquid_example/services/breez_liquid_sdk.dart';
 import 'package:flutter_breez_liquid_example/services/credentials_manager.dart';
 
 class HomePage extends StatefulWidget {
-  final CredentialsManager credentialsManager;
   final BreezLiquidSDK liquidSDK;
+  final CredentialsManager credentialsManager;
 
-  const HomePage({super.key, required this.credentialsManager, required this.liquidSDK});
+  const HomePage({
+    super.key,
+    required this.liquidSDK,
+    required this.credentialsManager,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -65,11 +69,11 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         drawer: HomePageDrawer(
-            liquidSDK: widget.liquidSDK.wallet!, credentialsManager: widget.credentialsManager),
-        floatingActionButton: QrActionButton(liquidSDK: widget.liquidSDK.wallet!),
+            liquidSDK: widget.liquidSDK.instance!, credentialsManager: widget.credentialsManager),
+        floatingActionButton: QrActionButton(liquidSDK: widget.liquidSDK.instance!),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: HomePageBottomAppBar(
-          liquidSDK: widget.liquidSDK.wallet!,
+          liquidSDK: widget.liquidSDK.instance!,
           paymentsStream: widget.liquidSDK.paymentsStream,
         ),
       ),
@@ -79,7 +83,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _sync() async {
     try {
       debugPrint("Syncing wallet.");
-      await widget.liquidSDK.wallet!.sync();
+      await widget.liquidSDK.instance!.sync();
       debugPrint("Wallet synced!");
     } on Exception catch (e) {
       final errMsg = "Failed to sync wallet. $e";
