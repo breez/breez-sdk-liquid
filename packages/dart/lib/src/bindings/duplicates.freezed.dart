@@ -18,7 +18,9 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$LnUrlAuthError {
   String get err => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LnUrlAuthErrorCopyWith<LnUrlAuthError> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -40,6 +42,8 @@ class _$LnUrlAuthErrorCopyWithImpl<$Res, $Val extends LnUrlAuthError>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -72,6 +76,8 @@ class __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>
       _$LnUrlAuthError_GenericImpl _value, $Res Function(_$LnUrlAuthError_GenericImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -110,7 +116,9 @@ class _$LnUrlAuthError_GenericImpl extends LnUrlAuthError_Generic {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_GenericImplCopyWith<_$LnUrlAuthError_GenericImpl> get copyWith =>
@@ -123,8 +131,11 @@ abstract class LnUrlAuthError_Generic extends LnUrlAuthError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlAuthError_GenericImplCopyWith<_$LnUrlAuthError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -147,6 +158,8 @@ class __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>
       _$LnUrlAuthError_InvalidUriImpl _value, $Res Function(_$LnUrlAuthError_InvalidUriImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -185,7 +198,9 @@ class _$LnUrlAuthError_InvalidUriImpl extends LnUrlAuthError_InvalidUri {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_InvalidUriImplCopyWith<_$LnUrlAuthError_InvalidUriImpl> get copyWith =>
@@ -198,8 +213,11 @@ abstract class LnUrlAuthError_InvalidUri extends LnUrlAuthError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlAuthError_InvalidUriImplCopyWith<_$LnUrlAuthError_InvalidUriImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -223,6 +241,8 @@ class __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -261,7 +281,9 @@ class _$LnUrlAuthError_ServiceConnectivityImpl extends LnUrlAuthError_ServiceCon
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
@@ -276,8 +298,11 @@ abstract class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlAuthError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -300,6 +325,9 @@ class _$LnUrlCallbackStatusCopyWithImpl<$Res, $Val extends LnUrlCallbackStatus>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of LnUrlCallbackStatus
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -316,6 +344,9 @@ class __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>
   __$$LnUrlCallbackStatus_OkImplCopyWithImpl(
       _$LnUrlCallbackStatus_OkImpl _value, $Res Function(_$LnUrlCallbackStatus_OkImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of LnUrlCallbackStatus
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -360,6 +391,8 @@ class __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlCallbackStatus
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -398,7 +431,9 @@ class _$LnUrlCallbackStatus_ErrorStatusImpl extends LnUrlCallbackStatus_ErrorSta
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlCallbackStatus
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
@@ -412,7 +447,10 @@ abstract class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
   const LnUrlCallbackStatus_ErrorStatus._() : super._();
 
   LnUrlErrorData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlCallbackStatus
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -434,6 +472,9 @@ class _$LnUrlPayErrorCopyWithImpl<$Res, $Val extends LnUrlPayError> implements $
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -450,6 +491,9 @@ class __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>
   __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl(
       _$LnUrlPayError_AlreadyPaidImpl _value, $Res Function(_$LnUrlPayError_AlreadyPaidImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -494,6 +538,8 @@ class __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>
       _$LnUrlPayError_GenericImpl _value, $Res Function(_$LnUrlPayError_GenericImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -532,7 +578,9 @@ class _$LnUrlPayError_GenericImpl extends LnUrlPayError_Generic {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_GenericImplCopyWith<_$LnUrlPayError_GenericImpl> get copyWith =>
@@ -544,7 +592,10 @@ abstract class LnUrlPayError_Generic extends LnUrlPayError {
   const LnUrlPayError_Generic._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_GenericImplCopyWith<_$LnUrlPayError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -566,6 +617,8 @@ class __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>
       _$LnUrlPayError_InvalidAmountImpl _value, $Res Function(_$LnUrlPayError_InvalidAmountImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -604,7 +657,9 @@ class _$LnUrlPayError_InvalidAmountImpl extends LnUrlPayError_InvalidAmount {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidAmountImplCopyWith<_$LnUrlPayError_InvalidAmountImpl> get copyWith =>
@@ -616,7 +671,10 @@ abstract class LnUrlPayError_InvalidAmount extends LnUrlPayError {
   const LnUrlPayError_InvalidAmount._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_InvalidAmountImplCopyWith<_$LnUrlPayError_InvalidAmountImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -638,6 +696,8 @@ class __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>
       _$LnUrlPayError_InvalidInvoiceImpl _value, $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -676,7 +736,9 @@ class _$LnUrlPayError_InvalidInvoiceImpl extends LnUrlPayError_InvalidInvoice {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidInvoiceImplCopyWith<_$LnUrlPayError_InvalidInvoiceImpl> get copyWith =>
@@ -689,7 +751,10 @@ abstract class LnUrlPayError_InvalidInvoice extends LnUrlPayError {
   const LnUrlPayError_InvalidInvoice._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_InvalidInvoiceImplCopyWith<_$LnUrlPayError_InvalidInvoiceImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -711,6 +776,8 @@ class __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>
       _$LnUrlPayError_InvalidNetworkImpl _value, $Res Function(_$LnUrlPayError_InvalidNetworkImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -749,7 +816,9 @@ class _$LnUrlPayError_InvalidNetworkImpl extends LnUrlPayError_InvalidNetwork {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidNetworkImplCopyWith<_$LnUrlPayError_InvalidNetworkImpl> get copyWith =>
@@ -762,7 +831,10 @@ abstract class LnUrlPayError_InvalidNetwork extends LnUrlPayError {
   const LnUrlPayError_InvalidNetwork._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_InvalidNetworkImplCopyWith<_$LnUrlPayError_InvalidNetworkImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -784,6 +856,8 @@ class __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>
       _$LnUrlPayError_InvalidUriImpl _value, $Res Function(_$LnUrlPayError_InvalidUriImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -822,7 +896,9 @@ class _$LnUrlPayError_InvalidUriImpl extends LnUrlPayError_InvalidUri {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvalidUriImplCopyWith<_$LnUrlPayError_InvalidUriImpl> get copyWith =>
@@ -834,7 +910,10 @@ abstract class LnUrlPayError_InvalidUri extends LnUrlPayError {
   const LnUrlPayError_InvalidUri._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_InvalidUriImplCopyWith<_$LnUrlPayError_InvalidUriImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -856,6 +935,8 @@ class __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>
       _$LnUrlPayError_InvoiceExpiredImpl _value, $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -894,7 +975,9 @@ class _$LnUrlPayError_InvoiceExpiredImpl extends LnUrlPayError_InvoiceExpired {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_InvoiceExpiredImplCopyWith<_$LnUrlPayError_InvoiceExpiredImpl> get copyWith =>
@@ -907,7 +990,10 @@ abstract class LnUrlPayError_InvoiceExpired extends LnUrlPayError {
   const LnUrlPayError_InvoiceExpired._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_InvoiceExpiredImplCopyWith<_$LnUrlPayError_InvoiceExpiredImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -929,6 +1015,8 @@ class __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>
       _$LnUrlPayError_PaymentFailedImpl _value, $Res Function(_$LnUrlPayError_PaymentFailedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -967,7 +1055,9 @@ class _$LnUrlPayError_PaymentFailedImpl extends LnUrlPayError_PaymentFailed {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_PaymentFailedImplCopyWith<_$LnUrlPayError_PaymentFailedImpl> get copyWith =>
@@ -979,7 +1069,10 @@ abstract class LnUrlPayError_PaymentFailed extends LnUrlPayError {
   const LnUrlPayError_PaymentFailed._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_PaymentFailedImplCopyWith<_$LnUrlPayError_PaymentFailedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1001,6 +1094,8 @@ class __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>
       _$LnUrlPayError_PaymentTimeoutImpl _value, $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1039,7 +1134,9 @@ class _$LnUrlPayError_PaymentTimeoutImpl extends LnUrlPayError_PaymentTimeout {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_PaymentTimeoutImplCopyWith<_$LnUrlPayError_PaymentTimeoutImpl> get copyWith =>
@@ -1052,7 +1149,10 @@ abstract class LnUrlPayError_PaymentTimeout extends LnUrlPayError {
   const LnUrlPayError_PaymentTimeout._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_PaymentTimeoutImplCopyWith<_$LnUrlPayError_PaymentTimeoutImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1074,6 +1174,8 @@ class __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>
       _$LnUrlPayError_RouteNotFoundImpl _value, $Res Function(_$LnUrlPayError_RouteNotFoundImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1112,7 +1214,9 @@ class _$LnUrlPayError_RouteNotFoundImpl extends LnUrlPayError_RouteNotFound {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_RouteNotFoundImplCopyWith<_$LnUrlPayError_RouteNotFoundImpl> get copyWith =>
@@ -1124,7 +1228,10 @@ abstract class LnUrlPayError_RouteNotFound extends LnUrlPayError {
   const LnUrlPayError_RouteNotFound._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_RouteNotFoundImplCopyWith<_$LnUrlPayError_RouteNotFoundImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1146,6 +1253,8 @@ class __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1184,7 +1293,9 @@ class _$LnUrlPayError_RouteTooExpensiveImpl extends LnUrlPayError_RouteTooExpens
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
@@ -1198,7 +1309,10 @@ abstract class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
   const LnUrlPayError_RouteTooExpensive._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1220,6 +1334,8 @@ class __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1258,7 +1374,9 @@ class _$LnUrlPayError_ServiceConnectivityImpl extends LnUrlPayError_ServiceConne
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
@@ -1272,7 +1390,10 @@ abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
   const LnUrlPayError_ServiceConnectivity._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlPayError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1281,7 +1402,9 @@ abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
 mixin _$LnUrlWithdrawError {
   String get err => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $LnUrlWithdrawErrorCopyWith<LnUrlWithdrawError> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -1303,6 +1426,8 @@ class _$LnUrlWithdrawErrorCopyWithImpl<$Res, $Val extends LnUrlWithdrawError>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1335,6 +1460,8 @@ class __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>
       _$LnUrlWithdrawError_GenericImpl _value, $Res Function(_$LnUrlWithdrawError_GenericImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1373,7 +1500,9 @@ class _$LnUrlWithdrawError_GenericImpl extends LnUrlWithdrawError_Generic {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_GenericImplCopyWith<_$LnUrlWithdrawError_GenericImpl> get copyWith =>
@@ -1386,8 +1515,11 @@ abstract class LnUrlWithdrawError_Generic extends LnUrlWithdrawError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_GenericImplCopyWith<_$LnUrlWithdrawError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1411,6 +1543,8 @@ class __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1449,7 +1583,9 @@ class _$LnUrlWithdrawError_InvalidAmountImpl extends LnUrlWithdrawError_InvalidA
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
@@ -1464,8 +1600,11 @@ abstract class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1489,6 +1628,8 @@ class __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1527,7 +1668,9 @@ class _$LnUrlWithdrawError_InvalidInvoiceImpl extends LnUrlWithdrawError_Invalid
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
@@ -1542,8 +1685,11 @@ abstract class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1567,6 +1713,8 @@ class __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>
       _$LnUrlWithdrawError_InvalidUriImpl _value, $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1605,7 +1753,9 @@ class _$LnUrlWithdrawError_InvalidUriImpl extends LnUrlWithdrawError_InvalidUri 
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
@@ -1620,8 +1770,11 @@ abstract class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1647,6 +1800,8 @@ class __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1685,7 +1840,9 @@ class _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl extends LnUrlWithdrawError_
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
@@ -1700,8 +1857,11 @@ abstract class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawErr
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -1727,6 +1887,8 @@ class __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1765,7 +1927,9 @@ class _$LnUrlWithdrawError_ServiceConnectivityImpl extends LnUrlWithdrawError_Se
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
@@ -1780,8 +1944,11 @@ abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError
 
   @override
   String get err;
+
+  /// Create a copy of LnUrlWithdrawError
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -1806,6 +1973,9 @@ class _$LnUrlWithdrawResultCopyWithImpl<$Res, $Val extends LnUrlWithdrawResult>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -1825,6 +1995,8 @@ class __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>
       _$LnUrlWithdrawResult_OkImpl _value, $Res Function(_$LnUrlWithdrawResult_OkImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1863,7 +2035,9 @@ class _$LnUrlWithdrawResult_OkImpl extends LnUrlWithdrawResult_Ok {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawResult_OkImplCopyWith<_$LnUrlWithdrawResult_OkImpl> get copyWith =>
@@ -1877,7 +2051,10 @@ abstract class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
 
   @override
   LnUrlWithdrawSuccessData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawResult_OkImplCopyWith<_$LnUrlWithdrawResult_OkImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1899,6 +2076,8 @@ class __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>
       _$LnUrlWithdrawResult_TimeoutImpl _value, $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1937,7 +2116,9 @@ class _$LnUrlWithdrawResult_TimeoutImpl extends LnUrlWithdrawResult_Timeout {
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
@@ -1951,7 +2132,10 @@ abstract class LnUrlWithdrawResult_Timeout extends LnUrlWithdrawResult {
 
   @override
   LnUrlWithdrawSuccessData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1973,6 +2157,8 @@ class __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>
       $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2011,7 +2197,9 @@ class _$LnUrlWithdrawResult_ErrorStatusImpl extends LnUrlWithdrawResult_ErrorSta
   @override
   int get hashCode => Object.hash(runtimeType, data);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
@@ -2026,7 +2214,10 @@ abstract class LnUrlWithdrawResult_ErrorStatus extends LnUrlWithdrawResult {
 
   @override
   LnUrlErrorData get data;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LnUrlWithdrawResult
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

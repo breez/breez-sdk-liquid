@@ -32,6 +32,9 @@ class _$LiquidSdkErrorCopyWithImpl<$Res, $Val extends LiquidSdkError>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -48,6 +51,9 @@ class __$$LiquidSdkError_AlreadyStartedImplCopyWithImpl<$Res>
   __$$LiquidSdkError_AlreadyStartedImplCopyWithImpl(
       _$LiquidSdkError_AlreadyStartedImpl _value, $Res Function(_$LiquidSdkError_AlreadyStartedImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -92,6 +98,8 @@ class __$$LiquidSdkError_GenericImplCopyWithImpl<$Res>
       _$LiquidSdkError_GenericImpl _value, $Res Function(_$LiquidSdkError_GenericImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -130,7 +138,9 @@ class _$LiquidSdkError_GenericImpl extends LiquidSdkError_Generic {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
@@ -142,7 +152,10 @@ abstract class LiquidSdkError_Generic extends LiquidSdkError {
   const LiquidSdkError_Generic._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LiquidSdkError_GenericImplCopyWith<_$LiquidSdkError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -161,6 +174,9 @@ class __$$LiquidSdkError_NotStartedImplCopyWithImpl<$Res>
   __$$LiquidSdkError_NotStartedImplCopyWithImpl(
       _$LiquidSdkError_NotStartedImpl _value, $Res Function(_$LiquidSdkError_NotStartedImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -205,6 +221,8 @@ class __$$LiquidSdkError_ServiceConnectivityImplCopyWithImpl<$Res>
       $Res Function(_$LiquidSdkError_ServiceConnectivityImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -243,7 +261,9 @@ class _$LiquidSdkError_ServiceConnectivityImpl extends LiquidSdkError_ServiceCon
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$LiquidSdkError_ServiceConnectivityImplCopyWith<_$LiquidSdkError_ServiceConnectivityImpl> get copyWith =>
@@ -257,7 +277,10 @@ abstract class LiquidSdkError_ServiceConnectivity extends LiquidSdkError {
   const LiquidSdkError_ServiceConnectivity._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of LiquidSdkError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LiquidSdkError_ServiceConnectivityImplCopyWith<_$LiquidSdkError_ServiceConnectivityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -279,6 +302,9 @@ class _$PaymentErrorCopyWithImpl<$Res, $Val extends PaymentError> implements $Pa
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -295,6 +321,9 @@ class __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>
   __$$PaymentError_AlreadyClaimedImplCopyWithImpl(
       _$PaymentError_AlreadyClaimedImpl _value, $Res Function(_$PaymentError_AlreadyClaimedImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -336,6 +365,9 @@ class __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>
   __$$PaymentError_AlreadyPaidImplCopyWithImpl(
       _$PaymentError_AlreadyPaidImpl _value, $Res Function(_$PaymentError_AlreadyPaidImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -377,6 +409,9 @@ class __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>
   __$$PaymentError_PaymentInProgressImplCopyWithImpl(
       _$PaymentError_PaymentInProgressImpl _value, $Res Function(_$PaymentError_PaymentInProgressImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -418,6 +453,9 @@ class __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>
   __$$PaymentError_AmountOutOfRangeImplCopyWithImpl(
       _$PaymentError_AmountOutOfRangeImpl _value, $Res Function(_$PaymentError_AmountOutOfRangeImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -462,6 +500,8 @@ class __$$PaymentError_GenericImplCopyWithImpl<$Res>
       _$PaymentError_GenericImpl _value, $Res Function(_$PaymentError_GenericImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -500,7 +540,9 @@ class _$PaymentError_GenericImpl extends PaymentError_Generic {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl> get copyWith =>
@@ -512,7 +554,10 @@ abstract class PaymentError_Generic extends PaymentError {
   const PaymentError_Generic._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -531,6 +576,9 @@ class __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>
   __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(_$PaymentError_InvalidOrExpiredFeesImpl _value,
       $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -572,6 +620,9 @@ class __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>
   __$$PaymentError_InsufficientFundsImplCopyWithImpl(
       _$PaymentError_InsufficientFundsImpl _value, $Res Function(_$PaymentError_InsufficientFundsImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -616,6 +667,8 @@ class __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>
       _$PaymentError_InvalidInvoiceImpl _value, $Res Function(_$PaymentError_InvalidInvoiceImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -654,7 +707,9 @@ class _$PaymentError_InvalidInvoiceImpl extends PaymentError_InvalidInvoice {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
@@ -666,7 +721,10 @@ abstract class PaymentError_InvalidInvoice extends PaymentError {
   const PaymentError_InvalidInvoice._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -685,6 +743,9 @@ class __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>
   __$$PaymentError_InvalidPreimageImplCopyWithImpl(
       _$PaymentError_InvalidPreimageImpl _value, $Res Function(_$PaymentError_InvalidPreimageImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -729,6 +790,8 @@ class __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>
       _$PaymentError_LwkErrorImpl _value, $Res Function(_$PaymentError_LwkErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -767,7 +830,9 @@ class _$PaymentError_LwkErrorImpl extends PaymentError_LwkError {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl> get copyWith =>
@@ -779,7 +844,10 @@ abstract class PaymentError_LwkError extends PaymentError {
   const PaymentError_LwkError._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -798,6 +866,9 @@ class __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>
   __$$PaymentError_PairsNotFoundImplCopyWithImpl(
       _$PaymentError_PairsNotFoundImpl _value, $Res Function(_$PaymentError_PairsNotFoundImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -839,6 +910,9 @@ class __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>
   __$$PaymentError_PaymentTimeoutImplCopyWithImpl(
       _$PaymentError_PaymentTimeoutImpl _value, $Res Function(_$PaymentError_PaymentTimeoutImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -880,6 +954,9 @@ class __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>
   __$$PaymentError_PersistErrorImplCopyWithImpl(
       _$PaymentError_PersistErrorImpl _value, $Res Function(_$PaymentError_PersistErrorImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -924,6 +1001,8 @@ class __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>
       _$PaymentError_ReceiveErrorImpl _value, $Res Function(_$PaymentError_ReceiveErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -962,7 +1041,9 @@ class _$PaymentError_ReceiveErrorImpl extends PaymentError_ReceiveError {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
@@ -974,7 +1055,10 @@ abstract class PaymentError_ReceiveError extends PaymentError {
   const PaymentError_ReceiveError._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -996,6 +1080,8 @@ class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
       _$PaymentError_RefundedImpl _value, $Res Function(_$PaymentError_RefundedImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1042,7 +1128,9 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
   @override
   int get hashCode => Object.hash(runtimeType, err, refundTxId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
@@ -1056,7 +1144,10 @@ abstract class PaymentError_Refunded extends PaymentError {
 
   String get err;
   String get refundTxId;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1077,6 +1168,9 @@ class __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>
       _$PaymentError_SelfTransferNotSupportedImpl _value,
       $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -1121,6 +1215,8 @@ class __$$PaymentError_SendErrorImplCopyWithImpl<$Res>
       _$PaymentError_SendErrorImpl _value, $Res Function(_$PaymentError_SendErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1159,7 +1255,9 @@ class _$PaymentError_SendErrorImpl extends PaymentError_SendError {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl> get copyWith =>
@@ -1171,7 +1269,10 @@ abstract class PaymentError_SendError extends PaymentError {
   const PaymentError_SendError._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1193,6 +1294,8 @@ class __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>
       _$PaymentError_SignerErrorImpl _value, $Res Function(_$PaymentError_SignerErrorImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1231,7 +1334,9 @@ class _$PaymentError_SignerErrorImpl extends PaymentError_SignerError {
   @override
   int get hashCode => Object.hash(runtimeType, err);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl> get copyWith =>
@@ -1243,7 +1348,10 @@ abstract class PaymentError_SignerError extends PaymentError {
   const PaymentError_SignerError._() : super._();
 
   String get err;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
