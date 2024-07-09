@@ -638,7 +638,7 @@ dependencies = [
  "hex",
  "lazy_static",
  "log",
- "lwk_common",
+ "lwk_common 0.5.2",
  "lwk_signer",
  "lwk_wollet",
  "openssl",
@@ -1936,6 +1936,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "lwk_common"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d243e2a9b97d95b00d3cc654ca1226ea4d86c1c8a4f841552eb3a51b465dc329"
+dependencies = [
+ "base64 0.21.7",
+ "elements",
+ "elements-miniscript",
+ "getrandom",
+ "qr_code",
+ "rand 0.8.5",
+ "thiserror",
+]
+
+[[package]]
 name = "lwk_jade"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1944,7 +1959,7 @@ dependencies = [
  "elements",
  "elements-miniscript",
  "hex",
- "lwk_common",
+ "lwk_common 0.5.2",
  "rand 0.8.5",
  "reqwest 0.12.5",
  "serde",
@@ -1965,15 +1980,15 @@ dependencies = [
  "base64 0.13.1",
  "bip39",
  "elements-miniscript",
- "lwk_common",
+ "lwk_common 0.5.2",
  "lwk_jade",
  "thiserror",
 ]
 
 [[package]]
 name = "lwk_wollet"
-version = "0.5.1"
-source = "git+https://github.com/dangeross/lwk?branch=savage-try-headers-subscribe#ecf62efbbde5008301a329330d519e93e1e1b462"
+version = "0.7.0"
+source = "git+https://github.com/dangeross/lwk?branch=savage-try-headers-subscribe#452bc5e07ab6b9a5fee8c2dae5c9e24d5e3cc9c5"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.21.7",
@@ -1983,7 +1998,7 @@ dependencies = [
  "elements-miniscript",
  "fxhash",
  "idna 0.4.0",
- "lwk_common",
+ "lwk_common 0.7.0",
  "once_cell",
  "rand 0.8.5",
  "regex-lite",
