@@ -18,8 +18,8 @@ use crate::{
 };
 
 /// The minimum acceptable fee rate when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: f32 = 0.1;
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: f32 = 0.01;
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: u32 = 100;
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: u32 = 10;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 100_000;
 
@@ -133,7 +133,7 @@ impl ReceiveSwapStateHandler {
 
                 // If the fees are higher than our estimated value
                 let tx_fees: u64 = lockup_tx.all_fees().values().sum();
-                let min_fee_rate = self.config.zero_conf_min_fee_rate;
+                let min_fee_rate = self.config.zero_conf_min_fee_rate_msat as f32 / 1000.0;
                 let lower_bound_estimated_fees = lockup_tx.vsize() as f32 * min_fee_rate * 0.8;
 
                 if lower_bound_estimated_fees > tx_fees as f32 {

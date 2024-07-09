@@ -1331,7 +1331,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       workingDir: dco_decode_String(arr[2]),
       network: dco_decode_liquid_network(arr[3]),
       paymentTimeoutSec: dco_decode_u_64(arr[4]),
-      zeroConfMinFeeRate: dco_decode_f_32(arr[5]),
+      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[5]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
     );
   }
@@ -1361,12 +1361,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       localizedName: dco_decode_list_localized_name(arr[5]),
       localeOverrides: dco_decode_list_locale_overrides(arr[6]),
     );
-  }
-
-  @protected
-  double dco_decode_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
   }
 
   @protected
@@ -2727,7 +2721,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_workingDir = sse_decode_String(deserializer);
     var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
-    var var_zeroConfMinFeeRate = sse_decode_f_32(deserializer);
+    var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
@@ -2735,7 +2729,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         workingDir: var_workingDir,
         network: var_network,
         paymentTimeoutSec: var_paymentTimeoutSec,
-        zeroConfMinFeeRate: var_zeroConfMinFeeRate,
+        zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat,
         zeroConfMaxAmountSat: var_zeroConfMaxAmountSat);
   }
 
@@ -2765,12 +2759,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         uniqSymbol: var_uniqSymbol,
         localizedName: var_localizedName,
         localeOverrides: var_localeOverrides);
-  }
-
-  @protected
-  double sse_decode_f_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getFloat32();
   }
 
   @protected
@@ -3794,12 +3782,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double cst_encode_f_32(double raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw;
-  }
-
-  @protected
   double cst_encode_f_64(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
@@ -4202,7 +4184,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.workingDir, serializer);
     sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
-    sse_encode_f_32(self.zeroConfMinFeeRate, serializer);
+    sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
   }
 
@@ -4223,12 +4205,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
     sse_encode_list_localized_name(self.localizedName, serializer);
     sse_encode_list_locale_overrides(self.localeOverrides, serializer);
-  }
-
-  @protected
-  void sse_encode_f_32(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putFloat32(self);
   }
 
   @protected

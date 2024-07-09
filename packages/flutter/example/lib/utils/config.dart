@@ -21,7 +21,7 @@ extension ConfigCopyWith on Config {
     String? workingDir,
     LiquidNetwork? network,
     BigInt? paymentTimeoutSec,
-    double? zeroConfMinFeeRate,
+    int? zeroConfMinFeeRateMsat,
   }) {
     return Config(
       liquidElectrumUrl: liquidElectrumUrl ?? this.liquidElectrumUrl,
@@ -29,7 +29,7 @@ extension ConfigCopyWith on Config {
       workingDir: workingDir ?? this.workingDir,
       network: network ?? this.network,
       paymentTimeoutSec: paymentTimeoutSec ?? this.paymentTimeoutSec,
-      zeroConfMinFeeRate: zeroConfMinFeeRate ?? this.zeroConfMinFeeRate,
+      zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat ?? this.zeroConfMinFeeRateMsat,
     );
   }
 }

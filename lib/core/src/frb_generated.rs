@@ -1622,12 +1622,6 @@ impl CstDecode<bool> for bool {
         self
     }
 }
-impl CstDecode<f32> for f32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> f32 {
-        self
-    }
-}
 impl CstDecode<f64> for f64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f64 {
@@ -1862,7 +1856,7 @@ impl SseDecode for crate::model::Config {
         let mut var_workingDir = <String>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
-        let mut var_zeroConfMinFeeRate = <f32>::sse_decode(deserializer);
+        let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
@@ -1870,7 +1864,7 @@ impl SseDecode for crate::model::Config {
             working_dir: var_workingDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
-            zero_conf_min_fee_rate: var_zeroConfMinFeeRate,
+            zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
         };
     }
@@ -1908,13 +1902,6 @@ impl SseDecode for crate::bindings::CurrencyInfo {
             localized_name: var_localizedName,
             locale_overrides: var_localeOverrides,
         };
-    }
-}
-
-impl SseDecode for f32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_f32::<NativeEndian>().unwrap()
     }
 }
 
@@ -3395,7 +3382,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.working_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
-            self.zero_conf_min_fee_rate.into_into_dart().into_dart(),
+            self.zero_conf_min_fee_rate_msat
+                .into_into_dart()
+                .into_dart(),
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -4926,7 +4915,7 @@ impl SseEncode for crate::model::Config {
         <String>::sse_encode(self.working_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
-        <f32>::sse_encode(self.zero_conf_min_fee_rate, serializer);
+        <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
     }
 }
@@ -4949,13 +4938,6 @@ impl SseEncode for crate::bindings::CurrencyInfo {
         <Option<crate::bindings::Symbol>>::sse_encode(self.uniq_symbol, serializer);
         <Vec<crate::bindings::LocalizedName>>::sse_encode(self.localized_name, serializer);
         <Vec<crate::bindings::LocaleOverrides>>::sse_encode(self.locale_overrides, serializer);
-    }
-}
-
-impl SseEncode for f32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
     }
 }
 
