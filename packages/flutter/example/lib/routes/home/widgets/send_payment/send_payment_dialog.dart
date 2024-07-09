@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_breez_liquid/flutter_breez_liquid.dart';
 
 class SendPaymentDialog extends StatefulWidget {
-  final String? barcodeValue;
   final BindingLiquidSdk liquidSdk;
+  final String? barcodeValue;
 
   const SendPaymentDialog({super.key, required this.liquidSdk, this.barcodeValue});
 

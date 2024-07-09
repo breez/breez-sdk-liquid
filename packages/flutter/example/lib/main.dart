@@ -50,7 +50,7 @@ class _AppState extends State<App> {
     return MaterialApp(
       title: App.title,
       theme: ThemeData.from(colorScheme: ColorScheme.fromSeed(seedColor: Colors.white), useMaterial3: true),
-      home: widget.liquidSDK.wallet == null
+      home: widget.liquidSDK.instance == null
           ? ConnectPage(
               liquidSDK: widget.liquidSDK,
               credentialsManager: widget.credentialsManager,

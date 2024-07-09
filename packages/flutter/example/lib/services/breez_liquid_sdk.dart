@@ -4,16 +4,16 @@ import 'package:flutter_breez_liquid/flutter_breez_liquid.dart' as liquid_sdk;
 import 'package:rxdart/rxdart.dart';
 
 class BreezLiquidSDK {
-  liquid_sdk.BindingLiquidSdk? wallet;
+  liquid_sdk.BindingLiquidSdk? instance;
 
   Future<liquid_sdk.BindingLiquidSdk> connect({
     required liquid_sdk.ConnectRequest req,
   }) async {
-    wallet = await liquid_sdk.connect(req: req);
-    _initializeEventsStream(wallet!);
-    _subscribeToSdkStreams(wallet!);
-    await _fetchWalletData(wallet!);
-    return wallet!;
+    instance = await liquid_sdk.connect(req: req);
+    _initializeEventsStream(instance!);
+    _subscribeToSdkStreams(instance!);
+    await _fetchWalletData(instance!);
+    return instance!;
   }
 
   void disconnect(liquid_sdk.BindingLiquidSdk sdk) {
