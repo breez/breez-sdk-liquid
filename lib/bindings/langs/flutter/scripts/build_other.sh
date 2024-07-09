@@ -9,7 +9,7 @@ cd $BUILD_DIR
 
 # Install build dependencies
 cargo install cargo-zigbuild
-cargo install cargo-xwin
+cargo install cargo-xwin@0.17.1
 
 zig_build () {
     local TARGET="$1"

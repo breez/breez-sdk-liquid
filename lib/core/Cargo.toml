@@ -9,7 +9,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [features]
 default = ["frb"]
-frb = ["dep:flutter_rust_bridge"]
+frb = ["dep:flutter_rust_bridge", "dep:rustls"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -42,6 +42,7 @@ async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }
 electrum-client = { version = "0.19.0" }
+rustls = { version = "0.23.10", optional = true }
 
 [dev-dependencies]
 lazy_static = "1.5.0"

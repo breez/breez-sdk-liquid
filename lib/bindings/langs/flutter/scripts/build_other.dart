@@ -38,7 +38,7 @@ Future<void> mainImpl(List<String> args) async {
   await run('mkdir -p $buildDir');
   Directory.current = buildDir;
 
-  await run('cargo install cargo-zigbuild cargo-xwin');
+  await run('cargo install cargo-zigbuild cargo-xwin@0.17.1');
 
   final targets = opts['local'] ? [Targets.host] : Targets.values;
   final compilerOpts = opts.rest;
