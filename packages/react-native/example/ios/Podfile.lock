@@ -1,11 +1,11 @@
 PODS:
   - boost (1.76.0)
-  - breez_liquid_sdk (0.1.1-dev1):
-    - BreezLiquidSDK (= 0.1.1-dev1)
+  - breez_sdk_liquid (0.1.1-dev1):
+    - BreezSDKLiquid (= 0.1.1-dev1)
     - React-Core
-  - breez_liquid_sdkFFI (0.1.1-dev1)
-  - BreezLiquidSDK (0.1.1-dev1):
-    - breez_liquid_sdkFFI (= 0.1.1-dev1)
+  - breez_sdk_liquidFFI (0.1.1-dev1)
+  - BreezSDKLiquid (0.1.1-dev1):
+    - breez_sdk_liquidFFI (= 0.1.1-dev1)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.70.15)
@@ -392,7 +392,7 @@ PODS:
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - "breez_liquid_sdk (from `../node_modules/@breeztech/react-native-breez-liquid-sdk`)"
+  - "breez_sdk_liquid (from `../node_modules/@breeztech/react-native-breez-sdk-liquid`)"
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
@@ -458,8 +458,8 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - breez_liquid_sdkFFI
-    - BreezLiquidSDK
+    - breez_sdk_liquidFFI
+    - BreezSDKLiquid
     - CocoaAsyncSocket
     - Flipper
     - Flipper-Boost-iOSX
@@ -479,8 +479,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
-  breez_liquid_sdk:
-    :path: "../node_modules/@breeztech/react-native-breez-liquid-sdk"
+  breez_sdk_liquid:
+    :path: "../node_modules/@breeztech/react-native-breez-sdk-liquid"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   FBLazyVector:
@@ -558,9 +558,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 9fa78656d705f55b1220151d997e57e2a3f2cde0
-  breez_liquid_sdk: c714a5070588921e44ee4f980079f7b5162f1f11
-  breez_liquid_sdkFFI: d01a5daa6b72967c04dce366479dec90fbcdc165
-  BreezLiquidSDK: dac9addd0109e4d6d893c66be708cfe373e8edd3
+  breez_sdk_liquid: c714a5070588921e44ee4f980079f7b5162f1f11
+  breez_sdk_liquidFFI: d01a5daa6b72967c04dce366479dec90fbcdc165
+  BreezSDKLiquid: dac9addd0109e4d6d893c66be708cfe373e8edd3
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 9cf707e46f9bd90816b7c91b2c1c8b8a2f549527

@@ -28,7 +28,7 @@ jobs:
   build-package:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -51,13 +51,13 @@ jobs:
 
       - name: Pack for archival
         working-directory: packages/react-native
-        run: yarn pack --filename breez-liquid-sdk-react-native.tgz
+        run: yarn pack --filename breez-sdk-liquid-react-native.tgz
 
       - name: Archive the package
         uses: actions/upload-artifact@v4
         with:
           name: react-native-${{ inputs.package-version || '0.0.2' }}
-          path: packages/react-native/breez-liquid-sdk-react-native.tgz
+          path: packages/react-native/breez-sdk-liquid-react-native.tgz
 
       - name: Publish package to npm
         if: ${{ inputs.publish }}

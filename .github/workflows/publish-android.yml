@@ -31,7 +31,7 @@ jobs:
   build-package:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -84,7 +84,7 @@ jobs:
           # We're waiting for at most 60s before triggering the Jitpack build to give our Maven repo
           # some time to process the just uploaded files (the Jitpack build is dependent upon them being available).
           # If anything fails here, we'll still finish sucessfully as this is an optional optimization.
-          timeout 60 bash -c 'while [[ "$(curl --output /dev/null --silent --head --write-out ''%{http_code}'' https://mvn.breez.technology/releases/breez_liquid_sdk/bindings-android/${{ inputs.package-version }}/bindings-android-${{ inputs.package-version }}.pom)" != "200" ]]; do echo "Waiting for package to be published on mvn.breez.technology..." && sleep 5; done && echo "Package found."' || echo "Package not found." && true
+          timeout 60 bash -c 'while [[ "$(curl --output /dev/null --silent --head --write-out ''%{http_code}'' https://mvn.breez.technology/releases/breez_sdk_liquid/bindings-android/${{ inputs.package-version }}/bindings-android-${{ inputs.package-version }}.pom)" != "200" ]]; do echo "Waiting for package to be published on mvn.breez.technology..." && sleep 5; done && echo "Package found."' || echo "Package not found." && true
           echo "Attempting to trigger Jitpack build..."
-          curl -s -m 30 https://jitpack.io/api/builds/com.github.breez/breez-liquid-sdk/${{ inputs.package-version }} || true
+          curl -s -m 30 https://jitpack.io/api/builds/com.github.breez/breez-sdk-liquid/${{ inputs.package-version }} || true
           echo "Done"

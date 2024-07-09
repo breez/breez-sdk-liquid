@@ -21,22 +21,22 @@ on:
         default: true
     secrets:
       REPO_SSH_KEY:
-        description: 'ssh key to commit to the breez-liquid-sdk-dart repository'
+        description: 'ssh key to commit to the breez-sdk-liquid-dart repository'
         required: true
 
 jobs:
   build-tag-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breez-liquid-sdk-dart repo
+      - name: Checkout breez-sdk-liquid-dart repo
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-liquid-sdk-dart
+          repository: breez/breez-sdk-liquid-dart
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
           path: dist
 
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -67,7 +67,7 @@ jobs:
       - name: Archive Dart release
         uses: actions/upload-artifact@v4
         with:
-          name: breez-liquid-sdk-dart-${{ inputs.package-version || github.sha }}
+          name: breez-sdk-liquid-dart-${{ inputs.package-version || github.sha }}
           path: |
             dist/*
             !dist/.git

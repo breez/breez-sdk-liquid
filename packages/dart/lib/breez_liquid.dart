@@ -14,7 +14,7 @@ import 'src/frb_generated.dart';
 typedef BreezLiquid = RustLibApi;
 typedef BreezLiquidImpl = RustLibApiImpl;
 
-const libName = 'breez_liquid_sdk';
+const libName = 'breez_sdk_liquid';
 
 Future<void> initialize({ExternalLibrary? dylib}) {
   if (dylib == null && (Platform.isIOS || Platform.isMacOS)) {

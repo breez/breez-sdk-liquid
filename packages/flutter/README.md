@@ -1,6 +1,6 @@
 # Breez Liquid SDK plugin
 
-[![pub package](https://img.shields.io/pub/v/breez_liquid_sdk.svg)](https://pub.dev/packages/breez_liquid_sdk)
+[![pub package](https://img.shields.io/pub/v/breez_sdk_liquid.svg)](https://pub.dev/packages/breez_sdk_liquid)
 
 ## Table of contents
 - [Platform Support](#platform-support)
@@ -29,10 +29,10 @@
 
 ## Description
 
-This is a Flutter package that wraps the Dart bindings of [Breez Liquid SDK](https://github.com/breez/breez-liquid-sdk?tab=readme-ov-file#readme).
+This is a Flutter package that wraps the Dart bindings of [Breez Liquid SDK](https://github.com/breez/breez-sdk-liquid?tab=readme-ov-file#readme).
 
 ## Installation
-To use this plugin, add `breez_liquid_sdk` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).
+To use this plugin, add `breez_sdk_liquid` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).
 
 ## Usage
 

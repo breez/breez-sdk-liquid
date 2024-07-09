@@ -1,4 +1,4 @@
-Breez Liquid SDK release notes can be found at [breez-liquid-sdk/releases](https://github.com/breez/breez-liquid-sdk/releases/)
+Breez Liquid SDK release notes can be found at [breez-sdk-liquid/releases](https://github.com/breez/breez-sdk-liquid/releases/)
 
 ## 0.1.0
 

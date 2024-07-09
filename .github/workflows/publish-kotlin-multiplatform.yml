@@ -31,7 +31,7 @@ jobs:
   build-package:
     runs-on: macOS-latest
     steps:
-      - name: Checkout breez-liquid-sdk repo
+      - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
@@ -45,44 +45,44 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: bindings-android-jniLibs
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/jniLibs
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs
 
       - uses: actions/download-artifact@v4
         with:
           name: bindings-kotlin-multiplatform
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src
 
       - name: Copy jvmMain
         working-directory: lib/bindings
         run: |
-          cp -r langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/jvmMain/kotlin langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/androidMain/
+          cp -r langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/jvmMain/kotlin langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/
 
       - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-arm64
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-arm64
 
       - uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios-sim
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-arm64
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-arm64
 
       - uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-apple-ios
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/src/lib/ios-simulator-x64
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-x64
 
       - name: Build Kotlin Multiplatform project
         working-directory: lib/bindings/langs/kotlin-multiplatform
         env:
           ORG_GRADLE_PROJECT_libraryVersion: ${{ inputs.package-version || '0.0.1' }}
-        run: ./gradlew :breez-liquid-sdk-kmp:assemble
+        run: ./gradlew :breez-sdk-liquid-kmp:assemble
 
       - name: Archive aar
         uses: actions/upload-artifact@v4
         with:
           name: kotlin-multiplatform-release.aar
-          path: lib/bindings/langs/kotlin-multiplatform/breez-liquid-sdk-kmp/build/outputs/aar/breez-liquid-sdk-kmp-release.aar
+          path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/build/outputs/aar/breez-sdk-liquid-kmp-release.aar
         
       - name: Publish artifacts
         if: ${{ inputs.publish }}

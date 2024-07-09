@@ -1,5 +1,5 @@
-name: breez_liquid_sdk
-repository: https://github.com/breez/breez-liquid-sdk
+name: breez_sdk_liquid
+repository: https://github.com/breez/breez-sdk-liquid
 packages:
   - ../../../../packages/**
   - scripts
@@ -39,7 +39,7 @@ scripts:
   build-other-local: dart scripts/build_other.dart --local
 
   test:
-    cargo build --package breez-liquid-sdk --profile=frb &&
+    cargo build --package breez-sdk-liquid --profile=frb &&
     melos run test-dart &&
     melos run test-flutter
   

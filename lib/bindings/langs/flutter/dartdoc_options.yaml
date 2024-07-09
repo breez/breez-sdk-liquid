@@ -1,4 +1,4 @@
 dartdoc:
   linkToSource:
     root: .
-    uriTemplate: 'https://github.com/breez/breez-liquid-sdk/blob/main/%f%#L%l%'
+    uriTemplate: 'https://github.com/breez/breez-sdk-liquid/blob/main/%f%#L%l%'

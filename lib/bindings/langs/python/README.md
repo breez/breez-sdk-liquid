@@ -3,17 +3,17 @@
 ## Usage
 
 ```
-pip install breez_liquid_sdk
+pip install breez_sdk_liquid
 ```
 
 ``` python
-import breez_liquid_sdk
+import breez_sdk_liquid
 ```
 
 ## Python Package
 
 Run the GitHub workflow 'Publish Python Bindings' when creating a new release of Breez Liquid SDK.
-It will create wheels for the following Python versions and Platforms and upload them to [PyPi.org](https://pypi.org/project/breez-liquid-sdk/).
+It will create wheels for the following Python versions and Platforms and upload them to [PyPi.org](https://pypi.org/project/breez-sdk-liquid/).
 
 ### Supported Wheels
 
@@ -34,4 +34,4 @@ make darwin # builds the package for macos
 make linux # builds the package for linux
 ```
 
-The artifacts will be placed in `src/breez_liquid_sdk/`.
+The artifacts will be placed in `src/breez_sdk_liquid/`.
