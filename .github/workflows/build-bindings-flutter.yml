@@ -77,14 +77,15 @@ jobs:
 
     - name: Build language packages
       working-directory: lib/bindings/langs/flutter/
-      run: melos build
+      run: |
+        melos build-apple
+        melos build-android
 
     - name: Copy build output
       run: |
         mkdir -p dist
         cp lib/bindings/langs/flutter/platform-build/android.tar.gz dist
         cp lib/bindings/langs/flutter/platform-build/breez_sdk_liquid.xcframework.zip dist
-        cp lib/bindings/langs/flutter/platform-build/other.tar.gz dist
 
     - name: Archive Flutter bindings
       uses: actions/upload-artifact@v4
@@ -101,7 +102,6 @@ jobs:
         run: |
           touch android.tar.gz
           touch breez_sdk_liquid.xcframework.zip
-          touch other.tar.gz
 
       - name: Archive Flutter dummy bindings
         uses: actions/upload-artifact@v4
