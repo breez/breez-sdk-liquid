@@ -101,8 +101,8 @@ jobs:
       bindings-flutter: ${{ !!needs.pre-setup.outputs.flutter-package-version }}
       bindings-android: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.golang-package-version }}
       bindings-ios: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.swift-package-version }}
-      kotlin: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.flutter-package-version }}
-      swift: ${{ !!needs.pre-setup.outputs.flutter-package-version || !!needs.pre-setup.outputs.swift-package-version }}
+      kotlin: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version }}
+      swift: ${{ !!needs.pre-setup.outputs.swift-package-version }}
       python: ${{ !!needs.pre-setup.outputs.python-package-version }}
       csharp: ${{ !!needs.pre-setup.outputs.csharp-package-version }}
       golang: ${{ !!needs.pre-setup.outputs.golang-package-version }}
@@ -290,26 +290,11 @@ jobs:
 
   # react native version x.y.z will at runtime require
   # ios and android packages x.y.z being published already.
-  publish-react-native-no-wait:
+  publish-react-native:
     needs:
       - setup
-    if: ${{ needs.setup.outputs.swift != 'true' && needs.setup.outputs.react-native == 'true' }}
-    uses: ./.github/workflows/publish-react-native.yml
-    with:
-      repository: ${{ needs.setup.outputs.repository }}
-      ref: ${{ needs.setup.outputs.ref }}
-      package-version: ${{ needs.setup.outputs.react-native-package-version }}
-      publish: ${{ needs.setup.outputs.publish == 'true' }}
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  # react native version x.y.z will at runtime require
-  # ios and android packages x.y.z being published already.
-  publish-react-native-wait:
-    needs:
-      - setup
-      - publish-swift
-    if: ${{ needs.setup.outputs.swift == 'true' && needs.setup.outputs.react-native == 'true' }}
+      - build-language-bindings
+    if: ${{ needs.setup.outputs.react-native == 'true' }}
     uses: ./.github/workflows/publish-react-native.yml
     with:
       repository: ${{ needs.setup.outputs.repository }}
