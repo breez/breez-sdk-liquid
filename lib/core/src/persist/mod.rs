@@ -330,10 +330,10 @@ fn filter_to_where_clause(
     let mut where_clause: Vec<String> = Vec::new();
 
     if let Some(t) = from_timestamp {
-        where_clause.push(format!("ptx.timestamp >= {t}"));
+        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) >= {t}"));
     };
     if let Some(t) = to_timestamp {
-        where_clause.push(format!("ptx.timestamp <= {t}"));
+        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) <= {t}"));
     };
 
     if let Some(filters) = type_filters {
