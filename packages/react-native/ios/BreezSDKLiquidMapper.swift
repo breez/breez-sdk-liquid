@@ -1275,6 +1275,25 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
+        guard let timestamp = payment["timestamp"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "Payment"))
+        }
+        guard let amountSat = payment["amountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "Payment"))
+        }
+        guard let feesSat = payment["feesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "Payment"))
+        }
+        guard let paymentTypeTmp = payment["paymentType"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentType", typeName: "Payment"))
+        }
+        let paymentType = try asPaymentType(paymentType: paymentTypeTmp)
+
+        guard let statusTmp = payment["status"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "status", typeName: "Payment"))
+        }
+        let status = try asPaymentState(paymentState: statusTmp)
+
         var txId: String?
         if hasNonNilKey(data: payment, key: "txId") {
             guard let txIdTmp = payment["txId"] as? String else {
@@ -1288,15 +1307,6 @@ enum BreezSDKLiquidMapper {
                 throw SdkError.Generic(message: errUnexpectedValue(fieldName: "swapId"))
             }
             swapId = swapIdTmp
-        }
-        guard let timestamp = payment["timestamp"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "Payment"))
-        }
-        guard let amountSat = payment["amountSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "Payment"))
-        }
-        guard let feesSat = payment["feesSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "Payment"))
         }
         var preimage: String?
         if hasNonNilKey(data: payment, key: "preimage") {
@@ -1326,44 +1336,35 @@ enum BreezSDKLiquidMapper {
             }
             refundTxAmountSat = refundTxAmountSatTmp
         }
-        guard let paymentTypeTmp = payment["paymentType"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentType", typeName: "Payment"))
-        }
-        let paymentType = try asPaymentType(paymentType: paymentTypeTmp)
-
-        guard let statusTmp = payment["status"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "status", typeName: "Payment"))
-        }
-        let status = try asPaymentState(paymentState: statusTmp)
 
         return Payment(
-            txId: txId,
-            swapId: swapId,
             timestamp: timestamp,
             amountSat: amountSat,
             feesSat: feesSat,
+            paymentType: paymentType,
+            status: status,
+            txId: txId,
+            swapId: swapId,
             preimage: preimage,
             bolt11: bolt11,
             refundTxId: refundTxId,
-            refundTxAmountSat: refundTxAmountSat,
-            paymentType: paymentType,
-            status: status
+            refundTxAmountSat: refundTxAmountSat
         )
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
         return [
-            "txId": payment.txId == nil ? nil : payment.txId,
-            "swapId": payment.swapId == nil ? nil : payment.swapId,
             "timestamp": payment.timestamp,
             "amountSat": payment.amountSat,
             "feesSat": payment.feesSat,
+            "paymentType": valueOf(paymentType: payment.paymentType),
+            "status": valueOf(paymentState: payment.status),
+            "txId": payment.txId == nil ? nil : payment.txId,
+            "swapId": payment.swapId == nil ? nil : payment.swapId,
             "preimage": payment.preimage == nil ? nil : payment.preimage,
             "bolt11": payment.bolt11 == nil ? nil : payment.bolt11,
             "refundTxId": payment.refundTxId == nil ? nil : payment.refundTxId,
             "refundTxAmountSat": payment.refundTxAmountSat == nil ? nil : payment.refundTxAmountSat,
-            "paymentType": valueOf(paymentType: payment.paymentType),
-            "status": valueOf(paymentState: payment.status),
         ]
     }
 
