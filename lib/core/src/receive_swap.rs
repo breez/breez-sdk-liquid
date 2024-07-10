@@ -263,7 +263,7 @@ impl ReceiveSwapStateHandler {
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         self.persister.insert_or_update_payment(PaymentTxData {
             tx_id: claim_tx_id.clone(),
-            timestamp: None,
+            timestamp: Some(utils::now()),
             amount_sat: ongoing_receive_swap.receiver_amount_sat,
             fees_sat: 0,
             payment_type: PaymentType::Receive,

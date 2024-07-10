@@ -9,6 +9,7 @@ use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRe
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkResult};
 use crate::receive_swap::{
@@ -312,6 +313,18 @@ pub struct BackupRequest {
 #[derive(Debug, Serialize)]
 pub struct RestoreRequest {
     pub backup_path: Option<String>,
+}
+
+/// Represents a list payments request.
+#[derive(Default)]
+pub struct ListPaymentsRequest {
+    pub filters: Option<Vec<PaymentType>>,
+    /// Epoch time, in seconds
+    pub from_timestamp: Option<i64>,
+    /// Epoch time, in seconds
+    pub to_timestamp: Option<i64>,
+    pub offset: Option<u32>,
+    pub limit: Option<u32>,
 }
 
 // A swap enum variant
@@ -776,7 +789,7 @@ impl FromSql for PaymentState {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, EnumString, Display, Hash, PartialEq, Serialize)]
 pub enum PaymentType {
     Receive = 0,
     Send = 1,

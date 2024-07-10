@@ -75,7 +75,7 @@ const App = () => {
                 addLine("getInfo", JSON.stringify(getInfoRes))
 
                 // Historical payments list
-                let payments = listPayments()
+                let payments = listPayments({})
 
                 // Register for events
                 listenerId = await addEventListener(eventHandler)

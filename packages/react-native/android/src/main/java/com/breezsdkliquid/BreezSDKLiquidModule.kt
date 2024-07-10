@@ -352,10 +352,15 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
-    fun listPayments(promise: Promise) {
+    fun listPayments(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val res = getBindingLiquidSdk().listPayments()
+                val listPaymentsRequest =
+                    asListPaymentsRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ListPaymentsRequest")) }
+                val res = getBindingLiquidSdk().listPayments(listPaymentsRequest)
                 promise.resolve(readableArrayOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

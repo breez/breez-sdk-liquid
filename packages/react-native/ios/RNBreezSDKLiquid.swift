@@ -272,10 +272,11 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
-    @objc(listPayments:reject:)
-    func listPayments(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(listPayments:resolve:reject:)
+    func listPayments(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try getBindingLiquidSdk().listPayments()
+            let listPaymentsRequest = try BreezSDKLiquidMapper.asListPaymentsRequest(listPaymentsRequest: req)
+            var res = try getBindingLiquidSdk().listPayments(req: listPaymentsRequest)
             resolve(BreezSDKLiquidMapper.arrayOf(paymentList: res))
         } catch let err {
             rejectErr(err: err, reject: reject)

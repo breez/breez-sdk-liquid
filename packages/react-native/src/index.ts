@@ -99,6 +99,14 @@ export interface Limits {
     maxZeroConfSat: number
 }
 
+export interface ListPaymentsRequest {
+    filters?: PaymentType[]
+    fromTimestamp?: number
+    toTimestamp?: number
+    offset?: number
+    limit?: number
+}
+
 export interface LnUrlAuthRequestData {
     k1: string
     domain: string
@@ -587,8 +595,8 @@ export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promis
     return response
 }
 
-export const listPayments = async (): Promise<Payment[]> => {
-    const response = await BreezSDKLiquid.listPayments()
+export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]> => {
+    const response = await BreezSDKLiquid.listPayments(req)
     return response
 }
 

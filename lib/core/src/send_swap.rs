@@ -88,7 +88,7 @@ impl SendSwapStateHandler {
                         // This makes the tx known to the SDK (get_info, list_payments) instantly
                         self.persister.insert_or_update_payment(PaymentTxData {
                             tx_id: lockup_tx_id.clone(),
-                            timestamp: None,
+                            timestamp: Some(utils::now()),
                             amount_sat: swap.payer_amount_sat,
                             fees_sat: lockup_tx_fees_sat,
                             payment_type: PaymentType::Send,

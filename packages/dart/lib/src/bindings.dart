@@ -49,7 +49,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<FiatCurrency>> listFiatCurrencies();
 
-  Future<List<Payment>> listPayments();
+  Future<List<Payment>> listPayments({required ListPaymentsRequest req});
 
   Future<List<RefundableSwap>> listRefundables();
 

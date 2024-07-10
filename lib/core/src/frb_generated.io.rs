@@ -191,6 +191,19 @@ impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
         CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<i64> for *mut i64 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> i64 {
+        unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
+impl CstDecode<crate::model::ListPaymentsRequest> for *mut wire_cst_list_payments_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ListPaymentsRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::ListPaymentsRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::bindings::LNInvoice> for *mut wire_cst_ln_invoice {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::bindings::LNInvoice {
@@ -576,6 +589,28 @@ impl CstDecode<Vec<crate::model::Payment>> for *mut wire_cst_list_payment {
             flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
         };
         vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
+impl CstDecode<Vec<crate::model::PaymentType>> for *mut wire_cst_list_payment_type {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> Vec<crate::model::PaymentType> {
+        let vec = unsafe {
+            let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+            flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+        };
+        vec.into_iter().map(CstDecode::cst_decode).collect()
+    }
+}
+impl CstDecode<crate::model::ListPaymentsRequest> for wire_cst_list_payments_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ListPaymentsRequest {
+        crate::model::ListPaymentsRequest {
+            filters: self.filters.cst_decode(),
+            from_timestamp: self.from_timestamp.cst_decode(),
+            to_timestamp: self.to_timestamp.cst_decode(),
+            offset: self.offset.cst_decode(),
+            limit: self.limit.cst_decode(),
+        }
     }
 }
 impl CstDecode<Vec<u8>> for *mut wire_cst_list_prim_u_8_strict {
@@ -1577,6 +1612,22 @@ impl Default for wire_cst_limits {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_list_payments_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            filters: core::ptr::null_mut(),
+            from_timestamp: core::ptr::null_mut(),
+            to_timestamp: core::ptr::null_mut(),
+            offset: core::ptr::null_mut(),
+            limit: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_list_payments_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_ln_invoice {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2326,8 +2377,9 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_li
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
     port_: i64,
     that: usize,
+    req: *mut wire_cst_list_payments_request,
 ) {
-    wire__crate__bindings__BindingLiquidSdk_list_payments_impl(port_, that)
+    wire__crate__bindings__BindingLiquidSdk_list_payments_impl(port_, that, req)
 }
 
 #[no_mangle]
@@ -2594,6 +2646,19 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_connect_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_i_64(value: i64) -> *mut i64 {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(
+) -> *mut wire_cst_list_payments_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_list_payments_request::new_with_null_ptr(),
     )
 }
 
@@ -2866,6 +2931,17 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment(len: i32) -> *mut wir
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment_type(
+    len: i32,
+) -> *mut wire_cst_list_payment_type {
+    let wrap = wire_cst_list_payment_type {
+        ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
+        len,
+    };
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_list_prim_u_8_strict(
     len: i32,
 ) -> *mut wire_cst_list_prim_u_8_strict {
@@ -3115,6 +3191,21 @@ pub struct wire_cst_list_localized_name {
 pub struct wire_cst_list_payment {
     ptr: *mut wire_cst_payment,
     len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_payment_type {
+    ptr: *mut i32,
+    len: i32,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_list_payments_request {
+    filters: *mut wire_cst_list_payment_type,
+    from_timestamp: *mut i64,
+    to_timestamp: *mut i64,
+    offset: *mut u32,
+    limit: *mut u32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

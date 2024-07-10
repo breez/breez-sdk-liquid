@@ -19,6 +19,7 @@ use crate::model::PaymentState::{
 use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
 use crate::sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
+use crate::utils;
 use crate::wallet::OnchainWallet;
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
 
@@ -351,7 +352,7 @@ impl ChainSwapStateHandler {
                         // This makes the tx known to the SDK (get_info, list_payments) instantly
                         self.persister.insert_or_update_payment(PaymentTxData {
                             tx_id: lockup_tx_id.clone(),
-                            timestamp: None,
+                            timestamp: Some(utils::now()),
                             amount_sat: swap.receiver_amount_sat,
                             // This should be: boltz fee + lockup fee + claim fee
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
@@ -593,7 +594,7 @@ impl ChainSwapStateHandler {
             // This makes the tx known to the SDK (get_info, list_payments) instantly
             self.persister.insert_or_update_payment(PaymentTxData {
                 tx_id: claim_tx_id.clone(),
-                timestamp: None,
+                timestamp: Some(utils::now()),
                 amount_sat: chain_swap.receiver_amount_sat,
                 fees_sat: 0,
                 payment_type: PaymentType::Receive,
