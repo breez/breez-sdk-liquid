@@ -37,7 +37,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(aesSuccessActionDataDecryptedList: [AesSuccessActionDataDecrypted]) -> [Any] {
-        return aesSuccessActionDataDecryptedList.map { v -> [String: Any?] in dictionaryOf(aesSuccessActionDataDecrypted: v) }
+        return aesSuccessActionDataDecryptedList.map { v -> [String: Any?] in return dictionaryOf(aesSuccessActionDataDecrypted: v) }
     }
 
     static func asBackupRequest(backupRequest: [String: Any?]) throws -> BackupRequest {
@@ -73,7 +73,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(backupRequestList: [BackupRequest]) -> [Any] {
-        return backupRequestList.map { v -> [String: Any?] in dictionaryOf(backupRequest: v) }
+        return backupRequestList.map { v -> [String: Any?] in return dictionaryOf(backupRequest: v) }
     }
 
     static func asBitcoinAddressData(bitcoinAddressData: [String: Any?]) throws -> BitcoinAddressData {
@@ -140,7 +140,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(bitcoinAddressDataList: [BitcoinAddressData]) -> [Any] {
-        return bitcoinAddressDataList.map { v -> [String: Any?] in dictionaryOf(bitcoinAddressData: v) }
+        return bitcoinAddressDataList.map { v -> [String: Any?] in return dictionaryOf(bitcoinAddressData: v) }
     }
 
     static func asConfig(config: [String: Any?]) throws -> Config {
@@ -209,7 +209,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(configList: [Config]) -> [Any] {
-        return configList.map { v -> [String: Any?] in dictionaryOf(config: v) }
+        return configList.map { v -> [String: Any?] in return dictionaryOf(config: v) }
     }
 
     static func asConnectRequest(connectRequest: [String: Any?]) throws -> ConnectRequest {
@@ -249,7 +249,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(connectRequestList: [ConnectRequest]) -> [Any] {
-        return connectRequestList.map { v -> [String: Any?] in dictionaryOf(connectRequest: v) }
+        return connectRequestList.map { v -> [String: Any?] in return dictionaryOf(connectRequest: v) }
     }
 
     static func asCurrencyInfo(currencyInfo: [String: Any?]) throws -> CurrencyInfo {
@@ -323,7 +323,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(currencyInfoList: [CurrencyInfo]) -> [Any] {
-        return currencyInfoList.map { v -> [String: Any?] in dictionaryOf(currencyInfo: v) }
+        return currencyInfoList.map { v -> [String: Any?] in return dictionaryOf(currencyInfo: v) }
     }
 
     static func asFiatCurrency(fiatCurrency: [String: Any?]) throws -> FiatCurrency {
@@ -362,7 +362,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(fiatCurrencyList: [FiatCurrency]) -> [Any] {
-        return fiatCurrencyList.map { v -> [String: Any?] in dictionaryOf(fiatCurrency: v) }
+        return fiatCurrencyList.map { v -> [String: Any?] in return dictionaryOf(fiatCurrency: v) }
     }
 
     static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
@@ -410,7 +410,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(getInfoResponseList: [GetInfoResponse]) -> [Any] {
-        return getInfoResponseList.map { v -> [String: Any?] in dictionaryOf(getInfoResponse: v) }
+        return getInfoResponseList.map { v -> [String: Any?] in return dictionaryOf(getInfoResponse: v) }
     }
 
     static func asLnInvoice(lnInvoice: [String: Any?]) throws -> LnInvoice {
@@ -514,7 +514,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnInvoiceList: [LnInvoice]) -> [Any] {
-        return lnInvoiceList.map { v -> [String: Any?] in dictionaryOf(lnInvoice: v) }
+        return lnInvoiceList.map { v -> [String: Any?] in return dictionaryOf(lnInvoice: v) }
     }
 
     static func asLightningPaymentLimitsResponse(lightningPaymentLimitsResponse: [String: Any?]) throws -> LightningPaymentLimitsResponse {
@@ -555,7 +555,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lightningPaymentLimitsResponseList: [LightningPaymentLimitsResponse]) -> [Any] {
-        return lightningPaymentLimitsResponseList.map { v -> [String: Any?] in dictionaryOf(lightningPaymentLimitsResponse: v) }
+        return lightningPaymentLimitsResponseList.map { v -> [String: Any?] in return dictionaryOf(lightningPaymentLimitsResponse: v) }
     }
 
     static func asLimits(limits: [String: Any?]) throws -> Limits {
@@ -598,7 +598,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(limitsList: [Limits]) -> [Any] {
-        return limitsList.map { v -> [String: Any?] in dictionaryOf(limits: v) }
+        return limitsList.map { v -> [String: Any?] in return dictionaryOf(limits: v) }
     }
 
     static func asListPaymentsRequest(listPaymentsRequest: [String: Any?]) throws -> ListPaymentsRequest {
@@ -669,7 +669,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(listPaymentsRequestList: [ListPaymentsRequest]) -> [Any] {
-        return listPaymentsRequestList.map { v -> [String: Any?] in dictionaryOf(listPaymentsRequest: v) }
+        return listPaymentsRequestList.map { v -> [String: Any?] in return dictionaryOf(listPaymentsRequest: v) }
     }
 
     static func asLnUrlAuthRequestData(lnUrlAuthRequestData: [String: Any?]) throws -> LnUrlAuthRequestData {
@@ -721,7 +721,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlAuthRequestDataList: [LnUrlAuthRequestData]) -> [Any] {
-        return lnUrlAuthRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlAuthRequestData: v) }
+        return lnUrlAuthRequestDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlAuthRequestData: v) }
     }
 
     static func asLnUrlErrorData(lnUrlErrorData: [String: Any?]) throws -> LnUrlErrorData {
@@ -753,7 +753,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlErrorDataList: [LnUrlErrorData]) -> [Any] {
-        return lnUrlErrorDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlErrorData: v) }
+        return lnUrlErrorDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlErrorData: v) }
     }
 
     static func asLnUrlPayErrorData(lnUrlPayErrorData: [String: Any?]) throws -> LnUrlPayErrorData {
@@ -791,7 +791,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlPayErrorDataList: [LnUrlPayErrorData]) -> [Any] {
-        return lnUrlPayErrorDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlPayErrorData: v) }
+        return lnUrlPayErrorDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlPayErrorData: v) }
     }
 
     static func asLnUrlPayRequest(lnUrlPayRequest: [String: Any?]) throws -> LnUrlPayRequest {
@@ -849,7 +849,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlPayRequestList: [LnUrlPayRequest]) -> [Any] {
-        return lnUrlPayRequestList.map { v -> [String: Any?] in dictionaryOf(lnUrlPayRequest: v) }
+        return lnUrlPayRequestList.map { v -> [String: Any?] in return dictionaryOf(lnUrlPayRequest: v) }
     }
 
     static func asLnUrlPayRequestData(lnUrlPayRequestData: [String: Any?]) throws -> LnUrlPayRequestData {
@@ -930,7 +930,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlPayRequestDataList: [LnUrlPayRequestData]) -> [Any] {
-        return lnUrlPayRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlPayRequestData: v) }
+        return lnUrlPayRequestDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlPayRequestData: v) }
     }
 
     static func asLnUrlPaySuccessData(lnUrlPaySuccessData: [String: Any?]) throws -> LnUrlPaySuccessData {
@@ -971,7 +971,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlPaySuccessDataList: [LnUrlPaySuccessData]) -> [Any] {
-        return lnUrlPaySuccessDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlPaySuccessData: v) }
+        return lnUrlPaySuccessDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlPaySuccessData: v) }
     }
 
     static func asLnUrlWithdrawRequest(lnUrlWithdrawRequest: [String: Any?]) throws -> LnUrlWithdrawRequest {
@@ -1020,7 +1020,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlWithdrawRequestList: [LnUrlWithdrawRequest]) -> [Any] {
-        return lnUrlWithdrawRequestList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawRequest: v) }
+        return lnUrlWithdrawRequestList.map { v -> [String: Any?] in return dictionaryOf(lnUrlWithdrawRequest: v) }
     }
 
     static func asLnUrlWithdrawRequestData(lnUrlWithdrawRequestData: [String: Any?]) throws -> LnUrlWithdrawRequestData {
@@ -1073,7 +1073,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlWithdrawRequestDataList: [LnUrlWithdrawRequestData]) -> [Any] {
-        return lnUrlWithdrawRequestDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawRequestData: v) }
+        return lnUrlWithdrawRequestDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlWithdrawRequestData: v) }
     }
 
     static func asLnUrlWithdrawSuccessData(lnUrlWithdrawSuccessData: [String: Any?]) throws -> LnUrlWithdrawSuccessData {
@@ -1106,7 +1106,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlWithdrawSuccessDataList: [LnUrlWithdrawSuccessData]) -> [Any] {
-        return lnUrlWithdrawSuccessDataList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawSuccessData: v) }
+        return lnUrlWithdrawSuccessDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlWithdrawSuccessData: v) }
     }
 
     static func asLocaleOverrides(localeOverrides: [String: Any?]) throws -> LocaleOverrides {
@@ -1154,7 +1154,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(localeOverridesList: [LocaleOverrides]) -> [Any] {
-        return localeOverridesList.map { v -> [String: Any?] in dictionaryOf(localeOverrides: v) }
+        return localeOverridesList.map { v -> [String: Any?] in return dictionaryOf(localeOverrides: v) }
     }
 
     static func asLocalizedName(localizedName: [String: Any?]) throws -> LocalizedName {
@@ -1192,7 +1192,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(localizedNameList: [LocalizedName]) -> [Any] {
-        return localizedNameList.map { v -> [String: Any?] in dictionaryOf(localizedName: v) }
+        return localizedNameList.map { v -> [String: Any?] in return dictionaryOf(localizedName: v) }
     }
 
     static func asLogEntry(logEntry: [String: Any?]) throws -> LogEntry {
@@ -1230,7 +1230,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(logEntryList: [LogEntry]) -> [Any] {
-        return logEntryList.map { v -> [String: Any?] in dictionaryOf(logEntry: v) }
+        return logEntryList.map { v -> [String: Any?] in return dictionaryOf(logEntry: v) }
     }
 
     static func asMessageSuccessActionData(messageSuccessActionData: [String: Any?]) throws -> MessageSuccessActionData {
@@ -1262,7 +1262,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(messageSuccessActionDataList: [MessageSuccessActionData]) -> [Any] {
-        return messageSuccessActionDataList.map { v -> [String: Any?] in dictionaryOf(messageSuccessActionData: v) }
+        return messageSuccessActionDataList.map { v -> [String: Any?] in return dictionaryOf(messageSuccessActionData: v) }
     }
 
     static func asOnchainPaymentLimitsResponse(onchainPaymentLimitsResponse: [String: Any?]) throws -> OnchainPaymentLimitsResponse {
@@ -1303,7 +1303,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(onchainPaymentLimitsResponseList: [OnchainPaymentLimitsResponse]) -> [Any] {
-        return onchainPaymentLimitsResponseList.map { v -> [String: Any?] in dictionaryOf(onchainPaymentLimitsResponse: v) }
+        return onchainPaymentLimitsResponseList.map { v -> [String: Any?] in return dictionaryOf(onchainPaymentLimitsResponse: v) }
     }
 
     static func asPayOnchainRequest(payOnchainRequest: [String: Any?]) throws -> PayOnchainRequest {
@@ -1342,7 +1342,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(payOnchainRequestList: [PayOnchainRequest]) -> [Any] {
-        return payOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(payOnchainRequest: v) }
+        return payOnchainRequestList.map { v -> [String: Any?] in return dictionaryOf(payOnchainRequest: v) }
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
@@ -1453,7 +1453,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(paymentList: [Payment]) -> [Any] {
-        return paymentList.map { v -> [String: Any?] in dictionaryOf(payment: v) }
+        return paymentList.map { v -> [String: Any?] in return dictionaryOf(payment: v) }
     }
 
     static func asPreparePayOnchainRequest(preparePayOnchainRequest: [String: Any?]) throws -> PreparePayOnchainRequest {
@@ -1485,7 +1485,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(preparePayOnchainRequestList: [PreparePayOnchainRequest]) -> [Any] {
-        return preparePayOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(preparePayOnchainRequest: v) }
+        return preparePayOnchainRequestList.map { v -> [String: Any?] in return dictionaryOf(preparePayOnchainRequest: v) }
     }
 
     static func asPreparePayOnchainResponse(preparePayOnchainResponse: [String: Any?]) throws -> PreparePayOnchainResponse {
@@ -1523,7 +1523,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(preparePayOnchainResponseList: [PreparePayOnchainResponse]) -> [Any] {
-        return preparePayOnchainResponseList.map { v -> [String: Any?] in dictionaryOf(preparePayOnchainResponse: v) }
+        return preparePayOnchainResponseList.map { v -> [String: Any?] in return dictionaryOf(preparePayOnchainResponse: v) }
     }
 
     static func asPrepareReceiveOnchainRequest(prepareReceiveOnchainRequest: [String: Any?]) throws -> PrepareReceiveOnchainRequest {
@@ -1555,7 +1555,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareReceiveOnchainRequestList: [PrepareReceiveOnchainRequest]) -> [Any] {
-        return prepareReceiveOnchainRequestList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveOnchainRequest: v) }
+        return prepareReceiveOnchainRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareReceiveOnchainRequest: v) }
     }
 
     static func asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: [String: Any?]) throws -> PrepareReceiveOnchainResponse {
@@ -1593,7 +1593,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareReceiveOnchainResponseList: [PrepareReceiveOnchainResponse]) -> [Any] {
-        return prepareReceiveOnchainResponseList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveOnchainResponse: v) }
+        return prepareReceiveOnchainResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareReceiveOnchainResponse: v) }
     }
 
     static func asPrepareReceiveRequest(prepareReceiveRequest: [String: Any?]) throws -> PrepareReceiveRequest {
@@ -1625,7 +1625,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareReceiveRequestList: [PrepareReceiveRequest]) -> [Any] {
-        return prepareReceiveRequestList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveRequest: v) }
+        return prepareReceiveRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareReceiveRequest: v) }
     }
 
     static func asPrepareReceiveResponse(prepareReceiveResponse: [String: Any?]) throws -> PrepareReceiveResponse {
@@ -1663,7 +1663,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareReceiveResponseList: [PrepareReceiveResponse]) -> [Any] {
-        return prepareReceiveResponseList.map { v -> [String: Any?] in dictionaryOf(prepareReceiveResponse: v) }
+        return prepareReceiveResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareReceiveResponse: v) }
     }
 
     static func asPrepareRefundRequest(prepareRefundRequest: [String: Any?]) throws -> PrepareRefundRequest {
@@ -1706,7 +1706,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareRefundRequestList: [PrepareRefundRequest]) -> [Any] {
-        return prepareRefundRequestList.map { v -> [String: Any?] in dictionaryOf(prepareRefundRequest: v) }
+        return prepareRefundRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareRefundRequest: v) }
     }
 
     static func asPrepareRefundResponse(prepareRefundResponse: [String: Any?]) throws -> PrepareRefundResponse {
@@ -1753,7 +1753,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareRefundResponseList: [PrepareRefundResponse]) -> [Any] {
-        return prepareRefundResponseList.map { v -> [String: Any?] in dictionaryOf(prepareRefundResponse: v) }
+        return prepareRefundResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareRefundResponse: v) }
     }
 
     static func asPrepareSendRequest(prepareSendRequest: [String: Any?]) throws -> PrepareSendRequest {
@@ -1785,7 +1785,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareSendRequestList: [PrepareSendRequest]) -> [Any] {
-        return prepareSendRequestList.map { v -> [String: Any?] in dictionaryOf(prepareSendRequest: v) }
+        return prepareSendRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareSendRequest: v) }
     }
 
     static func asPrepareSendResponse(prepareSendResponse: [String: Any?]) throws -> PrepareSendResponse {
@@ -1823,7 +1823,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(prepareSendResponseList: [PrepareSendResponse]) -> [Any] {
-        return prepareSendResponseList.map { v -> [String: Any?] in dictionaryOf(prepareSendResponse: v) }
+        return prepareSendResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareSendResponse: v) }
     }
 
     static func asRate(rate: [String: Any?]) throws -> Rate {
@@ -1861,7 +1861,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(rateList: [Rate]) -> [Any] {
-        return rateList.map { v -> [String: Any?] in dictionaryOf(rate: v) }
+        return rateList.map { v -> [String: Any?] in return dictionaryOf(rate: v) }
     }
 
     static func asReceiveOnchainResponse(receiveOnchainResponse: [String: Any?]) throws -> ReceiveOnchainResponse {
@@ -1899,7 +1899,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(receiveOnchainResponseList: [ReceiveOnchainResponse]) -> [Any] {
-        return receiveOnchainResponseList.map { v -> [String: Any?] in dictionaryOf(receiveOnchainResponse: v) }
+        return receiveOnchainResponseList.map { v -> [String: Any?] in return dictionaryOf(receiveOnchainResponse: v) }
     }
 
     static func asReceivePaymentResponse(receivePaymentResponse: [String: Any?]) throws -> ReceivePaymentResponse {
@@ -1937,7 +1937,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(receivePaymentResponseList: [ReceivePaymentResponse]) -> [Any] {
-        return receivePaymentResponseList.map { v -> [String: Any?] in dictionaryOf(receivePaymentResponse: v) }
+        return receivePaymentResponseList.map { v -> [String: Any?] in return dictionaryOf(receivePaymentResponse: v) }
     }
 
     static func asRefundRequest(refundRequest: [String: Any?]) throws -> RefundRequest {
@@ -1980,7 +1980,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(refundRequestList: [RefundRequest]) -> [Any] {
-        return refundRequestList.map { v -> [String: Any?] in dictionaryOf(refundRequest: v) }
+        return refundRequestList.map { v -> [String: Any?] in return dictionaryOf(refundRequest: v) }
     }
 
     static func asRefundResponse(refundResponse: [String: Any?]) throws -> RefundResponse {
@@ -2012,7 +2012,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(refundResponseList: [RefundResponse]) -> [Any] {
-        return refundResponseList.map { v -> [String: Any?] in dictionaryOf(refundResponse: v) }
+        return refundResponseList.map { v -> [String: Any?] in return dictionaryOf(refundResponse: v) }
     }
 
     static func asRefundableSwap(refundableSwap: [String: Any?]) throws -> RefundableSwap {
@@ -2055,7 +2055,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(refundableSwapList: [RefundableSwap]) -> [Any] {
-        return refundableSwapList.map { v -> [String: Any?] in dictionaryOf(refundableSwap: v) }
+        return refundableSwapList.map { v -> [String: Any?] in return dictionaryOf(refundableSwap: v) }
     }
 
     static func asRestoreRequest(restoreRequest: [String: Any?]) throws -> RestoreRequest {
@@ -2091,7 +2091,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(restoreRequestList: [RestoreRequest]) -> [Any] {
-        return restoreRequestList.map { v -> [String: Any?] in dictionaryOf(restoreRequest: v) }
+        return restoreRequestList.map { v -> [String: Any?] in return dictionaryOf(restoreRequest: v) }
     }
 
     static func asRouteHint(routeHint: [String: Any?]) throws -> RouteHint {
@@ -2124,7 +2124,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(routeHintList: [RouteHint]) -> [Any] {
-        return routeHintList.map { v -> [String: Any?] in dictionaryOf(routeHint: v) }
+        return routeHintList.map { v -> [String: Any?] in return dictionaryOf(routeHint: v) }
     }
 
     static func asRouteHintHop(routeHintHop: [String: Any?]) throws -> RouteHintHop {
@@ -2195,7 +2195,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(routeHintHopList: [RouteHintHop]) -> [Any] {
-        return routeHintHopList.map { v -> [String: Any?] in dictionaryOf(routeHintHop: v) }
+        return routeHintHopList.map { v -> [String: Any?] in return dictionaryOf(routeHintHop: v) }
     }
 
     static func asSendPaymentResponse(sendPaymentResponse: [String: Any?]) throws -> SendPaymentResponse {
@@ -2228,7 +2228,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(sendPaymentResponseList: [SendPaymentResponse]) -> [Any] {
-        return sendPaymentResponseList.map { v -> [String: Any?] in dictionaryOf(sendPaymentResponse: v) }
+        return sendPaymentResponseList.map { v -> [String: Any?] in return dictionaryOf(sendPaymentResponse: v) }
     }
 
     static func asSymbol(symbol: [String: Any?]) throws -> Symbol {
@@ -2292,7 +2292,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(symbolList: [Symbol]) -> [Any] {
-        return symbolList.map { v -> [String: Any?] in dictionaryOf(symbol: v) }
+        return symbolList.map { v -> [String: Any?] in return dictionaryOf(symbol: v) }
     }
 
     static func asUrlSuccessActionData(urlSuccessActionData: [String: Any?]) throws -> UrlSuccessActionData {
@@ -2330,7 +2330,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(urlSuccessActionDataList: [UrlSuccessActionData]) -> [Any] {
-        return urlSuccessActionDataList.map { v -> [String: Any?] in dictionaryOf(urlSuccessActionData: v) }
+        return urlSuccessActionDataList.map { v -> [String: Any?] in return dictionaryOf(urlSuccessActionData: v) }
     }
 
     static func asAesSuccessActionDataResult(aesSuccessActionDataResult: [String: Any?]) throws -> AesSuccessActionDataResult {
@@ -2374,7 +2374,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(aesSuccessActionDataResultList: [AesSuccessActionDataResult]) -> [Any] {
-        return aesSuccessActionDataResultList.map { v -> [String: Any?] in dictionaryOf(aesSuccessActionDataResult: v) }
+        return aesSuccessActionDataResultList.map { v -> [String: Any?] in return dictionaryOf(aesSuccessActionDataResult: v) }
     }
 
     static func asAesSuccessActionDataResultList(arr: [Any]) throws -> [AesSuccessActionDataResult] {
@@ -2525,7 +2525,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(inputTypeList: [InputType]) -> [Any] {
-        return inputTypeList.map { v -> [String: Any?] in dictionaryOf(inputType: v) }
+        return inputTypeList.map { v -> [String: Any?] in return dictionaryOf(inputType: v) }
     }
 
     static func asInputTypeList(arr: [Any]) throws -> [InputType] {
@@ -2564,7 +2564,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(liquidNetworkList: [LiquidNetwork]) -> [String] {
-        return liquidNetworkList.map { v -> String in valueOf(liquidNetwork: v) }
+        return liquidNetworkList.map { v -> String in return valueOf(liquidNetwork: v) }
     }
 
     static func asLiquidNetworkList(arr: [Any]) throws -> [LiquidNetwork] {
@@ -2615,7 +2615,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlCallbackStatusList: [LnUrlCallbackStatus]) -> [Any] {
-        return lnUrlCallbackStatusList.map { v -> [String: Any?] in dictionaryOf(lnUrlCallbackStatus: v) }
+        return lnUrlCallbackStatusList.map { v -> [String: Any?] in return dictionaryOf(lnUrlCallbackStatus: v) }
     }
 
     static func asLnUrlCallbackStatusList(arr: [Any]) throws -> [LnUrlCallbackStatus] {
@@ -2690,7 +2690,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlPayResultList: [LnUrlPayResult]) -> [Any] {
-        return lnUrlPayResultList.map { v -> [String: Any?] in dictionaryOf(lnUrlPayResult: v) }
+        return lnUrlPayResultList.map { v -> [String: Any?] in return dictionaryOf(lnUrlPayResult: v) }
     }
 
     static func asLnUrlPayResultList(arr: [Any]) throws -> [LnUrlPayResult] {
@@ -2765,7 +2765,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(lnUrlWithdrawResultList: [LnUrlWithdrawResult]) -> [Any] {
-        return lnUrlWithdrawResultList.map { v -> [String: Any?] in dictionaryOf(lnUrlWithdrawResult: v) }
+        return lnUrlWithdrawResultList.map { v -> [String: Any?] in return dictionaryOf(lnUrlWithdrawResult: v) }
     }
 
     static func asLnUrlWithdrawResultList(arr: [Any]) throws -> [LnUrlWithdrawResult] {
@@ -2816,7 +2816,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(networkList: [Network]) -> [String] {
-        return networkList.map { v -> String in valueOf(network: v) }
+        return networkList.map { v -> String in return valueOf(network: v) }
     }
 
     static func asNetworkList(arr: [Any]) throws -> [Network] {
@@ -2885,7 +2885,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(paymentStateList: [PaymentState]) -> [String] {
-        return paymentStateList.map { v -> String in valueOf(paymentState: v) }
+        return paymentStateList.map { v -> String in return valueOf(paymentState: v) }
     }
 
     static func asPaymentStateList(arr: [Any]) throws -> [PaymentState] {
@@ -2924,7 +2924,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(paymentTypeList: [PaymentType]) -> [String] {
-        return paymentTypeList.map { v -> String in valueOf(paymentType: v) }
+        return paymentTypeList.map { v -> String in return valueOf(paymentType: v) }
     }
 
     static func asPaymentTypeList(arr: [Any]) throws -> [PaymentType] {
@@ -3055,7 +3055,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(sdkEventList: [SdkEvent]) -> [Any] {
-        return sdkEventList.map { v -> [String: Any?] in dictionaryOf(sdkEvent: v) }
+        return sdkEventList.map { v -> [String: Any?] in return dictionaryOf(sdkEvent: v) }
     }
 
     static func asSdkEventList(arr: [Any]) throws -> [SdkEvent] {
@@ -3130,7 +3130,7 @@ enum BreezSDKLiquidMapper {
     }
 
     static func arrayOf(successActionProcessedList: [SuccessActionProcessed]) -> [Any] {
-        return successActionProcessedList.map { v -> [String: Any?] in dictionaryOf(successActionProcessed: v) }
+        return successActionProcessedList.map { v -> [String: Any?] in return dictionaryOf(successActionProcessed: v) }
     }
 
     static func asSuccessActionProcessedList(arr: [Any]) throws -> [SuccessActionProcessed] {
