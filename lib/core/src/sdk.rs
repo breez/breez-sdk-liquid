@@ -607,7 +607,7 @@ impl LiquidSdk {
         amount_sat: u64,
         address: &str,
         fee_rate: Option<f32>,
-    ) -> Result<u64> {
+    ) -> Result<u64, PaymentError> {
         Ok(self
             .onchain_wallet
             .build_tx(fee_rate, address, amount_sat)
@@ -617,7 +617,7 @@ impl LiquidSdk {
             .sum())
     }
 
-    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64> {
+    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64, PaymentError> {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
         let temp_p2tr_addr = match self.config.network {
