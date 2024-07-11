@@ -143,8 +143,11 @@ impl From<boltz_client::bitcoin::hex::HexToArrayError> for PaymentError {
 
 impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
-        PaymentError::LwkError {
-            err: format!("{err:?}"),
+        match err {
+            lwk_wollet::Error::InsufficientFunds => PaymentError::InsufficientFunds,
+            _ => PaymentError::LwkError {
+                err: format!("{err:?}"),
+            },
         }
     }
 }
