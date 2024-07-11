@@ -196,17 +196,17 @@ export interface PayOnchainRequest {
 }
 
 export interface Payment {
-    txId?: string
-    swapId?: string
     timestamp: number
     amountSat: number
     feesSat: number
+    paymentType: PaymentType
+    status: PaymentState
+    txId?: string
+    swapId?: string
     preimage?: string
     bolt11?: string
     refundTxId?: string
     refundTxAmountSat?: number
-    paymentType: PaymentType
-    status: PaymentState
 }
 
 export interface PreparePayOnchainRequest {

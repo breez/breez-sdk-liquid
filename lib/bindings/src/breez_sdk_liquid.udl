@@ -397,17 +397,17 @@ dictionary ListPaymentsRequest {
 };
 
 dictionary Payment {
-    string? tx_id = null;
-    string? swap_id = null;
     u32 timestamp;
     u64 amount_sat;
     u64 fees_sat;
+    PaymentType payment_type;
+    PaymentState status;
+    string? tx_id = null;
+    string? swap_id = null;
     string? preimage = null;
     string? bolt11 = null;
     string? refund_tx_id = null;
     u64? refund_tx_amount_sat = null;
-    PaymentType payment_type;
-    PaymentState status;
 };
 
 enum PaymentType {

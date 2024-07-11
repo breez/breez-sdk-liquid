@@ -1159,45 +1159,45 @@ fun asPayment(payment: ReadableMap): Payment? {
     ) {
         return null
     }
-    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
-    val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()
     val feesSat = payment.getDouble("feesSat").toULong()
+    val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
+    val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
+    val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
     val preimage = if (hasNonNullKey(payment, "preimage")) payment.getString("preimage") else null
     val bolt11 = if (hasNonNullKey(payment, "bolt11")) payment.getString("bolt11") else null
     val refundTxId = if (hasNonNullKey(payment, "refundTxId")) payment.getString("refundTxId") else null
     val refundTxAmountSat = if (hasNonNullKey(payment, "refundTxAmountSat")) payment.getDouble("refundTxAmountSat").toULong() else null
-    val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
-    val status = payment.getString("status")?.let { asPaymentState(it) }!!
     return Payment(
-        txId,
-        swapId,
         timestamp,
         amountSat,
         feesSat,
+        paymentType,
+        status,
+        txId,
+        swapId,
         preimage,
         bolt11,
         refundTxId,
         refundTxAmountSat,
-        paymentType,
-        status,
     )
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
     readableMapOf(
-        "txId" to payment.txId,
-        "swapId" to payment.swapId,
         "timestamp" to payment.timestamp,
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
+        "paymentType" to payment.paymentType.name.lowercase(),
+        "status" to payment.status.name.lowercase(),
+        "txId" to payment.txId,
+        "swapId" to payment.swapId,
         "preimage" to payment.preimage,
         "bolt11" to payment.bolt11,
         "refundTxId" to payment.refundTxId,
         "refundTxAmountSat" to payment.refundTxAmountSat,
-        "paymentType" to payment.paymentType.name.lowercase(),
-        "status" to payment.status.name.lowercase(),
     )
 
 fun asPaymentList(arr: ReadableArray): List<Payment> {
