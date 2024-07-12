@@ -1136,6 +1136,7 @@ impl CstDecode<crate::model::PreparePayOnchainRequest> for wire_cst_prepare_pay_
     fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
         crate::model::PreparePayOnchainRequest {
             receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
+            sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
         }
     }
 }
@@ -1144,7 +1145,8 @@ impl CstDecode<crate::model::PreparePayOnchainResponse> for wire_cst_prepare_pay
     fn cst_decode(self) -> crate::model::PreparePayOnchainResponse {
         crate::model::PreparePayOnchainResponse {
             receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
-            fees_sat: self.fees_sat.cst_decode(),
+            claim_fees_sat: self.claim_fees_sat.cst_decode(),
+            total_fees_sat: self.total_fees_sat.cst_decode(),
         }
     }
 }
@@ -1976,6 +1978,7 @@ impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
     fn new_with_null_ptr() -> Self {
         Self {
             receiver_amount_sat: Default::default(),
+            sat_per_vbyte: core::ptr::null_mut(),
         }
     }
 }
@@ -1988,7 +1991,8 @@ impl NewWithNullPtr for wire_cst_prepare_pay_onchain_response {
     fn new_with_null_ptr() -> Self {
         Self {
             receiver_amount_sat: Default::default(),
-            fees_sat: Default::default(),
+            claim_fees_sat: Default::default(),
+            total_fees_sat: Default::default(),
         }
     }
 }
@@ -3657,12 +3661,14 @@ pub struct wire_cst_PaymentError_SignerError {
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_pay_onchain_request {
     receiver_amount_sat: u64,
+    sat_per_vbyte: *mut u32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_pay_onchain_response {
     receiver_amount_sat: u64,
-    fees_sat: u64,
+    claim_fees_sat: u64,
+    total_fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

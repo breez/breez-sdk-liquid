@@ -1222,14 +1222,26 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         return null
     }
     val receiverAmountSat = preparePayOnchainRequest.getDouble("receiverAmountSat").toULong()
+    val satPerVbyte =
+        if (hasNonNullKey(
+                preparePayOnchainRequest,
+                "satPerVbyte",
+            )
+        ) {
+            preparePayOnchainRequest.getInt("satPerVbyte").toUInt()
+        } else {
+            null
+        }
     return PreparePayOnchainRequest(
         receiverAmountSat,
+        satPerVbyte,
     )
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
         "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
+        "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
@@ -1248,24 +1260,28 @@ fun asPreparePayOnchainResponse(preparePayOnchainResponse: ReadableMap): Prepare
             preparePayOnchainResponse,
             arrayOf(
                 "receiverAmountSat",
-                "feesSat",
+                "claimFeesSat",
+                "totalFeesSat",
             ),
         )
     ) {
         return null
     }
     val receiverAmountSat = preparePayOnchainResponse.getDouble("receiverAmountSat").toULong()
-    val feesSat = preparePayOnchainResponse.getDouble("feesSat").toULong()
+    val claimFeesSat = preparePayOnchainResponse.getDouble("claimFeesSat").toULong()
+    val totalFeesSat = preparePayOnchainResponse.getDouble("totalFeesSat").toULong()
     return PreparePayOnchainResponse(
         receiverAmountSat,
-        feesSat,
+        claimFeesSat,
+        totalFeesSat,
     )
 }
 
 fun readableMapOf(preparePayOnchainResponse: PreparePayOnchainResponse): ReadableMap =
     readableMapOf(
         "receiverAmountSat" to preparePayOnchainResponse.receiverAmountSat,
-        "feesSat" to preparePayOnchainResponse.feesSat,
+        "claimFeesSat" to preparePayOnchainResponse.claimFeesSat,
+        "totalFeesSat" to preparePayOnchainResponse.totalFeesSat,
     )
 
 fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainResponse> {

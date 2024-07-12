@@ -354,11 +354,13 @@ dictionary OnchainPaymentLimitsResponse {
 
 dictionary PreparePayOnchainRequest {
     u64 receiver_amount_sat;
+    u32? sat_per_vbyte;
 };
 
 dictionary PreparePayOnchainResponse {
     u64 receiver_amount_sat;
-    u64 fees_sat;
+    u64 claim_fees_sat;
+    u64 total_fees_sat;
 };
 
 dictionary PayOnchainRequest {

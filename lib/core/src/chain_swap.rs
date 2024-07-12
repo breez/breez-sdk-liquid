@@ -23,6 +23,9 @@ use crate::utils;
 use crate::wallet::OnchainWallet;
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
 
+// Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L78
+pub const ESTIMATED_BTC_CLAIM_TX_VSIZE: u64 = 111;
+
 pub(crate) struct ChainSwapStateHandler {
     config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,

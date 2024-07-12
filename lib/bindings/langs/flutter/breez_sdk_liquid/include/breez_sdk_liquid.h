@@ -14,6 +14,8 @@ void store_dart_post_cobject(DartPostCObjectFnType ptr);
 // EXTRA END
 typedef struct _Dart_Handle* Dart_Handle;
 
+#define ESTIMATED_BTC_CLAIM_TX_VSIZE 111
+
 #define STANDARD_FEE_RATE_SAT_PER_VBYTE 0.1
 
 #define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
@@ -99,7 +101,8 @@ typedef struct wire_cst_ln_url_withdraw_request {
 
 typedef struct wire_cst_prepare_pay_onchain_response {
   uint64_t receiver_amount_sat;
-  uint64_t fees_sat;
+  uint64_t claim_fees_sat;
+  uint64_t total_fees_sat;
 } wire_cst_prepare_pay_onchain_response;
 
 typedef struct wire_cst_pay_onchain_request {
@@ -109,6 +112,7 @@ typedef struct wire_cst_pay_onchain_request {
 
 typedef struct wire_cst_prepare_pay_onchain_request {
   uint64_t receiver_amount_sat;
+  uint32_t *sat_per_vbyte;
 } wire_cst_prepare_pay_onchain_request;
 
 typedef struct wire_cst_prepare_receive_onchain_request {

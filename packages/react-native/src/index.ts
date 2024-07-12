@@ -211,11 +211,13 @@ export interface Payment {
 
 export interface PreparePayOnchainRequest {
     receiverAmountSat: number
+    satPerVbyte?: number
 }
 
 export interface PreparePayOnchainResponse {
     receiverAmountSat: number
-    feesSat: number
+    claimFeesSat: number
+    totalFeesSat: number
 }
 
 export interface PrepareReceiveOnchainRequest {

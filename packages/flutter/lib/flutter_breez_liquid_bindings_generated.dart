@@ -1409,7 +1409,10 @@ final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
   external int receiver_amount_sat;
 
   @ffi.Uint64()
-  external int fees_sat;
+  external int claim_fees_sat;
+
+  @ffi.Uint64()
+  external int total_fees_sat;
 }
 
 final class wire_cst_pay_onchain_request extends ffi.Struct {
@@ -1421,6 +1424,8 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
   external int receiver_amount_sat;
+
+  external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
@@ -2277,6 +2282,8 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
+
+const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

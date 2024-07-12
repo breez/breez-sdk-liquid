@@ -512,33 +512,38 @@ enum PaymentType {
 
 class PreparePayOnchainRequest {
   final BigInt receiverAmountSat;
+  final int? satPerVbyte;
 
   const PreparePayOnchainRequest({
     required this.receiverAmountSat,
+    this.satPerVbyte,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
-          receiverAmountSat == other.receiverAmountSat;
+          receiverAmountSat == other.receiverAmountSat &&
+          satPerVbyte == other.satPerVbyte;
 }
 
 class PreparePayOnchainResponse {
   final BigInt receiverAmountSat;
-  final BigInt feesSat;
+  final BigInt claimFeesSat;
+  final BigInt totalFeesSat;
 
   const PreparePayOnchainResponse({
     required this.receiverAmountSat,
-    required this.feesSat,
+    required this.claimFeesSat,
+    required this.totalFeesSat,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ claimFeesSat.hashCode ^ totalFeesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -546,7 +551,8 @@ class PreparePayOnchainResponse {
       other is PreparePayOnchainResponse &&
           runtimeType == other.runtimeType &&
           receiverAmountSat == other.receiverAmountSat &&
-          feesSat == other.feesSat;
+          claimFeesSat == other.claimFeesSat &&
+          totalFeesSat == other.totalFeesSat;
 }
 
 class PrepareReceiveOnchainRequest {

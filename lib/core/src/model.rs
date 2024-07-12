@@ -227,12 +227,14 @@ pub struct SendPaymentResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub receiver_amount_sat: u64,
+    pub sat_per_vbyte: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainResponse {
     pub receiver_amount_sat: u64,
-    pub fees_sat: u64,
+    pub claim_fees_sat: u64,
+    pub total_fees_sat: u64,
 }
 
 #[derive(Debug, Serialize)]

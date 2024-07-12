@@ -1460,14 +1460,24 @@ enum BreezSDKLiquidMapper {
         guard let receiverAmountSat = preparePayOnchainRequest["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainRequest"))
         }
+        var satPerVbyte: UInt32?
+        if hasNonNilKey(data: preparePayOnchainRequest, key: "satPerVbyte") {
+            guard let satPerVbyteTmp = preparePayOnchainRequest["satPerVbyte"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "satPerVbyte"))
+            }
+            satPerVbyte = satPerVbyteTmp
+        }
 
         return PreparePayOnchainRequest(
-            receiverAmountSat: receiverAmountSat)
+            receiverAmountSat: receiverAmountSat,
+            satPerVbyte: satPerVbyte
+        )
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainRequest.receiverAmountSat,
+            "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
         ]
     }
 
@@ -1492,20 +1502,25 @@ enum BreezSDKLiquidMapper {
         guard let receiverAmountSat = preparePayOnchainResponse["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainResponse"))
         }
-        guard let feesSat = preparePayOnchainResponse["feesSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PreparePayOnchainResponse"))
+        guard let claimFeesSat = preparePayOnchainResponse["claimFeesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "claimFeesSat", typeName: "PreparePayOnchainResponse"))
+        }
+        guard let totalFeesSat = preparePayOnchainResponse["totalFeesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "totalFeesSat", typeName: "PreparePayOnchainResponse"))
         }
 
         return PreparePayOnchainResponse(
             receiverAmountSat: receiverAmountSat,
-            feesSat: feesSat
+            claimFeesSat: claimFeesSat,
+            totalFeesSat: totalFeesSat
         )
     }
 
     static func dictionaryOf(preparePayOnchainResponse: PreparePayOnchainResponse) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainResponse.receiverAmountSat,
-            "feesSat": preparePayOnchainResponse.feesSat,
+            "claimFeesSat": preparePayOnchainResponse.claimFeesSat,
+            "totalFeesSat": preparePayOnchainResponse.totalFeesSat,
         ]
     }
 

@@ -2079,9 +2079,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PreparePayOnchainRequest dco_decode_prepare_pay_onchain_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PreparePayOnchainRequest(
       receiverAmountSat: dco_decode_u_64(arr[0]),
+      satPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[1]),
     );
   }
 
@@ -2089,10 +2090,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PreparePayOnchainResponse dco_decode_prepare_pay_onchain_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PreparePayOnchainResponse(
       receiverAmountSat: dco_decode_u_64(arr[0]),
-      feesSat: dco_decode_u_64(arr[1]),
+      claimFeesSat: dco_decode_u_64(arr[1]),
+      totalFeesSat: dco_decode_u_64(arr[2]),
     );
   }
 
@@ -3581,15 +3583,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PreparePayOnchainRequest sse_decode_prepare_pay_onchain_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_receiverAmountSat = sse_decode_u_64(deserializer);
-    return PreparePayOnchainRequest(receiverAmountSat: var_receiverAmountSat);
+    var var_satPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return PreparePayOnchainRequest(receiverAmountSat: var_receiverAmountSat, satPerVbyte: var_satPerVbyte);
   }
 
   @protected
   PreparePayOnchainResponse sse_decode_prepare_pay_onchain_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_receiverAmountSat = sse_decode_u_64(deserializer);
-    var var_feesSat = sse_decode_u_64(deserializer);
-    return PreparePayOnchainResponse(receiverAmountSat: var_receiverAmountSat, feesSat: var_feesSat);
+    var var_claimFeesSat = sse_decode_u_64(deserializer);
+    var var_totalFeesSat = sse_decode_u_64(deserializer);
+    return PreparePayOnchainResponse(
+        receiverAmountSat: var_receiverAmountSat,
+        claimFeesSat: var_claimFeesSat,
+        totalFeesSat: var_totalFeesSat);
   }
 
   @protected
@@ -4973,13 +4980,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_prepare_pay_onchain_request(PreparePayOnchainRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.receiverAmountSat, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.satPerVbyte, serializer);
   }
 
   @protected
   void sse_encode_prepare_pay_onchain_response(PreparePayOnchainResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.receiverAmountSat, serializer);
-    sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_u_64(self.claimFeesSat, serializer);
+    sse_encode_u_64(self.totalFeesSat, serializer);
   }
 
   @protected
