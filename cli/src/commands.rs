@@ -98,6 +98,8 @@ pub(crate) enum Command {
     GetInfo,
     /// Sync local data with mempool and onchain data
     Sync,
+    /// List recommended fees based on the mempool
+    RecommendedFees,
     /// Empties the encrypted transaction cache
     EmptyCache,
     /// Backs up the current pending swaps
@@ -346,6 +348,10 @@ pub(crate) async fn handle_command(
         Command::Sync => {
             sdk.sync().await?;
             command_result!("Synced successfully")
+        }
+        Command::RecommendedFees => {
+            let res = sdk.recommended_fees().await?;
+            command_result!(res)
         }
         Command::EmptyCache => {
             sdk.empty_wallet_cache()?;

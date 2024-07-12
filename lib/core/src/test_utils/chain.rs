@@ -5,6 +5,7 @@ use async_trait::async_trait;
 
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    prelude::RecommendedFees,
     utils,
 };
 
@@ -105,6 +106,10 @@ impl BitcoinChainService for MockBitcoinChainService {
         _tx_hex: &str,
         _verify_confirmation: bool,
     ) -> Result<boltz_client::bitcoin::Transaction> {
+        unimplemented!()
+    }
+
+    async fn recommended_fees(&self) -> Result<RecommendedFees> {
         unimplemented!()
     }
 }

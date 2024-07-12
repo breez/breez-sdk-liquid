@@ -440,6 +440,18 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun recommendedFees(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().recommendedFees()
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun backup(
         req: ReadableMap,
         promise: Promise,

@@ -231,6 +231,10 @@ impl BindingLiquidSdk {
         self.sdk.sync().await.map_err(Into::into)
     }
 
+    pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
+        self.sdk.recommended_fees().await.map_err(Into::into)
+    }
+
     #[frb(sync)]
     pub fn empty_wallet_cache(&self) -> Result<(), SdkError> {
         self.sdk.empty_wallet_cache().map_err(Into::into)

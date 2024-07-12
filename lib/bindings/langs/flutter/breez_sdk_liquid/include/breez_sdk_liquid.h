@@ -217,6 +217,7 @@ typedef struct wire_cst_sdk_event {
 typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
   struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
+  struct wire_cst_list_prim_u_8_strict *mempoolspace_url;
   struct wire_cst_list_prim_u_8_strict *working_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
@@ -742,6 +743,14 @@ typedef struct wire_cst_receive_payment_response {
   struct wire_cst_list_prim_u_8_strict *invoice;
 } wire_cst_receive_payment_response;
 
+typedef struct wire_cst_recommended_fees {
+  uint64_t fastest_fee;
+  uint64_t half_hour_fee;
+  uint64_t hour_fee;
+  uint64_t economy_fee;
+  uint64_t minimum_fee;
+} wire_cst_recommended_fees;
+
 typedef struct wire_cst_refund_response {
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_refund_response;
@@ -845,6 +854,9 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(int64_t port_,
                                                                                  uintptr_t that,
                                                                                  struct wire_cst_prepare_receive_response *req);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(int64_t port_,
+                                                                                  uintptr_t that);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(int64_t port_,
                                                                         uintptr_t that,
@@ -1053,6 +1065,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore);

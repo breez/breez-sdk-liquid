@@ -34,6 +34,9 @@ class Config {
   final String liquidElectrumUrl;
   final String bitcoinElectrumUrl;
 
+  /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
+  final String mempoolspaceUrl;
+
   /// Directory in which all SDK files (DB, log, cache) are stored.
   ///
   /// Prefix can be a relative or absolute path to this directory.
@@ -53,6 +56,7 @@ class Config {
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
+    required this.mempoolspaceUrl,
     required this.workingDir,
     required this.network,
     required this.paymentTimeoutSec,
@@ -64,6 +68,7 @@ class Config {
   int get hashCode =>
       liquidElectrumUrl.hashCode ^
       bitcoinElectrumUrl.hashCode ^
+      mempoolspaceUrl.hashCode ^
       workingDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
@@ -77,6 +82,7 @@ class Config {
           runtimeType == other.runtimeType &&
           liquidElectrumUrl == other.liquidElectrumUrl &&
           bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
+          mempoolspaceUrl == other.mempoolspaceUrl &&
           workingDir == other.workingDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
@@ -758,6 +764,41 @@ class ReceivePaymentResponse {
           runtimeType == other.runtimeType &&
           id == other.id &&
           invoice == other.invoice;
+}
+
+class RecommendedFees {
+  final BigInt fastestFee;
+  final BigInt halfHourFee;
+  final BigInt hourFee;
+  final BigInt economyFee;
+  final BigInt minimumFee;
+
+  const RecommendedFees({
+    required this.fastestFee,
+    required this.halfHourFee,
+    required this.hourFee,
+    required this.economyFee,
+    required this.minimumFee,
+  });
+
+  @override
+  int get hashCode =>
+      fastestFee.hashCode ^
+      halfHourFee.hashCode ^
+      hourFee.hashCode ^
+      economyFee.hashCode ^
+      minimumFee.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecommendedFees &&
+          runtimeType == other.runtimeType &&
+          fastestFee == other.fastestFee &&
+          halfHourFee == other.halfHourFee &&
+          hourFee == other.hourFee &&
+          economyFee == other.economyFee &&
+          minimumFee == other.minimumFee;
 }
 
 class RefundRequest {

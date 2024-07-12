@@ -26,6 +26,8 @@ pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
 pub struct Config {
     pub liquid_electrum_url: String,
     pub bitcoin_electrum_url: String,
+    /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
+    pub mempoolspace_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
@@ -45,6 +47,7 @@ impl Config {
         Config {
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
+            mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
@@ -57,6 +60,7 @@ impl Config {
         Config {
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
+            mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
@@ -1003,6 +1007,24 @@ impl Payment {
             },
         }
     }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct RecommendedFees {
+    #[serde(rename(deserialize = "fastestFee"))]
+    pub fastest_fee: u64,
+
+    #[serde(rename(deserialize = "halfHourFee"))]
+    pub half_hour_fee: u64,
+
+    #[serde(rename(deserialize = "hourFee"))]
+    pub hour_fee: u64,
+
+    #[serde(rename(deserialize = "economyFee"))]
+    pub economy_fee: u64,
+
+    #[serde(rename(deserialize = "minimumFee"))]
+    pub minimum_fee: u64,
 }
 
 /// Internal SDK log entry used in the Uniffi and Dart bindings

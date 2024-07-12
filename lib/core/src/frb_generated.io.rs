@@ -423,6 +423,7 @@ impl CstDecode<crate::model::Config> for wire_cst_config {
         crate::model::Config {
             liquid_electrum_url: self.liquid_electrum_url.cst_decode(),
             bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
+            mempoolspace_url: self.mempoolspace_url.cst_decode(),
             working_dir: self.working_dir.cst_decode(),
             network: self.network.cst_decode(),
             payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
@@ -1252,6 +1253,18 @@ impl CstDecode<crate::model::ReceivePaymentResponse> for wire_cst_receive_paymen
         }
     }
 }
+impl CstDecode<crate::model::RecommendedFees> for wire_cst_recommended_fees {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::RecommendedFees {
+        crate::model::RecommendedFees {
+            fastest_fee: self.fastest_fee.cst_decode(),
+            half_hour_fee: self.half_hour_fee.cst_decode(),
+            hour_fee: self.hour_fee.cst_decode(),
+            economy_fee: self.economy_fee.cst_decode(),
+            minimum_fee: self.minimum_fee.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::RefundRequest> for wire_cst_refund_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::RefundRequest {
@@ -1502,6 +1515,7 @@ impl NewWithNullPtr for wire_cst_config {
         Self {
             liquid_electrum_url: core::ptr::null_mut(),
             bitcoin_electrum_url: core::ptr::null_mut(),
+            mempoolspace_url: core::ptr::null_mut(),
             working_dir: core::ptr::null_mut(),
             network: Default::default(),
             payment_timeout_sec: Default::default(),
@@ -2143,6 +2157,22 @@ impl Default for wire_cst_receive_payment_response {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_recommended_fees {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            fastest_fee: Default::default(),
+            half_hour_fee: Default::default(),
+            hour_fee: Default::default(),
+            economy_fee: Default::default(),
+            minimum_fee: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_recommended_fees {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_refund_request {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2491,6 +2521,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
     req: *mut wire_cst_prepare_receive_response,
 ) {
     wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+    port_: i64,
+    that: usize,
+) {
+    wire__crate__bindings__BindingLiquidSdk_recommended_fees_impl(port_, that)
 }
 
 #[no_mangle]
@@ -3063,6 +3101,7 @@ pub struct wire_cst_bitcoin_address_data {
 pub struct wire_cst_config {
     liquid_electrum_url: *mut wire_cst_list_prim_u_8_strict,
     bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
+    mempoolspace_url: *mut wire_cst_list_prim_u_8_strict,
     working_dir: *mut wire_cst_list_prim_u_8_strict,
     network: i32,
     payment_timeout_sec: u64,
@@ -3734,6 +3773,15 @@ pub struct wire_cst_receive_onchain_response {
 pub struct wire_cst_receive_payment_response {
     id: *mut wire_cst_list_prim_u_8_strict,
     invoice: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_recommended_fees {
+    fastest_fee: u64,
+    half_hour_fee: u64,
+    hour_fee: u64,
+    economy_fee: u64,
+    minimum_fee: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

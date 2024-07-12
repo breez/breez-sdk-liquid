@@ -6,6 +6,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
+use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
@@ -14,7 +15,7 @@ use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElectrumUrl, ElementsNetwork};
+use lwk_wollet::{elements, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
@@ -23,7 +24,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
 
-use crate::chain::bitcoin::{self, BitcoinChainService};
+use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::SdkError;
 use crate::model::PaymentState::*;
@@ -101,9 +102,8 @@ impl LiquidSdk {
 
         let liquid_chain_service =
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
-        let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
-            &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
-        )?));
+        let bitcoin_chain_service =
+            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
@@ -1623,6 +1623,16 @@ impl LiquidSdk {
             .list_fiat_currencies()
             .await
             .map_err(Into::into)
+    }
+
+    /// Get the recommended fees for Bitcoin onchain transactions
+    pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
+        Ok(self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .recommended_fees()
+            .await?)
     }
 
     pub fn default_config(network: LiquidNetwork) -> Config {

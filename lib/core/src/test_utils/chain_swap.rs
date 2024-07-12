@@ -3,11 +3,10 @@
 use anyhow::Result;
 use std::sync::Arc;
 
-use lwk_wollet::ElectrumUrl;
 use tokio::sync::Mutex;
 
 use crate::{
-    chain::{bitcoin, liquid::HybridLiquidChainService},
+    chain::{bitcoin::HybridBitcoinChainService, liquid::HybridLiquidChainService},
     chain_swap::ChainSwapStateHandler,
     model::{ChainSwap, Config, Direction, PaymentState},
     persist::Persister,
@@ -24,9 +23,8 @@ pub(crate) fn new_chain_swap_state_handler(
     let onchain_wallet = Arc::new(MockWallet::new());
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
-    let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
-        &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
-    )?));
+    let bitcoin_chain_service =
+        Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
     ChainSwapStateHandler::new(
         config,

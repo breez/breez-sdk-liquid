@@ -55,7 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.0.0';
 
   @override
-  int get rustContentHash => -1318462354;
+  int get rustContentHash => 749689565;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -123,6 +123,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
       {required BindingLiquidSdk that, required PrepareReceiveResponse req});
+
+  Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that});
 
   Future<RefundResponse> crateBindingsBindingLiquidSdkRefund(
       {required BindingLiquidSdk that, required RefundRequest req});
@@ -722,6 +724,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkReceivePaymentConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_receive_payment",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_recommended_fees(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_recommended_fees,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_recommended_fees",
+        argNames: ["that"],
       );
 
   @override
@@ -1339,15 +1365,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
-      workingDir: dco_decode_String(arr[2]),
-      network: dco_decode_liquid_network(arr[3]),
-      paymentTimeoutSec: dco_decode_u_64(arr[4]),
-      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[5]),
-      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+      mempoolspaceUrl: dco_decode_String(arr[2]),
+      workingDir: dco_decode_String(arr[3]),
+      network: dco_decode_liquid_network(arr[4]),
+      paymentTimeoutSec: dco_decode_u_64(arr[5]),
+      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
     );
   }
 
@@ -2219,6 +2246,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RecommendedFees dco_decode_recommended_fees(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return RecommendedFees(
+      fastestFee: dco_decode_u_64(arr[0]),
+      halfHourFee: dco_decode_u_64(arr[1]),
+      hourFee: dco_decode_u_64(arr[2]),
+      economyFee: dco_decode_u_64(arr[3]),
+      minimumFee: dco_decode_u_64(arr[4]),
+    );
+  }
+
+  @protected
   RefundRequest dco_decode_refund_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2785,6 +2826,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_liquidElectrumUrl = sse_decode_String(deserializer);
     var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
+    var var_mempoolspaceUrl = sse_decode_String(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
     var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
@@ -2793,6 +2835,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
+        mempoolspaceUrl: var_mempoolspaceUrl,
         workingDir: var_workingDir,
         network: var_network,
         paymentTimeoutSec: var_paymentTimeoutSec,
@@ -3688,6 +3731,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_fastestFee = sse_decode_u_64(deserializer);
+    var var_halfHourFee = sse_decode_u_64(deserializer);
+    var var_hourFee = sse_decode_u_64(deserializer);
+    var var_economyFee = sse_decode_u_64(deserializer);
+    var var_minimumFee = sse_decode_u_64(deserializer);
+    return RecommendedFees(
+        fastestFee: var_fastestFee,
+        halfHourFee: var_halfHourFee,
+        hourFee: var_hourFee,
+        economyFee: var_economyFee,
+        minimumFee: var_minimumFee);
+  }
+
+  @protected
   RefundRequest sse_decode_refund_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_swapAddress = sse_decode_String(deserializer);
@@ -4320,6 +4379,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.liquidElectrumUrl, serializer);
     sse_encode_String(self.bitcoinElectrumUrl, serializer);
+    sse_encode_String(self.mempoolspaceUrl, serializer);
     sse_encode_String(self.workingDir, serializer);
     sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
@@ -5070,6 +5130,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_recommended_fees(RecommendedFees self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.fastestFee, serializer);
+    sse_encode_u_64(self.halfHourFee, serializer);
+    sse_encode_u_64(self.hourFee, serializer);
+    sse_encode_u_64(self.economyFee, serializer);
+    sse_encode_u_64(self.minimumFee, serializer);
+  }
+
+  @protected
   void sse_encode_refund_request(RefundRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.swapAddress, serializer);
@@ -5333,6 +5403,11 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req);
+
+  Future<RecommendedFees> recommendedFees() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkRecommendedFees(
+        that: this,
+      );
 
   Future<RefundResponse> refund({required RefundRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkRefund(that: this, req: req);

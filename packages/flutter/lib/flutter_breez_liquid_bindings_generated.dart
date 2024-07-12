@@ -453,6 +453,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
     int port_,
     int that,
@@ -1570,6 +1587,8 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
   @ffi.Int32()
@@ -2249,6 +2268,23 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+}
+
+final class wire_cst_recommended_fees extends ffi.Struct {
+  @ffi.Uint64()
+  external int fastest_fee;
+
+  @ffi.Uint64()
+  external int half_hour_fee;
+
+  @ffi.Uint64()
+  external int hour_fee;
+
+  @ffi.Uint64()
+  external int economy_fee;
+
+  @ffi.Uint64()
+  external int minimum_fee;
 }
 
 final class wire_cst_refund_response extends ffi.Struct {
