@@ -1068,7 +1068,6 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
-        dbg!(&swap);
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
 
