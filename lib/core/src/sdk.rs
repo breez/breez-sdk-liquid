@@ -1068,6 +1068,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
+        dbg!(&swap);
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
 
@@ -1900,14 +1901,14 @@ mod tests {
         boltzv2::{self, SwapUpdateTxDetails},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::{elements::encode::serialize, hashes::hex::DisplayHex};
+    use lwk_wollet::hashes::hex::DisplayHex;
 
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
-            chain_swap::new_chain_swap,
-            create_mock_tx,
+            chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
+            create_mock_liquid_tx,
             persist::{new_persister, new_receive_swap, new_send_swap},
             sdk::new_liquid_sdk,
             status_stream::MockStatusStream,
@@ -1916,10 +1917,35 @@ mod tests {
     };
     use paste::paste;
 
+    #[derive(Default)]
+    struct NewSwapArgs {
+        direction: Option<Direction>,
+        accepts_zero_conf: Option<bool>,
+        initial_payment_state: Option<PaymentState>,
+    }
+
+    impl NewSwapArgs {
+        pub fn set_direction(mut self, direction: Direction) -> Self {
+            self.direction = Some(direction);
+            self
+        }
+
+        pub fn set_accepts_zero_conf(mut self, accepts_zero_conf: bool) -> Self {
+            self.accepts_zero_conf = Some(accepts_zero_conf);
+            self
+        }
+
+        #[allow(dead_code)]
+        pub fn set_initial_payment_state(mut self, payment_state: PaymentState) -> Self {
+            self.initial_payment_state = Some(payment_state);
+            self
+        }
+    }
+
     macro_rules! trigger_swap_update {
         (
             $type:literal,
-            $direction:expr,
+            $args:expr,
             $persister:expr,
             $status_stream:expr,
             $status:expr,
@@ -1928,17 +1954,21 @@ mod tests {
         ) => {{
             let swap = match $type {
                 "chain" => {
-                    let swap = new_chain_swap($direction.unwrap(), None);
+                    let swap = new_chain_swap(
+                        $args.direction.unwrap_or(Direction::Outgoing),
+                        $args.initial_payment_state,
+                        $args.accepts_zero_conf.unwrap_or(false),
+                    );
                     $persister.insert_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
                 }
                 "send" => {
-                    let swap = new_send_swap(None);
+                    let swap = new_send_swap($args.initial_payment_state);
                     $persister.insert_send_swap(&swap).unwrap();
                     Swap::Send(swap)
                 }
                 "receive" => {
-                    let swap = new_receive_swap(None);
+                    let swap = new_receive_swap($args.initial_payment_state);
                     $persister.insert_receive_swap(&swap).unwrap();
                     Swap::Receive(swap)
                 }
@@ -1993,7 +2023,7 @@ mod tests {
             for status in unrecoverable_states {
                 let persisted_swap = trigger_swap_update!(
                     "receive",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
@@ -2009,17 +2039,20 @@ mod tests {
                 RevSwapStates::TransactionMempool,
                 RevSwapStates::TransactionConfirmed,
             ] {
-                let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
+                let mock_tx = create_mock_liquid_tx(sdk.onchain_wallet.clone(), 1000)
+                    .await
+                    .unwrap();
                 let mock_lockup_tx_id = mock_tx.txid().to_string();
                 let persisted_swap = trigger_swap_update!(
                     "receive",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
                     Some(SwapUpdateTxDetails {
                         id: mock_lockup_tx_id.clone(),
-                        hex: serialize(&mock_tx).to_lower_hex_string(),
+                        hex: lwk_wollet::elements::encode::serialize(&mock_tx)
+                            .to_lower_hex_string(),
                     }),
                     None
                 );
@@ -2059,7 +2092,7 @@ mod tests {
             for status in unrecoverable_states {
                 let persisted_swap = trigger_swap_update!(
                     "send",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
@@ -2073,7 +2106,7 @@ mod tests {
             // assigns the `lockup_tx_id` to the payment
             let persisted_swap = trigger_swap_update!(
                 "send",
-                None,
+                NewSwapArgs::default(),
                 persister,
                 status_stream,
                 SubSwapStates::InvoiceSet,
@@ -2087,7 +2120,7 @@ mod tests {
             // and stores the preimage
             let persisted_swap = trigger_swap_update!(
                 "send",
-                None,
+                NewSwapArgs::default(),
                 persister,
                 status_stream,
                 SubSwapStates::TransactionClaimPending,
@@ -2134,7 +2167,7 @@ mod tests {
                 for status in &unrecoverable_states {
                     let persisted_swap = trigger_swap_update!(
                         "chain",
-                        Some(direction),
+                        NewSwapArgs::default().set_direction(direction),
                         persister,
                         status_stream,
                         status,
@@ -2153,39 +2186,93 @@ mod tests {
                     ChainSwapStates::TransactionMempool,
                     ChainSwapStates::TransactionConfirmed,
                 ] {
-                    let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
+                    let mock_tx = create_mock_liquid_tx(sdk.onchain_wallet.clone(), 1000)
+                        .await
+                        .unwrap();
                     let mock_lockup_tx_id = mock_tx.txid().to_string();
 
                     let persisted_swap = trigger_swap_update!(
                         "chain",
-                        Some(direction),
+                        NewSwapArgs::default().set_direction(direction),
                         persister,
                         status_stream,
                         status,
                         Some(SwapUpdateTxDetails {
                             id: mock_lockup_tx_id.clone(),
-                            hex: serialize(&mock_tx).to_lower_hex_string(),
-                        }),
-                        Some(true)
+                            hex: lwk_wollet::elements::encode::serialize(&mock_tx)
+                                .to_lower_hex_string(),
+                        }), // sets `update.transaction`
+                        Some(true) // sets `update.zero_conf_rejected`
                     );
                     assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_lockup_tx_id));
                     assert_eq!(persisted_swap.accept_zero_conf, false);
                 }
             }
 
-            // Verify that `Created` correctly sets the payment as `Pending` and creates
+            // For outgoing payments, verify that `Created` correctly sets the payment as `Pending` and creates
             // the `user_lockup_tx_id`
-            // let persisted_swap = trigger_swap_update!(
-            //     "chain",
-            //     Some(Direction::Outgoing),
-            //     persister,
-            //     status_stream,
-            //     ChainSwapStates::Created,
-            //     None,
-            //     None
-            // );
-            // assert_eq!(persisted_swap.state, PaymentState::Pending);
-            // assert!(persisted_swap.user_lockup_tx_id.is_some());
+            let persisted_swap = trigger_swap_update!(
+                "chain",
+                NewSwapArgs::default().set_direction(Direction::Outgoing),
+                persister,
+                status_stream,
+                ChainSwapStates::Created,
+                None,
+                None
+            );
+            assert_eq!(persisted_swap.state, PaymentState::Pending);
+            assert!(persisted_swap.user_lockup_tx_id.is_some());
+
+            // For outgoing payments, verify that `TransactionServerMempool` correctly:
+            // 1. Sets the payment as `Pending` and creates `server_lockup_tx_id` when
+            //    `accepts_zero_conf` is false
+            // 2. Sets the payment as `Complete` and creates `claim_tx_id` when `accepts_zero_conf`
+            //    is true
+            let mock_tx = TEST_BITCOIN_TX.clone();
+            for accepts_zero_conf in [false, true] {
+                let persisted_swap = trigger_swap_update!(
+                    "chain",
+                    NewSwapArgs::default()
+                        .set_direction(Direction::Outgoing)
+                        .set_accepts_zero_conf(accepts_zero_conf),
+                    persister,
+                    status_stream,
+                    ChainSwapStates::TransactionServerMempool,
+                    Some(SwapUpdateTxDetails {
+                        id: mock_tx.txid().to_string(),
+                        hex: sdk_common::bitcoin::consensus::serialize(&mock_tx)
+                            .to_lower_hex_string(),
+                    }),
+                    None
+                );
+                match accepts_zero_conf {
+                    false => {
+                        assert_eq!(persisted_swap.state, PaymentState::Pending);
+                        assert!(persisted_swap.server_lockup_tx_id.is_some());
+                    }
+                    true => {
+                        assert_eq!(persisted_swap.state, PaymentState::Complete);
+                        assert!(persisted_swap.claim_tx_id.is_some());
+                    }
+                };
+            }
+
+            // For outgoing payments, verify that `TransactionServerConfirmed` correctly
+            // sets the payment as `Complete` and creates `claim_tx_id`
+            let persisted_swap = trigger_swap_update!(
+                "chain",
+                NewSwapArgs::default().set_direction(Direction::Outgoing),
+                persister,
+                status_stream,
+                ChainSwapStates::TransactionServerConfirmed,
+                Some(SwapUpdateTxDetails {
+                    id: mock_tx.txid().to_string(),
+                    hex: sdk_common::bitcoin::consensus::serialize(&mock_tx).to_lower_hex_string(),
+                }),
+                None
+            );
+            assert_eq!(persisted_swap.state, PaymentState::Complete);
+            assert!(persisted_swap.claim_tx_id.is_some());
         })
         .await
         .unwrap();

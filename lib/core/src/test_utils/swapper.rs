@@ -226,7 +226,7 @@ impl Swapper for MockSwapper {
     }
 
     fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("chain-swap-claim-txid".to_string())
     }
 
     fn claim_send_swap_cooperative(

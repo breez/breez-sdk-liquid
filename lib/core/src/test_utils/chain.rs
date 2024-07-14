@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use async_trait::async_trait;
+use lwk_wollet::{bitcoin::consensus::deserialize, elements::hex::FromHex};
 
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -103,10 +104,12 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _address: &boltz_client::Address,
         _tx_id: &str,
-        _tx_hex: &str,
+        tx_hex: &str,
         _verify_confirmation: bool,
     ) -> Result<boltz_client::bitcoin::Transaction> {
-        unimplemented!()
+        Ok(deserialize(&Vec::<u8>::from_hex(tx_hex).map_err(
+            |err| anyhow::anyhow!("Could not deserialize transaction: {err:?}"),
+        )?)?)
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {

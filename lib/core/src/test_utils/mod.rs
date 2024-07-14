@@ -25,9 +25,10 @@ pub(crate) fn generate_random_string(size: usize) -> String {
         .collect()
 }
 
-pub(crate) async fn create_mock_tx(
+pub(crate) async fn create_mock_liquid_tx(
     onchain_wallet: Arc<dyn OnchainWallet>,
+    amount_sat: u64,
 ) -> anyhow::Result<Transaction> {
     let address = onchain_wallet.next_unused_address().await?.to_string();
-    Ok(onchain_wallet.build_tx(None, &address, 1000).await?)
+    Ok(onchain_wallet.build_tx(None, &address, amount_sat).await?)
 }

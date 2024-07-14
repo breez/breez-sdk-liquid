@@ -952,7 +952,7 @@ mod tests {
 
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
+                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state), false);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
@@ -975,7 +975,7 @@ mod tests {
 
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
+                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state), false);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
