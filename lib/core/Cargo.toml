@@ -20,12 +20,10 @@ chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.0.0", features = ["chrono"], optional = true }
 log = { workspace = true }
-lwk_common = "0.5.1"
-lwk_signer = "0.5.1"
-# Switch back to published version once this PR is merged and included in release: https://github.com/Blockstream/lwk/pull/34 (ETA in v0.5.2)
-#lwk_wollet = { git = "https://github.com/Blockstream/lwk", rev = "ffd793d0a1b1122c9bba7de23ccb73033eded98c" }
+lwk_common = "0.7.0"
+lwk_signer = "0.7.0"
 lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-try-headers-subscribe" }
-#lwk_wollet = "0.5.1"
+#lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
 sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "main" }
