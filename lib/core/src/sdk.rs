@@ -1625,7 +1625,7 @@ impl LiquidSdk {
             .map_err(Into::into)
     }
 
-    /// Get the recommended fees for Bitcoin onchain transactions
+    /// Get the recommended BTC fees based on the configured mempool.space instance
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
         Ok(self
             .bitcoin_chain_service

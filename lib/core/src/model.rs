@@ -1010,20 +1010,12 @@ impl Payment {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RecommendedFees {
-    #[serde(rename(deserialize = "fastestFee"))]
     pub fastest_fee: u64,
-
-    #[serde(rename(deserialize = "halfHourFee"))]
     pub half_hour_fee: u64,
-
-    #[serde(rename(deserialize = "hourFee"))]
     pub hour_fee: u64,
-
-    #[serde(rename(deserialize = "economyFee"))]
     pub economy_fee: u64,
-
-    #[serde(rename(deserialize = "minimumFee"))]
     pub minimum_fee: u64,
 }
 

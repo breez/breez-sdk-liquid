@@ -98,7 +98,7 @@ pub(crate) enum Command {
     GetInfo,
     /// Sync local data with mempool and onchain data
     Sync,
-    /// List recommended fees based on the mempool
+    /// Get the recommended BTC fees based on the configured mempool.space instance
     RecommendedFees,
     /// Empties the encrypted transaction cache
     EmptyCache,
