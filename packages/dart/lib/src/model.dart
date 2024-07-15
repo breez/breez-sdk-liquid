@@ -34,6 +34,9 @@ class Config {
   final String liquidElectrumUrl;
   final String bitcoinElectrumUrl;
 
+  /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
+  final String mempoolspaceUrl;
+
   /// Directory in which all SDK files (DB, log, cache) are stored.
   ///
   /// Prefix can be a relative or absolute path to this directory.
@@ -53,6 +56,7 @@ class Config {
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
+    required this.mempoolspaceUrl,
     required this.workingDir,
     required this.network,
     required this.paymentTimeoutSec,
@@ -64,6 +68,7 @@ class Config {
   int get hashCode =>
       liquidElectrumUrl.hashCode ^
       bitcoinElectrumUrl.hashCode ^
+      mempoolspaceUrl.hashCode ^
       workingDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
@@ -77,6 +82,7 @@ class Config {
           runtimeType == other.runtimeType &&
           liquidElectrumUrl == other.liquidElectrumUrl &&
           bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
+          mempoolspaceUrl == other.mempoolspaceUrl &&
           workingDir == other.workingDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
@@ -512,33 +518,38 @@ enum PaymentType {
 
 class PreparePayOnchainRequest {
   final BigInt receiverAmountSat;
+  final int? satPerVbyte;
 
   const PreparePayOnchainRequest({
     required this.receiverAmountSat,
+    this.satPerVbyte,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
-          receiverAmountSat == other.receiverAmountSat;
+          receiverAmountSat == other.receiverAmountSat &&
+          satPerVbyte == other.satPerVbyte;
 }
 
 class PreparePayOnchainResponse {
   final BigInt receiverAmountSat;
-  final BigInt feesSat;
+  final BigInt claimFeesSat;
+  final BigInt totalFeesSat;
 
   const PreparePayOnchainResponse({
     required this.receiverAmountSat,
-    required this.feesSat,
+    required this.claimFeesSat,
+    required this.totalFeesSat,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ claimFeesSat.hashCode ^ totalFeesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -546,7 +557,8 @@ class PreparePayOnchainResponse {
       other is PreparePayOnchainResponse &&
           runtimeType == other.runtimeType &&
           receiverAmountSat == other.receiverAmountSat &&
-          feesSat == other.feesSat;
+          claimFeesSat == other.claimFeesSat &&
+          totalFeesSat == other.totalFeesSat;
 }
 
 class PrepareReceiveOnchainRequest {
@@ -752,6 +764,41 @@ class ReceivePaymentResponse {
           runtimeType == other.runtimeType &&
           id == other.id &&
           invoice == other.invoice;
+}
+
+class RecommendedFees {
+  final BigInt fastestFee;
+  final BigInt halfHourFee;
+  final BigInt hourFee;
+  final BigInt economyFee;
+  final BigInt minimumFee;
+
+  const RecommendedFees({
+    required this.fastestFee,
+    required this.halfHourFee,
+    required this.hourFee,
+    required this.economyFee,
+    required this.minimumFee,
+  });
+
+  @override
+  int get hashCode =>
+      fastestFee.hashCode ^
+      halfHourFee.hashCode ^
+      hourFee.hashCode ^
+      economyFee.hashCode ^
+      minimumFee.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RecommendedFees &&
+          runtimeType == other.runtimeType &&
+          fastestFee == other.fastestFee &&
+          halfHourFee == other.halfHourFee &&
+          hourFee == other.hourFee &&
+          economyFee == other.economyFee &&
+          minimumFee == other.minimumFee;
 }
 
 class RefundRequest {

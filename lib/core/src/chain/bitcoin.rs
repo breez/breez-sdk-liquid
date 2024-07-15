@@ -13,6 +13,9 @@ use lwk_wollet::{
     hashes::{sha256, Hash},
     ElectrumOptions, ElectrumUrl, Error, History,
 };
+use sdk_common::prelude::get_parse_and_log_response;
+
+use crate::model::{Config, RecommendedFees};
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -41,24 +44,33 @@ pub trait BitcoinChainService: Send + Sync {
         tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<Transaction>;
+
+    /// Get the recommended fees, in sat/vbyte
+    async fn recommended_fees(&self) -> Result<RecommendedFees>;
 }
 
-pub(crate) struct ElectrumClient {
+pub(crate) struct HybridBitcoinChainService {
     client: Client,
     tip: HeaderNotification,
+    config: Config,
 }
-impl ElectrumClient {
-    pub fn new(url: &ElectrumUrl) -> Result<Self, Error> {
-        Self::with_options(url, ElectrumOptions::default())
+impl HybridBitcoinChainService {
+    pub fn new(config: Config) -> Result<Self, Error> {
+        Self::with_options(config, ElectrumOptions::default())
     }
 
     /// Creates an Electrum client specifying non default options like timeout
-    pub fn with_options(url: &ElectrumUrl, options: ElectrumOptions) -> Result<Self, Error> {
+    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
+        let url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true);
         let client = url.build_client(&options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;
 
-        Ok(Self { client, tip })
+        Ok(Self {
+            client,
+            tip,
+            config,
+        })
     }
 
     async fn get_script_history_with_retry(
@@ -92,7 +104,7 @@ impl ElectrumClient {
 }
 
 #[async_trait]
-impl BitcoinChainService for ElectrumClient {
+impl BitcoinChainService for HybridBitcoinChainService {
     fn tip(&mut self) -> Result<HeaderNotification> {
         let mut maybe_popped_header = None;
         while let Some(header) = self.client.block_headers_pop_raw()? {
@@ -184,5 +196,14 @@ impl BitcoinChainService for ElectrumClient {
                 tx_id,
             )),
         }
+    }
+
+    async fn recommended_fees(&self) -> Result<RecommendedFees> {
+        get_parse_and_log_response(
+            &format!("{}/v1/fees/recommended", self.config.mempoolspace_url),
+            true,
+        )
+        .await
+        .map_err(Into::into)
     }
 }

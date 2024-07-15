@@ -453,6 +453,23 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr
+          .asFunction<void Function(int, int)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund(
     int port_,
     int that,
@@ -1409,7 +1426,10 @@ final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
   external int receiver_amount_sat;
 
   @ffi.Uint64()
-  external int fees_sat;
+  external int claim_fees_sat;
+
+  @ffi.Uint64()
+  external int total_fees_sat;
 }
 
 final class wire_cst_pay_onchain_request extends ffi.Struct {
@@ -1421,6 +1441,8 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
   external int receiver_amount_sat;
+
+  external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
@@ -1564,6 +1586,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
@@ -2246,6 +2270,23 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 }
 
+final class wire_cst_recommended_fees extends ffi.Struct {
+  @ffi.Uint64()
+  external int fastest_fee;
+
+  @ffi.Uint64()
+  external int half_hour_fee;
+
+  @ffi.Uint64()
+  external int hour_fee;
+
+  @ffi.Uint64()
+  external int economy_fee;
+
+  @ffi.Uint64()
+  external int minimum_fee;
+}
+
 final class wire_cst_refund_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
@@ -2277,6 +2318,8 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
+
+const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

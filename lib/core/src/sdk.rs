@@ -6,14 +6,16 @@ use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
+use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
+use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElectrumUrl, ElementsNetwork};
+use lwk_wollet::{elements, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
@@ -22,7 +24,7 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
 
-use crate::chain::bitcoin::{self, BitcoinChainService};
+use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::SdkError;
 use crate::model::PaymentState::*;
@@ -100,9 +102,8 @@ impl LiquidSdk {
 
         let liquid_chain_service =
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
-        let bitcoin_chain_service = Arc::new(Mutex::new(bitcoin::ElectrumClient::new(
-            &ElectrumUrl::new(&config.bitcoin_electrum_url, true, true),
-        )?));
+        let bitcoin_chain_service =
+            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
@@ -895,7 +896,10 @@ impl LiquidSdk {
 
         let receiver_amount_sat = req.receiver_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
-        let claim_fees_sat = pair.fees.claim_estimate();
+        let claim_fees_sat = match req.sat_per_vbyte {
+            Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
+            None => pair.fees.claim_estimate(),
+        };
         let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
@@ -904,13 +908,14 @@ impl LiquidSdk {
 
         let res = PreparePayOnchainResponse {
             receiver_amount_sat,
-            fees_sat: pair.fees.boltz(server_lockup_amount_sat)
+            claim_fees_sat,
+            total_fees_sat: pair.fees.boltz(server_lockup_amount_sat)
                 + lockup_fees_sat
                 + claim_fees_sat
                 + server_fees_sat,
         };
 
-        let payer_amount_sat = res.receiver_amount_sat + res.fees_sat;
+        let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -927,7 +932,7 @@ impl LiquidSdk {
 
         let receiver_amount_sat = req.prepare_res.receiver_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
-        let claim_fees_sat = pair.fees.claim_estimate();
+        let claim_fees_sat = req.prepare_res.claim_fees_sat;
         let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
@@ -935,7 +940,7 @@ impl LiquidSdk {
             .await?;
 
         ensure_sdk!(
-            req.prepare_res.fees_sat
+            req.prepare_res.total_fees_sat
                 == pair.fees.boltz(server_lockup_amount_sat)
                     + lockup_fees_sat
                     + claim_fees_sat
@@ -943,7 +948,7 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let payer_amount_sat = req.prepare_res.fees_sat + receiver_amount_sat;
+        let payer_amount_sat = req.prepare_res.total_fees_sat + receiver_amount_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -978,7 +983,7 @@ impl LiquidSdk {
         let create_response_json = ChainSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
-        let payer_amount_sat = req.prepare_res.fees_sat + receiver_amount_sat;
+        let payer_amount_sat = req.prepare_res.total_fees_sat + receiver_amount_sat;
         let claim_address = req.address.clone();
 
         let swap = ChainSwap {
@@ -1618,6 +1623,16 @@ impl LiquidSdk {
             .list_fiat_currencies()
             .await
             .map_err(Into::into)
+    }
+
+    /// Get the recommended BTC fees based on the configured mempool.space instance
+    pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
+        Ok(self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .recommended_fees()
+            .await?)
     }
 
     pub fn default_config(network: LiquidNetwork) -> Config {

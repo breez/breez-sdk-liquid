@@ -39,6 +39,7 @@ export interface BitcoinAddressData {
 export interface Config {
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
+    mempoolspaceUrl: string
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
@@ -211,11 +212,13 @@ export interface Payment {
 
 export interface PreparePayOnchainRequest {
     receiverAmountSat: number
+    satPerVbyte?: number
 }
 
 export interface PreparePayOnchainResponse {
     receiverAmountSat: number
-    feesSat: number
+    claimFeesSat: number
+    totalFeesSat: number
 }
 
 export interface PrepareReceiveOnchainRequest {
@@ -270,6 +273,14 @@ export interface ReceiveOnchainResponse {
 export interface ReceivePaymentResponse {
     id: string
     invoice: string
+}
+
+export interface RecommendedFees {
+    fastestFee: number
+    halfHourFee: number
+    hourFee: number
+    economyFee: number
+    minimumFee: number
 }
 
 export interface RefundRequest {
@@ -621,6 +632,11 @@ export const rescanOnchainSwaps = async (): Promise<void> => {
 
 export const sync = async (): Promise<void> => {
     await BreezSDKLiquid.sync()
+}
+
+export const recommendedFees = async (): Promise<RecommendedFees> => {
+    const response = await BreezSDKLiquid.recommendedFees()
+    return response
 }
 
 export const backup = async (req: BackupRequest): Promise<void> => {

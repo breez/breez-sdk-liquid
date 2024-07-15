@@ -150,6 +150,9 @@ enum BreezSDKLiquidMapper {
         guard let bitcoinElectrumUrl = config["bitcoinElectrumUrl"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinElectrumUrl", typeName: "Config"))
         }
+        guard let mempoolspaceUrl = config["mempoolspaceUrl"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "mempoolspaceUrl", typeName: "Config"))
+        }
         guard let workingDir = config["workingDir"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "workingDir", typeName: "Config"))
         }
@@ -175,6 +178,7 @@ enum BreezSDKLiquidMapper {
         return Config(
             liquidElectrumUrl: liquidElectrumUrl,
             bitcoinElectrumUrl: bitcoinElectrumUrl,
+            mempoolspaceUrl: mempoolspaceUrl,
             workingDir: workingDir,
             network: network,
             paymentTimeoutSec: paymentTimeoutSec,
@@ -187,6 +191,7 @@ enum BreezSDKLiquidMapper {
         return [
             "liquidElectrumUrl": config.liquidElectrumUrl,
             "bitcoinElectrumUrl": config.bitcoinElectrumUrl,
+            "mempoolspaceUrl": config.mempoolspaceUrl,
             "workingDir": config.workingDir,
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
@@ -1460,14 +1465,24 @@ enum BreezSDKLiquidMapper {
         guard let receiverAmountSat = preparePayOnchainRequest["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainRequest"))
         }
+        var satPerVbyte: UInt32?
+        if hasNonNilKey(data: preparePayOnchainRequest, key: "satPerVbyte") {
+            guard let satPerVbyteTmp = preparePayOnchainRequest["satPerVbyte"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "satPerVbyte"))
+            }
+            satPerVbyte = satPerVbyteTmp
+        }
 
         return PreparePayOnchainRequest(
-            receiverAmountSat: receiverAmountSat)
+            receiverAmountSat: receiverAmountSat,
+            satPerVbyte: satPerVbyte
+        )
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainRequest.receiverAmountSat,
+            "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
         ]
     }
 
@@ -1492,20 +1507,25 @@ enum BreezSDKLiquidMapper {
         guard let receiverAmountSat = preparePayOnchainResponse["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainResponse"))
         }
-        guard let feesSat = preparePayOnchainResponse["feesSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PreparePayOnchainResponse"))
+        guard let claimFeesSat = preparePayOnchainResponse["claimFeesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "claimFeesSat", typeName: "PreparePayOnchainResponse"))
+        }
+        guard let totalFeesSat = preparePayOnchainResponse["totalFeesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "totalFeesSat", typeName: "PreparePayOnchainResponse"))
         }
 
         return PreparePayOnchainResponse(
             receiverAmountSat: receiverAmountSat,
-            feesSat: feesSat
+            claimFeesSat: claimFeesSat,
+            totalFeesSat: totalFeesSat
         )
     }
 
     static func dictionaryOf(preparePayOnchainResponse: PreparePayOnchainResponse) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainResponse.receiverAmountSat,
-            "feesSat": preparePayOnchainResponse.feesSat,
+            "claimFeesSat": preparePayOnchainResponse.claimFeesSat,
+            "totalFeesSat": preparePayOnchainResponse.totalFeesSat,
         ]
     }
 
@@ -1938,6 +1958,59 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(receivePaymentResponseList: [ReceivePaymentResponse]) -> [Any] {
         return receivePaymentResponseList.map { v -> [String: Any?] in return dictionaryOf(receivePaymentResponse: v) }
+    }
+
+    static func asRecommendedFees(recommendedFees: [String: Any?]) throws -> RecommendedFees {
+        guard let fastestFee = recommendedFees["fastestFee"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "fastestFee", typeName: "RecommendedFees"))
+        }
+        guard let halfHourFee = recommendedFees["halfHourFee"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "halfHourFee", typeName: "RecommendedFees"))
+        }
+        guard let hourFee = recommendedFees["hourFee"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "hourFee", typeName: "RecommendedFees"))
+        }
+        guard let economyFee = recommendedFees["economyFee"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "economyFee", typeName: "RecommendedFees"))
+        }
+        guard let minimumFee = recommendedFees["minimumFee"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "minimumFee", typeName: "RecommendedFees"))
+        }
+
+        return RecommendedFees(
+            fastestFee: fastestFee,
+            halfHourFee: halfHourFee,
+            hourFee: hourFee,
+            economyFee: economyFee,
+            minimumFee: minimumFee
+        )
+    }
+
+    static func dictionaryOf(recommendedFees: RecommendedFees) -> [String: Any?] {
+        return [
+            "fastestFee": recommendedFees.fastestFee,
+            "halfHourFee": recommendedFees.halfHourFee,
+            "hourFee": recommendedFees.hourFee,
+            "economyFee": recommendedFees.economyFee,
+            "minimumFee": recommendedFees.minimumFee,
+        ]
+    }
+
+    static func asRecommendedFeesList(arr: [Any]) throws -> [RecommendedFees] {
+        var list = [RecommendedFees]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var recommendedFees = try asRecommendedFees(recommendedFees: val)
+                list.append(recommendedFees)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "RecommendedFees"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(recommendedFeesList: [RecommendedFees]) -> [Any] {
+        return recommendedFeesList.map { v -> [String: Any?] in return dictionaryOf(recommendedFees: v) }
     }
 
     static func asRefundRequest(refundRequest: [String: Any?]) throws -> RefundRequest {

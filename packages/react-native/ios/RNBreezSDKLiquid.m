@@ -140,6 +140,11 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
+    recommendedFees: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     backup: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject

@@ -285,6 +285,7 @@ enum PaymentError {
 dictionary Config {
     string liquid_electrum_url;
     string bitcoin_electrum_url;
+    string mempoolspace_url;
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
@@ -354,11 +355,13 @@ dictionary OnchainPaymentLimitsResponse {
 
 dictionary PreparePayOnchainRequest {
     u64 receiver_amount_sat;
+    u32? sat_per_vbyte;
 };
 
 dictionary PreparePayOnchainResponse {
     u64 receiver_amount_sat;
-    u64 fees_sat;
+    u64 claim_fees_sat;
+    u64 total_fees_sat;
 };
 
 dictionary PayOnchainRequest {
@@ -429,6 +432,14 @@ dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
     u64 amount_sat;
+};
+
+dictionary RecommendedFees {
+    u64 fastest_fee;
+    u64 half_hour_fee;
+    u64 hour_fee;
+    u64 economy_fee;
+    u64 minimum_fee;
 };
 
 dictionary PrepareRefundRequest {
@@ -550,6 +561,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     void sync();
+
+    [Throws=SdkError]
+    RecommendedFees recommended_fees();
 
     [Throws=SdkError]
     void backup(BackupRequest req);

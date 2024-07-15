@@ -396,6 +396,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ReceivePaymentResponse dco_decode_receive_payment_response(dynamic raw);
 
   @protected
+  RecommendedFees dco_decode_recommended_fees(dynamic raw);
+
+  @protected
   RefundRequest dco_decode_refund_request(dynamic raw);
 
   @protected
@@ -823,6 +826,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReceivePaymentResponse sse_decode_receive_payment_response(SseDeserializer deserializer);
+
+  @protected
+  RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer);
 
   @protected
   RefundRequest sse_decode_refund_request(SseDeserializer deserializer);
@@ -1647,6 +1653,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_config(Config apiObj, wire_cst_config wireObj) {
     wireObj.liquid_electrum_url = cst_encode_String(apiObj.liquidElectrumUrl);
     wireObj.bitcoin_electrum_url = cst_encode_String(apiObj.bitcoinElectrumUrl);
+    wireObj.mempoolspace_url = cst_encode_String(apiObj.mempoolspaceUrl);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
@@ -2198,13 +2205,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
     wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
+    wireObj.sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(apiObj.satPerVbyte);
   }
 
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_response(
       PreparePayOnchainResponse apiObj, wire_cst_prepare_pay_onchain_response wireObj) {
     wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
-    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.claim_fees_sat = cst_encode_u_64(apiObj.claimFeesSat);
+    wireObj.total_fees_sat = cst_encode_u_64(apiObj.totalFeesSat);
   }
 
   @protected
@@ -2280,6 +2289,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ReceivePaymentResponse apiObj, wire_cst_receive_payment_response wireObj) {
     wireObj.id = cst_encode_String(apiObj.id);
     wireObj.invoice = cst_encode_String(apiObj.invoice);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_recommended_fees(RecommendedFees apiObj, wire_cst_recommended_fees wireObj) {
+    wireObj.fastest_fee = cst_encode_u_64(apiObj.fastestFee);
+    wireObj.half_hour_fee = cst_encode_u_64(apiObj.halfHourFee);
+    wireObj.hour_fee = cst_encode_u_64(apiObj.hourFee);
+    wireObj.economy_fee = cst_encode_u_64(apiObj.economyFee);
+    wireObj.minimum_fee = cst_encode_u_64(apiObj.minimumFee);
   }
 
   @protected
@@ -2863,6 +2881,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_receive_payment_response(ReceivePaymentResponse self, SseSerializer serializer);
 
   @protected
+  void sse_encode_recommended_fees(RecommendedFees self, SseSerializer serializer);
+
+  @protected
   void sse_encode_refund_request(RefundRequest self, SseSerializer serializer);
 
   @protected
@@ -3359,6 +3380,22 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_receive_payment =
       _wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_receive_response>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_recommended_fees(
+      port_,
+      that,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees');
+  late final _wire__crate__bindings__BindingLiquidSdk_recommended_fees =
+      _wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_refund(
     int port_,
@@ -4247,7 +4284,10 @@ final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
   external int receiver_amount_sat;
 
   @ffi.Uint64()
-  external int fees_sat;
+  external int claim_fees_sat;
+
+  @ffi.Uint64()
+  external int total_fees_sat;
 }
 
 final class wire_cst_pay_onchain_request extends ffi.Struct {
@@ -4259,6 +4299,8 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
   external int receiver_amount_sat;
+
+  external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
@@ -4402,6 +4444,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
@@ -5084,6 +5128,23 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 }
 
+final class wire_cst_recommended_fees extends ffi.Struct {
+  @ffi.Uint64()
+  external int fastest_fee;
+
+  @ffi.Uint64()
+  external int half_hour_fee;
+
+  @ffi.Uint64()
+  external int hour_fee;
+
+  @ffi.Uint64()
+  external int economy_fee;
+
+  @ffi.Uint64()
+  external int minimum_fee;
+}
+
 final class wire_cst_refund_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
@@ -5112,6 +5173,8 @@ final class wire_cst_sdk_error extends ffi.Struct {
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
 }
+
+const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

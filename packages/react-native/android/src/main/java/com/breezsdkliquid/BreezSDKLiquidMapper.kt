@@ -120,6 +120,7 @@ fun asConfig(config: ReadableMap): Config? {
             arrayOf(
                 "liquidElectrumUrl",
                 "bitcoinElectrumUrl",
+                "mempoolspaceUrl",
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
@@ -131,6 +132,7 @@ fun asConfig(config: ReadableMap): Config? {
     }
     val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
     val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
+    val mempoolspaceUrl = config.getString("mempoolspaceUrl")!!
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
@@ -148,6 +150,7 @@ fun asConfig(config: ReadableMap): Config? {
     return Config(
         liquidElectrumUrl,
         bitcoinElectrumUrl,
+        mempoolspaceUrl,
         workingDir,
         network,
         paymentTimeoutSec,
@@ -160,6 +163,7 @@ fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
         "liquidElectrumUrl" to config.liquidElectrumUrl,
         "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
+        "mempoolspaceUrl" to config.mempoolspaceUrl,
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
@@ -1222,14 +1226,26 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         return null
     }
     val receiverAmountSat = preparePayOnchainRequest.getDouble("receiverAmountSat").toULong()
+    val satPerVbyte =
+        if (hasNonNullKey(
+                preparePayOnchainRequest,
+                "satPerVbyte",
+            )
+        ) {
+            preparePayOnchainRequest.getInt("satPerVbyte").toUInt()
+        } else {
+            null
+        }
     return PreparePayOnchainRequest(
         receiverAmountSat,
+        satPerVbyte,
     )
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
         "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
+        "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
@@ -1248,24 +1264,28 @@ fun asPreparePayOnchainResponse(preparePayOnchainResponse: ReadableMap): Prepare
             preparePayOnchainResponse,
             arrayOf(
                 "receiverAmountSat",
-                "feesSat",
+                "claimFeesSat",
+                "totalFeesSat",
             ),
         )
     ) {
         return null
     }
     val receiverAmountSat = preparePayOnchainResponse.getDouble("receiverAmountSat").toULong()
-    val feesSat = preparePayOnchainResponse.getDouble("feesSat").toULong()
+    val claimFeesSat = preparePayOnchainResponse.getDouble("claimFeesSat").toULong()
+    val totalFeesSat = preparePayOnchainResponse.getDouble("totalFeesSat").toULong()
     return PreparePayOnchainResponse(
         receiverAmountSat,
-        feesSat,
+        claimFeesSat,
+        totalFeesSat,
     )
 }
 
 fun readableMapOf(preparePayOnchainResponse: PreparePayOnchainResponse): ReadableMap =
     readableMapOf(
         "receiverAmountSat" to preparePayOnchainResponse.receiverAmountSat,
-        "feesSat" to preparePayOnchainResponse.feesSat,
+        "claimFeesSat" to preparePayOnchainResponse.claimFeesSat,
+        "totalFeesSat" to preparePayOnchainResponse.totalFeesSat,
     )
 
 fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainResponse> {
@@ -1664,6 +1684,54 @@ fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentRespons
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asRecommendedFees(recommendedFees: ReadableMap): RecommendedFees? {
+    if (!validateMandatoryFields(
+            recommendedFees,
+            arrayOf(
+                "fastestFee",
+                "halfHourFee",
+                "hourFee",
+                "economyFee",
+                "minimumFee",
+            ),
+        )
+    ) {
+        return null
+    }
+    val fastestFee = recommendedFees.getDouble("fastestFee").toULong()
+    val halfHourFee = recommendedFees.getDouble("halfHourFee").toULong()
+    val hourFee = recommendedFees.getDouble("hourFee").toULong()
+    val economyFee = recommendedFees.getDouble("economyFee").toULong()
+    val minimumFee = recommendedFees.getDouble("minimumFee").toULong()
+    return RecommendedFees(
+        fastestFee,
+        halfHourFee,
+        hourFee,
+        economyFee,
+        minimumFee,
+    )
+}
+
+fun readableMapOf(recommendedFees: RecommendedFees): ReadableMap =
+    readableMapOf(
+        "fastestFee" to recommendedFees.fastestFee,
+        "halfHourFee" to recommendedFees.halfHourFee,
+        "hourFee" to recommendedFees.hourFee,
+        "economyFee" to recommendedFees.economyFee,
+        "minimumFee" to recommendedFees.minimumFee,
+    )
+
+fun asRecommendedFeesList(arr: ReadableArray): List<RecommendedFees> {
+    val list = ArrayList<RecommendedFees>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asRecommendedFees(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

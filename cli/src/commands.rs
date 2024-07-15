@@ -39,6 +39,10 @@ pub(crate) enum Command {
 
         /// Amount that will be received, in satoshi
         receiver_amount_sat: u64,
+
+        // The optional fee rate to use, in satoshi/vbyte
+        #[clap(short = 'f', long = "fee_rate")]
+        sat_per_vbyte: Option<u32>,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -76,7 +80,7 @@ pub(crate) enum Command {
         swap_address: String,
         // Btc onchain address to send the refund to
         refund_address: String,
-        // Fee rate to use
+        // Fee rate to use, in satoshi/vbyte
         sat_per_vbyte: u32,
     },
     /// Broadcast a refund transaction for an incomplete swap
@@ -85,7 +89,7 @@ pub(crate) enum Command {
         swap_address: String,
         // Btc onchain address to send the refund to
         refund_address: String,
-        // Fee rate to use
+        // Fee rate to use, in satoshi/vbyte
         sat_per_vbyte: u32,
     },
     /// Rescan onchain swaps
@@ -94,6 +98,8 @@ pub(crate) enum Command {
     GetInfo,
     /// Sync local data with mempool and onchain data
     Sync,
+    /// Get the recommended BTC fees based on the configured mempool.space instance
+    RecommendedFees,
     /// Empties the encrypted transaction cache
     EmptyCache,
     /// Backs up the current pending swaps
@@ -237,17 +243,19 @@ pub(crate) async fn handle_command(
         Command::SendOnchainPayment {
             address,
             receiver_amount_sat,
+            sat_per_vbyte,
         } => {
             let prepare_res = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
                     receiver_amount_sat,
+                    sat_per_vbyte,
                 })
                 .await?;
 
             wait_confirmation!(
                 format!(
-                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_res.fees_sat
+                    "Fees: {} sat (incl claim fee: {} sat). Are the fees acceptable? (y/N) ",
+                    prepare_res.total_fees_sat, prepare_res.claim_fees_sat
                 ),
                 "Payment send halted"
             );
@@ -340,6 +348,10 @@ pub(crate) async fn handle_command(
         Command::Sync => {
             sdk.sync().await?;
             command_result!("Synced successfully")
+        }
+        Command::RecommendedFees => {
+            let res = sdk.recommended_fees().await?;
+            command_result!(res)
         }
         Command::EmptyCache => {
             sdk.empty_wallet_cache()?;

@@ -26,6 +26,8 @@ pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
 pub struct Config {
     pub liquid_electrum_url: String,
     pub bitcoin_electrum_url: String,
+    /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
+    pub mempoolspace_url: String,
     /// Directory in which all SDK files (DB, log, cache) are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
@@ -45,6 +47,7 @@ impl Config {
         Config {
             liquid_electrum_url: "blockstream.info:995".to_string(),
             bitcoin_electrum_url: "blockstream.info:700".to_string(),
+            mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
@@ -57,6 +60,7 @@ impl Config {
         Config {
             liquid_electrum_url: "blockstream.info:465".to_string(),
             bitcoin_electrum_url: "blockstream.info:993".to_string(),
+            mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
@@ -227,12 +231,14 @@ pub struct SendPaymentResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub receiver_amount_sat: u64,
+    pub sat_per_vbyte: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainResponse {
     pub receiver_amount_sat: u64,
-    pub fees_sat: u64,
+    pub claim_fees_sat: u64,
+    pub total_fees_sat: u64,
 }
 
 #[derive(Debug, Serialize)]
@@ -1001,6 +1007,16 @@ impl Payment {
             },
         }
     }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RecommendedFees {
+    pub fastest_fee: u64,
+    pub half_hour_fee: u64,
+    pub hour_fee: u64,
+    pub economy_fee: u64,
+    pub minimum_fee: u64,
 }
 
 /// Internal SDK log entry used in the Uniffi and Dart bindings

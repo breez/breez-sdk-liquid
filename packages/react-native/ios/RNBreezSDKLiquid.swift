@@ -335,6 +335,16 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(recommendedFees:reject:)
+    func recommendedFees(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().recommendedFees()
+            resolve(BreezSDKLiquidMapper.dictionaryOf(recommendedFees: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(backup:resolve:reject:)
     func backup(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
