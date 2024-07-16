@@ -1,6 +1,6 @@
 name: scripts
 description: Supporting scripts
-version: 0.0.1
+version: 0.1.3-rc1
 homepage: https://breez.technology
 repository: https://github.com/breez/breez-sdk-liquid
 publish_to: none
