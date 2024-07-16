@@ -83,6 +83,7 @@ typedef struct wire_cst_ln_url_pay_request {
   uint64_t amount_msat;
   struct wire_cst_list_prim_u_8_strict *comment;
   struct wire_cst_list_prim_u_8_strict *payment_label;
+  bool *validate_success_action_url;
 } wire_cst_ln_url_pay_request;
 
 typedef struct wire_cst_ln_url_withdraw_request_data {
@@ -324,6 +325,7 @@ typedef struct wire_cst_SuccessActionProcessed_Message {
 typedef struct wire_cst_url_success_action_data {
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *url;
+  bool matches_callback_domain;
 } wire_cst_url_success_action_data;
 
 typedef struct wire_cst_SuccessActionProcessed_Url {

@@ -1741,12 +1741,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LnUrlPayRequest dco_decode_ln_url_pay_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return LnUrlPayRequest(
       data: dco_decode_ln_url_pay_request_data(arr[0]),
       amountMsat: dco_decode_u_64(arr[1]),
       comment: dco_decode_opt_String(arr[2]),
       paymentLabel: dco_decode_opt_String(arr[3]),
+      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),
     );
   }
 
@@ -2463,10 +2464,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UrlSuccessActionData dco_decode_url_success_action_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return UrlSuccessActionData(
       description: dco_decode_String(arr[0]),
       url: dco_decode_String(arr[1]),
+      matchesCallbackDomain: dco_decode_bool(arr[2]),
     );
   }
 
@@ -3245,8 +3247,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_amountMsat = sse_decode_u_64(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_paymentLabel = sse_decode_opt_String(deserializer);
+    var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
     return LnUrlPayRequest(
-        data: var_data, amountMsat: var_amountMsat, comment: var_comment, paymentLabel: var_paymentLabel);
+        data: var_data,
+        amountMsat: var_amountMsat,
+        comment: var_comment,
+        paymentLabel: var_paymentLabel,
+        validateSuccessActionUrl: var_validateSuccessActionUrl);
   }
 
   @protected
@@ -3929,7 +3936,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_description = sse_decode_String(deserializer);
     var var_url = sse_decode_String(deserializer);
-    return UrlSuccessActionData(description: var_description, url: var_url);
+    var var_matchesCallbackDomain = sse_decode_bool(deserializer);
+    return UrlSuccessActionData(
+        description: var_description, url: var_url, matchesCallbackDomain: var_matchesCallbackDomain);
   }
 
   @protected
@@ -4715,6 +4724,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.amountMsat, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_String(self.paymentLabel, serializer);
+    sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);
   }
 
   @protected
@@ -5300,6 +5310,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.description, serializer);
     sse_encode_String(self.url, serializer);
+    sse_encode_bool(self.matchesCallbackDomain, serializer);
   }
 
   @protected

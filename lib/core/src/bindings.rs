@@ -341,6 +341,7 @@ pub struct _LnUrlPayRequest {
     pub amount_msat: u64,
     pub comment: Option<String>,
     pub payment_label: Option<String>,
+    pub validate_success_action_url: Option<bool>,
 }
 
 #[frb(mirror(SuccessActionProcessed))]
@@ -371,6 +372,7 @@ pub struct _MessageSuccessActionData {
 pub struct _UrlSuccessActionData {
     pub description: String,
     pub url: String,
+    pub matches_callback_domain: bool,
 }
 
 #[frb(mirror(LnUrlPayErrorData))]

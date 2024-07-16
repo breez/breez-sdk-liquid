@@ -1396,6 +1396,8 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
+
+  external ffi.Pointer<ffi.Bool> validate_success_action_url;
 }
 
 final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
@@ -1743,6 +1745,9 @@ final class wire_cst_url_success_action_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  @ffi.Bool()
+  external bool matches_callback_domain;
 }
 
 final class wire_cst_SuccessActionProcessed_Url extends ffi.Struct {

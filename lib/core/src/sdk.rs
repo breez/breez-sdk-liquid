@@ -1500,6 +1500,7 @@ impl LiquidSdk {
             &req.comment,
             &req.data,
             self.config.network.into(),
+            req.validate_success_action_url,
         )
         .await?
         {
