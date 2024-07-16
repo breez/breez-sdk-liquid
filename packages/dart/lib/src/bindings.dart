@@ -394,16 +394,23 @@ class LnUrlPayRequest {
   final BigInt amountMsat;
   final String? comment;
   final String? paymentLabel;
+  final bool? validateSuccessActionUrl;
 
   const LnUrlPayRequest({
     required this.data,
     required this.amountMsat,
     this.comment,
     this.paymentLabel,
+    this.validateSuccessActionUrl,
   });
 
   @override
-  int get hashCode => data.hashCode ^ amountMsat.hashCode ^ comment.hashCode ^ paymentLabel.hashCode;
+  int get hashCode =>
+      data.hashCode ^
+      amountMsat.hashCode ^
+      comment.hashCode ^
+      paymentLabel.hashCode ^
+      validateSuccessActionUrl.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -413,7 +420,8 @@ class LnUrlPayRequest {
           data == other.data &&
           amountMsat == other.amountMsat &&
           comment == other.comment &&
-          paymentLabel == other.paymentLabel;
+          paymentLabel == other.paymentLabel &&
+          validateSuccessActionUrl == other.validateSuccessActionUrl;
 }
 
 class LnUrlPayRequestData {
@@ -716,14 +724,16 @@ class Symbol {
 class UrlSuccessActionData {
   final String description;
   final String url;
+  final bool matchesCallbackDomain;
 
   const UrlSuccessActionData({
     required this.description,
     required this.url,
+    required this.matchesCallbackDomain,
   });
 
   @override
-  int get hashCode => description.hashCode ^ url.hashCode;
+  int get hashCode => description.hashCode ^ url.hashCode ^ matchesCallbackDomain.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -731,5 +741,6 @@ class UrlSuccessActionData {
       other is UrlSuccessActionData &&
           runtimeType == other.runtimeType &&
           description == other.description &&
-          url == other.url;
+          url == other.url &&
+          matchesCallbackDomain == other.matchesCallbackDomain;
 }

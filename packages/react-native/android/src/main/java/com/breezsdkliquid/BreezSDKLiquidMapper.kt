@@ -684,11 +684,22 @@ fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
     val amountMsat = lnUrlPayRequest.getDouble("amountMsat").toULong()
     val comment = if (hasNonNullKey(lnUrlPayRequest, "comment")) lnUrlPayRequest.getString("comment") else null
     val paymentLabel = if (hasNonNullKey(lnUrlPayRequest, "paymentLabel")) lnUrlPayRequest.getString("paymentLabel") else null
+    val validateSuccessActionUrl =
+        if (hasNonNullKey(
+                lnUrlPayRequest,
+                "validateSuccessActionUrl",
+            )
+        ) {
+            lnUrlPayRequest.getBoolean("validateSuccessActionUrl")
+        } else {
+            null
+        }
     return LnUrlPayRequest(
         data,
         amountMsat,
         comment,
         paymentLabel,
+        validateSuccessActionUrl,
     )
 }
 
@@ -698,6 +709,7 @@ fun readableMapOf(lnUrlPayRequest: LnUrlPayRequest): ReadableMap =
         "amountMsat" to lnUrlPayRequest.amountMsat,
         "comment" to lnUrlPayRequest.comment,
         "paymentLabel" to lnUrlPayRequest.paymentLabel,
+        "validateSuccessActionUrl" to lnUrlPayRequest.validateSuccessActionUrl,
     )
 
 fun asLnUrlPayRequestList(arr: ReadableArray): List<LnUrlPayRequest> {
@@ -2043,6 +2055,7 @@ fun asUrlSuccessActionData(urlSuccessActionData: ReadableMap): UrlSuccessActionD
             arrayOf(
                 "description",
                 "url",
+                "matchesCallbackDomain",
             ),
         )
     ) {
@@ -2050,9 +2063,11 @@ fun asUrlSuccessActionData(urlSuccessActionData: ReadableMap): UrlSuccessActionD
     }
     val description = urlSuccessActionData.getString("description")!!
     val url = urlSuccessActionData.getString("url")!!
+    val matchesCallbackDomain = urlSuccessActionData.getBoolean("matchesCallbackDomain")
     return UrlSuccessActionData(
         description,
         url,
+        matchesCallbackDomain,
     )
 }
 
@@ -2060,6 +2075,7 @@ fun readableMapOf(urlSuccessActionData: UrlSuccessActionData): ReadableMap =
     readableMapOf(
         "description" to urlSuccessActionData.description,
         "url" to urlSuccessActionData.url,
+        "matchesCallbackDomain" to urlSuccessActionData.matchesCallbackDomain,
     )
 
 fun asUrlSuccessActionDataList(arr: ReadableArray): List<UrlSuccessActionData> {
