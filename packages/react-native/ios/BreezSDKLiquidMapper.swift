@@ -822,12 +822,20 @@ enum BreezSDKLiquidMapper {
             }
             paymentLabel = paymentLabelTmp
         }
+        var validateSuccessActionUrl: Bool?
+        if hasNonNilKey(data: lnUrlPayRequest, key: "validateSuccessActionUrl") {
+            guard let validateSuccessActionUrlTmp = lnUrlPayRequest["validateSuccessActionUrl"] as? Bool else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "validateSuccessActionUrl"))
+            }
+            validateSuccessActionUrl = validateSuccessActionUrlTmp
+        }
 
         return LnUrlPayRequest(
             data: data,
             amountMsat: amountMsat,
             comment: comment,
-            paymentLabel: paymentLabel
+            paymentLabel: paymentLabel,
+            validateSuccessActionUrl: validateSuccessActionUrl
         )
     }
 
@@ -837,6 +845,7 @@ enum BreezSDKLiquidMapper {
             "amountMsat": lnUrlPayRequest.amountMsat,
             "comment": lnUrlPayRequest.comment == nil ? nil : lnUrlPayRequest.comment,
             "paymentLabel": lnUrlPayRequest.paymentLabel == nil ? nil : lnUrlPayRequest.paymentLabel,
+            "validateSuccessActionUrl": lnUrlPayRequest.validateSuccessActionUrl == nil ? nil : lnUrlPayRequest.validateSuccessActionUrl,
         ]
     }
 
@@ -2375,10 +2384,14 @@ enum BreezSDKLiquidMapper {
         guard let url = urlSuccessActionData["url"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "UrlSuccessActionData"))
         }
+        guard let matchesCallbackDomain = urlSuccessActionData["matchesCallbackDomain"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "matchesCallbackDomain", typeName: "UrlSuccessActionData"))
+        }
 
         return UrlSuccessActionData(
             description: description,
-            url: url
+            url: url,
+            matchesCallbackDomain: matchesCallbackDomain
         )
     }
 
@@ -2386,6 +2399,7 @@ enum BreezSDKLiquidMapper {
         return [
             "description": urlSuccessActionData.description,
             "url": urlSuccessActionData.url,
+            "matchesCallbackDomain": urlSuccessActionData.matchesCallbackDomain,
         ]
     }
 

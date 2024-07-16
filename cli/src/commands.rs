@@ -123,6 +123,10 @@ pub(crate) enum Command {
     LnurlPay {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
+
+        /// Validates the success action URL
+        #[clap(name = "validate_success_url", short = 'v', long = "validate")]
+        validate_success_url: Option<bool>,
     },
     LnurlWithdraw {
         /// LNURL-withdraw endpoint
@@ -373,7 +377,10 @@ pub(crate) async fn handle_command(
             let res = LiquidSdk::parse(&input).await?;
             command_result!(res)
         }
-        Command::LnurlPay { lnurl } => {
+        Command::LnurlPay {
+            lnurl,
+            validate_success_url,
+        } => {
             let input = LiquidSdk::parse(&lnurl).await?;
             let res = match input {
                 InputType::LnUrlPay { data: pd } => {
@@ -389,6 +396,7 @@ pub(crate) async fn handle_command(
                             amount_msat: amount_msat.parse::<u64>()?,
                             comment: None,
                             payment_label: None,
+                            validate_success_action_url: validate_success_url,
                         })
                         .await?;
                     Ok(pay_res)

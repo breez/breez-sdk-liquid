@@ -836,6 +836,7 @@ impl CstDecode<crate::bindings::LnUrlPayRequest> for wire_cst_ln_url_pay_request
             amount_msat: self.amount_msat.cst_decode(),
             comment: self.comment.cst_decode(),
             payment_label: self.payment_label.cst_decode(),
+            validate_success_action_url: self.validate_success_action_url.cst_decode(),
         }
     }
 }
@@ -1441,6 +1442,7 @@ impl CstDecode<crate::bindings::UrlSuccessActionData> for wire_cst_url_success_a
         crate::bindings::UrlSuccessActionData {
             description: self.description.cst_decode(),
             url: self.url.cst_decode(),
+            matches_callback_domain: self.matches_callback_domain.cst_decode(),
         }
     }
 }
@@ -1753,6 +1755,7 @@ impl NewWithNullPtr for wire_cst_ln_url_pay_request {
             amount_msat: Default::default(),
             comment: core::ptr::null_mut(),
             payment_label: core::ptr::null_mut(),
+            validate_success_action_url: core::ptr::null_mut(),
         }
     }
 }
@@ -2326,6 +2329,7 @@ impl NewWithNullPtr for wire_cst_url_success_action_data {
         Self {
             description: core::ptr::null_mut(),
             url: core::ptr::null_mut(),
+            matches_callback_domain: Default::default(),
         }
     }
 }
@@ -3445,6 +3449,7 @@ pub struct wire_cst_ln_url_pay_request {
     amount_msat: u64,
     comment: *mut wire_cst_list_prim_u_8_strict,
     payment_label: *mut wire_cst_list_prim_u_8_strict,
+    validate_success_action_url: *mut bool,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -3940,4 +3945,5 @@ pub struct wire_cst_symbol {
 pub struct wire_cst_url_success_action_data {
     description: *mut wire_cst_list_prim_u_8_strict,
     url: *mut wire_cst_list_prim_u_8_strict,
+    matches_callback_domain: bool,
 }

@@ -1922,6 +1922,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.amount_msat = cst_encode_u_64(apiObj.amountMsat);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.payment_label = cst_encode_opt_String(apiObj.paymentLabel);
+    wireObj.validate_success_action_url = cst_encode_opt_box_autoadd_bool(apiObj.validateSuccessActionUrl);
   }
 
   @protected
@@ -2450,6 +2451,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       UrlSuccessActionData apiObj, wire_cst_url_success_action_data wireObj) {
     wireObj.description = cst_encode_String(apiObj.description);
     wireObj.url = cst_encode_String(apiObj.url);
+    wireObj.matches_callback_domain = cst_encode_bool(apiObj.matchesCallbackDomain);
   }
 
   @protected
@@ -4254,6 +4256,8 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
+
+  external ffi.Pointer<ffi.Bool> validate_success_action_url;
 }
 
 final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
@@ -4601,6 +4605,9 @@ final class wire_cst_url_success_action_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  @ffi.Bool()
+  external bool matches_callback_domain;
 }
 
 final class wire_cst_SuccessActionProcessed_Url extends ffi.Struct {

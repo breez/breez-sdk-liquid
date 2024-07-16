@@ -1577,6 +1577,7 @@ const _: fn() = || {
         let _: u64 = LnUrlPayRequest.amount_msat;
         let _: Option<String> = LnUrlPayRequest.comment;
         let _: Option<String> = LnUrlPayRequest.payment_label;
+        let _: Option<bool> = LnUrlPayRequest.validate_success_action_url;
     }
     {
         let LnUrlPayRequestData = None::<crate::bindings::LnUrlPayRequestData>.unwrap();
@@ -1660,6 +1661,7 @@ const _: fn() = || {
         let UrlSuccessActionData = None::<crate::bindings::UrlSuccessActionData>.unwrap();
         let _: String = UrlSuccessActionData.description;
         let _: String = UrlSuccessActionData.url;
+        let _: bool = UrlSuccessActionData.matches_callback_domain;
     }
 };
 
@@ -2425,11 +2427,13 @@ impl SseDecode for crate::bindings::LnUrlPayRequest {
         let mut var_amountMsat = <u64>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_paymentLabel = <Option<String>>::sse_decode(deserializer);
+        let mut var_validateSuccessActionUrl = <Option<bool>>::sse_decode(deserializer);
         return crate::bindings::LnUrlPayRequest {
             data: var_data,
             amount_msat: var_amountMsat,
             comment: var_comment,
             payment_label: var_paymentLabel,
+            validate_success_action_url: var_validateSuccessActionUrl,
         };
     }
 }
@@ -3352,9 +3356,11 @@ impl SseDecode for crate::bindings::UrlSuccessActionData {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_description = <String>::sse_decode(deserializer);
         let mut var_url = <String>::sse_decode(deserializer);
+        let mut var_matchesCallbackDomain = <bool>::sse_decode(deserializer);
         return crate::bindings::UrlSuccessActionData {
             description: var_description,
             url: var_url,
+            matches_callback_domain: var_matchesCallbackDomain,
         };
     }
 }
@@ -3958,6 +3964,10 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LnUrlPayReque
             self.0.amount_msat.into_into_dart().into_dart(),
             self.0.comment.into_into_dart().into_dart(),
             self.0.payment_label.into_into_dart().into_dart(),
+            self.0
+                .validate_success_action_url
+                .into_into_dart()
+                .into_dart(),
         ]
         .into_dart()
     }
@@ -4967,6 +4977,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::UrlSuccessAct
         [
             self.0.description.into_into_dart().into_dart(),
             self.0.url.into_into_dart().into_dart(),
+            self.0.matches_callback_domain.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5502,6 +5513,7 @@ impl SseEncode for crate::bindings::LnUrlPayRequest {
         <u64>::sse_encode(self.amount_msat, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<String>>::sse_encode(self.payment_label, serializer);
+        <Option<bool>>::sse_encode(self.validate_success_action_url, serializer);
     }
 }
 
@@ -6224,6 +6236,7 @@ impl SseEncode for crate::bindings::UrlSuccessActionData {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.description, serializer);
         <String>::sse_encode(self.url, serializer);
+        <bool>::sse_encode(self.matches_callback_domain, serializer);
     }
 }
 
