@@ -9,6 +9,7 @@ use boltz_client::{LockTime, ToHex};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
+use fiat::{BuyBitcoinService, FiatOnRampService};
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
@@ -60,6 +61,7 @@ pub struct LiquidSdk {
     pub(crate) send_swap_state_handler: SendSwapStateHandler,
     pub(crate) receive_swap_state_handler: ReceiveSwapStateHandler,
     pub(crate) chain_swap_state_handler: Arc<ChainSwapStateHandler>,
+    pub(crate) buy_bitcoin_service: Arc<dyn FiatOnRampService>,
 }
 
 impl LiquidSdk {
@@ -132,7 +134,10 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?);
 
-        let breez_server = BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?;
+        let breez_server = Arc::new(BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?);
+
+        let buy_bitcoin_service =
+            Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -143,13 +148,14 @@ impl LiquidSdk {
             swapper,
             bitcoin_chain_service,
             liquid_chain_service,
-            fiat_api: Arc::new(breez_server),
+            fiat_api: breez_server,
             is_started: RwLock::new(false),
             shutdown_sender,
             shutdown_receiver,
             send_swap_state_handler,
             receive_swap_state_handler,
             chain_swap_state_handler,
+            buy_bitcoin_service,
         });
         Ok(sdk)
     }
@@ -1228,19 +1234,17 @@ impl LiquidSdk {
         })
     }
 
-    pub async fn receive_onchain(
+    async fn create_chain_swap(
         &self,
-        req: &PrepareReceiveOnchainResponse,
-    ) -> Result<ReceiveOnchainResponse, PaymentError> {
-        self.ensure_is_started().await?;
-
-        let payer_amount_sat = req.payer_amount_sat;
+        payer_amount_sat: u64,
+        fees_sat: u64,
+    ) -> Result<ChainSwap, PaymentError> {
         let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            req.fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1274,15 +1278,14 @@ impl LiquidSdk {
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
         let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - req.fees_sat;
+        let receiver_amount_sat = payer_amount_sat - fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let lockup_address = create_response.lockup_details.lockup_address;
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Incoming,
             claim_address,
-            lockup_address: lockup_address.clone(),
+            lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             payer_amount_sat,
@@ -1301,8 +1304,21 @@ impl LiquidSdk {
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
+        Ok(swap)
+    }
 
-        let address = lockup_address;
+    pub async fn receive_onchain(
+        &self,
+        req: &PrepareReceiveOnchainResponse,
+    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        let swap = self
+            .create_chain_swap(req.payer_amount_sat, req.fees_sat)
+            .await?;
+        let create_response = swap.get_boltz_create_response()?;
+        let address = create_response.lockup_details.lockup_address;
+
         let amount = create_response.lockup_details.amount as f64 / 100_000_000.0;
         let bip21 = create_response.lockup_details.bip21.unwrap_or(format!(
             "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
@@ -1349,6 +1365,33 @@ impl LiquidSdk {
             .rescan_incoming_chain_swaps()
             .await?;
         Ok(())
+    }
+
+    pub async fn prepare_buy_bitcoin(
+        &self,
+        req: &PrepareBuyBitcoinRequest,
+    ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
+        let res = self
+            .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
+                payer_amount_sat: req.amount_sat,
+            })
+            .await?;
+        Ok(PrepareBuyBitcoinResponse {
+            provider: req.provider,
+            amount_sat: res.payer_amount_sat,
+            fees_sat: res.fees_sat,
+        })
+    }
+
+    pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
+        let swap = self
+            .create_chain_swap(req.prepare_res.amount_sat, req.prepare_res.fees_sat)
+            .await?;
+
+        Ok(self
+            .buy_bitcoin_service
+            .buy_bitcoin_onchain(req.prepare_res.provider, &swap, req.redirect_url.clone())
+            .await?)
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,

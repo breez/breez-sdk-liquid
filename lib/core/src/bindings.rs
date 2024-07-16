@@ -164,6 +164,17 @@ impl BindingLiquidSdk {
         self.sdk.receive_onchain(&req).await
     }
 
+    pub async fn prepare_buy_bitcoin(
+        &self,
+        req: PrepareBuyBitcoinRequest,
+    ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
+        self.sdk.prepare_buy_bitcoin(&req).await
+    }
+
+    pub async fn buy_bitcoin(&self, req: BuyBitcoinRequest) -> Result<String, PaymentError> {
+        self.sdk.buy_bitcoin(&req).await
+    }
+
     pub async fn list_payments(
         &self,
         req: ListPaymentsRequest,

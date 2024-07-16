@@ -143,6 +143,50 @@ enum BreezSDKLiquidMapper {
         return bitcoinAddressDataList.map { v -> [String: Any?] in return dictionaryOf(bitcoinAddressData: v) }
     }
 
+    static func asBuyBitcoinRequest(buyBitcoinRequest: [String: Any?]) throws -> BuyBitcoinRequest {
+        guard let prepareResTmp = buyBitcoinRequest["prepareRes"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareRes", typeName: "BuyBitcoinRequest"))
+        }
+        let prepareRes = try asPrepareBuyBitcoinResponse(prepareBuyBitcoinResponse: prepareResTmp)
+
+        var redirectUrl: String?
+        if hasNonNilKey(data: buyBitcoinRequest, key: "redirectUrl") {
+            guard let redirectUrlTmp = buyBitcoinRequest["redirectUrl"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "redirectUrl"))
+            }
+            redirectUrl = redirectUrlTmp
+        }
+
+        return BuyBitcoinRequest(
+            prepareRes: prepareRes,
+            redirectUrl: redirectUrl
+        )
+    }
+
+    static func dictionaryOf(buyBitcoinRequest: BuyBitcoinRequest) -> [String: Any?] {
+        return [
+            "prepareRes": dictionaryOf(prepareBuyBitcoinResponse: buyBitcoinRequest.prepareRes),
+            "redirectUrl": buyBitcoinRequest.redirectUrl == nil ? nil : buyBitcoinRequest.redirectUrl,
+        ]
+    }
+
+    static func asBuyBitcoinRequestList(arr: [Any]) throws -> [BuyBitcoinRequest] {
+        var list = [BuyBitcoinRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var buyBitcoinRequest = try asBuyBitcoinRequest(buyBitcoinRequest: val)
+                list.append(buyBitcoinRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BuyBitcoinRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(buyBitcoinRequestList: [BuyBitcoinRequest]) -> [Any] {
+        return buyBitcoinRequestList.map { v -> [String: Any?] in return dictionaryOf(buyBitcoinRequest: v) }
+    }
+
     static func asConfig(config: [String: Any?]) throws -> Config {
         guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
@@ -1470,6 +1514,91 @@ enum BreezSDKLiquidMapper {
         return paymentList.map { v -> [String: Any?] in return dictionaryOf(payment: v) }
     }
 
+    static func asPrepareBuyBitcoinRequest(prepareBuyBitcoinRequest: [String: Any?]) throws -> PrepareBuyBitcoinRequest {
+        guard let providerTmp = prepareBuyBitcoinRequest["provider"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "provider", typeName: "PrepareBuyBitcoinRequest"))
+        }
+        let provider = try asBuyBitcoinProvider(buyBitcoinProvider: providerTmp)
+
+        guard let amountSat = prepareBuyBitcoinRequest["amountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "PrepareBuyBitcoinRequest"))
+        }
+
+        return PrepareBuyBitcoinRequest(
+            provider: provider,
+            amountSat: amountSat
+        )
+    }
+
+    static func dictionaryOf(prepareBuyBitcoinRequest: PrepareBuyBitcoinRequest) -> [String: Any?] {
+        return [
+            "provider": valueOf(buyBitcoinProvider: prepareBuyBitcoinRequest.provider),
+            "amountSat": prepareBuyBitcoinRequest.amountSat,
+        ]
+    }
+
+    static func asPrepareBuyBitcoinRequestList(arr: [Any]) throws -> [PrepareBuyBitcoinRequest] {
+        var list = [PrepareBuyBitcoinRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareBuyBitcoinRequest = try asPrepareBuyBitcoinRequest(prepareBuyBitcoinRequest: val)
+                list.append(prepareBuyBitcoinRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareBuyBitcoinRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareBuyBitcoinRequestList: [PrepareBuyBitcoinRequest]) -> [Any] {
+        return prepareBuyBitcoinRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareBuyBitcoinRequest: v) }
+    }
+
+    static func asPrepareBuyBitcoinResponse(prepareBuyBitcoinResponse: [String: Any?]) throws -> PrepareBuyBitcoinResponse {
+        guard let providerTmp = prepareBuyBitcoinResponse["provider"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "provider", typeName: "PrepareBuyBitcoinResponse"))
+        }
+        let provider = try asBuyBitcoinProvider(buyBitcoinProvider: providerTmp)
+
+        guard let amountSat = prepareBuyBitcoinResponse["amountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "PrepareBuyBitcoinResponse"))
+        }
+        guard let feesSat = prepareBuyBitcoinResponse["feesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareBuyBitcoinResponse"))
+        }
+
+        return PrepareBuyBitcoinResponse(
+            provider: provider,
+            amountSat: amountSat,
+            feesSat: feesSat
+        )
+    }
+
+    static func dictionaryOf(prepareBuyBitcoinResponse: PrepareBuyBitcoinResponse) -> [String: Any?] {
+        return [
+            "provider": valueOf(buyBitcoinProvider: prepareBuyBitcoinResponse.provider),
+            "amountSat": prepareBuyBitcoinResponse.amountSat,
+            "feesSat": prepareBuyBitcoinResponse.feesSat,
+        ]
+    }
+
+    static func asPrepareBuyBitcoinResponseList(arr: [Any]) throws -> [PrepareBuyBitcoinResponse] {
+        var list = [PrepareBuyBitcoinResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareBuyBitcoinResponse = try asPrepareBuyBitcoinResponse(prepareBuyBitcoinResponse: val)
+                list.append(prepareBuyBitcoinResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareBuyBitcoinResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareBuyBitcoinResponseList: [PrepareBuyBitcoinResponse]) -> [Any] {
+        return prepareBuyBitcoinResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareBuyBitcoinResponse: v) }
+    }
+
     static func asPreparePayOnchainRequest(preparePayOnchainRequest: [String: Any?]) throws -> PreparePayOnchainRequest {
         guard let receiverAmountSat = preparePayOnchainRequest["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainRequest"))
@@ -2472,6 +2601,39 @@ enum BreezSDKLiquidMapper {
                 list.append(aesSuccessActionDataResult)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "AesSuccessActionDataResult"))
+            }
+        }
+        return list
+    }
+
+    static func asBuyBitcoinProvider(buyBitcoinProvider: String) throws -> BuyBitcoinProvider {
+        switch buyBitcoinProvider {
+        case "moonpay":
+            return BuyBitcoinProvider.moonpay
+
+        default: throw SdkError.Generic(message: "Invalid variant \(buyBitcoinProvider) for enum BuyBitcoinProvider")
+        }
+    }
+
+    static func valueOf(buyBitcoinProvider: BuyBitcoinProvider) -> String {
+        switch buyBitcoinProvider {
+        case .moonpay:
+            return "moonpay"
+        }
+    }
+
+    static func arrayOf(buyBitcoinProviderList: [BuyBitcoinProvider]) -> [String] {
+        return buyBitcoinProviderList.map { v -> String in return valueOf(buyBitcoinProvider: v) }
+    }
+
+    static func asBuyBitcoinProviderList(arr: [Any]) throws -> [BuyBitcoinProvider] {
+        var list = [BuyBitcoinProvider]()
+        for value in arr {
+            if let val = value as? String {
+                var buyBitcoinProvider = try asBuyBitcoinProvider(buyBitcoinProvider: val)
+                list.append(buyBitcoinProvider)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BuyBitcoinProvider"))
             }
         }
         return list

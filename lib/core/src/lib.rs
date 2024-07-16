@@ -4,6 +4,7 @@ pub(crate) mod chain;
 pub(crate) mod chain_swap;
 pub mod error;
 pub(crate) mod event;
+pub(crate) mod fiat;
 #[cfg(feature = "frb")]
 pub(crate) mod frb_generated;
 pub mod logger;

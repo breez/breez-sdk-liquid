@@ -272,6 +272,28 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(prepareBuyBitcoin:resolve:reject:)
+    func prepareBuyBitcoin(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let prepareBuyBitcoinRequest = try BreezSDKLiquidMapper.asPrepareBuyBitcoinRequest(prepareBuyBitcoinRequest: req)
+            var res = try getBindingLiquidSdk().prepareBuyBitcoin(req: prepareBuyBitcoinRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(prepareBuyBitcoinResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(buyBitcoin:resolve:reject:)
+    func buyBitcoin(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let buyBitcoinRequest = try BreezSDKLiquidMapper.asBuyBitcoinRequest(buyBitcoinRequest: req)
+            var res = try getBindingLiquidSdk().buyBitcoin(req: buyBitcoinRequest)
+            resolve(res)
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(listPayments:resolve:reject:)
     func listPayments(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

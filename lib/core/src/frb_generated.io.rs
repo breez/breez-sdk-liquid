@@ -184,6 +184,13 @@ impl CstDecode<bool> for *mut bool {
         unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
     }
 }
+impl CstDecode<crate::model::BuyBitcoinRequest> for *mut wire_cst_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BuyBitcoinRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::BuyBitcoinRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -301,6 +308,15 @@ impl CstDecode<crate::model::Payment> for *mut wire_cst_payment {
         CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
+    for *mut wire_cst_prepare_buy_bitcoin_request
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PrepareBuyBitcoinRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::PreparePayOnchainRequest>
     for *mut wire_cst_prepare_pay_onchain_request
 {
@@ -415,6 +431,15 @@ impl CstDecode<crate::bindings::UrlSuccessActionData> for *mut wire_cst_url_succ
     fn cst_decode(self) -> crate::bindings::UrlSuccessActionData {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::bindings::UrlSuccessActionData>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::BuyBitcoinRequest> for wire_cst_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BuyBitcoinRequest {
+        crate::model::BuyBitcoinRequest {
+            prepare_res: self.prepare_res.cst_decode(),
+            redirect_url: self.redirect_url.cst_decode(),
+        }
     }
 }
 impl CstDecode<crate::model::Config> for wire_cst_config {
@@ -1133,6 +1158,25 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
         }
     }
 }
+impl CstDecode<crate::model::PrepareBuyBitcoinRequest> for wire_cst_prepare_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinRequest {
+        crate::model::PrepareBuyBitcoinRequest {
+            provider: self.provider.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::PrepareBuyBitcoinResponse> for wire_cst_prepare_buy_bitcoin_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinResponse {
+        crate::model::PrepareBuyBitcoinResponse {
+            provider: self.provider.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::PreparePayOnchainRequest> for wire_cst_prepare_pay_onchain_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
@@ -1508,6 +1552,19 @@ impl NewWithNullPtr for wire_cst_bitcoin_address_data {
     }
 }
 impl Default for wire_cst_bitcoin_address_data {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_buy_bitcoin_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            prepare_res: Default::default(),
+            redirect_url: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_buy_bitcoin_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1991,6 +2048,33 @@ impl Default for wire_cst_payment_error {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_prepare_buy_bitcoin_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            provider: Default::default(),
+            amount_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_buy_bitcoin_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_buy_bitcoin_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            provider: Default::default(),
+            amount_sat: Default::default(),
+            fees_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_buy_bitcoin_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2357,6 +2441,15 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ba
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_buy_bitcoin_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(port_, that, req)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
     port_: i64,
     that: usize,
@@ -2462,6 +2555,15 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pa
     req: *mut wire_cst_pay_onchain_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_prepare_buy_bitcoin_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin_impl(port_, that, req)
 }
 
 #[no_mangle]
@@ -2688,6 +2790,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bool(value: bool) -> *
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request(
+) -> *mut wire_cst_buy_bitcoin_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_buy_bitcoin_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2804,6 +2914,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request(
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request(
+) -> *mut wire_cst_prepare_buy_bitcoin_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_prepare_buy_bitcoin_request::new_with_null_ptr(),
+    )
 }
 
 #[no_mangle]
@@ -3099,6 +3217,12 @@ pub struct wire_cst_bitcoin_address_data {
     amount_sat: *mut u64,
     label: *mut wire_cst_list_prim_u_8_strict,
     message: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_buy_bitcoin_request {
+    prepare_res: wire_cst_prepare_buy_bitcoin_response,
+    redirect_url: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -3700,6 +3824,19 @@ pub struct wire_cst_PaymentError_SendError {
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_SignerError {
     err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_buy_bitcoin_request {
+    provider: i32,
+    amount_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_buy_bitcoin_response {
+    provider: i32,
+    amount_sat: u64,
+    fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

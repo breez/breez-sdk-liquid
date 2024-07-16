@@ -36,6 +36,11 @@ export interface BitcoinAddressData {
     message?: string
 }
 
+export interface BuyBitcoinRequest {
+    prepareRes: PrepareBuyBitcoinResponse
+    redirectUrl?: string
+}
+
 export interface Config {
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
@@ -211,6 +216,17 @@ export interface Payment {
     refundTxAmountSat?: number
 }
 
+export interface PrepareBuyBitcoinRequest {
+    provider: BuyBitcoinProvider
+    amountSat: number
+}
+
+export interface PrepareBuyBitcoinResponse {
+    provider: BuyBitcoinProvider
+    amountSat: number
+    feesSat: number
+}
+
 export interface PreparePayOnchainRequest {
     receiverAmountSat: number
     satPerVbyte?: number
@@ -346,6 +362,10 @@ export type AesSuccessActionDataResult = {
 } | {
     type: AesSuccessActionDataResultVariant.ERROR_STATUS,
     reason: string
+}
+
+export enum BuyBitcoinProvider {
+    MOONPAY = "moonpay"
 }
 
 export enum InputTypeVariant {
@@ -605,6 +625,16 @@ export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): 
 
 export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promise<ReceiveOnchainResponse> => {
     const response = await BreezSDKLiquid.receiveOnchain(req)
+    return response
+}
+
+export const prepareBuyBitcoin = async (req: PrepareBuyBitcoinRequest): Promise<PrepareBuyBitcoinResponse> => {
+    const response = await BreezSDKLiquid.prepareBuyBitcoin(req)
+    return response
+}
+
+export const buyBitcoin = async (req: BuyBitcoinRequest): Promise<string> => {
+    const response = await BreezSDKLiquid.buyBitcoin(req)
     return response
 }
 

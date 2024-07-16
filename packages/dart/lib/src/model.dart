@@ -29,6 +29,36 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
+enum BuyBitcoinProvider {
+  moonpay,
+  ;
+}
+
+class BuyBitcoinRequest {
+  final PrepareBuyBitcoinResponse prepareRes;
+
+  /// The optional URL to redirect to after completing the buy.
+  ///
+  /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
+  final String? redirectUrl;
+
+  const BuyBitcoinRequest({
+    required this.prepareRes,
+    this.redirectUrl,
+  });
+
+  @override
+  int get hashCode => prepareRes.hashCode ^ redirectUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BuyBitcoinRequest &&
+          runtimeType == other.runtimeType &&
+          prepareRes == other.prepareRes &&
+          redirectUrl == other.redirectUrl;
+}
+
 /// Configuration for the Liquid SDK
 class Config {
   final String liquidElectrumUrl;
@@ -514,6 +544,51 @@ enum PaymentType {
   receive,
   send,
   ;
+}
+
+class PrepareBuyBitcoinRequest {
+  final BuyBitcoinProvider provider;
+  final BigInt amountSat;
+
+  const PrepareBuyBitcoinRequest({
+    required this.provider,
+    required this.amountSat,
+  });
+
+  @override
+  int get hashCode => provider.hashCode ^ amountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareBuyBitcoinRequest &&
+          runtimeType == other.runtimeType &&
+          provider == other.provider &&
+          amountSat == other.amountSat;
+}
+
+class PrepareBuyBitcoinResponse {
+  final BuyBitcoinProvider provider;
+  final BigInt amountSat;
+  final BigInt feesSat;
+
+  const PrepareBuyBitcoinResponse({
+    required this.provider,
+    required this.amountSat,
+    required this.feesSat,
+  });
+
+  @override
+  int get hashCode => provider.hashCode ^ amountSat.hashCode ^ feesSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareBuyBitcoinResponse &&
+          runtimeType == other.runtimeType &&
+          provider == other.provider &&
+          amountSat == other.amountSat &&
+          feesSat == other.feesSat;
 }
 
 class PreparePayOnchainRequest {

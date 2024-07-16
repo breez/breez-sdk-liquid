@@ -7,8 +7,9 @@ use std::sync::Arc;
 use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::{
-    chain_swap::ChainSwapStateHandler, event::EventManager, model::Config, persist::Persister,
-    receive_swap::ReceiveSwapStateHandler, sdk::LiquidSdk, send_swap::SendSwapStateHandler,
+    chain_swap::ChainSwapStateHandler, event::EventManager, fiat::BuyBitcoinService, model::Config,
+    persist::Persister, receive_swap::ReceiveSwapStateHandler, sdk::LiquidSdk,
+    send_swap::SendSwapStateHandler,
 };
 
 use super::{
@@ -63,7 +64,10 @@ pub(crate) fn new_liquid_sdk(
     let event_manager = Arc::new(EventManager::new());
     let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-    let fiat_api = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.into(), None)?);
+    let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.into(), None)?);
+
+    let buy_bitcoin_service =
+        Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
     Ok(LiquidSdk {
         config,
@@ -74,12 +78,13 @@ pub(crate) fn new_liquid_sdk(
         swapper,
         liquid_chain_service,
         bitcoin_chain_service,
-        fiat_api,
+        fiat_api: breez_server,
         is_started: RwLock::new(true),
         shutdown_sender,
         shutdown_receiver,
         send_swap_state_handler,
         receive_swap_state_handler,
         chain_swap_state_handler,
+        buy_bitcoin_service,
     })
 }
