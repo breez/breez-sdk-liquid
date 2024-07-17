@@ -21,6 +21,18 @@ pub(crate) struct Persister {
     network: LiquidNetwork,
 }
 
+/// Builds a WHERE clause that checks if `state` is any of the given arguments
+fn get_where_clause_state_in(allowed_states: &[PaymentState]) -> String {
+    format!(
+        "state in ({})",
+        allowed_states
+            .iter()
+            .map(|t| format!("'{}'", *t as i8))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
+}
+
 impl Persister {
     pub fn new(working_dir: &str, network: LiquidNetwork) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
