@@ -1916,21 +1916,30 @@ mod tests {
     };
     use paste::paste;
 
-    #[derive(Default)]
     struct NewSwapArgs {
-        direction: Option<Direction>,
-        accepts_zero_conf: Option<bool>,
+        direction: Direction,
+        accepts_zero_conf: bool,
         initial_payment_state: Option<PaymentState>,
+    }
+
+    impl Default for NewSwapArgs {
+        fn default() -> Self {
+            Self {
+                accepts_zero_conf: false,
+                initial_payment_state: None,
+                direction: Direction::Outgoing,
+            }
+        }
     }
 
     impl NewSwapArgs {
         pub fn set_direction(mut self, direction: Direction) -> Self {
-            self.direction = Some(direction);
+            self.direction = direction;
             self
         }
 
         pub fn set_accepts_zero_conf(mut self, accepts_zero_conf: bool) -> Self {
-            self.accepts_zero_conf = Some(accepts_zero_conf);
+            self.accepts_zero_conf = accepts_zero_conf;
             self
         }
 
@@ -1954,9 +1963,9 @@ mod tests {
             let swap = match $type {
                 "chain" => {
                     let swap = new_chain_swap(
-                        $args.direction.unwrap_or(Direction::Outgoing),
+                        $args.direction,
                         $args.initial_payment_state,
-                        $args.accepts_zero_conf.unwrap_or(false),
+                        $args.accepts_zero_conf,
                     );
                     $persister.insert_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
