@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
@@ -13,9 +13,10 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
+use lwk_wollet::elements::{OutPoint, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork};
+use lwk_wollet::{elements, ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
@@ -1374,7 +1375,15 @@ impl LiquidSdk {
         let pending_chain_swaps_by_refund_tx_id =
             self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
 
-        for tx in self.onchain_wallet.transactions().await? {
+        let tx_map: HashMap<String, WalletTx> = self
+            .onchain_wallet
+            .transactions()
+            .await?
+            .iter()
+            .map(|tx| (tx.txid.to_hex(), tx.clone()))
+            .collect();
+
+        for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
@@ -1426,6 +1435,67 @@ impl LiquidSdk {
                             // Covers events: Send and Receive direct onchain payments transitioning to Complete
                             self.emit_payment_updated(Some(tx_id)).await?;
                         }
+                    }
+                }
+            }
+        }
+
+        // TODO Ensure this happens only on first sync
+        // TODO This must be done after:
+        //  1) we fetched LWK onchain data, so that we have tx list and LWK is initialized
+        //  2) we fetched real-time sync data
+        self.extend_incomplete_failed_send_swaps(tx_map).await?;
+
+        Ok(())
+    }
+
+    /// Finds and persists the refund tx ID for failed Send Swaps that are missing it
+    async fn extend_incomplete_failed_send_swaps(
+        &self,
+        tx_map: HashMap<String, WalletTx>,
+    ) -> Result<()> {
+        // Find confirmed incoming onchain txs that have a single input and a single output, indexed by input
+        let possible_claim_or_refund_txs_by_input: HashMap<OutPoint, Txid> = tx_map
+            .iter()
+            .filter(|(_, tx)| tx.balance.values().sum::<i64>() > 0)
+            .filter(|(_, tx)| tx.height.is_some())
+            .filter(|(_, tx)| tx.tx.output.len() == 1)
+            .filter(|(_, tx)| tx.tx.input.len() == 1)
+            .filter_map(|(_, wallet_tx)| match wallet_tx.inputs.first() {
+                Some(Some(input)) => Some((input.outpoint, wallet_tx.txid)),
+                _ => None,
+            })
+            .collect();
+
+        let con = self.persister.get_connection()?;
+
+        // For every failed Send Swap with no refund tx, try to determine refund tx ID
+        let incomplete_failed_send_swaps =
+            self.persister.list_incomplete_failed_send_swaps(&con)?;
+        for ifss in &incomplete_failed_send_swaps {
+            let swap_id = ifss.id.clone();
+            info!("Trying to find refund tx ID for incomplete failed Send Swap {swap_id}");
+
+            let lockup_tx_id = ifss
+                .lockup_tx_id
+                .clone()
+                .ok_or(anyhow!("No lockup tx ID found for Send Swap {swap_id}"))?;
+            let lockup_tx = tx_map
+                .get(&lockup_tx_id)
+                .ok_or(anyhow!("No tx found in tx list for tx ID {lockup_tx_id}"))?;
+
+            if lockup_tx.outputs.len() == 1 {
+                if let Some(Some(lockup_tx_out)) = lockup_tx.outputs.first() {
+                    // For a Send Swap, this can only be a refund tx
+                    if let Some(refund_tx_id) =
+                        possible_claim_or_refund_txs_by_input.get(&lockup_tx_out.outpoint)
+                    {
+                        let refund_tx_id_str = refund_tx_id.to_hex();
+                        info!("Found refund tx for Send Swap {swap_id}, tx ID {refund_tx_id_str}");
+
+                        self.send_swap_state_handler
+                            .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
+                            .await?;
                     }
                 }
             }
