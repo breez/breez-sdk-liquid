@@ -402,7 +402,7 @@ dictionary PrepareBuyBitcoinResponse {
 
 dictionary BuyBitcoinRequest {
     PrepareBuyBitcoinResponse prepare_res;
-    string? redirect_url;
+    string? redirect_url = null;
 };
 
 dictionary BackupRequest {

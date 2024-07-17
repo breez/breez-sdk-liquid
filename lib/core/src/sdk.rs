@@ -6,10 +6,10 @@ use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
+use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
-use fiat::{BuyBitcoinService, FiatOnRampService};
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
@@ -61,7 +61,7 @@ pub struct LiquidSdk {
     pub(crate) send_swap_state_handler: SendSwapStateHandler,
     pub(crate) receive_swap_state_handler: ReceiveSwapStateHandler,
     pub(crate) chain_swap_state_handler: Arc<ChainSwapStateHandler>,
-    pub(crate) buy_bitcoin_service: Arc<dyn FiatOnRampService>,
+    pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
 }
 
 impl LiquidSdk {
@@ -1371,6 +1371,12 @@ impl LiquidSdk {
         &self,
         req: &PrepareBuyBitcoinRequest,
     ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
+        if self.config.network != LiquidNetwork::Mainnet {
+            return Err(PaymentError::Generic {
+                err: "Can only buy bitcoin on Mainnet".to_string(),
+            });
+        }
+
         let res = self
             .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
                 payer_amount_sat: req.amount_sat,
@@ -1390,7 +1396,7 @@ impl LiquidSdk {
 
         Ok(self
             .buy_bitcoin_service
-            .buy_bitcoin_onchain(req.prepare_res.provider, &swap, req.redirect_url.clone())
+            .buy_bitcoin(req.prepare_res.provider, &swap, req.redirect_url.clone())
             .await?)
     }
 

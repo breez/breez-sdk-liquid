@@ -2,30 +2,17 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use moonpay::MoonpayProvider;
-use sdk_common::prelude::BreezServer;
+use sdk_common::prelude::{BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
 
 use crate::{
     model::{BuyBitcoinProvider, ChainSwap, Config},
     prelude::LiquidNetwork,
 };
 
-pub(crate) mod moonpay;
-
 #[async_trait]
-pub(crate) trait FiatOnRampProvider: Send + Sync {
-    /// Configure buying Bitcoin and return a URL to continue
-    async fn buy_bitcoin_onchain(
-        &self,
-        chain_swap: &ChainSwap,
-        redirect_url: Option<String>,
-    ) -> Result<String>;
-}
-
-#[async_trait]
-pub(crate) trait FiatOnRampService: Send + Sync {
+pub(crate) trait BuyBitcoinApi: Send + Sync {
     /// Initiate buying Bitcoin and return a URL to the selected third party provider
-    async fn buy_bitcoin_onchain(
+    async fn buy_bitcoin(
         &self,
         provider: BuyBitcoinProvider,
         chain_swap: &ChainSwap,
@@ -35,7 +22,7 @@ pub(crate) trait FiatOnRampService: Send + Sync {
 
 pub(crate) struct BuyBitcoinService {
     config: Config,
-    moonpay_provider: Arc<dyn FiatOnRampProvider>,
+    moonpay_provider: Arc<dyn BuyBitcoinProviderApi>,
 }
 
 impl BuyBitcoinService {
@@ -49,21 +36,28 @@ impl BuyBitcoinService {
 }
 
 #[async_trait]
-impl FiatOnRampService for BuyBitcoinService {
-    async fn buy_bitcoin_onchain(
+impl BuyBitcoinApi for BuyBitcoinService {
+    async fn buy_bitcoin(
         &self,
         provider: BuyBitcoinProvider,
         chain_swap: &ChainSwap,
         redirect_url: Option<String>,
     ) -> Result<String> {
         if self.config.network != LiquidNetwork::Mainnet {
-            return Err(anyhow!("Can only buy Bitcoin on Mainnet"));
+            return Err(anyhow!("Can only buy bitcoin on Mainnet"));
         }
+
+        let create_response = chain_swap.get_boltz_create_response()?;
 
         match provider {
             BuyBitcoinProvider::Moonpay => {
                 self.moonpay_provider
-                    .buy_bitcoin_onchain(chain_swap, redirect_url)
+                    .buy_bitcoin(
+                        create_response.lockup_details.lockup_address,
+                        Some(create_response.lockup_details.amount as u64),
+                        None,
+                        redirect_url,
+                    )
                     .await
             }
         }

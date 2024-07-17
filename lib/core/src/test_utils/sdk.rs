@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::{
-    chain_swap::ChainSwapStateHandler, event::EventManager, fiat::BuyBitcoinService, model::Config,
+    buy::BuyBitcoinService, chain_swap::ChainSwapStateHandler, event::EventManager, model::Config,
     persist::Persister, receive_swap::ReceiveSwapStateHandler, sdk::LiquidSdk,
     send_swap::SendSwapStateHandler,
 };
