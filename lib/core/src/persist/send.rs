@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::Persister;
+use crate::persist::{get_where_clause_state_in, Persister};
 
 impl Persister {
     pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
@@ -147,29 +147,19 @@ impl Persister {
         &self,
         con: &Connection,
     ) -> rusqlite::Result<Vec<SendSwap>> {
-        let mut where_clause: Vec<String> = Vec::new();
-        where_clause.push(format!(
-            "state in ({})",
-            [PaymentState::Created, PaymentState::Pending]
-                .iter()
-                .map(|t| format!("'{}'", *t as i8))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+        ])];
 
         self.list_send_swaps(con, where_clause)
     }
 
     pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let mut where_clause: Vec<String> = Vec::new();
-        where_clause.push(format!(
-            "state in ({})",
-            [PaymentState::Pending, PaymentState::RefundPending]
-                .iter()
-                .map(|t| format!("'{}'", *t as i8))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Pending,
+            PaymentState::RefundPending,
+        ])];
 
         let con: Connection = self.get_connection()?;
         let query = Self::list_send_swaps_query(where_clause);

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::Persister;
+use crate::persist::{get_where_clause_state_in, Persister};
 
 impl Persister {
     pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
@@ -179,16 +179,7 @@ impl Persister {
         con: &Connection,
         states: Vec<PaymentState>,
     ) -> Result<Vec<ChainSwap>> {
-        let mut where_clause: Vec<String> = Vec::new();
-        where_clause.push(format!(
-            "state in ({})",
-            states
-                .iter()
-                .map(|t| format!("'{}'", *t as i8))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
-
+        let where_clause = vec![get_where_clause_state_in(&states)];
         self.list_chain_swaps_where(con, where_clause)
     }
 

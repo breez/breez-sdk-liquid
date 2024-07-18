@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::Persister;
+use crate::persist::{get_where_clause_state_in, Persister};
 
 impl Persister {
     pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
@@ -129,15 +129,10 @@ impl Persister {
         &self,
         con: &Connection,
     ) -> rusqlite::Result<Vec<ReceiveSwap>> {
-        let mut where_clause: Vec<String> = Vec::new();
-        where_clause.push(format!(
-            "state in ({})",
-            [PaymentState::Created, PaymentState::Pending]
-                .iter()
-                .map(|t| format!("'{}'", *t as i8))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+        ])];
 
         self.list_receive_swaps(con, where_clause)
     }

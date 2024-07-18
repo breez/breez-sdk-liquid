@@ -1355,9 +1355,7 @@ impl LiquidSdk {
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
         let payments_before_sync: HashMap<String, Payment> = self
-            .list_payments(&ListPaymentsRequest {
-                ..Default::default()
-            })
+            .list_payments(&ListPaymentsRequest::default())
             .await?
             .into_iter()
             .filter_map(|payment| {
