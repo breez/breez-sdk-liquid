@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
+use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice, LBtcSwapScriptV2};
 use boltz_client::{LockTime, ToHex};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
@@ -13,7 +13,7 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
-use lwk_wollet::elements::{OutPoint, Txid};
+use lwk_wollet::elements::Script;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElementsNetwork, WalletTx};
@@ -1444,62 +1444,70 @@ impl LiquidSdk {
         // TODO This must be done after:
         //  1) we fetched LWK onchain data, so that we have tx list and LWK is initialized
         //  2) we fetched real-time sync data
-        self.extend_incomplete_failed_send_swaps(tx_map).await?;
+
+        let con = self.persister.get_connection()?;
+        // Send Swap scripts by swap ID
+        let send_swap_immutable_db_data: HashMap<String, LBtcSwapScriptV2> = self
+            .persister
+            .list_send_swaps(&con, vec![])?
+            .iter()
+            .filter_map(|send_swap| match send_swap.get_swap_script() {
+                Ok(script) => Some((send_swap.id.clone(), script)),
+                Err(e) => {
+                    error!(
+                        "Failed to get swap script for Send Swap {}: {e}",
+                        send_swap.id
+                    );
+                    None
+                }
+            })
+            .collect();
+
+        self.recover_send_swap_tx_ids(tx_map, send_swap_immutable_db_data)
+            .await?;
 
         Ok(())
     }
 
-    /// Finds and persists the refund tx ID for failed Send Swaps that are missing it
-    async fn extend_incomplete_failed_send_swaps(
+    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable DB data
+    async fn recover_send_swap_tx_ids(
         &self,
         tx_map: HashMap<String, WalletTx>,
+        send_swap_immutable_db_data: HashMap<String, LBtcSwapScriptV2>,
     ) -> Result<()> {
-        // Find confirmed incoming onchain txs that have a single input and a single output, indexed by input
-        let possible_claim_or_refund_txs_by_input: HashMap<OutPoint, Txid> = tx_map
+        // Swap ID by swap script
+        let swap_ids_by_lockup_script: HashMap<Script, String> = send_swap_immutable_db_data
             .iter()
-            .filter(|(_, tx)| tx.balance.values().sum::<i64>() > 0)
-            .filter(|(_, tx)| tx.height.is_some())
-            .filter(|(_, tx)| tx.tx.output.len() == 1)
-            .filter(|(_, tx)| tx.tx.input.len() == 1)
-            .filter_map(|(_, wallet_tx)| match wallet_tx.inputs.first() {
-                Some(Some(input)) => Some((input.outpoint, wallet_tx.txid)),
-                _ => None,
+            .filter_map(|(swap_id, swap_script)| {
+                swap_script
+                    .funding_addrs
+                    .clone()
+                    .map(|address| (address.script_pubkey(), swap_id.clone()))
             })
             .collect();
 
-        let con = self.persister.get_connection()?;
+        // Find lockup tx IDs
+        let lockup_txs_by_swap_id: HashMap<String, String> = tx_map
+            .iter()
+            .filter(|(_, tx)| tx.balance.values().sum::<i64>() < 0) // Outgoing
+            .filter(|(_, tx)| tx.tx.output.len() <= 2) // Lockup + change
+            .filter_map(|(_, tx)| {
+                tx.tx
+                    .output
+                    .iter()
+                    .find_map(|out| swap_ids_by_lockup_script.get(&out.script_pubkey))
+                    .map(|swap_id| (swap_id.clone(), tx.txid.to_string()))
+            })
+            .collect();
 
-        // For every failed Send Swap with no refund tx, try to determine refund tx ID
-        let incomplete_failed_send_swaps =
-            self.persister.list_incomplete_failed_send_swaps(&con)?;
-        for ifss in &incomplete_failed_send_swaps {
-            let swap_id = ifss.id.clone();
-            info!("Trying to find refund tx ID for incomplete failed Send Swap {swap_id}");
+        // Find refund tx IDs
+        // TODO These are incoming txs with 1 input, where input is output of lockup tx
 
-            let lockup_tx_id = ifss
-                .lockup_tx_id
-                .clone()
-                .ok_or(anyhow!("No lockup tx ID found for Send Swap {swap_id}"))?;
-            let lockup_tx = tx_map
-                .get(&lockup_tx_id)
-                .ok_or(anyhow!("No tx found in tx list for tx ID {lockup_tx_id}"))?;
-
-            if lockup_tx.outputs.len() == 1 {
-                if let Some(Some(lockup_tx_out)) = lockup_tx.outputs.first() {
-                    // For a Send Swap, this can only be a refund tx
-                    if let Some(refund_tx_id) =
-                        possible_claim_or_refund_txs_by_input.get(&lockup_tx_out.outpoint)
-                    {
-                        let refund_tx_id_str = refund_tx_id.to_hex();
-                        info!("Found refund tx for Send Swap {swap_id}, tx ID {refund_tx_id_str}");
-
-                        self.send_swap_state_handler
-                            .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
-                            .await?;
-                    }
-                }
-            }
-        }
+        // TODO Send update with found txids
+        // TODO How to set tx IDs without having to also set state?
+        // self.send_swap_state_handler
+        //     .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
+        //     .await?;
 
         Ok(())
     }
