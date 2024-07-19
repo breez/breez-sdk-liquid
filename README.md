@@ -5,6 +5,9 @@
 - Bindings
   - `python`: [lib/bindings/README.md](lib/bindings/README.md)
 
+## API
+API documentation is [here](https://breez.github.io/breez-sdk-liquid/breez_sdk_liquid/).
+
 ## Roadmap
 - [x] Send/Receive Lightning payments
 - [x] CLI Interface
