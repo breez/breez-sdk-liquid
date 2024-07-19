@@ -50,7 +50,7 @@ Have a question for the team? Join our [Telegram channel](https://t.me/breezsdk
 
 The *Liquid* implementation uses submarine swaps and reverse submarine swaps to send and receive payments, enabling funds to move frictionlessly between the Lightning Network and the Liquid sidechain.
 
-![Breez SDK - Liquid](https://github.com/breez/breez-sdk-liquid-docs/blob/main/src/images/BreezSDK_Liquid.png)
+![Breez SDK - Liquid](https://github.com/breez/breez-sdk-liquid-docs/raw/main/src/images/BreezSDK_Liquid.png)
 
 When sending a payment the SDK performs a submarine swap, converting L-BTC from a user’s Liquid wallet into sats on the Lightning Network, and sends them to the recipient.
 
