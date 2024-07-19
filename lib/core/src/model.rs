@@ -1019,6 +1019,35 @@ pub struct RecommendedFees {
     pub minimum_fee: u64,
 }
 
+#[derive(Debug, Clone, Copy, EnumString, PartialEq, Serialize)]
+pub enum BuyBitcoinProvider {
+    #[strum(serialize = "moonpay")]
+    Moonpay,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PrepareBuyBitcoinRequest {
+    pub provider: BuyBitcoinProvider,
+    pub amount_sat: u64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct PrepareBuyBitcoinResponse {
+    pub provider: BuyBitcoinProvider,
+    pub amount_sat: u64,
+    pub fees_sat: u64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BuyBitcoinRequest {
+    pub prepare_res: PrepareBuyBitcoinResponse,
+
+    /// The optional URL to redirect to after completing the buy.
+    ///
+    /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
+    pub redirect_url: Option<String>,
+}
+
 /// Internal SDK log entry used in the Uniffi and Dart bindings
 #[derive(Clone, Debug)]
 pub struct LogEntry {

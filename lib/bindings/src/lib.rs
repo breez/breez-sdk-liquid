@@ -155,6 +155,17 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.receive_onchain(&req))
     }
 
+    pub fn prepare_buy_bitcoin(
+        &self,
+        req: PrepareBuyBitcoinRequest,
+    ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
+        rt().block_on(self.sdk.prepare_buy_bitcoin(&req))
+    }
+
+    pub fn buy_bitcoin(&self, req: BuyBitcoinRequest) -> Result<String, PaymentError> {
+        rt().block_on(self.sdk.buy_bitcoin(&req))
+    }
+
     pub fn list_payments(&self, req: ListPaymentsRequest) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.sdk.list_payments(&req))
     }

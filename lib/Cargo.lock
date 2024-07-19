@@ -3085,7 +3085,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.5.0"
-source = "git+https://github.com/breez/breez-sdk?branch=main#acadf5bfe616c5d1d119910ca8a876362b1cd969"
+source = "git+https://github.com/breez/breez-sdk?branch=main#8e4f8467892837421707e0b6f935edc494fdac58"
 dependencies = [
  "aes 0.8.4",
  "anyhow",
@@ -3107,6 +3107,7 @@ dependencies = [
  "thiserror",
  "tonic",
  "tonic-build",
+ "url",
 ]
 
 [[package]]

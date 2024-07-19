@@ -385,6 +385,26 @@ dictionary ReceiveOnchainResponse {
     string bip21;
 };
 
+enum BuyBitcoinProvider {
+    "Moonpay",
+};
+
+dictionary PrepareBuyBitcoinRequest {
+    BuyBitcoinProvider provider;
+    u64 amount_sat;
+};
+
+dictionary PrepareBuyBitcoinResponse {
+    BuyBitcoinProvider provider;
+    u64 amount_sat;
+    u64 fees_sat;
+};
+
+dictionary BuyBitcoinRequest {
+    PrepareBuyBitcoinResponse prepare_res;
+    string? redirect_url = null;
+};
+
 dictionary BackupRequest {
     string? backup_path = null;
 };
@@ -545,6 +565,12 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceiveOnchainResponse receive_onchain(PrepareReceiveOnchainResponse req);
+
+    [Throws=PaymentError]
+    PrepareBuyBitcoinResponse prepare_buy_bitcoin(PrepareBuyBitcoinRequest req);
+
+    [Throws=PaymentError]
+    string buy_bitcoin(BuyBitcoinRequest req);
 
     [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);

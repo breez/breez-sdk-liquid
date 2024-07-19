@@ -352,6 +352,41 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun prepareBuyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareBuyBitcoinRequest =
+                    asPrepareBuyBitcoinRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareBuyBitcoinRequest")) }
+                val res = getBindingLiquidSdk().prepareBuyBitcoin(prepareBuyBitcoinRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun buyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val buyBitcoinRequest =
+                    asBuyBitcoinRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BuyBitcoinRequest")) }
+                val res = getBindingLiquidSdk().buyBitcoin(buyBitcoinRequest)
+                promise.resolve(res)
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listPayments(
         req: ReadableMap,
         promise: Promise,

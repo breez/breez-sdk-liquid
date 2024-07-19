@@ -114,6 +114,41 @@ fun asBitcoinAddressDataList(arr: ReadableArray): List<BitcoinAddressData> {
     return list
 }
 
+fun asBuyBitcoinRequest(buyBitcoinRequest: ReadableMap): BuyBitcoinRequest? {
+    if (!validateMandatoryFields(
+            buyBitcoinRequest,
+            arrayOf(
+                "prepareRes",
+            ),
+        )
+    ) {
+        return null
+    }
+    val prepareRes = buyBitcoinRequest.getMap("prepareRes")?.let { asPrepareBuyBitcoinResponse(it) }!!
+    val redirectUrl = if (hasNonNullKey(buyBitcoinRequest, "redirectUrl")) buyBitcoinRequest.getString("redirectUrl") else null
+    return BuyBitcoinRequest(
+        prepareRes,
+        redirectUrl,
+    )
+}
+
+fun readableMapOf(buyBitcoinRequest: BuyBitcoinRequest): ReadableMap =
+    readableMapOf(
+        "prepareRes" to readableMapOf(buyBitcoinRequest.prepareRes),
+        "redirectUrl" to buyBitcoinRequest.redirectUrl,
+    )
+
+fun asBuyBitcoinRequestList(arr: ReadableArray): List<BuyBitcoinRequest> {
+    val list = ArrayList<BuyBitcoinRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBuyBitcoinRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
@@ -1227,6 +1262,82 @@ fun asPaymentList(arr: ReadableArray): List<Payment> {
     return list
 }
 
+fun asPrepareBuyBitcoinRequest(prepareBuyBitcoinRequest: ReadableMap): PrepareBuyBitcoinRequest? {
+    if (!validateMandatoryFields(
+            prepareBuyBitcoinRequest,
+            arrayOf(
+                "provider",
+                "amountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val provider = prepareBuyBitcoinRequest.getString("provider")?.let { asBuyBitcoinProvider(it) }!!
+    val amountSat = prepareBuyBitcoinRequest.getDouble("amountSat").toULong()
+    return PrepareBuyBitcoinRequest(
+        provider,
+        amountSat,
+    )
+}
+
+fun readableMapOf(prepareBuyBitcoinRequest: PrepareBuyBitcoinRequest): ReadableMap =
+    readableMapOf(
+        "provider" to prepareBuyBitcoinRequest.provider.name.lowercase(),
+        "amountSat" to prepareBuyBitcoinRequest.amountSat,
+    )
+
+fun asPrepareBuyBitcoinRequestList(arr: ReadableArray): List<PrepareBuyBitcoinRequest> {
+    val list = ArrayList<PrepareBuyBitcoinRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareBuyBitcoinRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asPrepareBuyBitcoinResponse(prepareBuyBitcoinResponse: ReadableMap): PrepareBuyBitcoinResponse? {
+    if (!validateMandatoryFields(
+            prepareBuyBitcoinResponse,
+            arrayOf(
+                "provider",
+                "amountSat",
+                "feesSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val provider = prepareBuyBitcoinResponse.getString("provider")?.let { asBuyBitcoinProvider(it) }!!
+    val amountSat = prepareBuyBitcoinResponse.getDouble("amountSat").toULong()
+    val feesSat = prepareBuyBitcoinResponse.getDouble("feesSat").toULong()
+    return PrepareBuyBitcoinResponse(
+        provider,
+        amountSat,
+        feesSat,
+    )
+}
+
+fun readableMapOf(prepareBuyBitcoinResponse: PrepareBuyBitcoinResponse): ReadableMap =
+    readableMapOf(
+        "provider" to prepareBuyBitcoinResponse.provider.name.lowercase(),
+        "amountSat" to prepareBuyBitcoinResponse.amountSat,
+        "feesSat" to prepareBuyBitcoinResponse.feesSat,
+    )
+
+fun asPrepareBuyBitcoinResponseList(arr: ReadableArray): List<PrepareBuyBitcoinResponse> {
+    val list = ArrayList<PrepareBuyBitcoinResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareBuyBitcoinResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePayOnchainRequest? {
     if (!validateMandatoryFields(
             preparePayOnchainRequest,
@@ -2123,6 +2234,19 @@ fun asAesSuccessActionDataResultList(arr: ReadableArray): List<AesSuccessActionD
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asAesSuccessActionDataResult(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asBuyBitcoinProvider(type: String): BuyBitcoinProvider = BuyBitcoinProvider.valueOf(camelToUpperSnakeCase(type))
+
+fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
+    val list = ArrayList<BuyBitcoinProvider>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is String -> list.add(asBuyBitcoinProvider(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

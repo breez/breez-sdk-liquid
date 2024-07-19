@@ -1,5 +1,6 @@
 #[cfg(feature = "frb")]
 pub(crate) mod bindings;
+pub(crate) mod buy;
 pub(crate) mod chain;
 pub(crate) mod chain_swap;
 pub mod error;
