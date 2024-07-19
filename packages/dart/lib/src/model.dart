@@ -9,6 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
 
+/// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
   ///
@@ -29,11 +30,13 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
+/// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 enum BuyBitcoinProvider {
   moonpay,
   ;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::buy_bitcoin].
 class BuyBitcoinRequest {
   final PrepareBuyBitcoinResponse prepareRes;
 
@@ -120,6 +123,7 @@ class Config {
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::connect].
 class ConnectRequest {
   final String mnemonic;
   final Config config;
@@ -141,6 +145,7 @@ class ConnectRequest {
           config == other.config;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
 class GetInfoResponse {
   /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
   final BigInt balanceSat;
@@ -174,6 +179,7 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
 class LightningPaymentLimitsResponse {
   /// Amount limits for a Send Payment to be valid
   final Limits send;
@@ -198,6 +204,7 @@ class LightningPaymentLimitsResponse {
           receive == other.receive;
 }
 
+/// The minimum and maximum in satoshis of a Lightning or onchain payment.
 class Limits {
   final BigInt minSat;
   final BigInt maxSat;
@@ -233,7 +240,7 @@ enum LiquidNetwork {
   ;
 }
 
-/// Represents a list payments request.
+/// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 class ListPaymentsRequest {
   final List<PaymentType>? filters;
 
@@ -324,6 +331,7 @@ class LogEntry {
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
 class OnchainPaymentLimitsResponse {
   /// Amount limits for a Send Onchain Payment to be valid
   final Limits send;
@@ -348,6 +356,7 @@ class OnchainPaymentLimitsResponse {
           receive == other.receive;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
 class PayOnchainRequest {
   final String address;
   final PreparePayOnchainResponse prepareRes;
@@ -418,6 +427,8 @@ class Payment {
 
   /// For a Send swap which was refunded, this is the refund amount
   final BigInt? refundTxAmountSat;
+
+  /// If it is a `Send` or `Receive` payment
   final PaymentType paymentType;
 
   /// Composite status representing the overall status of the payment.
@@ -473,6 +484,7 @@ class Payment {
           status == other.status;
 }
 
+/// The payment state of an individual payment.
 enum PaymentState {
   created,
 
@@ -546,6 +558,7 @@ enum PaymentType {
   ;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 class PrepareBuyBitcoinRequest {
   final BuyBitcoinProvider provider;
   final BigInt amountSat;
@@ -567,6 +580,7 @@ class PrepareBuyBitcoinRequest {
           amountSat == other.amountSat;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 class PrepareBuyBitcoinResponse {
   final BuyBitcoinProvider provider;
   final BigInt amountSat;
@@ -591,6 +605,7 @@ class PrepareBuyBitcoinResponse {
           feesSat == other.feesSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
   final BigInt receiverAmountSat;
   final int? satPerVbyte;
@@ -612,6 +627,7 @@ class PreparePayOnchainRequest {
           satPerVbyte == other.satPerVbyte;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainResponse {
   final BigInt receiverAmountSat;
   final BigInt claimFeesSat;
@@ -636,6 +652,7 @@ class PreparePayOnchainResponse {
           totalFeesSat == other.totalFeesSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 class PrepareReceiveOnchainRequest {
   final BigInt payerAmountSat;
 
@@ -654,6 +671,7 @@ class PrepareReceiveOnchainRequest {
           payerAmountSat == other.payerAmountSat;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 class PrepareReceiveOnchainResponse {
   final BigInt payerAmountSat;
   final BigInt feesSat;
@@ -675,6 +693,7 @@ class PrepareReceiveOnchainResponse {
           feesSat == other.feesSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceiveRequest {
   final BigInt payerAmountSat;
 
@@ -693,6 +712,7 @@ class PrepareReceiveRequest {
           payerAmountSat == other.payerAmountSat;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceiveResponse {
   final BigInt payerAmountSat;
   final BigInt feesSat;
@@ -714,9 +734,15 @@ class PrepareReceiveResponse {
           feesSat == other.feesSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].
 class PrepareRefundRequest {
+  /// The address where the swap funds are locked up
   final String swapAddress;
+
+  /// The address to refund the swap funds to
   final String refundAddress;
+
+  /// The fee rate in sat/vB for the refund transaction
   final int satPerVbyte;
 
   const PrepareRefundRequest({
@@ -738,6 +764,7 @@ class PrepareRefundRequest {
           satPerVbyte == other.satPerVbyte;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
 class PrepareRefundResponse {
   final int txVsize;
   final BigInt txFeeSat;
@@ -762,6 +789,7 @@ class PrepareRefundResponse {
           refundTxId == other.refundTxId;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendRequest {
   final String invoice;
 
@@ -778,6 +806,7 @@ class PrepareSendRequest {
       other is PrepareSendRequest && runtimeType == other.runtimeType && invoice == other.invoice;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendResponse {
   final String invoice;
   final BigInt feesSat;
@@ -799,6 +828,7 @@ class PrepareSendResponse {
           feesSat == other.feesSat;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::receive_onchain].
 class ReceiveOnchainResponse {
   final String address;
   final String bip21;
@@ -820,6 +850,7 @@ class ReceiveOnchainResponse {
           bip21 == other.bip21;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 class ReceivePaymentResponse {
   final String id;
   final String invoice;
@@ -841,6 +872,7 @@ class ReceivePaymentResponse {
           invoice == other.invoice;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
 class RecommendedFees {
   final BigInt fastestFee;
   final BigInt halfHourFee;
@@ -876,9 +908,15 @@ class RecommendedFees {
           minimumFee == other.minimumFee;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::refund].
 class RefundRequest {
+  /// The address where the swap funds are locked up
   final String swapAddress;
+
+  /// The address to refund the swap funds to
   final String refundAddress;
+
+  /// The fee rate in sat/vB for the refund transaction
   final int satPerVbyte;
 
   const RefundRequest({
@@ -900,6 +938,7 @@ class RefundRequest {
           satPerVbyte == other.satPerVbyte;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::refund].
 class RefundResponse {
   final String refundTxId;
 
@@ -916,6 +955,7 @@ class RefundResponse {
       other is RefundResponse && runtimeType == other.runtimeType && refundTxId == other.refundTxId;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::list_refundables].
 class RefundableSwap {
   final String swapAddress;
   final int timestamp;
@@ -940,6 +980,7 @@ class RefundableSwap {
           amountSat == other.amountSat;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::restore].
 class RestoreRequest {
   final String? backupPath;
 
@@ -981,6 +1022,7 @@ sealed class SdkEvent with _$SdkEvent {
   const factory SdkEvent.synced() = SdkEvent_Synced;
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::send_payment].
 class SendPaymentResponse {
   final Payment payment;
 
