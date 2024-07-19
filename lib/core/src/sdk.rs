@@ -65,6 +65,14 @@ pub struct LiquidSdk {
 }
 
 impl LiquidSdk {
+    /// Initializes the SDK services and starts the background tasks.
+    /// This must be called to create the [LiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [ConnectRequest] containing:
+    ///     * `mnemonic` - the Liquid wallet mnemonic
+    ///     * `config` - the SDK [Config]
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let maybe_swapper_proxy_url =
             match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
@@ -223,7 +231,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Trigger the stopping of background threads for this SDK instance.
+    /// Disconnects the [LiquidSdk] instance and stops the background tasks.
     pub async fn disconnect(&self) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
@@ -403,10 +411,21 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Adds an event listener to the [LiquidSdk] instance, where all [SdkEvent]'s will be emitted to.
+    /// The event listener can be removed be calling [LiquidSdk::remove_event_listener].
+    ///
+    /// # Arguments
+    ///
+    /// * `listener` - The listener which is an implementation of the [EventListener] trait
     pub async fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
         Ok(self.event_manager.add(listener).await?)
     }
 
+    /// Removes an event listener from the [LiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the event listener id returned by [LiquidSdk::add_event_listener]
     pub async fn remove_event_listener(&self, id: String) -> SdkResult<()> {
         self.event_manager.remove(id).await;
         Ok(())
@@ -490,6 +509,7 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Get the wallet info, calculating the current pending and confirmed balances.
     pub async fn get_info(&self) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
         debug!(
@@ -640,6 +660,12 @@ impl LiquidSdk {
         .await
     }
 
+    /// Prepares to pay a Lightning invoice via a submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareSendRequest] containing:
+    ///     * `invoice` - the bolt11 Lightning invoice to pay
     pub async fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
@@ -689,13 +715,20 @@ impl LiquidSdk {
         }
     }
 
-    /// Creates, initiates and starts monitoring the progress of a Send Payment.
+    /// Pays a Lightning invoice via a submarine swap.
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
-    /// - a [PaymentError::PaymentTimeout], if the payment could not be initiated in this time
-    /// - a [PaymentState::Pending] payment, if the payment could be initiated, but didn't yet
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
     /// complete in this time
-    /// - a [PaymentState::Complete] payment, if the payment was successfully completed in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The [PrepareSendResponse] from calling [LiquidSdk::prepare_send_payment]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     pub async fn send_payment(
         &self,
         req: &PrepareSendResponse,
@@ -836,7 +869,7 @@ impl LiquidSdk {
             .map(|payment| SendPaymentResponse { payment })
     }
 
-    /// Fetch the current limits for Send and Receive swaps
+    /// Fetch the current payment limits for [LiquidSdk::send_payment] and [LiquidSdk::receive_payment].
     pub async fn fetch_lightning_limits(
         &self,
     ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
@@ -868,7 +901,7 @@ impl LiquidSdk {
         })
     }
 
-    /// Fetch the current limits for Onchain Send and Receive swaps
+    /// Fetch the current payment limits for [LiquidSdk::pay_onchain] and [LiquidSdk::receive_onchain].
     pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.ensure_is_started().await?;
 
@@ -894,6 +927,13 @@ impl LiquidSdk {
         })
     }
 
+    /// Prepares to pay to a Bitcoin address via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PreparePayOnchainRequest] containing:
+    ///     * `receiver_amount_sat` - the amount in satoshi that will be received
+    ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,
@@ -930,6 +970,22 @@ impl LiquidSdk {
         Ok(res)
     }
 
+    /// Pays to a Bitcoin address via a chain swap.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
+    /// complete in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PayOnchainRequest] containing:
+    ///     * `address` - the Bitcoin address to pay to
+    ///     * `prepare_res` - the [PreparePayOnchainResponse] from calling [LiquidSdk::prepare_pay_onchain]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     pub async fn pay_onchain(
         &self,
         req: &PayOnchainRequest,
@@ -1076,6 +1132,12 @@ impl LiquidSdk {
         }
     }
 
+    /// Prepares to receive a Lightning payment via a reverse submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareReceiveRequest] containing:
+    ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
     pub async fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
@@ -1104,6 +1166,16 @@ impl LiquidSdk {
         })
     }
 
+    /// Receive a Lightning payment via a reverse submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The [PrepareReceiveResponse] from calling [LiquidSdk::prepare_receive_payment]
+    ///
+    /// # Returns
+    ///
+    /// * A [ReceivePaymentResponse] containing:
+    ///     * `invoice` - the bolt11 Lightning invoice that should be paid
     pub async fn receive_payment(
         &self,
         req: &PrepareReceiveResponse,
@@ -1217,6 +1289,12 @@ impl LiquidSdk {
         })
     }
 
+    /// Prepares to receive from a Bitcoin transaction via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareReceiveOnchainRequest] containing:
+    ///     * `payer_amount_sat` - the amount in satoshi that will be paid by the payer
     pub async fn prepare_receive_onchain(
         &self,
         req: &PrepareReceiveOnchainRequest,
@@ -1307,6 +1385,17 @@ impl LiquidSdk {
         Ok(swap)
     }
 
+    /// Receive from a Bitcoin transaction via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The [PrepareReceiveOnchainResponse] from calling [LiquidSdk::prepare_receive_onchain]
+    ///
+    /// # Returns
+    ///
+    /// * A [ReceiveOnchainResponse] containing:
+    ///     * `address` - the Bitcoin address the payer should pay to
+    ///     * `bip21` - the BIP-21 URI scheme to pay to. See <https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki>
     pub async fn receive_onchain(
         &self,
         req: &PrepareReceiveOnchainResponse,
@@ -1327,6 +1416,8 @@ impl LiquidSdk {
         Ok(ReceiveOnchainResponse { address, bip21 })
     }
 
+    /// List all failed chain swaps that need to be refunded.
+    /// They can be refunded by calling [LiquidSdk::prepare_refund] then [LiquidSdk::refund].
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
         Ok(self
             .persister
@@ -1336,6 +1427,14 @@ impl LiquidSdk {
             .collect())
     }
 
+    /// Prepares to refund a failed chain swap by calculating the refund transaction size and absolute fee.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareRefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn prepare_refund(
         &self,
         req: &PrepareRefundRequest,
@@ -1352,6 +1451,14 @@ impl LiquidSdk {
         })
     }
 
+    /// Refund a failed chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
         let refund_tx_id = self
             .chain_swap_state_handler
@@ -1360,6 +1467,8 @@ impl LiquidSdk {
         Ok(RefundResponse { refund_tx_id })
     }
 
+    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] within
+    /// the monitoring period to check if there are any confirmed funds available to refund.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
         self.chain_swap_state_handler
             .rescan_incoming_chain_swaps()
@@ -1367,6 +1476,13 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Prepares to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareBuyBitcoinRequest] containing:
+    ///     * `provider` - the [BuyBitcoinProvider] to use
+    ///     * `amount_sat` - the amount in satoshis to buy from the provider
     pub async fn prepare_buy_bitcoin(
         &self,
         req: &PrepareBuyBitcoinRequest,
@@ -1389,6 +1505,13 @@ impl LiquidSdk {
         })
     }
 
+    /// Generate a URL to a third party provider used to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BuyBitcoinRequest] containing:
+    ///     * `prepare_res` - the [PrepareBuyBitcoinResponse] from calling [LiquidSdk::prepare_buy_bitcoin]
+    ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
         let swap = self
             .create_chain_swap(req.prepare_res.amount_sat, req.prepare_res.fees_sat)
@@ -1494,7 +1617,7 @@ impl LiquidSdk {
         Ok(self.persister.get_payments(req)?)
     }
 
-    /// Empties all Liquid Wallet caches for this network type.
+    /// Empties the Liquid Wallet cache for the [Config::network].
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
         path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
@@ -1506,7 +1629,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Synchronize the DB with mempool and onchain data
+    /// Synchronizes the local state with the mempool and onchain data.
     pub async fn sync(&self) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
@@ -1519,6 +1642,12 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Backup the local state to the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BackupRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     pub fn backup(&self, req: BackupRequest) -> Result<()> {
         let backup_path = req
             .backup_path
@@ -1527,6 +1656,12 @@ impl LiquidSdk {
         self.persister.backup(backup_path)
     }
 
+    /// Restores the local state from the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RestoreRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     pub fn restore(&self, req: RestoreRequest) -> Result<()> {
         let backup_path = req
             .backup_path
@@ -1535,8 +1670,8 @@ impl LiquidSdk {
         self.persister.restore_from_backup(backup_path)
     }
 
-    /// Second step of LNURL-pay. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlPayRequest` payload needed here.
+    /// Second step of LNURL-pay. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlPayRequest] payload needed here.
     ///
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
     /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
@@ -1610,8 +1745,8 @@ impl LiquidSdk {
         }
     }
 
-    /// Second step of LNURL-withdraw. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlWithdrawRequest` payload needed here.
+    /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlWithdrawRequest] payload needed here.
     ///
     /// This call will validate the given `amount_msat` against the parameters
     /// of the LNURL endpoint (`data`). If they match the endpoint requirements, the LNURL withdraw
@@ -1634,8 +1769,8 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Third and last step of LNURL-auth. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlAuthRequestData` payload needed here. The second step is user approval of auth action.
+    /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlAuthRequestData] payload needed here. The second step is user approval of auth action.
     ///
     /// This call will sign `k1` of the LNURL endpoint (`req_data`) on `secp256k1` using `linkingPrivKey` and DER-encodes the signature.
     /// If they match the endpoint requirements, the LNURL auth request is made. A successful result here means the client signature is verified.
@@ -1659,13 +1794,13 @@ impl LiquidSdk {
         Ok(perform_lnurl_auth(linking_keys, req_data).await?)
     }
 
-    /// Fetch live rates of fiat currencies, sorted by name
+    /// Fetch live rates of fiat currencies, sorted by name.
     pub async fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, SdkError> {
         self.fiat_api.fetch_fiat_rates().await.map_err(Into::into)
     }
 
     /// List all supported fiat currencies for which there is a known exchange rate.
-    /// List is sorted by the canonical name of the currency
+    /// List is sorted by the canonical name of the currency.
     pub async fn list_fiat_currencies(&self) -> Result<Vec<FiatCurrency>, SdkError> {
         self.fiat_api
             .list_fiat_currencies()
@@ -1673,7 +1808,7 @@ impl LiquidSdk {
             .map_err(Into::into)
     }
 
-    /// Get the recommended BTC fees based on the configured mempool.space instance
+    /// Get the recommended BTC fees based on the configured mempool.space instance.
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
         Ok(self
             .bitcoin_chain_service
@@ -1683,6 +1818,7 @@ impl LiquidSdk {
             .await?)
     }
 
+    /// Get the full default [Config] for specific [LiquidNetwork].
     pub fn default_config(network: LiquidNetwork) -> Config {
         match network {
             LiquidNetwork::Mainnet => Config::mainnet(),
@@ -1690,12 +1826,14 @@ impl LiquidSdk {
         }
     }
 
+    /// Parses a string into an [InputType]. See [input_parser::parse].
     pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
         parse(input)
             .await
             .map_err(|e| PaymentError::Generic { err: e.to_string() })
     }
 
+    /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
         parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
     }

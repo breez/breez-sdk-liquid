@@ -153,8 +153,8 @@ pub trait EventListener: Send + Sync {
     fn on_event(&self, e: SdkEvent);
 }
 
-/// Event emitted by the SDK. To listen for and react to these events, use an [EventListener] when
-/// initializing the [LiquidSdk].
+/// Event emitted by the SDK. Add an [EventListener] by calling [crate::sdk::LiquidSdk::add_event_listener]
+/// to listen for emitted events.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SdkEvent {
     PaymentFailed { details: Payment },
@@ -166,29 +166,34 @@ pub enum SdkEvent {
     Synced,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::connect].
 #[derive(Debug, Serialize)]
 pub struct ConnectRequest {
     pub mnemonic: String,
     pub config: Config,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
     pub payer_amount_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     pub id: String,
     pub invoice: String,
 }
 
+/// The minimum and maximum in satoshis of a Lightning or onchain payment.
 #[derive(Debug, Serialize)]
 pub struct Limits {
     pub min_sat: u64,
@@ -196,6 +201,7 @@ pub struct Limits {
     pub max_zero_conf_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
 #[derive(Debug, Serialize)]
 pub struct LightningPaymentLimitsResponse {
     /// Amount limits for a Send Payment to be valid
@@ -204,6 +210,7 @@ pub struct LightningPaymentLimitsResponse {
     pub receive: Limits,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
 #[derive(Debug, Serialize)]
 pub struct OnchainPaymentLimitsResponse {
     /// Amount limits for a Send Onchain Payment to be valid
@@ -212,28 +219,33 @@ pub struct OnchainPaymentLimitsResponse {
     pub receive: Limits,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     pub invoice: String,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub invoice: String,
     pub fees_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub receiver_amount_sat: u64,
     pub sat_per_vbyte: Option<u32>,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainResponse {
     pub receiver_amount_sat: u64,
@@ -241,39 +253,45 @@ pub struct PreparePayOnchainResponse {
     pub total_fees_sat: u64,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
 #[derive(Debug, Serialize)]
 pub struct PayOnchainRequest {
     pub address: String,
     pub prepare_res: PreparePayOnchainResponse,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainRequest {
     pub payer_amount_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::receive_onchain].
 #[derive(Debug, Serialize)]
 pub struct ReceiveOnchainResponse {
     pub address: String,
     pub bip21: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundRequest {
-    // The address where the swap funds are locked up
+    /// The address where the swap funds are locked up
     pub swap_address: String,
-    // The address to refund the swap funds to
+    /// The address to refund the swap funds to
     pub refund_address: String,
-    // The fee rate in sat/vB for the refund transaction
+    /// The fee rate in sat/vB for the refund transaction
     pub sat_per_vbyte: u32,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundResponse {
     pub tx_vsize: u32,
@@ -281,21 +299,24 @@ pub struct PrepareRefundResponse {
     pub refund_tx_id: Option<String>,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::refund].
 #[derive(Debug, Serialize)]
 pub struct RefundRequest {
-    // The address where the swap funds are locked up
+    /// The address where the swap funds are locked up
     pub swap_address: String,
-    // The address to refund the swap funds to
+    /// The address to refund the swap funds to
     pub refund_address: String,
-    // The fee rate in sat/vB for the refund transaction
+    /// The fee rate in sat/vB for the refund transaction
     pub sat_per_vbyte: u32,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::refund].
 #[derive(Debug, Serialize)]
 pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
@@ -307,6 +328,7 @@ pub struct GetInfoResponse {
     pub pubkey: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::backup].
 #[derive(Debug, Serialize)]
 pub struct BackupRequest {
     /// Path to the backup.
@@ -316,12 +338,13 @@ pub struct BackupRequest {
     pub backup_path: Option<String>,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::restore].
 #[derive(Debug, Serialize)]
 pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
 
-/// Represents a list payments request.
+/// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
@@ -428,7 +451,7 @@ pub(crate) struct ChainSwap {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
     pub(crate) accept_zero_conf: bool,
-    /// JSON representation of [crate::persist::send::InternalCreateChainResponse]
+    /// JSON representation of [crate::persist::chain::InternalCreateChainResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the server lockup tx is successfully broadcast
     pub(crate) server_lockup_tx_id: Option<String>,
@@ -690,6 +713,7 @@ impl ReceiveSwap {
     }
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::list_refundables].
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct RefundableSwap {
     pub swap_address: String,
@@ -706,6 +730,7 @@ impl From<ChainSwap> for RefundableSwap {
     }
 }
 
+/// The payment state of an individual payment.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
@@ -946,6 +971,7 @@ pub struct Payment {
     /// For a Send swap which was refunded, this is the refund amount
     pub refund_tx_amount_sat: Option<u64>,
 
+    /// If it is a `Send` or `Receive` payment
     pub payment_type: PaymentType,
 
     /// Composite status representing the overall status of the payment.
@@ -1009,6 +1035,7 @@ impl Payment {
     }
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RecommendedFees {
@@ -1019,18 +1046,21 @@ pub struct RecommendedFees {
     pub minimum_fee: u64,
 }
 
+/// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 #[derive(Debug, Clone, Copy, EnumString, PartialEq, Serialize)]
 pub enum BuyBitcoinProvider {
     #[strum(serialize = "moonpay")]
     Moonpay,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 #[derive(Debug, Serialize)]
 pub struct PrepareBuyBitcoinRequest {
     pub provider: BuyBitcoinProvider,
     pub amount_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 #[derive(Clone, Debug, Serialize)]
 pub struct PrepareBuyBitcoinResponse {
     pub provider: BuyBitcoinProvider,
@@ -1038,6 +1068,7 @@ pub struct PrepareBuyBitcoinResponse {
     pub fees_sat: u64,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::buy_bitcoin].
 #[derive(Clone, Debug, Serialize)]
 pub struct BuyBitcoinRequest {
     pub prepare_res: PrepareBuyBitcoinResponse,
