@@ -169,8 +169,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _sat_per_vbyte: f32,
     ) -> Result<(u32, u64), SdkError> {
-        // Ok((2500, 100))
-        unimplemented!()
+        Ok((0, 0))
     }
 
     fn refund_chain_swap_cooperative(
@@ -179,7 +178,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_send_swap_cooperative(
@@ -188,7 +187,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_chain_swap_non_cooperative(
@@ -198,7 +197,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_send_swap_non_cooperative(
@@ -208,7 +207,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn get_send_claim_tx_details(

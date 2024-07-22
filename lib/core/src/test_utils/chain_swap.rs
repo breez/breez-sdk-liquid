@@ -47,6 +47,7 @@ pub(crate) fn new_chain_swap(
     direction: Direction,
     payment_state: Option<PaymentState>,
     accept_zero_conf: bool,
+    user_lockup_tx_id: Option<String>,
 ) -> ChainSwap {
     match direction {
         Direction::Incoming => ChainSwap {
@@ -104,7 +105,7 @@ pub(crate) fn new_chain_swap(
             receiver_amount_sat: 17592,
             claim_fees_sat: 144,
             server_lockup_tx_id: None,
-            user_lockup_tx_id: None,
+            user_lockup_tx_id,
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
@@ -166,7 +167,7 @@ pub(crate) fn new_chain_swap(
             receiver_amount_sat: 20000,
             claim_fees_sat: 2109,
             server_lockup_tx_id: None,
-            user_lockup_tx_id: None,
+            user_lockup_tx_id,
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),

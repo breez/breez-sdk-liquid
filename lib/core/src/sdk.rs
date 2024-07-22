@@ -1920,6 +1920,7 @@ mod tests {
         direction: Direction,
         accepts_zero_conf: bool,
         initial_payment_state: Option<PaymentState>,
+        user_lockup_tx_id: Option<String>,
     }
 
     impl Default for NewSwapArgs {
@@ -1928,6 +1929,7 @@ mod tests {
                 accepts_zero_conf: false,
                 initial_payment_state: None,
                 direction: Direction::Outgoing,
+                user_lockup_tx_id: None,
             }
         }
     }
@@ -1943,7 +1945,11 @@ mod tests {
             self
         }
 
-        #[allow(dead_code)]
+        pub fn set_user_lockup_tx_id(mut self, user_lockup_tx_id: Option<String>) -> Self {
+            self.user_lockup_tx_id = user_lockup_tx_id;
+            self
+        }
+
         pub fn set_initial_payment_state(mut self, payment_state: PaymentState) -> Self {
             self.initial_payment_state = Some(payment_state);
             self
@@ -1966,6 +1972,7 @@ mod tests {
                         $args.direction,
                         $args.initial_payment_state,
                         $args.accepts_zero_conf,
+                        $args.user_lockup_tx_id,
                     );
                     $persister.insert_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
@@ -2158,18 +2165,16 @@ mod tests {
 
         // We spawn a new thread since updates can only be sent when called via async runtimes
         tokio::spawn(async move {
-            // Checks that work for both incoming and outgoing chain swaps
-
-            let unrecoverable_states: [ChainSwapStates; 4] = [
+            let trigger_failed: [ChainSwapStates; 3] = [
                 ChainSwapStates::TransactionFailed,
-                ChainSwapStates::TransactionLockupFailed,
-                ChainSwapStates::TransactionRefunded,
                 ChainSwapStates::SwapExpired,
+                ChainSwapStates::TransactionRefunded,
             ];
 
+            // Checks that work for both incoming and outgoing chain swaps
             for direction in [Direction::Incoming, Direction::Outgoing] {
                 // Verify the swap becomes invalid after final states are received
-                for status in &unrecoverable_states {
+                for status in &trigger_failed {
                     let persisted_swap = trigger_swap_update!(
                         "chain",
                         NewSwapArgs::default().set_direction(direction),
@@ -2179,35 +2184,34 @@ mod tests {
                         None,
                         None
                     );
-                    assert!(
-                        persisted_swap.state == PaymentState::Failed
-                            || persisted_swap.state == PaymentState::Refundable,
-                    );
+                    assert_eq!(persisted_swap.state, PaymentState::Failed);
                 }
 
-                // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
-                // `user_lockup_tx_id` and `accept_zero_conf`
-                for status in [
-                    ChainSwapStates::TransactionMempool,
-                    ChainSwapStates::TransactionConfirmed,
-                ] {
-                    let mock_tx = TEST_LIQUID_TX.clone();
-                    let mock_tx_id = mock_tx.txid().to_string();
+                // Verify that `TransactionLockupFailed` correctly sets the state as
+                // `RefundPending`/`Refundable` or as `Failed` depending on whether or not
+                // `user_lockup_tx_id` is present
+                for user_lockup_tx_id in &[None, Some("user-lockup-tx-id".to_string())] {
                     let persisted_swap = trigger_swap_update!(
                         "chain",
-                        NewSwapArgs::default().set_direction(direction),
+                        NewSwapArgs::default()
+                            .set_direction(direction)
+                            .set_initial_payment_state(PaymentState::Pending)
+                            .set_user_lockup_tx_id(user_lockup_tx_id.clone()),
                         persister,
                         status_stream,
-                        status,
-                        Some(SwapUpdateTxDetails {
-                            id: mock_tx_id.clone(),
-                            hex: lwk_wollet::elements::encode::serialize(&mock_tx)
-                                .to_lower_hex_string(),
-                        }), // sets `update.transaction`
-                        Some(true) // sets `update.zero_conf_rejected`
+                        ChainSwapStates::TransactionLockupFailed,
+                        None,
+                        None
                     );
-                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_tx_id));
-                    assert_eq!(persisted_swap.accept_zero_conf, false);
+                    let expected_state = if user_lockup_tx_id.is_some() {
+                        match direction {
+                            Direction::Incoming => PaymentState::Refundable,
+                            Direction::Outgoing => PaymentState::RefundPending,
+                        }
+                    } else {
+                        PaymentState::Failed
+                    };
+                    assert_eq!(persisted_swap.state, expected_state);
                 }
 
                 let (mock_tx_hex, mock_tx_id) = match direction {
@@ -2226,6 +2230,28 @@ mod tests {
                         )
                     }
                 };
+
+                // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
+                // `user_lockup_tx_id` and `accept_zero_conf`
+                for status in [
+                    ChainSwapStates::TransactionMempool,
+                    ChainSwapStates::TransactionConfirmed,
+                ] {
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        NewSwapArgs::default().set_direction(direction),
+                        persister,
+                        status_stream,
+                        status,
+                        Some(SwapUpdateTxDetails {
+                            id: mock_tx_id.clone(),
+                            hex: mock_tx_hex.clone(),
+                        }), // sets `update.transaction`
+                        Some(true) // sets `update.zero_conf_rejected`
+                    );
+                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_tx_id.clone()));
+                    assert_eq!(persisted_swap.accept_zero_conf, false);
+                }
 
                 // Verify that `TransactionServerMempool` correctly:
                 // 1. Sets the payment as `Pending` and creates `server_lockup_tx_id` when

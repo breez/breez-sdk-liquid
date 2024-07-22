@@ -293,18 +293,13 @@ impl ChainSwapStateHandler {
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
-                        match (swap.user_lockup_tx_id.clone(), swap_state) {
-                            (Some(_), _) => {
+                        match swap.user_lockup_tx_id {
+                            Some(_) => {
                                 info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
                                 self.update_swap_info(id, Refundable, None, None, None, None)
                                     .await?;
                             }
-                            (None, ChainSwapStates::TransactionLockupFailed) => {
-                                info!("Chain Swap {id} user lockup tx was broadcast but lockup has failed. Setting the swap to refundable.");
-                                self.update_swap_info(id, Refundable, None, None, None, None)
-                                    .await?;
-                            }
-                            (None, _) => {
+                            None => {
                                 info!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
                                 self.update_swap_info(id, Failed, None, None, None, None)
                                     .await?;
@@ -952,7 +947,8 @@ mod tests {
 
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state), false);
+                let chain_swap =
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
@@ -975,7 +971,8 @@ mod tests {
 
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state), false);
+                let chain_swap =
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
