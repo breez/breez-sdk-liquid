@@ -275,7 +275,6 @@ impl LiquidSdk {
                     }
                     update = updates_stream.recv() => match update {
                         Ok(update) => {
-                            let _ = cloned.sync().await;
                             let id = &update.id;
                             match cloned.persister.fetch_swap_by_id(id) {
                                 Ok(Swap::Send(_)) => match cloned.send_swap_state_handler.on_new_status(&update).await {
