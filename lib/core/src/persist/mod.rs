@@ -192,7 +192,8 @@ impl Persister {
             AND                                  -- Filter out refund txs from Chain Swaps
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
             AND {}
-            ORDER BY ptx.timestamp DESC
+            ORDER BY                             -- Order by tx timestamp or swap creation time
+                COALESCE(ptx.timestamp, rs.created_at, ss.created_at, cs.created_at) DESC
             LIMIT {}
             OFFSET {}
             ",
