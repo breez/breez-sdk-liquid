@@ -551,6 +551,36 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun registerWebhook(
+        webhookUrl: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().registerWebhook(webhookUrl)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun unregisterWebhook(
+        webhookUrl: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().unregisterWebhook(webhookUrl)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun fetchFiatRates(promise: Promise) {
         executor.execute {
             try {

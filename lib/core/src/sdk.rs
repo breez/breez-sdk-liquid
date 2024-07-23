@@ -984,6 +984,10 @@ impl LiquidSdk {
                     compressed: true,
                     inner: keypair.public_key(),
                 };
+                let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+                    url,
+                    hash_swap_id: true,
+                });
                 let create_response = self.swapper.create_send_swap(CreateSubmarineRequest {
                     from: "L-BTC".to_string(),
                     to: "BTC".to_string(),
@@ -991,6 +995,7 @@ impl LiquidSdk {
                     refund_public_key,
                     pair_hash: Some(lbtc_pair.hash),
                     referral_id: None,
+                    webhook,
                 })?;
 
                 let swap_id = &create_response.id;
@@ -1185,6 +1190,10 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+            url,
+            hash_swap_id: true,
+        });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "L-BTC".to_string(),
             to: "BTC".to_string(),
@@ -1195,6 +1204,7 @@ impl LiquidSdk {
             server_lock_amount: Some(server_lockup_amount_sat as u32), // TODO update our model
             pair_hash: Some(pair.hash),
             referral_id: None,
+            webhook,
         })?;
 
         let swap_id = &create_response.id;
@@ -1449,6 +1459,10 @@ impl LiquidSdk {
         let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
         let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
 
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+            url,
+            hash_swap_id: true,
+        });
         let v2_req = CreateReverseRequest {
             invoice_amount: payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
@@ -1459,6 +1473,7 @@ impl LiquidSdk {
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
+            webhook,
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
 
@@ -1553,6 +1568,10 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+            url,
+            hash_swap_id: true,
+        });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
@@ -1563,6 +1582,7 @@ impl LiquidSdk {
             server_lock_amount: None,
             pair_hash: Some(pair.hash),
             referral_id: None,
+            webhook,
         })?;
 
         let swap_id = create_response.id.clone();
@@ -2068,6 +2088,31 @@ impl LiquidSdk {
         let linking_keys = linking_key.to_keypair(&Secp256k1::new());
 
         Ok(perform_lnurl_auth(linking_keys, req_data).await?)
+    }
+
+    /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the
+    /// webhook will include the `webhook_url`.
+    ///
+    /// This method should be called every time the application is started and when the `webhook_url` changes.
+    /// For example, if the `webhook_url` contains a push notification token and the token changes after
+    /// the application was started, then this method should be called to register for callbacks at
+    /// the new correct `webhook_url`. To unregister a webhook call [LiquidSdk::unregister_webhook].
+    pub async fn register_webhook(&self, webhook_url: String) -> SdkResult<()> {
+        info!("Registering for webhook notifications");
+        self.persister.set_webhook_url(webhook_url)?;
+        Ok(())
+    }
+
+    /// Unregister webhook callbacks. Each swap already created will continue to use the registered
+    /// `webhook_url` until complete.
+    ///
+    /// This can be called when callbacks are no longer needed or the `webhook_url`
+    /// has changed such that it needs unregistering. For example, the token is valid but the locale changes.
+    /// To register a webhook call [LiquidSdk::register_webhook].
+    pub async fn unregister_webhook(&self) -> SdkResult<()> {
+        info!("Unregistering for webhook notifications");
+        self.persister.remove_webhook_url()?;
+        Ok(())
     }
 
     /// Fetch live rates of fiat currencies, sorted by name.
