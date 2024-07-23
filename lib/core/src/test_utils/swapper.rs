@@ -13,7 +13,7 @@ use boltz_client::{
 use sdk_common::invoice::parse_invoice;
 
 use crate::{
-    error::{PaymentError, SdkError},
+    error::PaymentError,
     model::{ChainSwap, Direction, ReceiveSwap, SendSwap},
     swapper::Swapper,
     test_utils::generate_random_string,
@@ -163,53 +163,6 @@ impl Swapper for MockSwapper {
                 miner_fees: 100,
             },
         }))
-    }
-
-    fn prepare_chain_swap_refund(
-        &self,
-        _swap: &ChainSwap,
-        _output_address: &str,
-        _sat_per_vbyte: f32,
-    ) -> Result<(u32, u64), SdkError> {
-        Ok((0, 0))
-    }
-
-    fn refund_chain_swap_cooperative(
-        &self,
-        _swap: &ChainSwap,
-        _output_address: &str,
-        _broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_send_swap_cooperative(
-        &self,
-        _swap: &SendSwap,
-        _output_address: &str,
-        _broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_chain_swap_non_cooperative(
-        &self,
-        _swap: &ChainSwap,
-        _broadcast_fees_sat: u64,
-        _output_address: &str,
-        _current_height: u32,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_send_swap_non_cooperative(
-        &self,
-        _swap: &SendSwap,
-        _broadcast_fees_sat: u64,
-        _output_address: &str,
-        _current_height: u32,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
     }
 
     fn get_send_claim_tx_details(

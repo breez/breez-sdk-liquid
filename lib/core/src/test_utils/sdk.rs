@@ -7,9 +7,9 @@ use std::sync::Arc;
 use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::{
-    buy::BuyBitcoinService, chain_swap::ChainSwapStateHandler, event::EventManager, model::Config,
-    persist::Persister, receive_swap::ReceiveSwapStateHandler, sdk::LiquidSdk,
-    send_swap::SendSwapStateHandler,
+    buy::BuyBitcoinService, chain_swap::ChainSwapHandler, event::EventManager, model::Config,
+    persist::Persister, receive_swap::ReceiveSwapHandler, sdk::LiquidSdk,
+    send_swap::SendSwapHandler,
 };
 
 use super::{
@@ -52,7 +52,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let onchain_wallet = Arc::new(MockWallet::new());
 
-    let send_swap_state_handler = SendSwapStateHandler::new(
+    let send_swap_handler = SendSwapHandler::new(
         config.clone(),
         onchain_wallet.clone(),
         persister.clone(),
@@ -60,7 +60,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         liquid_chain_service.clone(),
     );
 
-    let receive_swap_state_handler = ReceiveSwapStateHandler::new(
+    let receive_swap_handler = ReceiveSwapHandler::new(
         config.clone(),
         onchain_wallet.clone(),
         persister.clone(),
@@ -68,7 +68,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         liquid_chain_service.clone(),
     );
 
-    let chain_swap_state_handler = Arc::new(ChainSwapStateHandler::new(
+    let chain_swap_handler = Arc::new(ChainSwapHandler::new(
         config.clone(),
         onchain_wallet.clone(),
         persister.clone(),
@@ -98,9 +98,9 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         is_started: RwLock::new(true),
         shutdown_sender,
         shutdown_receiver,
-        send_swap_state_handler,
-        receive_swap_state_handler,
-        chain_swap_state_handler,
+        send_swap_handler,
+        receive_swap_handler,
+        chain_swap_handler,
         buy_bitcoin_service,
     })
 }

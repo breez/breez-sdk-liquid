@@ -6,11 +6,13 @@ use boltz_client::ToHex;
 use log::info;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
-    elements::{pset::serialize::Serialize, Address, BlockHash, Script, Transaction, Txid},
+    elements::{
+        pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, TxOut, Txid,
+    },
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
-use reqwest::Response;
+use reqwest::{Response, StatusCode};
 use serde::Deserialize;
 
 use crate::{
@@ -27,6 +29,9 @@ pub trait LiquidChainService: Send + Sync {
 
     /// Broadcast a transaction
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid>;
+
+    /// Get a single transaction from its raw hash
+    async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>>;
 
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
@@ -47,6 +52,9 @@ pub trait LiquidChainService: Send + Sync {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>>;
+
+    /// Get the tx outpoint associated with a script pubkey
+    async fn get_script_utxos(&self, script: &Script) -> Result<(OutPoint, TxOut)>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -111,6 +119,15 @@ impl LiquidChainService for HybridLiquidChainService {
         }
     }
 
+    async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
+        let url = format!("{}/tx/{}/hex", LIQUID_ESPLORA_URL, txid.to_hex());
+        let response = get_with_retry(&url, 3).await?;
+        Ok(match response.status() {
+            StatusCode::OK => Some(utils::deserialize_tx_hex(&response.text().await?)?),
+            _ => None,
+        })
+    }
+
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         Ok(self.electrum_client.get_transactions(txids)?)
     }
@@ -169,6 +186,31 @@ impl LiquidChainService for HybridLiquidChainService {
             }
         }
         Ok(script_history)
+    }
+
+    async fn get_script_utxos(&self, script: &Script) -> Result<(OutPoint, TxOut)> {
+        let history = self.get_script_history(script).await?;
+        if history.is_empty() {
+            return Err(anyhow!("Transaction history is empty."));
+        }
+
+        let txid = history
+            .last()
+            .ok_or(anyhow!("Expected at least one txid"))?
+            .txid;
+        let tx = self
+            .get_transaction_hex(&txid)
+            .await?
+            .ok_or(anyhow!("Transaction not found"))?;
+
+        let script_pubkey = script.clone();
+        for (vout, output) in tx.clone().output.into_iter().enumerate() {
+            if output.script_pubkey == script_pubkey {
+                let outpoint_0 = OutPoint::new(tx.txid(), vout as u32);
+
+                return Ok((outpoint_0, output));
+            }
+        }
     }
 
     async fn verify_tx(

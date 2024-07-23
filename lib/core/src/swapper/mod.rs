@@ -16,10 +16,9 @@ use boltz_client::swaps::boltz::{
     BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Amount, Bolt11Invoice, BtcSwapTx, Keypair, LBtcSwapTx, LockTime};
+use boltz_client::{Amount, Bolt11Invoice, BtcSwapTx, LBtcSwapTx};
 use boltz_status_stream::BoltzStatusStream;
 use log::{debug, info};
-use lwk_wollet::elements;
 use serde_json::Value;
 use tokio::sync::{broadcast, watch};
 use url::Url;
@@ -28,7 +27,6 @@ use crate::error::{PaymentError, SdkError};
 use crate::model::{
     ChainSwap, Config, Direction, LiquidNetwork, ReceiveSwap, SendSwap, SwapScriptV2, SwapTxV2,
 };
-use crate::utils;
 
 #[async_trait]
 pub trait ReconnectHandler: Send + Sync {
@@ -67,48 +65,6 @@ pub trait Swapper: Send + Sync {
 
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
-
-    /// Prepare the chain swap refund
-    fn prepare_chain_swap_refund(
-        &self,
-        swap: &ChainSwap,
-        output_address: &str,
-        sat_per_vbyte: f32,
-    ) -> Result<(u32, u64), SdkError>;
-
-    /// Refund a cooperatively chain swap  
-    fn refund_chain_swap_cooperative(
-        &self,
-        swap: &ChainSwap,
-        output_address: &str,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError>;
-
-    /// Refund a cooperatively send swap
-    fn refund_send_swap_cooperative(
-        &self,
-        swap: &SendSwap,
-        output_address: &str,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError>;
-
-    /// Refund non-cooperatively chain swap
-    fn refund_chain_swap_non_cooperative(
-        &self,
-        swap: &ChainSwap,
-        broadcast_fees_sat: u64,
-        output_address: &str,
-        current_height: u32,
-    ) -> Result<String, PaymentError>;
-
-    /// Refund non-cooperatively send swap
-    fn refund_send_swap_non_cooperative(
-        &self,
-        swap: &SendSwap,
-        broadcast_fees_sat: u64,
-        output_address: &str,
-        current_height: u32,
-    ) -> Result<String, PaymentError>;
 
     /// Get send swap claim tx details which includes the preimage as a proof of payment.
     /// It is used to validate the preimage before claiming which is the reason why we need to separate
@@ -352,122 +308,6 @@ impl BoltzSwapper {
         )?;
         Ok(claim_tx_id)
     }
-
-    fn refund_swap_cooperative(
-        &self,
-        swap_id: String,
-        swap_script: SwapScriptV2,
-        refund_keypair: &Keypair,
-        refund_address: &str,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        info!("Initiating cooperative refund for Swap {}", &swap_id);
-        let is_cooperative = Some(Cooperative {
-            boltz_api: &self.client,
-            swap_id: swap_id.clone(),
-            pub_nonce: None,
-            partial_sig: None,
-        });
-        let refund_tx_id = match swap_script.clone() {
-            SwapScriptV2::Bitcoin(_) => {
-                let refund_tx = self
-                    .new_refund_tx(swap_id.clone(), swap_script, &refund_address.into())?
-                    .as_bitcoin_tx()?;
-                let signed_tx =
-                    refund_tx.sign_refund(refund_keypair, broadcast_fees_sat, is_cooperative)?;
-                refund_tx
-                    .broadcast(&signed_tx, &self.bitcoin_electrum_config)?
-                    .to_string()
-            }
-            SwapScriptV2::Liquid(_) => {
-                let refund_tx = self
-                    .new_refund_tx(swap_id.clone(), swap_script, &refund_address.into())?
-                    .as_liquid_tx()?;
-                let signed_tx = refund_tx.sign_refund(
-                    refund_keypair,
-                    Amount::from_sat(broadcast_fees_sat),
-                    is_cooperative,
-                )?;
-                // We attempt lowball broadcast when constructing the tx cooperatively
-                let lowball = Some((&self.client, self.config.network.into()));
-                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, lowball)?
-            }
-        };
-        info!(
-            "Successfully broadcast cooperative refund for Swap {}",
-            &swap_id
-        );
-        Ok(refund_tx_id)
-    }
-
-    fn refund_swap_non_cooperative(
-        &self,
-        swap_id: String,
-        swap_script: SwapScriptV2,
-        refund_keypair: &Keypair,
-        broadcast_fees_sat: u64,
-        refund_address: &str,
-        current_height: u32,
-    ) -> Result<String, PaymentError> {
-        let refund_tx_id = match swap_script.clone() {
-            SwapScriptV2::Bitcoin(script) => {
-                let locktime_from_height =
-                    LockTime::from_height(current_height).map_err(|e| PaymentError::Generic {
-                        err: format!("Error getting locktime from height {current_height:?}: {e}",),
-                    })?;
-
-                info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", script.locktime);
-                if !script.locktime.is_implied_by(locktime_from_height) {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
-                            locktime_from_height, script.locktime
-                        )
-                    });
-                }
-
-                let refund_tx = self
-                    .new_refund_tx(swap_id.clone(), swap_script, &refund_address.into())?
-                    .as_bitcoin_tx()?;
-                let signed_tx = refund_tx.sign_refund(refund_keypair, broadcast_fees_sat, None)?;
-                refund_tx
-                    .broadcast(&signed_tx, &self.bitcoin_electrum_config)?
-                    .to_string()
-            }
-            SwapScriptV2::Liquid(script) => {
-                let locktime_from_height = elements::LockTime::from_height(current_height)
-                    .map_err(|e| PaymentError::Generic {
-                        err: format!("Cannot convert current block height to lock time: {e:?}"),
-                    })?;
-
-                info!("locktime info: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}",  script.locktime);
-                if !utils::is_locktime_expired(locktime_from_height, script.locktime) {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "Cannot refund non-cooperatively. Lock time not elapsed yet. Current tip: {:?}. Script lock time: {:?}",
-                            locktime_from_height, script.locktime
-                        )
-                    });
-                }
-
-                let refund_tx = self
-                    .new_refund_tx(swap_id.clone(), swap_script, &refund_address.into())?
-                    .as_liquid_tx()?;
-                let signed_tx = refund_tx.sign_refund(
-                    refund_keypair,
-                    Amount::from_sat(broadcast_fees_sat),
-                    None,
-                )?;
-                // We cannot broadcast lowball when constructing a non-cooperative tx
-                refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config, None)?
-            }
-        };
-        info!(
-            "Successfully broadcast non-cooperative refund for Swap {}",
-            swap_id
-        );
-        Ok(refund_tx_id)
-    }
 }
 
 impl Swapper for BoltzSwapper {
@@ -514,116 +354,6 @@ impl Swapper for BoltzSwapper {
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
         Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
-    }
-
-    /// Prepare the chain swap refund
-    fn prepare_chain_swap_refund(
-        &self,
-        swap: &ChainSwap,
-        output_address: &str,
-        sat_per_vbyte: f32,
-    ) -> Result<(u32, u64), SdkError> {
-        let refund_keypair = swap.get_refund_keypair()?;
-        let preimage = Preimage::from_str(&swap.preimage)?;
-        let swap_script = swap.get_lockup_swap_script()?;
-        let refund_tx_vsize = match swap.direction {
-            Direction::Incoming => {
-                let refund_tx = self
-                    .new_refund_tx(swap.id.clone(), swap_script, &output_address.into())?
-                    .as_bitcoin_tx()?;
-                refund_tx.size(&refund_keypair, &preimage)? as u32
-            }
-            Direction::Outgoing => {
-                let refund_tx = self
-                    .new_refund_tx(swap.id.clone(), swap_script, &output_address.into())?
-                    .as_liquid_tx()?;
-                refund_tx.size(&refund_keypair, &preimage)? as u32
-            }
-        };
-        let refund_tx_fee_sat = (refund_tx_vsize as f32 * sat_per_vbyte).ceil() as u64;
-        Ok((refund_tx_vsize, refund_tx_fee_sat))
-    }
-
-    /// Refund a cooperatively chain swap  
-    fn refund_chain_swap_cooperative(
-        &self,
-        swap: &ChainSwap,
-        output_address: &str,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        let refund_keypair = swap.get_refund_keypair()?;
-        let swap_script = swap.get_lockup_swap_script()?;
-        info!("Initiating cooperative refund for Chain Swap {}", &swap.id);
-        self.refund_swap_cooperative(
-            swap.id.clone(),
-            swap_script,
-            &refund_keypair,
-            output_address,
-            broadcast_fees_sat,
-        )
-    }
-
-    /// Refund a cooperatively send swap
-    fn refund_send_swap_cooperative(
-        &self,
-        swap: &SendSwap,
-        output_address: &str,
-        broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        info!("Initiating cooperative refund for Send Swap {}", &swap.id);
-        let swap_script = SwapScriptV2::Liquid(swap.get_swap_script()?);
-        let refund_keypair = swap.get_refund_keypair()?;
-        self.refund_swap_cooperative(
-            swap.id.clone(),
-            swap_script,
-            &refund_keypair,
-            output_address,
-            broadcast_fees_sat,
-        )
-    }
-
-    /// Refund non-cooperatively chain swap
-    fn refund_chain_swap_non_cooperative(
-        &self,
-        swap: &ChainSwap,
-        broadcast_fees_sat: u64,
-        output_address: &str,
-        current_height: u32,
-    ) -> Result<String, PaymentError> {
-        info!(
-            "Initiating non cooperative refund for Chain Swap {}",
-            &swap.id
-        );
-        let refund_keypair = swap.get_refund_keypair()?;
-        let swap_script = swap.get_lockup_swap_script()?;
-        self.refund_swap_non_cooperative(
-            swap.id.clone(),
-            swap_script,
-            &refund_keypair,
-            broadcast_fees_sat,
-            output_address,
-            current_height,
-        )
-    }
-
-    /// Refund non-cooperatively send swap
-    fn refund_send_swap_non_cooperative(
-        &self,
-        swap: &SendSwap,
-        broadcast_fees_sat: u64,
-        output_address: &str,
-        current_height: u32,
-    ) -> Result<String, PaymentError> {
-        let swap_script = SwapScriptV2::Liquid(swap.get_swap_script()?);
-        let refund_keypair = swap.get_refund_keypair()?;
-        self.refund_swap_non_cooperative(
-            swap.id.clone(),
-            swap_script,
-            &refund_keypair,
-            broadcast_fees_sat,
-            output_address,
-            current_height,
-        )
     }
 
     /// Get claim tx details which includes the preimage as a proof of payment.
