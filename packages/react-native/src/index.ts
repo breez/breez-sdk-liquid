@@ -19,16 +19,16 @@ const BreezSDKLiquid = NativeModules.RNBreezSDKLiquid
 
 const BreezSDKLiquidEmitter = new NativeEventEmitter(BreezSDKLiquid)
 
-export type AesSuccessActionDataDecrypted = {
+export interface AesSuccessActionDataDecrypted {
     description: string
     plaintext: string
 }
 
-export type BackupRequest = {
+export interface BackupRequest {
     backupPath?: string
 }
 
-export type BitcoinAddressData = {
+export interface BitcoinAddressData {
     address: string
     network: Network
     amountSat?: number
@@ -52,12 +52,12 @@ export interface Config {
     zeroConfMaxAmountSat?: number
 }
 
-export type ConnectRequest = {
+export interface ConnectRequest {
     config: Config
     mnemonic: string
 }
 
-export type CurrencyInfo = {
+export interface CurrencyInfo {
     name: string
     fractionSize: number
     spacing?: number
@@ -67,19 +67,19 @@ export type CurrencyInfo = {
     localeOverrides: LocaleOverrides[]
 }
 
-export type FiatCurrency = {
+export interface FiatCurrency {
     id: string
     info: CurrencyInfo
 }
 
-export type GetInfoResponse = {
+export interface GetInfoResponse {
     balanceSat: number
     pendingSendSat: number
     pendingReceiveSat: number
     pubkey: string
 }
 
-export type LnInvoice = {
+export interface LnInvoice {
     bolt11: string
     network: Network
     payeePubkey: string
@@ -94,18 +94,18 @@ export type LnInvoice = {
     minFinalCltvExpiryDelta: number
 }
 
-export type LightningPaymentLimitsResponse = {
+export interface LightningPaymentLimitsResponse {
     send: Limits
     receive: Limits
 }
 
-export type Limits = {
+export interface Limits {
     minSat: number
     maxSat: number
     maxZeroConfSat: number
 }
 
-export type ListPaymentsRequest = {
+export interface ListPaymentsRequest {
     filters?: PaymentType[]
     fromTimestamp?: number
     toTimestamp?: number
@@ -113,23 +113,23 @@ export type ListPaymentsRequest = {
     limit?: number
 }
 
-export type LnUrlAuthRequestData = {
+export interface LnUrlAuthRequestData {
     k1: string
     domain: string
     url: string
     action?: string
 }
 
-export type LnUrlErrorData = {
+export interface LnUrlErrorData {
     reason: string
 }
 
-export type LnUrlPayErrorData = {
+export interface LnUrlPayErrorData {
     paymentHash: string
     reason: string
 }
 
-export type LnUrlPayRequest = {
+export interface LnUrlPayRequest {
     data: LnUrlPayRequestData
     amountMsat: number
     comment?: string
@@ -137,7 +137,7 @@ export type LnUrlPayRequest = {
     validateSuccessActionUrl?: boolean
 }
 
-export type LnUrlPayRequestData = {
+export interface LnUrlPayRequestData {
     callback: string
     minSendable: number
     maxSendable: number
@@ -149,18 +149,18 @@ export type LnUrlPayRequestData = {
     lnAddress?: string
 }
 
-export type LnUrlPaySuccessData = {
+export interface LnUrlPaySuccessData {
     successAction?: SuccessActionProcessed
     payment: Payment
 }
 
-export type LnUrlWithdrawRequest = {
+export interface LnUrlWithdrawRequest {
     data: LnUrlWithdrawRequestData
     amountMsat: number
     description?: string
 }
 
-export type LnUrlWithdrawRequestData = {
+export interface LnUrlWithdrawRequestData {
     callback: string
     k1: string
     defaultDescription: string
@@ -168,41 +168,41 @@ export type LnUrlWithdrawRequestData = {
     maxWithdrawable: number
 }
 
-export type LnUrlWithdrawSuccessData = {
+export interface LnUrlWithdrawSuccessData {
     invoice: LnInvoice
 }
 
-export type LocaleOverrides = {
+export interface LocaleOverrides {
     locale: string
     spacing?: number
     symbol: SymbolType
 }
 
-export type LocalizedName = {
+export interface LocalizedName {
     locale: string
     name: string
 }
 
-export type LogEntry = {
+export interface LogEntry {
     line: string
     level: string
 }
 
-export type MessageSuccessActionData = {
+export interface MessageSuccessActionData {
     message: string
 }
 
-export type OnchainPaymentLimitsResponse = {
+export interface OnchainPaymentLimitsResponse {
     send: Limits
     receive: Limits
 }
 
-export type PayOnchainRequest = {
+export interface PayOnchainRequest {
     address: string
     prepareRes: PreparePayOnchainResponse
 }
 
-export type Payment = {
+export interface Payment {
     timestamp: number
     amountSat: number
     feesSat: number
@@ -232,67 +232,67 @@ export interface PreparePayOnchainRequest {
     satPerVbyte?: number
 }
 
-export type PreparePayOnchainResponse = {
+export interface PreparePayOnchainResponse {
     receiverAmountSat: number
     claimFeesSat: number
     totalFeesSat: number
 }
 
-export type PrepareReceiveOnchainRequest = {
+export interface PrepareReceiveOnchainRequest {
     payerAmountSat: number
 }
 
-export type PrepareReceiveOnchainResponse = {
-    payerAmountSat: number
-    feesSat: number
-}
-
-export type PrepareReceiveRequest = {
-    payerAmountSat: number
-}
-
-export type PrepareReceiveResponse = {
+export interface PrepareReceiveOnchainResponse {
     payerAmountSat: number
     feesSat: number
 }
 
-export type PrepareRefundRequest = {
+export interface PrepareReceiveRequest {
+    payerAmountSat: number
+}
+
+export interface PrepareReceiveResponse {
+    payerAmountSat: number
+    feesSat: number
+}
+
+export interface PrepareRefundRequest {
     swapAddress: string
     refundAddress: string
     satPerVbyte: number
 }
 
-export type PrepareRefundResponse = {
+export interface PrepareRefundResponse {
     txVsize: number
     txFeeSat: number
     refundTxId?: string
 }
 
-export type PrepareSendRequest = {
+export interface PrepareSendRequest {
     invoice: string
 }
 
-export type PrepareSendResponse = {
+export interface PrepareSendResponse {
     invoice: string
     feesSat: number
 }
 
-export type Rate = {
+export interface Rate {
     coin: string
     value: number
 }
 
-export type ReceiveOnchainResponse = {
+export interface ReceiveOnchainResponse {
     address: string
     bip21: string
 }
 
-export type ReceivePaymentResponse = {
+export interface ReceivePaymentResponse {
     id: string
     invoice: string
 }
 
-export type RecommendedFees = {
+export interface RecommendedFees {
     fastestFee: number
     halfHourFee: number
     hourFee: number
@@ -300,31 +300,31 @@ export type RecommendedFees = {
     minimumFee: number
 }
 
-export type RefundRequest = {
+export interface RefundRequest {
     swapAddress: string
     refundAddress: string
     satPerVbyte: number
 }
 
-export type RefundResponse = {
+export interface RefundResponse {
     refundTxId: string
 }
 
-export type RefundableSwap = {
+export interface RefundableSwap {
     swapAddress: string
     timestamp: number
     amountSat: number
 }
 
-export type RestoreRequest = {
+export interface RestoreRequest {
     backupPath?: string
 }
 
-export type RouteHint = {
+export interface RouteHint {
     hops: RouteHintHop[]
 }
 
-export type RouteHintHop = {
+export interface RouteHintHop {
     srcNodeId: string
     shortChannelId: number
     feesBaseMsat: number
@@ -334,18 +334,18 @@ export type RouteHintHop = {
     htlcMaximumMsat?: number
 }
 
-export type SendPaymentResponse = {
+export interface SendPaymentResponse {
     payment: Payment
 }
 
-export type SymbolType = {
+export interface SymbolType {
     grapheme?: string
     template?: string
     rtl?: boolean
     position?: number
 }
 
-export type UrlSuccessActionData = {
+export interface UrlSuccessActionData {
     description: string
     url: string
     matchesCallbackDomain: boolean
@@ -539,7 +539,7 @@ export const connect = async (req: ConnectRequest): Promise<void> => {
 export const addEventListener = async (listener: EventListener): Promise<string> => {
     const response = await BreezSDKLiquid.addEventListener()
     BreezSDKLiquidEmitter.addListener(`event-${response}`, listener)
-    
+
     return response
 }
 
