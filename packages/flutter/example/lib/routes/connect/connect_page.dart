@@ -75,7 +75,7 @@ class _ConnectPageState extends State<ConnectPage> {
     );
   }
 
-  Future<Null> createWallet({String? mnemonic}) async {
+  Future<void> createWallet({String? mnemonic}) async {
     final walletMnemonic = mnemonic ??= generateMnemonic(strength: 128);
     debugPrint("${mnemonic.isEmpty ? "Creating" : "Restoring"} wallet with $walletMnemonic");
     return await initializeWallet(mnemonic: walletMnemonic).then(
@@ -95,7 +95,7 @@ class _ConnectPageState extends State<ConnectPage> {
     );
   }
 
-  Future<BindingLiquidSdk> initializeWallet({
+  Future<void> initializeWallet({
     required String mnemonic,
     LiquidNetwork network = LiquidNetwork.mainnet,
   }) async {
@@ -104,6 +104,6 @@ class _ConnectPageState extends State<ConnectPage> {
       config: config,
       mnemonic: mnemonic,
     );
-    return await widget.liquidSDK.connect(req: req);
+    await widget.liquidSDK.connect(req: req);
   }
 }

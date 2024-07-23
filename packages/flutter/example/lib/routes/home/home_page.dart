@@ -69,7 +69,9 @@ class _HomePageState extends State<HomePage> {
           },
         ),
         drawer: HomePageDrawer(
-            liquidSDK: widget.liquidSDK.instance!, credentialsManager: widget.credentialsManager),
+          liquidSDK: widget.liquidSDK.instance!,
+          credentialsManager: widget.credentialsManager,
+        ),
         floatingActionButton: QrActionButton(liquidSDK: widget.liquidSDK.instance!),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: HomePageBottomAppBar(
