@@ -69,7 +69,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<PrepareReceiveOnchainResponse> prepareReceiveOnchain({required PrepareReceiveOnchainRequest req});
 
-  Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req});
+  Future<PrepareReceivePaymentResponse> prepareReceivePayment({required PrepareReceivePaymentRequest req});
 
   Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req});
 
@@ -77,7 +77,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<ReceiveOnchainResponse> receiveOnchain({required PrepareReceiveOnchainResponse req});
 
-  Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req});
+  Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req});
 
   Future<RecommendedFees> recommendedFees();
 

@@ -9,14 +9,14 @@ use boltz_client::elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce
 use boltz_client::error::Error;
 use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::network::Chain;
-use boltz_client::swaps::boltzv2::{
+use boltz_client::swaps::boltz::{
     self, BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
     CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest, CreateSubmarineResponse,
     ReversePair, SubmarineClaimTxResponse, SubmarinePair, BOLTZ_MAINNET_URL_V2,
     BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Amount, Bolt11Invoice, BtcSwapTxV2, Keypair, LBtcSwapTxV2, LockTime};
+use boltz_client::{Amount, Bolt11Invoice, BtcSwapTx, Keypair, LBtcSwapTx, LockTime};
 use boltz_status_stream::BoltzStatusStream;
 use log::{debug, info};
 use lwk_wollet::elements;
@@ -43,7 +43,7 @@ pub trait SwapperStatusStream: Send + Sync {
         shutdown: watch::Receiver<()>,
     );
     fn track_swap_id(&self, swap_id: &str) -> Result<()>;
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update>;
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::Update>;
 }
 
 pub trait Swapper: Send + Sync {
@@ -222,12 +222,12 @@ impl BoltzSwapper {
         refund_address: &String,
     ) -> Result<SwapTxV2, SdkError> {
         let swap_tx = match swap_script {
-            SwapScriptV2::Bitcoin(swap_script) => SwapTxV2::Bitcoin(BtcSwapTxV2::new_refund(
+            SwapScriptV2::Bitcoin(swap_script) => SwapTxV2::Bitcoin(BtcSwapTx::new_refund(
                 swap_script.clone(),
                 refund_address,
                 &self.bitcoin_electrum_config,
             )?),
-            SwapScriptV2::Liquid(swap_script) => SwapTxV2::Liquid(LBtcSwapTxV2::new_refund(
+            SwapScriptV2::Liquid(swap_script) => SwapTxV2::Liquid(LBtcSwapTx::new_refund(
                 swap_script.clone(),
                 refund_address,
                 &self.liquid_electrum_config,
@@ -293,7 +293,7 @@ impl BoltzSwapper {
     fn claim_outgoing_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
-        let claim_tx_wrapper = BtcSwapTxV2::new_claim(
+        let claim_tx_wrapper = BtcSwapTx::new_claim(
             claim_swap_script,
             swap.claim_address.clone(),
             &self.bitcoin_electrum_config,
@@ -323,7 +323,7 @@ impl BoltzSwapper {
     fn claim_incoming_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
-        let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
+        let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             swap.claim_address.clone(),
             &self.liquid_electrum_config,
@@ -710,7 +710,7 @@ impl Swapper for BoltzSwapper {
     ) -> Result<String, PaymentError> {
         let swap_script = swap.get_swap_script()?;
         let swap_id = &swap.id;
-        let claim_tx_wrapper = LBtcSwapTxV2::new_claim(
+        let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
             &self.liquid_electrum_config,

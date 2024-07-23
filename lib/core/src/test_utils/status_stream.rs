@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::boltzv2;
+use boltz_client::boltz;
 use std::sync::Arc;
 
 use tokio::sync::{broadcast, watch};
@@ -10,17 +10,17 @@ use tokio::sync::{broadcast, watch};
 use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
 pub(crate) struct MockStatusStream {
-    pub update_notifier: broadcast::Sender<boltzv2::Update>,
+    pub update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl MockStatusStream {
     pub(crate) fn new() -> Self {
-        let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(30);
+        let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self { update_notifier }
     }
 
-    pub(crate) async fn send_mock_update(self: Arc<Self>, update: boltzv2::Update) -> Result<()> {
+    pub(crate) async fn send_mock_update(self: Arc<Self>, update: boltz::Update) -> Result<()> {
         tokio::spawn(async move {
             self.update_notifier.send(update).unwrap();
         })
@@ -42,7 +42,7 @@ impl SwapperStatusStream for MockStatusStream {
         Ok(())
     }
 
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::Update> {
         self.update_notifier.subscribe()
     }
 }

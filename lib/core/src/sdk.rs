@@ -4,7 +4,7 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice};
+use boltz_client::{swaps::boltz::*, util::secrets::Preimage, Bolt11Invoice};
 use boltz_client::{LockTime, ToHex};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -1135,12 +1135,12 @@ impl LiquidSdk {
     ///
     /// # Arguments
     ///
-    /// * `req` - the [PrepareReceiveRequest] containing:
+    /// * `req` - the [PrepareReceivePaymentRequest] containing:
     ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
     pub async fn prepare_receive_payment(
         &self,
-        req: &PrepareReceiveRequest,
-    ) -> Result<PrepareReceiveResponse, PaymentError> {
+        req: &PrepareReceivePaymentRequest,
+    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
         let reverse_pair = self
             .swapper
@@ -1159,7 +1159,7 @@ impl LiquidSdk {
 
         debug!("Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
-        Ok(PrepareReceiveResponse {
+        Ok(PrepareReceivePaymentResponse {
             payer_amount_sat,
             fees_sat,
         })
@@ -1169,7 +1169,9 @@ impl LiquidSdk {
     ///
     /// # Arguments
     ///
-    /// * `req` - The [PrepareReceiveResponse] from calling [LiquidSdk::prepare_receive_payment]
+    /// * `req` - the [ReceivePaymentRequest] containing:
+    ///     * `description` - the optional payment description
+    ///     * `prepare_res` - the [PrepareReceivePaymentResponse] from calling [LiquidSdk::prepare_receive_payment]
     ///
     /// # Returns
     ///
@@ -1177,18 +1179,18 @@ impl LiquidSdk {
     ///     * `invoice` - the bolt11 Lightning invoice that should be paid
     pub async fn receive_payment(
         &self,
-        req: &PrepareReceiveResponse,
+        req: &ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.payer_amount_sat;
-        let fees_sat = req.fees_sat;
+        let payer_amount_sat = req.prepare_res.payer_amount_sat;
+        let fees_sat = req.prepare_res.fees_sat;
 
         let reverse_pair = self
             .swapper
             .get_reverse_swap_pairs()?
             .ok_or(PaymentError::PairsNotFound)?;
-        let new_fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
+        let new_fees_sat = reverse_pair.fees.total(payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
         debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
@@ -1208,11 +1210,12 @@ impl LiquidSdk {
         let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
 
         let v2_req = CreateReverseRequest {
-            invoice_amount: req.payer_amount_sat as u32, // TODO update our model
+            invoice_amount: payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
+            description: req.description.clone(),
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
@@ -1230,7 +1233,7 @@ impl LiquidSdk {
             PaymentError::receive_error("Invoice has incorrect address in MRH")
         );
         // The swap fee savings are passed on to the Sender: MRH amount = invoice amount - fees
-        let expected_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
+        let expected_bip21_amount_sat = payer_amount_sat - fees_sat;
         ensure_sdk!(
             received_bip21_amount_sat == expected_bip21_amount_sat,
             PaymentError::receive_error(&format!(
@@ -1273,7 +1276,7 @@ impl LiquidSdk {
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
                 payer_amount_sat,
-                receiver_amount_sat: payer_amount_sat - req.fees_sat,
+                receiver_amount_sat: payer_amount_sat - fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 created_at: utils::now(),
@@ -1754,14 +1757,19 @@ impl LiquidSdk {
         &self,
         req: LnUrlWithdrawRequest,
     ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
-        let prepare_receive_res = self
+        let prepare_res = self
             .prepare_receive_payment(&{
-                PrepareReceiveRequest {
+                PrepareReceivePaymentRequest {
                     payer_amount_sat: req.amount_msat / 1_000,
                 }
             })
             .await?;
-        let receive_res = self.receive_payment(&prepare_receive_res).await?;
+        let receive_res = self
+            .receive_payment(&ReceivePaymentRequest {
+                prepare_res,
+                description: None,
+            })
+            .await?;
         let invoice = parse_invoice(&receive_res.invoice)?;
 
         let res = validate_lnurl_withdraw(req.data, invoice).await?;
@@ -1897,7 +1905,7 @@ mod tests {
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
-        boltzv2::{self, SwapUpdateTxDetails},
+        boltz::{self, SwapUpdateTxDetails},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
     use lwk_wollet::hashes::hex::DisplayHex;
@@ -1992,7 +2000,7 @@ mod tests {
 
             $status_stream
                 .clone()
-                .send_mock_update(boltzv2::Update {
+                .send_mock_update(boltz::Update {
                     id: swap.id(),
                     status: $status.to_string(),
                     transaction: $transaction,

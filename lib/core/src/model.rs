@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
-use boltz_client::swaps::boltzv2::{
+use boltz_client::swaps::boltz::{
     CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
 };
-use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
+use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -175,15 +175,22 @@ pub struct ConnectRequest {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceiveRequest {
+pub struct PrepareReceivePaymentRequest {
     pub payer_amount_sat: u64,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceiveResponse {
+pub struct PrepareReceivePaymentResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
+#[derive(Debug, Serialize)]
+pub struct ReceivePaymentRequest {
+    pub description: Option<String>,
+    pub prepare_res: PrepareReceivePaymentResponse,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -375,18 +382,18 @@ impl Swap {
 
 #[derive(Clone, Debug)]
 pub(crate) enum SwapScriptV2 {
-    Bitcoin(BtcSwapScriptV2),
-    Liquid(LBtcSwapScriptV2),
+    Bitcoin(BtcSwapScript),
+    Liquid(LBtcSwapScript),
 }
 impl SwapScriptV2 {
-    pub(crate) fn as_bitcoin_script(&self) -> Result<BtcSwapScriptV2> {
+    pub(crate) fn as_bitcoin_script(&self) -> Result<BtcSwapScript> {
         match self {
             SwapScriptV2::Bitcoin(script) => Ok(script.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
 
-    pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScriptV2> {
+    pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScript> {
         match self {
             SwapScriptV2::Liquid(script) => Ok(script.clone()),
             _ => Err(anyhow!("Invalid chain")),
@@ -396,18 +403,18 @@ impl SwapScriptV2 {
 
 #[allow(clippy::large_enum_variant)]
 pub(crate) enum SwapTxV2 {
-    Bitcoin(BtcSwapTxV2),
-    Liquid(LBtcSwapTxV2),
+    Bitcoin(BtcSwapTx),
+    Liquid(LBtcSwapTx),
 }
 impl SwapTxV2 {
-    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTxV2> {
+    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTx> {
         match self {
             SwapTxV2::Bitcoin(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
 
-    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTxV2> {
+    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTx> {
         match self {
             SwapTxV2::Liquid(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
@@ -492,12 +499,12 @@ impl ChainSwap {
         let chain_swap_details = self.get_boltz_create_response()?.claim_details;
         let our_pubkey = self.get_claim_keypair()?.public_key();
         let swap_script = match self.direction {
-            Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScript::chain_from_swap_resp(
                 Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
-            Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScript::chain_from_swap_resp(
                 Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
@@ -510,12 +517,12 @@ impl ChainSwap {
         let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
         let our_pubkey = self.get_refund_keypair()?.public_key();
         let swap_script = match self.direction {
-            Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScript::chain_from_swap_resp(
                 Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
-            Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScript::chain_from_swap_resp(
                 Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
@@ -583,14 +590,16 @@ impl SendSwap {
                 &internal_create_response.claim_public_key,
             )?,
             expected_amount: internal_create_response.expected_amount,
+            referral_id: internal_create_response.referral_id,
             swap_tree: internal_create_response.swap_tree.clone().into(),
+            timeout_block_height: internal_create_response.timeout_block_height,
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
     }
 
-    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
-        LBtcSwapScriptV2::submarine_from_swap_resp(
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
+        LBtcSwapScript::submarine_from_swap_resp(
             &self.get_boltz_create_response()?,
             self.get_refund_keypair()?.public_key().into(),
         )
@@ -671,7 +680,7 @@ impl ReceiveSwap {
         Ok(res)
     }
 
-    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
         let keypair = self.get_claim_keypair()?;
         let create_response =
             self.get_boltz_create_response()
@@ -681,7 +690,7 @@ impl ReceiveSwap {
                         self.id
                     ),
                 })?;
-        LBtcSwapScriptV2::reverse_from_swap_resp(&create_response, keypair.public_key().into())
+        LBtcSwapScript::reverse_from_swap_resp(&create_response, keypair.public_key().into())
             .map_err(|e| PaymentError::Generic {
                 err: format!(
                     "Failed to create swap script for Receive Swap {}: {e:?}",

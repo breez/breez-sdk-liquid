@@ -2,8 +2,8 @@ use std::time::Duration;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use boltz_client::swaps::boltzv2::{self, SwapUpdateTxDetails};
-use boltz_client::swaps::{boltz::ChainSwapStates, boltzv2::CreateChainResponse};
+use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
+use boltz_client::swaps::{boltz::ChainSwapStates, boltz::CreateChainResponse};
 use boltz_client::Secp256k1;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::Transaction;
@@ -84,7 +84,7 @@ impl ChainSwapStateHandler {
     }
 
     /// Handles status updates from Boltz for Chain swaps
-    pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let swap = self
             .persister
@@ -177,11 +177,7 @@ impl ChainSwapStateHandler {
         Ok(())
     }
 
-    async fn on_new_incoming_status(
-        &self,
-        swap: &ChainSwap,
-        update: &boltzv2::Update,
-    ) -> Result<()> {
+    async fn on_new_incoming_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
@@ -320,11 +316,7 @@ impl ChainSwapStateHandler {
         }
     }
 
-    async fn on_new_outgoing_status(
-        &self,
-        swap: &ChainSwap,
-        update: &boltzv2::Update,
-    ) -> Result<()> {
+    async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)

@@ -110,14 +110,14 @@ impl BindingLiquidSdk {
 
     pub fn prepare_receive_payment(
         &self,
-        req: PrepareReceiveRequest,
-    ) -> Result<PrepareReceiveResponse, PaymentError> {
+        req: PrepareReceivePaymentRequest,
+    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
         rt().block_on(self.sdk.prepare_receive_payment(&req))
     }
 
     pub fn receive_payment(
         &self,
-        req: PrepareReceiveResponse,
+        req: ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         rt().block_on(self.sdk.receive_payment(&req))
     }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use boltz_client::swaps::boltzv2::CreateReverseResponse;
+use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 

@@ -134,9 +134,9 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
                     try {
                       setState(() => creatingInvoice = true);
                       int amountSat = int.parse(payerAmountController.text);
-                      PrepareReceiveRequest prepareReceiveReq =
-                          PrepareReceiveRequest(payerAmountSat: BigInt.from(amountSat));
-                      PrepareReceiveResponse req = await widget.liquidSDK.prepareReceivePayment(
+                      PrepareReceivePaymentRequest prepareReceiveReq =
+                          PrepareReceivePaymentRequest(payerAmountSat: BigInt.from(amountSat));
+                      PrepareReceivePaymentResponse req = await widget.liquidSDK.prepareReceivePayment(
                         req: prepareReceiveReq,
                       );
                       setState(() {

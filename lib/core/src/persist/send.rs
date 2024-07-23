@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use boltz_client::swaps::boltzv2::CreateSubmarineResponse;
+use boltz_client::swaps::boltz::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
@@ -243,7 +243,10 @@ pub(crate) struct InternalCreateSubmarineResponse {
     pub(crate) bip21: String,
     pub(crate) claim_public_key: String,
     pub(crate) expected_amount: u64,
+    pub(crate) referral_id: Option<String>,
     pub(crate) swap_tree: InternalSwapTree,
+    #[serde(default)]
+    pub(crate) timeout_block_height: u64,
     pub(crate) blinding_key: Option<String>,
 }
 impl InternalCreateSubmarineResponse {
@@ -264,7 +267,9 @@ impl InternalCreateSubmarineResponse {
             bip21: boltz_create_response.bip21.clone(),
             claim_public_key: boltz_create_response.claim_public_key.to_string(),
             expected_amount: boltz_create_response.expected_amount,
+            referral_id: boltz_create_response.referral_id.clone(),
             swap_tree: boltz_create_response.swap_tree.clone().into(),
+            timeout_block_height: boltz_create_response.timeout_block_height,
             blinding_key: boltz_create_response.blinding_key.clone(),
         };
         Ok(res)

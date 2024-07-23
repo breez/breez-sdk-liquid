@@ -325,11 +325,11 @@ dictionary SendPaymentResponse {
     Payment payment;
 };
 
-dictionary PrepareReceiveRequest {
+dictionary PrepareReceivePaymentRequest {
     u64 payer_amount_sat;
 };
 
-dictionary PrepareReceiveResponse {
+dictionary PrepareReceivePaymentResponse {
     u64 payer_amount_sat;
     u64 fees_sat;
 };
@@ -337,6 +337,11 @@ dictionary PrepareReceiveResponse {
 dictionary ReceivePaymentResponse {
     string id;
     string invoice;
+};
+
+dictionary ReceivePaymentRequest {
+    PrepareReceivePaymentResponse prepare_res;
+    string? description = null;
 };
 
 dictionary Limits {
@@ -543,10 +548,10 @@ interface BindingLiquidSdk {
     SendPaymentResponse send_payment(PrepareSendResponse req);
 
     [Throws=PaymentError]
-    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
+    PrepareReceivePaymentResponse prepare_receive_payment(PrepareReceivePaymentRequest req);
 
     [Throws=PaymentError]
-    ReceivePaymentResponse receive_payment(PrepareReceiveResponse req);
+    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
 
     [Throws=PaymentError]
     LightningPaymentLimitsResponse fetch_lightning_limits();

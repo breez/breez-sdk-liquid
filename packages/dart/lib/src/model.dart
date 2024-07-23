@@ -694,10 +694,10 @@ class PrepareReceiveOnchainResponse {
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
-class PrepareReceiveRequest {
+class PrepareReceivePaymentRequest {
   final BigInt payerAmountSat;
 
-  const PrepareReceiveRequest({
+  const PrepareReceivePaymentRequest({
     required this.payerAmountSat,
   });
 
@@ -707,17 +707,17 @@ class PrepareReceiveRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrepareReceiveRequest &&
+      other is PrepareReceivePaymentRequest &&
           runtimeType == other.runtimeType &&
           payerAmountSat == other.payerAmountSat;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
-class PrepareReceiveResponse {
+class PrepareReceivePaymentResponse {
   final BigInt payerAmountSat;
   final BigInt feesSat;
 
-  const PrepareReceiveResponse({
+  const PrepareReceivePaymentResponse({
     required this.payerAmountSat,
     required this.feesSat,
   });
@@ -728,7 +728,7 @@ class PrepareReceiveResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrepareReceiveResponse &&
+      other is PrepareReceivePaymentResponse &&
           runtimeType == other.runtimeType &&
           payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat;
@@ -848,6 +848,28 @@ class ReceiveOnchainResponse {
           runtimeType == other.runtimeType &&
           address == other.address &&
           bip21 == other.bip21;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
+class ReceivePaymentRequest {
+  final String? description;
+  final PrepareReceivePaymentResponse prepareRes;
+
+  const ReceivePaymentRequest({
+    this.description,
+    required this.prepareRes,
+  });
+
+  @override
+  int get hashCode => description.hashCode ^ prepareRes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ReceivePaymentRequest &&
+          runtimeType == other.runtimeType &&
+          description == other.description &&
+          prepareRes == other.prepareRes;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].

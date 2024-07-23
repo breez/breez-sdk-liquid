@@ -60,6 +60,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
                     "version": 196
                 }
             },
+            "timeout_block_height": 1459611,
             "blinding_key": "1eabe70f75a3c92e1ce1e4108a014a275a4b03415234c87d8670e29d70059326"
         }"#.to_string(),
         lockup_tx_id: None,
