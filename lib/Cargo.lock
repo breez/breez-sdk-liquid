@@ -614,7 +614,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/dangeross/boltz-rust?branch=savage-breez-latest#108d745dbdb2f8fb957d50dc92b5821562fb917d"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=d666868b5b36fab5ebb4cffc600c64a8017b092b#d666868b5b36fab5ebb4cffc600c64a8017b092b"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",
