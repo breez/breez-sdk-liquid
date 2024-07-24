@@ -13,10 +13,10 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
-use lwk_wollet::elements::{OutPoint, Script, Txid};
+use lwk_wollet::elements::{OutPoint, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork, WalletTx};
+use lwk_wollet::{elements, ElementsNetwork, History, WalletTx};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
@@ -1447,6 +1447,24 @@ impl LiquidSdk {
 
         let con = self.persister.get_connection()?;
         let t0 = Instant::now();
+
+        // Find incoming txs that have a single input and a single output, indexed by input
+        let possible_claim_or_refund_txs_by_input: HashMap<OutPoint, Txid> = tx_map
+            .iter()
+            .filter(|(_, tx)| tx.balance.values().sum::<i64>() > 0)
+            .filter(|(_, tx)| tx.tx.output.len() == 2) // Separate vout for fee
+            .filter(|(_, tx)| tx.tx.input.len() == 1)
+            .filter_map(|(_, wallet_tx)| {
+                wallet_tx
+                    .tx
+                    .input
+                    .first()
+                    .map(|input| (input.previous_output, wallet_tx.txid))
+            })
+            .collect();
+        let possible_claim_or_refund_txs_found = possible_claim_or_refund_txs_by_input.len();
+        info!("Found {possible_claim_or_refund_txs_found} possible claim or refund txs from onchain data");
+
         // Send Swap scripts by swap ID
         let send_swap_immutable_db: HashMap<String, LBtcSwapScriptV2> = self
             .persister
@@ -1463,8 +1481,43 @@ impl LiquidSdk {
         let send_swap_immutable_db_size = send_swap_immutable_db.len();
         info!("Send Swap immutable DB: {send_swap_immutable_db_size} rows");
 
-        self.recover_send_swap_tx_ids(tx_map, send_swap_immutable_db)
-            .await?;
+        self.recover_send_swap_tx_ids(
+            &tx_map,
+            send_swap_immutable_db,
+            &possible_claim_or_refund_txs_by_input,
+        )
+        .await?;
+
+        let receive_swap_immutable_db: HashMap<String, (CreateReverseResponse, LBtcSwapScriptV2)> =
+            self.persister
+                .list_receive_swaps(&con, vec![])?
+                .iter()
+                .filter_map(|swap| {
+                    let create_response = swap.get_boltz_create_response();
+                    let swap_script = swap.get_swap_script();
+                    let swap_id = &swap.id;
+
+                    match (create_response, swap_script) {
+                        (Ok(response), Ok(script)) => Some((swap.id.clone(), (response, script))),
+                        (Err(e), _) => {
+                            error!("Failed to deserialize Create Response for Receive Swap {swap_id}: {e}");
+                            None
+                        }
+                        (_, Err(e)) => {
+                            error!("Failed to get swap script for Receive Swap {swap_id}: {e}");
+                            None
+                        }
+                    }
+                })
+                .collect();
+        let receive_swap_immutable_db_size = receive_swap_immutable_db.len();
+        info!("Receive Swap immutable DB: {receive_swap_immutable_db_size} rows");
+
+        self.recover_receive_swap_tx_ids(
+            receive_swap_immutable_db,
+            &possible_claim_or_refund_txs_by_input,
+        )
+        .await?;
 
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Finished recovering swap tx IDs from onchain data (t = {duration_ms} ms)");
@@ -1475,47 +1528,34 @@ impl LiquidSdk {
     /// Reconstruct Send Swap tx IDs from the onchain data and the immutable DB data
     async fn recover_send_swap_tx_ids(
         &self,
-        tx_map: HashMap<String, WalletTx>,
+        tx_map: &HashMap<String, WalletTx>,
         send_swap_immutable_db_data: HashMap<String, LBtcSwapScriptV2>,
+        possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
     ) -> Result<()> {
-        // Find incoming txs that have a single input and a single output, indexed by input
-        let possible_claim_or_refund_txs_by_input: HashMap<OutPoint, Txid> = tx_map
-            .iter()
-            .filter(|(_, tx)| tx.balance.values().sum::<i64>() > 0)
-            .filter(|(_, tx)| tx.tx.output.len() == 2) // Refund tx + fee
-            .filter(|(_, tx)| tx.tx.input.len() == 1)
-            .filter_map(|(_, wallet_tx)| {
-                wallet_tx
-                    .tx
-                    .input
-                    .first()
-                    .map(|input| (input.previous_output, wallet_tx.txid))
-            })
-            .collect();
-        let possible_claim_or_refund_txs_found = possible_claim_or_refund_txs_by_input.len();
-        info!("Found {possible_claim_or_refund_txs_found} possible claim or refund txs from onchain data");
-
-        // Swap ID by swap script
-        let swap_ids_by_lockup_script: HashMap<Script, String> = send_swap_immutable_db_data
-            .iter()
-            .filter_map(|(swap_id, swap_script)| {
-                swap_script
-                    .funding_addrs
-                    .clone()
-                    .map(|address| (address.script_pubkey(), swap_id.clone()))
-            })
-            .collect();
-
-        // Find lockup tx IDs
-        let lockup_txs_by_swap_id: HashMap<String, WalletTx> = tx_map
+        let outgoing_tx_map: HashMap<&String, &WalletTx> = tx_map
             .iter()
             .filter(|(_, tx)| tx.balance.values().sum::<i64>() < 0) // Outgoing
-            .filter_map(|(_, tx)| {
-                tx.tx
-                    .output
-                    .iter()
-                    .find_map(|out| swap_ids_by_lockup_script.get(&out.script_pubkey))
-                    .map(|swap_id| (swap_id.clone(), tx.clone()))
+            .collect();
+
+        let lockup_txs_by_swap_id: HashMap<String, WalletTx> = send_swap_immutable_db_data
+            .iter()
+            .filter_map(|(swap_id, script)| {
+                let script_pk = script.funding_addrs.clone().map(|a| a.script_pubkey());
+                let maybe_lockup_tx = outgoing_tx_map.iter().find_map(|(_, &tx)| {
+                    tx.tx
+                        .output
+                        .iter()
+                        .find(|out| Some(out.script_pubkey.clone()) == script_pk)
+                        .map(|_| tx)
+                });
+
+                match maybe_lockup_tx {
+                    Some(lockup_tx) => Some((swap_id.clone(), lockup_tx.clone())),
+                    None => {
+                        error!("No lockup tx found when recovering data for Send Swap {swap_id}");
+                        None
+                    }
+                }
             })
             .collect();
         let lockup_txs_found = lockup_txs_by_swap_id.len();
@@ -1551,6 +1591,45 @@ impl LiquidSdk {
         // self.send_swap_state_handler
         //     .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
         //     .await?;
+
+        Ok(())
+    }
+
+    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable DB data
+    async fn recover_receive_swap_tx_ids(
+        &self,
+        receive_swap_immutable_db_data: HashMap<String, (CreateReverseResponse, LBtcSwapScriptV2)>,
+        possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
+    ) -> Result<()> {
+        // TODO Group in 1 call
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let mut script_histories_by_swap_id: HashMap<String, Vec<History>> = HashMap::new();
+        for (swap_id, (_create_res, swap_script)) in receive_swap_immutable_db_data {
+            if let Some(swap_script_pk) = swap_script.funding_addrs.map(|a| a.script_pubkey()) {
+                let history: Vec<_> = liquid_chain_service
+                    .get_script_history(&swap_script_pk)
+                    .await?;
+                script_histories_by_swap_id.insert(swap_id, history);
+            }
+        }
+
+        let mut lockup_claim_tx_ids_by_swap_id: HashMap<&str, (Txid, Txid)> = HashMap::new();
+        for (incoming_tx_prev_out, incoming_tx_id) in possible_claim_or_refund_txs_by_input {
+            let possible_lockup_tx_id = incoming_tx_prev_out.txid;
+            let possible_claim_tx_id = *incoming_tx_id;
+
+            for (swap_id, history) in &script_histories_by_swap_id {
+                let contains_lockup = history.iter().any(|tx| tx.txid == possible_lockup_tx_id);
+                let contains_claim = history.iter().any(|tx| tx.txid == possible_claim_tx_id);
+
+                if contains_lockup && contains_claim {
+                    lockup_claim_tx_ids_by_swap_id
+                        .insert(swap_id, (possible_lockup_tx_id, possible_claim_tx_id));
+                }
+            }
+        }
+        let lockup_claim_txs_found = lockup_claim_tx_ids_by_swap_id.len();
+        info!("Found {lockup_claim_txs_found} lockup and claim txs from onchain data");
 
         Ok(())
     }
