@@ -61,8 +61,11 @@ impl LiquidOnchainWallet {
         let descriptor = LiquidOnchainWallet::get_descriptor(&lwk_signer, config.network)?;
         let elements_network: ElementsNetwork = config.network.into();
 
-        let lwk_persister =
-            FsPersister::new(config.working_dir.clone(), elements_network, &descriptor)?;
+        let lwk_persister = FsPersister::new(
+            config.get_wallet_working_dir(&mnemonic)?,
+            elements_network,
+            &descriptor,
+        )?;
         let wollet = Wollet::new(elements_network, lwk_persister, descriptor)?;
         Ok(Self {
             wallet: Arc::new(Mutex::new(wollet)),

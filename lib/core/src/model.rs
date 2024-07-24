@@ -1,3 +1,7 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::path::PathBuf;
+use std::str::FromStr;
+
 use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
 use boltz_client::swaps::boltz::{
@@ -67,6 +71,21 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
         }
+    }
+
+    pub(crate) fn get_wallet_working_dir(&self, mnemonic: &str) -> anyhow::Result<String> {
+        let mut hasher = DefaultHasher::new();
+        let mnemonic = bip39::Mnemonic::from_str(mnemonic)?;
+        mnemonic.hash(&mut hasher);
+        let mnemonic_hash = hasher.finish().to_hex();
+
+        Ok(PathBuf::from(self.working_dir.clone())
+            .join(mnemonic_hash)
+            .to_str()
+            .ok_or(anyhow::anyhow!(
+                "Could not get retrieve current wallet directory"
+            ))?
+            .to_string())
     }
 
     pub fn zero_conf_max_amount_sat(&self) -> u64 {

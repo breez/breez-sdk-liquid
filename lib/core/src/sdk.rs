@@ -98,7 +98,10 @@ impl LiquidSdk {
     ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
-        let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
+        let persister = Arc::new(Persister::new(
+            &config.get_wallet_working_dir(&mnemonic)?,
+            config.network,
+        )?);
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
