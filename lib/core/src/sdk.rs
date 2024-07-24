@@ -16,7 +16,7 @@ use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::elements::{OutPoint, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork, History, WalletTx};
+use lwk_wollet::{elements, ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
@@ -1601,30 +1601,36 @@ impl LiquidSdk {
         receive_swap_immutable_db_data: HashMap<String, (CreateReverseResponse, LBtcSwapScriptV2)>,
         possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
     ) -> Result<()> {
-        // TODO Group in 1 call
-        let liquid_chain_service = self.liquid_chain_service.lock().await;
-        let mut script_histories_by_swap_id: HashMap<String, Vec<History>> = HashMap::new();
-        for (swap_id, (_create_res, swap_script)) in receive_swap_immutable_db_data {
-            if let Some(swap_script_pk) = swap_script.funding_addrs.map(|a| a.script_pubkey()) {
-                let history: Vec<_> = liquid_chain_service
-                    .get_script_history(&swap_script_pk)
-                    .await?;
-                script_histories_by_swap_id.insert(swap_id, history);
-            }
-        }
+        let lockup_tx_ids: Vec<Txid> = possible_claim_or_refund_txs_by_input
+            .iter()
+            .map(|(k, _)| k.txid)
+            .collect();
+        let lockup_txs = self
+            .liquid_chain_service
+            .lock()
+            .await
+            .get_transactions(&lockup_tx_ids)
+            .await?;
 
         let mut lockup_claim_tx_ids_by_swap_id: HashMap<&str, (Txid, Txid)> = HashMap::new();
         for (incoming_tx_prev_out, incoming_tx_id) in possible_claim_or_refund_txs_by_input {
             let possible_lockup_tx_id = incoming_tx_prev_out.txid;
             let possible_claim_tx_id = *incoming_tx_id;
 
-            for (swap_id, history) in &script_histories_by_swap_id {
-                let contains_lockup = history.iter().any(|tx| tx.txid == possible_lockup_tx_id);
-                let contains_claim = history.iter().any(|tx| tx.txid == possible_claim_tx_id);
+            for lockup_tx in &lockup_txs {
+                if lockup_tx.txid() == possible_lockup_tx_id {
+                    for (swap_id, (_, script)) in &receive_swap_immutable_db_data {
+                        let swap_script = script.funding_addrs.clone().map(|a| a.script_pubkey());
+                        let lockup_tx_matches_swap_script = lockup_tx
+                            .output
+                            .iter()
+                            .any(|out| Some(out.script_pubkey.clone()) == swap_script);
 
-                if contains_lockup && contains_claim {
-                    lockup_claim_tx_ids_by_swap_id
-                        .insert(swap_id, (possible_lockup_tx_id, possible_claim_tx_id));
+                        if lockup_tx_matches_swap_script {
+                            lockup_claim_tx_ids_by_swap_id
+                                .insert(swap_id, (possible_lockup_tx_id, possible_claim_tx_id));
+                        }
+                    }
                 }
             }
         }
