@@ -1,6 +1,4 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use boltz_client::network::Chain;
@@ -73,14 +71,16 @@ impl Config {
         }
     }
 
-    pub(crate) fn get_wallet_working_dir(&self, mnemonic: &str) -> anyhow::Result<String> {
-        let mut hasher = DefaultHasher::new();
-        let mnemonic = bip39::Mnemonic::from_str(mnemonic)?;
-        mnemonic.hash(&mut hasher);
-        let mnemonic_hash = hasher.finish().to_hex();
+    pub(crate) fn get_wallet_working_dir(
+        &self,
+        config: &Config,
+        mnemonic: &str,
+    ) -> anyhow::Result<String> {
+        let is_mainnet = config.network == LiquidNetwork::Mainnet;
+        let signer = SwSigner::new(mnemonic, is_mainnet)?;
 
         Ok(PathBuf::from(self.working_dir.clone())
-            .join(mnemonic_hash)
+            .join(signer.xpub().public_key.to_hex())
             .to_str()
             .ok_or(anyhow::anyhow!(
                 "Could not get retrieve current wallet directory"

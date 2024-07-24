@@ -99,7 +99,7 @@ impl LiquidSdk {
         fs::create_dir_all(&config.working_dir)?;
 
         let persister = Arc::new(Persister::new(
-            &config.get_wallet_working_dir(&mnemonic)?,
+            &config.get_wallet_working_dir(&config, &mnemonic)?,
             config.network,
         )?);
         persister.init()?;

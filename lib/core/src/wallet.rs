@@ -62,7 +62,7 @@ impl LiquidOnchainWallet {
         let elements_network: ElementsNetwork = config.network.into();
 
         let lwk_persister = FsPersister::new(
-            config.get_wallet_working_dir(&mnemonic)?,
+            config.get_wallet_working_dir(&config, &mnemonic)?,
             elements_network,
             &descriptor,
         )?;
@@ -74,7 +74,7 @@ impl LiquidOnchainWallet {
         })
     }
 
-    fn get_descriptor(
+    pub(crate) fn get_descriptor(
         signer: &SwSigner,
         network: LiquidNetwork,
     ) -> Result<WolletDescriptor, PaymentError> {
