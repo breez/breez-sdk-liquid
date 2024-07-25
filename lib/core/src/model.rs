@@ -1,11 +1,16 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-use boltz_client::network::Chain;
-use boltz_client::swaps::boltz::{
-    CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+
+use boltz_client::{
+    network::Chain,
+    swaps::boltz::{
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+    },
+    ToHex,
 };
 use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
+use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
