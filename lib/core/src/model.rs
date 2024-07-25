@@ -1,9 +1,16 @@
+use std::path::PathBuf;
+
 use anyhow::{anyhow, Result};
-use boltz_client::network::Chain;
-use boltz_client::swaps::boltz::{
-    CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+
+use boltz_client::{
+    network::Chain,
+    swaps::boltz::{
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+    },
+    ToHex,
 };
 use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
+use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -67,6 +74,16 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
         }
+    }
+
+    pub(crate) fn get_wallet_working_dir(&self, signer: &SwSigner) -> anyhow::Result<String> {
+        Ok(PathBuf::from(self.working_dir.clone())
+            .join(signer.fingerprint().to_hex())
+            .to_str()
+            .ok_or(anyhow::anyhow!(
+                "Could not get retrieve current wallet directory"
+            ))?
+            .to_string())
     }
 
     pub fn zero_conf_max_amount_sat(&self) -> u64 {

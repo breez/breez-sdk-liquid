@@ -19,6 +19,7 @@ use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
+use sdk_common::ensure_sdk;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
@@ -98,7 +99,12 @@ impl LiquidSdk {
     ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
-        let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
+
+        let persister = Arc::new(Persister::new(
+            &config.get_wallet_working_dir(&onchain_wallet.lwk_signer)?,
+            config.network,
+        )?);
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
@@ -115,8 +121,6 @@ impl LiquidSdk {
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
         let send_swap_state_handler = SendSwapStateHandler::new(
             config.clone(),
@@ -1679,6 +1683,13 @@ impl LiquidSdk {
             .backup_path
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
+        ensure_sdk!(
+            backup_path.exists(),
+            SdkError::Generic {
+                err: "Backup file does not exist".to_string()
+            }
+            .into()
+        );
         self.persister.restore_from_backup(backup_path)
     }
 
