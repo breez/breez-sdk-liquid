@@ -136,14 +136,15 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
                       int amountSat = int.parse(payerAmountController.text);
                       PrepareReceivePaymentRequest prepareReceiveReq =
                           PrepareReceivePaymentRequest(payerAmountSat: BigInt.from(amountSat));
-                      PrepareReceivePaymentResponse req = await widget.liquidSDK.prepareReceivePayment(
+                      PrepareReceivePaymentResponse prepareRes = await widget.liquidSDK.prepareReceivePayment(
                         req: prepareReceiveReq,
                       );
                       setState(() {
-                        payerAmountSat = req.payerAmountSat.toInt();
-                        feesSat = req.feesSat.toInt();
+                        payerAmountSat = prepareRes.payerAmountSat.toInt();
+                        feesSat = prepareRes.feesSat.toInt();
                       });
-                      ReceivePaymentResponse resp = await widget.liquidSDK.receivePayment(req: req);
+                      ReceivePaymentRequest receiveReq = ReceivePaymentRequest(prepareRes: prepareRes);
+                      ReceivePaymentResponse resp = await widget.liquidSDK.receivePayment(req: receiveReq);
                       debugPrint(
                         "Created Invoice for $payerAmountSat sats with $feesSat sats fees.\nInvoice:${resp.invoice}",
                       );
