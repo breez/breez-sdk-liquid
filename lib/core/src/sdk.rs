@@ -19,6 +19,7 @@ use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
+use sdk_common::ensure_sdk;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
@@ -1682,6 +1683,13 @@ impl LiquidSdk {
             .backup_path
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
+        ensure_sdk!(
+            backup_path.exists(),
+            SdkError::Generic {
+                err: "Backup file does not exist".to_string()
+            }
+            .into()
+        );
         self.persister.restore_from_backup(backup_path)
     }
 
