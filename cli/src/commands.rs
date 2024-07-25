@@ -48,6 +48,10 @@ pub(crate) enum Command {
     ReceivePayment {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
+
+        /// Optional description for the invoice
+        #[clap(short = 'd', long = "description")]
+        description: Option<String>,
     },
     /// Receive lbtc and send btc onchain through a swap
     ReceiveOnchainPayment {
@@ -195,20 +199,28 @@ pub(crate) async fn handle_command(
     command: Command,
 ) -> Result<String> {
     Ok(match command {
-        Command::ReceivePayment { payer_amount_sat } => {
-            let prepare_response = sdk
-                .prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })
+        Command::ReceivePayment {
+            payer_amount_sat,
+            description,
+        } => {
+            let prepare_res = sdk
+                .prepare_receive_payment(&PrepareReceivePaymentRequest { payer_amount_sat })
                 .await?;
 
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.fees_sat
+                    prepare_res.fees_sat
                 ),
                 "Payment receive halted"
             );
 
-            let response = sdk.receive_payment(&prepare_response).await?;
+            let response = sdk
+                .receive_payment(&ReceivePaymentRequest {
+                    prepare_res,
+                    description,
+                })
+                .await?;
             let invoice = response.invoice.clone();
 
             let mut result = command_result!(response);

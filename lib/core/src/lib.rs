@@ -45,7 +45,7 @@
 //!
 //! // Set the amount you wish the payer to send, which should be within the above limits
 //! let prepare_receive_response = sdk
-//!     .prepare_receive_payment(&PrepareReceiveRequest {
+//!     .prepare_receive_payment(&PrepareReceivePaymentRequest {
 //!         payer_amount_sat: 5_000,
 //!     })
 //!     .await?;

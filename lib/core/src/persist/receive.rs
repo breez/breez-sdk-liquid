@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use boltz_client::swaps::boltzv2::CreateReverseResponse;
+use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +22,7 @@ impl Persister {
                 create_response_json,
                 claim_private_key,
                 invoice,
+                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 created_at,
@@ -29,7 +30,7 @@ impl Persister {
                 claim_tx_id,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             &receive_swap.id,
@@ -37,6 +38,7 @@ impl Persister {
             &receive_swap.create_response_json,
             &receive_swap.claim_private_key,
             &receive_swap.invoice,
+            &receive_swap.description,
             &receive_swap.payer_amount_sat,
             &receive_swap.receiver_amount_sat,
             &receive_swap.created_at,
@@ -63,6 +65,7 @@ impl Persister {
                 rs.create_response_json,
                 rs.claim_private_key,
                 rs.invoice,
+                rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
@@ -102,12 +105,13 @@ impl Persister {
             create_response_json: row.get(2)?,
             claim_private_key: row.get(3)?,
             invoice: row.get(4)?,
-            payer_amount_sat: row.get(5)?,
-            receiver_amount_sat: row.get(6)?,
-            claim_fees_sat: row.get(7)?,
-            claim_tx_id: row.get(8)?,
-            created_at: row.get(9)?,
-            state: row.get(10)?,
+            description: row.get(5)?,
+            payer_amount_sat: row.get(6)?,
+            receiver_amount_sat: row.get(7)?,
+            claim_fees_sat: row.get(8)?,
+            claim_tx_id: row.get(9)?,
+            created_at: row.get(10)?,
+            state: row.get(11)?,
         })
     }
 

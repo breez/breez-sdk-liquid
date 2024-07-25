@@ -41,6 +41,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
     SendSwap {
         id: generate_random_string(4),
         invoice: invoice.to_string(),
+        description: Some("Send to BTC lightning".to_string()),
         preimage: None,
         payer_amount_sat: 1149,
         receiver_amount_sat: 1000,
@@ -60,6 +61,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
                     "version": 196
                 }
             },
+            "timeout_block_height": 1459611,
             "blinding_key": "1eabe70f75a3c92e1ce1e4108a014a275a4b03415234c87d8670e29d70059326"
         }"#.to_string(),
         lockup_tx_id: None,
@@ -74,6 +76,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
     ReceiveSwap {
         id: generate_random_string(4),
         preimage: "49ef4cb865d78519e5b3cf6aae6b409e1b471fe8ddbda744582e23665a2252cf".to_string(),
+        description: Some("Send to L-BTC address".to_string()),
         create_response_json: r#"{
             "swap_tree": {
                 "claim_leaf": {

@@ -208,6 +208,7 @@ export interface Payment {
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    description: string
     txId?: string
     swapId?: string
     preimage?: string
@@ -247,11 +248,11 @@ export interface PrepareReceiveOnchainResponse {
     feesSat: number
 }
 
-export interface PrepareReceiveRequest {
+export interface PrepareReceivePaymentRequest {
     payerAmountSat: number
 }
 
-export interface PrepareReceiveResponse {
+export interface PrepareReceivePaymentResponse {
     payerAmountSat: number
     feesSat: number
 }
@@ -285,6 +286,11 @@ export interface Rate {
 export interface ReceiveOnchainResponse {
     address: string
     bip21: string
+}
+
+export interface ReceivePaymentRequest {
+    prepareRes: PrepareReceivePaymentResponse
+    description?: string
 }
 
 export interface ReceivePaymentResponse {
@@ -588,12 +594,12 @@ export const sendPayment = async (req: PrepareSendResponse): Promise<SendPayment
     return response
 }
 
-export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise<PrepareReceiveResponse> => {
+export const prepareReceivePayment = async (req: PrepareReceivePaymentRequest): Promise<PrepareReceivePaymentResponse> => {
     const response = await BreezSDKLiquid.prepareReceivePayment(req)
     return response
 }
 
-export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
+export const receivePayment = async (req: ReceivePaymentRequest): Promise<ReceivePaymentResponse> => {
     const response = await BreezSDKLiquid.receivePayment(req)
     return response
 }

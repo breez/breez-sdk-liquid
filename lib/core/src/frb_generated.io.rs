@@ -344,18 +344,13 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
         CstDecode::<crate::model::PrepareReceiveOnchainResponse>::cst_decode(*wrap).into()
     }
 }
-impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
+impl CstDecode<crate::model::PrepareReceivePaymentRequest>
+    for *mut wire_cst_prepare_receive_payment_request
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentRequest {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::PrepareReceiveRequest>::cst_decode(*wrap).into()
-    }
-}
-impl CstDecode<crate::model::PrepareReceiveResponse> for *mut wire_cst_prepare_receive_response {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
-        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::PrepareReceiveResponse>::cst_decode(*wrap).into()
+        CstDecode::<crate::model::PrepareReceivePaymentRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::PrepareRefundRequest> for *mut wire_cst_prepare_refund_request {
@@ -377,6 +372,13 @@ impl CstDecode<crate::model::PrepareSendResponse> for *mut wire_cst_prepare_send
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::PrepareSendResponse>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::ReceivePaymentRequest> for *mut wire_cst_receive_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::ReceivePaymentRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::RefundRequest> for *mut wire_cst_refund_request {
@@ -1089,6 +1091,7 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
             fees_sat: self.fees_sat.cst_decode(),
             preimage: self.preimage.cst_decode(),
             bolt11: self.bolt11.cst_decode(),
+            description: self.description.cst_decode(),
             refund_tx_id: self.refund_tx_id.cst_decode(),
             refund_tx_amount_sat: self.refund_tx_amount_sat.cst_decode(),
             payment_type: self.payment_type.cst_decode(),
@@ -1217,18 +1220,22 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
         }
     }
 }
-impl CstDecode<crate::model::PrepareReceiveRequest> for wire_cst_prepare_receive_request {
+impl CstDecode<crate::model::PrepareReceivePaymentRequest>
+    for wire_cst_prepare_receive_payment_request
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
-        crate::model::PrepareReceiveRequest {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentRequest {
+        crate::model::PrepareReceivePaymentRequest {
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
         }
     }
 }
-impl CstDecode<crate::model::PrepareReceiveResponse> for wire_cst_prepare_receive_response {
+impl CstDecode<crate::model::PrepareReceivePaymentResponse>
+    for wire_cst_prepare_receive_payment_response
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
-        crate::model::PrepareReceiveResponse {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentResponse {
+        crate::model::PrepareReceivePaymentResponse {
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
@@ -1286,6 +1293,15 @@ impl CstDecode<crate::model::ReceiveOnchainResponse> for wire_cst_receive_onchai
         crate::model::ReceiveOnchainResponse {
             address: self.address.cst_decode(),
             bip21: self.bip21.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::ReceivePaymentRequest> for wire_cst_receive_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
+        crate::model::ReceivePaymentRequest {
+            description: self.description.cst_decode(),
+            prepare_res: self.prepare_res.cst_decode(),
         }
     }
 }
@@ -2023,6 +2039,7 @@ impl NewWithNullPtr for wire_cst_payment {
             fees_sat: Default::default(),
             preimage: core::ptr::null_mut(),
             bolt11: core::ptr::null_mut(),
+            description: core::ptr::null_mut(),
             refund_tx_id: core::ptr::null_mut(),
             refund_tx_amount_sat: core::ptr::null_mut(),
             payment_type: Default::default(),
@@ -2127,19 +2144,19 @@ impl Default for wire_cst_prepare_receive_onchain_response {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_prepare_receive_request {
+impl NewWithNullPtr for wire_cst_prepare_receive_payment_request {
     fn new_with_null_ptr() -> Self {
         Self {
             payer_amount_sat: Default::default(),
         }
     }
 }
-impl Default for wire_cst_prepare_receive_request {
+impl Default for wire_cst_prepare_receive_payment_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_prepare_receive_response {
+impl NewWithNullPtr for wire_cst_prepare_receive_payment_response {
     fn new_with_null_ptr() -> Self {
         Self {
             payer_amount_sat: Default::default(),
@@ -2147,7 +2164,7 @@ impl NewWithNullPtr for wire_cst_prepare_receive_response {
         }
     }
 }
-impl Default for wire_cst_prepare_receive_response {
+impl Default for wire_cst_prepare_receive_payment_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2227,6 +2244,19 @@ impl NewWithNullPtr for wire_cst_receive_onchain_response {
     }
 }
 impl Default for wire_cst_receive_onchain_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_receive_payment_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            description: core::ptr::null_mut(),
+            prepare_res: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_receive_payment_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2588,7 +2618,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_prepare_receive_request,
+    req: *mut wire_cst_prepare_receive_payment_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment_impl(port_, that, req)
 }
@@ -2624,7 +2654,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_prepare_receive_response,
+    req: *mut wire_cst_receive_payment_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(port_, that, req)
 }
@@ -2949,18 +2979,10 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchai
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
-) -> *mut wire_cst_prepare_receive_request {
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_payment_request(
+) -> *mut wire_cst_prepare_receive_payment_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_prepare_receive_request::new_with_null_ptr(),
-    )
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response(
-) -> *mut wire_cst_prepare_receive_response {
-    flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_prepare_receive_response::new_with_null_ptr(),
+        wire_cst_prepare_receive_payment_request::new_with_null_ptr(),
     )
 }
 
@@ -2985,6 +3007,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 ) -> *mut wire_cst_prepare_send_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_response::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request(
+) -> *mut wire_cst_receive_payment_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_receive_payment_request::new_with_null_ptr(),
     )
 }
 
@@ -3766,6 +3796,7 @@ pub struct wire_cst_payment {
     fees_sat: u64,
     preimage: *mut wire_cst_list_prim_u_8_strict,
     bolt11: *mut wire_cst_list_prim_u_8_strict,
+    description: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_amount_sat: *mut u64,
     payment_type: i32,
@@ -3864,12 +3895,12 @@ pub struct wire_cst_prepare_receive_onchain_response {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_prepare_receive_request {
+pub struct wire_cst_prepare_receive_payment_request {
     payer_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_prepare_receive_response {
+pub struct wire_cst_prepare_receive_payment_response {
     payer_amount_sat: u64,
     fees_sat: u64,
 }
@@ -3909,6 +3940,12 @@ pub struct wire_cst_rate {
 pub struct wire_cst_receive_onchain_response {
     address: *mut wire_cst_list_prim_u_8_strict,
     bip21: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_receive_payment_request {
+    description: *mut wire_cst_list_prim_u_8_strict,
+    prepare_res: wire_cst_prepare_receive_payment_response,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

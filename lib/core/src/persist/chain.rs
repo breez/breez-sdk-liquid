@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use boltz_client::swaps::boltzv2::{ChainSwapDetails, CreateChainResponse};
+use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
 use rusqlite::{named_params, params, Connection, Row};
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +58,7 @@ impl Persister {
         con.execute(
             "UPDATE chain_swaps
             SET
+                description = :description,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_tx_id = :claim_tx_id,
@@ -66,6 +67,7 @@ impl Persister {
                 id = :id",
             named_params! {
                 ":id": &chain_swap.id,
+                ":description": &chain_swap.description,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
@@ -92,6 +94,7 @@ impl Persister {
                 lockup_address,
                 timeout_block_height,
                 preimage,
+                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 accept_zero_conf,
@@ -139,19 +142,20 @@ impl Persister {
             lockup_address: row.get(3)?,
             timeout_block_height: row.get(4)?,
             preimage: row.get(5)?,
-            payer_amount_sat: row.get(6)?,
-            receiver_amount_sat: row.get(7)?,
-            accept_zero_conf: row.get(8)?,
-            create_response_json: row.get(9)?,
-            claim_private_key: row.get(10)?,
-            refund_private_key: row.get(11)?,
-            server_lockup_tx_id: row.get(12)?,
-            user_lockup_tx_id: row.get(13)?,
-            claim_fees_sat: row.get(14)?,
-            claim_tx_id: row.get(15)?,
-            refund_tx_id: row.get(16)?,
-            created_at: row.get(17)?,
-            state: row.get(18)?,
+            description: row.get(6)?,
+            payer_amount_sat: row.get(7)?,
+            receiver_amount_sat: row.get(8)?,
+            accept_zero_conf: row.get(9)?,
+            create_response_json: row.get(10)?,
+            claim_private_key: row.get(11)?,
+            refund_private_key: row.get(12)?,
+            server_lockup_tx_id: row.get(13)?,
+            user_lockup_tx_id: row.get(14)?,
+            claim_fees_sat: row.get(15)?,
+            claim_tx_id: row.get(16)?,
+            refund_tx_id: row.get(17)?,
+            created_at: row.get(18)?,
+            state: row.get(19)?,
         })
     }
 
