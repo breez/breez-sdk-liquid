@@ -454,6 +454,7 @@ pub(crate) struct ChainSwap {
     pub(crate) lockup_address: String,
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
+    pub(crate) description: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
@@ -557,6 +558,7 @@ impl ChainSwap {
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     pub(crate) invoice: String,
+    pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -641,6 +643,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) create_response_json: String,
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
+    pub(crate) description: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -916,6 +919,8 @@ pub struct PaymentSwapData {
 
     pub bolt11: Option<String>,
 
+    pub description: String,
+
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
 
@@ -974,6 +979,9 @@ pub struct Payment {
     /// In the case of a Receive payment, this is the invoice paid by the user
     pub bolt11: Option<String>,
 
+    /// Represents the invoice description
+    pub description: String,
+
     /// For a Send swap which was refunded, this is the refund tx id
     pub refund_tx_id: Option<String>,
 
@@ -1005,6 +1013,7 @@ impl Payment {
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             preimage: swap.preimage,
             bolt11: swap.bolt11,
+            description: swap.description,
             refund_tx_id: swap.refund_tx_id,
             refund_tx_amount_sat: swap.refund_tx_amount_sat,
             payment_type,
@@ -1030,6 +1039,10 @@ impl Payment {
             },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
             bolt11: swap.as_ref().and_then(|s| s.bolt11.clone()),
+            description: swap
+                .as_ref()
+                .map(|s| s.description.clone())
+                .unwrap_or("Liquid transfer".to_string()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,
@@ -1172,5 +1185,20 @@ macro_rules! get_invoice_amount {
             .amount_milli_satoshis()
             .expect("Expecting valid amount")
             / 1000
+    };
+}
+
+#[macro_export]
+macro_rules! get_invoice_description {
+    ($invoice:expr) => {
+        match $invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .expect("Expecting valid invoice")
+            .description()
+        {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        }
     };
 }

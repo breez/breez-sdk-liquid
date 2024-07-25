@@ -1205,6 +1205,7 @@ fun asPayment(payment: ReadableMap): Payment? {
                 "feesSat",
                 "paymentType",
                 "status",
+                "description",
             ),
         )
     ) {
@@ -1215,6 +1216,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     val feesSat = payment.getDouble("feesSat").toULong()
     val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    val description = payment.getString("description")!!
     val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val swapId = if (hasNonNullKey(payment, "swapId")) payment.getString("swapId") else null
     val preimage = if (hasNonNullKey(payment, "preimage")) payment.getString("preimage") else null
@@ -1227,6 +1229,7 @@ fun asPayment(payment: ReadableMap): Payment? {
         feesSat,
         paymentType,
         status,
+        description,
         txId,
         swapId,
         preimage,
@@ -1243,6 +1246,7 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "feesSat" to payment.feesSat,
         "paymentType" to payment.paymentType.name.lowercase(),
         "status" to payment.status.name.lowercase(),
+        "description" to payment.description,
         "txId" to payment.txId,
         "swapId" to payment.swapId,
         "preimage" to payment.preimage,

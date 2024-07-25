@@ -2184,6 +2184,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.preimage = cst_encode_opt_String(apiObj.preimage);
     wireObj.bolt11 = cst_encode_opt_String(apiObj.bolt11);
+    wireObj.description = cst_encode_String(apiObj.description);
     wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
     wireObj.refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
     wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
@@ -4612,6 +4613,8 @@ final class wire_cst_payment extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 

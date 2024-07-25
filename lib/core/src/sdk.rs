@@ -4,7 +4,7 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::{swaps::boltz::*, util::secrets::Preimage, Bolt11Invoice};
+use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use boltz_client::{LockTime, ToHex};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -28,6 +28,7 @@ use url::Url;
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::SdkError;
+use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
@@ -841,11 +842,13 @@ impl LiquidSdk {
                 let swap_id = &create_response.id;
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+                let description = get_invoice_description!(req.invoice);
 
                 let payer_amount_sat = req.fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: req.invoice.clone(),
+                    description,
                     preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
@@ -1054,6 +1057,7 @@ impl LiquidSdk {
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
+            description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
@@ -1268,6 +1272,10 @@ impl LiquidSdk {
             &swap_id,
             &invoice.to_string(),
         )?;
+        let description = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        };
         self.persister
             .insert_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
@@ -1275,6 +1283,7 @@ impl LiquidSdk {
                 create_response_json,
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
+                description,
                 payer_amount_sat,
                 receiver_amount_sat: payer_amount_sat - fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
@@ -1368,6 +1377,7 @@ impl LiquidSdk {
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
+            description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,

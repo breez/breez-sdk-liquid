@@ -1423,6 +1423,9 @@ enum BreezSDKLiquidMapper {
         }
         let status = try asPaymentState(paymentState: statusTmp)
 
+        guard let description = payment["description"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "Payment"))
+        }
         var txId: String?
         if hasNonNilKey(data: payment, key: "txId") {
             guard let txIdTmp = payment["txId"] as? String else {
@@ -1472,6 +1475,7 @@ enum BreezSDKLiquidMapper {
             feesSat: feesSat,
             paymentType: paymentType,
             status: status,
+            description: description,
             txId: txId,
             swapId: swapId,
             preimage: preimage,
@@ -1488,6 +1492,7 @@ enum BreezSDKLiquidMapper {
             "feesSat": payment.feesSat,
             "paymentType": valueOf(paymentType: payment.paymentType),
             "status": valueOf(paymentState: payment.status),
+            "description": payment.description,
             "txId": payment.txId == nil ? nil : payment.txId,
             "swapId": payment.swapId == nil ? nil : payment.swapId,
             "preimage": payment.preimage == nil ? nil : payment.preimage,

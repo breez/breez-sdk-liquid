@@ -208,6 +208,7 @@ export interface Payment {
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    description: string
     txId?: string
     swapId?: string
     preimage?: string

@@ -334,14 +334,14 @@ dictionary PrepareReceivePaymentResponse {
     u64 fees_sat;
 };
 
-dictionary ReceivePaymentResponse {
-    string id;
-    string invoice;
-};
-
 dictionary ReceivePaymentRequest {
     PrepareReceivePaymentResponse prepare_res;
     string? description = null;
+};
+
+dictionary ReceivePaymentResponse {
+    string id;
+    string invoice;
 };
 
 dictionary Limits {
@@ -432,6 +432,7 @@ dictionary Payment {
     u64 fees_sat;
     PaymentType payment_type;
     PaymentState status;
+    string description;
     string? tx_id = null;
     string? swap_id = null;
     string? preimage = null;

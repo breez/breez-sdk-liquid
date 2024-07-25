@@ -192,6 +192,7 @@ typedef struct wire_cst_payment {
   uint64_t fees_sat;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *bolt11;
+  struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
   int32_t payment_type;

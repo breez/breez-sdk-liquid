@@ -19,6 +19,7 @@ impl Persister {
             INSERT INTO send_swaps (
                 id,
                 invoice,
+                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
@@ -28,11 +29,12 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         _ = stmt.execute((
             &send_swap.id,
             &send_swap.invoice,
+            &send_swap.description,
             &send_swap.payer_amount_sat,
             &send_swap.receiver_amount_sat,
             &send_swap.create_response_json,
@@ -81,6 +83,7 @@ impl Persister {
             SELECT
                 id,
                 invoice,
+                description,
                 preimage,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -117,15 +120,16 @@ impl Persister {
         Ok(SendSwap {
             id: row.get(0)?,
             invoice: row.get(1)?,
-            preimage: row.get(2)?,
-            payer_amount_sat: row.get(3)?,
-            receiver_amount_sat: row.get(4)?,
-            create_response_json: row.get(5)?,
-            refund_private_key: row.get(6)?,
-            lockup_tx_id: row.get(7)?,
-            refund_tx_id: row.get(8)?,
-            created_at: row.get(9)?,
-            state: row.get(10)?,
+            description: row.get(2)?,
+            preimage: row.get(3)?,
+            payer_amount_sat: row.get(4)?,
+            receiver_amount_sat: row.get(5)?,
+            create_response_json: row.get(6)?,
+            refund_private_key: row.get(7)?,
+            lockup_tx_id: row.get(8)?,
+            refund_tx_id: row.get(9)?,
+            created_at: row.get(10)?,
+            state: row.get(11)?,
         })
     }
 
