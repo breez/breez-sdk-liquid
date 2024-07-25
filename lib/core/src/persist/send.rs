@@ -10,6 +10,8 @@ use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
 
+use super::hash_str;
+
 impl Persister {
     pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
         let con = self.get_connection()?;
@@ -18,6 +20,7 @@ impl Persister {
             "
             INSERT INTO send_swaps (
                 id,
+                id_hash,
                 invoice,
                 description,
                 payer_amount_sat,
@@ -29,10 +32,12 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
+        let id_hash = hash_str(&send_swap.id);
         _ = stmt.execute((
             &send_swap.id,
+            &id_hash,
             &send_swap.invoice,
             &send_swap.description,
             &send_swap.payer_amount_sat,
@@ -102,7 +107,7 @@ impl Persister {
 
     pub(crate) fn fetch_send_swap_by_id(&self, id: &str) -> Result<Option<SendSwap>> {
         let con: Connection = self.get_connection()?;
-        let query = Self::list_send_swaps_query(vec!["id = ?1".to_string()]);
+        let query = Self::list_send_swaps_query(vec!["id = ?1 or id_hash = ?1".to_string()]);
         let res = con.query_row(&query, [id], Self::sql_row_to_send_swap);
 
         Ok(res.ok())
