@@ -1,6 +1,6 @@
 name: flutter_breez_liquid
 description: Flutter wrapper around Dart bindings for the Breez Liquid SDK
-version: 0.1.4
+version: 0.2.0
 homepage: https://breez.technology
 repository: https://github.com/breez/breez-sdk-liquid-flutter
 publish_to: 'none'
