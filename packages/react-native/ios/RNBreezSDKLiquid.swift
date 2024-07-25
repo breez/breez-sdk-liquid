@@ -443,10 +443,10 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
-    @objc(unregisterWebhook:resolve:reject:)
-    func unregisterWebhook(_ webhookUrl: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(unregisterWebhook:reject:)
+    func unregisterWebhook(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            try getBindingLiquidSdk().unregisterWebhook(webhookUrl: webhookUrl)
+            try getBindingLiquidSdk().unregisterWebhook()
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
