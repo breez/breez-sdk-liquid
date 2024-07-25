@@ -986,7 +986,7 @@ impl LiquidSdk {
                 };
                 let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
                     url,
-                    hash_swap_id: true,
+                    hash_swap_id: Some(true),
                 });
                 let create_response = self.swapper.create_send_swap(CreateSubmarineRequest {
                     from: "L-BTC".to_string(),
@@ -1192,7 +1192,7 @@ impl LiquidSdk {
         };
         let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
-            hash_swap_id: true,
+            hash_swap_id: Some(true),
         });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "L-BTC".to_string(),
@@ -1461,7 +1461,7 @@ impl LiquidSdk {
 
         let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
-            hash_swap_id: true,
+            hash_swap_id: Some(true),
         });
         let v2_req = CreateReverseRequest {
             invoice_amount: payer_amount_sat as u32, // TODO update our model
@@ -1570,7 +1570,7 @@ impl LiquidSdk {
         };
         let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
-            hash_swap_id: true,
+            hash_swap_id: Some(true),
         });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "BTC".to_string(),

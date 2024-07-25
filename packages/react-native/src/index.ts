@@ -744,8 +744,8 @@ export const registerWebhook = async (webhookUrl: string): Promise<void> => {
     await BreezSDKLiquid.registerWebhook(webhookUrl)
 }
 
-export const unregisterWebhook = async (webhookUrl: string): Promise<void> => {
-    await BreezSDKLiquid.unregisterWebhook(webhookUrl)
+export const unregisterWebhook = async (): Promise<void> => {
+    await BreezSDKLiquid.unregisterWebhook()
 }
 
 export const fetchFiatRates = async (): Promise<Rate[]> => {
