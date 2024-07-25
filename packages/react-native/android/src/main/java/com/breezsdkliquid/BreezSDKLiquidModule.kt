@@ -602,13 +602,10 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
-    fun unregisterWebhook(
-        webhookUrl: String,
-        promise: Promise,
-    ) {
+    fun unregisterWebhook(promise: Promise) {
         executor.execute {
             try {
-                getBindingLiquidSdk().unregisterWebhook(webhookUrl)
+                getBindingLiquidSdk().unregisterWebhook()
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
