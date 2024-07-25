@@ -98,8 +98,10 @@ impl LiquidSdk {
     ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
+
         let persister = Arc::new(Persister::new(
-            &config.get_wallet_working_dir(&config, &mnemonic)?,
+            &config.get_wallet_working_dir(&onchain_wallet.lwk_signer)?,
             config.network,
         )?);
         persister.init()?;
@@ -118,8 +120,6 @@ impl LiquidSdk {
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
         let send_swap_state_handler = SendSwapStateHandler::new(
             config.clone(),

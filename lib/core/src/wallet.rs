@@ -50,8 +50,8 @@ pub trait OnchainWallet: Send + Sync {
 
 pub(crate) struct LiquidOnchainWallet {
     wallet: Arc<Mutex<Wollet>>,
-    lwk_signer: SwSigner,
     config: Config,
+    pub(crate) lwk_signer: SwSigner,
 }
 
 impl LiquidOnchainWallet {
@@ -62,7 +62,7 @@ impl LiquidOnchainWallet {
         let elements_network: ElementsNetwork = config.network.into();
 
         let lwk_persister = FsPersister::new(
-            config.get_wallet_working_dir(&config, &mnemonic)?,
+            config.get_wallet_working_dir(&lwk_signer)?,
             elements_network,
             &descriptor,
         )?;
@@ -74,7 +74,7 @@ impl LiquidOnchainWallet {
         })
     }
 
-    pub(crate) fn get_descriptor(
+    fn get_descriptor(
         signer: &SwSigner,
         network: LiquidNetwork,
     ) -> Result<WolletDescriptor, PaymentError> {

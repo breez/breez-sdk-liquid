@@ -71,16 +71,9 @@ impl Config {
         }
     }
 
-    pub(crate) fn get_wallet_working_dir(
-        &self,
-        config: &Config,
-        mnemonic: &str,
-    ) -> anyhow::Result<String> {
-        let is_mainnet = config.network == LiquidNetwork::Mainnet;
-        let signer = SwSigner::new(mnemonic, is_mainnet)?;
-
+    pub(crate) fn get_wallet_working_dir(&self, signer: &SwSigner) -> anyhow::Result<String> {
         Ok(PathBuf::from(self.working_dir.clone())
-            .join(signer.xpub().public_key.to_hex())
+            .join(signer.fingerprint().to_hex())
             .to_str()
             .ok_or(anyhow::anyhow!(
                 "Could not get retrieve current wallet directory"
