@@ -9,12 +9,14 @@ use std::collections::HashSet;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
-use crate::model::{LiquidNetwork::*, *};
+use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use migrations::current_migrations;
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
+
+const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
@@ -46,11 +48,9 @@ impl Persister {
     }
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
-        let db_file = match self.network {
-            Mainnet => "storage.sql",
-            Testnet => "storage-testnet.sql",
-        };
-        Ok(Connection::open(self.main_db_dir.join(db_file))?)
+        Ok(Connection::open(
+            self.main_db_dir.join(DEFAULT_DB_FILENAME),
+        )?)
     }
 
     pub fn init(&self) -> Result<()> {
