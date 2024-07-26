@@ -687,12 +687,8 @@ impl LiquidSdk {
 
         let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
             Some((lbtc_address, _)) => {
-                self.estimate_onchain_tx_fee(
-                    receiver_amount_sat,
-                    &lbtc_address,
-                    self.config.lowball_fee_rate_msat_per_vbyte(),
-                )
-                .await?
+                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address, None)
+                    .await?
             }
             None => {
                 let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
