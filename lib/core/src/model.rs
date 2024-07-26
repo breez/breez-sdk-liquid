@@ -78,11 +78,11 @@ impl Config {
 
     pub(crate) fn get_wallet_working_dir(&self, signer: &SwSigner) -> anyhow::Result<String> {
         Ok(PathBuf::from(self.working_dir.clone())
-            .join(signer.fingerprint().to_hex())
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",
                 LiquidNetwork::Testnet => "testnet",
             })
+            .join(signer.fingerprint().to_hex())
             .to_str()
             .ok_or(anyhow::anyhow!(
                 "Could not get retrieve current wallet directory"
