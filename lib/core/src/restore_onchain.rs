@@ -82,6 +82,20 @@ pub(crate) mod onchain {
     use crate::restore_onchain::immutable::ImmutableDb;
     use crate::sdk::LiquidSdk;
 
+    pub(crate) struct RecoveredOnchainDataSend {
+        lockup_tx_ids: HashMap<String, Txid>,
+        refund_tx_ids: HashMap<String, Txid>,
+    }
+
+    pub(crate) struct RecoveredOnchainDataReceive {
+        lockup_claim_tx_ids: HashMap<String, (Txid, Txid)>,
+    }
+
+    pub(crate) struct RecoveredOnchainData {
+        send: RecoveredOnchainDataSend,
+        receive: RecoveredOnchainDataReceive,
+    }
+
     impl LiquidSdk {
         pub(crate) async fn recover_from_onchain(
             &self,
@@ -90,7 +104,7 @@ pub(crate) mod onchain {
             // TODO Fetch immutable DB data
             let immutable_db = self.get_immutable_db_data().await?;
 
-            self.get_onchain_data(tx_map, immutable_db).await?;
+            let _recovered = self.get_onchain_data(tx_map, immutable_db).await?;
 
             // TODO Persist updated swaps
 
@@ -100,7 +114,7 @@ pub(crate) mod onchain {
             &self,
             tx_map: HashMap<Txid, WalletTx>,
             immutable_db: ImmutableDb,
-        ) -> Result<()> {
+        ) -> Result<RecoveredOnchainData> {
             // Find incoming txs that have a single input and a single output, indexed by input
             let possible_claim_or_refund_txs_by_input: HashMap<OutPoint, Txid> = tx_map
                 .iter()
@@ -118,20 +132,24 @@ pub(crate) mod onchain {
             let possible_claim_or_refund_txs_found = possible_claim_or_refund_txs_by_input.len();
             info!("Found {possible_claim_or_refund_txs_found} possible claim or refund txs from onchain data");
 
-            self.recover_send_swap_tx_ids(
-                &tx_map,
-                &immutable_db.send_db,
-                &possible_claim_or_refund_txs_by_input,
-            )
-            .await?;
+            let recovered_send_data = self
+                .recover_send_swap_tx_ids(
+                    &tx_map,
+                    &immutable_db.send_db,
+                    &possible_claim_or_refund_txs_by_input,
+                )
+                .await?;
+            let recovered_receive_data = self
+                .recover_receive_swap_tx_ids(
+                    &immutable_db.receive_db,
+                    &possible_claim_or_refund_txs_by_input,
+                )
+                .await?;
 
-            self.recover_receive_swap_tx_ids(
-                &immutable_db.receive_db,
-                &possible_claim_or_refund_txs_by_input,
-            )
-            .await?;
-
-            Ok(())
+            Ok(RecoveredOnchainData {
+                send: recovered_send_data,
+                receive: recovered_receive_data,
+            })
         }
 
         /// Reconstruct Send Swap tx IDs from the onchain data and the immutable DB data
@@ -140,7 +158,7 @@ pub(crate) mod onchain {
             tx_map: &HashMap<Txid, WalletTx>,
             send_swap_immutable_db_data: &HashMap<String, LBtcSwapScript>,
             possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
-        ) -> Result<()> {
+        ) -> Result<RecoveredOnchainDataSend> {
             let outgoing_tx_map: HashMap<&Txid, &WalletTx> = tx_map
                 .iter()
                 .filter(|(_, tx)| tx.balance.values().sum::<i64>() < 0) // Outgoing
@@ -204,7 +222,13 @@ pub(crate) mod onchain {
             //     .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
             //     .await?;
 
-            Ok(())
+            Ok(RecoveredOnchainDataSend {
+                lockup_tx_ids: lockup_txs_by_swap_id
+                    .into_iter()
+                    .map(|(swap_id, tx)| (swap_id, tx.txid))
+                    .collect(),
+                refund_tx_ids: refund_tx_ids_by_swap_id,
+            })
         }
 
         /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable DB data
@@ -215,7 +239,7 @@ pub(crate) mod onchain {
                 (CreateReverseResponse, LBtcSwapScript),
             >,
             possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
-        ) -> Result<()> {
+        ) -> Result<RecoveredOnchainDataReceive> {
             let lockup_tx_ids: Vec<Txid> = possible_claim_or_refund_txs_by_input
                 .iter()
                 .map(|(k, _)| k.txid)
@@ -227,7 +251,7 @@ pub(crate) mod onchain {
                 .get_transactions(&lockup_tx_ids)
                 .await?;
 
-            let mut lockup_claim_tx_ids_by_swap_id: HashMap<&str, (Txid, Txid)> = HashMap::new();
+            let mut lockup_claim_tx_ids_by_swap_id: HashMap<String, (Txid, Txid)> = HashMap::new();
             for (incoming_tx_prev_out, incoming_tx_id) in possible_claim_or_refund_txs_by_input {
                 let possible_lockup_tx_id = incoming_tx_prev_out.txid;
                 let possible_claim_tx_id = *incoming_tx_id;
@@ -243,8 +267,10 @@ pub(crate) mod onchain {
                                 .any(|out| Some(out.script_pubkey.clone()) == swap_script);
 
                             if lockup_tx_matches_swap_script {
-                                lockup_claim_tx_ids_by_swap_id
-                                    .insert(swap_id, (possible_lockup_tx_id, possible_claim_tx_id));
+                                lockup_claim_tx_ids_by_swap_id.insert(
+                                    swap_id.clone(),
+                                    (possible_lockup_tx_id, possible_claim_tx_id),
+                                );
                             }
                         }
                     }
@@ -253,7 +279,9 @@ pub(crate) mod onchain {
             let lockup_claim_txs_found = lockup_claim_tx_ids_by_swap_id.len();
             info!("Found {lockup_claim_txs_found} lockup and claim txs from onchain data");
 
-            Ok(())
+            Ok(RecoveredOnchainDataReceive {
+                lockup_claim_tx_ids: lockup_claim_tx_ids_by_swap_id,
+            })
         }
     }
 }
