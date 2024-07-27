@@ -39,7 +39,7 @@ packages:
       path: "../../dart"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.4"
   build_cli_annotations:
     dependency: transitive
     description:
@@ -139,7 +139,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.1.4"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -362,10 +362,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "30c5aa827a6ae95ce2853cdc5fe3971daaac00f6f081c419c013f7f57bff2f5e"
+      sha256: e84c8a53fe1510ef4582f118c7b4bdf15b03002b51d7c2b66983c65843d61193
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.7"
+    version: "2.2.8"
   path_provider_foundation:
     dependency: transitive
     description:
