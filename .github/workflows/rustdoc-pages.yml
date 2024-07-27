@@ -1,0 +1,69 @@
+# Publish rust docs built from the latest git main branch to a GitHub Pages site
+name: Publish rustdocs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install rust
+        run: |
+          rustup set auto-self-update disable
+          rustup toolchain install stable --profile minimal
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docs
+        working-directory: lib/core
+        run: cargo doc --no-deps
+
+      # Set the right file permissions, based on https://github.com/actions/upload-pages-artifact#file-permissions
+      - name: Fix file permissions
+        shell: sh
+        run: |
+          chmod -c -R +rX "./lib/target/doc/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload the entire doc folder
+          path: './lib/target/doc'
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use boltz_client::{
-    boltzv2::{
+    boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
         CreateReverseResponse, CreateSubmarineResponse, Leaf, PairLimits, PairMinerFees,
         ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse, SubmarineFees,
@@ -65,7 +65,7 @@ impl MockSwapper {
 impl Swapper for MockSwapper {
     fn create_chain_swap(
         &self,
-        _req: boltz_client::swaps::boltzv2::CreateChainRequest,
+        _req: boltz_client::swaps::boltz::CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
         Ok(CreateChainResponse {
             id: generate_random_string(4),
@@ -76,7 +76,7 @@ impl Swapper for MockSwapper {
 
     fn create_send_swap(
         &self,
-        req: boltz_client::swaps::boltzv2::CreateSubmarineRequest,
+        req: boltz_client::swaps::boltz::CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
         let invoice = parse_invoice(&req.invoice).map_err(|err| PaymentError::InvalidInvoice {
             err: err.to_string(),
@@ -94,7 +94,9 @@ impl Swapper for MockSwapper {
             claim_public_key: Self::mock_public_key(),
             expected_amount: amount_msat / 1000,
             id: generate_random_string(4),
+            referral_id: None,
             swap_tree: Self::mock_swap_tree(),
+            timeout_block_height: 1459611,
             blinding_key: None,
         })
     }
@@ -169,8 +171,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _sat_per_vbyte: f32,
     ) -> Result<(u32, u64), SdkError> {
-        // Ok((2500, 100))
-        unimplemented!()
+        Ok((0, 0))
     }
 
     fn refund_chain_swap_cooperative(
@@ -179,7 +180,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_send_swap_cooperative(
@@ -188,7 +189,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _broadcast_fees_sat: u64,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_chain_swap_non_cooperative(
@@ -198,7 +199,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn refund_send_swap_non_cooperative(
@@ -208,7 +209,7 @@ impl Swapper for MockSwapper {
         _output_address: &str,
         _current_height: u32,
     ) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("refund-tx-id".to_string())
     }
 
     fn get_send_claim_tx_details(
@@ -226,13 +227,13 @@ impl Swapper for MockSwapper {
     }
 
     fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        unimplemented!()
+        Ok("chain-swap-claim-txid".to_string())
     }
 
     fn claim_send_swap_cooperative(
         &self,
         _swap: &SendSwap,
-        _claim_tx_response: boltz_client::swaps::boltzv2::SubmarineClaimTxResponse,
+        _claim_tx_response: boltz_client::swaps::boltz::SubmarineClaimTxResponse,
         _refund_address: &str,
     ) -> Result<(), PaymentError> {
         Ok(())
@@ -240,7 +241,7 @@ impl Swapper for MockSwapper {
 
     fn create_receive_swap(
         &self,
-        _req: boltz_client::swaps::boltzv2::CreateReverseRequest,
+        _req: boltz_client::swaps::boltz::CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
         Ok(CreateReverseResponse {
             id: generate_random_string(4),

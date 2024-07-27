@@ -48,11 +48,22 @@ pub(crate) enum Command {
     ReceivePayment {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
+
+        /// Optional description for the invoice
+        #[clap(short = 'd', long = "description")]
+        description: Option<String>,
     },
     /// Receive lbtc and send btc onchain through a swap
     ReceiveOnchainPayment {
         /// Amount the payer will send, in satoshi
         payer_amount_sat: u64,
+    },
+    /// Generates an URL to buy bitcoin from a 3rd party provider
+    BuyBitcoin {
+        provider: BuyBitcoinProvider,
+
+        /// Amount to buy, in satoshi
+        amount_sat: u64,
     },
     /// List incoming and outgoing payments
     ListPayments {
@@ -188,20 +199,28 @@ pub(crate) async fn handle_command(
     command: Command,
 ) -> Result<String> {
     Ok(match command {
-        Command::ReceivePayment { payer_amount_sat } => {
-            let prepare_response = sdk
-                .prepare_receive_payment(&PrepareReceiveRequest { payer_amount_sat })
+        Command::ReceivePayment {
+            payer_amount_sat,
+            description,
+        } => {
+            let prepare_res = sdk
+                .prepare_receive_payment(&PrepareReceivePaymentRequest { payer_amount_sat })
                 .await?;
 
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.fees_sat
+                    prepare_res.fees_sat
                 ),
                 "Payment receive halted"
             );
 
-            let response = sdk.receive_payment(&prepare_response).await?;
+            let response = sdk
+                .receive_payment(&ReceivePaymentRequest {
+                    prepare_res,
+                    description,
+                })
+                .await?;
             let invoice = response.invoice.clone();
 
             let mut result = command_result!(response);
@@ -291,6 +310,37 @@ pub(crate) async fn handle_command(
             let mut result = command_result!(response);
             result.push('\n');
             result.push_str(&build_qr_text(&bip21));
+            result
+        }
+        Command::BuyBitcoin {
+            provider,
+            amount_sat,
+        } => {
+            let prepare_res = sdk
+                .prepare_buy_bitcoin(&PrepareBuyBitcoinRequest {
+                    provider,
+                    amount_sat,
+                })
+                .await?;
+
+            wait_confirmation!(
+                format!(
+                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_res.fees_sat
+                ),
+                "Buy Bitcoin halted"
+            );
+
+            let url = sdk
+                .buy_bitcoin(&BuyBitcoinRequest {
+                    prepare_res,
+                    redirect_url: None,
+                })
+                .await?;
+
+            let mut result = command_result!(url.clone());
+            result.push('\n');
+            result.push_str(&build_qr_text(&url));
             result
         }
         Command::GetInfo => {

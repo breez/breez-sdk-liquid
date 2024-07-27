@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.0.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 749689565;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -119028624;
 
 // Section: executor
 
@@ -132,6 +132,55 @@ fn wire__crate__bindings__BindingLiquidSdk_backup_impl(
                     crate::bindings::BindingLiquidSdk::backup(&*api_that_guard, api_req)?;
                 Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::BuyBitcoinRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_buy_bitcoin",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::buy_bitcoin(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
         },
     )
 }
@@ -729,6 +778,55 @@ fn wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::PrepareBuyBitcoinRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_prepare_buy_bitcoin",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::prepare_buy_bitcoin(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -832,7 +930,7 @@ fn wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    req: impl CstDecode<crate::model::PrepareReceiveRequest>,
+    req: impl CstDecode<crate::model::PrepareReceivePaymentRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1028,7 +1126,7 @@ fn wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    req: impl CstDecode<crate::model::PrepareReceiveResponse>,
+    req: impl CstDecode<crate::model::ReceivePaymentRequest>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1673,6 +1771,15 @@ impl CstDecode<bool> for bool {
         self
     }
 }
+impl CstDecode<crate::model::BuyBitcoinProvider> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BuyBitcoinProvider {
+        match self {
+            0 => crate::model::BuyBitcoinProvider::Moonpay,
+            _ => unreachable!("Invalid variant for BuyBitcoinProvider: {}", self),
+        }
+    }
+}
 impl CstDecode<f64> for f64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f64 {
@@ -1902,6 +2009,30 @@ impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
+impl SseDecode for crate::model::BuyBitcoinProvider {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::BuyBitcoinProvider::Moonpay,
+            _ => unreachable!("Invalid variant for BuyBitcoinProvider: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::model::BuyBitcoinRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_prepareRes =
+            <crate::model::PrepareBuyBitcoinResponse>::sse_decode(deserializer);
+        let mut var_redirectUrl = <Option<String>>::sse_decode(deserializer);
+        return crate::model::BuyBitcoinRequest {
+            prepare_res: var_prepareRes,
+            redirect_url: var_redirectUrl,
+        };
     }
 }
 
@@ -2810,6 +2941,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_preimage = <Option<String>>::sse_decode(deserializer);
         let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
+        let mut var_description = <String>::sse_decode(deserializer);
         let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
         let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
@@ -2822,6 +2954,7 @@ impl SseDecode for crate::model::Payment {
             fees_sat: var_feesSat,
             preimage: var_preimage,
             bolt11: var_bolt11,
+            description: var_description,
             refund_tx_id: var_refundTxId,
             refund_tx_amount_sat: var_refundTxAmountSat,
             payment_type: var_paymentType,
@@ -2936,6 +3069,32 @@ impl SseDecode for crate::model::PaymentType {
     }
 }
 
+impl SseDecode for crate::model::PrepareBuyBitcoinRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_provider = <crate::model::BuyBitcoinProvider>::sse_decode(deserializer);
+        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        return crate::model::PrepareBuyBitcoinRequest {
+            provider: var_provider,
+            amount_sat: var_amountSat,
+        };
+    }
+}
+
+impl SseDecode for crate::model::PrepareBuyBitcoinResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_provider = <crate::model::BuyBitcoinProvider>::sse_decode(deserializer);
+        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
+        return crate::model::PrepareBuyBitcoinResponse {
+            provider: var_provider,
+            amount_sat: var_amountSat,
+            fees_sat: var_feesSat,
+        };
+    }
+}
+
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2984,22 +3143,22 @@ impl SseDecode for crate::model::PrepareReceiveOnchainResponse {
     }
 }
 
-impl SseDecode for crate::model::PrepareReceiveRequest {
+impl SseDecode for crate::model::PrepareReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
-        return crate::model::PrepareReceiveRequest {
+        return crate::model::PrepareReceivePaymentRequest {
             payer_amount_sat: var_payerAmountSat,
         };
     }
 }
 
-impl SseDecode for crate::model::PrepareReceiveResponse {
+impl SseDecode for crate::model::PrepareReceivePaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
-        return crate::model::PrepareReceiveResponse {
+        return crate::model::PrepareReceivePaymentResponse {
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
         };
@@ -3076,6 +3235,19 @@ impl SseDecode for crate::model::ReceiveOnchainResponse {
         return crate::model::ReceiveOnchainResponse {
             address: var_address,
             bip21: var_bip21,
+        };
+    }
+}
+
+impl SseDecode for crate::model::ReceivePaymentRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_prepareRes =
+            <crate::model::PrepareReceivePaymentResponse>::sse_decode(deserializer);
+        return crate::model::ReceivePaymentRequest {
+            description: var_description,
+            prepare_res: var_prepareRes,
         };
     }
 }
@@ -3515,6 +3687,47 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::BitcoinAddres
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::BitcoinAddressData> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BuyBitcoinProvider {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Moonpay => 0.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::BuyBitcoinProvider
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BuyBitcoinProvider>
+    for crate::model::BuyBitcoinProvider
+{
+    fn into_into_dart(self) -> crate::model::BuyBitcoinProvider {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BuyBitcoinRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.prepare_res.into_into_dart().into_dart(),
+            self.redirect_url.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::BuyBitcoinRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BuyBitcoinRequest>
+    for crate::model::BuyBitcoinRequest
+{
+    fn into_into_dart(self) -> crate::model::BuyBitcoinRequest {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -4343,6 +4556,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Payment {
             self.fees_sat.into_into_dart().into_dart(),
             self.preimage.into_into_dart().into_dart(),
             self.bolt11.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
             self.refund_tx_id.into_into_dart().into_dart(),
             self.refund_tx_amount_sat.into_into_dart().into_dart(),
             self.payment_type.into_into_dart().into_dart(),
@@ -4446,6 +4660,49 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentType> for crate::mod
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareBuyBitcoinRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.provider.into_into_dart().into_dart(),
+            self.amount_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PrepareBuyBitcoinRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareBuyBitcoinRequest>
+    for crate::model::PrepareBuyBitcoinRequest
+{
+    fn into_into_dart(self) -> crate::model::PrepareBuyBitcoinRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareBuyBitcoinResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.provider.into_into_dart().into_dart(),
+            self.amount_sat.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PrepareBuyBitcoinResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareBuyBitcoinResponse>
+    for crate::model::PrepareBuyBitcoinResponse
+{
+    fn into_into_dart(self) -> crate::model::PrepareBuyBitcoinResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4527,24 +4784,24 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveOnchainRespon
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveRequest {
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceivePaymentRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.payer_amount_sat.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::PrepareReceiveRequest
+    for crate::model::PrepareReceivePaymentRequest
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveRequest>
-    for crate::model::PrepareReceiveRequest
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceivePaymentRequest>
+    for crate::model::PrepareReceivePaymentRequest
 {
-    fn into_into_dart(self) -> crate::model::PrepareReceiveRequest {
+    fn into_into_dart(self) -> crate::model::PrepareReceivePaymentRequest {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceivePaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.payer_amount_sat.into_into_dart().into_dart(),
@@ -4554,13 +4811,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::PrepareReceiveResponse
+    for crate::model::PrepareReceivePaymentResponse
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveResponse>
-    for crate::model::PrepareReceiveResponse
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceivePaymentResponse>
+    for crate::model::PrepareReceivePaymentResponse
 {
-    fn into_into_dart(self) -> crate::model::PrepareReceiveResponse {
+    fn into_into_dart(self) -> crate::model::PrepareReceivePaymentResponse {
         self
     }
 }
@@ -4685,6 +4942,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceiveOnchainResponse>
     for crate::model::ReceiveOnchainResponse
 {
     fn into_into_dart(self) -> crate::model::ReceiveOnchainResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ReceivePaymentRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.description.into_into_dart().into_dart(),
+            self.prepare_res.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::ReceivePaymentRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceivePaymentRequest>
+    for crate::model::ReceivePaymentRequest
+{
+    fn into_into_dart(self) -> crate::model::ReceivePaymentRequest {
         self
     }
 }
@@ -5100,6 +5378,29 @@ impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
+impl SseEncode for crate::model::BuyBitcoinProvider {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::BuyBitcoinProvider::Moonpay => 0,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::model::BuyBitcoinRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::PrepareBuyBitcoinResponse>::sse_encode(self.prepare_res, serializer);
+        <Option<String>>::sse_encode(self.redirect_url, serializer);
     }
 }
 
@@ -5811,6 +6112,7 @@ impl SseEncode for crate::model::Payment {
         <u64>::sse_encode(self.fees_sat, serializer);
         <Option<String>>::sse_encode(self.preimage, serializer);
         <Option<String>>::sse_encode(self.bolt11, serializer);
+        <String>::sse_encode(self.description, serializer);
         <Option<String>>::sse_encode(self.refund_tx_id, serializer);
         <Option<u64>>::sse_encode(self.refund_tx_amount_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
@@ -5928,6 +6230,23 @@ impl SseEncode for crate::model::PaymentType {
     }
 }
 
+impl SseEncode for crate::model::PrepareBuyBitcoinRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::BuyBitcoinProvider>::sse_encode(self.provider, serializer);
+        <u64>::sse_encode(self.amount_sat, serializer);
+    }
+}
+
+impl SseEncode for crate::model::PrepareBuyBitcoinResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::BuyBitcoinProvider>::sse_encode(self.provider, serializer);
+        <u64>::sse_encode(self.amount_sat, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
+    }
+}
+
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5960,14 +6279,14 @@ impl SseEncode for crate::model::PrepareReceiveOnchainResponse {
     }
 }
 
-impl SseEncode for crate::model::PrepareReceiveRequest {
+impl SseEncode for crate::model::PrepareReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.payer_amount_sat, serializer);
     }
 }
 
-impl SseEncode for crate::model::PrepareReceiveResponse {
+impl SseEncode for crate::model::PrepareReceivePaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.payer_amount_sat, serializer);
@@ -6021,6 +6340,14 @@ impl SseEncode for crate::model::ReceiveOnchainResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.address, serializer);
         <String>::sse_encode(self.bip21, serializer);
+    }
+}
+
+impl SseEncode for crate::model::ReceivePaymentRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.description, serializer);
+        <crate::model::PrepareReceivePaymentResponse>::sse_encode(self.prepare_res, serializer);
     }
 }
 

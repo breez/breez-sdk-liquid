@@ -4,8 +4,9 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::{swaps::boltzv2::*, util::secrets::Preimage, Bolt11Invoice, LBtcSwapScriptV2};
+use boltz_client::{swaps::boltz::*, util::secrets::Preimage, LBtcSwapScript};
 use boltz_client::{LockTime, ToHex};
+use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
@@ -19,6 +20,7 @@ use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
+use sdk_common::ensure_sdk;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
@@ -28,6 +30,7 @@ use url::Url;
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapStateHandler;
 use crate::error::SdkError;
+use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
 use crate::send_swap::SendSwapStateHandler;
@@ -61,9 +64,18 @@ pub struct LiquidSdk {
     pub(crate) send_swap_state_handler: SendSwapStateHandler,
     pub(crate) receive_swap_state_handler: ReceiveSwapStateHandler,
     pub(crate) chain_swap_state_handler: Arc<ChainSwapStateHandler>,
+    pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
 }
 
 impl LiquidSdk {
+    /// Initializes the SDK services and starts the background tasks.
+    /// This must be called to create the [LiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [ConnectRequest] containing:
+    ///     * `mnemonic` - the Liquid wallet mnemonic
+    ///     * `config` - the SDK [Config]
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let maybe_swapper_proxy_url =
             match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
@@ -88,7 +100,12 @@ impl LiquidSdk {
     ) -> Result<Arc<Self>> {
         fs::create_dir_all(&config.working_dir)?;
 
-        let persister = Arc::new(Persister::new(&config.working_dir, config.network)?);
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
+
+        let persister = Arc::new(Persister::new(
+            &config.get_wallet_working_dir(&onchain_wallet.lwk_signer)?,
+            config.network,
+        )?);
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
@@ -105,8 +122,6 @@ impl LiquidSdk {
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
         let send_swap_state_handler = SendSwapStateHandler::new(
             config.clone(),
@@ -133,7 +148,10 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?);
 
-        let breez_server = BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?;
+        let breez_server = Arc::new(BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?);
+
+        let buy_bitcoin_service =
+            Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -144,13 +162,14 @@ impl LiquidSdk {
             swapper,
             bitcoin_chain_service,
             liquid_chain_service,
-            fiat_api: Arc::new(breez_server),
+            fiat_api: breez_server,
             is_started: RwLock::new(false),
             shutdown_sender,
             shutdown_receiver,
             send_swap_state_handler,
             receive_swap_state_handler,
             chain_swap_state_handler,
+            buy_bitcoin_service,
         });
         Ok(sdk)
     }
@@ -218,7 +237,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Trigger the stopping of background threads for this SDK instance.
+    /// Disconnects the [LiquidSdk] instance and stops the background tasks.
     pub async fn disconnect(&self) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
@@ -262,7 +281,6 @@ impl LiquidSdk {
                     }
                     update = updates_stream.recv() => match update {
                         Ok(update) => {
-                            let _ = cloned.sync().await;
                             let id = &update.id;
                             match cloned.persister.fetch_swap_by_id(id) {
                                 Ok(Swap::Send(_)) => match cloned.send_swap_state_handler.on_new_status(&update).await {
@@ -398,10 +416,21 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Adds an event listener to the [LiquidSdk] instance, where all [SdkEvent]'s will be emitted to.
+    /// The event listener can be removed be calling [LiquidSdk::remove_event_listener].
+    ///
+    /// # Arguments
+    ///
+    /// * `listener` - The listener which is an implementation of the [EventListener] trait
     pub async fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
         Ok(self.event_manager.add(listener).await?)
     }
 
+    /// Removes an event listener from the [LiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the event listener id returned by [LiquidSdk::add_event_listener]
     pub async fn remove_event_listener(&self, id: String) -> SdkResult<()> {
         self.event_manager.remove(id).await;
         Ok(())
@@ -485,6 +514,7 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Get the wallet info, calculating the current pending and confirmed balances.
     pub async fn get_info(&self) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
         debug!(
@@ -635,6 +665,12 @@ impl LiquidSdk {
         .await
     }
 
+    /// Prepares to pay a Lightning invoice via a submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareSendRequest] containing:
+    ///     * `invoice` - the bolt11 Lightning invoice to pay
     pub async fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
@@ -652,12 +688,8 @@ impl LiquidSdk {
 
         let fees_sat = match self.swapper.check_for_mrh(&req.invoice)? {
             Some((lbtc_address, _)) => {
-                self.estimate_onchain_tx_fee(
-                    receiver_amount_sat,
-                    &lbtc_address,
-                    self.config.lowball_fee_rate_msat_per_vbyte(),
-                )
-                .await?
+                self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address, None)
+                    .await?
             }
             None => {
                 let lockup_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
@@ -684,13 +716,20 @@ impl LiquidSdk {
         }
     }
 
-    /// Creates, initiates and starts monitoring the progress of a Send Payment.
+    /// Pays a Lightning invoice via a submarine swap.
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
-    /// - a [PaymentError::PaymentTimeout], if the payment could not be initiated in this time
-    /// - a [PaymentState::Pending] payment, if the payment could be initiated, but didn't yet
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
     /// complete in this time
-    /// - a [PaymentState::Complete] payment, if the payment was successfully completed in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The [PrepareSendResponse] from calling [LiquidSdk::prepare_send_payment]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     pub async fn send_payment(
         &self,
         req: &PrepareSendResponse,
@@ -804,11 +843,13 @@ impl LiquidSdk {
                 let swap_id = &create_response.id;
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+                let description = get_invoice_description!(req.invoice);
 
                 let payer_amount_sat = req.fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: req.invoice.clone(),
+                    description,
                     preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
@@ -831,7 +872,7 @@ impl LiquidSdk {
             .map(|payment| SendPaymentResponse { payment })
     }
 
-    /// Fetch the current limits for Send and Receive swaps
+    /// Fetch the current payment limits for [LiquidSdk::send_payment] and [LiquidSdk::receive_payment].
     pub async fn fetch_lightning_limits(
         &self,
     ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
@@ -863,7 +904,7 @@ impl LiquidSdk {
         })
     }
 
-    /// Fetch the current limits for Onchain Send and Receive swaps
+    /// Fetch the current payment limits for [LiquidSdk::pay_onchain] and [LiquidSdk::receive_onchain].
     pub async fn fetch_onchain_limits(&self) -> Result<OnchainPaymentLimitsResponse, PaymentError> {
         self.ensure_is_started().await?;
 
@@ -889,6 +930,13 @@ impl LiquidSdk {
         })
     }
 
+    /// Prepares to pay to a Bitcoin address via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PreparePayOnchainRequest] containing:
+    ///     * `receiver_amount_sat` - the amount in satoshi that will be received
+    ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,
@@ -925,6 +973,22 @@ impl LiquidSdk {
         Ok(res)
     }
 
+    /// Pays to a Bitcoin address via a chain swap.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
+    /// complete in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PayOnchainRequest] containing:
+    ///     * `address` - the Bitcoin address to pay to
+    ///     * `prepare_res` - the [PreparePayOnchainResponse] from calling [LiquidSdk::prepare_pay_onchain]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     pub async fn pay_onchain(
         &self,
         req: &PayOnchainRequest,
@@ -994,6 +1058,7 @@ impl LiquidSdk {
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
+            description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
@@ -1071,10 +1136,16 @@ impl LiquidSdk {
         }
     }
 
+    /// Prepares to receive a Lightning payment via a reverse submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareReceivePaymentRequest] containing:
+    ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
     pub async fn prepare_receive_payment(
         &self,
-        req: &PrepareReceiveRequest,
-    ) -> Result<PrepareReceiveResponse, PaymentError> {
+        req: &PrepareReceivePaymentRequest,
+    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
         let reverse_pair = self
             .swapper
@@ -1093,26 +1164,38 @@ impl LiquidSdk {
 
         debug!("Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
-        Ok(PrepareReceiveResponse {
+        Ok(PrepareReceivePaymentResponse {
             payer_amount_sat,
             fees_sat,
         })
     }
 
+    /// Receive a Lightning payment via a reverse submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [ReceivePaymentRequest] containing:
+    ///     * `description` - the optional payment description
+    ///     * `prepare_res` - the [PrepareReceivePaymentResponse] from calling [LiquidSdk::prepare_receive_payment]
+    ///
+    /// # Returns
+    ///
+    /// * A [ReceivePaymentResponse] containing:
+    ///     * `invoice` - the bolt11 Lightning invoice that should be paid
     pub async fn receive_payment(
         &self,
-        req: &PrepareReceiveResponse,
+        req: &ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.payer_amount_sat;
-        let fees_sat = req.fees_sat;
+        let payer_amount_sat = req.prepare_res.payer_amount_sat;
+        let fees_sat = req.prepare_res.fees_sat;
 
         let reverse_pair = self
             .swapper
             .get_reverse_swap_pairs()?
             .ok_or(PaymentError::PairsNotFound)?;
-        let new_fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
+        let new_fees_sat = reverse_pair.fees.total(payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
         debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
@@ -1132,11 +1215,12 @@ impl LiquidSdk {
         let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
 
         let v2_req = CreateReverseRequest {
-            invoice_amount: req.payer_amount_sat as u32, // TODO update our model
+            invoice_amount: payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
+            description: req.description.clone(),
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
@@ -1154,7 +1238,7 @@ impl LiquidSdk {
             PaymentError::receive_error("Invoice has incorrect address in MRH")
         );
         // The swap fee savings are passed on to the Sender: MRH amount = invoice amount - fees
-        let expected_bip21_amount_sat = req.payer_amount_sat - req.fees_sat;
+        let expected_bip21_amount_sat = payer_amount_sat - fees_sat;
         ensure_sdk!(
             received_bip21_amount_sat == expected_bip21_amount_sat,
             PaymentError::receive_error(&format!(
@@ -1189,6 +1273,10 @@ impl LiquidSdk {
             &swap_id,
             &invoice.to_string(),
         )?;
+        let description = match invoice.description() {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        };
         self.persister
             .insert_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
@@ -1196,8 +1284,9 @@ impl LiquidSdk {
                 create_response_json,
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
+                description,
                 payer_amount_sat,
-                receiver_amount_sat: payer_amount_sat - req.fees_sat,
+                receiver_amount_sat: payer_amount_sat - fees_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 created_at: utils::now(),
@@ -1212,6 +1301,12 @@ impl LiquidSdk {
         })
     }
 
+    /// Prepares to receive from a Bitcoin transaction via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareReceiveOnchainRequest] containing:
+    ///     * `payer_amount_sat` - the amount in satoshi that will be paid by the payer
     pub async fn prepare_receive_onchain(
         &self,
         req: &PrepareReceiveOnchainRequest,
@@ -1229,19 +1324,17 @@ impl LiquidSdk {
         })
     }
 
-    pub async fn receive_onchain(
+    async fn create_chain_swap(
         &self,
-        req: &PrepareReceiveOnchainResponse,
-    ) -> Result<ReceiveOnchainResponse, PaymentError> {
-        self.ensure_is_started().await?;
-
-        let payer_amount_sat = req.payer_amount_sat;
+        payer_amount_sat: u64,
+        fees_sat: u64,
+    ) -> Result<ChainSwap, PaymentError> {
         let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            req.fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1275,17 +1368,17 @@ impl LiquidSdk {
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
         let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - req.fees_sat;
+        let receiver_amount_sat = payer_amount_sat - fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let lockup_address = create_response.lockup_details.lockup_address;
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Incoming,
             claim_address,
-            lockup_address: lockup_address.clone(),
+            lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
+            description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
@@ -1302,8 +1395,32 @@ impl LiquidSdk {
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
+        Ok(swap)
+    }
 
-        let address = lockup_address;
+    /// Receive from a Bitcoin transaction via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - The [PrepareReceiveOnchainResponse] from calling [LiquidSdk::prepare_receive_onchain]
+    ///
+    /// # Returns
+    ///
+    /// * A [ReceiveOnchainResponse] containing:
+    ///     * `address` - the Bitcoin address the payer should pay to
+    ///     * `bip21` - the BIP-21 URI scheme to pay to. See <https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki>
+    pub async fn receive_onchain(
+        &self,
+        req: &PrepareReceiveOnchainResponse,
+    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        self.ensure_is_started().await?;
+
+        let swap = self
+            .create_chain_swap(req.payer_amount_sat, req.fees_sat)
+            .await?;
+        let create_response = swap.get_boltz_create_response()?;
+        let address = create_response.lockup_details.lockup_address;
+
         let amount = create_response.lockup_details.amount as f64 / 100_000_000.0;
         let bip21 = create_response.lockup_details.bip21.unwrap_or(format!(
             "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
@@ -1312,6 +1429,8 @@ impl LiquidSdk {
         Ok(ReceiveOnchainResponse { address, bip21 })
     }
 
+    /// List all failed chain swaps that need to be refunded.
+    /// They can be refunded by calling [LiquidSdk::prepare_refund] then [LiquidSdk::refund].
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
         Ok(self
             .persister
@@ -1321,6 +1440,14 @@ impl LiquidSdk {
             .collect())
     }
 
+    /// Prepares to refund a failed chain swap by calculating the refund transaction size and absolute fee.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareRefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn prepare_refund(
         &self,
         req: &PrepareRefundRequest,
@@ -1337,6 +1464,14 @@ impl LiquidSdk {
         })
     }
 
+    /// Refund a failed chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
         let refund_tx_id = self
             .chain_swap_state_handler
@@ -1345,11 +1480,60 @@ impl LiquidSdk {
         Ok(RefundResponse { refund_tx_id })
     }
 
+    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] within
+    /// the monitoring period to check if there are any confirmed funds available to refund.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
         self.chain_swap_state_handler
             .rescan_incoming_chain_swaps()
             .await?;
         Ok(())
+    }
+
+    /// Prepares to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareBuyBitcoinRequest] containing:
+    ///     * `provider` - the [BuyBitcoinProvider] to use
+    ///     * `amount_sat` - the amount in satoshis to buy from the provider
+    pub async fn prepare_buy_bitcoin(
+        &self,
+        req: &PrepareBuyBitcoinRequest,
+    ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
+        if self.config.network != LiquidNetwork::Mainnet {
+            return Err(PaymentError::Generic {
+                err: "Can only buy bitcoin on Mainnet".to_string(),
+            });
+        }
+
+        let res = self
+            .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
+                payer_amount_sat: req.amount_sat,
+            })
+            .await?;
+        Ok(PrepareBuyBitcoinResponse {
+            provider: req.provider,
+            amount_sat: res.payer_amount_sat,
+            fees_sat: res.fees_sat,
+        })
+    }
+
+    /// Generate a URL to a third party provider used to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BuyBitcoinRequest] containing:
+    ///     * `prepare_res` - the [PrepareBuyBitcoinResponse] from calling [LiquidSdk::prepare_buy_bitcoin]
+    ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
+    pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
+        let swap = self
+            .create_chain_swap(req.prepare_res.amount_sat, req.prepare_res.fees_sat)
+            .await?;
+
+        Ok(self
+            .buy_bitcoin_service
+            .buy_bitcoin(req.prepare_res.provider, &swap, req.redirect_url.clone())
+            .await?)
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
@@ -1466,7 +1650,7 @@ impl LiquidSdk {
         info!("Found {possible_claim_or_refund_txs_found} possible claim or refund txs from onchain data");
 
         // Send Swap scripts by swap ID
-        let send_swap_immutable_db: HashMap<String, LBtcSwapScriptV2> = self
+        let send_swap_immutable_db: HashMap<String, LBtcSwapScript> = self
             .persister
             .list_send_swaps(&con, vec![])?
             .iter()
@@ -1488,7 +1672,7 @@ impl LiquidSdk {
         )
         .await?;
 
-        let receive_swap_immutable_db: HashMap<String, (CreateReverseResponse, LBtcSwapScriptV2)> =
+        let receive_swap_immutable_db: HashMap<String, (CreateReverseResponse, LBtcSwapScript)> =
             self.persister
                 .list_receive_swaps(&con, vec![])?
                 .iter()
@@ -1529,7 +1713,7 @@ impl LiquidSdk {
     async fn recover_send_swap_tx_ids(
         &self,
         tx_map: &HashMap<String, WalletTx>,
-        send_swap_immutable_db_data: HashMap<String, LBtcSwapScriptV2>,
+        send_swap_immutable_db_data: HashMap<String, LBtcSwapScript>,
         possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
     ) -> Result<()> {
         let outgoing_tx_map: HashMap<&String, &WalletTx> = tx_map
@@ -1598,7 +1782,7 @@ impl LiquidSdk {
     /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable DB data
     async fn recover_receive_swap_tx_ids(
         &self,
-        receive_swap_immutable_db_data: HashMap<String, (CreateReverseResponse, LBtcSwapScriptV2)>,
+        receive_swap_immutable_db_data: HashMap<String, (CreateReverseResponse, LBtcSwapScript)>,
         possible_claim_or_refund_txs_by_input: &HashMap<OutPoint, Txid>,
     ) -> Result<()> {
         let lockup_tx_ids: Vec<Txid> = possible_claim_or_refund_txs_by_input
@@ -1651,7 +1835,7 @@ impl LiquidSdk {
         Ok(self.persister.get_payments(req)?)
     }
 
-    /// Empties all Liquid Wallet caches for this network type.
+    /// Empties the Liquid Wallet cache for the [Config::network].
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
         path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
@@ -1663,7 +1847,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Synchronize the DB with mempool and onchain data
+    /// Synchronizes the local state with the mempool and onchain data.
     pub async fn sync(&self) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
@@ -1676,6 +1860,12 @@ impl LiquidSdk {
         Ok(())
     }
 
+    /// Backup the local state to the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BackupRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     pub fn backup(&self, req: BackupRequest) -> Result<()> {
         let backup_path = req
             .backup_path
@@ -1684,16 +1874,29 @@ impl LiquidSdk {
         self.persister.backup(backup_path)
     }
 
+    /// Restores the local state from the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RestoreRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     pub fn restore(&self, req: RestoreRequest) -> Result<()> {
         let backup_path = req
             .backup_path
             .map(PathBuf::from)
             .unwrap_or(self.persister.get_default_backup_path());
+        ensure_sdk!(
+            backup_path.exists(),
+            SdkError::Generic {
+                err: "Backup file does not exist".to_string()
+            }
+            .into()
+        );
         self.persister.restore_from_backup(backup_path)
     }
 
-    /// Second step of LNURL-pay. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlPayRequest` payload needed here.
+    /// Second step of LNURL-pay. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlPayRequest] payload needed here.
     ///
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
     /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
@@ -1767,8 +1970,8 @@ impl LiquidSdk {
         }
     }
 
-    /// Second step of LNURL-withdraw. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlWithdrawRequest` payload needed here.
+    /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlWithdrawRequest] payload needed here.
     ///
     /// This call will validate the given `amount_msat` against the parameters
     /// of the LNURL endpoint (`data`). If they match the endpoint requirements, the LNURL withdraw
@@ -1777,22 +1980,27 @@ impl LiquidSdk {
         &self,
         req: LnUrlWithdrawRequest,
     ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
-        let prepare_receive_res = self
+        let prepare_res = self
             .prepare_receive_payment(&{
-                PrepareReceiveRequest {
+                PrepareReceivePaymentRequest {
                     payer_amount_sat: req.amount_msat / 1_000,
                 }
             })
             .await?;
-        let receive_res = self.receive_payment(&prepare_receive_res).await?;
+        let receive_res = self
+            .receive_payment(&ReceivePaymentRequest {
+                prepare_res,
+                description: None,
+            })
+            .await?;
         let invoice = parse_invoice(&receive_res.invoice)?;
 
         let res = validate_lnurl_withdraw(req.data, invoice).await?;
         Ok(res)
     }
 
-    /// Third and last step of LNURL-auth. The first step is `parse()`, which also validates the LNURL destination
-    /// and generates the `LnUrlAuthRequestData` payload needed here. The second step is user approval of auth action.
+    /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlAuthRequestData] payload needed here. The second step is user approval of auth action.
     ///
     /// This call will sign `k1` of the LNURL endpoint (`req_data`) on `secp256k1` using `linkingPrivKey` and DER-encodes the signature.
     /// If they match the endpoint requirements, the LNURL auth request is made. A successful result here means the client signature is verified.
@@ -1816,13 +2024,13 @@ impl LiquidSdk {
         Ok(perform_lnurl_auth(linking_keys, req_data).await?)
     }
 
-    /// Fetch live rates of fiat currencies, sorted by name
+    /// Fetch live rates of fiat currencies, sorted by name.
     pub async fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, SdkError> {
         self.fiat_api.fetch_fiat_rates().await.map_err(Into::into)
     }
 
     /// List all supported fiat currencies for which there is a known exchange rate.
-    /// List is sorted by the canonical name of the currency
+    /// List is sorted by the canonical name of the currency.
     pub async fn list_fiat_currencies(&self) -> Result<Vec<FiatCurrency>, SdkError> {
         self.fiat_api
             .list_fiat_currencies()
@@ -1830,7 +2038,7 @@ impl LiquidSdk {
             .map_err(Into::into)
     }
 
-    /// Get the recommended BTC fees based on the configured mempool.space instance
+    /// Get the recommended BTC fees based on the configured mempool.space instance.
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
         Ok(self
             .bitcoin_chain_service
@@ -1840,6 +2048,7 @@ impl LiquidSdk {
             .await?)
     }
 
+    /// Get the full default [Config] for specific [LiquidNetwork].
     pub fn default_config(network: LiquidNetwork) -> Config {
         match network {
             LiquidNetwork::Mainnet => Config::mainnet(),
@@ -1847,12 +2056,14 @@ impl LiquidSdk {
         }
     }
 
+    /// Parses a string into an [InputType]. See [input_parser::parse].
     pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
         parse(input)
             .await
             .map_err(|e| PaymentError::Generic { err: e.to_string() })
     }
 
+    /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
         parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
     }
@@ -1917,29 +2128,69 @@ mod tests {
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
-        boltzv2::{self, SwapUpdateTxDetails},
+        boltz::{self, SwapUpdateTxDetails},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::{elements::encode::serialize, hashes::hex::DisplayHex};
+    use lwk_wollet::hashes::hex::DisplayHex;
 
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
-            chain_swap::new_chain_swap,
-            create_mock_tx,
+            chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
             persist::{new_persister, new_receive_swap, new_send_swap},
             sdk::new_liquid_sdk,
             status_stream::MockStatusStream,
             swapper::MockSwapper,
+            wallet::TEST_LIQUID_TX,
         },
     };
     use paste::paste;
 
+    struct NewSwapArgs {
+        direction: Direction,
+        accepts_zero_conf: bool,
+        initial_payment_state: Option<PaymentState>,
+        user_lockup_tx_id: Option<String>,
+    }
+
+    impl Default for NewSwapArgs {
+        fn default() -> Self {
+            Self {
+                accepts_zero_conf: false,
+                initial_payment_state: None,
+                direction: Direction::Outgoing,
+                user_lockup_tx_id: None,
+            }
+        }
+    }
+
+    impl NewSwapArgs {
+        pub fn set_direction(mut self, direction: Direction) -> Self {
+            self.direction = direction;
+            self
+        }
+
+        pub fn set_accepts_zero_conf(mut self, accepts_zero_conf: bool) -> Self {
+            self.accepts_zero_conf = accepts_zero_conf;
+            self
+        }
+
+        pub fn set_user_lockup_tx_id(mut self, user_lockup_tx_id: Option<String>) -> Self {
+            self.user_lockup_tx_id = user_lockup_tx_id;
+            self
+        }
+
+        pub fn set_initial_payment_state(mut self, payment_state: PaymentState) -> Self {
+            self.initial_payment_state = Some(payment_state);
+            self
+        }
+    }
+
     macro_rules! trigger_swap_update {
         (
             $type:literal,
-            $direction:expr,
+            $args:expr,
             $persister:expr,
             $status_stream:expr,
             $status:expr,
@@ -1948,17 +2199,22 @@ mod tests {
         ) => {{
             let swap = match $type {
                 "chain" => {
-                    let swap = new_chain_swap($direction.unwrap(), None);
+                    let swap = new_chain_swap(
+                        $args.direction,
+                        $args.initial_payment_state,
+                        $args.accepts_zero_conf,
+                        $args.user_lockup_tx_id,
+                    );
                     $persister.insert_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
                 }
                 "send" => {
-                    let swap = new_send_swap(None);
+                    let swap = new_send_swap($args.initial_payment_state);
                     $persister.insert_send_swap(&swap).unwrap();
                     Swap::Send(swap)
                 }
                 "receive" => {
-                    let swap = new_receive_swap(None);
+                    let swap = new_receive_swap($args.initial_payment_state);
                     $persister.insert_receive_swap(&swap).unwrap();
                     Swap::Receive(swap)
                 }
@@ -1967,7 +2223,7 @@ mod tests {
 
             $status_stream
                 .clone()
-                .send_mock_update(boltzv2::Update {
+                .send_mock_update(boltz::Update {
                     id: swap.id(),
                     status: $status.to_string(),
                     transaction: $transaction,
@@ -2013,7 +2269,7 @@ mod tests {
             for status in unrecoverable_states {
                 let persisted_swap = trigger_swap_update!(
                     "receive",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
@@ -2029,17 +2285,17 @@ mod tests {
                 RevSwapStates::TransactionMempool,
                 RevSwapStates::TransactionConfirmed,
             ] {
-                let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
-                let mock_lockup_tx_id = mock_tx.txid().to_string();
+                let mock_tx = TEST_LIQUID_TX.clone();
                 let persisted_swap = trigger_swap_update!(
                     "receive",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
                     Some(SwapUpdateTxDetails {
-                        id: mock_lockup_tx_id.clone(),
-                        hex: serialize(&mock_tx).to_lower_hex_string(),
+                        id: mock_tx.txid().to_string(),
+                        hex: lwk_wollet::elements::encode::serialize(&mock_tx)
+                            .to_lower_hex_string(),
                     }),
                     None
                 );
@@ -2079,7 +2335,7 @@ mod tests {
             for status in unrecoverable_states {
                 let persisted_swap = trigger_swap_update!(
                     "send",
-                    None,
+                    NewSwapArgs::default(),
                     persister,
                     status_stream,
                     status,
@@ -2093,7 +2349,7 @@ mod tests {
             // assigns the `lockup_tx_id` to the payment
             let persisted_swap = trigger_swap_update!(
                 "send",
-                None,
+                NewSwapArgs::default(),
                 persister,
                 status_stream,
                 SubSwapStates::InvoiceSet,
@@ -2107,7 +2363,7 @@ mod tests {
             // and stores the preimage
             let persisted_swap = trigger_swap_update!(
                 "send",
-                None,
+                NewSwapArgs::default(),
                 persister,
                 status_stream,
                 SubSwapStates::TransactionClaimPending,
@@ -2140,32 +2396,71 @@ mod tests {
 
         // We spawn a new thread since updates can only be sent when called via async runtimes
         tokio::spawn(async move {
-            // Checks that work for both incoming and outgoing chain swaps
-
-            let unrecoverable_states: [ChainSwapStates; 4] = [
+            let trigger_failed: [ChainSwapStates; 3] = [
                 ChainSwapStates::TransactionFailed,
-                ChainSwapStates::TransactionLockupFailed,
-                ChainSwapStates::TransactionRefunded,
                 ChainSwapStates::SwapExpired,
+                ChainSwapStates::TransactionRefunded,
             ];
 
+            // Checks that work for both incoming and outgoing chain swaps
             for direction in [Direction::Incoming, Direction::Outgoing] {
                 // Verify the swap becomes invalid after final states are received
-                for status in &unrecoverable_states {
+                for status in &trigger_failed {
                     let persisted_swap = trigger_swap_update!(
                         "chain",
-                        Some(direction),
+                        NewSwapArgs::default().set_direction(direction),
                         persister,
                         status_stream,
                         status,
                         None,
                         None
                     );
-                    assert!(
-                        persisted_swap.state == PaymentState::Failed
-                            || persisted_swap.state == PaymentState::Refundable,
-                    );
+                    assert_eq!(persisted_swap.state, PaymentState::Failed);
                 }
+
+                // Verify that `TransactionLockupFailed` correctly sets the state as
+                // `RefundPending`/`Refundable` or as `Failed` depending on whether or not
+                // `user_lockup_tx_id` is present
+                for user_lockup_tx_id in &[None, Some("user-lockup-tx-id".to_string())] {
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        NewSwapArgs::default()
+                            .set_direction(direction)
+                            .set_initial_payment_state(PaymentState::Pending)
+                            .set_user_lockup_tx_id(user_lockup_tx_id.clone()),
+                        persister,
+                        status_stream,
+                        ChainSwapStates::TransactionLockupFailed,
+                        None,
+                        None
+                    );
+                    let expected_state = if user_lockup_tx_id.is_some() {
+                        match direction {
+                            Direction::Incoming => PaymentState::Refundable,
+                            Direction::Outgoing => PaymentState::RefundPending,
+                        }
+                    } else {
+                        PaymentState::Failed
+                    };
+                    assert_eq!(persisted_swap.state, expected_state);
+                }
+
+                let (mock_tx_hex, mock_tx_id) = match direction {
+                    Direction::Incoming => {
+                        let tx = TEST_LIQUID_TX.clone();
+                        (
+                            lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
+                    Direction::Outgoing => {
+                        let tx = TEST_BITCOIN_TX.clone();
+                        (
+                            sdk_common::bitcoin::consensus::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
+                };
 
                 // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
                 // `user_lockup_tx_id` and `accept_zero_conf`
@@ -2173,39 +2468,85 @@ mod tests {
                     ChainSwapStates::TransactionMempool,
                     ChainSwapStates::TransactionConfirmed,
                 ] {
-                    let mock_tx = create_mock_tx(sdk.onchain_wallet.clone()).await.unwrap();
-                    let mock_lockup_tx_id = mock_tx.txid().to_string();
-
                     let persisted_swap = trigger_swap_update!(
                         "chain",
-                        Some(direction),
+                        NewSwapArgs::default().set_direction(direction),
                         persister,
                         status_stream,
                         status,
                         Some(SwapUpdateTxDetails {
-                            id: mock_lockup_tx_id.clone(),
-                            hex: serialize(&mock_tx).to_lower_hex_string(),
-                        }),
-                        Some(true)
+                            id: mock_tx_id.clone(),
+                            hex: mock_tx_hex.clone(),
+                        }), // sets `update.transaction`
+                        Some(true) // sets `update.zero_conf_rejected`
                     );
-                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_lockup_tx_id));
+                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_tx_id.clone()));
                     assert_eq!(persisted_swap.accept_zero_conf, false);
                 }
+
+                // Verify that `TransactionServerMempool` correctly:
+                // 1. Sets the payment as `Pending` and creates `server_lockup_tx_id` when
+                //    `accepts_zero_conf` is false
+                // 2. Sets the payment as `Complete` and creates `claim_tx_id` when `accepts_zero_conf`
+                //    is true
+                for accepts_zero_conf in [false, true] {
+                    let persisted_swap = trigger_swap_update!(
+                        "chain",
+                        NewSwapArgs::default()
+                            .set_direction(direction)
+                            .set_accepts_zero_conf(accepts_zero_conf),
+                        persister,
+                        status_stream,
+                        ChainSwapStates::TransactionServerMempool,
+                        Some(SwapUpdateTxDetails {
+                            id: mock_tx_id.clone(),
+                            hex: mock_tx_hex.clone(),
+                        }),
+                        None
+                    );
+                    match accepts_zero_conf {
+                        false => {
+                            assert_eq!(persisted_swap.state, PaymentState::Pending);
+                            assert!(persisted_swap.server_lockup_tx_id.is_some());
+                        }
+                        true => {
+                            assert_eq!(persisted_swap.state, PaymentState::Complete);
+                            assert!(persisted_swap.claim_tx_id.is_some());
+                        }
+                    };
+                }
+
+                // Verify that `TransactionServerConfirmed` correctly
+                // sets the payment as `Complete` and creates `claim_tx_id`
+                let persisted_swap = trigger_swap_update!(
+                    "chain",
+                    NewSwapArgs::default().set_direction(direction),
+                    persister,
+                    status_stream,
+                    ChainSwapStates::TransactionServerConfirmed,
+                    Some(SwapUpdateTxDetails {
+                        id: mock_tx_id,
+                        hex: mock_tx_hex,
+                    }),
+                    None
+                );
+                assert_eq!(persisted_swap.state, PaymentState::Complete);
+                assert!(persisted_swap.claim_tx_id.is_some());
             }
 
-            // Verify that `Created` correctly sets the payment as `Pending` and creates
+            // For outgoing payments, verify that `Created` correctly sets the payment as `Pending` and creates
             // the `user_lockup_tx_id`
-            // let persisted_swap = trigger_swap_update!(
-            //     "chain",
-            //     Some(Direction::Outgoing),
-            //     persister,
-            //     status_stream,
-            //     ChainSwapStates::Created,
-            //     None,
-            //     None
-            // );
-            // assert_eq!(persisted_swap.state, PaymentState::Pending);
-            // assert!(persisted_swap.user_lockup_tx_id.is_some());
+            let persisted_swap = trigger_swap_update!(
+                "chain",
+                NewSwapArgs::default().set_direction(Direction::Outgoing),
+                persister,
+                status_stream,
+                ChainSwapStates::Created,
+                None,
+                None
+            );
+            assert_eq!(persisted_swap.state, PaymentState::Pending);
+            assert!(persisted_swap.user_lockup_tx_id.is_some());
         })
         .await
         .unwrap();

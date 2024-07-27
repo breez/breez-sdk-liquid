@@ -184,6 +184,13 @@ impl CstDecode<bool> for *mut bool {
         unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
     }
 }
+impl CstDecode<crate::model::BuyBitcoinRequest> for *mut wire_cst_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BuyBitcoinRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::BuyBitcoinRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -301,6 +308,15 @@ impl CstDecode<crate::model::Payment> for *mut wire_cst_payment {
         CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
+    for *mut wire_cst_prepare_buy_bitcoin_request
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::PrepareBuyBitcoinRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::PreparePayOnchainRequest>
     for *mut wire_cst_prepare_pay_onchain_request
 {
@@ -328,18 +344,13 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
         CstDecode::<crate::model::PrepareReceiveOnchainResponse>::cst_decode(*wrap).into()
     }
 }
-impl CstDecode<crate::model::PrepareReceiveRequest> for *mut wire_cst_prepare_receive_request {
+impl CstDecode<crate::model::PrepareReceivePaymentRequest>
+    for *mut wire_cst_prepare_receive_payment_request
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentRequest {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::PrepareReceiveRequest>::cst_decode(*wrap).into()
-    }
-}
-impl CstDecode<crate::model::PrepareReceiveResponse> for *mut wire_cst_prepare_receive_response {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
-        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-        CstDecode::<crate::model::PrepareReceiveResponse>::cst_decode(*wrap).into()
+        CstDecode::<crate::model::PrepareReceivePaymentRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::PrepareRefundRequest> for *mut wire_cst_prepare_refund_request {
@@ -361,6 +372,13 @@ impl CstDecode<crate::model::PrepareSendResponse> for *mut wire_cst_prepare_send
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::model::PrepareSendResponse>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::ReceivePaymentRequest> for *mut wire_cst_receive_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::ReceivePaymentRequest>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::RefundRequest> for *mut wire_cst_refund_request {
@@ -415,6 +433,15 @@ impl CstDecode<crate::bindings::UrlSuccessActionData> for *mut wire_cst_url_succ
     fn cst_decode(self) -> crate::bindings::UrlSuccessActionData {
         let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
         CstDecode::<crate::bindings::UrlSuccessActionData>::cst_decode(*wrap).into()
+    }
+}
+impl CstDecode<crate::model::BuyBitcoinRequest> for wire_cst_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::BuyBitcoinRequest {
+        crate::model::BuyBitcoinRequest {
+            prepare_res: self.prepare_res.cst_decode(),
+            redirect_url: self.redirect_url.cst_decode(),
+        }
     }
 }
 impl CstDecode<crate::model::Config> for wire_cst_config {
@@ -1064,6 +1091,7 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
             fees_sat: self.fees_sat.cst_decode(),
             preimage: self.preimage.cst_decode(),
             bolt11: self.bolt11.cst_decode(),
+            description: self.description.cst_decode(),
             refund_tx_id: self.refund_tx_id.cst_decode(),
             refund_tx_amount_sat: self.refund_tx_amount_sat.cst_decode(),
             payment_type: self.payment_type.cst_decode(),
@@ -1133,6 +1161,25 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
         }
     }
 }
+impl CstDecode<crate::model::PrepareBuyBitcoinRequest> for wire_cst_prepare_buy_bitcoin_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinRequest {
+        crate::model::PrepareBuyBitcoinRequest {
+            provider: self.provider.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::PrepareBuyBitcoinResponse> for wire_cst_prepare_buy_bitcoin_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareBuyBitcoinResponse {
+        crate::model::PrepareBuyBitcoinResponse {
+            provider: self.provider.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::model::PreparePayOnchainRequest> for wire_cst_prepare_pay_onchain_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
@@ -1173,18 +1220,22 @@ impl CstDecode<crate::model::PrepareReceiveOnchainResponse>
         }
     }
 }
-impl CstDecode<crate::model::PrepareReceiveRequest> for wire_cst_prepare_receive_request {
+impl CstDecode<crate::model::PrepareReceivePaymentRequest>
+    for wire_cst_prepare_receive_payment_request
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
-        crate::model::PrepareReceiveRequest {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentRequest {
+        crate::model::PrepareReceivePaymentRequest {
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
         }
     }
 }
-impl CstDecode<crate::model::PrepareReceiveResponse> for wire_cst_prepare_receive_response {
+impl CstDecode<crate::model::PrepareReceivePaymentResponse>
+    for wire_cst_prepare_receive_payment_response
+{
     // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
-        crate::model::PrepareReceiveResponse {
+    fn cst_decode(self) -> crate::model::PrepareReceivePaymentResponse {
+        crate::model::PrepareReceivePaymentResponse {
             payer_amount_sat: self.payer_amount_sat.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
@@ -1242,6 +1293,15 @@ impl CstDecode<crate::model::ReceiveOnchainResponse> for wire_cst_receive_onchai
         crate::model::ReceiveOnchainResponse {
             address: self.address.cst_decode(),
             bip21: self.bip21.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::ReceivePaymentRequest> for wire_cst_receive_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
+        crate::model::ReceivePaymentRequest {
+            description: self.description.cst_decode(),
+            prepare_res: self.prepare_res.cst_decode(),
         }
     }
 }
@@ -1508,6 +1568,19 @@ impl NewWithNullPtr for wire_cst_bitcoin_address_data {
     }
 }
 impl Default for wire_cst_bitcoin_address_data {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_buy_bitcoin_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            prepare_res: Default::default(),
+            redirect_url: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_buy_bitcoin_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -1966,6 +2039,7 @@ impl NewWithNullPtr for wire_cst_payment {
             fees_sat: Default::default(),
             preimage: core::ptr::null_mut(),
             bolt11: core::ptr::null_mut(),
+            description: core::ptr::null_mut(),
             refund_tx_id: core::ptr::null_mut(),
             refund_tx_amount_sat: core::ptr::null_mut(),
             payment_type: Default::default(),
@@ -1987,6 +2061,33 @@ impl NewWithNullPtr for wire_cst_payment_error {
     }
 }
 impl Default for wire_cst_payment_error {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_buy_bitcoin_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            provider: Default::default(),
+            amount_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_buy_bitcoin_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_buy_bitcoin_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            provider: Default::default(),
+            amount_sat: Default::default(),
+            fees_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_buy_bitcoin_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2043,19 +2144,19 @@ impl Default for wire_cst_prepare_receive_onchain_response {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_prepare_receive_request {
+impl NewWithNullPtr for wire_cst_prepare_receive_payment_request {
     fn new_with_null_ptr() -> Self {
         Self {
             payer_amount_sat: Default::default(),
         }
     }
 }
-impl Default for wire_cst_prepare_receive_request {
+impl Default for wire_cst_prepare_receive_payment_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
 }
-impl NewWithNullPtr for wire_cst_prepare_receive_response {
+impl NewWithNullPtr for wire_cst_prepare_receive_payment_response {
     fn new_with_null_ptr() -> Self {
         Self {
             payer_amount_sat: Default::default(),
@@ -2063,7 +2164,7 @@ impl NewWithNullPtr for wire_cst_prepare_receive_response {
         }
     }
 }
-impl Default for wire_cst_prepare_receive_response {
+impl Default for wire_cst_prepare_receive_payment_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2143,6 +2244,19 @@ impl NewWithNullPtr for wire_cst_receive_onchain_response {
     }
 }
 impl Default for wire_cst_receive_onchain_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_receive_payment_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            description: core::ptr::null_mut(),
+            prepare_res: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_receive_payment_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2357,6 +2471,15 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_ba
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_buy_bitcoin_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(port_, that, req)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
     port_: i64,
     that: usize,
@@ -2465,6 +2588,15 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pa
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
+    port_: i64,
+    that: usize,
+    req: *mut wire_cst_prepare_buy_bitcoin_request,
+) {
+    wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin_impl(port_, that, req)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     port_: i64,
     that: usize,
@@ -2486,7 +2618,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pr
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_prepare_receive_request,
+    req: *mut wire_cst_prepare_receive_payment_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment_impl(port_, that, req)
 }
@@ -2522,7 +2654,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     port_: i64,
     that: usize,
-    req: *mut wire_cst_prepare_receive_response,
+    req: *mut wire_cst_receive_payment_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_receive_payment_impl(port_, that, req)
 }
@@ -2688,6 +2820,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_bool(value: bool) -> *
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request(
+) -> *mut wire_cst_buy_bitcoin_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_buy_bitcoin_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 ) -> *mut wire_cst_connect_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2807,6 +2947,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request(
+) -> *mut wire_cst_prepare_buy_bitcoin_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_prepare_buy_bitcoin_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(
 ) -> *mut wire_cst_prepare_pay_onchain_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2831,18 +2979,10 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_onchai
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request(
-) -> *mut wire_cst_prepare_receive_request {
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_payment_request(
+) -> *mut wire_cst_prepare_receive_payment_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_prepare_receive_request::new_with_null_ptr(),
-    )
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_response(
-) -> *mut wire_cst_prepare_receive_response {
-    flutter_rust_bridge::for_generated::new_leak_box_ptr(
-        wire_cst_prepare_receive_response::new_with_null_ptr(),
+        wire_cst_prepare_receive_payment_request::new_with_null_ptr(),
     )
 }
 
@@ -2867,6 +3007,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_response(
 ) -> *mut wire_cst_prepare_send_response {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_prepare_send_response::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request(
+) -> *mut wire_cst_receive_payment_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_receive_payment_request::new_with_null_ptr(),
     )
 }
 
@@ -3099,6 +3247,12 @@ pub struct wire_cst_bitcoin_address_data {
     amount_sat: *mut u64,
     label: *mut wire_cst_list_prim_u_8_strict,
     message: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_buy_bitcoin_request {
+    prepare_res: wire_cst_prepare_buy_bitcoin_response,
+    redirect_url: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -3642,6 +3796,7 @@ pub struct wire_cst_payment {
     fees_sat: u64,
     preimage: *mut wire_cst_list_prim_u_8_strict,
     bolt11: *mut wire_cst_list_prim_u_8_strict,
+    description: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     refund_tx_amount_sat: *mut u64,
     payment_type: i32,
@@ -3703,6 +3858,19 @@ pub struct wire_cst_PaymentError_SignerError {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_prepare_buy_bitcoin_request {
+    provider: i32,
+    amount_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_buy_bitcoin_response {
+    provider: i32,
+    amount_sat: u64,
+    fees_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_prepare_pay_onchain_request {
     receiver_amount_sat: u64,
     sat_per_vbyte: *mut u32,
@@ -3727,12 +3895,12 @@ pub struct wire_cst_prepare_receive_onchain_response {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_prepare_receive_request {
+pub struct wire_cst_prepare_receive_payment_request {
     payer_amount_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct wire_cst_prepare_receive_response {
+pub struct wire_cst_prepare_receive_payment_response {
     payer_amount_sat: u64,
     fees_sat: u64,
 }
@@ -3772,6 +3940,12 @@ pub struct wire_cst_rate {
 pub struct wire_cst_receive_onchain_response {
     address: *mut wire_cst_list_prim_u_8_strict,
     bip21: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_receive_payment_request {
+    description: *mut wire_cst_list_prim_u_8_strict,
+    prepare_res: wire_cst_prepare_receive_payment_response,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

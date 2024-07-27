@@ -35,6 +35,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void backup({required BackupRequest req});
 
+  Future<String> buyBitcoin({required BuyBitcoinRequest req});
+
   Future<void> disconnect();
 
   void emptyWalletCache();
@@ -61,11 +63,13 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 
+  Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
+
   Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req});
 
   Future<PrepareReceiveOnchainResponse> prepareReceiveOnchain({required PrepareReceiveOnchainRequest req});
 
-  Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req});
+  Future<PrepareReceivePaymentResponse> prepareReceivePayment({required PrepareReceivePaymentRequest req});
 
   Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req});
 
@@ -73,7 +77,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<ReceiveOnchainResponse> receiveOnchain({required PrepareReceiveOnchainResponse req});
 
-  Future<ReceivePaymentResponse> receivePayment({required PrepareReceiveResponse req});
+  Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req});
 
   Future<RecommendedFees> recommendedFees();
 

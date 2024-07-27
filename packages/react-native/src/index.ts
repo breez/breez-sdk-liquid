@@ -36,6 +36,11 @@ export interface BitcoinAddressData {
     message?: string
 }
 
+export interface BuyBitcoinRequest {
+    prepareRes: PrepareBuyBitcoinResponse
+    redirectUrl?: string
+}
+
 export interface Config {
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
@@ -203,12 +208,24 @@ export interface Payment {
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    description: string
     txId?: string
     swapId?: string
     preimage?: string
     bolt11?: string
     refundTxId?: string
     refundTxAmountSat?: number
+}
+
+export interface PrepareBuyBitcoinRequest {
+    provider: BuyBitcoinProvider
+    amountSat: number
+}
+
+export interface PrepareBuyBitcoinResponse {
+    provider: BuyBitcoinProvider
+    amountSat: number
+    feesSat: number
 }
 
 export interface PreparePayOnchainRequest {
@@ -231,11 +248,11 @@ export interface PrepareReceiveOnchainResponse {
     feesSat: number
 }
 
-export interface PrepareReceiveRequest {
+export interface PrepareReceivePaymentRequest {
     payerAmountSat: number
 }
 
-export interface PrepareReceiveResponse {
+export interface PrepareReceivePaymentResponse {
     payerAmountSat: number
     feesSat: number
 }
@@ -269,6 +286,11 @@ export interface Rate {
 export interface ReceiveOnchainResponse {
     address: string
     bip21: string
+}
+
+export interface ReceivePaymentRequest {
+    prepareRes: PrepareReceivePaymentResponse
+    description?: string
 }
 
 export interface ReceivePaymentResponse {
@@ -346,6 +368,10 @@ export type AesSuccessActionDataResult = {
 } | {
     type: AesSuccessActionDataResultVariant.ERROR_STATUS,
     reason: string
+}
+
+export enum BuyBitcoinProvider {
+    MOONPAY = "moonpay"
 }
 
 export enum InputTypeVariant {
@@ -568,12 +594,12 @@ export const sendPayment = async (req: PrepareSendResponse): Promise<SendPayment
     return response
 }
 
-export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise<PrepareReceiveResponse> => {
+export const prepareReceivePayment = async (req: PrepareReceivePaymentRequest): Promise<PrepareReceivePaymentResponse> => {
     const response = await BreezSDKLiquid.prepareReceivePayment(req)
     return response
 }
 
-export const receivePayment = async (req: PrepareReceiveResponse): Promise<ReceivePaymentResponse> => {
+export const receivePayment = async (req: ReceivePaymentRequest): Promise<ReceivePaymentResponse> => {
     const response = await BreezSDKLiquid.receivePayment(req)
     return response
 }
@@ -605,6 +631,16 @@ export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): 
 
 export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promise<ReceiveOnchainResponse> => {
     const response = await BreezSDKLiquid.receiveOnchain(req)
+    return response
+}
+
+export const prepareBuyBitcoin = async (req: PrepareBuyBitcoinRequest): Promise<PrepareBuyBitcoinResponse> => {
+    const response = await BreezSDKLiquid.prepareBuyBitcoin(req)
+    return response
+}
+
+export const buyBitcoin = async (req: BuyBitcoinRequest): Promise<string> => {
+    const response = await BreezSDKLiquid.buyBitcoin(req)
     return response
 }
 

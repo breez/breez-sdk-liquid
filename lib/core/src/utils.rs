@@ -7,7 +7,7 @@ use crate::prelude::{
     STANDARD_FEE_RATE_SAT_PER_VBYTE,
 };
 use anyhow::{anyhow, Result};
-use boltz_client::boltzv2::{
+use boltz_client::boltz::{
     BoltzApiClientV2, Cooperative, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
 };
 use boltz_client::network::electrum::ElectrumConfig;
@@ -73,7 +73,7 @@ pub(crate) fn estimate_refund_fees(
         true,
         100,
     );
-    let swap_tx = boltz_client::LBtcSwapTxV2::new_refund(
+    let swap_tx = boltz_client::LBtcSwapTx::new_refund(
         swap_script,
         &output_address.to_string(),
         &electrum_config,

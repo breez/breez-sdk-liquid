@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use boltz_client::swaps::boltzv2::{self, Subscription, SwapUpdate};
+use boltz_client::swaps::boltz::{self, Subscription, SwapUpdate};
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
 use tokio::net::TcpStream;
@@ -18,13 +18,13 @@ use super::{ReconnectHandler, SwapperStatusStream};
 pub(crate) struct BoltzStatusStream {
     url: String,
     subscription_notifier: broadcast::Sender<String>,
-    update_notifier: broadcast::Sender<boltzv2::Update>,
+    update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl BoltzStatusStream {
     pub(crate) fn new(url: &str) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
-        let (update_notifier, _) = broadcast::channel::<boltzv2::Update>(30);
+        let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self {
             url: url.replace("http", "ws") + "/ws",
@@ -65,7 +65,7 @@ impl SwapperStatusStream for BoltzStatusStream {
         Ok(())
     }
 
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltzv2::Update> {
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::Update> {
         self.update_notifier.subscribe()
     }
 

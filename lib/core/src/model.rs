@@ -1,9 +1,16 @@
+use std::path::PathBuf;
+
 use anyhow::{anyhow, Result};
-use boltz_client::network::Chain;
-use boltz_client::swaps::boltzv2::{
-    CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+
+use boltz_client::{
+    network::Chain,
+    swaps::boltz::{
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
+    },
+    ToHex,
 };
-use boltz_client::{BtcSwapScriptV2, BtcSwapTxV2, Keypair, LBtcSwapScriptV2, LBtcSwapTxV2};
+use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
+use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -67,6 +74,20 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
         }
+    }
+
+    pub(crate) fn get_wallet_working_dir(&self, signer: &SwSigner) -> anyhow::Result<String> {
+        Ok(PathBuf::from(self.working_dir.clone())
+            .join(match self.network {
+                LiquidNetwork::Mainnet => "mainnet",
+                LiquidNetwork::Testnet => "testnet",
+            })
+            .join(signer.fingerprint().to_hex())
+            .to_str()
+            .ok_or(anyhow::anyhow!(
+                "Could not get retrieve current wallet directory"
+            ))?
+            .to_string())
     }
 
     pub fn zero_conf_max_amount_sat(&self) -> u64 {
@@ -153,8 +174,8 @@ pub trait EventListener: Send + Sync {
     fn on_event(&self, e: SdkEvent);
 }
 
-/// Event emitted by the SDK. To listen for and react to these events, use an [EventListener] when
-/// initializing the [LiquidSdk].
+/// Event emitted by the SDK. Add an [EventListener] by calling [crate::sdk::LiquidSdk::add_event_listener]
+/// to listen for emitted events.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SdkEvent {
     PaymentFailed { details: Payment },
@@ -166,29 +187,41 @@ pub enum SdkEvent {
     Synced,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::connect].
 #[derive(Debug, Serialize)]
 pub struct ConnectRequest {
     pub mnemonic: String,
     pub config: Config,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceiveRequest {
+pub struct PrepareReceivePaymentRequest {
     pub payer_amount_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceiveResponse {
+pub struct PrepareReceivePaymentResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
+#[derive(Debug, Serialize)]
+pub struct ReceivePaymentRequest {
+    pub description: Option<String>,
+    pub prepare_res: PrepareReceivePaymentResponse,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     pub id: String,
     pub invoice: String,
 }
 
+/// The minimum and maximum in satoshis of a Lightning or onchain payment.
 #[derive(Debug, Serialize)]
 pub struct Limits {
     pub min_sat: u64,
@@ -196,6 +229,7 @@ pub struct Limits {
     pub max_zero_conf_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
 #[derive(Debug, Serialize)]
 pub struct LightningPaymentLimitsResponse {
     /// Amount limits for a Send Payment to be valid
@@ -204,6 +238,7 @@ pub struct LightningPaymentLimitsResponse {
     pub receive: Limits,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
 #[derive(Debug, Serialize)]
 pub struct OnchainPaymentLimitsResponse {
     /// Amount limits for a Send Onchain Payment to be valid
@@ -212,28 +247,33 @@ pub struct OnchainPaymentLimitsResponse {
     pub receive: Limits,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     pub invoice: String,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub invoice: String,
     pub fees_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub receiver_amount_sat: u64,
     pub sat_per_vbyte: Option<u32>,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainResponse {
     pub receiver_amount_sat: u64,
@@ -241,39 +281,45 @@ pub struct PreparePayOnchainResponse {
     pub total_fees_sat: u64,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
 #[derive(Debug, Serialize)]
 pub struct PayOnchainRequest {
     pub address: String,
     pub prepare_res: PreparePayOnchainResponse,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainRequest {
     pub payer_amount_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveOnchainResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::receive_onchain].
 #[derive(Debug, Serialize)]
 pub struct ReceiveOnchainResponse {
     pub address: String,
     pub bip21: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundRequest {
-    // The address where the swap funds are locked up
+    /// The address where the swap funds are locked up
     pub swap_address: String,
-    // The address to refund the swap funds to
+    /// The address to refund the swap funds to
     pub refund_address: String,
-    // The fee rate in sat/vB for the refund transaction
+    /// The fee rate in sat/vB for the refund transaction
     pub sat_per_vbyte: u32,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
 #[derive(Debug, Serialize)]
 pub struct PrepareRefundResponse {
     pub tx_vsize: u32,
@@ -281,21 +327,24 @@ pub struct PrepareRefundResponse {
     pub refund_tx_id: Option<String>,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::refund].
 #[derive(Debug, Serialize)]
 pub struct RefundRequest {
-    // The address where the swap funds are locked up
+    /// The address where the swap funds are locked up
     pub swap_address: String,
-    // The address to refund the swap funds to
+    /// The address to refund the swap funds to
     pub refund_address: String,
-    // The fee rate in sat/vB for the refund transaction
+    /// The fee rate in sat/vB for the refund transaction
     pub sat_per_vbyte: u32,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::refund].
 #[derive(Debug, Serialize)]
 pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
 #[derive(Debug, Serialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
@@ -307,6 +356,7 @@ pub struct GetInfoResponse {
     pub pubkey: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::backup].
 #[derive(Debug, Serialize)]
 pub struct BackupRequest {
     /// Path to the backup.
@@ -316,12 +366,13 @@ pub struct BackupRequest {
     pub backup_path: Option<String>,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::restore].
 #[derive(Debug, Serialize)]
 pub struct RestoreRequest {
     pub backup_path: Option<String>,
 }
 
-/// Represents a list payments request.
+/// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
@@ -352,18 +403,18 @@ impl Swap {
 
 #[derive(Clone, Debug)]
 pub(crate) enum SwapScriptV2 {
-    Bitcoin(BtcSwapScriptV2),
-    Liquid(LBtcSwapScriptV2),
+    Bitcoin(BtcSwapScript),
+    Liquid(LBtcSwapScript),
 }
 impl SwapScriptV2 {
-    pub(crate) fn as_bitcoin_script(&self) -> Result<BtcSwapScriptV2> {
+    pub(crate) fn as_bitcoin_script(&self) -> Result<BtcSwapScript> {
         match self {
             SwapScriptV2::Bitcoin(script) => Ok(script.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
 
-    pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScriptV2> {
+    pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScript> {
         match self {
             SwapScriptV2::Liquid(script) => Ok(script.clone()),
             _ => Err(anyhow!("Invalid chain")),
@@ -373,18 +424,18 @@ impl SwapScriptV2 {
 
 #[allow(clippy::large_enum_variant)]
 pub(crate) enum SwapTxV2 {
-    Bitcoin(BtcSwapTxV2),
-    Liquid(LBtcSwapTxV2),
+    Bitcoin(BtcSwapTx),
+    Liquid(LBtcSwapTx),
 }
 impl SwapTxV2 {
-    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTxV2> {
+    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTx> {
         match self {
             SwapTxV2::Bitcoin(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
 
-    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTxV2> {
+    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTx> {
         match self {
             SwapTxV2::Liquid(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
@@ -424,11 +475,12 @@ pub(crate) struct ChainSwap {
     pub(crate) lockup_address: String,
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
+    pub(crate) description: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
     pub(crate) accept_zero_conf: bool,
-    /// JSON representation of [crate::persist::send::InternalCreateChainResponse]
+    /// JSON representation of [crate::persist::chain::InternalCreateChainResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the server lockup tx is successfully broadcast
     pub(crate) server_lockup_tx_id: Option<String>,
@@ -469,12 +521,12 @@ impl ChainSwap {
         let chain_swap_details = self.get_boltz_create_response()?.claim_details;
         let our_pubkey = self.get_claim_keypair()?.public_key();
         let swap_script = match self.direction {
-            Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Incoming => SwapScriptV2::Liquid(LBtcSwapScript::chain_from_swap_resp(
                 Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
-            Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Outgoing => SwapScriptV2::Bitcoin(BtcSwapScript::chain_from_swap_resp(
                 Side::Claim,
                 chain_swap_details,
                 our_pubkey.into(),
@@ -487,12 +539,12 @@ impl ChainSwap {
         let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
         let our_pubkey = self.get_refund_keypair()?.public_key();
         let swap_script = match self.direction {
-            Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Incoming => SwapScriptV2::Bitcoin(BtcSwapScript::chain_from_swap_resp(
                 Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
             )?),
-            Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScriptV2::chain_from_swap_resp(
+            Direction::Outgoing => SwapScriptV2::Liquid(LBtcSwapScript::chain_from_swap_resp(
                 Side::Lockup,
                 chain_swap_details,
                 our_pubkey.into(),
@@ -527,6 +579,7 @@ impl ChainSwap {
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     pub(crate) invoice: String,
+    pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -560,14 +613,16 @@ impl SendSwap {
                 &internal_create_response.claim_public_key,
             )?,
             expected_amount: internal_create_response.expected_amount,
+            referral_id: internal_create_response.referral_id,
             swap_tree: internal_create_response.swap_tree.clone().into(),
+            timeout_block_height: internal_create_response.timeout_block_height,
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
     }
 
-    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
-        LBtcSwapScriptV2::submarine_from_swap_resp(
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
+        LBtcSwapScript::submarine_from_swap_resp(
             &self.get_boltz_create_response()?,
             self.get_refund_keypair()?.public_key().into(),
         )
@@ -609,6 +664,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) create_response_json: String,
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
+    pub(crate) description: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -648,7 +704,7 @@ impl ReceiveSwap {
         Ok(res)
     }
 
-    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScriptV2, PaymentError> {
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
         let keypair = self.get_claim_keypair()?;
         let create_response =
             self.get_boltz_create_response()
@@ -658,7 +714,7 @@ impl ReceiveSwap {
                         self.id
                     ),
                 })?;
-        LBtcSwapScriptV2::reverse_from_swap_resp(&create_response, keypair.public_key().into())
+        LBtcSwapScript::reverse_from_swap_resp(&create_response, keypair.public_key().into())
             .map_err(|e| PaymentError::Generic {
                 err: format!(
                     "Failed to create swap script for Receive Swap {}: {e:?}",
@@ -690,6 +746,7 @@ impl ReceiveSwap {
     }
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::list_refundables].
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct RefundableSwap {
     pub swap_address: String,
@@ -706,6 +763,7 @@ impl From<ChainSwap> for RefundableSwap {
     }
 }
 
+/// The payment state of an individual payment.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
@@ -882,6 +940,8 @@ pub struct PaymentSwapData {
 
     pub bolt11: Option<String>,
 
+    pub description: String,
+
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
 
@@ -940,12 +1000,16 @@ pub struct Payment {
     /// In the case of a Receive payment, this is the invoice paid by the user
     pub bolt11: Option<String>,
 
+    /// Represents the invoice description
+    pub description: String,
+
     /// For a Send swap which was refunded, this is the refund tx id
     pub refund_tx_id: Option<String>,
 
     /// For a Send swap which was refunded, this is the refund amount
     pub refund_tx_amount_sat: Option<u64>,
 
+    /// If it is a `Send` or `Receive` payment
     pub payment_type: PaymentType,
 
     /// Composite status representing the overall status of the payment.
@@ -970,6 +1034,7 @@ impl Payment {
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             preimage: swap.preimage,
             bolt11: swap.bolt11,
+            description: swap.description,
             refund_tx_id: swap.refund_tx_id,
             refund_tx_amount_sat: swap.refund_tx_amount_sat,
             payment_type,
@@ -995,6 +1060,10 @@ impl Payment {
             },
             preimage: swap.as_ref().and_then(|s| s.preimage.clone()),
             bolt11: swap.as_ref().and_then(|s| s.bolt11.clone()),
+            description: swap
+                .as_ref()
+                .map(|s| s.description.clone())
+                .unwrap_or("Liquid transfer".to_string()),
             refund_tx_id: swap.as_ref().and_then(|s| s.refund_tx_id.clone()),
             refund_tx_amount_sat: swap.as_ref().and_then(|s| s.refund_tx_amount_sat),
             payment_type: tx.payment_type,
@@ -1009,6 +1078,7 @@ impl Payment {
     }
 }
 
+/// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RecommendedFees {
@@ -1017,6 +1087,39 @@ pub struct RecommendedFees {
     pub hour_fee: u64,
     pub economy_fee: u64,
     pub minimum_fee: u64,
+}
+
+/// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
+#[derive(Debug, Clone, Copy, EnumString, PartialEq, Serialize)]
+pub enum BuyBitcoinProvider {
+    #[strum(serialize = "moonpay")]
+    Moonpay,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
+#[derive(Debug, Serialize)]
+pub struct PrepareBuyBitcoinRequest {
+    pub provider: BuyBitcoinProvider,
+    pub amount_sat: u64,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
+#[derive(Clone, Debug, Serialize)]
+pub struct PrepareBuyBitcoinResponse {
+    pub provider: BuyBitcoinProvider,
+    pub amount_sat: u64,
+    pub fees_sat: u64,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::buy_bitcoin].
+#[derive(Clone, Debug, Serialize)]
+pub struct BuyBitcoinRequest {
+    pub prepare_res: PrepareBuyBitcoinResponse,
+
+    /// The optional URL to redirect to after completing the buy.
+    ///
+    /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
+    pub redirect_url: Option<String>,
 }
 
 /// Internal SDK log entry used in the Uniffi and Dart bindings
@@ -1103,5 +1206,20 @@ macro_rules! get_invoice_amount {
             .amount_milli_satoshis()
             .expect("Expecting valid amount")
             / 1000
+    };
+}
+
+#[macro_export]
+macro_rules! get_invoice_description {
+    ($invoice:expr) => {
+        match $invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .expect("Expecting valid invoice")
+            .description()
+        {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        }
     };
 }

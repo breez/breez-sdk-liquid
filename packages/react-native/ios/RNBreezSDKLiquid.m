@@ -107,6 +107,18 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
+    prepareBuyBitcoin: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    buyBitcoin: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     listPayments: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject

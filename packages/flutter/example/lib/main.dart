@@ -20,7 +20,7 @@ void main() async {
   runApp(App(credentialsManager: credentialsManager, liquidSDK: liquidSDK));
 }
 
-Future<BindingLiquidSdk> reconnect({
+Future<void> reconnect({
   required BreezSDKLiquid liquidSDK,
   required String mnemonic,
   LiquidNetwork network = LiquidNetwork.mainnet,
@@ -30,7 +30,7 @@ Future<BindingLiquidSdk> reconnect({
     config: config,
     mnemonic: mnemonic,
   );
-  return await liquidSDK.connect(req: req);
+  await liquidSDK.connect(req: req);
 }
 
 class App extends StatefulWidget {

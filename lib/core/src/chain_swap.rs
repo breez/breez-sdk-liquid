@@ -2,8 +2,8 @@ use std::time::Duration;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use boltz_client::swaps::boltzv2::{self, SwapUpdateTxDetails};
-use boltz_client::swaps::{boltz::ChainSwapStates, boltzv2::CreateChainResponse};
+use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
+use boltz_client::swaps::{boltz::ChainSwapStates, boltz::CreateChainResponse};
 use boltz_client::Secp256k1;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::Transaction;
@@ -84,7 +84,7 @@ impl ChainSwapStateHandler {
     }
 
     /// Handles status updates from Boltz for Chain swaps
-    pub(crate) async fn on_new_status(&self, update: &boltzv2::Update) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let swap = self
             .persister
@@ -177,11 +177,7 @@ impl ChainSwapStateHandler {
         Ok(())
     }
 
-    async fn on_new_incoming_status(
-        &self,
-        swap: &ChainSwap,
-        update: &boltzv2::Update,
-    ) -> Result<()> {
+    async fn on_new_incoming_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
@@ -293,18 +289,13 @@ impl ChainSwapStateHandler {
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
-                        match (swap.user_lockup_tx_id.clone(), swap_state) {
-                            (Some(_), _) => {
+                        match swap.user_lockup_tx_id {
+                            Some(_) => {
                                 info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
                                 self.update_swap_info(id, Refundable, None, None, None, None)
                                     .await?;
                             }
-                            (None, ChainSwapStates::TransactionLockupFailed) => {
-                                info!("Chain Swap {id} user lockup tx was broadcast but lockup has failed. Setting the swap to refundable.");
-                                self.update_swap_info(id, Refundable, None, None, None, None)
-                                    .await?;
-                            }
-                            (None, _) => {
+                            None => {
                                 info!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
                                 self.update_swap_info(id, Failed, None, None, None, None)
                                     .await?;
@@ -325,11 +316,7 @@ impl ChainSwapStateHandler {
         }
     }
 
-    async fn on_new_outgoing_status(
-        &self,
-        swap: &ChainSwap,
-        update: &boltzv2::Update,
-    ) -> Result<()> {
+    async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
@@ -952,7 +939,8 @@ mod tests {
 
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
+                let chain_swap =
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler
@@ -975,7 +963,8 @@ mod tests {
 
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
-                let chain_swap = new_chain_swap(Direction::Incoming, Some(*first_state));
+                let chain_swap =
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
                 storage.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_state_handler

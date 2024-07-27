@@ -227,10 +227,10 @@ class BreezSDKLiquidModule(
     ) {
         executor.execute {
             try {
-                val prepareReceiveRequest =
-                    asPrepareReceiveRequest(req)
-                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest")) }
-                val res = getBindingLiquidSdk().prepareReceivePayment(prepareReceiveRequest)
+                val prepareReceivePaymentRequest =
+                    asPrepareReceivePaymentRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceivePaymentRequest")) }
+                val res = getBindingLiquidSdk().prepareReceivePayment(prepareReceivePaymentRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -245,10 +245,10 @@ class BreezSDKLiquidModule(
     ) {
         executor.execute {
             try {
-                val prepareReceiveResponse =
-                    asPrepareReceiveResponse(req)
-                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveResponse")) }
-                val res = getBindingLiquidSdk().receivePayment(prepareReceiveResponse)
+                val receivePaymentRequest =
+                    asReceivePaymentRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ReceivePaymentRequest")) }
+                val res = getBindingLiquidSdk().receivePayment(receivePaymentRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -345,6 +345,41 @@ class BreezSDKLiquidModule(
                         ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveOnchainResponse")) }
                 val res = getBindingLiquidSdk().receiveOnchain(prepareReceiveOnchainResponse)
                 promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun prepareBuyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareBuyBitcoinRequest =
+                    asPrepareBuyBitcoinRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareBuyBitcoinRequest")) }
+                val res = getBindingLiquidSdk().prepareBuyBitcoin(prepareBuyBitcoinRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun buyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val buyBitcoinRequest =
+                    asBuyBitcoinRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BuyBitcoinRequest")) }
+                val res = getBindingLiquidSdk().buyBitcoin(buyBitcoinRequest)
+                promise.resolve(res)
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }

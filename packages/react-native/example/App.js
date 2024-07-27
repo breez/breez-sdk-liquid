@@ -88,7 +88,7 @@ const App = () => {
                 // Get the fees required for this payment
                 addLine("Payment fees", `${prepareReceiveRes.feesSat}`)
 
-                let receivePaymentRes = await receivePayment(prepareReceiveRes)
+                let receivePaymentRes = await receivePayment({prepareRes: prepareReceiveRes})
                 addLine("receivePayment", JSON.stringify(receivePaymentRes))
                 // Wait for payer to pay.... once successfully paid an event of `paymentSucceeded` will be emitted.
                 addLine("Bolt11 invoice", `${receivePaymentRes.invoice}`)
