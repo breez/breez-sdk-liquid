@@ -33,6 +33,7 @@ use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
+use crate::restore_onchain::onchain::TxMap;
 use crate::send_swap::SendSwapStateHandler;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
@@ -1626,7 +1627,8 @@ impl LiquidSdk {
 
         // TODO Recover data from onchain on 1st sync only
         let t0 = Instant::now();
-        self.recover_from_onchain(tx_map).await?;
+        self.recover_from_onchain(TxMap::from_raw_tx_map(tx_map))
+            .await?;
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Finished recovering swap tx IDs from onchain data (t = {duration_ms} ms)");
 
