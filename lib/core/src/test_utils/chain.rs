@@ -48,10 +48,7 @@ impl LiquidChainService for MockLiquidChainService {
         unimplemented!()
     }
 
-    async fn get_scripts_history_electrum(
-        &self,
-        _scripts: &[&Script],
-    ) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
         unimplemented!()
     }
 

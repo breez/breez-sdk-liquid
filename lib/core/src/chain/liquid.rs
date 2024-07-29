@@ -31,11 +31,15 @@ pub trait LiquidChainService: Send + Sync {
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
-    /// Get the transactions involved in a script, including lowball transactions
+    /// Get the transactions involved in a script, including lowball transactions.
+    ///
+    /// On mainnet, the data is fetched from Esplora. On testnet, it's fetched from Electrum.
     async fn get_script_history(&self, scripts: &Script) -> Result<Vec<History>>;
 
     /// Get the transactions involved in a list of scripts, including lowball transactions.
-    async fn get_scripts_history_electrum(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+    ///
+    /// The data is fetched in a single call from the Electrum endpoint.
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -156,7 +160,7 @@ impl LiquidChainService for HybridLiquidChainService {
         }
     }
 
-    async fn get_scripts_history_electrum(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
         self.electrum_client
             .get_scripts_history(scripts)
             .map_err(Into::into)

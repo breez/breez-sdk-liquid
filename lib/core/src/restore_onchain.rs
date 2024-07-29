@@ -173,7 +173,7 @@ pub(crate) mod onchain {
                 .liquid_chain_service
                 .lock()
                 .await
-                .get_scripts_history_electrum(swap_scripts.as_slice())
+                .get_scripts_history(swap_scripts.as_slice())
                 .await?;
             let swap_scripts_len = swap_scripts.len();
             let script_histories_len = script_histories.len();
