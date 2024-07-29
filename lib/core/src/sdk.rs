@@ -33,7 +33,7 @@ use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapStateHandler;
-use crate::restore_onchain::onchain::TxMap;
+use crate::restore::TxMap;
 use crate::send_swap::SendSwapStateHandler;
 use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
