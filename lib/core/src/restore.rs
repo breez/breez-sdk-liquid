@@ -9,7 +9,7 @@ use log::{error, info};
 use lwk_wollet::elements::{Script, Txid};
 use lwk_wollet::{History, WalletTx};
 
-use crate::restore::immutable::ImmutableDb;
+use crate::restore::immutable::SwapsList;
 use crate::sdk::LiquidSdk;
 
 /// A map of all our known onchain txs, indexed by tx ID
@@ -47,7 +47,7 @@ pub(crate) struct RecoveredOnchainData {
 
 impl LiquidSdk {
     pub(crate) async fn recover_from_onchain(&self, tx_map: TxMap) -> Result<()> {
-        let immutable_db = self.get_immutable_db_data().await?;
+        let immutable_db = self.get_swaps_list().await?;
 
         let _recovered = self.get_onchain_data(tx_map, immutable_db).await?;
 
@@ -63,7 +63,7 @@ impl LiquidSdk {
     pub(crate) async fn get_onchain_data(
         &self,
         tx_map: TxMap,
-        immutable_db: ImmutableDb,
+        immutable_db: SwapsList,
     ) -> Result<RecoveredOnchainData> {
         let send_swap_scripts: Vec<&Script> = immutable_db
             .send_db
@@ -252,13 +252,14 @@ pub(crate) mod immutable {
 
     use crate::sdk::LiquidSdk;
 
-    pub(crate) struct ImmutableDb {
+    /// Swap data received from the immutable DB
+    pub(crate) struct SwapsList {
         pub(crate) send_db: HashMap<String, (LBtcSwapScript, Script)>,
         pub(crate) receive_db: HashMap<String, (CreateReverseResponse, LBtcSwapScript, Script)>,
     }
 
     impl LiquidSdk {
-        pub(crate) async fn get_immutable_db_data(&self) -> Result<ImmutableDb> {
+        pub(crate) async fn get_swaps_list(&self) -> Result<SwapsList> {
             let con = self.persister.get_connection()?;
 
             // Send Swap scripts by swap ID
@@ -320,7 +321,7 @@ pub(crate) mod immutable {
             let receive_swap_immutable_db_size = receive_swap_immutable_db.len();
             info!("Receive Swap immutable DB: {receive_swap_immutable_db_size} rows");
 
-            Ok(ImmutableDb {
+            Ok(SwapsList {
                 send_db: send_swap_immutable_db,
                 receive_db: receive_swap_immutable_db,
             })
