@@ -65,80 +65,13 @@ impl LiquidSdk {
         tx_map: TxMap,
         immutable_db: SwapsList,
     ) -> Result<RecoveredOnchainData> {
-        let send_swap_scripts: Vec<&Script> = immutable_db
-            .send_db
-            .iter()
-            .map(|(_, (_, script))| script)
-            .collect();
-        let receive_swap_scripts: Vec<&Script> = immutable_db
-            .receive_db
-            .iter()
-            .map(|(_, (_, _, script))| script)
-            .collect();
-        let mut swap_scripts = send_swap_scripts.clone();
-        swap_scripts.extend(receive_swap_scripts.clone());
-
-        let script_histories = self
-            .liquid_chain_service
-            .lock()
-            .await
-            .get_scripts_history(swap_scripts.as_slice())
-            .await?;
-        let swap_scripts_len = swap_scripts.len();
-        let script_histories_len = script_histories.len();
-        ensure!(
-            swap_scripts_len == script_histories_len,
-            anyhow!("Got {script_histories_len} script histories, expected {swap_scripts_len}")
-        );
-        let script_to_history_map: Vec<(&Script, Vec<History>)> = swap_scripts
-            .into_iter()
-            .zip(script_histories.into_iter())
-            .collect();
-
-        let mut send_swaps_script_to_history_map: HashMap<Script, Vec<History>> = HashMap::new();
-        let mut receive_swaps_script_to_history_map: HashMap<Script, Vec<History>> = HashMap::new();
-        script_to_history_map
-            .into_iter()
-            .for_each(|(script, history)| {
-                if send_swap_scripts.contains(&script) {
-                    send_swaps_script_to_history_map.insert(script.clone(), history);
-                } else if receive_swap_scripts.contains(&script) {
-                    receive_swaps_script_to_history_map.insert(script.clone(), history);
-                }
-                else {
-                    error!("Found script that doesn't belong to either Send or Receive swaps: {script:?}");
-                }
-            });
-
-        let mut send_composite_data: HashMap<String, (LBtcSwapScript, Script, &Vec<History>)> =
-            HashMap::new();
-        for (swap_id, (script, script_pk)) in immutable_db.send_db {
-            match send_swaps_script_to_history_map.get(&script_pk) {
-                None => error!("No history found for script pk {script_pk:?}"),
-                Some(history) => {
-                    send_composite_data.insert(swap_id, (script, script_pk, history));
-                }
-            }
-        }
-        let mut receive_composite_data: HashMap<
-            String,
-            (CreateReverseResponse, LBtcSwapScript, Script, &Vec<History>),
-        > = HashMap::new();
-        for (swap_id, (create_resp, script, script_pk)) in immutable_db.receive_db {
-            match receive_swaps_script_to_history_map.get(&script_pk) {
-                None => error!("No history found for script pk {script_pk:?}"),
-                Some(history) => {
-                    receive_composite_data
-                        .insert(swap_id, (create_resp, script, script_pk, history));
-                }
-            }
-        }
+        let swap_list_with_histories = self.get_swaps_list_with_histories(immutable_db).await?;
 
         let recovered_send_data = self
-            .recover_send_swap_tx_ids(&tx_map, &send_composite_data)
+            .recover_send_swap_tx_ids(&tx_map, &swap_list_with_histories.send_swaps)
             .await?;
         let recovered_receive_data = self
-            .recover_receive_swap_tx_ids(&tx_map, &receive_composite_data)
+            .recover_receive_swap_tx_ids(&tx_map, &swap_list_with_histories.receive_swaps)
             .await?;
 
         Ok(RecoveredOnchainData {
@@ -151,7 +84,7 @@ impl LiquidSdk {
     pub(crate) async fn recover_send_swap_tx_ids(
         &self,
         tx_map: &TxMap,
-        send_composite_data: &HashMap<String, (LBtcSwapScript, Script, &Vec<History>)>,
+        send_composite_data: &HashMap<String, (LBtcSwapScript, Script, Vec<History>)>,
     ) -> Result<RecoveredOnchainDataSend> {
         let mut lockup_tx_map: HashMap<String, Txid> = HashMap::new();
         let mut refund_tx_map: HashMap<String, Txid> = HashMap::new();
@@ -202,7 +135,7 @@ impl LiquidSdk {
         tx_map: &TxMap,
         receive_composite_data: &HashMap<
             String,
-            (CreateReverseResponse, LBtcSwapScript, Script, &Vec<History>),
+            (CreateReverseResponse, LBtcSwapScript, Script, Vec<History>),
         >,
     ) -> Result<RecoveredOnchainDataReceive> {
         let mut lockup_claim_tx_ids_map: HashMap<String, (Txid, Txid)> = HashMap::new();
@@ -244,28 +177,26 @@ impl LiquidSdk {
 pub(crate) mod immutable {
     use std::collections::HashMap;
 
-    use anyhow::Result;
+    use anyhow::{anyhow, ensure, Result};
     use boltz_client::boltz::CreateReverseResponse;
     use boltz_client::LBtcSwapScript;
     use log::{error, info};
     use lwk_wollet::elements::Script;
+    use lwk_wollet::History;
 
+    use crate::prelude::*;
     use crate::sdk::LiquidSdk;
 
     /// Swap data received from the immutable DB
     pub(crate) struct SwapsList {
-        pub(crate) send_db: HashMap<String, (LBtcSwapScript, Script)>,
-        pub(crate) receive_db: HashMap<String, (CreateReverseResponse, LBtcSwapScript, Script)>,
+        send_db: HashMap<String, (LBtcSwapScript, Script)>,
+        receive_db: HashMap<String, (CreateReverseResponse, LBtcSwapScript, Script)>,
     }
 
-    impl LiquidSdk {
-        pub(crate) async fn get_swaps_list(&self) -> Result<SwapsList> {
-            let con = self.persister.get_connection()?;
-
+    impl SwapsList {
+        fn init(send_swaps: Vec<SendSwap>, receive_swaps: Vec<ReceiveSwap>) -> Result<Self> {
             // Send Swap scripts by swap ID
-            let send_swap_immutable_db: HashMap<String, (LBtcSwapScript, Script)> = self
-                .persister
-                .list_send_swaps(&con, vec![])?
+            let send_swap_immutable_db: HashMap<String, (LBtcSwapScript, Script)> = send_swaps
                 .iter()
                 .filter_map(|swap| match swap.get_swap_script() {
                     Ok(script) => match &script.funding_addrs {
@@ -287,8 +218,7 @@ pub(crate) mod immutable {
             info!("Send Swap immutable DB: {send_swap_immutable_db_size} rows");
 
             let receive_swap_immutable_db: HashMap<String, (CreateReverseResponse, LBtcSwapScript, Script)> =
-                self.persister
-                    .list_receive_swaps(&con, vec![])?
+                receive_swaps
                     .iter()
                     .filter_map(|swap| {
                         let create_response = swap.get_boltz_create_response();
@@ -324,6 +254,108 @@ pub(crate) mod immutable {
             Ok(SwapsList {
                 send_db: send_swap_immutable_db,
                 receive_db: receive_swap_immutable_db,
+            })
+        }
+
+        fn send_swaps_by_script(&self) -> HashMap<Script, (String, LBtcSwapScript)> {
+            self.send_db
+                .clone()
+                .into_iter()
+                .map(|(swap_id, (script, script_pk))| (script_pk, (swap_id, script)))
+                .collect()
+        }
+
+        fn receive_swaps_by_script(
+            &self,
+        ) -> HashMap<Script, (String, CreateReverseResponse, LBtcSwapScript)> {
+            self.receive_db
+                .clone()
+                .into_iter()
+                .map(|(swap_id, (create_resp, script, script_pk))| {
+                    (script_pk, (swap_id, create_resp, script))
+                })
+                .collect()
+        }
+
+        fn get_all_swap_scripts(&self) -> Vec<&Script> {
+            let send_swap_scripts: Vec<&Script> =
+                self.send_db.iter().map(|(_, (_, script))| script).collect();
+            let receive_swap_scripts: Vec<&Script> = self
+                .receive_db
+                .iter()
+                .map(|(_, (_, _, script))| script)
+                .collect();
+            let mut swap_scripts = send_swap_scripts.clone();
+            swap_scripts.extend(receive_swap_scripts.clone());
+            swap_scripts
+        }
+    }
+
+    pub(crate) struct SwapsListWithHistories {
+        pub(crate) send_swaps: HashMap<String, (LBtcSwapScript, Script, Vec<History>)>,
+        pub(crate) receive_swaps:
+            HashMap<String, (CreateReverseResponse, LBtcSwapScript, Script, Vec<History>)>,
+    }
+
+    impl LiquidSdk {
+        pub(crate) async fn get_swaps_list(&self) -> Result<SwapsList> {
+            let con = self.persister.get_connection()?;
+
+            let send_swaps = self.persister.list_send_swaps(&con, vec![])?;
+            let receive_swaps = self.persister.list_receive_swaps(&con, vec![])?;
+
+            SwapsList::init(send_swaps, receive_swaps)
+        }
+
+        /// Extends the given [SwapList] with the script histories fetched from the [LiquidChainService]
+        pub(crate) async fn get_swaps_list_with_histories(
+            &self,
+            swaps_list: SwapsList,
+        ) -> Result<SwapsListWithHistories> {
+            let swap_scripts = swaps_list.get_all_swap_scripts();
+
+            let script_histories = self
+                .liquid_chain_service
+                .lock()
+                .await
+                .get_scripts_history(swap_scripts.as_slice())
+                .await?;
+            let swap_scripts_len = swap_scripts.len();
+            let script_histories_len = script_histories.len();
+            ensure!(
+                swap_scripts_len == script_histories_len,
+                anyhow!("Got {script_histories_len} script histories, expected {swap_scripts_len}")
+            );
+            let script_to_history_map: Vec<(&Script, Vec<History>)> = swap_scripts
+                .into_iter()
+                .zip(script_histories.into_iter())
+                .collect();
+
+            let send_swaps_by_script = swaps_list.send_swaps_by_script();
+            let receive_swaps_by_script = swaps_list.receive_swaps_by_script();
+            let mut send_composite: HashMap<String, (LBtcSwapScript, Script, Vec<History>)> =
+                HashMap::new();
+            let mut receive_composite: HashMap<
+                String,
+                (CreateReverseResponse, LBtcSwapScript, Script, Vec<History>),
+            > = HashMap::new();
+            script_to_history_map
+                .into_iter()
+                .for_each(|(script_pk, history)| {
+                    if let Some((swap_id, script)) = send_swaps_by_script.get(&script_pk) {
+                        send_composite.insert(swap_id.clone(), (script.clone(), script_pk.clone(),  history));
+                    }
+                    else if let Some((swap_id, create_resp, script)) = receive_swaps_by_script.get(&script_pk) {
+                        receive_composite.insert(swap_id.clone(), (create_resp.clone(), script.clone(), script_pk.clone(), history));
+                    }
+                    else {
+                        error!("Found script that doesn't belong to either Send or Receive swaps: {script_pk:?}");
+                    }
+                });
+
+            Ok(SwapsListWithHistories {
+                send_swaps: send_composite,
+                receive_swaps: receive_composite,
             })
         }
     }
