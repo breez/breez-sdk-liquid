@@ -147,7 +147,8 @@ typedef struct wire_cst_prepare_refund_request {
 } wire_cst_prepare_refund_request;
 
 typedef struct wire_cst_prepare_send_request {
-  struct wire_cst_list_prim_u_8_strict *invoice;
+  struct wire_cst_list_prim_u_8_strict *destination;
+  float *fee_rate;
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_onchain_response {
@@ -175,8 +176,107 @@ typedef struct wire_cst_restore_request {
   struct wire_cst_list_prim_u_8_strict *backup_path;
 } wire_cst_restore_request;
 
+typedef struct wire_cst_bitcoin_address_data {
+  struct wire_cst_list_prim_u_8_strict *address;
+  int32_t network;
+  uint64_t *amount_sat;
+  struct wire_cst_list_prim_u_8_strict *label;
+  struct wire_cst_list_prim_u_8_strict *message;
+} wire_cst_bitcoin_address_data;
+
+typedef struct wire_cst_InputType_BitcoinAddress {
+  struct wire_cst_bitcoin_address_data *address;
+} wire_cst_InputType_BitcoinAddress;
+
+typedef struct wire_cst_route_hint_hop {
+  struct wire_cst_list_prim_u_8_strict *src_node_id;
+  uint64_t short_channel_id;
+  uint32_t fees_base_msat;
+  uint32_t fees_proportional_millionths;
+  uint64_t cltv_expiry_delta;
+  uint64_t *htlc_minimum_msat;
+  uint64_t *htlc_maximum_msat;
+} wire_cst_route_hint_hop;
+
+typedef struct wire_cst_list_route_hint_hop {
+  struct wire_cst_route_hint_hop *ptr;
+  int32_t len;
+} wire_cst_list_route_hint_hop;
+
+typedef struct wire_cst_route_hint {
+  struct wire_cst_list_route_hint_hop *hops;
+} wire_cst_route_hint;
+
+typedef struct wire_cst_list_route_hint {
+  struct wire_cst_route_hint *ptr;
+  int32_t len;
+} wire_cst_list_route_hint;
+
+typedef struct wire_cst_ln_invoice {
+  struct wire_cst_list_prim_u_8_strict *bolt11;
+  int32_t network;
+  struct wire_cst_list_prim_u_8_strict *payee_pubkey;
+  struct wire_cst_list_prim_u_8_strict *payment_hash;
+  struct wire_cst_list_prim_u_8_strict *description;
+  struct wire_cst_list_prim_u_8_strict *description_hash;
+  uint64_t *amount_msat;
+  uint64_t timestamp;
+  uint64_t expiry;
+  struct wire_cst_list_route_hint *routing_hints;
+  struct wire_cst_list_prim_u_8_strict *payment_secret;
+  uint64_t min_final_cltv_expiry_delta;
+} wire_cst_ln_invoice;
+
+typedef struct wire_cst_InputType_Bolt11 {
+  struct wire_cst_ln_invoice *invoice;
+} wire_cst_InputType_Bolt11;
+
+typedef struct wire_cst_InputType_NodeId {
+  struct wire_cst_list_prim_u_8_strict *node_id;
+} wire_cst_InputType_NodeId;
+
+typedef struct wire_cst_InputType_Url {
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_InputType_Url;
+
+typedef struct wire_cst_InputType_LnUrlPay {
+  struct wire_cst_ln_url_pay_request_data *data;
+} wire_cst_InputType_LnUrlPay;
+
+typedef struct wire_cst_InputType_LnUrlWithdraw {
+  struct wire_cst_ln_url_withdraw_request_data *data;
+} wire_cst_InputType_LnUrlWithdraw;
+
+typedef struct wire_cst_InputType_LnUrlAuth {
+  struct wire_cst_ln_url_auth_request_data *data;
+} wire_cst_InputType_LnUrlAuth;
+
+typedef struct wire_cst_ln_url_error_data {
+  struct wire_cst_list_prim_u_8_strict *reason;
+} wire_cst_ln_url_error_data;
+
+typedef struct wire_cst_InputType_LnUrlError {
+  struct wire_cst_ln_url_error_data *data;
+} wire_cst_InputType_LnUrlError;
+
+typedef union InputTypeKind {
+  struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
+  struct wire_cst_InputType_Bolt11 Bolt11;
+  struct wire_cst_InputType_NodeId NodeId;
+  struct wire_cst_InputType_Url Url;
+  struct wire_cst_InputType_LnUrlPay LnUrlPay;
+  struct wire_cst_InputType_LnUrlWithdraw LnUrlWithdraw;
+  struct wire_cst_InputType_LnUrlAuth LnUrlAuth;
+  struct wire_cst_InputType_LnUrlError LnUrlError;
+} InputTypeKind;
+
+typedef struct wire_cst_input_type {
+  int32_t tag;
+  union InputTypeKind kind;
+} wire_cst_input_type;
+
 typedef struct wire_cst_prepare_send_response {
-  struct wire_cst_list_prim_u_8_strict *invoice;
+  struct wire_cst_input_type parsed_destination;
   uint64_t fees_sat;
 } wire_cst_prepare_send_response;
 
@@ -275,57 +375,6 @@ typedef struct wire_cst_aes_success_action_data_result {
   int32_t tag;
   union AesSuccessActionDataResultKind kind;
 } wire_cst_aes_success_action_data_result;
-
-typedef struct wire_cst_bitcoin_address_data {
-  struct wire_cst_list_prim_u_8_strict *address;
-  int32_t network;
-  uint64_t *amount_sat;
-  struct wire_cst_list_prim_u_8_strict *label;
-  struct wire_cst_list_prim_u_8_strict *message;
-} wire_cst_bitcoin_address_data;
-
-typedef struct wire_cst_route_hint_hop {
-  struct wire_cst_list_prim_u_8_strict *src_node_id;
-  uint64_t short_channel_id;
-  uint32_t fees_base_msat;
-  uint32_t fees_proportional_millionths;
-  uint64_t cltv_expiry_delta;
-  uint64_t *htlc_minimum_msat;
-  uint64_t *htlc_maximum_msat;
-} wire_cst_route_hint_hop;
-
-typedef struct wire_cst_list_route_hint_hop {
-  struct wire_cst_route_hint_hop *ptr;
-  int32_t len;
-} wire_cst_list_route_hint_hop;
-
-typedef struct wire_cst_route_hint {
-  struct wire_cst_list_route_hint_hop *hops;
-} wire_cst_route_hint;
-
-typedef struct wire_cst_list_route_hint {
-  struct wire_cst_route_hint *ptr;
-  int32_t len;
-} wire_cst_list_route_hint;
-
-typedef struct wire_cst_ln_invoice {
-  struct wire_cst_list_prim_u_8_strict *bolt11;
-  int32_t network;
-  struct wire_cst_list_prim_u_8_strict *payee_pubkey;
-  struct wire_cst_list_prim_u_8_strict *payment_hash;
-  struct wire_cst_list_prim_u_8_strict *description;
-  struct wire_cst_list_prim_u_8_strict *description_hash;
-  uint64_t *amount_msat;
-  uint64_t timestamp;
-  uint64_t expiry;
-  struct wire_cst_list_route_hint *routing_hints;
-  struct wire_cst_list_prim_u_8_strict *payment_secret;
-  uint64_t min_final_cltv_expiry_delta;
-} wire_cst_ln_invoice;
-
-typedef struct wire_cst_ln_url_error_data {
-  struct wire_cst_list_prim_u_8_strict *reason;
-} wire_cst_ln_url_error_data;
 
 typedef struct wire_cst_ln_url_pay_error_data {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
@@ -454,54 +503,6 @@ typedef struct wire_cst_get_info_response {
   uint64_t pending_receive_sat;
   struct wire_cst_list_prim_u_8_strict *pubkey;
 } wire_cst_get_info_response;
-
-typedef struct wire_cst_InputType_BitcoinAddress {
-  struct wire_cst_bitcoin_address_data *address;
-} wire_cst_InputType_BitcoinAddress;
-
-typedef struct wire_cst_InputType_Bolt11 {
-  struct wire_cst_ln_invoice *invoice;
-} wire_cst_InputType_Bolt11;
-
-typedef struct wire_cst_InputType_NodeId {
-  struct wire_cst_list_prim_u_8_strict *node_id;
-} wire_cst_InputType_NodeId;
-
-typedef struct wire_cst_InputType_Url {
-  struct wire_cst_list_prim_u_8_strict *url;
-} wire_cst_InputType_Url;
-
-typedef struct wire_cst_InputType_LnUrlPay {
-  struct wire_cst_ln_url_pay_request_data *data;
-} wire_cst_InputType_LnUrlPay;
-
-typedef struct wire_cst_InputType_LnUrlWithdraw {
-  struct wire_cst_ln_url_withdraw_request_data *data;
-} wire_cst_InputType_LnUrlWithdraw;
-
-typedef struct wire_cst_InputType_LnUrlAuth {
-  struct wire_cst_ln_url_auth_request_data *data;
-} wire_cst_InputType_LnUrlAuth;
-
-typedef struct wire_cst_InputType_LnUrlError {
-  struct wire_cst_ln_url_error_data *data;
-} wire_cst_InputType_LnUrlError;
-
-typedef union InputTypeKind {
-  struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
-  struct wire_cst_InputType_Bolt11 Bolt11;
-  struct wire_cst_InputType_NodeId NodeId;
-  struct wire_cst_InputType_Url Url;
-  struct wire_cst_InputType_LnUrlPay LnUrlPay;
-  struct wire_cst_InputType_LnUrlWithdraw LnUrlWithdraw;
-  struct wire_cst_InputType_LnUrlAuth LnUrlAuth;
-  struct wire_cst_InputType_LnUrlError LnUrlError;
-} InputTypeKind;
-
-typedef struct wire_cst_input_type {
-  int32_t tag;
-  union InputTypeKind kind;
-} wire_cst_input_type;
 
 typedef struct wire_cst_limits {
   uint64_t min_sat;
@@ -944,6 +945,8 @@ struct wire_cst_buy_bitcoin_request *frbgen_breez_liquid_cst_new_box_autoadd_buy
 
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
+float *frbgen_breez_liquid_cst_new_box_autoadd_f_32(float value);
+
 int64_t *frbgen_breez_liquid_cst_new_box_autoadd_i_64(int64_t value);
 
 struct wire_cst_list_payments_request *frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(void);
@@ -1037,6 +1040,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bool);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_f_32);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);

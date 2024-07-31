@@ -198,6 +198,12 @@ impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
         CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<f32> for *mut f32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> f32 {
+        unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
 impl CstDecode<i64> for *mut i64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> i64 {
@@ -1265,7 +1271,8 @@ impl CstDecode<crate::model::PrepareSendRequest> for wire_cst_prepare_send_reque
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareSendRequest {
         crate::model::PrepareSendRequest {
-            invoice: self.invoice.cst_decode(),
+            destination: self.destination.cst_decode(),
+            fee_rate: self.fee_rate.cst_decode(),
         }
     }
 }
@@ -1273,7 +1280,7 @@ impl CstDecode<crate::model::PrepareSendResponse> for wire_cst_prepare_send_resp
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::PrepareSendResponse {
         crate::model::PrepareSendResponse {
-            invoice: self.invoice.cst_decode(),
+            parsed_destination: self.parsed_destination.cst_decode(),
             fees_sat: self.fees_sat.cst_decode(),
         }
     }
@@ -2200,7 +2207,8 @@ impl Default for wire_cst_prepare_refund_response {
 impl NewWithNullPtr for wire_cst_prepare_send_request {
     fn new_with_null_ptr() -> Self {
         Self {
-            invoice: core::ptr::null_mut(),
+            destination: core::ptr::null_mut(),
+            fee_rate: core::ptr::null_mut(),
         }
     }
 }
@@ -2212,7 +2220,7 @@ impl Default for wire_cst_prepare_send_request {
 impl NewWithNullPtr for wire_cst_prepare_send_response {
     fn new_with_null_ptr() -> Self {
         Self {
-            invoice: core::ptr::null_mut(),
+            parsed_destination: Default::default(),
             fees_sat: Default::default(),
         }
     }
@@ -2833,6 +2841,11 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_connect_request::new_with_null_ptr(),
     )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_f_32(value: f32) -> *mut f32 {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
 }
 
 #[no_mangle]
@@ -3921,12 +3934,13 @@ pub struct wire_cst_prepare_refund_response {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_send_request {
-    invoice: *mut wire_cst_list_prim_u_8_strict,
+    destination: *mut wire_cst_list_prim_u_8_strict,
+    fee_rate: *mut f32,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_send_response {
-    invoice: *mut wire_cst_list_prim_u_8_strict,
+    parsed_destination: wire_cst_input_type,
     fees_sat: u64,
 }
 #[repr(C)]

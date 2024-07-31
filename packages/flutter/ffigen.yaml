@@ -18,3 +18,5 @@ comments:
   style: any
   length: full
 ignore-source-errors: true
+llvm-path:
+  - '/nix/store/wsqahmc3a5a2pwmc40r6mmwq8xw59s3q-clang-18.1.8-lib/'

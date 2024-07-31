@@ -797,40 +797,51 @@ class PrepareRefundResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendRequest {
-  final String invoice;
+  /// The destination we intend to pay to.
+  /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
+  final String destination;
+
+  /// Fee rate with which direct payments are executed (either via MRH or liquid address/BIP21)
+  /// Note that this is not alterable in case of swap payments
+  final double? feeRate;
 
   const PrepareSendRequest({
-    required this.invoice,
+    required this.destination,
+    this.feeRate,
   });
 
   @override
-  int get hashCode => invoice.hashCode;
+  int get hashCode => destination.hashCode ^ feeRate.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrepareSendRequest && runtimeType == other.runtimeType && invoice == other.invoice;
+      other is PrepareSendRequest &&
+          runtimeType == other.runtimeType &&
+          destination == other.destination &&
+          feeRate == other.feeRate;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendResponse {
-  final String invoice;
+  /// The parsed destination, either [InputType::Bolt11] or
+  final InputType parsedDestination;
   final BigInt feesSat;
 
   const PrepareSendResponse({
-    required this.invoice,
+    required this.parsedDestination,
     required this.feesSat,
   });
 
   @override
-  int get hashCode => invoice.hashCode ^ feesSat.hashCode;
+  int get hashCode => parsedDestination.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareSendResponse &&
           runtimeType == other.runtimeType &&
-          invoice == other.invoice &&
+          parsedDestination == other.parsedDestination &&
           feesSat == other.feesSat;
 }
 

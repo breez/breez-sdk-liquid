@@ -93,6 +93,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
 
   @protected
+  double dco_decode_box_autoadd_f_32(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
@@ -202,6 +205,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CurrencyInfo dco_decode_currency_info(dynamic raw);
+
+  @protected
+  double dco_decode_f_32(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -334,6 +340,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  double? dco_decode_opt_box_autoadd_f_32(dynamic raw);
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
@@ -544,6 +553,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
 
   @protected
+  double sse_decode_box_autoadd_f_32(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
@@ -656,6 +668,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -788,6 +803,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
@@ -1026,6 +1044,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_connect_request();
     cst_api_fill_to_wire_connect_request(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Float> cst_encode_box_autoadd_f_32(double raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_f_32(cst_encode_f_32(raw));
   }
 
   @protected
@@ -1413,6 +1437,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Bool> cst_encode_opt_box_autoadd_bool(bool? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Float> cst_encode_opt_box_autoadd_f_32(double? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_f_32(raw);
   }
 
   @protected
@@ -2358,13 +2388,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_send_request(
       PrepareSendRequest apiObj, wire_cst_prepare_send_request wireObj) {
-    wireObj.invoice = cst_encode_String(apiObj.invoice);
+    wireObj.destination = cst_encode_String(apiObj.destination);
+    wireObj.fee_rate = cst_encode_opt_box_autoadd_f_32(apiObj.feeRate);
   }
 
   @protected
   void cst_api_fill_to_wire_prepare_send_response(
       PrepareSendResponse apiObj, wire_cst_prepare_send_response wireObj) {
-    wireObj.invoice = cst_encode_String(apiObj.invoice);
+    cst_api_fill_to_wire_input_type(apiObj.parsedDestination, wireObj.parsed_destination);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
   }
 
@@ -2576,6 +2607,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_buy_bitcoin_provider(BuyBitcoinProvider raw);
 
   @protected
+  double cst_encode_f_32(double raw);
+
+  @protected
   double cst_encode_f_64(double raw);
 
   @protected
@@ -2673,6 +2707,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_f_32(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer);
@@ -2792,6 +2829,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_32(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -2926,6 +2966,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_32(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer);
@@ -3094,7 +3137,7 @@ class RustLibWire implements BaseWire {
       : _lookup = lookup;
 
   void store_dart_post_cobject(
-    DartPostCObjectFnType ptr,
+    int ptr,
   ) {
     return _store_dart_post_cobject(
       ptr,
@@ -3102,9 +3145,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _store_dart_post_cobjectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>('store_dart_post_cobject');
-  late final _store_dart_post_cobject =
-      _store_dart_post_cobjectPtr.asFunction<void Function(DartPostCObjectFnType)>();
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>('store_dart_post_cobject');
+  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr.asFunction<void Function(int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_add_event_listener(
     int port_,
@@ -3119,8 +3161,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener');
   late final _wire__crate__bindings__BindingLiquidSdk_add_event_listener =
       _wire__crate__bindings__BindingLiquidSdk_add_event_listenerPtr
@@ -3137,8 +3179,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_backupPtr = _lookup<
-          ffi
-          .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_backup_request>)>>(
+          ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int, ffi.Pointer<wire_cst_backup_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup');
   late final _wire__crate__bindings__BindingLiquidSdk_backup =
       _wire__crate__bindings__BindingLiquidSdk_backupPtr
@@ -3157,8 +3198,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_buy_bitcoinPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_buy_bitcoin_request>)>>(
+          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_buy_bitcoin_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin');
   late final _wire__crate__bindings__BindingLiquidSdk_buy_bitcoin =
       _wire__crate__bindings__BindingLiquidSdk_buy_bitcoinPtr
@@ -3175,7 +3215,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_disconnectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect');
   late final _wire__crate__bindings__BindingLiquidSdk_disconnect =
       _wire__crate__bindings__BindingLiquidSdk_disconnectPtr.asFunction<void Function(int, int)>();
@@ -3189,7 +3229,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache');
   late final _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
       _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
@@ -3206,7 +3246,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates =
       _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_ratesPtr.asFunction<void Function(int, int)>();
@@ -3222,7 +3262,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits =
       _wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limitsPtr
@@ -3239,7 +3279,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits =
       _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr.asFunction<void Function(int, int)>();
@@ -3255,7 +3295,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_get_infoPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info');
   late final _wire__crate__bindings__BindingLiquidSdk_get_info =
       _wire__crate__bindings__BindingLiquidSdk_get_infoPtr.asFunction<void Function(int, int)>();
@@ -3271,7 +3311,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies');
   late final _wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies =
       _wire__crate__bindings__BindingLiquidSdk_list_fiat_currenciesPtr.asFunction<void Function(int, int)>();
@@ -3289,8 +3329,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_payments_request>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_list_payments_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments');
   late final _wire__crate__bindings__BindingLiquidSdk_list_payments =
       _wire__crate__bindings__BindingLiquidSdk_list_paymentsPtr
@@ -3307,7 +3347,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables');
   late final _wire__crate__bindings__BindingLiquidSdk_list_refundables =
       _wire__crate__bindings__BindingLiquidSdk_list_refundablesPtr.asFunction<void Function(int, int)>();
@@ -3326,7 +3366,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_ln_url_auth_request_data>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth');
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_auth =
       _wire__crate__bindings__BindingLiquidSdk_lnurl_authPtr
@@ -3345,8 +3385,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_pay_request>)>>(
+          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_ln_url_pay_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay');
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_pay =
       _wire__crate__bindings__BindingLiquidSdk_lnurl_payPtr
@@ -3366,7 +3405,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw');
   late final _wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw =
       _wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
@@ -3385,8 +3424,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_pay_onchain_request>)>>(
+          ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_pay_onchain_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain');
   late final _wire__crate__bindings__BindingLiquidSdk_pay_onchain =
       _wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
@@ -3406,7 +3444,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoinPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_buy_bitcoin_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_buy_bitcoin_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin =
       _wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoinPtr
@@ -3426,7 +3464,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_pay_onchain_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_pay_onchain_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain =
       _wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchainPtr
@@ -3446,8 +3484,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_receive_onchain_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain =
       _wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchainPtr
@@ -3467,8 +3504,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_payment_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_receive_payment_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment =
       _wire__crate__bindings__BindingLiquidSdk_prepare_receive_paymentPtr
@@ -3487,8 +3523,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_refund_request>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_refund_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_refund');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_refund =
       _wire__crate__bindings__BindingLiquidSdk_prepare_refundPtr
@@ -3507,8 +3543,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_send_request>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_send_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_payment');
   late final _wire__crate__bindings__BindingLiquidSdk_prepare_send_payment =
       _wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr
@@ -3528,8 +3564,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(
-                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_receive_onchain_response>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_onchain');
   late final _wire__crate__bindings__BindingLiquidSdk_receive_onchain =
       _wire__crate__bindings__BindingLiquidSdk_receive_onchainPtr
@@ -3549,7 +3584,7 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_receive_payment_request>)>>(
+              ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_receive_payment_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment');
   late final _wire__crate__bindings__BindingLiquidSdk_receive_payment =
       _wire__crate__bindings__BindingLiquidSdk_receive_paymentPtr
@@ -3566,7 +3601,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_recommended_fees');
   late final _wire__crate__bindings__BindingLiquidSdk_recommended_fees =
       _wire__crate__bindings__BindingLiquidSdk_recommended_feesPtr.asFunction<void Function(int, int)>();
@@ -3583,10 +3618,9 @@ class RustLibWire implements BaseWire {
     );
   }
 
-  late final _wire__crate__bindings__BindingLiquidSdk_refundPtr = _lookup<
-          ffi
-          .NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_refund_request>)>>(
-      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund');
+  late final _wire__crate__bindings__BindingLiquidSdk_refundPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_refund_request>)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refund');
   late final _wire__crate__bindings__BindingLiquidSdk_refund =
       _wire__crate__bindings__BindingLiquidSdk_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_refund_request>)>();
@@ -3602,7 +3636,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps');
   late final _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps =
       _wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swapsPtr.asFunction<void Function(int, int)>();
@@ -3618,8 +3652,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_restorePtr = _lookup<
-          ffi
-          .NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_restore_request>)>>(
+          ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int, ffi.Pointer<wire_cst_restore_request>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_restore');
   late final _wire__crate__bindings__BindingLiquidSdk_restore =
       _wire__crate__bindings__BindingLiquidSdk_restorePtr
@@ -3638,8 +3671,8 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_send_paymentPtr = _lookup<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_send_response>)>>(
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Int, ffi.Int, ffi.Pointer<wire_cst_prepare_send_response>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment');
   late final _wire__crate__bindings__BindingLiquidSdk_send_payment =
       _wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
@@ -3656,7 +3689,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__BindingLiquidSdk_syncPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
   late final _wire__crate__bindings__BindingLiquidSdk_sync =
       _wire__crate__bindings__BindingLiquidSdk_syncPtr.asFunction<void Function(int, int)>();
@@ -3676,7 +3709,7 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__binding_event_listener_on_eventPtr = _lookup<
           ffi.NativeFunction<
               ffi.Void Function(
-                  ffi.Int64, ffi.Pointer<wire_cst_binding_event_listener>, ffi.Pointer<wire_cst_sdk_event>)>>(
+                  ffi.Int, ffi.Pointer<wire_cst_binding_event_listener>, ffi.Pointer<wire_cst_sdk_event>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event');
   late final _wire__crate__bindings__binding_event_listener_on_event =
       _wire__crate__bindings__binding_event_listener_on_eventPtr.asFunction<
@@ -3694,7 +3727,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__breez_log_streamPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
           'frbgen_breez_liquid_wire__crate__bindings__breez_log_stream');
   late final _wire__crate__bindings__breez_log_stream = _wire__crate__bindings__breez_log_streamPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
@@ -3710,7 +3743,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__connectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_connect_request>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<wire_cst_connect_request>)>>(
           'frbgen_breez_liquid_wire__crate__bindings__connect');
   late final _wire__crate__bindings__connect = _wire__crate__bindings__connectPtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_connect_request>)>();
@@ -3724,7 +3757,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__default_configPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int)>>(
           'frbgen_breez_liquid_wire__crate__bindings__default_config');
   late final _wire__crate__bindings__default_config =
       _wire__crate__bindings__default_configPtr.asFunction<WireSyncRust2DartDco Function(int)>();
@@ -3740,7 +3773,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _wire__crate__bindings__parsePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
           'frbgen_breez_liquid_wire__crate__bindings__parse');
   late final _wire__crate__bindings__parse = _wire__crate__bindings__parsePtr
       .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
@@ -3844,8 +3877,8 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_bitcoin_address_data = _cst_new_box_autoadd_bitcoin_address_dataPtr
       .asFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>();
 
-  ffi.Pointer<ffi.Bool> cst_new_box_autoadd_bool(
-    bool value,
+  ffi.Pointer<bool> cst_new_box_autoadd_bool(
+    ffi.Pointer<bool> value,
   ) {
     return _cst_new_box_autoadd_bool(
       value,
@@ -3853,10 +3886,10 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_box_autoadd_boolPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>>(
           'frbgen_breez_liquid_cst_new_box_autoadd_bool');
   late final _cst_new_box_autoadd_bool =
-      _cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+      _cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>();
 
   ffi.Pointer<wire_cst_buy_bitcoin_request> cst_new_box_autoadd_buy_bitcoin_request() {
     return _cst_new_box_autoadd_buy_bitcoin_request();
@@ -3878,7 +3911,21 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_connect_request =
       _cst_new_box_autoadd_connect_requestPtr.asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
-  ffi.Pointer<ffi.Int64> cst_new_box_autoadd_i_64(
+  ffi.Pointer<ffi.Float> cst_new_box_autoadd_f_32(
+    double value,
+  ) {
+    return _cst_new_box_autoadd_f_32(
+      value,
+    );
+  }
+
+  late final _cst_new_box_autoadd_f_32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Float> Function(ffi.Float)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_f_32');
+  late final _cst_new_box_autoadd_f_32 =
+      _cst_new_box_autoadd_f_32Ptr.asFunction<ffi.Pointer<ffi.Float> Function(double)>();
+
+  ffi.Pointer<ffi.Int> cst_new_box_autoadd_i_64(
     int value,
   ) {
     return _cst_new_box_autoadd_i_64(
@@ -3887,10 +3934,10 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_box_autoadd_i_64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int64> Function(ffi.Int64)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_box_autoadd_i_64');
   late final _cst_new_box_autoadd_i_64 =
-      _cst_new_box_autoadd_i_64Ptr.asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
+      _cst_new_box_autoadd_i_64Ptr.asFunction<ffi.Pointer<ffi.Int> Function(int)>();
 
   ffi.Pointer<wire_cst_list_payments_request> cst_new_box_autoadd_list_payments_request() {
     return _cst_new_box_autoadd_list_payments_request();
@@ -4183,7 +4230,7 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_symbol =
       _cst_new_box_autoadd_symbolPtr.asFunction<ffi.Pointer<wire_cst_symbol> Function()>();
 
-  ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(
+  ffi.Pointer<ffi.Int> cst_new_box_autoadd_u_32(
     int value,
   ) {
     return _cst_new_box_autoadd_u_32(
@@ -4192,12 +4239,12 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_box_autoadd_u_32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_box_autoadd_u_32');
   late final _cst_new_box_autoadd_u_32 =
-      _cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+      _cst_new_box_autoadd_u_32Ptr.asFunction<ffi.Pointer<ffi.Int> Function(int)>();
 
-  ffi.Pointer<ffi.Uint64> cst_new_box_autoadd_u_64(
+  ffi.Pointer<ffi.Int> cst_new_box_autoadd_u_64(
     int value,
   ) {
     return _cst_new_box_autoadd_u_64(
@@ -4206,10 +4253,10 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_box_autoadd_u_64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint64> Function(ffi.Uint64)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_box_autoadd_u_64');
   late final _cst_new_box_autoadd_u_64 =
-      _cst_new_box_autoadd_u_64Ptr.asFunction<ffi.Pointer<ffi.Uint64> Function(int)>();
+      _cst_new_box_autoadd_u_64Ptr.asFunction<ffi.Pointer<ffi.Int> Function(int)>();
 
   ffi.Pointer<wire_cst_url_success_action_data> cst_new_box_autoadd_url_success_action_data() {
     return _cst_new_box_autoadd_url_success_action_data();
@@ -4230,7 +4277,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_fiat_currencyPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_fiat_currency');
   late final _cst_new_list_fiat_currency =
       _cst_new_list_fiat_currencyPtr.asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
@@ -4244,7 +4291,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_locale_overridesPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_locale_overrides');
   late final _cst_new_list_locale_overrides = _cst_new_list_locale_overridesPtr
       .asFunction<ffi.Pointer<wire_cst_list_locale_overrides> Function(int)>();
@@ -4258,7 +4305,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_localized_namePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_localized_name> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_localized_name> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_localized_name');
   late final _cst_new_list_localized_name =
       _cst_new_list_localized_namePtr.asFunction<ffi.Pointer<wire_cst_list_localized_name> Function(int)>();
@@ -4272,7 +4319,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_paymentPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_payment');
   late final _cst_new_list_payment =
       _cst_new_list_paymentPtr.asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
@@ -4286,7 +4333,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_payment_typePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_type> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_type> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_payment_type');
   late final _cst_new_list_payment_type =
       _cst_new_list_payment_typePtr.asFunction<ffi.Pointer<wire_cst_list_payment_type> Function(int)>();
@@ -4300,7 +4347,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_prim_u_8_strictPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_prim_u_8_strict');
   late final _cst_new_list_prim_u_8_strict =
       _cst_new_list_prim_u_8_strictPtr.asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
@@ -4314,7 +4361,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_ratePtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_rate> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_rate> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_rate');
   late final _cst_new_list_rate =
       _cst_new_list_ratePtr.asFunction<ffi.Pointer<wire_cst_list_rate> Function(int)>();
@@ -4328,7 +4375,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_refundable_swapPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_refundable_swap> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_refundable_swap> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_refundable_swap');
   late final _cst_new_list_refundable_swap =
       _cst_new_list_refundable_swapPtr.asFunction<ffi.Pointer<wire_cst_list_refundable_swap> Function(int)>();
@@ -4342,7 +4389,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_route_hintPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_route_hint');
   late final _cst_new_list_route_hint =
       _cst_new_list_route_hintPtr.asFunction<ffi.Pointer<wire_cst_list_route_hint> Function(int)>();
@@ -4356,7 +4403,7 @@ class RustLibWire implements BaseWire {
   }
 
   late final _cst_new_list_route_hint_hopPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(ffi.Int32)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(ffi.Int)>>(
           'frbgen_breez_liquid_cst_new_list_route_hint_hop');
   late final _cst_new_list_route_hint_hop =
       _cst_new_list_route_hint_hopPtr.asFunction<ffi.Pointer<wire_cst_list_route_hint_hop> Function(int)>();
@@ -4366,22 +4413,15 @@ class RustLibWire implements BaseWire {
   }
 
   late final _dummy_method_to_enforce_bundlingPtr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>('dummy_method_to_enforce_bundling');
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('dummy_method_to_enforce_bundling');
   late final _dummy_method_to_enforce_bundling =
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 }
 
-typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
-typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartDartPostCObjectFnTypeFunction = bool Function(
-    DartDartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartPort = ffi.Int64;
-typedef DartDartPort = int;
-
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
-  external ffi.Pointer<ffi.Uint8> ptr;
+  external ffi.Pointer<ffi.Int> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
@@ -4390,13 +4430,13 @@ final class wire_cst_backup_request extends ffi.Struct {
 }
 
 final class wire_cst_prepare_buy_bitcoin_response extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int provider;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int fees_sat;
 }
 
@@ -4407,22 +4447,22 @@ final class wire_cst_buy_bitcoin_request extends ffi.Struct {
 }
 
 final class wire_cst_list_payment_type extends ffi.Struct {
-  external ffi.Pointer<ffi.Int32> ptr;
+  external ffi.Pointer<ffi.Int> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_payment_type> filters;
 
-  external ffi.Pointer<ffi.Int64> from_timestamp;
+  external ffi.Pointer<ffi.Int> from_timestamp;
 
-  external ffi.Pointer<ffi.Int64> to_timestamp;
+  external ffi.Pointer<ffi.Int> to_timestamp;
 
-  external ffi.Pointer<ffi.Uint32> offset;
+  external ffi.Pointer<ffi.Int> offset;
 
-  external ffi.Pointer<ffi.Uint32> limit;
+  external ffi.Pointer<ffi.Int> limit;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
@@ -4438,20 +4478,19 @@ final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
 final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int min_sendable;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int max_sendable;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> metadata_str;
 
-  @ffi.Uint16()
+  @ffi.Int()
   external int comment_allowed;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
 
-  @ffi.Bool()
   external bool allows_nostr;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
@@ -4459,17 +4498,19 @@ final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
 }
 
+typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
+
 final class wire_cst_ln_url_pay_request extends ffi.Struct {
   external wire_cst_ln_url_pay_request_data data;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_msat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
 
-  external ffi.Pointer<ffi.Bool> validate_success_action_url;
+  external ffi.Pointer<bool> validate_success_action_url;
 }
 
 final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
@@ -4479,30 +4520,30 @@ final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> default_description;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int min_withdrawable;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int max_withdrawable;
 }
 
 final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
   external wire_cst_ln_url_withdraw_request_data data;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_msat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 }
 
 final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int receiver_amount_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int claim_fees_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int total_fees_sat;
 }
 
@@ -4513,27 +4554,27 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
 }
 
 final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int provider;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_sat;
 }
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int receiver_amount_sat;
 
-  external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
+  external ffi.Pointer<ffi.Int> sat_per_vbyte;
 }
 
 final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int payer_amount_sat;
 }
 
 final class wire_cst_prepare_receive_payment_request extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int payer_amount_sat;
 }
 
@@ -4542,27 +4583,29 @@ final class wire_cst_prepare_refund_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int sat_per_vbyte;
 }
 
 final class wire_cst_prepare_send_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+
+  external ffi.Pointer<ffi.Float> fee_rate;
 }
 
 final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int payer_amount_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int fees_sat;
 }
 
 final class wire_cst_prepare_receive_payment_response extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int payer_amount_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int fees_sat;
 }
 
@@ -4577,7 +4620,7 @@ final class wire_cst_refund_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int sat_per_vbyte;
 }
 
@@ -4585,10 +4628,152 @@ final class wire_cst_restore_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
-final class wire_cst_prepare_send_response extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+final class wire_cst_bitcoin_address_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
-  @ffi.Uint64()
+  @ffi.Int()
+  external int network;
+
+  external ffi.Pointer<ffi.Int> amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {
+  external ffi.Pointer<wire_cst_bitcoin_address_data> address;
+}
+
+final class wire_cst_route_hint_hop extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
+
+  @ffi.Int()
+  external int short_channel_id;
+
+  @ffi.Int()
+  external int fees_base_msat;
+
+  @ffi.Int()
+  external int fees_proportional_millionths;
+
+  @ffi.Int()
+  external int cltv_expiry_delta;
+
+  external ffi.Pointer<ffi.Int> htlc_minimum_msat;
+
+  external ffi.Pointer<ffi.Int> htlc_maximum_msat;
+}
+
+final class wire_cst_list_route_hint_hop extends ffi.Struct {
+  external ffi.Pointer<wire_cst_route_hint_hop> ptr;
+
+  @ffi.Int()
+  external int len;
+}
+
+final class wire_cst_route_hint extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_route_hint_hop> hops;
+}
+
+final class wire_cst_list_route_hint extends ffi.Struct {
+  external ffi.Pointer<wire_cst_route_hint> ptr;
+
+  @ffi.Int()
+  external int len;
+}
+
+final class wire_cst_ln_invoice extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  @ffi.Int()
+  external int network;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payee_pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description_hash;
+
+  external ffi.Pointer<ffi.Int> amount_msat;
+
+  @ffi.Int()
+  external int timestamp;
+
+  @ffi.Int()
+  external int expiry;
+
+  external ffi.Pointer<wire_cst_list_route_hint> routing_hints;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_secret;
+
+  @ffi.Int()
+  external int min_final_cltv_expiry_delta;
+}
+
+final class wire_cst_InputType_Bolt11 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_invoice> invoice;
+}
+
+final class wire_cst_InputType_NodeId extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> node_id;
+}
+
+final class wire_cst_InputType_Url extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+}
+
+final class wire_cst_InputType_LnUrlPay extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_pay_request_data> data;
+}
+
+final class wire_cst_InputType_LnUrlWithdraw extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_withdraw_request_data> data;
+}
+
+final class wire_cst_InputType_LnUrlAuth extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_auth_request_data> data;
+}
+
+final class wire_cst_ln_url_error_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
+}
+
+final class wire_cst_InputType_LnUrlError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_url_error_data> data;
+}
+
+final class InputTypeKind extends ffi.Union {
+  external wire_cst_InputType_BitcoinAddress BitcoinAddress;
+
+  external wire_cst_InputType_Bolt11 Bolt11;
+
+  external wire_cst_InputType_NodeId NodeId;
+
+  external wire_cst_InputType_Url Url;
+
+  external wire_cst_InputType_LnUrlPay LnUrlPay;
+
+  external wire_cst_InputType_LnUrlWithdraw LnUrlWithdraw;
+
+  external wire_cst_InputType_LnUrlAuth LnUrlAuth;
+
+  external wire_cst_InputType_LnUrlError LnUrlError;
+}
+
+final class wire_cst_input_type extends ffi.Struct {
+  @ffi.Int()
+  external int tag;
+
+  external InputTypeKind kind;
+}
+
+final class wire_cst_prepare_send_response extends ffi.Struct {
+  external wire_cst_input_type parsed_destination;
+
+  @ffi.Int()
   external int fees_sat;
 }
 
@@ -4601,13 +4786,13 @@ final class wire_cst_payment extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int timestamp;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int fees_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
@@ -4618,12 +4803,12 @@ final class wire_cst_payment extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
-  external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
+  external ffi.Pointer<ffi.Int> refund_tx_amount_sat;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int payment_type;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int status;
 }
 
@@ -4666,7 +4851,7 @@ final class SdkEventKind extends ffi.Union {
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external SdkEventKind kind;
@@ -4681,16 +4866,16 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int network;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int payment_timeout_sec;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int zero_conf_min_fee_rate_msat;
 
-  external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
+  external ffi.Pointer<ffi.Int> zero_conf_max_amount_sat;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -4720,95 +4905,10 @@ final class AesSuccessActionDataResultKind extends ffi.Union {
 }
 
 final class wire_cst_aes_success_action_data_result extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external AesSuccessActionDataResultKind kind;
-}
-
-final class wire_cst_bitcoin_address_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
-
-  @ffi.Int32()
-  external int network;
-
-  external ffi.Pointer<ffi.Uint64> amount_sat;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
-}
-
-final class wire_cst_route_hint_hop extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
-
-  @ffi.Uint64()
-  external int short_channel_id;
-
-  @ffi.Uint32()
-  external int fees_base_msat;
-
-  @ffi.Uint32()
-  external int fees_proportional_millionths;
-
-  @ffi.Uint64()
-  external int cltv_expiry_delta;
-
-  external ffi.Pointer<ffi.Uint64> htlc_minimum_msat;
-
-  external ffi.Pointer<ffi.Uint64> htlc_maximum_msat;
-}
-
-final class wire_cst_list_route_hint_hop extends ffi.Struct {
-  external ffi.Pointer<wire_cst_route_hint_hop> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_cst_route_hint extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_route_hint_hop> hops;
-}
-
-final class wire_cst_list_route_hint extends ffi.Struct {
-  external ffi.Pointer<wire_cst_route_hint> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_cst_ln_invoice extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
-
-  @ffi.Int32()
-  external int network;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payee_pubkey;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description_hash;
-
-  external ffi.Pointer<ffi.Uint64> amount_msat;
-
-  @ffi.Uint64()
-  external int timestamp;
-
-  @ffi.Uint64()
-  external int expiry;
-
-  external ffi.Pointer<wire_cst_list_route_hint> routing_hints;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_secret;
-
-  @ffi.Uint64()
-  external int min_final_cltv_expiry_delta;
-}
-
-final class wire_cst_ln_url_error_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
 }
 
 final class wire_cst_ln_url_pay_error_data extends ffi.Struct {
@@ -4834,7 +4934,6 @@ final class wire_cst_url_success_action_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
 
-  @ffi.Bool()
   external bool matches_callback_domain;
 }
 
@@ -4851,7 +4950,7 @@ final class SuccessActionProcessedKind extends ffi.Union {
 }
 
 final class wire_cst_success_action_processed extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external SuccessActionProcessedKind kind;
@@ -4872,9 +4971,9 @@ final class wire_cst_symbol extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> template_;
 
-  external ffi.Pointer<ffi.Bool> rtl;
+  external ffi.Pointer<bool> rtl;
 
-  external ffi.Pointer<ffi.Uint32> position;
+  external ffi.Pointer<ffi.Int> position;
 }
 
 final class wire_cst_localized_name extends ffi.Struct {
@@ -4886,14 +4985,14 @@ final class wire_cst_localized_name extends ffi.Struct {
 final class wire_cst_list_localized_name extends ffi.Struct {
   external ffi.Pointer<wire_cst_localized_name> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_locale_overrides extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> locale;
 
-  external ffi.Pointer<ffi.Uint32> spacing;
+  external ffi.Pointer<ffi.Int> spacing;
 
   external wire_cst_symbol symbol;
 }
@@ -4901,17 +5000,17 @@ final class wire_cst_locale_overrides extends ffi.Struct {
 final class wire_cst_list_locale_overrides extends ffi.Struct {
   external ffi.Pointer<wire_cst_locale_overrides> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_currency_info extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int fraction_size;
 
-  external ffi.Pointer<ffi.Uint32> spacing;
+  external ffi.Pointer<ffi.Int> spacing;
 
   external ffi.Pointer<wire_cst_symbol> symbol;
 
@@ -4931,14 +5030,14 @@ final class wire_cst_fiat_currency extends ffi.Struct {
 final class wire_cst_list_fiat_currency extends ffi.Struct {
   external ffi.Pointer<wire_cst_fiat_currency> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_list_payment extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
@@ -4952,105 +5051,48 @@ final class wire_cst_rate extends ffi.Struct {
 final class wire_cst_list_rate extends ffi.Struct {
   external ffi.Pointer<wire_cst_rate> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_refundable_swap extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_address;
 
-  @ffi.Uint32()
+  @ffi.Int()
   external int timestamp;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int amount_sat;
 }
 
 final class wire_cst_list_refundable_swap extends ffi.Struct {
   external ffi.Pointer<wire_cst_refundable_swap> ptr;
 
-  @ffi.Int32()
+  @ffi.Int()
   external int len;
 }
 
 final class wire_cst_get_info_response extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int balance_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int pending_send_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int pending_receive_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
 
-final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {
-  external ffi.Pointer<wire_cst_bitcoin_address_data> address;
-}
-
-final class wire_cst_InputType_Bolt11 extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ln_invoice> invoice;
-}
-
-final class wire_cst_InputType_NodeId extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> node_id;
-}
-
-final class wire_cst_InputType_Url extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-}
-
-final class wire_cst_InputType_LnUrlPay extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ln_url_pay_request_data> data;
-}
-
-final class wire_cst_InputType_LnUrlWithdraw extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ln_url_withdraw_request_data> data;
-}
-
-final class wire_cst_InputType_LnUrlAuth extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ln_url_auth_request_data> data;
-}
-
-final class wire_cst_InputType_LnUrlError extends ffi.Struct {
-  external ffi.Pointer<wire_cst_ln_url_error_data> data;
-}
-
-final class InputTypeKind extends ffi.Union {
-  external wire_cst_InputType_BitcoinAddress BitcoinAddress;
-
-  external wire_cst_InputType_Bolt11 Bolt11;
-
-  external wire_cst_InputType_NodeId NodeId;
-
-  external wire_cst_InputType_Url Url;
-
-  external wire_cst_InputType_LnUrlPay LnUrlPay;
-
-  external wire_cst_InputType_LnUrlWithdraw LnUrlWithdraw;
-
-  external wire_cst_InputType_LnUrlAuth LnUrlAuth;
-
-  external wire_cst_InputType_LnUrlError LnUrlError;
-}
-
-final class wire_cst_input_type extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external InputTypeKind kind;
-}
-
 final class wire_cst_limits extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int min_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int max_sat;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int max_zero_conf_sat;
 }
 
@@ -5081,7 +5123,7 @@ final class LnUrlAuthErrorKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_auth_error extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlAuthErrorKind kind;
@@ -5096,7 +5138,7 @@ final class LnUrlCallbackStatusKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_callback_status extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlCallbackStatusKind kind;
@@ -5171,7 +5213,7 @@ final class LnUrlPayErrorKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_pay_error extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlPayErrorKind kind;
@@ -5198,7 +5240,7 @@ final class LnUrlPayResultKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_pay_result extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlPayResultKind kind;
@@ -5243,7 +5285,7 @@ final class LnUrlWithdrawErrorKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_withdraw_error extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlWithdrawErrorKind kind;
@@ -5270,7 +5312,7 @@ final class LnUrlWithdrawResultKind extends ffi.Union {
 }
 
 final class wire_cst_ln_url_withdraw_result extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external LnUrlWithdrawResultKind kind;
@@ -5335,17 +5377,17 @@ final class PaymentErrorKind extends ffi.Union {
 }
 
 final class wire_cst_payment_error extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external PaymentErrorKind kind;
 }
 
 final class wire_cst_prepare_refund_response extends ffi.Struct {
-  @ffi.Uint32()
+  @ffi.Int()
   external int tx_vsize;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int tx_fee_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
@@ -5364,19 +5406,19 @@ final class wire_cst_receive_payment_response extends ffi.Struct {
 }
 
 final class wire_cst_recommended_fees extends ffi.Struct {
-  @ffi.Uint64()
+  @ffi.Int()
   external int fastest_fee;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int half_hour_fee;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int hour_fee;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int economy_fee;
 
-  @ffi.Uint64()
+  @ffi.Int()
   external int minimum_fee;
 }
 
@@ -5399,7 +5441,7 @@ final class SdkErrorKind extends ffi.Union {
 }
 
 final class wire_cst_sdk_error extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Int()
   external int tag;
 
   external SdkErrorKind kind;

@@ -250,13 +250,20 @@ pub struct OnchainPaymentLimitsResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
-    pub invoice: String,
+    /// The destination we intend to pay to.
+    /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
+    pub destination: String,
+
+    /// Fee rate with which direct payments are executed (either via MRH or liquid address/BIP21)
+    /// Note that this is not alterable in case of swap payments
+    pub fee_rate: Option<f32>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub invoice: String,
+    /// The parsed destination, either [InputType::Bolt11] or
+    pub parsed_destination: InputType,
     pub fees_sat: u64,
 }
 
