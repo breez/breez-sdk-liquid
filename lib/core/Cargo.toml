@@ -17,7 +17,9 @@ bip39 = "2.0.0"
 boltz-client = { git = "https://github.com/dangeross/boltz-rust", branch = "savage-breez-latest" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.2.0", features = ["chrono"], optional = true }
+flutter_rust_bridge = { version = "=2.2.0", features = [
+  "chrono",
+], optional = true }
 log = { workspace = true }
 lwk_common = "0.7.0"
 lwk_signer = "0.7.0"
@@ -36,7 +38,10 @@ openssl = { version = "0.10", features = ["vendored"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
-futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
+futures-util = { version = "0.3.28", default-features = false, features = [
+  "sink",
+  "std",
+] }
 async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }

@@ -83,7 +83,11 @@ impl Persister {
         }
     }
 
-    pub(crate) fn insert_or_update_payment(&self, ptx: PaymentTxData) -> Result<()> {
+    pub(crate) fn insert_or_update_payment(
+        &self,
+        ptx: PaymentTxData,
+        details: Option<PaymentDetails>,
+    ) -> Result<()> {
         let mut con = self.get_connection()?;
 
         let tx = con.transaction()?;
@@ -99,7 +103,7 @@ impl Persister {
         VALUES (?, ?, ?, ?, ?, ?)
         ",
             (
-                ptx.tx_id,
+                &ptx.tx_id,
                 ptx.timestamp,
                 ptx.amount_sat,
                 ptx.fees_sat,
@@ -107,6 +111,22 @@ impl Persister {
                 ptx.is_confirmed,
             ),
         )?;
+        if let Some(PaymentDetails::Liquid {
+            destination,
+            description,
+        }) = details
+        {
+            tx.execute(
+                "INSERT OR REPLACE INTO payment_details (
+                    tx_id,
+                    destination,
+                    description 
+                )
+                VALUES (?, ?, ?)
+            ",
+                (ptx.tx_id, destination, description),
+            )?;
+        }
         tx.commit()?;
 
         Ok(())
@@ -176,8 +196,11 @@ impl Persister {
                 cs.refund_tx_id,
                 cs.payer_amount_sat,
                 cs.receiver_amount_sat,
+                cs.claim_address,
                 cs.state,
-                rtx.amount_sat
+                rtx.amount_sat,
+                pd.destination,
+                pd.description
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
@@ -190,6 +213,8 @@ impl Persister {
                 ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
+            LEFT JOIN payment_details AS pd      -- Payment details
+                ON pd.tx_id = ptx.tx_id
             WHERE                                -- Filter out refund txs from Send Swaps
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
             AND                                  -- Filter out refund txs from Chain Swaps
@@ -246,14 +271,19 @@ impl Persister {
         let maybe_chain_swap_refund_tx_id: Option<String> = row.get(27)?;
         let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(28)?;
         let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(29)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(30)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(30)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(31)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(31)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(32)?;
+
+        let maybe_payment_details_destination: Option<String> = row.get(33)?;
+        let maybe_payment_details_description: Option<String> = row.get(34)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
                 Some(PaymentSwapData {
                     swap_id: receive_swap_id,
+                    swap_type: PaymentSwapType::Receive,
                     created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                     preimage: None,
                     bolt11: maybe_receive_swap_invoice.clone(),
@@ -266,6 +296,7 @@ impl Persister {
                     receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
                     refund_tx_id: None,
                     refund_tx_amount_sat: None,
+                    claim_address: None,
                     status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
                 }),
                 PaymentType::Receive,
@@ -274,6 +305,7 @@ impl Persister {
                 Some(send_swap_id) => (
                     Some(PaymentSwapData {
                         swap_id: send_swap_id,
+                        swap_type: PaymentSwapType::Send,
                         created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                         preimage: maybe_send_swap_preimage,
                         bolt11: maybe_send_swap_invoice.clone(),
@@ -286,6 +318,7 @@ impl Persister {
                         receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
                         refund_tx_id: maybe_send_swap_refund_tx_id,
                         refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                        claim_address: None,
                         status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
                     }),
                     PaymentType::Send,
@@ -294,6 +327,7 @@ impl Persister {
                     Some(chain_swap_id) => (
                         Some(PaymentSwapData {
                             swap_id: chain_swap_id,
+                            swap_type: PaymentSwapType::Chain,
                             created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
                             preimage: maybe_chain_swap_preimage,
                             bolt11: None,
@@ -303,6 +337,7 @@ impl Persister {
                             receiver_amount_sat: maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
                             refund_tx_id: maybe_chain_swap_refund_tx_id,
                             refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                            claim_address: maybe_chain_swap_claim_address,
                             status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
                         }),
                         maybe_chain_swap_direction
@@ -314,11 +349,18 @@ impl Persister {
             },
         };
 
+        let payment_details =
+            maybe_payment_details_destination.map(|destination| PaymentDetails::Liquid {
+                destination,
+                description: maybe_payment_details_description
+                    .unwrap_or("Liquid transfer".to_string()),
+            });
+
         match (tx, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
             (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_type)),
-            (Some(tx), None) => Ok(Payment::from_tx_data(tx, None)),
-            (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap))),
+            (Some(tx), None) => Ok(Payment::from_tx_data(tx, None, payment_details)),
+            (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap), payment_details)),
         }
     }
 
@@ -413,7 +455,7 @@ mod tests {
         let (_temp_dir, storage) = new_persister()?;
 
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
-        storage.insert_or_update_payment(payment_tx_data.clone())?;
+        storage.insert_or_update_payment(payment_tx_data.clone(), None)?;
 
         assert!(storage
             .get_payments(&ListPaymentsRequest {

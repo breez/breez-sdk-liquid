@@ -37,7 +37,7 @@ export interface BitcoinAddressData {
 }
 
 export interface BuyBitcoinRequest {
-    prepareRes: PrepareBuyBitcoinResponse
+    prepareResponse: PrepareBuyBitcoinResponse
     redirectUrl?: string
 }
 
@@ -208,22 +208,18 @@ export interface OnchainPaymentLimitsResponse {
 
 export interface PayOnchainRequest {
     address: string
-    prepareRes: PreparePayOnchainResponse
+    prepareResponse: PreparePayOnchainResponse
 }
 
 export interface Payment {
+    destination?: string
+    txId?: string
     timestamp: number
     amountSat: number
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
-    description: string
-    txId?: string
-    swapId?: string
-    preimage?: string
-    bolt11?: string
-    refundTxId?: string
-    refundTxAmountSat?: number
+    details?: PaymentDetails
 }
 
 export interface PrepareBuyBitcoinRequest {
@@ -248,21 +244,14 @@ export interface PreparePayOnchainResponse {
     totalFeesSat: number
 }
 
-export interface PrepareReceiveOnchainRequest {
-    payerAmountSat: number
+export interface PrepareReceiveRequest {
+    payerAmountSat?: number
+    paymentMethod: PaymentMethod
 }
 
-export interface PrepareReceiveOnchainResponse {
-    payerAmountSat: number
-    feesSat: number
-}
-
-export interface PrepareReceivePaymentRequest {
-    payerAmountSat: number
-}
-
-export interface PrepareReceivePaymentResponse {
-    payerAmountSat: number
+export interface PrepareReceiveResponse {
+    payerAmountSat?: number
+    paymentMethod: PaymentMethod
     feesSat: number
 }
 
@@ -279,11 +268,12 @@ export interface PrepareRefundResponse {
 }
 
 export interface PrepareSendRequest {
-    invoice: string
+    destination: string
+    amountSat?: number
 }
 
 export interface PrepareSendResponse {
-    invoice: string
+    destination: SendDestination
     feesSat: number
 }
 
@@ -292,19 +282,13 @@ export interface Rate {
     value: number
 }
 
-export interface ReceiveOnchainResponse {
-    address: string
-    bip21: string
-}
-
 export interface ReceivePaymentRequest {
-    prepareRes: PrepareReceivePaymentResponse
+    prepareResponse: PrepareReceiveResponse
     description?: string
 }
 
 export interface ReceivePaymentResponse {
-    id: string
-    invoice: string
+    destination: string
 }
 
 export interface RecommendedFees {
@@ -347,6 +331,10 @@ export interface RouteHintHop {
     cltvExpiryDelta: number
     htlcMinimumMsat?: number
     htlcMaximumMsat?: number
+}
+
+export interface SendPaymentRequest {
+    prepareResponse: PrepareSendResponse
 }
 
 export interface SendPaymentResponse {
@@ -482,6 +470,38 @@ export enum Network {
     REGTEST = "regtest"
 }
 
+export enum PaymentDetailsVariant {
+    LIGHTNING = "lightning",
+    LIQUID = "liquid",
+    BITCOIN = "bitcoin"
+}
+
+export type PaymentDetails = {
+    type: PaymentDetailsVariant.LIGHTNING,
+    swapId: string
+    description: string
+    preimage?: string
+    bolt11?: string
+    refundTxId?: string
+    refundTxAmountSat?: number
+} | {
+    type: PaymentDetailsVariant.LIQUID,
+    destination: string
+    description: string
+} | {
+    type: PaymentDetailsVariant.BITCOIN,
+    swapId: string
+    description: string
+    refundTxId?: string
+    refundTxAmountSat?: number
+}
+
+export enum PaymentMethod {
+    LIGHTNING = "lightning",
+    BITCOIN_ADDRESS = "bitcoinAddress",
+    LIQUID_ADDRESS = "liquidAddress"
+}
+
 export enum PaymentState {
     CREATED = "created",
     PENDING = "pending",
@@ -527,6 +547,19 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.SYNCED
+}
+
+export enum SendDestinationVariant {
+    LIQUID_ADDRESS = "liquidAddress",
+    BOLT11 = "bolt11"
+}
+
+export type SendDestination = {
+    type: SendDestinationVariant.LIQUID_ADDRESS,
+    addressData: LiquidAddressData
+} | {
+    type: SendDestinationVariant.BOLT11,
+    invoice: LnInvoice
 }
 
 export enum SuccessActionProcessedVariant {
@@ -602,12 +635,12 @@ export const prepareSendPayment = async (req: PrepareSendRequest): Promise<Prepa
     return response
 }
 
-export const sendPayment = async (req: PrepareSendResponse): Promise<SendPaymentResponse> => {
+export const sendPayment = async (req: SendPaymentRequest): Promise<SendPaymentResponse> => {
     const response = await BreezSDKLiquid.sendPayment(req)
     return response
 }
 
-export const prepareReceivePayment = async (req: PrepareReceivePaymentRequest): Promise<PrepareReceivePaymentResponse> => {
+export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise<PrepareReceiveResponse> => {
     const response = await BreezSDKLiquid.prepareReceivePayment(req)
     return response
 }
@@ -634,16 +667,6 @@ export const preparePayOnchain = async (req: PreparePayOnchainRequest): Promise<
 
 export const payOnchain = async (req: PayOnchainRequest): Promise<SendPaymentResponse> => {
     const response = await BreezSDKLiquid.payOnchain(req)
-    return response
-}
-
-export const prepareReceiveOnchain = async (req: PrepareReceiveOnchainRequest): Promise<PrepareReceiveOnchainResponse> => {
-    const response = await BreezSDKLiquid.prepareReceiveOnchain(req)
-    return response
-}
-
-export const receiveOnchain = async (req: PrepareReceiveOnchainResponse): Promise<ReceiveOnchainResponse> => {
-    const response = await BreezSDKLiquid.receiveOnchain(req)
     return response
 }
 

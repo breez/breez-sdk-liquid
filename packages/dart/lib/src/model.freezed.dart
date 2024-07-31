@@ -284,6 +284,449 @@ abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
 }
 
 /// @nodoc
+mixin _$PaymentDetails {
+  /// Represents the invoice description
+  String get description => throw _privateConstructorUsedError;
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $PaymentDetailsCopyWith<PaymentDetails> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $PaymentDetailsCopyWith<$Res> {
+  factory $PaymentDetailsCopyWith(PaymentDetails value, $Res Function(PaymentDetails) then) =
+      _$PaymentDetailsCopyWithImpl<$Res, PaymentDetails>;
+  @useResult
+  $Res call({String description});
+}
+
+/// @nodoc
+class _$PaymentDetailsCopyWithImpl<$Res, $Val extends PaymentDetails>
+    implements $PaymentDetailsCopyWith<$Res> {
+  _$PaymentDetailsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? description = null,
+  }) {
+    return _then(_value.copyWith(
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $PaymentDetailsCopyWith<$Res> {
+  factory _$$PaymentDetails_LightningImplCopyWith(
+          _$PaymentDetails_LightningImpl value, $Res Function(_$PaymentDetails_LightningImpl) then) =
+      __$$PaymentDetails_LightningImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String swapId,
+      String description,
+      String? preimage,
+      String? bolt11,
+      String? refundTxId,
+      BigInt? refundTxAmountSat});
+}
+
+/// @nodoc
+class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
+    extends _$PaymentDetailsCopyWithImpl<$Res, _$PaymentDetails_LightningImpl>
+    implements _$$PaymentDetails_LightningImplCopyWith<$Res> {
+  __$$PaymentDetails_LightningImplCopyWithImpl(
+      _$PaymentDetails_LightningImpl _value, $Res Function(_$PaymentDetails_LightningImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? swapId = null,
+    Object? description = null,
+    Object? preimage = freezed,
+    Object? bolt11 = freezed,
+    Object? refundTxId = freezed,
+    Object? refundTxAmountSat = freezed,
+  }) {
+    return _then(_$PaymentDetails_LightningImpl(
+      swapId: null == swapId
+          ? _value.swapId
+          : swapId // ignore: cast_nullable_to_non_nullable
+              as String,
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+      preimage: freezed == preimage
+          ? _value.preimage
+          : preimage // ignore: cast_nullable_to_non_nullable
+              as String?,
+      bolt11: freezed == bolt11
+          ? _value.bolt11
+          : bolt11 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      refundTxId: freezed == refundTxId
+          ? _value.refundTxId
+          : refundTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      refundTxAmountSat: freezed == refundTxAmountSat
+          ? _value.refundTxAmountSat
+          : refundTxAmountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
+  const _$PaymentDetails_LightningImpl(
+      {required this.swapId,
+      required this.description,
+      this.preimage,
+      this.bolt11,
+      this.refundTxId,
+      this.refundTxAmountSat})
+      : super._();
+
+  @override
+  final String swapId;
+
+  /// Represents the invoice description
+  @override
+  final String description;
+
+  /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+  @override
+  final String? preimage;
+
+  /// Represents the invoice associated with a payment
+  /// In the case of a Send payment, this is the invoice paid by the swapper
+  /// In the case of a Receive payment, this is the invoice paid by the user
+  @override
+  final String? bolt11;
+
+  /// For a Send swap which was refunded, this is the refund tx id
+  @override
+  final String? refundTxId;
+
+  /// For a Send swap which was refunded, this is the refund amount
+  @override
+  final BigInt? refundTxAmountSat;
+
+  @override
+  String toString() {
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentDetails_LightningImpl &&
+            (identical(other.swapId, swapId) || other.swapId == swapId) &&
+            (identical(other.description, description) || other.description == description) &&
+            (identical(other.preimage, preimage) || other.preimage == preimage) &&
+            (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
+            (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
+            (identical(other.refundTxAmountSat, refundTxAmountSat) ||
+                other.refundTxAmountSat == refundTxAmountSat));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, swapId, description, preimage, bolt11, refundTxId, refundTxAmountSat);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentDetails_LightningImplCopyWith<_$PaymentDetails_LightningImpl> get copyWith =>
+      __$$PaymentDetails_LightningImplCopyWithImpl<_$PaymentDetails_LightningImpl>(this, _$identity);
+}
+
+abstract class PaymentDetails_Lightning extends PaymentDetails {
+  const factory PaymentDetails_Lightning(
+      {required final String swapId,
+      required final String description,
+      final String? preimage,
+      final String? bolt11,
+      final String? refundTxId,
+      final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
+  const PaymentDetails_Lightning._() : super._();
+
+  String get swapId;
+
+  /// Represents the invoice description
+  @override
+  String get description;
+
+  /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+  String? get preimage;
+
+  /// Represents the invoice associated with a payment
+  /// In the case of a Send payment, this is the invoice paid by the swapper
+  /// In the case of a Receive payment, this is the invoice paid by the user
+  String? get bolt11;
+
+  /// For a Send swap which was refunded, this is the refund tx id
+  String? get refundTxId;
+
+  /// For a Send swap which was refunded, this is the refund amount
+  BigInt? get refundTxAmountSat;
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PaymentDetails_LightningImplCopyWith<_$PaymentDetails_LightningImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$PaymentDetails_LiquidImplCopyWith<$Res> implements $PaymentDetailsCopyWith<$Res> {
+  factory _$$PaymentDetails_LiquidImplCopyWith(
+          _$PaymentDetails_LiquidImpl value, $Res Function(_$PaymentDetails_LiquidImpl) then) =
+      __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String destination, String description});
+}
+
+/// @nodoc
+class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
+    extends _$PaymentDetailsCopyWithImpl<$Res, _$PaymentDetails_LiquidImpl>
+    implements _$$PaymentDetails_LiquidImplCopyWith<$Res> {
+  __$$PaymentDetails_LiquidImplCopyWithImpl(
+      _$PaymentDetails_LiquidImpl _value, $Res Function(_$PaymentDetails_LiquidImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? destination = null,
+    Object? description = null,
+  }) {
+    return _then(_$PaymentDetails_LiquidImpl(
+      destination: null == destination
+          ? _value.destination
+          : destination // ignore: cast_nullable_to_non_nullable
+              as String,
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
+  const _$PaymentDetails_LiquidImpl({required this.destination, required this.description}) : super._();
+
+  /// Represents either a Liquid BIP21 URI or pure address
+  @override
+  final String destination;
+
+  /// Represents the BIP21 `message` field
+  @override
+  final String description;
+
+  @override
+  String toString() {
+    return 'PaymentDetails.liquid(destination: $destination, description: $description)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentDetails_LiquidImpl &&
+            (identical(other.destination, destination) || other.destination == destination) &&
+            (identical(other.description, description) || other.description == description));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, destination, description);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentDetails_LiquidImplCopyWith<_$PaymentDetails_LiquidImpl> get copyWith =>
+      __$$PaymentDetails_LiquidImplCopyWithImpl<_$PaymentDetails_LiquidImpl>(this, _$identity);
+}
+
+abstract class PaymentDetails_Liquid extends PaymentDetails {
+  const factory PaymentDetails_Liquid(
+      {required final String destination, required final String description}) = _$PaymentDetails_LiquidImpl;
+  const PaymentDetails_Liquid._() : super._();
+
+  /// Represents either a Liquid BIP21 URI or pure address
+  String get destination;
+
+  /// Represents the BIP21 `message` field
+  @override
+  String get description;
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PaymentDetails_LiquidImplCopyWith<_$PaymentDetails_LiquidImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDetailsCopyWith<$Res> {
+  factory _$$PaymentDetails_BitcoinImplCopyWith(
+          _$PaymentDetails_BitcoinImpl value, $Res Function(_$PaymentDetails_BitcoinImpl) then) =
+      __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String swapId, String description, String? refundTxId, BigInt? refundTxAmountSat});
+}
+
+/// @nodoc
+class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
+    extends _$PaymentDetailsCopyWithImpl<$Res, _$PaymentDetails_BitcoinImpl>
+    implements _$$PaymentDetails_BitcoinImplCopyWith<$Res> {
+  __$$PaymentDetails_BitcoinImplCopyWithImpl(
+      _$PaymentDetails_BitcoinImpl _value, $Res Function(_$PaymentDetails_BitcoinImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? swapId = null,
+    Object? description = null,
+    Object? refundTxId = freezed,
+    Object? refundTxAmountSat = freezed,
+  }) {
+    return _then(_$PaymentDetails_BitcoinImpl(
+      swapId: null == swapId
+          ? _value.swapId
+          : swapId // ignore: cast_nullable_to_non_nullable
+              as String,
+      description: null == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String,
+      refundTxId: freezed == refundTxId
+          ? _value.refundTxId
+          : refundTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      refundTxAmountSat: freezed == refundTxAmountSat
+          ? _value.refundTxAmountSat
+          : refundTxAmountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
+  const _$PaymentDetails_BitcoinImpl(
+      {required this.swapId, required this.description, this.refundTxId, this.refundTxAmountSat})
+      : super._();
+
+  @override
+  final String swapId;
+
+  /// Represents the invoice description
+  @override
+  final String description;
+
+  /// For a Send swap which was refunded, this is the refund tx id
+  @override
+  final String? refundTxId;
+
+  /// For a Send swap which was refunded, this is the refund amount
+  @override
+  final BigInt? refundTxAmountSat;
+
+  @override
+  String toString() {
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentDetails_BitcoinImpl &&
+            (identical(other.swapId, swapId) || other.swapId == swapId) &&
+            (identical(other.description, description) || other.description == description) &&
+            (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
+            (identical(other.refundTxAmountSat, refundTxAmountSat) ||
+                other.refundTxAmountSat == refundTxAmountSat));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, swapId, description, refundTxId, refundTxAmountSat);
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentDetails_BitcoinImplCopyWith<_$PaymentDetails_BitcoinImpl> get copyWith =>
+      __$$PaymentDetails_BitcoinImplCopyWithImpl<_$PaymentDetails_BitcoinImpl>(this, _$identity);
+}
+
+abstract class PaymentDetails_Bitcoin extends PaymentDetails {
+  const factory PaymentDetails_Bitcoin(
+      {required final String swapId,
+      required final String description,
+      final String? refundTxId,
+      final BigInt? refundTxAmountSat}) = _$PaymentDetails_BitcoinImpl;
+  const PaymentDetails_Bitcoin._() : super._();
+
+  String get swapId;
+
+  /// Represents the invoice description
+  @override
+  String get description;
+
+  /// For a Send swap which was refunded, this is the refund tx id
+  String? get refundTxId;
+
+  /// For a Send swap which was refunded, this is the refund amount
+  BigInt? get refundTxAmountSat;
+
+  /// Create a copy of PaymentDetails
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PaymentDetails_BitcoinImplCopyWith<_$PaymentDetails_BitcoinImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$SdkEvent {}
 
 /// @nodoc
@@ -824,4 +1267,187 @@ class _$SdkEvent_SyncedImpl extends SdkEvent_Synced {
 abstract class SdkEvent_Synced extends SdkEvent {
   const factory SdkEvent_Synced() = _$SdkEvent_SyncedImpl;
   const SdkEvent_Synced._() : super._();
+}
+
+/// @nodoc
+mixin _$SendDestination {}
+
+/// @nodoc
+abstract class $SendDestinationCopyWith<$Res> {
+  factory $SendDestinationCopyWith(SendDestination value, $Res Function(SendDestination) then) =
+      _$SendDestinationCopyWithImpl<$Res, SendDestination>;
+}
+
+/// @nodoc
+class _$SendDestinationCopyWithImpl<$Res, $Val extends SendDestination>
+    implements $SendDestinationCopyWith<$Res> {
+  _$SendDestinationCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+abstract class _$$SendDestination_LiquidAddressImplCopyWith<$Res> {
+  factory _$$SendDestination_LiquidAddressImplCopyWith(_$SendDestination_LiquidAddressImpl value,
+          $Res Function(_$SendDestination_LiquidAddressImpl) then) =
+      __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LiquidAddressData addressData});
+}
+
+/// @nodoc
+class __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>
+    extends _$SendDestinationCopyWithImpl<$Res, _$SendDestination_LiquidAddressImpl>
+    implements _$$SendDestination_LiquidAddressImplCopyWith<$Res> {
+  __$$SendDestination_LiquidAddressImplCopyWithImpl(
+      _$SendDestination_LiquidAddressImpl _value, $Res Function(_$SendDestination_LiquidAddressImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? addressData = null,
+  }) {
+    return _then(_$SendDestination_LiquidAddressImpl(
+      addressData: null == addressData
+          ? _value.addressData
+          : addressData // ignore: cast_nullable_to_non_nullable
+              as LiquidAddressData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SendDestination_LiquidAddressImpl extends SendDestination_LiquidAddress {
+  const _$SendDestination_LiquidAddressImpl({required this.addressData}) : super._();
+
+  @override
+  final LiquidAddressData addressData;
+
+  @override
+  String toString() {
+    return 'SendDestination.liquidAddress(addressData: $addressData)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SendDestination_LiquidAddressImpl &&
+            (identical(other.addressData, addressData) || other.addressData == addressData));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, addressData);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SendDestination_LiquidAddressImplCopyWith<_$SendDestination_LiquidAddressImpl> get copyWith =>
+      __$$SendDestination_LiquidAddressImplCopyWithImpl<_$SendDestination_LiquidAddressImpl>(
+          this, _$identity);
+}
+
+abstract class SendDestination_LiquidAddress extends SendDestination {
+  const factory SendDestination_LiquidAddress({required final LiquidAddressData addressData}) =
+      _$SendDestination_LiquidAddressImpl;
+  const SendDestination_LiquidAddress._() : super._();
+
+  LiquidAddressData get addressData;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SendDestination_LiquidAddressImplCopyWith<_$SendDestination_LiquidAddressImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SendDestination_Bolt11ImplCopyWith<$Res> {
+  factory _$$SendDestination_Bolt11ImplCopyWith(
+          _$SendDestination_Bolt11Impl value, $Res Function(_$SendDestination_Bolt11Impl) then) =
+      __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LNInvoice invoice});
+}
+
+/// @nodoc
+class __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>
+    extends _$SendDestinationCopyWithImpl<$Res, _$SendDestination_Bolt11Impl>
+    implements _$$SendDestination_Bolt11ImplCopyWith<$Res> {
+  __$$SendDestination_Bolt11ImplCopyWithImpl(
+      _$SendDestination_Bolt11Impl _value, $Res Function(_$SendDestination_Bolt11Impl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? invoice = null,
+  }) {
+    return _then(_$SendDestination_Bolt11Impl(
+      invoice: null == invoice
+          ? _value.invoice
+          : invoice // ignore: cast_nullable_to_non_nullable
+              as LNInvoice,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SendDestination_Bolt11Impl extends SendDestination_Bolt11 {
+  const _$SendDestination_Bolt11Impl({required this.invoice}) : super._();
+
+  @override
+  final LNInvoice invoice;
+
+  @override
+  String toString() {
+    return 'SendDestination.bolt11(invoice: $invoice)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SendDestination_Bolt11Impl &&
+            (identical(other.invoice, invoice) || other.invoice == invoice));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, invoice);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
+      __$$SendDestination_Bolt11ImplCopyWithImpl<_$SendDestination_Bolt11Impl>(this, _$identity);
+}
+
+abstract class SendDestination_Bolt11 extends SendDestination {
+  const factory SendDestination_Bolt11({required final LNInvoice invoice}) = _$SendDestination_Bolt11Impl;
+  const SendDestination_Bolt11._() : super._();
+
+  LNInvoice get invoice;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

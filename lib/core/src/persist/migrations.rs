@@ -65,5 +65,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN description TEXT;
         ALTER TABLE chain_swaps ADD COLUMN description TEXT;
         ",
+        "CREATE TABLE IF NOT EXISTS payment_details (
+            tx_id TEXT NOT NULL PRIMARY KEY,
+            destination TEXT NOT NULL,
+            description TEXT NOT NULL
+        );",
     ]
 }
