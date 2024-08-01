@@ -1,7 +1,7 @@
 // The Android Gradle Plugin builds the native code with the Android NDK.
 
 group 'com.example.flutter_breez_liquid'
-version '0.2.0'
+version '0.2.1'
 
 buildscript {
     repositories {
