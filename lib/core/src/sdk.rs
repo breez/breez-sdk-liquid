@@ -1646,7 +1646,21 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
-        self.sync_payments_with_chain_data(true).await?;
+        let is_first_sync = !self
+            .persister
+            .get_is_first_sync_complete()?
+            .unwrap_or(false);
+        match is_first_sync {
+            true => {
+                self.event_manager.pause_notifications();
+                self.sync_payments_with_chain_data(true).await?;
+                self.event_manager.resume_notifications();
+                self.persister.set_is_first_sync_complete(true)?;
+            }
+            false => {
+                self.sync_payments_with_chain_data(true).await?;
+            }
+        }
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized with mempool and onchain data (t = {duration_ms} ms)");
 

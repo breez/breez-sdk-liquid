@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
+use log::info;
 use tokio::sync::{broadcast, RwLock};
 
 use crate::model::{EventListener, SdkEvent};
@@ -9,6 +11,7 @@ use crate::model::{EventListener, SdkEvent};
 pub(crate) struct EventManager {
     listeners: RwLock<HashMap<String, Box<dyn EventListener>>>,
     notifier: broadcast::Sender<SdkEvent>,
+    is_paused: AtomicBool,
 }
 
 impl EventManager {
@@ -18,6 +21,7 @@ impl EventManager {
         Self {
             listeners: Default::default(),
             notifier,
+            is_paused: AtomicBool::new(false),
         }
     }
 
@@ -35,14 +39,29 @@ impl EventManager {
     }
 
     pub async fn notify(&self, e: SdkEvent) {
-        let _ = self.notifier.send(e.clone());
+        match self.is_paused.load(Ordering::SeqCst) {
+            true => info!("Event notifications are paused, not emitting event {e:?}"),
+            false => {
+                let _ = self.notifier.send(e.clone());
 
-        for listener in (*self.listeners.read().await).values() {
-            listener.on_event(e.clone());
+                for listener in (*self.listeners.read().await).values() {
+                    listener.on_event(e.clone());
+                }
+            }
         }
     }
 
     pub(crate) fn subscribe(&self) -> broadcast::Receiver<SdkEvent> {
         self.notifier.subscribe()
+    }
+
+    pub(crate) fn pause_notifications(&self) {
+        info!("Pausing event notifications");
+        self.is_paused.store(true, Ordering::SeqCst);
+    }
+
+    pub(crate) fn resume_notifications(&self) {
+        info!("Resuming event notifications");
+        self.is_paused.store(false, Ordering::SeqCst);
     }
 }
