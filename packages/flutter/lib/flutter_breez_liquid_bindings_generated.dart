@@ -761,6 +761,38 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponsePtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  void
+      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequestPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest');
+  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest =
+      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequestPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      ptr,
+    );
+  }
+
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequestPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest');
+  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest =
+      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequestPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
   ffi.Pointer<wire_cst_aes_success_action_data_decrypted>
       frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted();
@@ -1579,6 +1611,8 @@ final class wire_cst_prepare_refund_request extends ffi.Struct {
 
 final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_destination;
+
+  external ffi.Pointer<ffi.Int> amount_sat;
 }
 
 final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {

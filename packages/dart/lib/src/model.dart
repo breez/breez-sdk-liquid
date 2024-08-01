@@ -12,6 +12,9 @@ part 'model.freezed.dart';
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
 abstract class PrepareSendResponse implements RustOpaqueInterface {}
 
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>
+abstract class SendPaymentRequest implements RustOpaqueInterface {}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
@@ -810,19 +813,25 @@ class PrepareSendRequest {
   /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
   final String paymentDestination;
 
+  /// Should only be set when paying directly onchain or to a BIP21 URI
+  /// where no amount is specified
+  final BigInt? amountSat;
+
   const PrepareSendRequest({
     required this.paymentDestination,
+    this.amountSat,
   });
 
   @override
-  int get hashCode => paymentDestination.hashCode;
+  int get hashCode => paymentDestination.hashCode ^ amountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
-          paymentDestination == other.paymentDestination;
+          paymentDestination == other.paymentDestination &&
+          amountSat == other.amountSat;
 }
 
 /// Specifies the supported ways to receive by the SDK

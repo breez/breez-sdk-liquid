@@ -265,6 +265,10 @@ pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
     /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
     pub payment_destination: String,
+
+    /// Should only be set when paying directly onchain or to a BIP21 URI
+    /// where no amount is specified
+    pub amount_sat: Option<u64>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -285,9 +289,6 @@ pub struct PrepareSendResponse {
 #[derive(Debug, Serialize)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
-    /// Should only be set when paying directly onchain or to a BIP21 URI
-    /// where no amount is specified
-    pub amount_sat: Option<u64>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

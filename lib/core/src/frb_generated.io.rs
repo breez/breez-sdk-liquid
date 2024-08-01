@@ -49,6 +49,18 @@ impl CstDecode<PrepareSendResponse> for usize {
         ))
     }
 }
+impl CstDecode<SendPaymentRequest> for usize {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> SendPaymentRequest {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
+            RustOpaqueNom<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>,
+            >,
+        >::cst_decode(
+            self
+        ))
+    }
+}
 impl
     CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
@@ -71,6 +83,19 @@ impl
     fn cst_decode(
         self,
     ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
+    {
+        unsafe { decode_rust_opaque_nom(self as _) }
+    }
+}
+impl
+    CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>,
+    > for usize
+{
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(
+        self,
+    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>
     {
         unsafe { decode_rust_opaque_nom(self as _) }
     }
@@ -1294,6 +1319,7 @@ impl CstDecode<crate::model::PrepareSendRequest> for wire_cst_prepare_send_reque
     fn cst_decode(self) -> crate::model::PrepareSendRequest {
         crate::model::PrepareSendRequest {
             payment_destination: self.payment_destination.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
         }
     }
 }
@@ -2223,6 +2249,7 @@ impl NewWithNullPtr for wire_cst_prepare_send_request {
     fn new_with_null_ptr() -> Self {
         Self {
             payment_destination: core::ptr::null_mut(),
+            amount_sat: core::ptr::null_mut(),
         }
     }
 }
@@ -2799,6 +2826,24 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 ) {
     unsafe {
         StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>::decrement_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>::increment_strong_count(ptr as _);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+    ptr: *const std::ffi::c_void,
+) {
+    unsafe {
+        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>::decrement_strong_count(ptr as _);
     }
 }
 
@@ -3949,6 +3994,7 @@ pub struct wire_cst_prepare_refund_response {
 #[derive(Clone, Copy)]
 pub struct wire_cst_prepare_send_request {
     payment_destination: *mut wire_cst_list_prim_u_8_strict,
+    amount_sat: *mut u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

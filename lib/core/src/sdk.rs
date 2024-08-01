@@ -679,11 +679,12 @@ impl LiquidSdk {
         let fees_sat;
         let receiver_amount_sat;
         let payment_destination;
+
         match sdk_common::input_parser::parse(&req.payment_destination).await? {
             InputType::LiquidAddress {
-                address: liquid_address_data,
+                address: mut liquid_address_data,
             } => {
-                let Some(amount_sat) = liquid_address_data.amount_sat else {
+                let Some(amount_sat) = req.amount_sat.or(liquid_address_data.amount_sat) else {
                     return Err(PaymentError::AmountOutOfRange);
                 };
 
@@ -697,6 +698,8 @@ impl LiquidSdk {
                         None,
                     )
                     .await?;
+
+                liquid_address_data.amount_sat = Some(receiver_amount_sat);
                 payment_destination = PaymentDestination::BIP21 {
                     address: liquid_address_data,
                 };
@@ -707,6 +710,14 @@ impl LiquidSdk {
 
                 receiver_amount_sat =
                     invoice.amount_msat.ok_or(PaymentError::AmountOutOfRange)? / 1000;
+
+                if let Some(amount_sat) = req.amount_sat {
+                    ensure_sdk!(
+                        receiver_amount_sat == amount_sat,
+                        PaymentError::Generic { err: "Amount in the payment request is not the same as the one in the invoice".to_string() }
+                    );
+                }
+
                 let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
@@ -779,12 +790,6 @@ impl LiquidSdk {
             PaymentDestination::BIP21 {
                 address: liquid_address_data,
             } => {
-                // We default to paying the invoice encoded within the BIP21
-                // if it is present
-                if let Some(invoice) = &liquid_address_data.invoice {
-                    return self.check_send_payment_invoice(invoice, *fees_sat).await;
-                }
-
                 ensure_sdk!(
                     liquid_address_data.network == self.config.network.into(),
                     PaymentError::Generic {
@@ -792,21 +797,8 @@ impl LiquidSdk {
                     }
                 );
 
-                let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
-                    (None, None) => return Err(PaymentError::AmountOutOfRange),
-                    (Some(amount_sat), None) => amount_sat,
-                    (None, Some(amount_sat)) => amount_sat,
-                    (Some(uri_amount_sat), Some(req_amount_sat)) => {
-                        ensure_sdk!(
-                            uri_amount_sat == req_amount_sat,
-                            PaymentError::Generic {
-                                err:
-                                    "Amount in the URI differs from amount in the payment request."
-                                        .to_string()
-                            }
-                        );
-                        uri_amount_sat
-                    }
+                let Some(amount_sat) = liquid_address_data.amount_sat else {
+                    return Err(PaymentError::AmountOutOfRange);
                 };
 
                 let payer_amount_sat = amount_sat + fees_sat;
@@ -1866,14 +1858,12 @@ impl LiquidSdk {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
                         payment_destination: cb.pr.clone(),
+                        amount_sat: None,
                     })
                     .await?;
 
                 let payment = self
-                    .send_payment(&SendPaymentRequest {
-                        prepare_response,
-                        amount_sat: None,
-                    })
+                    .send_payment(&SendPaymentRequest { prepare_response })
                     .await?
                     .payment;
 

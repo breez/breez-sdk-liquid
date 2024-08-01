@@ -325,6 +325,7 @@ dictionary GetInfoResponse {
 
 dictionary PrepareSendRequest {
     string payment_destination;
+    u64? amount_sat;
 };
 
 [Enum]
@@ -340,7 +341,6 @@ dictionary PrepareSendResponse {
 
 dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
-    u64? amount_sat;
 };
 
 dictionary SendPaymentResponse {

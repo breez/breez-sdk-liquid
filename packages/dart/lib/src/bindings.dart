@@ -87,7 +87,7 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void restore({required RestoreRequest req});
 
-  Future<SendPaymentResponse> sendPayment({required PrepareSendResponse req});
+  Future<SendPaymentResponse> sendPayment({required SendPaymentRequest req});
 
   Future<void> sync();
 }
