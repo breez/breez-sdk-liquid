@@ -9,6 +9,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
 
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
+abstract class PrepareSendResponse implements RustOpaqueInterface {}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
@@ -702,34 +705,39 @@ class PrepareReceiveOnchainResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceivePaymentRequest {
   final BigInt payerAmountSat;
+  final ReceiveMethod? receiveMethod;
 
   const PrepareReceivePaymentRequest({
     required this.payerAmountSat,
+    this.receiveMethod,
   });
 
   @override
-  int get hashCode => payerAmountSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode ^ receiveMethod.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceivePaymentRequest &&
           runtimeType == other.runtimeType &&
-          payerAmountSat == other.payerAmountSat;
+          payerAmountSat == other.payerAmountSat &&
+          receiveMethod == other.receiveMethod;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceivePaymentResponse {
   final BigInt payerAmountSat;
   final BigInt feesSat;
+  final ReceiveMethod? receiveMethod;
 
   const PrepareReceivePaymentResponse({
     required this.payerAmountSat,
     required this.feesSat,
+    this.receiveMethod,
   });
 
   @override
-  int get hashCode => payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode => payerAmountSat.hashCode ^ feesSat.hashCode ^ receiveMethod.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -737,7 +745,8 @@ class PrepareReceivePaymentResponse {
       other is PrepareReceivePaymentResponse &&
           runtimeType == other.runtimeType &&
           payerAmountSat == other.payerAmountSat &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          receiveMethod == other.receiveMethod;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].
@@ -799,50 +808,28 @@ class PrepareRefundResponse {
 class PrepareSendRequest {
   /// The destination we intend to pay to.
   /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
-  final String destination;
-
-  /// Fee rate with which direct payments are executed (either via MRH or liquid address/BIP21)
-  /// Note that this is not alterable in case of swap payments
-  final double? feeRate;
+  final String paymentDestination;
 
   const PrepareSendRequest({
-    required this.destination,
-    this.feeRate,
+    required this.paymentDestination,
   });
 
   @override
-  int get hashCode => destination.hashCode ^ feeRate.hashCode;
+  int get hashCode => paymentDestination.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
-          destination == other.destination &&
-          feeRate == other.feeRate;
+          paymentDestination == other.paymentDestination;
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
-class PrepareSendResponse {
-  /// The parsed destination, either [InputType::Bolt11] or
-  final InputType parsedDestination;
-  final BigInt feesSat;
-
-  const PrepareSendResponse({
-    required this.parsedDestination,
-    required this.feesSat,
-  });
-
-  @override
-  int get hashCode => parsedDestination.hashCode ^ feesSat.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PrepareSendResponse &&
-          runtimeType == other.runtimeType &&
-          parsedDestination == other.parsedDestination &&
-          feesSat == other.feesSat;
+/// Specifies the supported ways to receive by the SDK
+enum ReceiveMethod {
+  bip21,
+  bolt11,
+  ;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_onchain].
@@ -894,13 +881,17 @@ class ReceivePaymentResponse {
   final String id;
   final String invoice;
 
+  /// Present only when [ReceiveMethod::BIP21] is specified in the [ReceivePaymentResponse]
+  final String? bip21;
+
   const ReceivePaymentResponse({
     required this.id,
     required this.invoice,
+    this.bip21,
   });
 
   @override
-  int get hashCode => id.hashCode ^ invoice.hashCode;
+  int get hashCode => id.hashCode ^ invoice.hashCode ^ bip21.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -908,7 +899,8 @@ class ReceivePaymentResponse {
       other is ReceivePaymentResponse &&
           runtimeType == other.runtimeType &&
           id == other.id &&
-          invoice == other.invoice;
+          invoice == other.invoice &&
+          bip21 == other.bip21;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].

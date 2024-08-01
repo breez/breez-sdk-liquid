@@ -324,26 +324,43 @@ dictionary GetInfoResponse {
 };
 
 dictionary PrepareSendRequest {
-    string destination;
-    f32? fee_rate;
+    string payment_destination;
+};
+
+[Enum]
+interface PaymentDestination {
+    BIP21(LiquidAddressData address);
+    Bolt11(string invoice);
 };
 
 dictionary PrepareSendResponse {
-    InputType parsed_destination;
+    PaymentDestination payment_destination;
     u64 fees_sat;
+};
+
+dictionary SendPaymentRequest {
+    PrepareSendResponse prepare_response;
+    u64? amount_sat;
 };
 
 dictionary SendPaymentResponse {
     Payment payment;
 };
 
+enum ReceiveMethod {
+    "BIP21",
+    "Bolt11",
+};
+
 dictionary PrepareReceivePaymentRequest {
     u64 payer_amount_sat;
+    ReceiveMethod? receive_method;
 };
 
 dictionary PrepareReceivePaymentResponse {
     u64 payer_amount_sat;
     u64 fees_sat;
+    ReceiveMethod? receive_method;
 };
 
 dictionary ReceivePaymentRequest {
@@ -558,7 +575,7 @@ interface BindingLiquidSdk {
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
 
     [Throws=PaymentError]
-    SendPaymentResponse send_payment(PrepareSendResponse req);
+    SendPaymentResponse send_payment(SendPaymentRequest req);
 
     [Throws=PaymentError]
     PrepareReceivePaymentResponse prepare_receive_payment(PrepareReceivePaymentRequest req);

@@ -19,7 +19,6 @@ use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{elements, ElementsNetwork};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
-use sdk_common::ensure_sdk;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
@@ -28,6 +27,7 @@ use url::Url;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapStateHandler;
+use crate::ensure_sdk;
 use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
@@ -678,8 +678,8 @@ impl LiquidSdk {
 
         let fees_sat;
         let receiver_amount_sat;
-        let parsed_destination = sdk_common::input_parser::parse(&req.destination).await?;
-        match &parsed_destination {
+        let payment_destination;
+        match sdk_common::input_parser::parse(&req.payment_destination).await? {
             InputType::LiquidAddress {
                 address: liquid_address_data,
             } => {
@@ -688,13 +688,18 @@ impl LiquidSdk {
                 };
 
                 receiver_amount_sat = amount_sat;
+                // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
+                // once Esplora broadcast is enabled
                 fees_sat = self
                     .estimate_onchain_tx_fee(
                         receiver_amount_sat,
                         &liquid_address_data.address,
-                        req.fee_rate,
+                        None,
                     )
                     .await?;
+                payment_destination = PaymentDestination::BIP21 {
+                    address: liquid_address_data,
+                };
             }
             InputType::Bolt11 { invoice } => {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
@@ -715,6 +720,9 @@ impl LiquidSdk {
                         lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
                     }
                 };
+                payment_destination = PaymentDestination::Bolt11 {
+                    invoice: invoice.bolt11,
+                };
             }
             _ => {
                 return Err(PaymentError::Generic {
@@ -730,7 +738,7 @@ impl LiquidSdk {
         );
 
         Ok(PrepareSendResponse {
-            parsed_destination,
+            payment_destination,
             fees_sat,
         })
     }
@@ -758,39 +766,64 @@ impl LiquidSdk {
     /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     pub async fn send_payment(
         &self,
-        req: &PrepareSendResponse,
+        req: &SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        match &req.parsed_destination {
-            InputType::LiquidAddress {
+        let PrepareSendResponse {
+            fees_sat,
+            payment_destination,
+        } = &req.prepare_response;
+
+        match payment_destination {
+            PaymentDestination::BIP21 {
                 address: liquid_address_data,
             } => {
                 // We default to paying the invoice encoded within the BIP21
                 // if it is present
                 if let Some(invoice) = &liquid_address_data.invoice {
-                    return self.check_send_payment_invoice(invoice, req.fees_sat).await;
+                    return self.check_send_payment_invoice(invoice, *fees_sat).await;
                 }
 
-                let Some(amount_sat) = liquid_address_data.amount_sat else {
-                    return Err(PaymentError::AmountOutOfRange);
+                ensure_sdk!(
+                    liquid_address_data.network == self.config.network.into(),
+                    PaymentError::Generic {
+                        err: "Cannot pay to the given network".to_string()
+                    }
+                );
+
+                let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
+                    (None, None) => return Err(PaymentError::AmountOutOfRange),
+                    (Some(amount_sat), None) => amount_sat,
+                    (None, Some(amount_sat)) => amount_sat,
+                    (Some(uri_amount_sat), Some(req_amount_sat)) => {
+                        ensure_sdk!(
+                            uri_amount_sat == req_amount_sat,
+                            PaymentError::Generic {
+                                err:
+                                    "Amount in the URI differs from amount in the payment request."
+                                        .to_string()
+                            }
+                        );
+                        uri_amount_sat
+                    }
                 };
-                let payer_amount_sat = amount_sat + req.fees_sat;
+
+                let payer_amount_sat = amount_sat + fees_sat;
                 ensure_sdk!(
                     payer_amount_sat <= self.get_info().await?.balance_sat,
                     PaymentError::InsufficientFunds
                 );
 
-                self.send_direct_payment(&liquid_address_data.address, amount_sat, req.fees_sat)
+                self.send_direct_payment(&liquid_address_data.address, amount_sat, *fees_sat)
                     .await
             }
-            InputType::Bolt11 { invoice } => {
-                self.check_send_payment_invoice(&invoice.bolt11, req.fees_sat)
+            PaymentDestination::Bolt11 {
+                invoice: raw_invoice,
+            } => {
+                self.check_send_payment_invoice(&raw_invoice, *fees_sat)
                     .await
             }
-            _ => Err(PaymentError::Generic {
-                err: "Destination is not valid".to_string(),
-            }),
         }
     }
 
@@ -1220,25 +1253,44 @@ impl LiquidSdk {
         req: &PrepareReceivePaymentRequest,
     ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
-        let reverse_pair = self
-            .swapper
-            .get_reverse_swap_pairs()?
-            .ok_or(PaymentError::PairsNotFound)?;
 
-        let payer_amount_sat = req.payer_amount_sat;
-        let fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
+        let fees_sat;
+        match req.receive_method {
+            Some(ReceiveMethod::BIP21) => {
+                fees_sat = 0;
+                debug!(
+                    "Preparing direct receive payment with: payer_amount_sat {} sat, fees_sat {fees_sat} sat",
+                    req.payer_amount_sat
+                );
+            }
+            _ => {
+                let reverse_pair = self
+                    .swapper
+                    .get_reverse_swap_pairs()?
+                    .ok_or(PaymentError::PairsNotFound)?;
 
-        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+                fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
 
-        reverse_pair
-            .limits
-            .within(payer_amount_sat)
-            .map_err(|_| PaymentError::AmountOutOfRange)?;
+                ensure_sdk!(
+                    req.payer_amount_sat > fees_sat,
+                    PaymentError::AmountOutOfRange
+                );
 
-        debug!("Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+                reverse_pair
+                    .limits
+                    .within(req.payer_amount_sat)
+                    .map_err(|_| PaymentError::AmountOutOfRange)?;
+
+                debug!(
+                    "Preparing Receive Swap with: payer_amount_sat {} sat, fees_sat {fees_sat} sat",
+                    req.payer_amount_sat
+                );
+            }
+        }
 
         Ok(PrepareReceivePaymentResponse {
-            payer_amount_sat,
+            payer_amount_sat: req.payer_amount_sat,
+            receive_method: req.receive_method.clone(),
             fees_sat,
         })
     }
@@ -1368,9 +1420,23 @@ impl LiquidSdk {
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
+        let bip21 = match req.prepare_res.receive_method {
+            Some(ReceiveMethod::BIP21) => {
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                Some(utils::new_liquid_bip21(
+                    &address,
+                    self.config.network,
+                    Some(invoice.to_string()),
+                    Some(payer_amount_sat),
+                ))
+            }
+            _ => None,
+        };
+
         Ok(ReceivePaymentResponse {
             id: swap_id,
             invoice: invoice.to_string(),
+            bip21,
         })
     }
 
@@ -1797,14 +1863,19 @@ impl LiquidSdk {
                 Ok(LnUrlPayResult::EndpointError { data: e })
             }
             ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
-                let pay_req = self
+                let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
-                        destination: cb.pr.clone(),
-                        fee_rate: None,
+                        payment_destination: cb.pr.clone(),
                     })
                     .await?;
 
-                let payment = self.send_payment(&pay_req).await?.payment;
+                let payment = self
+                    .send_payment(&SendPaymentRequest {
+                        prepare_response,
+                        amount_sat: None,
+                    })
+                    .await?
+                    .payment;
 
                 let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
                     Some(sa) => {
@@ -1866,6 +1937,7 @@ impl LiquidSdk {
         let prepare_res = self
             .prepare_receive_payment(&{
                 PrepareReceivePaymentRequest {
+                    receive_method: None,
                     payer_amount_sat: req.amount_msat / 1_000,
                 }
             })

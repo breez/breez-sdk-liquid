@@ -48,6 +48,7 @@ async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }
 electrum-client = { version = "0.19.0" }
+querystring = "1.1.0"
 
 [dev-dependencies]
 lazy_static = "1.5.0"

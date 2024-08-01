@@ -27,6 +27,7 @@
 
 use crate::bindings::*;
 use crate::model::EventListener;
+use crate::model::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -1350,7 +1351,7 @@ fn wire__crate__bindings__BindingLiquidSdk_send_payment_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    req: impl CstDecode<crate::model::PrepareSendResponse>,
+    req: impl CstDecode<PrepareSendResponse>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1616,9 +1617,6 @@ const _: fn() = || {
         crate::bindings::InputType::BitcoinAddress { address } => {
             let _: crate::bindings::BitcoinAddressData = address;
         }
-        crate::bindings::InputType::LiquidAddress { address } => {
-            let _: crate::liquid::LiquidAddressData = address;
-        }
         crate::bindings::InputType::Bolt11 { invoice } => {
             let _: crate::bindings::LNInvoice = invoice;
         }
@@ -1783,12 +1781,6 @@ impl CstDecode<crate::model::BuyBitcoinProvider> for i32 {
         }
     }
 }
-impl CstDecode<f32> for f32 {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> f32 {
-        self
-    }
-}
 impl CstDecode<f64> for f64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> f64 {
@@ -1854,6 +1846,16 @@ impl CstDecode<crate::model::PaymentType> for i32 {
         }
     }
 }
+impl CstDecode<crate::model::ReceiveMethod> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::ReceiveMethod {
+        match self {
+            0 => crate::model::ReceiveMethod::BIP21,
+            1 => crate::model::ReceiveMethod::Bolt11,
+            _ => unreachable!("Invalid variant for ReceiveMethod: {}", self),
+        }
+    }
+}
 impl CstDecode<u16> for u16 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u16 {
@@ -1902,8 +1904,28 @@ impl SseDecode for BindingLiquidSdk {
     }
 }
 
+impl SseDecode for PrepareSendResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueNom<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
 impl SseDecode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return unsafe { decode_rust_opaque_nom(inner) };
+    }
+}
+
+impl SseDecode
+    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2101,13 +2123,6 @@ impl SseDecode for crate::bindings::CurrencyInfo {
             localized_name: var_localizedName,
             locale_overrides: var_localeOverrides,
         };
-    }
-}
-
-impl SseDecode for f32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_f32::<NativeEndian>().unwrap()
     }
 }
 
@@ -2866,22 +2881,22 @@ impl SseDecode for Option<bool> {
     }
 }
 
-impl SseDecode for Option<f32> {
+impl SseDecode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<f32>::sse_decode(deserializer));
+            return Some(<i64>::sse_decode(deserializer));
         } else {
             return None;
         }
     }
 }
 
-impl SseDecode for Option<i64> {
+impl SseDecode for Option<crate::model::ReceiveMethod> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<i64>::sse_decode(deserializer));
+            return Some(<crate::model::ReceiveMethod>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -3174,8 +3189,10 @@ impl SseDecode for crate::model::PrepareReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiveMethod = <Option<crate::model::ReceiveMethod>>::sse_decode(deserializer);
         return crate::model::PrepareReceivePaymentRequest {
             payer_amount_sat: var_payerAmountSat,
+            receive_method: var_receiveMethod,
         };
     }
 }
@@ -3185,9 +3202,11 @@ impl SseDecode for crate::model::PrepareReceivePaymentResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_receiveMethod = <Option<crate::model::ReceiveMethod>>::sse_decode(deserializer);
         return crate::model::PrepareReceivePaymentResponse {
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
+            receive_method: var_receiveMethod,
         };
     }
 }
@@ -3223,23 +3242,9 @@ impl SseDecode for crate::model::PrepareRefundResponse {
 impl SseDecode for crate::model::PrepareSendRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_destination = <String>::sse_decode(deserializer);
-        let mut var_feeRate = <Option<f32>>::sse_decode(deserializer);
+        let mut var_paymentDestination = <String>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
-            destination: var_destination,
-            fee_rate: var_feeRate,
-        };
-    }
-}
-
-impl SseDecode for crate::model::PrepareSendResponse {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_parsedDestination = <crate::bindings::InputType>::sse_decode(deserializer);
-        let mut var_feesSat = <u64>::sse_decode(deserializer);
-        return crate::model::PrepareSendResponse {
-            parsed_destination: var_parsedDestination,
-            fees_sat: var_feesSat,
+            payment_destination: var_paymentDestination,
         };
     }
 }
@@ -3252,6 +3257,18 @@ impl SseDecode for crate::bindings::Rate {
         return crate::bindings::Rate {
             coin: var_coin,
             value: var_value,
+        };
+    }
+}
+
+impl SseDecode for crate::model::ReceiveMethod {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::ReceiveMethod::BIP21,
+            1 => crate::model::ReceiveMethod::Bolt11,
+            _ => unreachable!("Invalid variant for ReceiveMethod: {}", inner),
         };
     }
 }
@@ -3286,9 +3303,11 @@ impl SseDecode for crate::model::ReceivePaymentResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_invoice = <String>::sse_decode(deserializer);
+        let mut var_bip21 = <Option<String>>::sse_decode(deserializer);
         return crate::model::ReceivePaymentResponse {
             id: var_id,
             invoice: var_invoice,
+            bip21: var_bip21,
         };
     }
 }
@@ -3611,6 +3630,24 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<BindingLiquidSdk>> for BindingLiquidSdk {
     fn into_into_dart(self) -> FrbWrapper<BindingLiquidSdk> {
+        self.into()
+    }
+}
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<PrepareSendResponse> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<PrepareSendResponse>
+{
+}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<PrepareSendResponse>> for PrepareSendResponse {
+    fn into_into_dart(self) -> FrbWrapper<PrepareSendResponse> {
         self.into()
     }
 }
@@ -4815,7 +4852,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareReceiveOnchainRespon
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceivePaymentRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.payer_amount_sat.into_into_dart().into_dart()].into_dart()
+        [
+            self.payer_amount_sat.into_into_dart().into_dart(),
+            self.receive_method.into_into_dart().into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4835,6 +4876,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceivePaymentRespon
         [
             self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.receive_method.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4897,11 +4939,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareRefundResponse>
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.destination.into_into_dart().into_dart(),
-            self.fee_rate.into_into_dart().into_dart(),
-        ]
-        .into_dart()
+        [self.payment_destination.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -4912,27 +4950,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareSendRequest>
     for crate::model::PrepareSendRequest
 {
     fn into_into_dart(self) -> crate::model::PrepareSendRequest {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.parsed_destination.into_into_dart().into_dart(),
-            self.fees_sat.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::PrepareSendResponse
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareSendResponse>
-    for crate::model::PrepareSendResponse
-{
-    fn into_into_dart(self) -> crate::model::PrepareSendResponse {
         self
     }
 }
@@ -4955,6 +4972,24 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Rate>>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::Rate> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ReceiveMethod {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::BIP21 => 0.into_dart(),
+            Self::Bolt11 => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::ReceiveMethod {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceiveMethod>
+    for crate::model::ReceiveMethod
+{
+    fn into_into_dart(self) -> crate::model::ReceiveMethod {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -5005,6 +5040,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ReceivePaymentResponse {
         [
             self.id.into_into_dart().into_dart(),
             self.invoice.into_into_dart().into_dart(),
+            self.bip21.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5319,8 +5355,26 @@ impl SseEncode for BindingLiquidSdk {
     }
 }
 
+impl SseEncode for PrepareSendResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
+    }
+}
+
 impl SseEncode
     for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
+    }
+}
+
+impl SseEncode
+    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5469,13 +5523,6 @@ impl SseEncode for crate::bindings::CurrencyInfo {
         <Option<crate::bindings::Symbol>>::sse_encode(self.uniq_symbol, serializer);
         <Vec<crate::bindings::LocalizedName>>::sse_encode(self.localized_name, serializer);
         <Vec<crate::bindings::LocaleOverrides>>::sse_encode(self.locale_overrides, serializer);
-    }
-}
-
-impl SseEncode for f32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -6074,22 +6121,22 @@ impl SseEncode for Option<bool> {
     }
 }
 
-impl SseEncode for Option<f32> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <f32>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::model::ReceiveMethod> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::ReceiveMethod>::sse_encode(value, serializer);
         }
     }
 }
@@ -6333,6 +6380,7 @@ impl SseEncode for crate::model::PrepareReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.payer_amount_sat, serializer);
+        <Option<crate::model::ReceiveMethod>>::sse_encode(self.receive_method, serializer);
     }
 }
 
@@ -6341,6 +6389,7 @@ impl SseEncode for crate::model::PrepareReceivePaymentResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <Option<crate::model::ReceiveMethod>>::sse_encode(self.receive_method, serializer);
     }
 }
 
@@ -6365,16 +6414,7 @@ impl SseEncode for crate::model::PrepareRefundResponse {
 impl SseEncode for crate::model::PrepareSendRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.destination, serializer);
-        <Option<f32>>::sse_encode(self.fee_rate, serializer);
-    }
-}
-
-impl SseEncode for crate::model::PrepareSendResponse {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::bindings::InputType>::sse_encode(self.parsed_destination, serializer);
-        <u64>::sse_encode(self.fees_sat, serializer);
+        <String>::sse_encode(self.payment_destination, serializer);
     }
 }
 
@@ -6383,6 +6423,22 @@ impl SseEncode for crate::bindings::Rate {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.coin, serializer);
         <f64>::sse_encode(self.value, serializer);
+    }
+}
+
+impl SseEncode for crate::model::ReceiveMethod {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::ReceiveMethod::BIP21 => 0,
+                crate::model::ReceiveMethod::Bolt11 => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -6407,6 +6463,7 @@ impl SseEncode for crate::model::ReceivePaymentResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.invoice, serializer);
+        <Option<String>>::sse_encode(self.bip21, serializer);
     }
 }
 

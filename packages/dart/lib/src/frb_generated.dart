@@ -162,6 +162,12 @@ abstract class RustLibApi extends BaseApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PrepareSendResponsePtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -718,7 +724,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return wire.wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(port_, arg0, arg1);
       },
       codec: DcoCodec(
-        decodeSuccessData: dco_decode_prepare_send_response,
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse,
         decodeErrorData: dco_decode_payment_error,
       ),
       constMeta: kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta,
@@ -891,7 +898,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        var arg1 = cst_encode_box_autoadd_prepare_send_response(req);
+        var arg1 =
+            cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+                req);
         return wire.wire__crate__bindings__BindingLiquidSdk_send_payment(port_, arg0, arg1);
       },
       codec: DcoCodec(
@@ -1076,6 +1085,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
 
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1091,6 +1106,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PrepareSendResponse
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   BindingLiquidSdk
       dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           dynamic raw) {
@@ -1103,6 +1126,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PrepareSendResponse
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1240,12 +1271,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double dco_decode_box_autoadd_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
-  }
-
-  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_i_64(raw);
@@ -1378,9 +1403,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareSendResponse dco_decode_box_autoadd_prepare_send_response(dynamic raw) {
+  ReceiveMethod dco_decode_box_autoadd_receive_method(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_prepare_send_response(raw);
+    return dco_decode_receive_method(raw);
   }
 
   @protected
@@ -1496,12 +1521,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       localizedName: dco_decode_list_localized_name(arr[5]),
       localeOverrides: dco_decode_list_locale_overrides(arr[6]),
     );
-  }
-
-  @protected
-  double dco_decode_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
   }
 
   @protected
@@ -2064,15 +2083,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double? dco_decode_opt_box_autoadd_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_f_32(raw);
-  }
-
-  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  ReceiveMethod? dco_decode_opt_box_autoadd_receive_method(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_receive_method(raw);
   }
 
   @protected
@@ -2280,9 +2299,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceivePaymentRequest dco_decode_prepare_receive_payment_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PrepareReceivePaymentRequest(
       payerAmountSat: dco_decode_u_64(arr[0]),
+      receiveMethod: dco_decode_opt_box_autoadd_receive_method(arr[1]),
     );
   }
 
@@ -2290,10 +2310,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceivePaymentResponse dco_decode_prepare_receive_payment_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareReceivePaymentResponse(
       payerAmountSat: dco_decode_u_64(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
+      receiveMethod: dco_decode_opt_box_autoadd_receive_method(arr[2]),
     );
   }
 
@@ -2325,21 +2346,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendRequest dco_decode_prepare_send_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return PrepareSendRequest(
-      destination: dco_decode_String(arr[0]),
-      feeRate: dco_decode_opt_box_autoadd_f_32(arr[1]),
-    );
-  }
-
-  @protected
-  PrepareSendResponse dco_decode_prepare_send_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return PrepareSendResponse(
-      parsedDestination: dco_decode_input_type(arr[0]),
-      feesSat: dco_decode_u_64(arr[1]),
+      paymentDestination: dco_decode_String(arr[0]),
     );
   }
 
@@ -2352,6 +2361,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       coin: dco_decode_String(arr[0]),
       value: dco_decode_f_64(arr[1]),
     );
+  }
+
+  @protected
+  ReceiveMethod dco_decode_receive_method(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ReceiveMethod.values[raw as int];
   }
 
   @protected
@@ -2380,10 +2395,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ReceivePaymentResponse dco_decode_receive_payment_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ReceivePaymentResponse(
       id: dco_decode_String(arr[0]),
       invoice: dco_decode_String(arr[1]),
+      bip21: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -2636,6 +2652,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PrepareSendResponse
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   BindingLiquidSdk
       sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer) {
@@ -2649,6 +2674,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return BindingLiquidSdkImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  PrepareSendResponse
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -2780,12 +2814,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_connect_request(deserializer));
-  }
-
-  @protected
-  double sse_decode_box_autoadd_f_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_f_32(deserializer));
   }
 
   @protected
@@ -2924,9 +2952,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareSendResponse sse_decode_box_autoadd_prepare_send_response(SseDeserializer deserializer) {
+  ReceiveMethod sse_decode_box_autoadd_receive_method(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_prepare_send_response(deserializer));
+    return (sse_decode_receive_method(deserializer));
   }
 
   @protected
@@ -3046,12 +3074,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         uniqSymbol: var_uniqSymbol,
         localizedName: var_localizedName,
         localeOverrides: var_localeOverrides);
-  }
-
-  @protected
-  double sse_decode_f_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getFloat32();
   }
 
   @protected
@@ -3640,22 +3662,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double? sse_decode_opt_box_autoadd_f_32(SseDeserializer deserializer) {
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_f_32(deserializer));
+      return (sse_decode_box_autoadd_i_64(deserializer));
     } else {
       return null;
     }
   }
 
   @protected
-  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+  ReceiveMethod? sse_decode_opt_box_autoadd_receive_method(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_i_64(deserializer));
+      return (sse_decode_box_autoadd_receive_method(deserializer));
     } else {
       return null;
     }
@@ -3879,7 +3901,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceivePaymentRequest sse_decode_prepare_receive_payment_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_payerAmountSat = sse_decode_u_64(deserializer);
-    return PrepareReceivePaymentRequest(payerAmountSat: var_payerAmountSat);
+    var var_receiveMethod = sse_decode_opt_box_autoadd_receive_method(deserializer);
+    return PrepareReceivePaymentRequest(payerAmountSat: var_payerAmountSat, receiveMethod: var_receiveMethod);
   }
 
   @protected
@@ -3887,7 +3910,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_payerAmountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
-    return PrepareReceivePaymentResponse(payerAmountSat: var_payerAmountSat, feesSat: var_feesSat);
+    var var_receiveMethod = sse_decode_opt_box_autoadd_receive_method(deserializer);
+    return PrepareReceivePaymentResponse(
+        payerAmountSat: var_payerAmountSat, feesSat: var_feesSat, receiveMethod: var_receiveMethod);
   }
 
   @protected
@@ -3912,17 +3937,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PrepareSendRequest sse_decode_prepare_send_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_destination = sse_decode_String(deserializer);
-    var var_feeRate = sse_decode_opt_box_autoadd_f_32(deserializer);
-    return PrepareSendRequest(destination: var_destination, feeRate: var_feeRate);
-  }
-
-  @protected
-  PrepareSendResponse sse_decode_prepare_send_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_parsedDestination = sse_decode_input_type(deserializer);
-    var var_feesSat = sse_decode_u_64(deserializer);
-    return PrepareSendResponse(parsedDestination: var_parsedDestination, feesSat: var_feesSat);
+    var var_paymentDestination = sse_decode_String(deserializer);
+    return PrepareSendRequest(paymentDestination: var_paymentDestination);
   }
 
   @protected
@@ -3931,6 +3947,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_coin = sse_decode_String(deserializer);
     var var_value = sse_decode_f_64(deserializer);
     return Rate(coin: var_coin, value: var_value);
+  }
+
+  @protected
+  ReceiveMethod sse_decode_receive_method(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return ReceiveMethod.values[inner];
   }
 
   @protected
@@ -3954,7 +3977,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_invoice = sse_decode_String(deserializer);
-    return ReceivePaymentResponse(id: var_id, invoice: var_invoice);
+    var var_bip21 = sse_decode_opt_String(deserializer);
+    return ReceivePaymentResponse(id: var_id, invoice: var_invoice, bip21: var_bip21);
   }
 
   @protected
@@ -4176,6 +4200,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as PrepareSendResponseImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
   int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -4192,6 +4224,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as PrepareSendResponseImpl).frbInternalCstEncode();
+  }
+
+  @protected
   bool cst_encode_bool(bool raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
@@ -4201,12 +4241,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int cst_encode_buy_bitcoin_provider(BuyBitcoinProvider raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
-  }
-
-  @protected
-  double cst_encode_f_32(double raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw;
   }
 
   @protected
@@ -4241,6 +4275,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int cst_encode_payment_type(PaymentType raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_receive_method(ReceiveMethod raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_i_32(raw.index);
   }
@@ -4283,6 +4323,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          PrepareSendResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
   void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -4294,6 +4342,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       BindingLiquidSdk self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: null), serializer);
   }
 
   @protected
@@ -4425,12 +4480,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_connect_request(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_f_32(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_f_32(self, serializer);
   }
 
   @protected
@@ -4574,9 +4623,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_prepare_send_response(PrepareSendResponse self, SseSerializer serializer) {
+  void sse_encode_box_autoadd_receive_method(ReceiveMethod self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepare_send_response(self, serializer);
+    sse_encode_receive_method(self, serializer);
   }
 
   @protected
@@ -4677,12 +4726,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
     sse_encode_list_localized_name(self.localizedName, serializer);
     sse_encode_list_locale_overrides(self.localeOverrides, serializer);
-  }
-
-  @protected
-  void sse_encode_f_32(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putFloat32(self);
   }
 
   @protected
@@ -5168,22 +5211,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_f_32(double? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_f_32(self, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_receive_method(ReceiveMethod? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_receive_method(self, serializer);
     }
   }
 
@@ -5377,6 +5420,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       PrepareReceivePaymentRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.payerAmountSat, serializer);
+    sse_encode_opt_box_autoadd_receive_method(self.receiveMethod, serializer);
   }
 
   @protected
@@ -5385,6 +5429,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.payerAmountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_opt_box_autoadd_receive_method(self.receiveMethod, serializer);
   }
 
   @protected
@@ -5406,15 +5451,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_prepare_send_request(PrepareSendRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.destination, serializer);
-    sse_encode_opt_box_autoadd_f_32(self.feeRate, serializer);
-  }
-
-  @protected
-  void sse_encode_prepare_send_response(PrepareSendResponse self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_input_type(self.parsedDestination, serializer);
-    sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_String(self.paymentDestination, serializer);
   }
 
   @protected
@@ -5422,6 +5459,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.coin, serializer);
     sse_encode_f_64(self.value, serializer);
+  }
+
+  @protected
+  void sse_encode_receive_method(ReceiveMethod self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -5443,6 +5486,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.invoice, serializer);
+    sse_encode_opt_String(self.bip21, serializer);
   }
 
   @protected
@@ -5748,4 +5792,22 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<void> sync() => RustLib.instance.api.crateBindingsBindingLiquidSdkSync(
         that: this,
       );
+}
+
+@sealed
+class PrepareSendResponseImpl extends RustOpaque implements PrepareSendResponse {
+  // Not to be used by end users
+  PrepareSendResponseImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PrepareSendResponseImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_PrepareSendResponse,
+    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponse,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponsePtr,
+  );
 }

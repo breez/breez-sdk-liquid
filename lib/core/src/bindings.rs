@@ -107,7 +107,7 @@ impl BindingLiquidSdk {
 
     pub async fn send_payment(
         &self,
-        req: PrepareSendResponse,
+        req: SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.sdk.send_payment(&req).await
     }

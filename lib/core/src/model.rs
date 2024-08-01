@@ -14,7 +14,7 @@ use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
-use sdk_common::prelude::*;
+use sdk_common::{liquid::LiquidAddressData, prelude::*};
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
@@ -194,10 +194,18 @@ pub struct ConnectRequest {
     pub config: Config,
 }
 
+/// Specifies the supported ways to receive by the SDK
+#[derive(Clone, Debug, Serialize, Eq, PartialEq)]
+pub enum ReceiveMethod {
+    BIP21,
+    Bolt11,
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceivePaymentRequest {
     pub payer_amount_sat: u64,
+    pub receive_method: Option<ReceiveMethod>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
@@ -205,6 +213,7 @@ pub struct PrepareReceivePaymentRequest {
 pub struct PrepareReceivePaymentResponse {
     pub payer_amount_sat: u64,
     pub fees_sat: u64,
+    pub receive_method: Option<ReceiveMethod>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -219,6 +228,9 @@ pub struct ReceivePaymentRequest {
 pub struct ReceivePaymentResponse {
     pub id: String,
     pub invoice: String,
+
+    /// Present only when [ReceiveMethod::BIP21] is specified in the [ReceivePaymentResponse]
+    pub bip21: Option<String>,
 }
 
 /// The minimum and maximum in satoshis of a Lightning or onchain payment.
@@ -252,19 +264,30 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
     /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
-    pub destination: String,
+    pub payment_destination: String,
+}
 
-    /// Fee rate with which direct payments are executed (either via MRH or liquid address/BIP21)
-    /// Note that this is not alterable in case of swap payments
-    pub fee_rate: Option<f32>,
+/// Specifies the supported destinations which can be payed by the SDK
+#[derive(Clone, Debug, Serialize)]
+pub enum PaymentDestination {
+    BIP21 { address: LiquidAddressData },
+    Bolt11 { invoice: String },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    /// The parsed destination, either [InputType::Bolt11] or
-    pub parsed_destination: InputType,
+    pub payment_destination: PaymentDestination,
     pub fees_sat: u64,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::send_payment].
+#[derive(Debug, Serialize)]
+pub struct SendPaymentRequest {
+    pub prepare_response: PrepareSendResponse,
+    /// Should only be set when paying directly onchain or to a BIP21 URI
+    /// where no amount is specified
+    pub amount_sat: Option<u64>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
