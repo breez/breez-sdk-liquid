@@ -543,7 +543,7 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: 015002c060f1ae9f41a818f2d5640389cc05283e368be19dc8d77cecb43c40c9
+      sha256: "015002c060f1ae9f41a818f2d5640389cc05283e368be19dc8d77cecb43c40c9"
       url: "https://pub.dev"
     source: hosted
     version: "5.5.3"
