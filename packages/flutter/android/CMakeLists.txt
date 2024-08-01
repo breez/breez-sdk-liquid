@@ -1,4 +1,4 @@
-set(TagName "v0.1.0") # generated; do not edit
+set(TagName "v0.1.4") # generated; do not edit
 set(LibraryVersion "breez_liquid-${TagName}")
 
 # Unlike the Windows & Linux CMakeLists.txt, this Android equivalent is just here
