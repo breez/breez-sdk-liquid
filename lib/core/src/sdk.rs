@@ -1250,6 +1250,7 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareReceivePaymentRequest] containing:
     ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
+    ///     * `receive_method` - TODO Add documentation
     pub async fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
@@ -1319,7 +1320,9 @@ impl LiquidSdk {
     /// # Returns
     ///
     /// * A [ReceivePaymentResponse] containing:
+    ///     * `id` - TODO Add documentation
     ///     * `invoice` - the bolt11 Lightning invoice that should be paid
+    ///     * `bip21` - TODO Add documentation
     pub async fn receive_payment(
         &self,
         req: &ReceivePaymentRequest,
