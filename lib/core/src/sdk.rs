@@ -700,8 +700,8 @@ impl LiquidSdk {
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
-                payment_destination = PaymentDestination::BIP21 {
-                    address: liquid_address_data,
+                payment_destination = PayDestination::BIP21 {
+                    address_data: liquid_address_data,
                 };
             }
             InputType::Bolt11 { invoice } => {
@@ -731,7 +731,7 @@ impl LiquidSdk {
                         lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
                     }
                 };
-                payment_destination = PaymentDestination::Bolt11 {
+                payment_destination = PayDestination::Bolt11 {
                     invoice: invoice.bolt11,
                 };
             }
@@ -787,8 +787,8 @@ impl LiquidSdk {
         } = &req.prepare_response;
 
         match payment_destination {
-            PaymentDestination::BIP21 {
-                address: liquid_address_data,
+            PayDestination::BIP21 {
+                address_data: liquid_address_data,
             } => {
                 ensure_sdk!(
                     liquid_address_data.network == self.config.network.into(),
@@ -810,7 +810,7 @@ impl LiquidSdk {
                 self.send_direct_payment(&liquid_address_data.address, amount_sat, *fees_sat)
                     .await
             }
-            PaymentDestination::Bolt11 {
+            PayDestination::Bolt11 {
                 invoice: raw_invoice,
             } => {
                 self.check_send_payment_invoice(&raw_invoice, *fees_sat)
@@ -1247,42 +1247,40 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let fees_sat;
-        match req.receive_method {
-            Some(ReceiveMethod::BIP21) => {
-                fees_sat = 0;
-                debug!(
-                    "Preparing direct receive payment with: payer_amount_sat {} sat, fees_sat {fees_sat} sat",
-                    req.payer_amount_sat
-                );
+        match (req.use_lightning, req.payer_amount_sat) {
+            (true, None) => {
+                return Err(PaymentError::Generic {
+                    err: "Payer amount was not set.".to_string(),
+                });
             }
-            _ => {
+            (true, Some(payer_amount_sat)) => {
                 let reverse_pair = self
                     .swapper
                     .get_reverse_swap_pairs()?
                     .ok_or(PaymentError::PairsNotFound)?;
 
-                fees_sat = reverse_pair.fees.total(req.payer_amount_sat);
+                fees_sat = reverse_pair.fees.total(payer_amount_sat);
 
-                ensure_sdk!(
-                    req.payer_amount_sat > fees_sat,
-                    PaymentError::AmountOutOfRange
-                );
+                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
 
                 reverse_pair
                     .limits
-                    .within(req.payer_amount_sat)
+                    .within(payer_amount_sat)
                     .map_err(|_| PaymentError::AmountOutOfRange)?;
 
                 debug!(
                     "Preparing Receive Swap with: payer_amount_sat {} sat, fees_sat {fees_sat} sat",
-                    req.payer_amount_sat
+                    payer_amount_sat
                 );
             }
-        }
+            (false, _) => {
+                fees_sat = 0;
+            }
+        };
 
         Ok(PrepareReceivePaymentResponse {
             payer_amount_sat: req.payer_amount_sat,
-            receive_method: req.receive_method.clone(),
+            use_lightning: req.use_lightning,
             fees_sat,
         })
     }
@@ -1305,9 +1303,45 @@ impl LiquidSdk {
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let payer_amount_sat = req.prepare_res.payer_amount_sat;
-        let fees_sat = req.prepare_res.fees_sat;
+        let PrepareReceivePaymentResponse {
+            payer_amount_sat,
+            use_lightning,
+            fees_sat,
+        } = req.prepare_response;
 
+        match (use_lightning, payer_amount_sat) {
+            (true, None) => {
+                return Err(PaymentError::Generic {
+                    err: "Payer amount was not set.".to_string(),
+                });
+            }
+            (true, Some(payer_amount_sat)) => {
+                self.create_receive_swap(payer_amount_sat, fees_sat, req.description.clone())
+                    .await
+            }
+            (false, None) => {
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                Ok(ReceivePaymentResponse {
+                    receive_destination: ReceiveDestination::Liquid { address },
+                })
+            }
+            (false, Some(payer_amount_sat)) => {
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                let uri =
+                    utils::new_liquid_bip21(&address, self.config.network, Some(payer_amount_sat));
+                Ok(ReceivePaymentResponse {
+                    receive_destination: ReceiveDestination::BIP21 { uri },
+                })
+            }
+        }
+    }
+
+    async fn create_receive_swap(
+        &self,
+        payer_amount_sat: u64,
+        fees_sat: u64,
+        description: Option<String>,
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
         let reverse_pair = self
             .swapper
             .get_reverse_swap_pairs()?
@@ -1337,7 +1371,7 @@ impl LiquidSdk {
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
-            description: req.description.clone(),
+            description,
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
@@ -1412,23 +1446,11 @@ impl LiquidSdk {
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
-        let bip21 = match req.prepare_res.receive_method {
-            Some(ReceiveMethod::BIP21) => {
-                let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                Some(utils::new_liquid_bip21(
-                    &address,
-                    self.config.network,
-                    Some(invoice.to_string()),
-                    Some(payer_amount_sat),
-                ))
-            }
-            _ => None,
-        };
-
         Ok(ReceivePaymentResponse {
-            id: swap_id,
-            invoice: invoice.to_string(),
-            bip21,
+            receive_destination: ReceiveDestination::Bolt11 {
+                id: swap_id,
+                invoice: invoice.to_string(),
+            },
         })
     }
 
@@ -1927,21 +1949,27 @@ impl LiquidSdk {
         let prepare_res = self
             .prepare_receive_payment(&{
                 PrepareReceivePaymentRequest {
-                    receive_method: None,
-                    payer_amount_sat: req.amount_msat / 1_000,
+                    use_lightning: true,
+                    payer_amount_sat: Some(req.amount_msat / 1_000),
                 }
             })
             .await?;
         let receive_res = self
             .receive_payment(&ReceivePaymentRequest {
-                prepare_res,
+                prepare_response: prepare_res,
                 description: None,
             })
             .await?;
-        let invoice = parse_invoice(&receive_res.invoice)?;
 
-        let res = validate_lnurl_withdraw(req.data, invoice).await?;
-        Ok(res)
+        if let ReceiveDestination::Bolt11 { invoice, .. } = receive_res.receive_destination {
+            let invoice = parse_invoice(&invoice)?;
+            let res = validate_lnurl_withdraw(req.data, invoice).await?;
+            Ok(res)
+        } else {
+            Err(LnUrlWithdrawError::Generic {
+                err: "Received unexpected output from receive request".to_string(),
+            })
+        }
     }
 
     /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination

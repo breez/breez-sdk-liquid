@@ -137,8 +137,8 @@ typedef struct wire_cst_prepare_receive_onchain_request {
 } wire_cst_prepare_receive_onchain_request;
 
 typedef struct wire_cst_prepare_receive_payment_request {
-  uint64_t payer_amount_sat;
-  int32_t *receive_method;
+  uint64_t *payer_amount_sat;
+  bool use_lightning;
 } wire_cst_prepare_receive_payment_request;
 
 typedef struct wire_cst_prepare_refund_request {
@@ -158,14 +158,14 @@ typedef struct wire_cst_prepare_receive_onchain_response {
 } wire_cst_prepare_receive_onchain_response;
 
 typedef struct wire_cst_prepare_receive_payment_response {
-  uint64_t payer_amount_sat;
+  uint64_t *payer_amount_sat;
   uint64_t fees_sat;
-  int32_t *receive_method;
+  bool use_lightning;
 } wire_cst_prepare_receive_payment_response;
 
 typedef struct wire_cst_receive_payment_request {
   struct wire_cst_list_prim_u_8_strict *description;
-  struct wire_cst_prepare_receive_payment_response prepare_res;
+  struct wire_cst_prepare_receive_payment_response prepare_response;
 } wire_cst_receive_payment_request;
 
 typedef struct wire_cst_refund_request {
@@ -755,15 +755,37 @@ typedef struct wire_cst_prepare_refund_response {
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
 } wire_cst_prepare_refund_response;
 
+typedef struct wire_cst_ReceiveDestination_BIP21 {
+  struct wire_cst_list_prim_u_8_strict *uri;
+} wire_cst_ReceiveDestination_BIP21;
+
+typedef struct wire_cst_ReceiveDestination_Liquid {
+  struct wire_cst_list_prim_u_8_strict *address;
+} wire_cst_ReceiveDestination_Liquid;
+
+typedef struct wire_cst_ReceiveDestination_Bolt11 {
+  struct wire_cst_list_prim_u_8_strict *id;
+  struct wire_cst_list_prim_u_8_strict *invoice;
+} wire_cst_ReceiveDestination_Bolt11;
+
+typedef union ReceiveDestinationKind {
+  struct wire_cst_ReceiveDestination_BIP21 BIP21;
+  struct wire_cst_ReceiveDestination_Liquid Liquid;
+  struct wire_cst_ReceiveDestination_Bolt11 Bolt11;
+} ReceiveDestinationKind;
+
+typedef struct wire_cst_receive_destination {
+  int32_t tag;
+  union ReceiveDestinationKind kind;
+} wire_cst_receive_destination;
+
 typedef struct wire_cst_receive_onchain_response {
   struct wire_cst_list_prim_u_8_strict *address;
   struct wire_cst_list_prim_u_8_strict *bip21;
 } wire_cst_receive_onchain_response;
 
 typedef struct wire_cst_receive_payment_response {
-  struct wire_cst_list_prim_u_8_strict *id;
-  struct wire_cst_list_prim_u_8_strict *invoice;
-  struct wire_cst_list_prim_u_8_strict *bip21;
+  struct wire_cst_receive_destination receive_destination;
 } wire_cst_receive_payment_response;
 
 typedef struct wire_cst_recommended_fees {
@@ -995,8 +1017,6 @@ struct wire_cst_prepare_refund_request *frbgen_breez_liquid_cst_new_box_autoadd_
 
 struct wire_cst_prepare_send_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request(void);
 
-int32_t *frbgen_breez_liquid_cst_new_box_autoadd_receive_method(int32_t value);
-
 struct wire_cst_receive_payment_request *frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request(void);
 
 struct wire_cst_refund_request *frbgen_breez_liquid_cst_new_box_autoadd_refund_request(void);
@@ -1066,7 +1086,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_refund_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_request);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_receive_method);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_refund_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);

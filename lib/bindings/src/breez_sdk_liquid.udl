@@ -329,13 +329,13 @@ dictionary PrepareSendRequest {
 };
 
 [Enum]
-interface PaymentDestination {
-    BIP21(LiquidAddressData address);
+interface PayDestination {
+    BIP21(LiquidAddressData address_data);
     Bolt11(string invoice);
 };
 
 dictionary PrepareSendResponse {
-    PaymentDestination payment_destination;
+    PayDestination payment_destination;
     u64 fees_sat;
 };
 
@@ -353,24 +353,30 @@ enum ReceiveMethod {
 };
 
 dictionary PrepareReceivePaymentRequest {
-    u64 payer_amount_sat;
-    ReceiveMethod? receive_method;
+    u64? payer_amount_sat;
+    bool use_lightning;
 };
 
 dictionary PrepareReceivePaymentResponse {
-    u64 payer_amount_sat;
+    u64? payer_amount_sat;
+    bool use_lightning;
     u64 fees_sat;
-    ReceiveMethod? receive_method;
 };
 
 dictionary ReceivePaymentRequest {
-    PrepareReceivePaymentResponse prepare_res;
+    PrepareReceivePaymentResponse prepare_response;
     string? description = null;
 };
 
+[Enum]
+interface ReceiveDestination {
+    BIP21(string uri);
+    Liquid(string address):
+    Bolt11(string id, string invoice);
+};
+
 dictionary ReceivePaymentResponse {
-    string id;
-    string invoice;
+    ReceiveDestination receive_destination;
 };
 
 dictionary Limits {

@@ -194,43 +194,40 @@ pub struct ConnectRequest {
     pub config: Config,
 }
 
-/// Specifies the supported ways to receive by the SDK
-#[derive(Clone, Debug, Serialize, Eq, PartialEq)]
-pub enum ReceiveMethod {
-    BIP21,
-    Bolt11,
-}
-
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceivePaymentRequest {
-    pub payer_amount_sat: u64,
-    pub receive_method: Option<ReceiveMethod>,
+    pub payer_amount_sat: Option<u64>,
+    pub use_lightning: bool,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceivePaymentResponse {
-    pub payer_amount_sat: u64,
+    pub payer_amount_sat: Option<u64>,
     pub fees_sat: u64,
-    pub receive_method: Option<ReceiveMethod>,
+    pub use_lightning: bool,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentRequest {
     pub description: Option<String>,
-    pub prepare_res: PrepareReceivePaymentResponse,
+    pub prepare_response: PrepareReceivePaymentResponse,
+}
+
+/// Specifies the supported destinations through which payments can be received
+#[derive(Debug, Serialize)]
+pub enum ReceiveDestination {
+    BIP21 { uri: String },
+    Liquid { address: String },
+    Bolt11 { id: String, invoice: String },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
-    pub id: String,
-    pub invoice: String,
-
-    /// Present only when [ReceiveMethod::BIP21] is specified in the [ReceivePaymentResponse]
-    pub bip21: Option<String>,
+    pub receive_destination: ReceiveDestination,
 }
 
 /// The minimum and maximum in satoshis of a Lightning or onchain payment.
@@ -273,15 +270,15 @@ pub struct PrepareSendRequest {
 
 /// Specifies the supported destinations which can be payed by the SDK
 #[derive(Clone, Debug, Serialize)]
-pub enum PaymentDestination {
-    BIP21 { address: LiquidAddressData },
+pub enum PayDestination {
+    BIP21 { address_data: LiquidAddressData },
     Bolt11 { invoice: String },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub payment_destination: PaymentDestination,
+    pub payment_destination: PayDestination,
     pub fees_sat: u64,
 }
 

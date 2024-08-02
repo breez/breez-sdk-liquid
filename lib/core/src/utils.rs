@@ -137,7 +137,6 @@ pub(crate) fn estimate_refund_fees(
 pub(crate) fn new_liquid_bip21(
     address: &str,
     network: LiquidNetwork,
-    invoice: Option<String>,
     amount_sat: Option<u64>,
 ) -> String {
     let (scheme, asset_id) = match network {
@@ -150,10 +149,6 @@ pub(crate) fn new_liquid_bip21(
     };
 
     let mut optional_keys = HashMap::new();
-
-    if let Some(invoice) = invoice {
-        optional_keys.insert("lightning", invoice);
-    }
 
     if let Some(amount_sat) = amount_sat {
         let amount_btc = amount_sat as f64 / 100_000_000.0;

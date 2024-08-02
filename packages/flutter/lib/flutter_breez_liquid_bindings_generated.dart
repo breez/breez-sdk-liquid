@@ -1147,21 +1147,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_request> Function()>();
 
-  ffi.Pointer<ffi.Int> frbgen_breez_liquid_cst_new_box_autoadd_receive_method(
-    int value,
-  ) {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_receive_method(
-      value,
-    );
-  }
-
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_receive_methodPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int> Function(ffi.Int)>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_receive_method');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_receive_method =
-      _frbgen_breez_liquid_cst_new_box_autoadd_receive_methodPtr
-          .asFunction<ffi.Pointer<ffi.Int> Function(int)>();
-
   ffi.Pointer<wire_cst_receive_payment_request>
       frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request();
@@ -1594,10 +1579,9 @@ final class wire_cst_prepare_receive_onchain_request extends ffi.Struct {
 }
 
 final class wire_cst_prepare_receive_payment_request extends ffi.Struct {
-  @ffi.Int()
-  external int payer_amount_sat;
+  external ffi.Pointer<ffi.Int> payer_amount_sat;
 
-  external ffi.Pointer<ffi.Int> receive_method;
+  external bool use_lightning;
 }
 
 final class wire_cst_prepare_refund_request extends ffi.Struct {
@@ -1624,19 +1608,18 @@ final class wire_cst_prepare_receive_onchain_response extends ffi.Struct {
 }
 
 final class wire_cst_prepare_receive_payment_response extends ffi.Struct {
-  @ffi.Int()
-  external int payer_amount_sat;
+  external ffi.Pointer<ffi.Int> payer_amount_sat;
 
   @ffi.Int()
   external int fees_sat;
 
-  external ffi.Pointer<ffi.Int> receive_method;
+  external bool use_lightning;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external wire_cst_prepare_receive_payment_response prepare_res;
+  external wire_cst_prepare_receive_payment_response prepare_response;
 }
 
 final class wire_cst_refund_request extends ffi.Struct {
@@ -2410,6 +2393,35 @@ final class wire_cst_prepare_refund_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 }
 
+final class wire_cst_ReceiveDestination_BIP21 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> uri;
+}
+
+final class wire_cst_ReceiveDestination_Liquid extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+}
+
+final class wire_cst_ReceiveDestination_Bolt11 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+}
+
+final class ReceiveDestinationKind extends ffi.Union {
+  external wire_cst_ReceiveDestination_BIP21 BIP21;
+
+  external wire_cst_ReceiveDestination_Liquid Liquid;
+
+  external wire_cst_ReceiveDestination_Bolt11 Bolt11;
+}
+
+final class wire_cst_receive_destination extends ffi.Struct {
+  @ffi.Int()
+  external int tag;
+
+  external ReceiveDestinationKind kind;
+}
+
 final class wire_cst_receive_onchain_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
@@ -2417,11 +2429,7 @@ final class wire_cst_receive_onchain_response extends ffi.Struct {
 }
 
 final class wire_cst_receive_payment_response extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip21;
+  external wire_cst_receive_destination receive_destination;
 }
 
 final class wire_cst_recommended_fees extends ffi.Struct {
