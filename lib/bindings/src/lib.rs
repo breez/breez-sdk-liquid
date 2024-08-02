@@ -103,7 +103,7 @@ impl BindingLiquidSdk {
 
     pub fn send_payment(
         &self,
-        req: PrepareSendResponse,
+        req: SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         rt().block_on(self.sdk.send_payment(&req))
     }
