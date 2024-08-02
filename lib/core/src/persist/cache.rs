@@ -1,8 +1,10 @@
 use anyhow::Result;
+use std::str::FromStr;
 
 use super::Persister;
 
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
+const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 
 impl Persister {
     pub fn get_cached_item(&self, key: &str) -> Result<Option<String>> {
@@ -40,6 +42,15 @@ impl Persister {
 
     pub fn get_swapper_proxy_url(&self) -> Result<Option<String>> {
         self.get_cached_item(KEY_SWAPPER_PROXY_URL)
+    }
+
+    pub fn set_is_first_sync_complete(&self, complete: bool) -> Result<()> {
+        self.update_cached_item(KEY_IS_FIRST_SYNC_COMPLETE, complete.to_string())
+    }
+
+    pub fn get_is_first_sync_complete(&self) -> Result<Option<bool>> {
+        self.get_cached_item(KEY_IS_FIRST_SYNC_COMPLETE)
+            .map(|maybe_str| maybe_str.and_then(|val_str| bool::from_str(&val_str).ok()))
     }
 }
 

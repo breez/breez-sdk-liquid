@@ -58,7 +58,7 @@ x86_64-linux-android: $(SOURCES) ndk-home
 bindings-android: android
 	cp -r ffi/kotlin/jniLibs langs/android/lib/src/main
 	cp -r ffi/kotlin/breez_sdk_liquid langs/android/lib/src/main/kotlin/
-	cd android && ./gradlew assemble
+	cd langs/android && ./gradlew assemble
 	mkdir -p ffi/android
 	cp langs/android/lib/build/outputs/aar/lib-release.aar ffi/android
 
