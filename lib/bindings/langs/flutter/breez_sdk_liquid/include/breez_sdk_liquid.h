@@ -178,6 +178,42 @@ typedef struct wire_cst_restore_request {
   struct wire_cst_list_prim_u_8_strict *backup_path;
 } wire_cst_restore_request;
 
+typedef struct wire_cst_liquid_address_data {
+  struct wire_cst_list_prim_u_8_strict *address;
+  int32_t network;
+  struct wire_cst_list_prim_u_8_strict *asset_id;
+  uint64_t *amount_sat;
+  struct wire_cst_list_prim_u_8_strict *label;
+  struct wire_cst_list_prim_u_8_strict *message;
+} wire_cst_liquid_address_data;
+
+typedef struct wire_cst_PaymentDestination_BIP21 {
+  struct wire_cst_liquid_address_data *address;
+} wire_cst_PaymentDestination_BIP21;
+
+typedef struct wire_cst_PaymentDestination_Bolt11 {
+  struct wire_cst_list_prim_u_8_strict *invoice;
+} wire_cst_PaymentDestination_Bolt11;
+
+typedef union PaymentDestinationKind {
+  struct wire_cst_PaymentDestination_BIP21 BIP21;
+  struct wire_cst_PaymentDestination_Bolt11 Bolt11;
+} PaymentDestinationKind;
+
+typedef struct wire_cst_payment_destination {
+  int32_t tag;
+  union PaymentDestinationKind kind;
+} wire_cst_payment_destination;
+
+typedef struct wire_cst_prepare_send_response {
+  struct wire_cst_payment_destination payment_destination;
+  uint64_t fees_sat;
+} wire_cst_prepare_send_response;
+
+typedef struct wire_cst_send_payment_request {
+  struct wire_cst_prepare_send_response prepare_response;
+} wire_cst_send_payment_request;
+
 typedef struct wire_cst_binding_event_listener {
   struct wire_cst_list_prim_u_8_strict *stream;
 } wire_cst_binding_event_listener;
@@ -457,6 +493,10 @@ typedef struct wire_cst_InputType_BitcoinAddress {
   struct wire_cst_bitcoin_address_data *address;
 } wire_cst_InputType_BitcoinAddress;
 
+typedef struct wire_cst_InputType_LiquidAddress {
+  struct wire_cst_liquid_address_data *address;
+} wire_cst_InputType_LiquidAddress;
+
 typedef struct wire_cst_InputType_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
 } wire_cst_InputType_Bolt11;
@@ -487,6 +527,7 @@ typedef struct wire_cst_InputType_LnUrlError {
 
 typedef union InputTypeKind {
   struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
+  struct wire_cst_InputType_LiquidAddress LiquidAddress;
   struct wire_cst_InputType_Bolt11 Bolt11;
   struct wire_cst_InputType_NodeId NodeId;
   struct wire_cst_InputType_Url Url;
@@ -923,7 +964,7 @@ WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(int64_t port_,
                                                                               uintptr_t that,
-                                                                              uintptr_t req);
+                                                                              struct wire_cst_send_payment_request *req);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(int64_t port_,
                                                                       uintptr_t that);
@@ -949,14 +990,6 @@ void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust
 
 void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
-void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(const void *ptr);
-
-void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(const void *ptr);
-
-void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(const void *ptr);
-
-void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(const void *ptr);
-
 struct wire_cst_aes_success_action_data_decrypted *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(void);
 
 struct wire_cst_aes_success_action_data_result *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(void);
@@ -974,6 +1007,8 @@ struct wire_cst_buy_bitcoin_request *frbgen_breez_liquid_cst_new_box_autoadd_buy
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
 int64_t *frbgen_breez_liquid_cst_new_box_autoadd_i_64(int64_t value);
+
+struct wire_cst_liquid_address_data *frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data(void);
 
 struct wire_cst_list_payments_request *frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(void);
 
@@ -1025,6 +1060,8 @@ struct wire_cst_restore_request *frbgen_breez_liquid_cst_new_box_autoadd_restore
 
 struct wire_cst_sdk_event *frbgen_breez_liquid_cst_new_box_autoadd_sdk_event(void);
 
+struct wire_cst_send_payment_request *frbgen_breez_liquid_cst_new_box_autoadd_send_payment_request(void);
+
 struct wire_cst_success_action_processed *frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(void);
 
 struct wire_cst_symbol *frbgen_breez_liquid_cst_new_box_autoadd_symbol(void);
@@ -1065,6 +1102,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
@@ -1090,6 +1128,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_refund_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_restore_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_sdk_event);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_send_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_symbol);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
@@ -1106,11 +1145,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin);

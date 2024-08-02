@@ -6,7 +6,6 @@
 use super::*;
 use crate::bindings::*;
 use crate::model::EventListener;
-use crate::model::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -37,30 +36,6 @@ impl CstDecode<BindingLiquidSdk> for usize {
         ))
     }
 }
-impl CstDecode<PrepareSendResponse> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> PrepareSendResponse {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-            RustOpaqueNom<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>,
-            >,
-        >::cst_decode(
-            self
-        ))
-    }
-}
-impl CstDecode<SendPaymentRequest> for usize {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(self) -> SendPaymentRequest {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
-            RustOpaqueNom<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>,
-            >,
-        >::cst_decode(
-            self
-        ))
-    }
-}
 impl
     CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
@@ -70,32 +45,6 @@ impl
     fn cst_decode(
         self,
     ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
-    {
-        unsafe { decode_rust_opaque_nom(self as _) }
-    }
-}
-impl
-    CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>,
-    > for usize
-{
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(
-        self,
-    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>
-    {
-        unsafe { decode_rust_opaque_nom(self as _) }
-    }
-}
-impl
-    CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>,
-    > for usize
-{
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    fn cst_decode(
-        self,
-    ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>
     {
         unsafe { decode_rust_opaque_nom(self as _) }
     }
@@ -253,6 +202,13 @@ impl CstDecode<i64> for *mut i64 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> i64 {
         unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+    }
+}
+impl CstDecode<crate::bindings::LiquidAddressData> for *mut wire_cst_liquid_address_data {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::LiquidAddressData {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::bindings::LiquidAddressData>::cst_decode(*wrap).into()
     }
 }
 impl CstDecode<crate::model::ListPaymentsRequest> for *mut wire_cst_list_payments_request {
@@ -446,6 +402,13 @@ impl CstDecode<crate::model::SdkEvent> for *mut wire_cst_sdk_event {
         CstDecode::<crate::model::SdkEvent>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::SendPaymentRequest> for *mut wire_cst_send_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SendPaymentRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::SendPaymentRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::bindings::SuccessActionProcessed> for *mut wire_cst_success_action_processed {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::bindings::SuccessActionProcessed {
@@ -557,42 +520,48 @@ impl CstDecode<crate::bindings::InputType> for wire_cst_input_type {
                 }
             }
             1 => {
+                let ans = unsafe { self.kind.LiquidAddress };
+                crate::bindings::InputType::LiquidAddress {
+                    address: ans.address.cst_decode(),
+                }
+            }
+            2 => {
                 let ans = unsafe { self.kind.Bolt11 };
                 crate::bindings::InputType::Bolt11 {
                     invoice: ans.invoice.cst_decode(),
                 }
             }
-            2 => {
+            3 => {
                 let ans = unsafe { self.kind.NodeId };
                 crate::bindings::InputType::NodeId {
                     node_id: ans.node_id.cst_decode(),
                 }
             }
-            3 => {
+            4 => {
                 let ans = unsafe { self.kind.Url };
                 crate::bindings::InputType::Url {
                     url: ans.url.cst_decode(),
                 }
             }
-            4 => {
+            5 => {
                 let ans = unsafe { self.kind.LnUrlPay };
                 crate::bindings::InputType::LnUrlPay {
                     data: ans.data.cst_decode(),
                 }
             }
-            5 => {
+            6 => {
                 let ans = unsafe { self.kind.LnUrlWithdraw };
                 crate::bindings::InputType::LnUrlWithdraw {
                     data: ans.data.cst_decode(),
                 }
             }
-            6 => {
+            7 => {
                 let ans = unsafe { self.kind.LnUrlAuth };
                 crate::bindings::InputType::LnUrlAuth {
                     data: ans.data.cst_decode(),
                 }
             }
-            7 => {
+            8 => {
                 let ans = unsafe { self.kind.LnUrlError };
                 crate::bindings::InputType::LnUrlError {
                     data: ans.data.cst_decode(),
@@ -620,6 +589,19 @@ impl CstDecode<crate::model::Limits> for wire_cst_limits {
             min_sat: self.min_sat.cst_decode(),
             max_sat: self.max_sat.cst_decode(),
             max_zero_conf_sat: self.max_zero_conf_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::bindings::LiquidAddressData> for wire_cst_liquid_address_data {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::bindings::LiquidAddressData {
+        crate::bindings::LiquidAddressData {
+            address: self.address.cst_decode(),
+            network: self.network.cst_decode(),
+            asset_id: self.asset_id.cst_decode(),
+            amount_sat: self.amount_sat.cst_decode(),
+            label: self.label.cst_decode(),
+            message: self.message.cst_decode(),
         }
     }
 }
@@ -1143,6 +1125,26 @@ impl CstDecode<crate::model::Payment> for wire_cst_payment {
         }
     }
 }
+impl CstDecode<crate::model::PaymentDestination> for wire_cst_payment_destination {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PaymentDestination {
+        match self.tag {
+            0 => {
+                let ans = unsafe { self.kind.BIP21 };
+                crate::model::PaymentDestination::BIP21 {
+                    address: ans.address.cst_decode(),
+                }
+            }
+            1 => {
+                let ans = unsafe { self.kind.Bolt11 };
+                crate::model::PaymentDestination::Bolt11 {
+                    invoice: ans.invoice.cst_decode(),
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+}
 impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::error::PaymentError {
@@ -1313,6 +1315,15 @@ impl CstDecode<crate::model::PrepareSendRequest> for wire_cst_prepare_send_reque
         crate::model::PrepareSendRequest {
             payment_destination: self.payment_destination.cst_decode(),
             amount_sat: self.amount_sat.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::PrepareSendResponse> for wire_cst_prepare_send_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::PrepareSendResponse {
+        crate::model::PrepareSendResponse {
+            payment_destination: self.payment_destination.cst_decode(),
+            fees_sat: self.fees_sat.cst_decode(),
         }
     }
 }
@@ -1512,6 +1523,14 @@ impl CstDecode<crate::model::SdkEvent> for wire_cst_sdk_event {
             }
             6 => crate::model::SdkEvent::Synced,
             _ => unreachable!(),
+        }
+    }
+}
+impl CstDecode<crate::model::SendPaymentRequest> for wire_cst_send_payment_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SendPaymentRequest {
+        crate::model::SendPaymentRequest {
+            prepare_response: self.prepare_response.cst_decode(),
         }
     }
 }
@@ -1763,6 +1782,23 @@ impl NewWithNullPtr for wire_cst_limits {
     }
 }
 impl Default for wire_cst_limits {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_liquid_address_data {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            address: core::ptr::null_mut(),
+            network: Default::default(),
+            asset_id: core::ptr::null_mut(),
+            amount_sat: core::ptr::null_mut(),
+            label: core::ptr::null_mut(),
+            message: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_liquid_address_data {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2116,6 +2152,19 @@ impl Default for wire_cst_payment {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_payment_destination {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            tag: -1,
+            kind: PaymentDestinationKind { nil__: () },
+        }
+    }
+}
+impl Default for wire_cst_payment_destination {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_payment_error {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2272,6 +2321,19 @@ impl NewWithNullPtr for wire_cst_prepare_send_request {
     }
 }
 impl Default for wire_cst_prepare_send_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_prepare_send_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            payment_destination: Default::default(),
+            fees_sat: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_prepare_send_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2460,6 +2522,18 @@ impl NewWithNullPtr for wire_cst_sdk_event {
     }
 }
 impl Default for wire_cst_sdk_event {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_send_payment_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            prepare_response: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_send_payment_request {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2762,7 +2836,7 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_re
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_payment(
     port_: i64,
     that: usize,
-    req: usize,
+    req: *mut wire_cst_send_payment_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_send_payment_impl(port_, that, req)
 }
@@ -2841,42 +2915,6 @@ pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque
 }
 
 #[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>::increment_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrepareSendResponse>>::decrement_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>::increment_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
-    ptr: *const std::ffi::c_void,
-) {
-    unsafe {
-        StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SendPaymentRequest>>::decrement_strong_count(ptr as _);
-    }
-}
-
-#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(
 ) -> *mut wire_cst_aes_success_action_data_decrypted {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -2940,6 +2978,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_connect_request(
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_i_64(value: i64) -> *mut i64 {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data(
+) -> *mut wire_cst_liquid_address_data {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_liquid_address_data::new_with_null_ptr(),
+    )
 }
 
 #[no_mangle]
@@ -3131,6 +3177,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_restore_request(
 #[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_sdk_event() -> *mut wire_cst_sdk_event {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_sdk_event::new_with_null_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_send_payment_request(
+) -> *mut wire_cst_send_payment_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_send_payment_request::new_with_null_ptr(),
+    )
 }
 
 #[no_mangle]
@@ -3401,6 +3455,7 @@ pub struct wire_cst_input_type {
 #[derive(Clone, Copy)]
 pub union InputTypeKind {
     BitcoinAddress: wire_cst_InputType_BitcoinAddress,
+    LiquidAddress: wire_cst_InputType_LiquidAddress,
     Bolt11: wire_cst_InputType_Bolt11,
     NodeId: wire_cst_InputType_NodeId,
     Url: wire_cst_InputType_Url,
@@ -3414,6 +3469,11 @@ pub union InputTypeKind {
 #[derive(Clone, Copy)]
 pub struct wire_cst_InputType_BitcoinAddress {
     address: *mut wire_cst_bitcoin_address_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_InputType_LiquidAddress {
+    address: *mut wire_cst_liquid_address_data,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -3462,6 +3522,16 @@ pub struct wire_cst_limits {
     min_sat: u64,
     max_sat: u64,
     max_zero_conf_sat: u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_liquid_address_data {
+    address: *mut wire_cst_list_prim_u_8_strict,
+    network: i32,
+    asset_id: *mut wire_cst_list_prim_u_8_strict,
+    amount_sat: *mut u64,
+    label: *mut wire_cst_list_prim_u_8_strict,
+    message: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -3898,6 +3968,29 @@ pub struct wire_cst_payment {
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
+pub struct wire_cst_payment_destination {
+    tag: i32,
+    kind: PaymentDestinationKind,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union PaymentDestinationKind {
+    BIP21: wire_cst_PaymentDestination_BIP21,
+    Bolt11: wire_cst_PaymentDestination_Bolt11,
+    nil__: (),
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentDestination_BIP21 {
+    address: *mut wire_cst_liquid_address_data,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentDestination_Bolt11 {
+    invoice: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
 pub struct wire_cst_payment_error {
     tag: i32,
     kind: PaymentErrorKind,
@@ -4019,6 +4112,12 @@ pub struct wire_cst_prepare_refund_response {
 pub struct wire_cst_prepare_send_request {
     payment_destination: *mut wire_cst_list_prim_u_8_strict,
     amount_sat: *mut u64,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_prepare_send_response {
+    payment_destination: wire_cst_payment_destination,
+    fees_sat: u64,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -4191,6 +4290,11 @@ pub struct wire_cst_SdkEvent_PaymentSucceeded {
 #[derive(Clone, Copy)]
 pub struct wire_cst_SdkEvent_PaymentWaitingConfirmation {
     details: *mut wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_send_payment_request {
+    prepare_response: wire_cst_prepare_send_response,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
