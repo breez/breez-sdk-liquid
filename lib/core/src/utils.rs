@@ -169,7 +169,7 @@ pub(crate) fn new_liquid_bip21(
             querystring::stringify(
                 optional_keys
                     .iter()
-                    .map(|(key, value)| (key.clone(), value.as_str()))
+                    .map(|(key, value)| (*key, value.as_str()))
                     .collect(),
             )
         )
