@@ -210,9 +210,9 @@ class BreezSDKLiquidModule(
     ) {
         executor.execute {
             try {
-                val prepareSendResponse =
-                    asPrepareSendResponse(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareSendResponse")) }
-                val res = getBindingLiquidSdk().sendPayment(prepareSendResponse)
+                val sendPaymentRequest =
+                    asSendPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SendPaymentRequest")) }
+                val res = getBindingLiquidSdk().sendPayment(sendPaymentRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

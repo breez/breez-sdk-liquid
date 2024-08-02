@@ -259,11 +259,13 @@ export interface PrepareReceiveOnchainResponse {
 
 export interface PrepareReceivePaymentRequest {
     payerAmountSat: number
+    receiveMethod?: ReceiveMethod
 }
 
 export interface PrepareReceivePaymentResponse {
     payerAmountSat: number
     feesSat: number
+    receiveMethod?: ReceiveMethod
 }
 
 export interface PrepareRefundRequest {
@@ -279,11 +281,12 @@ export interface PrepareRefundResponse {
 }
 
 export interface PrepareSendRequest {
-    invoice: string
+    paymentDestination: string
+    amountSat?: number
 }
 
 export interface PrepareSendResponse {
-    invoice: string
+    paymentDestination: PaymentDestination
     feesSat: number
 }
 
@@ -305,6 +308,7 @@ export interface ReceivePaymentRequest {
 export interface ReceivePaymentResponse {
     id: string
     invoice: string
+    bip21?: string
 }
 
 export interface RecommendedFees {
@@ -347,6 +351,10 @@ export interface RouteHintHop {
     cltvExpiryDelta: number
     htlcMinimumMsat?: number
     htlcMaximumMsat?: number
+}
+
+export interface SendPaymentRequest {
+    prepareResponse: PrepareSendResponse
 }
 
 export interface SendPaymentResponse {
@@ -482,6 +490,19 @@ export enum Network {
     REGTEST = "regtest"
 }
 
+export enum PaymentDestinationVariant {
+    BIP21 = "bip21",
+    BOLT11 = "bolt11"
+}
+
+export type PaymentDestination = {
+    type: PaymentDestinationVariant.BIP21,
+    address: LiquidAddressData
+} | {
+    type: PaymentDestinationVariant.BOLT11,
+    invoice: string
+}
+
 export enum PaymentState {
     CREATED = "created",
     PENDING = "pending",
@@ -495,6 +516,11 @@ export enum PaymentState {
 export enum PaymentType {
     RECEIVE = "receive",
     SEND = "send"
+}
+
+export enum ReceiveMethod {
+    BIP21 = "bip21",
+    BOLT11 = "bolt11"
 }
 
 export enum SdkEventVariant {
@@ -602,7 +628,7 @@ export const prepareSendPayment = async (req: PrepareSendRequest): Promise<Prepa
     return response
 }
 
-export const sendPayment = async (req: PrepareSendResponse): Promise<SendPaymentResponse> => {
+export const sendPayment = async (req: SendPaymentRequest): Promise<SendPaymentResponse> => {
     const response = await BreezSDKLiquid.sendPayment(req)
     return response
 }
