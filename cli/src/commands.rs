@@ -19,6 +19,7 @@ use serde_json::to_string_pretty;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
+    /// TODO Add BIP21 Support
     /// Send lbtc and receive btc lightning through a swap
     SendPayment {
         /// Invoice which has to be paid
@@ -54,6 +55,7 @@ pub(crate) enum Command {
         #[clap(short = 'f', long = "fee_rate")]
         sat_per_vbyte: Option<u32>,
     },
+    /// TODO Add BIP21 Support
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
         /// Whether or not to receive via lightning
@@ -299,15 +301,14 @@ pub(crate) async fn handle_command(
 
             if let Some(delay) = delay {
                 let sdk_cloned = sdk.clone();
-                let prepare_cloned = prepare_response.clone();
 
                 tokio::spawn(async move {
                     thread::sleep(Duration::from_secs(delay));
-                    sdk_cloned.send_payment(&prepare_cloned).await.unwrap();
+                    sdk_cloned.send_payment(&send_payment_req).await.unwrap();
                 });
                 command_result!(prepare_response)
             } else {
-                let response = sdk.send_payment(&prepare_response).await?;
+                let response = sdk.send_payment(&send_payment_req).await?;
                 command_result!(response)
             }
         }
