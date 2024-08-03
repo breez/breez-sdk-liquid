@@ -318,13 +318,15 @@ pub(crate) mod immutable {
     pub(crate) type SendSwapHistory = Vec<Txid>;
     pub(crate) type ReceiveSwapHistory = Vec<Txid>;
 
+    #[allow(dead_code)]
     #[derive(Clone)]
     struct SendSwapImmutableData {
         pub(crate) swap_id: String,
-        swap_script: LBtcSwapScript,
+        pub(crate) swap_script: LBtcSwapScript,
         pub(crate) script: LBtcScript
     }
 
+    #[allow(dead_code)]
     #[derive(Clone)]
     struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
@@ -332,6 +334,7 @@ pub(crate) mod immutable {
         pub(crate) script: LBtcScript
     }
 
+    #[allow(dead_code)]
     #[derive(Clone)]
     struct SendChainSwapImmutableData {
         swap_id: String,
@@ -346,6 +349,7 @@ pub(crate) mod immutable {
         pub(crate) btc_claim_script_history: Vec<Txid>
     }
 
+    #[allow(dead_code)]
     #[derive(Clone)]
     struct ReceiveChainSwapImmutableData {
         swap_id: String,
