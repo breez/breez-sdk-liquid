@@ -415,33 +415,26 @@ pub(crate) mod immutable {
                 receive_swaps
                     .iter()
                     .filter_map(|swap| {
-                        let create_response_res = swap.get_boltz_create_response();
-                        let swap_script_res = swap.get_swap_script();
                         let swap_id = &swap.id;
 
-                        match (&create_response_res, &swap_script_res) {
-                            (Ok(create_resp), Ok(swap_script)) => {
-                                match &swap_script.funding_addrs {
-                                    Some(address) => {
-                                        Some((swap.id.clone(), ReceiveSwapImmutableData {
-                                            swap_id: swap.id.clone(),
-                                            create_resp: create_resp.clone(),
-                                            swap_script: swap_script.clone(),
-                                            script: address.script_pubkey(),
-                                        }))
-                                    },
-                                    None => {
-                                        error!("No funding address found for Receive Swap {}", swap.id);
-                                        None
-                                    }
-                                }
-                            }
-                            (Err(e), _) => {
-                                error!("Failed to deserialize Create Response for Receive Swap {swap_id}: {e}");
-                                None
-                            }
-                            (_, Err(e)) => {
-                                error!("Failed to get swap script for Receive Swap {swap_id}: {e}");
+                        let create_resp = swap.get_boltz_create_response()
+                            .map_err(|e| error!("Failed to deserialize Create Response for Receive Swap {swap_id}: {e}"))
+                            .ok()?;
+                        let swap_script = swap.get_swap_script()
+                            .map_err(|e| error!("Failed to get swap script for Receive Swap {swap_id}: {e}"))
+                            .ok()?;
+
+                        match &swap_script.funding_addrs {
+                            Some(address) => {
+                                Some((swap.id.clone(), ReceiveSwapImmutableData {
+                                    swap_id: swap.id.clone(),
+                                    create_resp: create_resp.clone(),
+                                    swap_script: swap_script.clone(),
+                                    script: address.script_pubkey(),
+                                }))
+                            },
+                            None => {
+                                error!("No funding address found for Receive Swap {}", swap.id);
                                 None
                             }
                         }
@@ -452,32 +445,34 @@ pub(crate) mod immutable {
 
             let send_chain_swap_immutable_db_by_swap_id: HashMap<String, SendChainSwapImmutableData> =
                 send_chain_swaps.iter().filter_map(|swap| {
-                    let maybe_lockup_script = swap.get_lockup_swap_script()
-                        .map(|s| s.as_liquid_script().ok()).ok().flatten();
-                    let maybe_claim_script = swap.get_claim_swap_script()
-                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten();
+                    let swap_id = &swap.id;
+
+                    let lockup_swap_script = swap.get_lockup_swap_script()
+                        .map_err(|e| error!("Failed to get lockup swap script for swap {swap_id}: {e}"))
+                        .map(|s| s.as_liquid_script().ok())
+                        .ok()
+                        .flatten()?;
+                    let claim_swap_script = swap.get_claim_swap_script()
+                        .map_err(|e| error!("Failed to get claim swap script for swap {swap_id}: {e}"))
+                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten()?;
+
+                    let maybe_lockup_script = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
+                    let maybe_claim_script = claim_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
 
                     match (maybe_lockup_script, maybe_claim_script) {
-                        (Some(lockup_swap_script), Some(claim_script)) => {
-                            let maybe_lockup_script_pk = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-                            let maybe_claim_script_pk = claim_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-
-                            match (maybe_lockup_script_pk, maybe_claim_script_pk) {
-                                (Some(lockup_script), Some(claim_script_pk)) => {
-                                    Some((swap.id.clone(), SendChainSwapImmutableData {
-                                        swap_id: swap.id.clone(),
-                                        lockup_swap_script,
-                                        lockup_script,
-                                        claim_swap_script: claim_script,
-                                        claim_script: claim_script_pk,
-                                    }))
-                                }
-                                // TODO Add errors and logging
-                                _ => None
-                            }
+                        (Some(lockup_script), Some(claim_script)) => {
+                            Some((swap.id.clone(), SendChainSwapImmutableData {
+                                swap_id: swap.id.clone(),
+                                lockup_swap_script,
+                                lockup_script,
+                                claim_swap_script,
+                                claim_script,
+                            }))
                         }
-                        // TODO Add errors and logging
-                        _ => None
+                        (lockup_script, claim_script) => {
+                            error!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}");
+                            None
+                        }
                     }
                 })
                 .collect();
@@ -486,32 +481,32 @@ pub(crate) mod immutable {
 
             let receive_chain_swap_immutable_db_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData> =
                 receive_chain_swaps.iter().filter_map(|swap| {
-                    let maybe_lockup_swap_script = swap.get_lockup_swap_script()
-                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten();
-                    let maybe_claim_swap_script = swap.get_claim_swap_script()
-                        .map(|s| s.as_liquid_script().ok()).ok().flatten();
+                    let swap_id = &swap.id;
 
-                    match  (maybe_lockup_swap_script, maybe_claim_swap_script) {
-                        (Some(lockup_swap_script), Some(claim_swap_script)) => {
-                            let maybe_lockup_script = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-                            let maybe_claim_script = claim_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
+                    let lockup_swap_script = swap.get_lockup_swap_script()
+                        .map_err(|e| error!("Failed to get lockup swap script for swap {swap_id}: {e}"))
+                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten()?;
+                    let claim_swap_script = swap.get_claim_swap_script()
+                        .map_err(|e| error!("Failed to get claim swap script for swap {swap_id}: {e}"))
+                        .map(|s| s.as_liquid_script().ok()).ok().flatten()?;
 
-                            match (maybe_lockup_script, maybe_claim_script) {
-                                (Some(lockup_script), Some(claim_script)) => {
-                                    Some((swap.id.clone(), ReceiveChainSwapImmutableData {
-                                        swap_id: swap.id.clone(),
-                                        lockup_swap_script,
-                                        lockup_script,
-                                        claim_swap_script,
-                                        claim_script,
-                                    }))
-                                }
-                                // TODO Add errors and logging
-                                _ => None
-                            }
+                    let maybe_lockup_script = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
+                    let maybe_claim_script = claim_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
+
+                    match (maybe_lockup_script, maybe_claim_script) {
+                        (Some(lockup_script), Some(claim_script)) => {
+                            Some((swap.id.clone(), ReceiveChainSwapImmutableData {
+                                swap_id: swap.id.clone(),
+                                lockup_swap_script,
+                                lockup_script,
+                                claim_swap_script,
+                                claim_script,
+                            }))
                         }
-                        // TODO Add errors and logging
-                        _ => None
+                        (lockup_script, claim_script) => {
+                            error!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}");
+                            None
+                        }
                     }
                 })
                 .collect();
