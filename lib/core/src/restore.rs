@@ -305,7 +305,6 @@ pub(crate) mod immutable {
     use std::collections::HashMap;
 
     use anyhow::{anyhow, ensure, Result};
-    use boltz_client::boltz::CreateReverseResponse;
     use boltz_client::{BtcSwapScript, LBtcSwapScript};
     use log::{error, info};
     use lwk_wollet::elements::Txid;
@@ -331,7 +330,6 @@ pub(crate) mod immutable {
     #[derive(Clone)]
     struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
-        create_resp: CreateReverseResponse,
         pub(crate) swap_script: LBtcSwapScript,
         pub(crate) script: LBtcScript
     }
@@ -417,9 +415,6 @@ pub(crate) mod immutable {
                     .filter_map(|swap| {
                         let swap_id = &swap.id;
 
-                        let create_resp = swap.get_boltz_create_response()
-                            .map_err(|e| error!("Failed to deserialize Create Response for Receive Swap {swap_id}: {e}"))
-                            .ok()?;
                         let swap_script = swap.get_swap_script()
                             .map_err(|e| error!("Failed to get swap script for Receive Swap {swap_id}: {e}"))
                             .ok()?;
@@ -428,7 +423,6 @@ pub(crate) mod immutable {
                             Some(address) => {
                                 Some((swap.id.clone(), ReceiveSwapImmutableData {
                                     swap_id: swap.id.clone(),
-                                    create_resp: create_resp.clone(),
                                     swap_script: swap_script.clone(),
                                     script: address.script_pubkey(),
                                 }))
