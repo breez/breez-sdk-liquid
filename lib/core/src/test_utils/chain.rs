@@ -98,6 +98,13 @@ impl BitcoinChainService for MockBitcoinChainService {
         unimplemented!()
     }
 
+    fn get_scripts_history(
+        &self,
+        _scripts: &[&boltz_client::bitcoin::Script],
+    ) -> Result<Vec<Vec<History>>> {
+        unimplemented!()
+    }
+
     fn script_get_balance(
         &self,
         _script: &boltz_client::bitcoin::Script,
