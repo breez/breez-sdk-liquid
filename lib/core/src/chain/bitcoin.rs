@@ -158,11 +158,11 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        Ok(self.client.batch_script_get_history(scripts)?
+        Ok(self
+            .client
+            .batch_script_get_history(scripts)?
             .into_iter()
-            .map(|v| v.into_iter()
-                .map(Into::into)
-                .collect())
+            .map(|v| v.into_iter().map(Into::into).collect())
             .collect())
     }
 

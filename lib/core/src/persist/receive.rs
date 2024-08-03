@@ -134,10 +134,7 @@ impl Persister {
         Ok(ongoing_receive)
     }
 
-    pub(crate) fn list_ongoing_receive_swaps(
-        &self,
-        con: &Connection,
-    ) -> Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_ongoing_receive_swaps(&self, con: &Connection) -> Result<Vec<ReceiveSwap>> {
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
