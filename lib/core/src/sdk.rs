@@ -721,7 +721,7 @@ impl LiquidSdk {
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
     /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
-    /// complete in this time
+    ///   complete in this time
     /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
     ///
     /// # Arguments
@@ -978,7 +978,7 @@ impl LiquidSdk {
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
     /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
-    /// complete in this time
+    ///   complete in this time
     /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
     ///
     /// # Arguments
