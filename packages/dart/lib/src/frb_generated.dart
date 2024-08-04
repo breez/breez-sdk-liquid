@@ -13,3625 +13,5884 @@ import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.d
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Main entrypoint of the Rust API
+class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
+  @internal
+  static final instance = RustLib._();
 
-                /// Main entrypoint of the Rust API
-                class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
-                  @internal
-                  static final instance = RustLib._();
+  RustLib._();
 
-                  RustLib._();
+  /// Initialize flutter_rust_bridge
+  static Future<void> init({
+    RustLibApi? api,
+    BaseHandler? handler,
+    ExternalLibrary? externalLibrary,
+  }) async {
+    await instance.initImpl(
+      api: api,
+      handler: handler,
+      externalLibrary: externalLibrary,
+    );
+  }
 
-                  /// Initialize flutter_rust_bridge
-                  static Future<void> init({
-                    RustLibApi? api,
-                    BaseHandler? handler,
-                    ExternalLibrary? externalLibrary,
-                  }) async {
-                    await instance.initImpl(
-                      api: api,
-                      handler: handler,
-                      externalLibrary: externalLibrary,
-                    );
-                  }
+  /// Dispose flutter_rust_bridge
+  ///
+  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
+  /// is automatically disposed when the app stops.
+  static void dispose() => instance.disposeImpl();
 
-                  /// Dispose flutter_rust_bridge
-                  ///
-                  /// The call to this function is optional, since flutter_rust_bridge (and everything else)
-                  /// is automatically disposed when the app stops.
-                  static void dispose() => instance.disposeImpl();
+  @override
+  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor => RustLibApiImpl.new;
 
-                  @override
-                  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor => RustLibApiImpl.new;
+  @override
+  WireConstructor<RustLibWire> get wireConstructor => RustLibWire.fromExternalLibrary;
 
-                  @override
-                  WireConstructor<RustLibWire> get wireConstructor => RustLibWire.fromExternalLibrary;
+  @override
+  Future<void> executeRustInitializers() async {}
 
-                  @override
-                  Future<void> executeRustInitializers() async {
-                    
-                  }
+  @override
+  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig => kDefaultExternalLibraryLoaderConfig;
 
-                  @override
-                  ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig => kDefaultExternalLibraryLoaderConfig;
+  @override
+  String get codegenVersion => '2.0.0';
 
-                  @override
-                  String get codegenVersion => '2.0.0';
+  @override
+  int get rustContentHash => -119028624;
 
-                  @override
-                  int get rustContentHash => -119028624;
+  static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
+    stem: 'breez_sdk_liquid',
+    ioDirectory: '../../lib/core/target/release/',
+    webPrefix: 'pkg/',
+  );
+}
 
-                  static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
-                    stem: 'breez_sdk_liquid',
-                    ioDirectory: '../../lib/core/target/release/',
-                    webPrefix: 'pkg/',
-                  );
-                }
-                
+abstract class RustLibApi extends BaseApi {
+  Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that});
 
-                abstract class RustLibApi extends BaseApi {
-                  Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that });
+  void crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, required BackupRequest req});
 
-void crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that , required BackupRequest req });
+  Future<String> crateBindingsBindingLiquidSdkBuyBitcoin(
+      {required BindingLiquidSdk that, required BuyBitcoinRequest req});
 
-Future<String> crateBindingsBindingLiquidSdkBuyBitcoin({required BindingLiquidSdk that , required BuyBitcoinRequest req });
+  Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that});
 
-Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that });
+  void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that});
 
-void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that });
+  Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that});
 
-Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that });
+  Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits(
+      {required BindingLiquidSdk that});
 
-Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits({required BindingLiquidSdk that });
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits(
+      {required BindingLiquidSdk that});
 
-Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits({required BindingLiquidSdk that });
+  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that});
 
-Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that });
+  Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies(
+      {required BindingLiquidSdk that});
 
-Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies({required BindingLiquidSdk that });
+  Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments(
+      {required BindingLiquidSdk that, required ListPaymentsRequest req});
 
-Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that , required ListPaymentsRequest req });
+  Future<List<RefundableSwap>> crateBindingsBindingLiquidSdkListRefundables({required BindingLiquidSdk that});
 
-Future<List<RefundableSwap>> crateBindingsBindingLiquidSdkListRefundables({required BindingLiquidSdk that });
+  Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth(
+      {required BindingLiquidSdk that, required LnUrlAuthRequestData reqData});
 
-Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth({required BindingLiquidSdk that , required LnUrlAuthRequestData reqData });
+  Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
+      {required BindingLiquidSdk that, required LnUrlPayRequest req});
 
-Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay({required BindingLiquidSdk that , required LnUrlPayRequest req });
+  Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
+      {required BindingLiquidSdk that, required LnUrlWithdrawRequest req});
 
-Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw({required BindingLiquidSdk that , required LnUrlWithdrawRequest req });
+  Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain(
+      {required BindingLiquidSdk that, required PayOnchainRequest req});
 
-Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain({required BindingLiquidSdk that , required PayOnchainRequest req });
+  Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin(
+      {required BindingLiquidSdk that, required PrepareBuyBitcoinRequest req});
 
-Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin({required BindingLiquidSdk that , required PrepareBuyBitcoinRequest req });
+  Future<PreparePayOnchainResponse> crateBindingsBindingLiquidSdkPreparePayOnchain(
+      {required BindingLiquidSdk that, required PreparePayOnchainRequest req});
 
-Future<PreparePayOnchainResponse> crateBindingsBindingLiquidSdkPreparePayOnchain({required BindingLiquidSdk that , required PreparePayOnchainRequest req });
+  Future<PrepareReceiveOnchainResponse> crateBindingsBindingLiquidSdkPrepareReceiveOnchain(
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainRequest req});
 
-Future<PrepareReceiveOnchainResponse> crateBindingsBindingLiquidSdkPrepareReceiveOnchain({required BindingLiquidSdk that , required PrepareReceiveOnchainRequest req });
+  Future<PrepareReceivePaymentResponse> crateBindingsBindingLiquidSdkPrepareReceivePayment(
+      {required BindingLiquidSdk that, required PrepareReceivePaymentRequest req});
 
-Future<PrepareReceivePaymentResponse> crateBindingsBindingLiquidSdkPrepareReceivePayment({required BindingLiquidSdk that , required PrepareReceivePaymentRequest req });
+  Future<PrepareRefundResponse> crateBindingsBindingLiquidSdkPrepareRefund(
+      {required BindingLiquidSdk that, required PrepareRefundRequest req});
 
-Future<PrepareRefundResponse> crateBindingsBindingLiquidSdkPrepareRefund({required BindingLiquidSdk that , required PrepareRefundRequest req });
+  Future<PrepareSendResponse> crateBindingsBindingLiquidSdkPrepareSendPayment(
+      {required BindingLiquidSdk that, required PrepareSendRequest req});
 
-Future<PrepareSendResponse> crateBindingsBindingLiquidSdkPrepareSendPayment({required BindingLiquidSdk that , required PrepareSendRequest req });
+  Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain(
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainResponse req});
 
-Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain({required BindingLiquidSdk that , required PrepareReceiveOnchainResponse req });
+  Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
+      {required BindingLiquidSdk that, required ReceivePaymentRequest req});
 
-Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment({required BindingLiquidSdk that , required ReceivePaymentRequest req });
+  Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that});
 
-Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that });
+  Future<RefundResponse> crateBindingsBindingLiquidSdkRefund(
+      {required BindingLiquidSdk that, required RefundRequest req});
 
-Future<RefundResponse> crateBindingsBindingLiquidSdkRefund({required BindingLiquidSdk that , required RefundRequest req });
+  Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that});
 
-Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that });
+  void crateBindingsBindingLiquidSdkRestore({required BindingLiquidSdk that, required RestoreRequest req});
 
-void crateBindingsBindingLiquidSdkRestore({required BindingLiquidSdk that , required RestoreRequest req });
+  Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment(
+      {required BindingLiquidSdk that, required SendPaymentRequest req});
 
-Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment({required BindingLiquidSdk that , required SendPaymentRequest req });
+  Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that});
 
-Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that });
+  Future<void> crateBindingsBindingEventListenerOnEvent(
+      {required BindingEventListener that, required SdkEvent e});
 
-Future<void> crateBindingsBindingEventListenerOnEvent({required BindingEventListener that , required SdkEvent e });
+  Stream<LogEntry> crateBindingsBreezLogStream();
 
-Stream<LogEntry> crateBindingsBreezLogStream();
+  Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req});
 
-Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req });
+  Config crateBindingsDefaultConfig({required LiquidNetwork network});
 
-Config crateBindingsDefaultConfig({required LiquidNetwork network });
+  Future<InputType> crateBindingsParse({required String input});
 
-Future<InputType> crateBindingsParse({required String input });
+  LNInvoice crateBindingsParseInvoice({required String input});
 
-LNInvoice crateBindingsParseInvoice({required String input });
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk;
 
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk;
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk;
 
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr;
 
-CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr;
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse;
 
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse;
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse;
 
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PrepareSendResponsePtr;
 
-CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PrepareSendResponsePtr;
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_SendPaymentRequest;
 
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_SendPaymentRequest;
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_SendPaymentRequest;
 
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_SendPaymentRequest;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SendPaymentRequestPtr;
+}
 
-CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SendPaymentRequestPtr;
+class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
+  RustLibApiImpl({
+    required super.handler,
+    required super.wire,
+    required super.generalizedFrbRustBinding,
+    required super.portManager,
+  });
 
+  @override
+  Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that}) {
+    final listener = RustStreamSink<SdkEvent>();
+    unawaited(handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_StreamSink_sdk_event_Dco(listener);
+        return wire.wire__crate__bindings__BindingLiquidSdk_add_event_listener(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_String,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkAddEventListenerConstMeta,
+      argValues: [that, listener],
+      apiImpl: this,
+    )));
+    return listener.stream;
+  }
 
-                }
-                
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkAddEventListenerConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_add_event_listener",
+        argNames: ["that", "listener"],
+      );
 
-                class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
-                  RustLibApiImpl({
-                    required super.handler,
-                    required super.wire,
-                    required super.generalizedFrbRustBinding,
-                    required super.portManager,
-                  });
+  @override
+  void crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, required BackupRequest req}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_backup_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_backup(arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkBackupConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
 
-                  @override Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that })  { 
-            final listener = RustStreamSink<SdkEvent>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_StreamSink_sdk_event_Dco(listener);
-            return wire.wire__crate__bindings__BindingLiquidSdk_add_event_listener(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkAddEventListenerConstMeta,
-            argValues: [that, listener],
-            apiImpl: this,
-        )));
-            return listener.stream;
-             }
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkBackupConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_backup",
+        argNames: ["that", "req"],
+      );
 
+  @override
+  Future<String> crateBindingsBindingLiquidSdkBuyBitcoin(
+      {required BindingLiquidSdk that, required BuyBitcoinRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_buy_bitcoin_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_buy_bitcoin(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_String,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkBuyBitcoinConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
 
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkAddEventListenerConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_add_event_listener",
-            argNames: ["that", "listener"],
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkBuyBitcoinConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_buy_bitcoin",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_disconnect(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkDisconnectConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkDisconnectConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_disconnect",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_empty_wallet_cache",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_rate,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_fiat_rates",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_lightning_payment_limits_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_lightning_limits",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_onchain_payment_limits_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchOnchainLimitsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchOnchainLimitsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_onchain_limits",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_get_info(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_get_info_response,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkGetInfoConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkGetInfoConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_get_info",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_fiat_currency,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_list_fiat_currencies",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments(
+      {required BindingLiquidSdk that, required ListPaymentsRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_list_payments_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_list_payments(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_payment,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkListPaymentsConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkListPaymentsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_list_payments",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<List<RefundableSwap>> crateBindingsBindingLiquidSdkListRefundables(
+      {required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_list_refundables(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_list_refundable_swap,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkListRefundablesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkListRefundablesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_list_refundables",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth(
+      {required BindingLiquidSdk that, required LnUrlAuthRequestData reqData}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_ln_url_auth_request_data(reqData);
+        return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_auth(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_url_callback_status,
+        decodeErrorData: dco_decode_ln_url_auth_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta,
+      argValues: [that, reqData],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_lnurl_auth",
+        argNames: ["that", "reqData"],
+      );
+
+  @override
+  Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay(
+      {required BindingLiquidSdk that, required LnUrlPayRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_ln_url_pay_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_pay(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_url_pay_result,
+        decodeErrorData: dco_decode_ln_url_pay_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkLnurlPayConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlPayConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_lnurl_pay",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
+      {required BindingLiquidSdk that, required LnUrlWithdrawRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_ln_url_withdraw_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_url_withdraw_result,
+        decodeErrorData: dco_decode_ln_url_withdraw_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_lnurl_withdraw",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain(
+      {required BindingLiquidSdk that, required PayOnchainRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_pay_onchain_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_pay_onchain(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_send_payment_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPayOnchainConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPayOnchainConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_pay_onchain",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin(
+      {required BindingLiquidSdk that, required PrepareBuyBitcoinRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_buy_bitcoin_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_prepare_buy_bitcoin_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPrepareBuyBitcoinConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareBuyBitcoinConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_buy_bitcoin",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PreparePayOnchainResponse> crateBindingsBindingLiquidSdkPreparePayOnchain(
+      {required BindingLiquidSdk that, required PreparePayOnchainRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_pay_onchain_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_prepare_pay_onchain_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPreparePayOnchainConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPreparePayOnchainConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_pay_onchain",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PrepareReceiveOnchainResponse> crateBindingsBindingLiquidSdkPrepareReceiveOnchain(
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_receive_onchain_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_prepare_receive_onchain_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPrepareReceiveOnchainConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareReceiveOnchainConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_receive_onchain",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PrepareReceivePaymentResponse> crateBindingsBindingLiquidSdkPrepareReceivePayment(
+      {required BindingLiquidSdk that, required PrepareReceivePaymentRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_receive_payment_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_prepare_receive_payment_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPrepareReceivePaymentConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareReceivePaymentConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_receive_payment",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PrepareRefundResponse> crateBindingsBindingLiquidSdkPrepareRefund(
+      {required BindingLiquidSdk that, required PrepareRefundRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_refund_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_refund(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_prepare_refund_response,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPrepareRefundConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareRefundConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_refund",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<PrepareSendResponse> crateBindingsBindingLiquidSdkPrepareSendPayment(
+      {required BindingLiquidSdk that, required PrepareSendRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_send_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_prepare_send_payment",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain(
+      {required BindingLiquidSdk that, required PrepareReceiveOnchainResponse req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_prepare_receive_onchain_response(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_receive_onchain(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_receive_onchain_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkReceiveOnchainConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkReceiveOnchainConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_receive_onchain",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment(
+      {required BindingLiquidSdk that, required ReceivePaymentRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_receive_payment_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_receive_payment(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_receive_payment_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkReceivePaymentConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkReceivePaymentConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_receive_payment",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_recommended_fees(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_recommended_fees,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_recommended_fees",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<RefundResponse> crateBindingsBindingLiquidSdkRefund(
+      {required BindingLiquidSdk that, required RefundRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_refund_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_refund(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_refund_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRefundConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRefundConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_refund",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_rescan_onchain_swaps",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateBindingsBindingLiquidSdkRestore({required BindingLiquidSdk that, required RestoreRequest req}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_restore_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_restore(arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkRestoreConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkRestoreConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_restore",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment(
+      {required BindingLiquidSdk that, required SendPaymentRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 =
+            cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+                req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_send_payment(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_send_payment_response,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkSendPaymentConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkSendPaymentConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_send_payment",
+        argNames: ["that", "req"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        return wire.wire__crate__bindings__BindingLiquidSdk_sync(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkSyncConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkSyncConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_sync",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> crateBindingsBindingEventListenerOnEvent(
+      {required BindingEventListener that, required SdkEvent e}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_box_autoadd_binding_event_listener(that);
+        var arg1 = cst_encode_box_autoadd_sdk_event(e);
+        return wire.wire__crate__bindings__binding_event_listener_on_event(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateBindingsBindingEventListenerOnEventConstMeta,
+      argValues: [that, e],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingEventListenerOnEventConstMeta => const TaskConstMeta(
+        debugName: "binding_event_listener_on_event",
+        argNames: ["that", "e"],
+      );
+
+  @override
+  Stream<LogEntry> crateBindingsBreezLogStream() {
+    final s = RustStreamSink<LogEntry>();
+    unawaited(handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_StreamSink_log_entry_Dco(s);
+        return wire.wire__crate__bindings__breez_log_stream(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_AnyhowException,
+      ),
+      constMeta: kCrateBindingsBreezLogStreamConstMeta,
+      argValues: [s],
+      apiImpl: this,
+    )));
+    return s.stream;
+  }
+
+  TaskConstMeta get kCrateBindingsBreezLogStreamConstMeta => const TaskConstMeta(
+        debugName: "breez_log_stream",
+        argNames: ["s"],
+      );
+
+  @override
+  Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_box_autoadd_connect_request(req);
+        return wire.wire__crate__bindings__connect(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData:
+            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsConnectConstMeta,
+      argValues: [req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsConnectConstMeta => const TaskConstMeta(
+        debugName: "connect",
+        argNames: ["req"],
+      );
+
+  @override
+  Config crateBindingsDefaultConfig({required LiquidNetwork network}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        var arg0 = cst_encode_liquid_network(network);
+        return wire.wire__crate__bindings__default_config(arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_config,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateBindingsDefaultConfigConstMeta,
+      argValues: [network],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsDefaultConfigConstMeta => const TaskConstMeta(
+        debugName: "default_config",
+        argNames: ["network"],
+      );
+
+  @override
+  Future<InputType> crateBindingsParse({required String input}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 = cst_encode_String(input);
+        return wire.wire__crate__bindings__parse(port_, arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_input_type,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsParseConstMeta,
+      argValues: [input],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsParseConstMeta => const TaskConstMeta(
+        debugName: "parse",
+        argNames: ["input"],
+      );
+
+  @override
+  LNInvoice crateBindingsParseInvoice({required String input}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        var arg0 = cst_encode_String(input);
+        return wire.wire__crate__bindings__parse_invoice(arg0);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_ln_invoice,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsParseInvoiceConstMeta,
+      argValues: [input],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsParseInvoiceConstMeta => const TaskConstMeta(
+        debugName: "parse_invoice",
+        argNames: ["input"],
+      );
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_SendPaymentRequest => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_SendPaymentRequest => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest;
+
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AnyhowException(raw as String);
+  }
+
+  @protected
+  BindingLiquidSdk
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PrepareSendResponse
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  SendPaymentRequest
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SendPaymentRequestImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BindingLiquidSdk
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BindingLiquidSdk dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PrepareSendResponse
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  SendPaymentRequest
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SendPaymentRequestImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Dco(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<SdkEvent> dco_decode_StreamSink_sdk_event_Dco(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  String dco_decode_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as String;
+  }
+
+  @protected
+  AesSuccessActionDataDecrypted dco_decode_aes_success_action_data_decrypted(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return AesSuccessActionDataDecrypted(
+      description: dco_decode_String(arr[0]),
+      plaintext: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  AesSuccessActionDataResult dco_decode_aes_success_action_data_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return AesSuccessActionDataResult_Decrypted(
+          data: dco_decode_box_autoadd_aes_success_action_data_decrypted(raw[1]),
         );
-        
-
-@override void crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that , required BackupRequest req })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_backup_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_backup(arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkBackupConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkBackupConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_backup",
-            argNames: ["that", "req"],
+      case 1:
+        return AesSuccessActionDataResult_ErrorStatus(
+          reason: dco_decode_String(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<String> crateBindingsBindingLiquidSdkBuyBitcoin({required BindingLiquidSdk that , required BuyBitcoinRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_buy_bitcoin_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_buy_bitcoin(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkBuyBitcoinConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  BackupRequest dco_decode_backup_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return BackupRequest(
+      backupPath: dco_decode_opt_String(arr[0]),
+    );
+  }
 
+  @protected
+  BindingEventListener dco_decode_binding_event_listener(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return BindingEventListener(
+      stream: dco_decode_StreamSink_sdk_event_Dco(arr[0]),
+    );
+  }
 
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkBuyBitcoinConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_buy_bitcoin",
-            argNames: ["that", "req"],
+  @protected
+  BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return BitcoinAddressData(
+      address: dco_decode_String(arr[0]),
+      network: dco_decode_network(arr[1]),
+      amountSat: dco_decode_opt_box_autoadd_u_64(arr[2]),
+      label: dco_decode_opt_String(arr[3]),
+      message: dco_decode_opt_String(arr[4]),
+    );
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  AesSuccessActionDataDecrypted dco_decode_box_autoadd_aes_success_action_data_decrypted(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_aes_success_action_data_decrypted(raw);
+  }
+
+  @protected
+  AesSuccessActionDataResult dco_decode_box_autoadd_aes_success_action_data_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_aes_success_action_data_result(raw);
+  }
+
+  @protected
+  BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_backup_request(raw);
+  }
+
+  @protected
+  BindingEventListener dco_decode_box_autoadd_binding_event_listener(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_binding_event_listener(raw);
+  }
+
+  @protected
+  BitcoinAddressData dco_decode_box_autoadd_bitcoin_address_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_bitcoin_address_data(raw);
+  }
+
+  @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  BuyBitcoinRequest dco_decode_box_autoadd_buy_bitcoin_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_buy_bitcoin_request(raw);
+  }
+
+  @protected
+  ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_connect_request(raw);
+  }
+
+  @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_i_64(raw);
+  }
+
+  @protected
+  ListPaymentsRequest dco_decode_box_autoadd_list_payments_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_list_payments_request(raw);
+  }
+
+  @protected
+  LNInvoice dco_decode_box_autoadd_ln_invoice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_invoice(raw);
+  }
+
+  @protected
+  LnUrlAuthRequestData dco_decode_box_autoadd_ln_url_auth_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_auth_request_data(raw);
+  }
+
+  @protected
+  LnUrlErrorData dco_decode_box_autoadd_ln_url_error_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_error_data(raw);
+  }
+
+  @protected
+  LnUrlPayErrorData dco_decode_box_autoadd_ln_url_pay_error_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_pay_error_data(raw);
+  }
+
+  @protected
+  LnUrlPayRequest dco_decode_box_autoadd_ln_url_pay_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_pay_request(raw);
+  }
+
+  @protected
+  LnUrlPayRequestData dco_decode_box_autoadd_ln_url_pay_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_pay_request_data(raw);
+  }
+
+  @protected
+  LnUrlPaySuccessData dco_decode_box_autoadd_ln_url_pay_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_pay_success_data(raw);
+  }
+
+  @protected
+  LnUrlWithdrawRequest dco_decode_box_autoadd_ln_url_withdraw_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_withdraw_request(raw);
+  }
+
+  @protected
+  LnUrlWithdrawRequestData dco_decode_box_autoadd_ln_url_withdraw_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_withdraw_request_data(raw);
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_box_autoadd_ln_url_withdraw_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ln_url_withdraw_success_data(raw);
+  }
+
+  @protected
+  MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_message_success_action_data(raw);
+  }
+
+  @protected
+  PayOnchainRequest dco_decode_box_autoadd_pay_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_pay_onchain_request(raw);
+  }
+
+  @protected
+  Payment dco_decode_box_autoadd_payment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_payment(raw);
+  }
+
+  @protected
+  PrepareBuyBitcoinRequest dco_decode_box_autoadd_prepare_buy_bitcoin_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_buy_bitcoin_request(raw);
+  }
+
+  @protected
+  PreparePayOnchainRequest dco_decode_box_autoadd_prepare_pay_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_pay_onchain_request(raw);
+  }
+
+  @protected
+  PrepareReceiveOnchainRequest dco_decode_box_autoadd_prepare_receive_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_receive_onchain_request(raw);
+  }
+
+  @protected
+  PrepareReceiveOnchainResponse dco_decode_box_autoadd_prepare_receive_onchain_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_receive_onchain_response(raw);
+  }
+
+  @protected
+  PrepareReceivePaymentRequest dco_decode_box_autoadd_prepare_receive_payment_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_receive_payment_request(raw);
+  }
+
+  @protected
+  PrepareRefundRequest dco_decode_box_autoadd_prepare_refund_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_refund_request(raw);
+  }
+
+  @protected
+  PrepareSendRequest dco_decode_box_autoadd_prepare_send_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_send_request(raw);
+  }
+
+  @protected
+  ReceivePaymentRequest dco_decode_box_autoadd_receive_payment_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_receive_payment_request(raw);
+  }
+
+  @protected
+  RefundRequest dco_decode_box_autoadd_refund_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_refund_request(raw);
+  }
+
+  @protected
+  RestoreRequest dco_decode_box_autoadd_restore_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_restore_request(raw);
+  }
+
+  @protected
+  SdkEvent dco_decode_box_autoadd_sdk_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_sdk_event(raw);
+  }
+
+  @protected
+  SuccessActionProcessed dco_decode_box_autoadd_success_action_processed(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_success_action_processed(raw);
+  }
+
+  @protected
+  Symbol dco_decode_box_autoadd_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_symbol(raw);
+  }
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_u_64(raw);
+  }
+
+  @protected
+  UrlSuccessActionData dco_decode_box_autoadd_url_success_action_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_url_success_action_data(raw);
+  }
+
+  @protected
+  BuyBitcoinProvider dco_decode_buy_bitcoin_provider(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BuyBitcoinProvider.values[raw as int];
+  }
+
+  @protected
+  BuyBitcoinRequest dco_decode_buy_bitcoin_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return BuyBitcoinRequest(
+      prepareRes: dco_decode_prepare_buy_bitcoin_response(arr[0]),
+      redirectUrl: dco_decode_opt_String(arr[1]),
+    );
+  }
+
+  @protected
+  Config dco_decode_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return Config(
+      liquidElectrumUrl: dco_decode_String(arr[0]),
+      bitcoinElectrumUrl: dco_decode_String(arr[1]),
+      mempoolspaceUrl: dco_decode_String(arr[2]),
+      workingDir: dco_decode_String(arr[3]),
+      network: dco_decode_liquid_network(arr[4]),
+      paymentTimeoutSec: dco_decode_u_64(arr[5]),
+      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
+    );
+  }
+
+  @protected
+  ConnectRequest dco_decode_connect_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ConnectRequest(
+      mnemonic: dco_decode_String(arr[0]),
+      config: dco_decode_config(arr[1]),
+    );
+  }
+
+  @protected
+  CurrencyInfo dco_decode_currency_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return CurrencyInfo(
+      name: dco_decode_String(arr[0]),
+      fractionSize: dco_decode_u_32(arr[1]),
+      spacing: dco_decode_opt_box_autoadd_u_32(arr[2]),
+      symbol: dco_decode_opt_box_autoadd_symbol(arr[3]),
+      uniqSymbol: dco_decode_opt_box_autoadd_symbol(arr[4]),
+      localizedName: dco_decode_list_localized_name(arr[5]),
+      localeOverrides: dco_decode_list_locale_overrides(arr[6]),
+    );
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  FiatCurrency dco_decode_fiat_currency(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FiatCurrency(
+      id: dco_decode_String(arr[0]),
+      info: dco_decode_currency_info(arr[1]),
+    );
+  }
+
+  @protected
+  GetInfoResponse dco_decode_get_info_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return GetInfoResponse(
+      balanceSat: dco_decode_u_64(arr[0]),
+      pendingSendSat: dco_decode_u_64(arr[1]),
+      pendingReceiveSat: dco_decode_u_64(arr[2]),
+      pubkey: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  InputType dco_decode_input_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return InputType_BitcoinAddress(
+          address: dco_decode_box_autoadd_bitcoin_address_data(raw[1]),
         );
-        
-
-@override Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_disconnect(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkDisconnectConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkDisconnectConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_disconnect",
-            argNames: ["that"],
+      case 1:
+        return InputType_Bolt11(
+          invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),
         );
-        
-
-@override void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache(arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_empty_wallet_cache",
-            argNames: ["that"],
+      case 2:
+        return InputType_NodeId(
+          nodeId: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_list_rate,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchFiatRatesConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_fetch_fiat_rates",
-            argNames: ["that"],
+      case 3:
+        return InputType_Url(
+          url: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<LightningPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchLightningLimits({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_lightning_payment_limits_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchLightningLimitsConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_fetch_lightning_limits",
-            argNames: ["that"],
+      case 4:
+        return InputType_LnUrlPay(
+          data: dco_decode_box_autoadd_ln_url_pay_request_data(raw[1]),
         );
-        
-
-@override Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_onchain_payment_limits_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkFetchOnchainLimitsConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchOnchainLimitsConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_fetch_onchain_limits",
-            argNames: ["that"],
+      case 5:
+        return InputType_LnUrlWithdraw(
+          data: dco_decode_box_autoadd_ln_url_withdraw_request_data(raw[1]),
         );
-        
-
-@override Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_get_info(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_get_info_response,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkGetInfoConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkGetInfoConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_get_info",
-            argNames: ["that"],
+      case 6:
+        return InputType_LnUrlAuth(
+          data: dco_decode_box_autoadd_ln_url_auth_request_data(raw[1]),
         );
-        
-
-@override Future<List<FiatCurrency>> crateBindingsBindingLiquidSdkListFiatCurrencies({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_list_fiat_currency,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkListFiatCurrenciesConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_list_fiat_currencies",
-            argNames: ["that"],
+      case 7:
+        return InputType_LnUrlError(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<List<Payment>> crateBindingsBindingLiquidSdkListPayments({required BindingLiquidSdk that , required ListPaymentsRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_list_payments_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_list_payments(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_list_payment,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkListPaymentsConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  LightningPaymentLimitsResponse dco_decode_lightning_payment_limits_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LightningPaymentLimitsResponse(
+      send: dco_decode_limits(arr[0]),
+      receive: dco_decode_limits(arr[1]),
+    );
+  }
 
+  @protected
+  Limits dco_decode_limits(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return Limits(
+      minSat: dco_decode_u_64(arr[0]),
+      maxSat: dco_decode_u_64(arr[1]),
+      maxZeroConfSat: dco_decode_u_64(arr[2]),
+    );
+  }
 
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkListPaymentsConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_list_payments",
-            argNames: ["that", "req"],
+  @protected
+  LiquidNetwork dco_decode_liquid_network(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return LiquidNetwork.values[raw as int];
+  }
+
+  @protected
+  List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_fiat_currency).toList();
+  }
+
+  @protected
+  List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_locale_overrides).toList();
+  }
+
+  @protected
+  List<LocalizedName> dco_decode_list_localized_name(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_localized_name).toList();
+  }
+
+  @protected
+  List<Payment> dco_decode_list_payment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_payment).toList();
+  }
+
+  @protected
+  List<PaymentType> dco_decode_list_payment_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_payment_type).toList();
+  }
+
+  @protected
+  ListPaymentsRequest dco_decode_list_payments_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return ListPaymentsRequest(
+      filters: dco_decode_opt_list_payment_type(arr[0]),
+      fromTimestamp: dco_decode_opt_box_autoadd_i_64(arr[1]),
+      toTimestamp: dco_decode_opt_box_autoadd_i_64(arr[2]),
+      offset: dco_decode_opt_box_autoadd_u_32(arr[3]),
+      limit: dco_decode_opt_box_autoadd_u_32(arr[4]),
+    );
+  }
+
+  @protected
+  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint8List;
+  }
+
+  @protected
+  List<Rate> dco_decode_list_rate(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_rate).toList();
+  }
+
+  @protected
+  List<RefundableSwap> dco_decode_list_refundable_swap(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_refundable_swap).toList();
+  }
+
+  @protected
+  List<RouteHint> dco_decode_list_route_hint(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_hint).toList();
+  }
+
+  @protected
+  List<RouteHintHop> dco_decode_list_route_hint_hop(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_hint_hop).toList();
+  }
+
+  @protected
+  LNInvoice dco_decode_ln_invoice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return LNInvoice(
+      bolt11: dco_decode_String(arr[0]),
+      network: dco_decode_network(arr[1]),
+      payeePubkey: dco_decode_String(arr[2]),
+      paymentHash: dco_decode_String(arr[3]),
+      description: dco_decode_opt_String(arr[4]),
+      descriptionHash: dco_decode_opt_String(arr[5]),
+      amountMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+      timestamp: dco_decode_u_64(arr[7]),
+      expiry: dco_decode_u_64(arr[8]),
+      routingHints: dco_decode_list_route_hint(arr[9]),
+      paymentSecret: dco_decode_list_prim_u_8_strict(arr[10]),
+      minFinalCltvExpiryDelta: dco_decode_u_64(arr[11]),
+    );
+  }
+
+  @protected
+  LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlAuthError_Generic(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<List<RefundableSwap>> crateBindingsBindingLiquidSdkListRefundables({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_list_refundables(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_list_refundable_swap,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkListRefundablesConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkListRefundablesConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_list_refundables",
-            argNames: ["that"],
+      case 1:
+        return LnUrlAuthError_InvalidUri(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<LnUrlCallbackStatus> crateBindingsBindingLiquidSdkLnurlAuth({required BindingLiquidSdk that , required LnUrlAuthRequestData reqData })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_ln_url_auth_request_data(reqData);
-            return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_auth(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_ln_url_callback_status,
-          decodeErrorData: dco_decode_ln_url_auth_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta,
-            argValues: [that, reqData],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlAuthConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_lnurl_auth",
-            argNames: ["that", "reqData"],
+      case 2:
+        return LnUrlAuthError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<LnUrlPayResult> crateBindingsBindingLiquidSdkLnurlPay({required BindingLiquidSdk that , required LnUrlPayRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_ln_url_pay_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_pay(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_ln_url_pay_result,
-          decodeErrorData: dco_decode_ln_url_pay_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkLnurlPayConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  LnUrlAuthRequestData dco_decode_ln_url_auth_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return LnUrlAuthRequestData(
+      k1: dco_decode_String(arr[0]),
+      action: dco_decode_opt_String(arr[1]),
+      domain: dco_decode_String(arr[2]),
+      url: dco_decode_String(arr[3]),
+    );
+  }
 
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlPayConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_lnurl_pay",
-            argNames: ["that", "req"],
+  @protected
+  LnUrlCallbackStatus dco_decode_ln_url_callback_status(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlCallbackStatus_Ok();
+      case 1:
+        return LnUrlCallbackStatus_ErrorStatus(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw({required BindingLiquidSdk that , required LnUrlWithdrawRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_ln_url_withdraw_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_ln_url_withdraw_result,
-          decodeErrorData: dco_decode_ln_url_withdraw_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  LnUrlErrorData dco_decode_ln_url_error_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return LnUrlErrorData(
+      reason: dco_decode_String(arr[0]),
+    );
+  }
 
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_lnurl_withdraw",
-            argNames: ["that", "req"],
+  @protected
+  LnUrlPayError dco_decode_ln_url_pay_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlPayError_AlreadyPaid();
+      case 1:
+        return LnUrlPayError_Generic(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain({required BindingLiquidSdk that , required PayOnchainRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_pay_onchain_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_pay_onchain(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_send_payment_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPayOnchainConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPayOnchainConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_pay_onchain",
-            argNames: ["that", "req"],
+      case 2:
+        return LnUrlPayError_InvalidAmount(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin({required BindingLiquidSdk that , required PrepareBuyBitcoinRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_buy_bitcoin_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_prepare_buy_bitcoin_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPrepareBuyBitcoinConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareBuyBitcoinConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_buy_bitcoin",
-            argNames: ["that", "req"],
+      case 3:
+        return LnUrlPayError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PreparePayOnchainResponse> crateBindingsBindingLiquidSdkPreparePayOnchain({required BindingLiquidSdk that , required PreparePayOnchainRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_pay_onchain_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_prepare_pay_onchain_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPreparePayOnchainConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPreparePayOnchainConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_pay_onchain",
-            argNames: ["that", "req"],
+      case 4:
+        return LnUrlPayError_InvalidNetwork(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PrepareReceiveOnchainResponse> crateBindingsBindingLiquidSdkPrepareReceiveOnchain({required BindingLiquidSdk that , required PrepareReceiveOnchainRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_receive_onchain_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_receive_onchain(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_prepare_receive_onchain_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPrepareReceiveOnchainConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareReceiveOnchainConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_receive_onchain",
-            argNames: ["that", "req"],
+      case 5:
+        return LnUrlPayError_InvalidUri(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PrepareReceivePaymentResponse> crateBindingsBindingLiquidSdkPrepareReceivePayment({required BindingLiquidSdk that , required PrepareReceivePaymentRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_receive_payment_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_receive_payment(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_prepare_receive_payment_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPrepareReceivePaymentConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareReceivePaymentConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_receive_payment",
-            argNames: ["that", "req"],
+      case 6:
+        return LnUrlPayError_InvoiceExpired(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PrepareRefundResponse> crateBindingsBindingLiquidSdkPrepareRefund({required BindingLiquidSdk that , required PrepareRefundRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_refund_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_refund(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_prepare_refund_response,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPrepareRefundConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareRefundConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_refund",
-            argNames: ["that", "req"],
+      case 7:
+        return LnUrlPayError_PaymentFailed(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<PrepareSendResponse> crateBindingsBindingLiquidSdkPrepareSendPayment({required BindingLiquidSdk that , required PrepareSendRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_send_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_prepare_send_payment(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_prepare_send_payment",
-            argNames: ["that", "req"],
+      case 8:
+        return LnUrlPayError_PaymentTimeout(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<ReceiveOnchainResponse> crateBindingsBindingLiquidSdkReceiveOnchain({required BindingLiquidSdk that , required PrepareReceiveOnchainResponse req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_prepare_receive_onchain_response(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_receive_onchain(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_receive_onchain_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkReceiveOnchainConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkReceiveOnchainConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_receive_onchain",
-            argNames: ["that", "req"],
+      case 9:
+        return LnUrlPayError_RouteNotFound(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment({required BindingLiquidSdk that , required ReceivePaymentRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_receive_payment_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_receive_payment(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_receive_payment_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkReceivePaymentConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkReceivePaymentConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_receive_payment",
-            argNames: ["that", "req"],
+      case 10:
+        return LnUrlPayError_RouteTooExpensive(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<RecommendedFees> crateBindingsBindingLiquidSdkRecommendedFees({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_recommended_fees(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_recommended_fees,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkRecommendedFeesConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_recommended_fees",
-            argNames: ["that"],
+      case 11:
+        return LnUrlPayError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<RefundResponse> crateBindingsBindingLiquidSdkRefund({required BindingLiquidSdk that , required RefundRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_refund_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_refund(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_refund_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkRefundConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  LnUrlPayErrorData dco_decode_ln_url_pay_error_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LnUrlPayErrorData(
+      paymentHash: dco_decode_String(arr[0]),
+      reason: dco_decode_String(arr[1]),
+    );
+  }
 
+  @protected
+  LnUrlPayRequest dco_decode_ln_url_pay_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return LnUrlPayRequest(
+      data: dco_decode_ln_url_pay_request_data(arr[0]),
+      amountMsat: dco_decode_u_64(arr[1]),
+      comment: dco_decode_opt_String(arr[2]),
+      paymentLabel: dco_decode_opt_String(arr[3]),
+      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),
+    );
+  }
 
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkRefundConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_refund",
-            argNames: ["that", "req"],
+  @protected
+  LnUrlPayRequestData dco_decode_ln_url_pay_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return LnUrlPayRequestData(
+      callback: dco_decode_String(arr[0]),
+      minSendable: dco_decode_u_64(arr[1]),
+      maxSendable: dco_decode_u_64(arr[2]),
+      metadataStr: dco_decode_String(arr[3]),
+      commentAllowed: dco_decode_u_16(arr[4]),
+      domain: dco_decode_String(arr[5]),
+      allowsNostr: dco_decode_bool(arr[6]),
+      nostrPubkey: dco_decode_opt_String(arr[7]),
+      lnAddress: dco_decode_opt_String(arr[8]),
+    );
+  }
+
+  @protected
+  LnUrlPayResult dco_decode_ln_url_pay_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlPayResult_EndpointSuccess(
+          data: dco_decode_box_autoadd_ln_url_pay_success_data(raw[1]),
         );
-        
-
-@override Future<void> crateBindingsBindingLiquidSdkRescanOnchainSwaps({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkRescanOnchainSwapsConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_rescan_onchain_swaps",
-            argNames: ["that"],
+      case 1:
+        return LnUrlPayResult_EndpointError(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
-        
-
-@override void crateBindingsBindingLiquidSdkRestore({required BindingLiquidSdk that , required RestoreRequest req })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_box_autoadd_restore_request(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_restore(arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkRestoreConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkRestoreConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_restore",
-            argNames: ["that", "req"],
+      case 2:
+        return LnUrlPayResult_PayError(
+          data: dco_decode_box_autoadd_ln_url_pay_error_data(raw[1]),
         );
-        
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Future<SendPaymentResponse> crateBindingsBindingLiquidSdkSendPayment({required BindingLiquidSdk that , required SendPaymentRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-var arg1 = cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(req);
-            return wire.wire__crate__bindings__BindingLiquidSdk_send_payment(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_send_payment_response,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkSendPaymentConstMeta,
-            argValues: [that, req],
-            apiImpl: this,
-        )); }
+  @protected
+  LnUrlPaySuccessData dco_decode_ln_url_pay_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LnUrlPaySuccessData(
+      payment: dco_decode_payment(arr[0]),
+      successAction: dco_decode_opt_box_autoadd_success_action_processed(arr[1]),
+    );
+  }
 
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkSendPaymentConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_send_payment",
-            argNames: ["that", "req"],
+  @protected
+  LnUrlWithdrawError dco_decode_ln_url_withdraw_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlWithdrawError_Generic(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(that);
-            return wire.wire__crate__bindings__BindingLiquidSdk_sync(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsBindingLiquidSdkSyncConstMeta,
-            argValues: [that],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingLiquidSdkSyncConstMeta => const TaskConstMeta(
-            debugName: "BindingLiquidSdk_sync",
-            argNames: ["that"],
+      case 1:
+        return LnUrlWithdrawError_InvalidAmount(
+          err: dco_decode_String(raw[1]),
         );
-        
-
-@override Future<void> crateBindingsBindingEventListenerOnEvent({required BindingEventListener that , required SdkEvent e })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_box_autoadd_binding_event_listener(that);
-var arg1 = cst_encode_box_autoadd_sdk_event(e);
-            return wire.wire__crate__bindings__binding_event_listener_on_event(port_, arg0, arg1);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
-          decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateBindingsBindingEventListenerOnEventConstMeta,
-            argValues: [that, e],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsBindingEventListenerOnEventConstMeta => const TaskConstMeta(
-            debugName: "binding_event_listener_on_event",
-            argNames: ["that", "e"],
+      case 2:
+        return LnUrlWithdrawError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
         );
-        
+      case 3:
+        return LnUrlWithdrawError_InvalidUri(
+          err: dco_decode_String(raw[1]),
+        );
+      case 4:
+        return LnUrlWithdrawError_InvoiceNoRoutingHints(
+          err: dco_decode_String(raw[1]),
+        );
+      case 5:
+        return LnUrlWithdrawError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
 
-@override Stream<LogEntry> crateBindingsBreezLogStream()  { 
-            final s = RustStreamSink<LogEntry>();
-            unawaited(handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_StreamSink_log_entry_Dco(s);
-            return wire.wire__crate__bindings__breez_log_stream(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_unit,
+  @protected
+  LnUrlWithdrawRequest dco_decode_ln_url_withdraw_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LnUrlWithdrawRequest(
+      data: dco_decode_ln_url_withdraw_request_data(arr[0]),
+      amountMsat: dco_decode_u_64(arr[1]),
+      description: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
+  LnUrlWithdrawRequestData dco_decode_ln_url_withdraw_request_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return LnUrlWithdrawRequestData(
+      callback: dco_decode_String(arr[0]),
+      k1: dco_decode_String(arr[1]),
+      defaultDescription: dco_decode_String(arr[2]),
+      minWithdrawable: dco_decode_u_64(arr[3]),
+      maxWithdrawable: dco_decode_u_64(arr[4]),
+    );
+  }
+
+  @protected
+  LnUrlWithdrawResult dco_decode_ln_url_withdraw_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LnUrlWithdrawResult_Ok(
+          data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),
+        );
+      case 1:
+        return LnUrlWithdrawResult_Timeout(
+          data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),
+        );
+      case 2:
+        return LnUrlWithdrawResult_ErrorStatus(
+          data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData dco_decode_ln_url_withdraw_success_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return LnUrlWithdrawSuccessData(
+      invoice: dco_decode_ln_invoice(arr[0]),
+    );
+  }
+
+  @protected
+  LocaleOverrides dco_decode_locale_overrides(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LocaleOverrides(
+      locale: dco_decode_String(arr[0]),
+      spacing: dco_decode_opt_box_autoadd_u_32(arr[1]),
+      symbol: dco_decode_symbol(arr[2]),
+    );
+  }
+
+  @protected
+  LocalizedName dco_decode_localized_name(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LocalizedName(
+      locale: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  LogEntry dco_decode_log_entry(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LogEntry(
+      line: dco_decode_String(arr[0]),
+      level: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  MessageSuccessActionData dco_decode_message_success_action_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return MessageSuccessActionData(
+      message: dco_decode_String(arr[0]),
+    );
+  }
+
+  @protected
+  Network dco_decode_network(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return Network.values[raw as int];
+  }
+
+  @protected
+  OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return OnchainPaymentLimitsResponse(
+      send: dco_decode_limits(arr[0]),
+      receive: dco_decode_limits(arr[1]),
+    );
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  SuccessActionProcessed? dco_decode_opt_box_autoadd_success_action_processed(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_success_action_processed(raw);
+  }
+
+  @protected
+  Symbol? dco_decode_opt_box_autoadd_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_symbol(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_payment_type(raw);
+  }
+
+  @protected
+  PayOnchainRequest dco_decode_pay_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PayOnchainRequest(
+      address: dco_decode_String(arr[0]),
+      prepareRes: dco_decode_prepare_pay_onchain_response(arr[1]),
+    );
+  }
+
+  @protected
+  Payment dco_decode_payment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return Payment(
+      txId: dco_decode_opt_String(arr[0]),
+      swapId: dco_decode_opt_String(arr[1]),
+      timestamp: dco_decode_u_32(arr[2]),
+      amountSat: dco_decode_u_64(arr[3]),
+      feesSat: dco_decode_u_64(arr[4]),
+      preimage: dco_decode_opt_String(arr[5]),
+      bolt11: dco_decode_opt_String(arr[6]),
+      description: dco_decode_String(arr[7]),
+      refundTxId: dco_decode_opt_String(arr[8]),
+      refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[9]),
+      paymentType: dco_decode_payment_type(arr[10]),
+      status: dco_decode_payment_state(arr[11]),
+    );
+  }
+
+  @protected
+  PaymentError dco_decode_payment_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return PaymentError_AlreadyClaimed();
+      case 1:
+        return PaymentError_AlreadyPaid();
+      case 2:
+        return PaymentError_PaymentInProgress();
+      case 3:
+        return PaymentError_AmountOutOfRange();
+      case 4:
+        return PaymentError_Generic(
+          err: dco_decode_String(raw[1]),
+        );
+      case 5:
+        return PaymentError_InvalidOrExpiredFees();
+      case 6:
+        return PaymentError_InsufficientFunds();
+      case 7:
+        return PaymentError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
+        );
+      case 8:
+        return PaymentError_InvalidPreimage();
+      case 9:
+        return PaymentError_LwkError(
+          err: dco_decode_String(raw[1]),
+        );
+      case 10:
+        return PaymentError_PairsNotFound();
+      case 11:
+        return PaymentError_PaymentTimeout();
+      case 12:
+        return PaymentError_PersistError();
+      case 13:
+        return PaymentError_ReceiveError(
+          err: dco_decode_String(raw[1]),
+        );
+      case 14:
+        return PaymentError_Refunded(
+          err: dco_decode_String(raw[1]),
+          refundTxId: dco_decode_String(raw[2]),
+        );
+      case 15:
+        return PaymentError_SelfTransferNotSupported();
+      case 16:
+        return PaymentError_SendError(
+          err: dco_decode_String(raw[1]),
+        );
+      case 17:
+        return PaymentError_SignerError(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  PaymentState dco_decode_payment_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PaymentState.values[raw as int];
+  }
+
+  @protected
+  PaymentType dco_decode_payment_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PaymentType.values[raw as int];
+  }
+
+  @protected
+  PrepareBuyBitcoinRequest dco_decode_prepare_buy_bitcoin_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PrepareBuyBitcoinRequest(
+      provider: dco_decode_buy_bitcoin_provider(arr[0]),
+      amountSat: dco_decode_u_64(arr[1]),
+    );
+  }
+
+  @protected
+  PrepareBuyBitcoinResponse dco_decode_prepare_buy_bitcoin_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PrepareBuyBitcoinResponse(
+      provider: dco_decode_buy_bitcoin_provider(arr[0]),
+      amountSat: dco_decode_u_64(arr[1]),
+      feesSat: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  PreparePayOnchainRequest dco_decode_prepare_pay_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PreparePayOnchainRequest(
+      receiverAmountSat: dco_decode_u_64(arr[0]),
+      satPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[1]),
+    );
+  }
+
+  @protected
+  PreparePayOnchainResponse dco_decode_prepare_pay_onchain_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PreparePayOnchainResponse(
+      receiverAmountSat: dco_decode_u_64(arr[0]),
+      claimFeesSat: dco_decode_u_64(arr[1]),
+      totalFeesSat: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  PrepareReceiveOnchainRequest dco_decode_prepare_receive_onchain_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return PrepareReceiveOnchainRequest(
+      payerAmountSat: dco_decode_u_64(arr[0]),
+    );
+  }
+
+  @protected
+  PrepareReceiveOnchainResponse dco_decode_prepare_receive_onchain_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PrepareReceiveOnchainResponse(
+      payerAmountSat: dco_decode_u_64(arr[0]),
+      feesSat: dco_decode_u_64(arr[1]),
+    );
+  }
+
+  @protected
+  PrepareReceivePaymentRequest dco_decode_prepare_receive_payment_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PrepareReceivePaymentRequest(
+      payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[0]),
+      useLightning: dco_decode_bool(arr[1]),
+    );
+  }
+
+  @protected
+  PrepareReceivePaymentResponse dco_decode_prepare_receive_payment_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PrepareReceivePaymentResponse(
+      payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[0]),
+      feesSat: dco_decode_u_64(arr[1]),
+      useLightning: dco_decode_bool(arr[2]),
+    );
+  }
+
+  @protected
+  PrepareRefundRequest dco_decode_prepare_refund_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PrepareRefundRequest(
+      swapAddress: dco_decode_String(arr[0]),
+      refundAddress: dco_decode_String(arr[1]),
+      satPerVbyte: dco_decode_u_32(arr[2]),
+    );
+  }
+
+  @protected
+  PrepareRefundResponse dco_decode_prepare_refund_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PrepareRefundResponse(
+      txVsize: dco_decode_u_32(arr[0]),
+      txFeeSat: dco_decode_u_64(arr[1]),
+      refundTxId: dco_decode_opt_String(arr[2]),
+    );
+  }
+
+  @protected
+  PrepareSendRequest dco_decode_prepare_send_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PrepareSendRequest(
+      paymentDestination: dco_decode_String(arr[0]),
+      amountSat: dco_decode_opt_box_autoadd_u_64(arr[1]),
+    );
+  }
+
+  @protected
+  Rate dco_decode_rate(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Rate(
+      coin: dco_decode_String(arr[0]),
+      value: dco_decode_f_64(arr[1]),
+    );
+  }
+
+  @protected
+  ReceiveDestination dco_decode_receive_destination(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return ReceiveDestination_BIP21(
+          uri: dco_decode_String(raw[1]),
+        );
+      case 1:
+        return ReceiveDestination_Liquid(
+          address: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return ReceiveDestination_Bolt11(
+          id: dco_decode_String(raw[1]),
+          invoice: dco_decode_String(raw[2]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  ReceiveOnchainResponse dco_decode_receive_onchain_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ReceiveOnchainResponse(
+      address: dco_decode_String(arr[0]),
+      bip21: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  ReceivePaymentRequest dco_decode_receive_payment_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return ReceivePaymentRequest(
+      description: dco_decode_opt_String(arr[0]),
+      prepareResponse: dco_decode_prepare_receive_payment_response(arr[1]),
+    );
+  }
+
+  @protected
+  ReceivePaymentResponse dco_decode_receive_payment_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return ReceivePaymentResponse(
+      receiveDestination: dco_decode_receive_destination(arr[0]),
+    );
+  }
+
+  @protected
+  RecommendedFees dco_decode_recommended_fees(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return RecommendedFees(
+      fastestFee: dco_decode_u_64(arr[0]),
+      halfHourFee: dco_decode_u_64(arr[1]),
+      hourFee: dco_decode_u_64(arr[2]),
+      economyFee: dco_decode_u_64(arr[3]),
+      minimumFee: dco_decode_u_64(arr[4]),
+    );
+  }
+
+  @protected
+  RefundRequest dco_decode_refund_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return RefundRequest(
+      swapAddress: dco_decode_String(arr[0]),
+      refundAddress: dco_decode_String(arr[1]),
+      satPerVbyte: dco_decode_u_32(arr[2]),
+    );
+  }
+
+  @protected
+  RefundResponse dco_decode_refund_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return RefundResponse(
+      refundTxId: dco_decode_String(arr[0]),
+    );
+  }
+
+  @protected
+  RefundableSwap dco_decode_refundable_swap(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return RefundableSwap(
+      swapAddress: dco_decode_String(arr[0]),
+      timestamp: dco_decode_u_32(arr[1]),
+      amountSat: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  RestoreRequest dco_decode_restore_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return RestoreRequest(
+      backupPath: dco_decode_opt_String(arr[0]),
+    );
+  }
+
+  @protected
+  RouteHint dco_decode_route_hint(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return RouteHint(
+      hops: dco_decode_list_route_hint_hop(arr[0]),
+    );
+  }
+
+  @protected
+  RouteHintHop dco_decode_route_hint_hop(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return RouteHintHop(
+      srcNodeId: dco_decode_String(arr[0]),
+      shortChannelId: dco_decode_u_64(arr[1]),
+      feesBaseMsat: dco_decode_u_32(arr[2]),
+      feesProportionalMillionths: dco_decode_u_32(arr[3]),
+      cltvExpiryDelta: dco_decode_u_64(arr[4]),
+      htlcMinimumMsat: dco_decode_opt_box_autoadd_u_64(arr[5]),
+      htlcMaximumMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+    );
+  }
+
+  @protected
+  SdkError dco_decode_sdk_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return SdkError_AlreadyStarted();
+      case 1:
+        return SdkError_Generic(
+          err: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return SdkError_NotStarted();
+      case 3:
+        return SdkError_ServiceConnectivity(
+          err: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  SdkEvent dco_decode_sdk_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return SdkEvent_PaymentFailed(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 1:
+        return SdkEvent_PaymentPending(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 2:
+        return SdkEvent_PaymentRefunded(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 3:
+        return SdkEvent_PaymentRefundPending(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 4:
+        return SdkEvent_PaymentSucceeded(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 5:
+        return SdkEvent_PaymentWaitingConfirmation(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 6:
+        return SdkEvent_Synced();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  SendPaymentResponse dco_decode_send_payment_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return SendPaymentResponse(
+      payment: dco_decode_payment(arr[0]),
+    );
+  }
+
+  @protected
+  SuccessActionProcessed dco_decode_success_action_processed(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return SuccessActionProcessed_Aes(
+          result: dco_decode_box_autoadd_aes_success_action_data_result(raw[1]),
+        );
+      case 1:
+        return SuccessActionProcessed_Message(
+          data: dco_decode_box_autoadd_message_success_action_data(raw[1]),
+        );
+      case 2:
+        return SuccessActionProcessed_Url(
+          data: dco_decode_box_autoadd_url_success_action_data(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  Symbol dco_decode_symbol(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return Symbol(
+      grapheme: dco_decode_opt_String(arr[0]),
+      template: dco_decode_opt_String(arr[1]),
+      rtl: dco_decode_opt_box_autoadd_bool(arr[2]),
+      position: dco_decode_opt_box_autoadd_u_32(arr[3]),
+    );
+  }
+
+  @protected
+  int dco_decode_u_16(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
+  int dco_decode_u_8(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  void dco_decode_unit(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return;
+  }
+
+  @protected
+  UrlSuccessActionData dco_decode_url_success_action_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return UrlSuccessActionData(
+      description: dco_decode_String(arr[0]),
+      url: dco_decode_String(arr[1]),
+      matchesCallbackDomain: dco_decode_bool(arr[2]),
+    );
+  }
+
+  @protected
+  BigInt dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_String(deserializer);
+    return AnyhowException(inner);
+  }
+
+  @protected
+  BindingLiquidSdk
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  PrepareSendResponse
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  SendPaymentRequest
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SendPaymentRequestImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  BindingLiquidSdk
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  BindingLiquidSdk sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BindingLiquidSdkImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  PrepareSendResponse
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PrepareSendResponseImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  SendPaymentRequest
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SendPaymentRequestImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Dco(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<SdkEvent> sse_decode_StreamSink_sdk_event_Dco(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  String sse_decode_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
+    return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  AesSuccessActionDataDecrypted sse_decode_aes_success_action_data_decrypted(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_description = sse_decode_String(deserializer);
+    var var_plaintext = sse_decode_String(deserializer);
+    return AesSuccessActionDataDecrypted(description: var_description, plaintext: var_plaintext);
+  }
+
+  @protected
+  AesSuccessActionDataResult sse_decode_aes_success_action_data_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_data = sse_decode_box_autoadd_aes_success_action_data_decrypted(deserializer);
+        return AesSuccessActionDataResult_Decrypted(data: var_data);
+      case 1:
+        var var_reason = sse_decode_String(deserializer);
+        return AesSuccessActionDataResult_ErrorStatus(reason: var_reason);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  BackupRequest sse_decode_backup_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_backupPath = sse_decode_opt_String(deserializer);
+    return BackupRequest(backupPath: var_backupPath);
+  }
+
+  @protected
+  BindingEventListener sse_decode_binding_event_listener(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_stream = sse_decode_StreamSink_sdk_event_Dco(deserializer);
+    return BindingEventListener(stream: var_stream);
+  }
+
+  @protected
+  BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_address = sse_decode_String(deserializer);
+    var var_network = sse_decode_network(deserializer);
+    var var_amountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_label = sse_decode_opt_String(deserializer);
+    var var_message = sse_decode_opt_String(deserializer);
+    return BitcoinAddressData(
+        address: var_address,
+        network: var_network,
+        amountSat: var_amountSat,
+        label: var_label,
+        message: var_message);
+  }
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  AesSuccessActionDataDecrypted sse_decode_box_autoadd_aes_success_action_data_decrypted(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_aes_success_action_data_decrypted(deserializer));
+  }
+
+  @protected
+  AesSuccessActionDataResult sse_decode_box_autoadd_aes_success_action_data_result(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_aes_success_action_data_result(deserializer));
+  }
+
+  @protected
+  BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_backup_request(deserializer));
+  }
+
+  @protected
+  BindingEventListener sse_decode_box_autoadd_binding_event_listener(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_binding_event_listener(deserializer));
+  }
+
+  @protected
+  BitcoinAddressData sse_decode_box_autoadd_bitcoin_address_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bitcoin_address_data(deserializer));
+  }
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bool(deserializer));
+  }
+
+  @protected
+  BuyBitcoinRequest sse_decode_box_autoadd_buy_bitcoin_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_buy_bitcoin_request(deserializer));
+  }
+
+  @protected
+  ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_connect_request(deserializer));
+  }
+
+  @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_i_64(deserializer));
+  }
+
+  @protected
+  ListPaymentsRequest sse_decode_box_autoadd_list_payments_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_list_payments_request(deserializer));
+  }
+
+  @protected
+  LNInvoice sse_decode_box_autoadd_ln_invoice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_invoice(deserializer));
+  }
+
+  @protected
+  LnUrlAuthRequestData sse_decode_box_autoadd_ln_url_auth_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_auth_request_data(deserializer));
+  }
+
+  @protected
+  LnUrlErrorData sse_decode_box_autoadd_ln_url_error_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_error_data(deserializer));
+  }
+
+  @protected
+  LnUrlPayErrorData sse_decode_box_autoadd_ln_url_pay_error_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_pay_error_data(deserializer));
+  }
+
+  @protected
+  LnUrlPayRequest sse_decode_box_autoadd_ln_url_pay_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_pay_request(deserializer));
+  }
+
+  @protected
+  LnUrlPayRequestData sse_decode_box_autoadd_ln_url_pay_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_pay_request_data(deserializer));
+  }
+
+  @protected
+  LnUrlPaySuccessData sse_decode_box_autoadd_ln_url_pay_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_pay_success_data(deserializer));
+  }
+
+  @protected
+  LnUrlWithdrawRequest sse_decode_box_autoadd_ln_url_withdraw_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_withdraw_request(deserializer));
+  }
+
+  @protected
+  LnUrlWithdrawRequestData sse_decode_box_autoadd_ln_url_withdraw_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_withdraw_request_data(deserializer));
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_box_autoadd_ln_url_withdraw_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ln_url_withdraw_success_data(deserializer));
+  }
+
+  @protected
+  MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_message_success_action_data(deserializer));
+  }
+
+  @protected
+  PayOnchainRequest sse_decode_box_autoadd_pay_onchain_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_pay_onchain_request(deserializer));
+  }
+
+  @protected
+  Payment sse_decode_box_autoadd_payment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_payment(deserializer));
+  }
+
+  @protected
+  PrepareBuyBitcoinRequest sse_decode_box_autoadd_prepare_buy_bitcoin_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_buy_bitcoin_request(deserializer));
+  }
+
+  @protected
+  PreparePayOnchainRequest sse_decode_box_autoadd_prepare_pay_onchain_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_pay_onchain_request(deserializer));
+  }
+
+  @protected
+  PrepareReceiveOnchainRequest sse_decode_box_autoadd_prepare_receive_onchain_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_receive_onchain_request(deserializer));
+  }
+
+  @protected
+  PrepareReceiveOnchainResponse sse_decode_box_autoadd_prepare_receive_onchain_response(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_receive_onchain_response(deserializer));
+  }
+
+  @protected
+  PrepareReceivePaymentRequest sse_decode_box_autoadd_prepare_receive_payment_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_receive_payment_request(deserializer));
+  }
+
+  @protected
+  PrepareRefundRequest sse_decode_box_autoadd_prepare_refund_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_refund_request(deserializer));
+  }
+
+  @protected
+  PrepareSendRequest sse_decode_box_autoadd_prepare_send_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_send_request(deserializer));
+  }
+
+  @protected
+  ReceivePaymentRequest sse_decode_box_autoadd_receive_payment_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_receive_payment_request(deserializer));
+  }
+
+  @protected
+  RefundRequest sse_decode_box_autoadd_refund_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_refund_request(deserializer));
+  }
+
+  @protected
+  RestoreRequest sse_decode_box_autoadd_restore_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_restore_request(deserializer));
+  }
+
+  @protected
+  SdkEvent sse_decode_box_autoadd_sdk_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_sdk_event(deserializer));
+  }
+
+  @protected
+  SuccessActionProcessed sse_decode_box_autoadd_success_action_processed(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_success_action_processed(deserializer));
+  }
+
+  @protected
+  Symbol sse_decode_box_autoadd_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_symbol(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_32(deserializer));
+  }
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_64(deserializer));
+  }
+
+  @protected
+  UrlSuccessActionData sse_decode_box_autoadd_url_success_action_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_url_success_action_data(deserializer));
+  }
+
+  @protected
+  BuyBitcoinProvider sse_decode_buy_bitcoin_provider(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return BuyBitcoinProvider.values[inner];
+  }
+
+  @protected
+  BuyBitcoinRequest sse_decode_buy_bitcoin_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_prepareRes = sse_decode_prepare_buy_bitcoin_response(deserializer);
+    var var_redirectUrl = sse_decode_opt_String(deserializer);
+    return BuyBitcoinRequest(prepareRes: var_prepareRes, redirectUrl: var_redirectUrl);
+  }
+
+  @protected
+  Config sse_decode_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_liquidElectrumUrl = sse_decode_String(deserializer);
+    var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
+    var var_mempoolspaceUrl = sse_decode_String(deserializer);
+    var var_workingDir = sse_decode_String(deserializer);
+    var var_network = sse_decode_liquid_network(deserializer);
+    var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
+    var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
+    var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    return Config(
+        liquidElectrumUrl: var_liquidElectrumUrl,
+        bitcoinElectrumUrl: var_bitcoinElectrumUrl,
+        mempoolspaceUrl: var_mempoolspaceUrl,
+        workingDir: var_workingDir,
+        network: var_network,
+        paymentTimeoutSec: var_paymentTimeoutSec,
+        zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat,
+        zeroConfMaxAmountSat: var_zeroConfMaxAmountSat);
+  }
+
+  @protected
+  ConnectRequest sse_decode_connect_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_mnemonic = sse_decode_String(deserializer);
+    var var_config = sse_decode_config(deserializer);
+    return ConnectRequest(mnemonic: var_mnemonic, config: var_config);
+  }
+
+  @protected
+  CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_fractionSize = sse_decode_u_32(deserializer);
+    var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_symbol = sse_decode_opt_box_autoadd_symbol(deserializer);
+    var var_uniqSymbol = sse_decode_opt_box_autoadd_symbol(deserializer);
+    var var_localizedName = sse_decode_list_localized_name(deserializer);
+    var var_localeOverrides = sse_decode_list_locale_overrides(deserializer);
+    return CurrencyInfo(
+        name: var_name,
+        fractionSize: var_fractionSize,
+        spacing: var_spacing,
+        symbol: var_symbol,
+        uniqSymbol: var_uniqSymbol,
+        localizedName: var_localizedName,
+        localeOverrides: var_localeOverrides);
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_info = sse_decode_currency_info(deserializer);
+    return FiatCurrency(id: var_id, info: var_info);
+  }
+
+  @protected
+  GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_balanceSat = sse_decode_u_64(deserializer);
+    var var_pendingSendSat = sse_decode_u_64(deserializer);
+    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
+    var var_pubkey = sse_decode_String(deserializer);
+    return GetInfoResponse(
+        balanceSat: var_balanceSat,
+        pendingSendSat: var_pendingSendSat,
+        pendingReceiveSat: var_pendingReceiveSat,
+        pubkey: var_pubkey);
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  InputType sse_decode_input_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_address = sse_decode_box_autoadd_bitcoin_address_data(deserializer);
+        return InputType_BitcoinAddress(address: var_address);
+      case 1:
+        var var_invoice = sse_decode_box_autoadd_ln_invoice(deserializer);
+        return InputType_Bolt11(invoice: var_invoice);
+      case 2:
+        var var_nodeId = sse_decode_String(deserializer);
+        return InputType_NodeId(nodeId: var_nodeId);
+      case 3:
+        var var_url = sse_decode_String(deserializer);
+        return InputType_Url(url: var_url);
+      case 4:
+        var var_data = sse_decode_box_autoadd_ln_url_pay_request_data(deserializer);
+        return InputType_LnUrlPay(data: var_data);
+      case 5:
+        var var_data = sse_decode_box_autoadd_ln_url_withdraw_request_data(deserializer);
+        return InputType_LnUrlWithdraw(data: var_data);
+      case 6:
+        var var_data = sse_decode_box_autoadd_ln_url_auth_request_data(deserializer);
+        return InputType_LnUrlAuth(data: var_data);
+      case 7:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return InputType_LnUrlError(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LightningPaymentLimitsResponse sse_decode_lightning_payment_limits_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_send = sse_decode_limits(deserializer);
+    var var_receive = sse_decode_limits(deserializer);
+    return LightningPaymentLimitsResponse(send: var_send, receive: var_receive);
+  }
+
+  @protected
+  Limits sse_decode_limits(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_minSat = sse_decode_u_64(deserializer);
+    var var_maxSat = sse_decode_u_64(deserializer);
+    var var_maxZeroConfSat = sse_decode_u_64(deserializer);
+    return Limits(minSat: var_minSat, maxSat: var_maxSat, maxZeroConfSat: var_maxZeroConfSat);
+  }
+
+  @protected
+  LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return LiquidNetwork.values[inner];
+  }
+
+  @protected
+  List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FiatCurrency>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_fiat_currency(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LocaleOverrides>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_locale_overrides(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LocalizedName> sse_decode_list_localized_name(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LocalizedName>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_localized_name(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<Payment> sse_decode_list_payment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Payment>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_payment(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<PaymentType> sse_decode_list_payment_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PaymentType>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_payment_type(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  ListPaymentsRequest sse_decode_list_payments_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_filters = sse_decode_opt_list_payment_type(deserializer);
+    var var_fromTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_toTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_offset = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_limit = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return ListPaymentsRequest(
+        filters: var_filters,
+        fromTimestamp: var_fromTimestamp,
+        toTimestamp: var_toTimestamp,
+        offset: var_offset,
+        limit: var_limit);
+  }
+
+  @protected
+  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<Rate> sse_decode_list_rate(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Rate>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_rate(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<RefundableSwap> sse_decode_list_refundable_swap(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RefundableSwap>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_refundable_swap(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<RouteHint> sse_decode_list_route_hint(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RouteHint>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_hint(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<RouteHintHop> sse_decode_list_route_hint_hop(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RouteHintHop>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_hint_hop(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_bolt11 = sse_decode_String(deserializer);
+    var var_network = sse_decode_network(deserializer);
+    var var_payeePubkey = sse_decode_String(deserializer);
+    var var_paymentHash = sse_decode_String(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
+    var var_descriptionHash = sse_decode_opt_String(deserializer);
+    var var_amountMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_timestamp = sse_decode_u_64(deserializer);
+    var var_expiry = sse_decode_u_64(deserializer);
+    var var_routingHints = sse_decode_list_route_hint(deserializer);
+    var var_paymentSecret = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_minFinalCltvExpiryDelta = sse_decode_u_64(deserializer);
+    return LNInvoice(
+        bolt11: var_bolt11,
+        network: var_network,
+        payeePubkey: var_payeePubkey,
+        paymentHash: var_paymentHash,
+        description: var_description,
+        descriptionHash: var_descriptionHash,
+        amountMsat: var_amountMsat,
+        timestamp: var_timestamp,
+        expiry: var_expiry,
+        routingHints: var_routingHints,
+        paymentSecret: var_paymentSecret,
+        minFinalCltvExpiryDelta: var_minFinalCltvExpiryDelta);
+  }
+
+  @protected
+  LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_Generic(err: var_err);
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_InvalidUri(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlAuthError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlAuthRequestData sse_decode_ln_url_auth_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_k1 = sse_decode_String(deserializer);
+    var var_action = sse_decode_opt_String(deserializer);
+    var var_domain = sse_decode_String(deserializer);
+    var var_url = sse_decode_String(deserializer);
+    return LnUrlAuthRequestData(k1: var_k1, action: var_action, domain: var_domain, url: var_url);
+  }
+
+  @protected
+  LnUrlCallbackStatus sse_decode_ln_url_callback_status(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return LnUrlCallbackStatus_Ok();
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlCallbackStatus_ErrorStatus(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlErrorData sse_decode_ln_url_error_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_reason = sse_decode_String(deserializer);
+    return LnUrlErrorData(reason: var_reason);
+  }
+
+  @protected
+  LnUrlPayError sse_decode_ln_url_pay_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return LnUrlPayError_AlreadyPaid();
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_Generic(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidAmount(err: var_err);
+      case 3:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidInvoice(err: var_err);
+      case 4:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidNetwork(err: var_err);
+      case 5:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvalidUri(err: var_err);
+      case 6:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_InvoiceExpired(err: var_err);
+      case 7:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_PaymentFailed(err: var_err);
+      case 8:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_PaymentTimeout(err: var_err);
+      case 9:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_RouteNotFound(err: var_err);
+      case 10:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_RouteTooExpensive(err: var_err);
+      case 11:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlPayErrorData sse_decode_ln_url_pay_error_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_paymentHash = sse_decode_String(deserializer);
+    var var_reason = sse_decode_String(deserializer);
+    return LnUrlPayErrorData(paymentHash: var_paymentHash, reason: var_reason);
+  }
+
+  @protected
+  LnUrlPayRequest sse_decode_ln_url_pay_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_data = sse_decode_ln_url_pay_request_data(deserializer);
+    var var_amountMsat = sse_decode_u_64(deserializer);
+    var var_comment = sse_decode_opt_String(deserializer);
+    var var_paymentLabel = sse_decode_opt_String(deserializer);
+    var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
+    return LnUrlPayRequest(
+        data: var_data,
+        amountMsat: var_amountMsat,
+        comment: var_comment,
+        paymentLabel: var_paymentLabel,
+        validateSuccessActionUrl: var_validateSuccessActionUrl);
+  }
+
+  @protected
+  LnUrlPayRequestData sse_decode_ln_url_pay_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_callback = sse_decode_String(deserializer);
+    var var_minSendable = sse_decode_u_64(deserializer);
+    var var_maxSendable = sse_decode_u_64(deserializer);
+    var var_metadataStr = sse_decode_String(deserializer);
+    var var_commentAllowed = sse_decode_u_16(deserializer);
+    var var_domain = sse_decode_String(deserializer);
+    var var_allowsNostr = sse_decode_bool(deserializer);
+    var var_nostrPubkey = sse_decode_opt_String(deserializer);
+    var var_lnAddress = sse_decode_opt_String(deserializer);
+    return LnUrlPayRequestData(
+        callback: var_callback,
+        minSendable: var_minSendable,
+        maxSendable: var_maxSendable,
+        metadataStr: var_metadataStr,
+        commentAllowed: var_commentAllowed,
+        domain: var_domain,
+        allowsNostr: var_allowsNostr,
+        nostrPubkey: var_nostrPubkey,
+        lnAddress: var_lnAddress);
+  }
+
+  @protected
+  LnUrlPayResult sse_decode_ln_url_pay_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_data = sse_decode_box_autoadd_ln_url_pay_success_data(deserializer);
+        return LnUrlPayResult_EndpointSuccess(data: var_data);
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlPayResult_EndpointError(data: var_data);
+      case 2:
+        var var_data = sse_decode_box_autoadd_ln_url_pay_error_data(deserializer);
+        return LnUrlPayResult_PayError(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlPaySuccessData sse_decode_ln_url_pay_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payment = sse_decode_payment(deserializer);
+    var var_successAction = sse_decode_opt_box_autoadd_success_action_processed(deserializer);
+    return LnUrlPaySuccessData(payment: var_payment, successAction: var_successAction);
+  }
+
+  @protected
+  LnUrlWithdrawError sse_decode_ln_url_withdraw_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_Generic(err: var_err);
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidAmount(err: var_err);
+      case 2:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidInvoice(err: var_err);
+      case 3:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvalidUri(err: var_err);
+      case 4:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_InvoiceNoRoutingHints(err: var_err);
+      case 5:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlWithdrawError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlWithdrawRequest sse_decode_ln_url_withdraw_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_data = sse_decode_ln_url_withdraw_request_data(deserializer);
+    var var_amountMsat = sse_decode_u_64(deserializer);
+    var var_description = sse_decode_opt_String(deserializer);
+    return LnUrlWithdrawRequest(data: var_data, amountMsat: var_amountMsat, description: var_description);
+  }
+
+  @protected
+  LnUrlWithdrawRequestData sse_decode_ln_url_withdraw_request_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_callback = sse_decode_String(deserializer);
+    var var_k1 = sse_decode_String(deserializer);
+    var var_defaultDescription = sse_decode_String(deserializer);
+    var var_minWithdrawable = sse_decode_u_64(deserializer);
+    var var_maxWithdrawable = sse_decode_u_64(deserializer);
+    return LnUrlWithdrawRequestData(
+        callback: var_callback,
+        k1: var_k1,
+        defaultDescription: var_defaultDescription,
+        minWithdrawable: var_minWithdrawable,
+        maxWithdrawable: var_maxWithdrawable);
+  }
+
+  @protected
+  LnUrlWithdrawResult sse_decode_ln_url_withdraw_result(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
+        return LnUrlWithdrawResult_Ok(data: var_data);
+      case 1:
+        var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
+        return LnUrlWithdrawResult_Timeout(data: var_data);
+      case 2:
+        var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
+        return LnUrlWithdrawResult_ErrorStatus(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  LnUrlWithdrawSuccessData sse_decode_ln_url_withdraw_success_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_invoice = sse_decode_ln_invoice(deserializer);
+    return LnUrlWithdrawSuccessData(invoice: var_invoice);
+  }
+
+  @protected
+  LocaleOverrides sse_decode_locale_overrides(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_locale = sse_decode_String(deserializer);
+    var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_symbol = sse_decode_symbol(deserializer);
+    return LocaleOverrides(locale: var_locale, spacing: var_spacing, symbol: var_symbol);
+  }
+
+  @protected
+  LocalizedName sse_decode_localized_name(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_locale = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    return LocalizedName(locale: var_locale, name: var_name);
+  }
+
+  @protected
+  LogEntry sse_decode_log_entry(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_line = sse_decode_String(deserializer);
+    var var_level = sse_decode_String(deserializer);
+    return LogEntry(line: var_line, level: var_level);
+  }
+
+  @protected
+  MessageSuccessActionData sse_decode_message_success_action_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_message = sse_decode_String(deserializer);
+    return MessageSuccessActionData(message: var_message);
+  }
+
+  @protected
+  Network sse_decode_network(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return Network.values[inner];
+  }
+
+  @protected
+  OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_send = sse_decode_limits(deserializer);
+    var var_receive = sse_decode_limits(deserializer);
+    return OnchainPaymentLimitsResponse(send: var_send, receive: var_receive);
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_bool(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_i_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_success_action_processed(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Symbol? sse_decode_opt_box_autoadd_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_symbol(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_32(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_payment_type(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  PayOnchainRequest sse_decode_pay_onchain_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_address = sse_decode_String(deserializer);
+    var var_prepareRes = sse_decode_prepare_pay_onchain_response(deserializer);
+    return PayOnchainRequest(address: var_address, prepareRes: var_prepareRes);
+  }
+
+  @protected
+  Payment sse_decode_payment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_txId = sse_decode_opt_String(deserializer);
+    var var_swapId = sse_decode_opt_String(deserializer);
+    var var_timestamp = sse_decode_u_32(deserializer);
+    var var_amountSat = sse_decode_u_64(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
+    var var_preimage = sse_decode_opt_String(deserializer);
+    var var_bolt11 = sse_decode_opt_String(deserializer);
+    var var_description = sse_decode_String(deserializer);
+    var var_refundTxId = sse_decode_opt_String(deserializer);
+    var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_paymentType = sse_decode_payment_type(deserializer);
+    var var_status = sse_decode_payment_state(deserializer);
+    return Payment(
+        txId: var_txId,
+        swapId: var_swapId,
+        timestamp: var_timestamp,
+        amountSat: var_amountSat,
+        feesSat: var_feesSat,
+        preimage: var_preimage,
+        bolt11: var_bolt11,
+        description: var_description,
+        refundTxId: var_refundTxId,
+        refundTxAmountSat: var_refundTxAmountSat,
+        paymentType: var_paymentType,
+        status: var_status);
+  }
+
+  @protected
+  PaymentError sse_decode_payment_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return PaymentError_AlreadyClaimed();
+      case 1:
+        return PaymentError_AlreadyPaid();
+      case 2:
+        return PaymentError_PaymentInProgress();
+      case 3:
+        return PaymentError_AmountOutOfRange();
+      case 4:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_Generic(err: var_err);
+      case 5:
+        return PaymentError_InvalidOrExpiredFees();
+      case 6:
+        return PaymentError_InsufficientFunds();
+      case 7:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_InvalidInvoice(err: var_err);
+      case 8:
+        return PaymentError_InvalidPreimage();
+      case 9:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_LwkError(err: var_err);
+      case 10:
+        return PaymentError_PairsNotFound();
+      case 11:
+        return PaymentError_PaymentTimeout();
+      case 12:
+        return PaymentError_PersistError();
+      case 13:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_ReceiveError(err: var_err);
+      case 14:
+        var var_err = sse_decode_String(deserializer);
+        var var_refundTxId = sse_decode_String(deserializer);
+        return PaymentError_Refunded(err: var_err, refundTxId: var_refundTxId);
+      case 15:
+        return PaymentError_SelfTransferNotSupported();
+      case 16:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_SendError(err: var_err);
+      case 17:
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_SignerError(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  PaymentState sse_decode_payment_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PaymentState.values[inner];
+  }
+
+  @protected
+  PaymentType sse_decode_payment_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PaymentType.values[inner];
+  }
+
+  @protected
+  PrepareBuyBitcoinRequest sse_decode_prepare_buy_bitcoin_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_provider = sse_decode_buy_bitcoin_provider(deserializer);
+    var var_amountSat = sse_decode_u_64(deserializer);
+    return PrepareBuyBitcoinRequest(provider: var_provider, amountSat: var_amountSat);
+  }
+
+  @protected
+  PrepareBuyBitcoinResponse sse_decode_prepare_buy_bitcoin_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_provider = sse_decode_buy_bitcoin_provider(deserializer);
+    var var_amountSat = sse_decode_u_64(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
+    return PrepareBuyBitcoinResponse(provider: var_provider, amountSat: var_amountSat, feesSat: var_feesSat);
+  }
+
+  @protected
+  PreparePayOnchainRequest sse_decode_prepare_pay_onchain_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_receiverAmountSat = sse_decode_u_64(deserializer);
+    var var_satPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return PreparePayOnchainRequest(receiverAmountSat: var_receiverAmountSat, satPerVbyte: var_satPerVbyte);
+  }
+
+  @protected
+  PreparePayOnchainResponse sse_decode_prepare_pay_onchain_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_receiverAmountSat = sse_decode_u_64(deserializer);
+    var var_claimFeesSat = sse_decode_u_64(deserializer);
+    var var_totalFeesSat = sse_decode_u_64(deserializer);
+    return PreparePayOnchainResponse(
+        receiverAmountSat: var_receiverAmountSat,
+        claimFeesSat: var_claimFeesSat,
+        totalFeesSat: var_totalFeesSat);
+  }
+
+  @protected
+  PrepareReceiveOnchainRequest sse_decode_prepare_receive_onchain_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
+    return PrepareReceiveOnchainRequest(payerAmountSat: var_payerAmountSat);
+  }
+
+  @protected
+  PrepareReceiveOnchainResponse sse_decode_prepare_receive_onchain_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
+    return PrepareReceiveOnchainResponse(payerAmountSat: var_payerAmountSat, feesSat: var_feesSat);
+  }
+
+  @protected
+  PrepareReceivePaymentRequest sse_decode_prepare_receive_payment_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_useLightning = sse_decode_bool(deserializer);
+    return PrepareReceivePaymentRequest(payerAmountSat: var_payerAmountSat, useLightning: var_useLightning);
+  }
+
+  @protected
+  PrepareReceivePaymentResponse sse_decode_prepare_receive_payment_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
+    var var_useLightning = sse_decode_bool(deserializer);
+    return PrepareReceivePaymentResponse(
+        payerAmountSat: var_payerAmountSat, feesSat: var_feesSat, useLightning: var_useLightning);
+  }
+
+  @protected
+  PrepareRefundRequest sse_decode_prepare_refund_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapAddress = sse_decode_String(deserializer);
+    var var_refundAddress = sse_decode_String(deserializer);
+    var var_satPerVbyte = sse_decode_u_32(deserializer);
+    return PrepareRefundRequest(
+        swapAddress: var_swapAddress, refundAddress: var_refundAddress, satPerVbyte: var_satPerVbyte);
+  }
+
+  @protected
+  PrepareRefundResponse sse_decode_prepare_refund_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_txVsize = sse_decode_u_32(deserializer);
+    var var_txFeeSat = sse_decode_u_64(deserializer);
+    var var_refundTxId = sse_decode_opt_String(deserializer);
+    return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId);
+  }
+
+  @protected
+  PrepareSendRequest sse_decode_prepare_send_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_paymentDestination = sse_decode_String(deserializer);
+    var var_amountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    return PrepareSendRequest(paymentDestination: var_paymentDestination, amountSat: var_amountSat);
+  }
+
+  @protected
+  Rate sse_decode_rate(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_coin = sse_decode_String(deserializer);
+    var var_value = sse_decode_f_64(deserializer);
+    return Rate(coin: var_coin, value: var_value);
+  }
+
+  @protected
+  ReceiveDestination sse_decode_receive_destination(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_uri = sse_decode_String(deserializer);
+        return ReceiveDestination_BIP21(uri: var_uri);
+      case 1:
+        var var_address = sse_decode_String(deserializer);
+        return ReceiveDestination_Liquid(address: var_address);
+      case 2:
+        var var_id = sse_decode_String(deserializer);
+        var var_invoice = sse_decode_String(deserializer);
+        return ReceiveDestination_Bolt11(id: var_id, invoice: var_invoice);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  ReceiveOnchainResponse sse_decode_receive_onchain_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_address = sse_decode_String(deserializer);
+    var var_bip21 = sse_decode_String(deserializer);
+    return ReceiveOnchainResponse(address: var_address, bip21: var_bip21);
+  }
+
+  @protected
+  ReceivePaymentRequest sse_decode_receive_payment_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_description = sse_decode_opt_String(deserializer);
+    var var_prepareResponse = sse_decode_prepare_receive_payment_response(deserializer);
+    return ReceivePaymentRequest(description: var_description, prepareResponse: var_prepareResponse);
+  }
+
+  @protected
+  ReceivePaymentResponse sse_decode_receive_payment_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_receiveDestination = sse_decode_receive_destination(deserializer);
+    return ReceivePaymentResponse(receiveDestination: var_receiveDestination);
+  }
+
+  @protected
+  RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_fastestFee = sse_decode_u_64(deserializer);
+    var var_halfHourFee = sse_decode_u_64(deserializer);
+    var var_hourFee = sse_decode_u_64(deserializer);
+    var var_economyFee = sse_decode_u_64(deserializer);
+    var var_minimumFee = sse_decode_u_64(deserializer);
+    return RecommendedFees(
+        fastestFee: var_fastestFee,
+        halfHourFee: var_halfHourFee,
+        hourFee: var_hourFee,
+        economyFee: var_economyFee,
+        minimumFee: var_minimumFee);
+  }
+
+  @protected
+  RefundRequest sse_decode_refund_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapAddress = sse_decode_String(deserializer);
+    var var_refundAddress = sse_decode_String(deserializer);
+    var var_satPerVbyte = sse_decode_u_32(deserializer);
+    return RefundRequest(
+        swapAddress: var_swapAddress, refundAddress: var_refundAddress, satPerVbyte: var_satPerVbyte);
+  }
+
+  @protected
+  RefundResponse sse_decode_refund_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_refundTxId = sse_decode_String(deserializer);
+    return RefundResponse(refundTxId: var_refundTxId);
+  }
+
+  @protected
+  RefundableSwap sse_decode_refundable_swap(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapAddress = sse_decode_String(deserializer);
+    var var_timestamp = sse_decode_u_32(deserializer);
+    var var_amountSat = sse_decode_u_64(deserializer);
+    return RefundableSwap(swapAddress: var_swapAddress, timestamp: var_timestamp, amountSat: var_amountSat);
+  }
+
+  @protected
+  RestoreRequest sse_decode_restore_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_backupPath = sse_decode_opt_String(deserializer);
+    return RestoreRequest(backupPath: var_backupPath);
+  }
+
+  @protected
+  RouteHint sse_decode_route_hint(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_hops = sse_decode_list_route_hint_hop(deserializer);
+    return RouteHint(hops: var_hops);
+  }
+
+  @protected
+  RouteHintHop sse_decode_route_hint_hop(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_srcNodeId = sse_decode_String(deserializer);
+    var var_shortChannelId = sse_decode_u_64(deserializer);
+    var var_feesBaseMsat = sse_decode_u_32(deserializer);
+    var var_feesProportionalMillionths = sse_decode_u_32(deserializer);
+    var var_cltvExpiryDelta = sse_decode_u_64(deserializer);
+    var var_htlcMinimumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_htlcMaximumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    return RouteHintHop(
+        srcNodeId: var_srcNodeId,
+        shortChannelId: var_shortChannelId,
+        feesBaseMsat: var_feesBaseMsat,
+        feesProportionalMillionths: var_feesProportionalMillionths,
+        cltvExpiryDelta: var_cltvExpiryDelta,
+        htlcMinimumMsat: var_htlcMinimumMsat,
+        htlcMaximumMsat: var_htlcMaximumMsat);
+  }
+
+  @protected
+  SdkError sse_decode_sdk_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return SdkError_AlreadyStarted();
+      case 1:
+        var var_err = sse_decode_String(deserializer);
+        return SdkError_Generic(err: var_err);
+      case 2:
+        return SdkError_NotStarted();
+      case 3:
+        var var_err = sse_decode_String(deserializer);
+        return SdkError_ServiceConnectivity(err: var_err);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  SdkEvent sse_decode_sdk_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentFailed(details: var_details);
+      case 1:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentPending(details: var_details);
+      case 2:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentRefunded(details: var_details);
+      case 3:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentRefundPending(details: var_details);
+      case 4:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentSucceeded(details: var_details);
+      case 5:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentWaitingConfirmation(details: var_details);
+      case 6:
+        return SdkEvent_Synced();
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  SendPaymentResponse sse_decode_send_payment_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payment = sse_decode_payment(deserializer);
+    return SendPaymentResponse(payment: var_payment);
+  }
+
+  @protected
+  SuccessActionProcessed sse_decode_success_action_processed(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_result = sse_decode_box_autoadd_aes_success_action_data_result(deserializer);
+        return SuccessActionProcessed_Aes(result: var_result);
+      case 1:
+        var var_data = sse_decode_box_autoadd_message_success_action_data(deserializer);
+        return SuccessActionProcessed_Message(data: var_data);
+      case 2:
+        var var_data = sse_decode_box_autoadd_url_success_action_data(deserializer);
+        return SuccessActionProcessed_Url(data: var_data);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  Symbol sse_decode_symbol(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_grapheme = sse_decode_opt_String(deserializer);
+    var var_template = sse_decode_opt_String(deserializer);
+    var var_rtl = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_position = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return Symbol(grapheme: var_grapheme, template: var_template, rtl: var_rtl, position: var_position);
+  }
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint16();
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  int sse_decode_u_8(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8();
+  }
+
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  UrlSuccessActionData sse_decode_url_success_action_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_description = sse_decode_String(deserializer);
+    var var_url = sse_decode_String(deserializer);
+    var var_matchesCallbackDomain = sse_decode_bool(deserializer);
+    return UrlSuccessActionData(
+        description: var_description, url: var_url, matchesCallbackDomain: var_matchesCallbackDomain);
+  }
+
+  @protected
+  BigInt sse_decode_usize(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as BindingLiquidSdkImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as PrepareSendResponseImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      SendPaymentRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as SendPaymentRequestImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as BindingLiquidSdkImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as BindingLiquidSdkImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as PrepareSendResponseImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      SendPaymentRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+// ignore: invalid_use_of_internal_member
+    return (raw as SendPaymentRequestImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  bool cst_encode_bool(bool raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_buy_bitcoin_provider(BuyBitcoinProvider raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  double cst_encode_f_64(double raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_i_32(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_liquid_network(LiquidNetwork raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_network(Network raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_payment_state(PaymentState raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_payment_type(PaymentType raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
+  }
+
+  @protected
+  int cst_encode_u_16(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_u_32(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  int cst_encode_u_8(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  void cst_encode_unit(void raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw;
+  }
+
+  @protected
+  void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+          PrepareSendResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
+  void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      SendPaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as SendPaymentRequestImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
+  void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: false), serializer);
+  }
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+      BindingLiquidSdk self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(
+      PrepareSendResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(
+      SendPaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as SendPaymentRequestImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void sse_encode_StreamSink_log_entry_Dco(RustStreamSink<LogEntry> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+        self.setupAndSerialize(
+            codec: DcoCodec(
+          decodeSuccessData: dco_decode_log_entry,
           decodeErrorData: dco_decode_AnyhowException,
-        )
-        ,
-            constMeta: kCrateBindingsBreezLogStreamConstMeta,
-            argValues: [s],
-            apiImpl: this,
-        )));
-            return s.stream;
-             }
-
-
-        TaskConstMeta get kCrateBindingsBreezLogStreamConstMeta => const TaskConstMeta(
-            debugName: "breez_log_stream",
-            argNames: ["s"],
-        );
-        
-
-@override Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_box_autoadd_connect_request(req);
-            return wire.wire__crate__bindings__connect(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk,
-          decodeErrorData: dco_decode_sdk_error,
-        )
-        ,
-            constMeta: kCrateBindingsConnectConstMeta,
-            argValues: [req],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsConnectConstMeta => const TaskConstMeta(
-            debugName: "connect",
-            argNames: ["req"],
-        );
-        
-
-@override Config crateBindingsDefaultConfig({required LiquidNetwork network })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              var arg0 = cst_encode_liquid_network(network);
-            return wire.wire__crate__bindings__default_config(arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_config,
-          decodeErrorData: null,
-        )
-        ,
-            constMeta: kCrateBindingsDefaultConfigConstMeta,
-            argValues: [network],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsDefaultConfigConstMeta => const TaskConstMeta(
-            debugName: "default_config",
-            argNames: ["network"],
-        );
-        
-
-@override Future<InputType> crateBindingsParse({required String input })  { return handler.executeNormal(NormalTask(
-            callFfi: (port_) {
-              var arg0 = cst_encode_String(input);
-            return wire.wire__crate__bindings__parse(port_, arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_input_type,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsParseConstMeta,
-            argValues: [input],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsParseConstMeta => const TaskConstMeta(
-            debugName: "parse",
-            argNames: ["input"],
-        );
-        
-
-@override LNInvoice crateBindingsParseInvoice({required String input })  { return handler.executeSync(SyncTask(
-            callFfi: () {
-              var arg0 = cst_encode_String(input);
-            return wire.wire__crate__bindings__parse_invoice(arg0);
-            
-            },
-            codec: 
-        DcoCodec(
-          decodeSuccessData: dco_decode_ln_invoice,
-          decodeErrorData: dco_decode_payment_error,
-        )
-        ,
-            constMeta: kCrateBindingsParseInvoiceConstMeta,
-            argValues: [input],
-            apiImpl: this,
-        )); }
-
-
-        TaskConstMeta get kCrateBindingsParseInvoiceConstMeta => const TaskConstMeta(
-            debugName: "parse_invoice",
-            argNames: ["input"],
-        );
-        
-
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_BindingLiquidSdk => wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
-
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk => wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
-
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_PrepareSendResponse => wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
-
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_PrepareSendResponse => wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse;
-
-RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_SendPaymentRequest => wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest;
-
-RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_SendPaymentRequest => wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest;
-
-
-
-                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return AnyhowException(raw as String); }
-
-@protected BindingLiquidSdk dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected PrepareSendResponse dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected SendPaymentRequest dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return SendPaymentRequestImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected BindingLiquidSdk dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected BindingLiquidSdk dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected PrepareSendResponse dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return PrepareSendResponseImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected SendPaymentRequest dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return SendPaymentRequestImpl.frbInternalDcoDecode(raw as List<dynamic>); }
-
-@protected RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Dco(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected RustStreamSink<SdkEvent> dco_decode_StreamSink_sdk_event_Dco(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-throw UnimplementedError(); }
-
-@protected String dco_decode_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as String; }
-
-@protected AesSuccessActionDataDecrypted dco_decode_aes_success_action_data_decrypted(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return AesSuccessActionDataDecrypted(description: dco_decode_String(arr[0]),
-plaintext: dco_decode_String(arr[1]),); }
-
-@protected AesSuccessActionDataResult dco_decode_aes_success_action_data_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return AesSuccessActionDataResult_Decrypted(data: dco_decode_box_autoadd_aes_success_action_data_decrypted(raw[1]),);
-case 1: return AesSuccessActionDataResult_ErrorStatus(reason: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected BackupRequest dco_decode_backup_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return BackupRequest(backupPath: dco_decode_opt_String(arr[0]),); }
-
-@protected BindingEventListener dco_decode_binding_event_listener(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return BindingEventListener(stream: dco_decode_StreamSink_sdk_event_Dco(arr[0]),); }
-
-@protected BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return BitcoinAddressData(address: dco_decode_String(arr[0]),
-network: dco_decode_network(arr[1]),
-amountSat: dco_decode_opt_box_autoadd_u_64(arr[2]),
-label: dco_decode_opt_String(arr[3]),
-message: dco_decode_opt_String(arr[4]),); }
-
-@protected bool dco_decode_bool(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as bool; }
-
-@protected AesSuccessActionDataDecrypted dco_decode_box_autoadd_aes_success_action_data_decrypted(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_aes_success_action_data_decrypted(raw); }
-
-@protected AesSuccessActionDataResult dco_decode_box_autoadd_aes_success_action_data_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_aes_success_action_data_result(raw); }
-
-@protected BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_backup_request(raw); }
-
-@protected BindingEventListener dco_decode_box_autoadd_binding_event_listener(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_binding_event_listener(raw); }
-
-@protected BitcoinAddressData dco_decode_box_autoadd_bitcoin_address_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_bitcoin_address_data(raw); }
-
-@protected bool dco_decode_box_autoadd_bool(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as bool; }
-
-@protected BuyBitcoinRequest dco_decode_box_autoadd_buy_bitcoin_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_buy_bitcoin_request(raw); }
-
-@protected ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_connect_request(raw); }
-
-@protected PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_i_64(raw); }
-
-@protected ListPaymentsRequest dco_decode_box_autoadd_list_payments_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_list_payments_request(raw); }
-
-@protected LNInvoice dco_decode_box_autoadd_ln_invoice(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_invoice(raw); }
-
-@protected LnUrlAuthRequestData dco_decode_box_autoadd_ln_url_auth_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_auth_request_data(raw); }
-
-@protected LnUrlErrorData dco_decode_box_autoadd_ln_url_error_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_error_data(raw); }
-
-@protected LnUrlPayErrorData dco_decode_box_autoadd_ln_url_pay_error_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_pay_error_data(raw); }
-
-@protected LnUrlPayRequest dco_decode_box_autoadd_ln_url_pay_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_pay_request(raw); }
-
-@protected LnUrlPayRequestData dco_decode_box_autoadd_ln_url_pay_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_pay_request_data(raw); }
-
-@protected LnUrlPaySuccessData dco_decode_box_autoadd_ln_url_pay_success_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_pay_success_data(raw); }
-
-@protected LnUrlWithdrawRequest dco_decode_box_autoadd_ln_url_withdraw_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_withdraw_request(raw); }
-
-@protected LnUrlWithdrawRequestData dco_decode_box_autoadd_ln_url_withdraw_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_withdraw_request_data(raw); }
-
-@protected LnUrlWithdrawSuccessData dco_decode_box_autoadd_ln_url_withdraw_success_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_ln_url_withdraw_success_data(raw); }
-
-@protected MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_message_success_action_data(raw); }
-
-@protected PayOnchainRequest dco_decode_box_autoadd_pay_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_pay_onchain_request(raw); }
-
-@protected Payment dco_decode_box_autoadd_payment(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_payment(raw); }
-
-@protected PrepareBuyBitcoinRequest dco_decode_box_autoadd_prepare_buy_bitcoin_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_buy_bitcoin_request(raw); }
-
-@protected PreparePayOnchainRequest dco_decode_box_autoadd_prepare_pay_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_pay_onchain_request(raw); }
-
-@protected PrepareReceiveOnchainRequest dco_decode_box_autoadd_prepare_receive_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_receive_onchain_request(raw); }
-
-@protected PrepareReceiveOnchainResponse dco_decode_box_autoadd_prepare_receive_onchain_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_receive_onchain_response(raw); }
-
-@protected PrepareReceivePaymentRequest dco_decode_box_autoadd_prepare_receive_payment_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_receive_payment_request(raw); }
-
-@protected PrepareRefundRequest dco_decode_box_autoadd_prepare_refund_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_refund_request(raw); }
-
-@protected PrepareSendRequest dco_decode_box_autoadd_prepare_send_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_prepare_send_request(raw); }
-
-@protected ReceivePaymentRequest dco_decode_box_autoadd_receive_payment_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_receive_payment_request(raw); }
-
-@protected RefundRequest dco_decode_box_autoadd_refund_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_refund_request(raw); }
-
-@protected RestoreRequest dco_decode_box_autoadd_restore_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_restore_request(raw); }
-
-@protected SdkEvent dco_decode_box_autoadd_sdk_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_sdk_event(raw); }
-
-@protected SuccessActionProcessed dco_decode_box_autoadd_success_action_processed(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_success_action_processed(raw); }
-
-@protected Symbol dco_decode_box_autoadd_symbol(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_symbol(raw); }
-
-@protected int dco_decode_box_autoadd_u_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected BigInt dco_decode_box_autoadd_u_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_u_64(raw); }
-
-@protected UrlSuccessActionData dco_decode_box_autoadd_url_success_action_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dco_decode_url_success_action_data(raw); }
-
-@protected BuyBitcoinProvider dco_decode_buy_bitcoin_provider(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return BuyBitcoinProvider.values[raw as int]; }
-
-@protected BuyBitcoinRequest dco_decode_buy_bitcoin_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return BuyBitcoinRequest(prepareRes: dco_decode_prepare_buy_bitcoin_response(arr[0]),
-redirectUrl: dco_decode_opt_String(arr[1]),); }
-
-@protected Config dco_decode_config(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
-                return Config(liquidElectrumUrl: dco_decode_String(arr[0]),
-bitcoinElectrumUrl: dco_decode_String(arr[1]),
-mempoolspaceUrl: dco_decode_String(arr[2]),
-workingDir: dco_decode_String(arr[3]),
-network: dco_decode_liquid_network(arr[4]),
-paymentTimeoutSec: dco_decode_u_64(arr[5]),
-zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
-zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),); }
-
-@protected ConnectRequest dco_decode_connect_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return ConnectRequest(mnemonic: dco_decode_String(arr[0]),
-config: dco_decode_config(arr[1]),); }
-
-@protected CurrencyInfo dco_decode_currency_info(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-                return CurrencyInfo(name: dco_decode_String(arr[0]),
-fractionSize: dco_decode_u_32(arr[1]),
-spacing: dco_decode_opt_box_autoadd_u_32(arr[2]),
-symbol: dco_decode_opt_box_autoadd_symbol(arr[3]),
-uniqSymbol: dco_decode_opt_box_autoadd_symbol(arr[4]),
-localizedName: dco_decode_list_localized_name(arr[5]),
-localeOverrides: dco_decode_list_locale_overrides(arr[6]),); }
-
-@protected double dco_decode_f_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as double; }
-
-@protected FiatCurrency dco_decode_fiat_currency(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return FiatCurrency(id: dco_decode_String(arr[0]),
-info: dco_decode_currency_info(arr[1]),); }
-
-@protected GetInfoResponse dco_decode_get_info_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-                return GetInfoResponse(balanceSat: dco_decode_u_64(arr[0]),
-pendingSendSat: dco_decode_u_64(arr[1]),
-pendingReceiveSat: dco_decode_u_64(arr[2]),
-pubkey: dco_decode_String(arr[3]),); }
-
-@protected int dco_decode_i_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected PlatformInt64 dco_decode_i_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeI64(raw); }
-
-@protected InputType dco_decode_input_type(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return InputType_BitcoinAddress(address: dco_decode_box_autoadd_bitcoin_address_data(raw[1]),);
-case 1: return InputType_Bolt11(invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),);
-case 2: return InputType_NodeId(nodeId: dco_decode_String(raw[1]),);
-case 3: return InputType_Url(url: dco_decode_String(raw[1]),);
-case 4: return InputType_LnUrlPay(data: dco_decode_box_autoadd_ln_url_pay_request_data(raw[1]),);
-case 5: return InputType_LnUrlWithdraw(data: dco_decode_box_autoadd_ln_url_withdraw_request_data(raw[1]),);
-case 6: return InputType_LnUrlAuth(data: dco_decode_box_autoadd_ln_url_auth_request_data(raw[1]),);
-case 7: return InputType_LnUrlError(data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LightningPaymentLimitsResponse dco_decode_lightning_payment_limits_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return LightningPaymentLimitsResponse(send: dco_decode_limits(arr[0]),
-receive: dco_decode_limits(arr[1]),); }
-
-@protected Limits dco_decode_limits(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return Limits(minSat: dco_decode_u_64(arr[0]),
-maxSat: dco_decode_u_64(arr[1]),
-maxZeroConfSat: dco_decode_u_64(arr[2]),); }
-
-@protected LiquidNetwork dco_decode_liquid_network(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return LiquidNetwork.values[raw as int]; }
-
-@protected List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_fiat_currency).toList(); }
-
-@protected List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_locale_overrides).toList(); }
-
-@protected List<LocalizedName> dco_decode_list_localized_name(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_localized_name).toList(); }
-
-@protected List<Payment> dco_decode_list_payment(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_payment).toList(); }
-
-@protected List<PaymentType> dco_decode_list_payment_type(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_payment_type).toList(); }
-
-@protected ListPaymentsRequest dco_decode_list_payments_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return ListPaymentsRequest(filters: dco_decode_opt_list_payment_type(arr[0]),
-fromTimestamp: dco_decode_opt_box_autoadd_i_64(arr[1]),
-toTimestamp: dco_decode_opt_box_autoadd_i_64(arr[2]),
-offset: dco_decode_opt_box_autoadd_u_32(arr[3]),
-limit: dco_decode_opt_box_autoadd_u_32(arr[4]),); }
-
-@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as Uint8List; }
-
-@protected List<Rate> dco_decode_list_rate(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_rate).toList(); }
-
-@protected List<RefundableSwap> dco_decode_list_refundable_swap(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_refundable_swap).toList(); }
-
-@protected List<RouteHint> dco_decode_list_route_hint(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_route_hint).toList(); }
-
-@protected List<RouteHintHop> dco_decode_list_route_hint_hop(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return (raw as List<dynamic>).map(dco_decode_route_hint_hop).toList(); }
-
-@protected LNInvoice dco_decode_ln_invoice(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
-                return LNInvoice(bolt11: dco_decode_String(arr[0]),
-network: dco_decode_network(arr[1]),
-payeePubkey: dco_decode_String(arr[2]),
-paymentHash: dco_decode_String(arr[3]),
-description: dco_decode_opt_String(arr[4]),
-descriptionHash: dco_decode_opt_String(arr[5]),
-amountMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),
-timestamp: dco_decode_u_64(arr[7]),
-expiry: dco_decode_u_64(arr[8]),
-routingHints: dco_decode_list_route_hint(arr[9]),
-paymentSecret: dco_decode_list_prim_u_8_strict(arr[10]),
-minFinalCltvExpiryDelta: dco_decode_u_64(arr[11]),); }
-
-@protected LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlAuthError_Generic(err: dco_decode_String(raw[1]),);
-case 1: return LnUrlAuthError_InvalidUri(err: dco_decode_String(raw[1]),);
-case 2: return LnUrlAuthError_ServiceConnectivity(err: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlAuthRequestData dco_decode_ln_url_auth_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-                return LnUrlAuthRequestData(k1: dco_decode_String(arr[0]),
-action: dco_decode_opt_String(arr[1]),
-domain: dco_decode_String(arr[2]),
-url: dco_decode_String(arr[3]),); }
-
-@protected LnUrlCallbackStatus dco_decode_ln_url_callback_status(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlCallbackStatus_Ok();
-case 1: return LnUrlCallbackStatus_ErrorStatus(data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlErrorData dco_decode_ln_url_error_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return LnUrlErrorData(reason: dco_decode_String(arr[0]),); }
-
-@protected LnUrlPayError dco_decode_ln_url_pay_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlPayError_AlreadyPaid();
-case 1: return LnUrlPayError_Generic(err: dco_decode_String(raw[1]),);
-case 2: return LnUrlPayError_InvalidAmount(err: dco_decode_String(raw[1]),);
-case 3: return LnUrlPayError_InvalidInvoice(err: dco_decode_String(raw[1]),);
-case 4: return LnUrlPayError_InvalidNetwork(err: dco_decode_String(raw[1]),);
-case 5: return LnUrlPayError_InvalidUri(err: dco_decode_String(raw[1]),);
-case 6: return LnUrlPayError_InvoiceExpired(err: dco_decode_String(raw[1]),);
-case 7: return LnUrlPayError_PaymentFailed(err: dco_decode_String(raw[1]),);
-case 8: return LnUrlPayError_PaymentTimeout(err: dco_decode_String(raw[1]),);
-case 9: return LnUrlPayError_RouteNotFound(err: dco_decode_String(raw[1]),);
-case 10: return LnUrlPayError_RouteTooExpensive(err: dco_decode_String(raw[1]),);
-case 11: return LnUrlPayError_ServiceConnectivity(err: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlPayErrorData dco_decode_ln_url_pay_error_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return LnUrlPayErrorData(paymentHash: dco_decode_String(arr[0]),
-reason: dco_decode_String(arr[1]),); }
-
-@protected LnUrlPayRequest dco_decode_ln_url_pay_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return LnUrlPayRequest(data: dco_decode_ln_url_pay_request_data(arr[0]),
-amountMsat: dco_decode_u_64(arr[1]),
-comment: dco_decode_opt_String(arr[2]),
-paymentLabel: dco_decode_opt_String(arr[3]),
-validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),); }
-
-@protected LnUrlPayRequestData dco_decode_ln_url_pay_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
-                return LnUrlPayRequestData(callback: dco_decode_String(arr[0]),
-minSendable: dco_decode_u_64(arr[1]),
-maxSendable: dco_decode_u_64(arr[2]),
-metadataStr: dco_decode_String(arr[3]),
-commentAllowed: dco_decode_u_16(arr[4]),
-domain: dco_decode_String(arr[5]),
-allowsNostr: dco_decode_bool(arr[6]),
-nostrPubkey: dco_decode_opt_String(arr[7]),
-lnAddress: dco_decode_opt_String(arr[8]),); }
-
-@protected LnUrlPayResult dco_decode_ln_url_pay_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlPayResult_EndpointSuccess(data: dco_decode_box_autoadd_ln_url_pay_success_data(raw[1]),);
-case 1: return LnUrlPayResult_EndpointError(data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),);
-case 2: return LnUrlPayResult_PayError(data: dco_decode_box_autoadd_ln_url_pay_error_data(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlPaySuccessData dco_decode_ln_url_pay_success_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return LnUrlPaySuccessData(payment: dco_decode_payment(arr[0]),
-successAction: dco_decode_opt_box_autoadd_success_action_processed(arr[1]),); }
-
-@protected LnUrlWithdrawError dco_decode_ln_url_withdraw_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlWithdrawError_Generic(err: dco_decode_String(raw[1]),);
-case 1: return LnUrlWithdrawError_InvalidAmount(err: dco_decode_String(raw[1]),);
-case 2: return LnUrlWithdrawError_InvalidInvoice(err: dco_decode_String(raw[1]),);
-case 3: return LnUrlWithdrawError_InvalidUri(err: dco_decode_String(raw[1]),);
-case 4: return LnUrlWithdrawError_InvoiceNoRoutingHints(err: dco_decode_String(raw[1]),);
-case 5: return LnUrlWithdrawError_ServiceConnectivity(err: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlWithdrawRequest dco_decode_ln_url_withdraw_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return LnUrlWithdrawRequest(data: dco_decode_ln_url_withdraw_request_data(arr[0]),
-amountMsat: dco_decode_u_64(arr[1]),
-description: dco_decode_opt_String(arr[2]),); }
-
-@protected LnUrlWithdrawRequestData dco_decode_ln_url_withdraw_request_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return LnUrlWithdrawRequestData(callback: dco_decode_String(arr[0]),
-k1: dco_decode_String(arr[1]),
-defaultDescription: dco_decode_String(arr[2]),
-minWithdrawable: dco_decode_u_64(arr[3]),
-maxWithdrawable: dco_decode_u_64(arr[4]),); }
-
-@protected LnUrlWithdrawResult dco_decode_ln_url_withdraw_result(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return LnUrlWithdrawResult_Ok(data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),);
-case 1: return LnUrlWithdrawResult_Timeout(data: dco_decode_box_autoadd_ln_url_withdraw_success_data(raw[1]),);
-case 2: return LnUrlWithdrawResult_ErrorStatus(data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected LnUrlWithdrawSuccessData dco_decode_ln_url_withdraw_success_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return LnUrlWithdrawSuccessData(invoice: dco_decode_ln_invoice(arr[0]),); }
-
-@protected LocaleOverrides dco_decode_locale_overrides(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return LocaleOverrides(locale: dco_decode_String(arr[0]),
-spacing: dco_decode_opt_box_autoadd_u_32(arr[1]),
-symbol: dco_decode_symbol(arr[2]),); }
-
-@protected LocalizedName dco_decode_localized_name(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return LocalizedName(locale: dco_decode_String(arr[0]),
-name: dco_decode_String(arr[1]),); }
-
-@protected LogEntry dco_decode_log_entry(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return LogEntry(line: dco_decode_String(arr[0]),
-level: dco_decode_String(arr[1]),); }
-
-@protected MessageSuccessActionData dco_decode_message_success_action_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return MessageSuccessActionData(message: dco_decode_String(arr[0]),); }
-
-@protected Network dco_decode_network(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return Network.values[raw as int]; }
-
-@protected OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return OnchainPaymentLimitsResponse(send: dco_decode_limits(arr[0]),
-receive: dco_decode_limits(arr[1]),); }
-
-@protected String? dco_decode_opt_String(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_String(raw); }
-
-@protected bool? dco_decode_opt_box_autoadd_bool(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_bool(raw); }
-
-@protected PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_i_64(raw); }
-
-@protected SuccessActionProcessed? dco_decode_opt_box_autoadd_success_action_processed(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_success_action_processed(raw); }
-
-@protected Symbol? dco_decode_opt_box_autoadd_symbol(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_symbol(raw); }
-
-@protected int? dco_decode_opt_box_autoadd_u_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_u_32(raw); }
-
-@protected BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_box_autoadd_u_64(raw); }
-
-@protected List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw == null ? null : dco_decode_list_payment_type(raw); }
-
-@protected PayOnchainRequest dco_decode_pay_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PayOnchainRequest(address: dco_decode_String(arr[0]),
-prepareRes: dco_decode_prepare_pay_onchain_response(arr[1]),); }
-
-@protected Payment dco_decode_payment(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
-                return Payment(txId: dco_decode_opt_String(arr[0]),
-swapId: dco_decode_opt_String(arr[1]),
-timestamp: dco_decode_u_32(arr[2]),
-amountSat: dco_decode_u_64(arr[3]),
-feesSat: dco_decode_u_64(arr[4]),
-preimage: dco_decode_opt_String(arr[5]),
-bolt11: dco_decode_opt_String(arr[6]),
-description: dco_decode_String(arr[7]),
-refundTxId: dco_decode_opt_String(arr[8]),
-refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[9]),
-paymentType: dco_decode_payment_type(arr[10]),
-status: dco_decode_payment_state(arr[11]),); }
-
-@protected PaymentError dco_decode_payment_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return PaymentError_AlreadyClaimed();
-case 1: return PaymentError_AlreadyPaid();
-case 2: return PaymentError_PaymentInProgress();
-case 3: return PaymentError_AmountOutOfRange();
-case 4: return PaymentError_Generic(err: dco_decode_String(raw[1]),);
-case 5: return PaymentError_InvalidOrExpiredFees();
-case 6: return PaymentError_InsufficientFunds();
-case 7: return PaymentError_InvalidInvoice(err: dco_decode_String(raw[1]),);
-case 8: return PaymentError_InvalidPreimage();
-case 9: return PaymentError_LwkError(err: dco_decode_String(raw[1]),);
-case 10: return PaymentError_PairsNotFound();
-case 11: return PaymentError_PaymentTimeout();
-case 12: return PaymentError_PersistError();
-case 13: return PaymentError_ReceiveError(err: dco_decode_String(raw[1]),);
-case 14: return PaymentError_Refunded(err: dco_decode_String(raw[1]),refundTxId: dco_decode_String(raw[2]),);
-case 15: return PaymentError_SelfTransferNotSupported();
-case 16: return PaymentError_SendError(err: dco_decode_String(raw[1]),);
-case 17: return PaymentError_SignerError(err: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected PaymentState dco_decode_payment_state(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return PaymentState.values[raw as int]; }
-
-@protected PaymentType dco_decode_payment_type(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return PaymentType.values[raw as int]; }
-
-@protected PrepareBuyBitcoinRequest dco_decode_prepare_buy_bitcoin_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PrepareBuyBitcoinRequest(provider: dco_decode_buy_bitcoin_provider(arr[0]),
-amountSat: dco_decode_u_64(arr[1]),); }
-
-@protected PrepareBuyBitcoinResponse dco_decode_prepare_buy_bitcoin_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return PrepareBuyBitcoinResponse(provider: dco_decode_buy_bitcoin_provider(arr[0]),
-amountSat: dco_decode_u_64(arr[1]),
-feesSat: dco_decode_u_64(arr[2]),); }
-
-@protected PreparePayOnchainRequest dco_decode_prepare_pay_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PreparePayOnchainRequest(receiverAmountSat: dco_decode_u_64(arr[0]),
-satPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[1]),); }
-
-@protected PreparePayOnchainResponse dco_decode_prepare_pay_onchain_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return PreparePayOnchainResponse(receiverAmountSat: dco_decode_u_64(arr[0]),
-claimFeesSat: dco_decode_u_64(arr[1]),
-totalFeesSat: dco_decode_u_64(arr[2]),); }
-
-@protected PrepareReceiveOnchainRequest dco_decode_prepare_receive_onchain_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return PrepareReceiveOnchainRequest(payerAmountSat: dco_decode_u_64(arr[0]),); }
-
-@protected PrepareReceiveOnchainResponse dco_decode_prepare_receive_onchain_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PrepareReceiveOnchainResponse(payerAmountSat: dco_decode_u_64(arr[0]),
-feesSat: dco_decode_u_64(arr[1]),); }
-
-@protected PrepareReceivePaymentRequest dco_decode_prepare_receive_payment_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PrepareReceivePaymentRequest(payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[0]),
-useLightning: dco_decode_bool(arr[1]),); }
-
-@protected PrepareReceivePaymentResponse dco_decode_prepare_receive_payment_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return PrepareReceivePaymentResponse(payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[0]),
-feesSat: dco_decode_u_64(arr[1]),
-useLightning: dco_decode_bool(arr[2]),); }
-
-@protected PrepareRefundRequest dco_decode_prepare_refund_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return PrepareRefundRequest(swapAddress: dco_decode_String(arr[0]),
-refundAddress: dco_decode_String(arr[1]),
-satPerVbyte: dco_decode_u_32(arr[2]),); }
-
-@protected PrepareRefundResponse dco_decode_prepare_refund_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return PrepareRefundResponse(txVsize: dco_decode_u_32(arr[0]),
-txFeeSat: dco_decode_u_64(arr[1]),
-refundTxId: dco_decode_opt_String(arr[2]),); }
-
-@protected PrepareSendRequest dco_decode_prepare_send_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return PrepareSendRequest(paymentDestination: dco_decode_String(arr[0]),
-amountSat: dco_decode_opt_box_autoadd_u_64(arr[1]),); }
-
-@protected Rate dco_decode_rate(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return Rate(coin: dco_decode_String(arr[0]),
-value: dco_decode_f_64(arr[1]),); }
-
-@protected ReceiveDestination dco_decode_receive_destination(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return ReceiveDestination_BIP21(uri: dco_decode_String(raw[1]),);
-case 1: return ReceiveDestination_Liquid(address: dco_decode_String(raw[1]),);
-case 2: return ReceiveDestination_Bolt11(id: dco_decode_String(raw[1]),invoice: dco_decode_String(raw[2]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected ReceiveOnchainResponse dco_decode_receive_onchain_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return ReceiveOnchainResponse(address: dco_decode_String(arr[0]),
-bip21: dco_decode_String(arr[1]),); }
-
-@protected ReceivePaymentRequest dco_decode_receive_payment_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-                return ReceivePaymentRequest(description: dco_decode_opt_String(arr[0]),
-prepareResponse: dco_decode_prepare_receive_payment_response(arr[1]),); }
-
-@protected ReceivePaymentResponse dco_decode_receive_payment_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return ReceivePaymentResponse(receiveDestination: dco_decode_receive_destination(arr[0]),); }
-
-@protected RecommendedFees dco_decode_recommended_fees(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-                return RecommendedFees(fastestFee: dco_decode_u_64(arr[0]),
-halfHourFee: dco_decode_u_64(arr[1]),
-hourFee: dco_decode_u_64(arr[2]),
-economyFee: dco_decode_u_64(arr[3]),
-minimumFee: dco_decode_u_64(arr[4]),); }
-
-@protected RefundRequest dco_decode_refund_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return RefundRequest(swapAddress: dco_decode_String(arr[0]),
-refundAddress: dco_decode_String(arr[1]),
-satPerVbyte: dco_decode_u_32(arr[2]),); }
-
-@protected RefundResponse dco_decode_refund_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return RefundResponse(refundTxId: dco_decode_String(arr[0]),); }
-
-@protected RefundableSwap dco_decode_refundable_swap(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return RefundableSwap(swapAddress: dco_decode_String(arr[0]),
-timestamp: dco_decode_u_32(arr[1]),
-amountSat: dco_decode_u_64(arr[2]),); }
-
-@protected RestoreRequest dco_decode_restore_request(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return RestoreRequest(backupPath: dco_decode_opt_String(arr[0]),); }
-
-@protected RouteHint dco_decode_route_hint(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return RouteHint(hops: dco_decode_list_route_hint_hop(arr[0]),); }
-
-@protected RouteHintHop dco_decode_route_hint_hop(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
-                return RouteHintHop(srcNodeId: dco_decode_String(arr[0]),
-shortChannelId: dco_decode_u_64(arr[1]),
-feesBaseMsat: dco_decode_u_32(arr[2]),
-feesProportionalMillionths: dco_decode_u_32(arr[3]),
-cltvExpiryDelta: dco_decode_u_64(arr[4]),
-htlcMinimumMsat: dco_decode_opt_box_autoadd_u_64(arr[5]),
-htlcMaximumMsat: dco_decode_opt_box_autoadd_u_64(arr[6]),); }
-
-@protected SdkError dco_decode_sdk_error(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return SdkError_AlreadyStarted();
-case 1: return SdkError_Generic(err: dco_decode_String(raw[1]),);
-case 2: return SdkError_NotStarted();
-case 3: return SdkError_ServiceConnectivity(err: dco_decode_String(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected SdkEvent dco_decode_sdk_event(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return SdkEvent_PaymentFailed(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 1: return SdkEvent_PaymentPending(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 2: return SdkEvent_PaymentRefunded(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 3: return SdkEvent_PaymentRefundPending(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 4: return SdkEvent_PaymentSucceeded(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 5: return SdkEvent_PaymentWaitingConfirmation(details: dco_decode_box_autoadd_payment(raw[1]),);
-case 6: return SdkEvent_Synced();
-                default: throw Exception("unreachable");
-            } }
-
-@protected SendPaymentResponse dco_decode_send_payment_response(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-                return SendPaymentResponse(payment: dco_decode_payment(arr[0]),); }
-
-@protected SuccessActionProcessed dco_decode_success_action_processed(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-switch (raw[0]) {
-                case 0: return SuccessActionProcessed_Aes(result: dco_decode_box_autoadd_aes_success_action_data_result(raw[1]),);
-case 1: return SuccessActionProcessed_Message(data: dco_decode_box_autoadd_message_success_action_data(raw[1]),);
-case 2: return SuccessActionProcessed_Url(data: dco_decode_box_autoadd_url_success_action_data(raw[1]),);
-                default: throw Exception("unreachable");
-            } }
-
-@protected Symbol dco_decode_symbol(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-                return Symbol(grapheme: dco_decode_opt_String(arr[0]),
-template: dco_decode_opt_String(arr[1]),
-rtl: dco_decode_opt_box_autoadd_bool(arr[2]),
-position: dco_decode_opt_box_autoadd_u_32(arr[3]),); }
-
-@protected int dco_decode_u_16(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected int dco_decode_u_32(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected BigInt dco_decode_u_64(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeU64(raw); }
-
-@protected int dco_decode_u_8(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return raw as int; }
-
-@protected void dco_decode_unit(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return; }
-
-@protected UrlSuccessActionData dco_decode_url_success_action_data(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-final arr = raw as List<dynamic>;
-                if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-                return UrlSuccessActionData(description: dco_decode_String(arr[0]),
-url: dco_decode_String(arr[1]),
-matchesCallbackDomain: dco_decode_bool(arr[2]),); }
-
-@protected BigInt dco_decode_usize(dynamic raw){ // Codec=Dco (DartCObject based), see doc to use other codecs
-return dcoDecodeU64(raw); }
-
-@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_String(deserializer);
-        return AnyhowException(inner); }
-
-@protected BindingLiquidSdk sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected PrepareSendResponse sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return PrepareSendResponseImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected SendPaymentRequest sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return SendPaymentRequestImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected BindingLiquidSdk sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected BindingLiquidSdk sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return BindingLiquidSdkImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected PrepareSendResponse sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return PrepareSendResponseImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected SendPaymentRequest sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return SendPaymentRequestImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer)); }
-
-@protected RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Dco(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected RustStreamSink<SdkEvent> sse_decode_StreamSink_sdk_event_Dco(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-throw UnimplementedError('Unreachable ()'); }
-
-@protected String sse_decode_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_list_prim_u_8_strict(deserializer);
-        return utf8.decoder.convert(inner); }
-
-@protected AesSuccessActionDataDecrypted sse_decode_aes_success_action_data_decrypted(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_description = sse_decode_String(deserializer);
-var var_plaintext = sse_decode_String(deserializer);
-return AesSuccessActionDataDecrypted(description: var_description, plaintext: var_plaintext); }
-
-@protected AesSuccessActionDataResult sse_decode_aes_success_action_data_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_data = sse_decode_box_autoadd_aes_success_action_data_decrypted(deserializer);
-return AesSuccessActionDataResult_Decrypted(data: var_data);case 1: var var_reason = sse_decode_String(deserializer);
-return AesSuccessActionDataResult_ErrorStatus(reason: var_reason); default: throw UnimplementedError(''); }
-             }
-
-@protected BackupRequest sse_decode_backup_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_backupPath = sse_decode_opt_String(deserializer);
-return BackupRequest(backupPath: var_backupPath); }
-
-@protected BindingEventListener sse_decode_binding_event_listener(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_stream = sse_decode_StreamSink_sdk_event_Dco(deserializer);
-return BindingEventListener(stream: var_stream); }
-
-@protected BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_address = sse_decode_String(deserializer);
-var var_network = sse_decode_network(deserializer);
-var var_amountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_label = sse_decode_opt_String(deserializer);
-var var_message = sse_decode_opt_String(deserializer);
-return BitcoinAddressData(address: var_address, network: var_network, amountSat: var_amountSat, label: var_label, message: var_message); }
-
-@protected bool sse_decode_bool(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8() != 0; }
-
-@protected AesSuccessActionDataDecrypted sse_decode_box_autoadd_aes_success_action_data_decrypted(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_aes_success_action_data_decrypted(deserializer)); }
-
-@protected AesSuccessActionDataResult sse_decode_box_autoadd_aes_success_action_data_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_aes_success_action_data_result(deserializer)); }
-
-@protected BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_backup_request(deserializer)); }
-
-@protected BindingEventListener sse_decode_box_autoadd_binding_event_listener(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_binding_event_listener(deserializer)); }
-
-@protected BitcoinAddressData sse_decode_box_autoadd_bitcoin_address_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_bitcoin_address_data(deserializer)); }
-
-@protected bool sse_decode_box_autoadd_bool(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_bool(deserializer)); }
-
-@protected BuyBitcoinRequest sse_decode_box_autoadd_buy_bitcoin_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_buy_bitcoin_request(deserializer)); }
-
-@protected ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_connect_request(deserializer)); }
-
-@protected PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_i_64(deserializer)); }
-
-@protected ListPaymentsRequest sse_decode_box_autoadd_list_payments_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_list_payments_request(deserializer)); }
-
-@protected LNInvoice sse_decode_box_autoadd_ln_invoice(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_invoice(deserializer)); }
-
-@protected LnUrlAuthRequestData sse_decode_box_autoadd_ln_url_auth_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_auth_request_data(deserializer)); }
-
-@protected LnUrlErrorData sse_decode_box_autoadd_ln_url_error_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_error_data(deserializer)); }
-
-@protected LnUrlPayErrorData sse_decode_box_autoadd_ln_url_pay_error_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_pay_error_data(deserializer)); }
-
-@protected LnUrlPayRequest sse_decode_box_autoadd_ln_url_pay_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_pay_request(deserializer)); }
-
-@protected LnUrlPayRequestData sse_decode_box_autoadd_ln_url_pay_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_pay_request_data(deserializer)); }
-
-@protected LnUrlPaySuccessData sse_decode_box_autoadd_ln_url_pay_success_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_pay_success_data(deserializer)); }
-
-@protected LnUrlWithdrawRequest sse_decode_box_autoadd_ln_url_withdraw_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_withdraw_request(deserializer)); }
-
-@protected LnUrlWithdrawRequestData sse_decode_box_autoadd_ln_url_withdraw_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_withdraw_request_data(deserializer)); }
-
-@protected LnUrlWithdrawSuccessData sse_decode_box_autoadd_ln_url_withdraw_success_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_ln_url_withdraw_success_data(deserializer)); }
-
-@protected MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_message_success_action_data(deserializer)); }
-
-@protected PayOnchainRequest sse_decode_box_autoadd_pay_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_pay_onchain_request(deserializer)); }
-
-@protected Payment sse_decode_box_autoadd_payment(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_payment(deserializer)); }
-
-@protected PrepareBuyBitcoinRequest sse_decode_box_autoadd_prepare_buy_bitcoin_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_buy_bitcoin_request(deserializer)); }
-
-@protected PreparePayOnchainRequest sse_decode_box_autoadd_prepare_pay_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_pay_onchain_request(deserializer)); }
-
-@protected PrepareReceiveOnchainRequest sse_decode_box_autoadd_prepare_receive_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_receive_onchain_request(deserializer)); }
-
-@protected PrepareReceiveOnchainResponse sse_decode_box_autoadd_prepare_receive_onchain_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_receive_onchain_response(deserializer)); }
-
-@protected PrepareReceivePaymentRequest sse_decode_box_autoadd_prepare_receive_payment_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_receive_payment_request(deserializer)); }
-
-@protected PrepareRefundRequest sse_decode_box_autoadd_prepare_refund_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_refund_request(deserializer)); }
-
-@protected PrepareSendRequest sse_decode_box_autoadd_prepare_send_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_prepare_send_request(deserializer)); }
-
-@protected ReceivePaymentRequest sse_decode_box_autoadd_receive_payment_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_receive_payment_request(deserializer)); }
-
-@protected RefundRequest sse_decode_box_autoadd_refund_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_refund_request(deserializer)); }
-
-@protected RestoreRequest sse_decode_box_autoadd_restore_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_restore_request(deserializer)); }
-
-@protected SdkEvent sse_decode_box_autoadd_sdk_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_sdk_event(deserializer)); }
-
-@protected SuccessActionProcessed sse_decode_box_autoadd_success_action_processed(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_success_action_processed(deserializer)); }
-
-@protected Symbol sse_decode_box_autoadd_symbol(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_symbol(deserializer)); }
-
-@protected int sse_decode_box_autoadd_u_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_u_32(deserializer)); }
-
-@protected BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_u_64(deserializer)); }
-
-@protected UrlSuccessActionData sse_decode_box_autoadd_url_success_action_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return (sse_decode_url_success_action_data(deserializer)); }
-
-@protected BuyBitcoinProvider sse_decode_buy_bitcoin_provider(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return BuyBitcoinProvider.values[inner]; }
-
-@protected BuyBitcoinRequest sse_decode_buy_bitcoin_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_prepareRes = sse_decode_prepare_buy_bitcoin_response(deserializer);
-var var_redirectUrl = sse_decode_opt_String(deserializer);
-return BuyBitcoinRequest(prepareRes: var_prepareRes, redirectUrl: var_redirectUrl); }
-
-@protected Config sse_decode_config(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_liquidElectrumUrl = sse_decode_String(deserializer);
-var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
-var var_mempoolspaceUrl = sse_decode_String(deserializer);
-var var_workingDir = sse_decode_String(deserializer);
-var var_network = sse_decode_liquid_network(deserializer);
-var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
-var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
-var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-return Config(liquidElectrumUrl: var_liquidElectrumUrl, bitcoinElectrumUrl: var_bitcoinElectrumUrl, mempoolspaceUrl: var_mempoolspaceUrl, workingDir: var_workingDir, network: var_network, paymentTimeoutSec: var_paymentTimeoutSec, zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat, zeroConfMaxAmountSat: var_zeroConfMaxAmountSat); }
-
-@protected ConnectRequest sse_decode_connect_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_mnemonic = sse_decode_String(deserializer);
-var var_config = sse_decode_config(deserializer);
-return ConnectRequest(mnemonic: var_mnemonic, config: var_config); }
-
-@protected CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_name = sse_decode_String(deserializer);
-var var_fractionSize = sse_decode_u_32(deserializer);
-var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
-var var_symbol = sse_decode_opt_box_autoadd_symbol(deserializer);
-var var_uniqSymbol = sse_decode_opt_box_autoadd_symbol(deserializer);
-var var_localizedName = sse_decode_list_localized_name(deserializer);
-var var_localeOverrides = sse_decode_list_locale_overrides(deserializer);
-return CurrencyInfo(name: var_name, fractionSize: var_fractionSize, spacing: var_spacing, symbol: var_symbol, uniqSymbol: var_uniqSymbol, localizedName: var_localizedName, localeOverrides: var_localeOverrides); }
-
-@protected double sse_decode_f_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getFloat64(); }
-
-@protected FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_id = sse_decode_String(deserializer);
-var var_info = sse_decode_currency_info(deserializer);
-return FiatCurrency(id: var_id, info: var_info); }
-
-@protected GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_balanceSat = sse_decode_u_64(deserializer);
-var var_pendingSendSat = sse_decode_u_64(deserializer);
-var var_pendingReceiveSat = sse_decode_u_64(deserializer);
-var var_pubkey = sse_decode_String(deserializer);
-return GetInfoResponse(balanceSat: var_balanceSat, pendingSendSat: var_pendingSendSat, pendingReceiveSat: var_pendingReceiveSat, pubkey: var_pubkey); }
-
-@protected int sse_decode_i_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getInt32(); }
-
-@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getPlatformInt64(); }
-
-@protected InputType sse_decode_input_type(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_address = sse_decode_box_autoadd_bitcoin_address_data(deserializer);
-return InputType_BitcoinAddress(address: var_address);case 1: var var_invoice = sse_decode_box_autoadd_ln_invoice(deserializer);
-return InputType_Bolt11(invoice: var_invoice);case 2: var var_nodeId = sse_decode_String(deserializer);
-return InputType_NodeId(nodeId: var_nodeId);case 3: var var_url = sse_decode_String(deserializer);
-return InputType_Url(url: var_url);case 4: var var_data = sse_decode_box_autoadd_ln_url_pay_request_data(deserializer);
-return InputType_LnUrlPay(data: var_data);case 5: var var_data = sse_decode_box_autoadd_ln_url_withdraw_request_data(deserializer);
-return InputType_LnUrlWithdraw(data: var_data);case 6: var var_data = sse_decode_box_autoadd_ln_url_auth_request_data(deserializer);
-return InputType_LnUrlAuth(data: var_data);case 7: var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-return InputType_LnUrlError(data: var_data); default: throw UnimplementedError(''); }
-             }
-
-@protected LightningPaymentLimitsResponse sse_decode_lightning_payment_limits_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_send = sse_decode_limits(deserializer);
-var var_receive = sse_decode_limits(deserializer);
-return LightningPaymentLimitsResponse(send: var_send, receive: var_receive); }
-
-@protected Limits sse_decode_limits(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_minSat = sse_decode_u_64(deserializer);
-var var_maxSat = sse_decode_u_64(deserializer);
-var var_maxZeroConfSat = sse_decode_u_64(deserializer);
-return Limits(minSat: var_minSat, maxSat: var_maxSat, maxZeroConfSat: var_maxZeroConfSat); }
-
-@protected LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return LiquidNetwork.values[inner]; }
-
-@protected List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <FiatCurrency>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_fiat_currency(deserializer)); }
-        return ans_;
-         }
-
-@protected List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <LocaleOverrides>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_locale_overrides(deserializer)); }
-        return ans_;
-         }
-
-@protected List<LocalizedName> sse_decode_list_localized_name(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <LocalizedName>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_localized_name(deserializer)); }
-        return ans_;
-         }
-
-@protected List<Payment> sse_decode_list_payment(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <Payment>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_payment(deserializer)); }
-        return ans_;
-         }
-
-@protected List<PaymentType> sse_decode_list_payment_type(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <PaymentType>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_payment_type(deserializer)); }
-        return ans_;
-         }
-
-@protected ListPaymentsRequest sse_decode_list_payments_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_filters = sse_decode_opt_list_payment_type(deserializer);
-var var_fromTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
-var var_toTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
-var var_offset = sse_decode_opt_box_autoadd_u_32(deserializer);
-var var_limit = sse_decode_opt_box_autoadd_u_32(deserializer);
-return ListPaymentsRequest(filters: var_filters, fromTimestamp: var_fromTimestamp, toTimestamp: var_toTimestamp, offset: var_offset, limit: var_limit); }
-
-@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var len_ = sse_decode_i_32(deserializer);
-                return deserializer.buffer.getUint8List(len_); }
-
-@protected List<Rate> sse_decode_list_rate(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <Rate>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_rate(deserializer)); }
-        return ans_;
-         }
-
-@protected List<RefundableSwap> sse_decode_list_refundable_swap(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <RefundableSwap>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_refundable_swap(deserializer)); }
-        return ans_;
-         }
-
-@protected List<RouteHint> sse_decode_list_route_hint(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <RouteHint>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_route_hint(deserializer)); }
-        return ans_;
-         }
-
-@protected List<RouteHintHop> sse_decode_list_route_hint_hop(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-        var len_ = sse_decode_i_32(deserializer);
-        var ans_ = <RouteHintHop>[];
-        for (var idx_ = 0; idx_ < len_; ++idx_) { ans_.add(sse_decode_route_hint_hop(deserializer)); }
-        return ans_;
-         }
-
-@protected LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_bolt11 = sse_decode_String(deserializer);
-var var_network = sse_decode_network(deserializer);
-var var_payeePubkey = sse_decode_String(deserializer);
-var var_paymentHash = sse_decode_String(deserializer);
-var var_description = sse_decode_opt_String(deserializer);
-var var_descriptionHash = sse_decode_opt_String(deserializer);
-var var_amountMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_timestamp = sse_decode_u_64(deserializer);
-var var_expiry = sse_decode_u_64(deserializer);
-var var_routingHints = sse_decode_list_route_hint(deserializer);
-var var_paymentSecret = sse_decode_list_prim_u_8_strict(deserializer);
-var var_minFinalCltvExpiryDelta = sse_decode_u_64(deserializer);
-return LNInvoice(bolt11: var_bolt11, network: var_network, payeePubkey: var_payeePubkey, paymentHash: var_paymentHash, description: var_description, descriptionHash: var_descriptionHash, amountMsat: var_amountMsat, timestamp: var_timestamp, expiry: var_expiry, routingHints: var_routingHints, paymentSecret: var_paymentSecret, minFinalCltvExpiryDelta: var_minFinalCltvExpiryDelta); }
-
-@protected LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_err = sse_decode_String(deserializer);
-return LnUrlAuthError_Generic(err: var_err);case 1: var var_err = sse_decode_String(deserializer);
-return LnUrlAuthError_InvalidUri(err: var_err);case 2: var var_err = sse_decode_String(deserializer);
-return LnUrlAuthError_ServiceConnectivity(err: var_err); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlAuthRequestData sse_decode_ln_url_auth_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_k1 = sse_decode_String(deserializer);
-var var_action = sse_decode_opt_String(deserializer);
-var var_domain = sse_decode_String(deserializer);
-var var_url = sse_decode_String(deserializer);
-return LnUrlAuthRequestData(k1: var_k1, action: var_action, domain: var_domain, url: var_url); }
-
-@protected LnUrlCallbackStatus sse_decode_ln_url_callback_status(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: return LnUrlCallbackStatus_Ok();case 1: var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-return LnUrlCallbackStatus_ErrorStatus(data: var_data); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlErrorData sse_decode_ln_url_error_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_reason = sse_decode_String(deserializer);
-return LnUrlErrorData(reason: var_reason); }
-
-@protected LnUrlPayError sse_decode_ln_url_pay_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: return LnUrlPayError_AlreadyPaid();case 1: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_Generic(err: var_err);case 2: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_InvalidAmount(err: var_err);case 3: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_InvalidInvoice(err: var_err);case 4: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_InvalidNetwork(err: var_err);case 5: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_InvalidUri(err: var_err);case 6: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_InvoiceExpired(err: var_err);case 7: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_PaymentFailed(err: var_err);case 8: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_PaymentTimeout(err: var_err);case 9: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_RouteNotFound(err: var_err);case 10: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_RouteTooExpensive(err: var_err);case 11: var var_err = sse_decode_String(deserializer);
-return LnUrlPayError_ServiceConnectivity(err: var_err); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlPayErrorData sse_decode_ln_url_pay_error_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_paymentHash = sse_decode_String(deserializer);
-var var_reason = sse_decode_String(deserializer);
-return LnUrlPayErrorData(paymentHash: var_paymentHash, reason: var_reason); }
-
-@protected LnUrlPayRequest sse_decode_ln_url_pay_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_data = sse_decode_ln_url_pay_request_data(deserializer);
-var var_amountMsat = sse_decode_u_64(deserializer);
-var var_comment = sse_decode_opt_String(deserializer);
-var var_paymentLabel = sse_decode_opt_String(deserializer);
-var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
-return LnUrlPayRequest(data: var_data, amountMsat: var_amountMsat, comment: var_comment, paymentLabel: var_paymentLabel, validateSuccessActionUrl: var_validateSuccessActionUrl); }
-
-@protected LnUrlPayRequestData sse_decode_ln_url_pay_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_callback = sse_decode_String(deserializer);
-var var_minSendable = sse_decode_u_64(deserializer);
-var var_maxSendable = sse_decode_u_64(deserializer);
-var var_metadataStr = sse_decode_String(deserializer);
-var var_commentAllowed = sse_decode_u_16(deserializer);
-var var_domain = sse_decode_String(deserializer);
-var var_allowsNostr = sse_decode_bool(deserializer);
-var var_nostrPubkey = sse_decode_opt_String(deserializer);
-var var_lnAddress = sse_decode_opt_String(deserializer);
-return LnUrlPayRequestData(callback: var_callback, minSendable: var_minSendable, maxSendable: var_maxSendable, metadataStr: var_metadataStr, commentAllowed: var_commentAllowed, domain: var_domain, allowsNostr: var_allowsNostr, nostrPubkey: var_nostrPubkey, lnAddress: var_lnAddress); }
-
-@protected LnUrlPayResult sse_decode_ln_url_pay_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_data = sse_decode_box_autoadd_ln_url_pay_success_data(deserializer);
-return LnUrlPayResult_EndpointSuccess(data: var_data);case 1: var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-return LnUrlPayResult_EndpointError(data: var_data);case 2: var var_data = sse_decode_box_autoadd_ln_url_pay_error_data(deserializer);
-return LnUrlPayResult_PayError(data: var_data); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlPaySuccessData sse_decode_ln_url_pay_success_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payment = sse_decode_payment(deserializer);
-var var_successAction = sse_decode_opt_box_autoadd_success_action_processed(deserializer);
-return LnUrlPaySuccessData(payment: var_payment, successAction: var_successAction); }
-
-@protected LnUrlWithdrawError sse_decode_ln_url_withdraw_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_Generic(err: var_err);case 1: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_InvalidAmount(err: var_err);case 2: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_InvalidInvoice(err: var_err);case 3: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_InvalidUri(err: var_err);case 4: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_InvoiceNoRoutingHints(err: var_err);case 5: var var_err = sse_decode_String(deserializer);
-return LnUrlWithdrawError_ServiceConnectivity(err: var_err); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlWithdrawRequest sse_decode_ln_url_withdraw_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_data = sse_decode_ln_url_withdraw_request_data(deserializer);
-var var_amountMsat = sse_decode_u_64(deserializer);
-var var_description = sse_decode_opt_String(deserializer);
-return LnUrlWithdrawRequest(data: var_data, amountMsat: var_amountMsat, description: var_description); }
-
-@protected LnUrlWithdrawRequestData sse_decode_ln_url_withdraw_request_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_callback = sse_decode_String(deserializer);
-var var_k1 = sse_decode_String(deserializer);
-var var_defaultDescription = sse_decode_String(deserializer);
-var var_minWithdrawable = sse_decode_u_64(deserializer);
-var var_maxWithdrawable = sse_decode_u_64(deserializer);
-return LnUrlWithdrawRequestData(callback: var_callback, k1: var_k1, defaultDescription: var_defaultDescription, minWithdrawable: var_minWithdrawable, maxWithdrawable: var_maxWithdrawable); }
-
-@protected LnUrlWithdrawResult sse_decode_ln_url_withdraw_result(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
-return LnUrlWithdrawResult_Ok(data: var_data);case 1: var var_data = sse_decode_box_autoadd_ln_url_withdraw_success_data(deserializer);
-return LnUrlWithdrawResult_Timeout(data: var_data);case 2: var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
-return LnUrlWithdrawResult_ErrorStatus(data: var_data); default: throw UnimplementedError(''); }
-             }
-
-@protected LnUrlWithdrawSuccessData sse_decode_ln_url_withdraw_success_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_invoice = sse_decode_ln_invoice(deserializer);
-return LnUrlWithdrawSuccessData(invoice: var_invoice); }
-
-@protected LocaleOverrides sse_decode_locale_overrides(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_locale = sse_decode_String(deserializer);
-var var_spacing = sse_decode_opt_box_autoadd_u_32(deserializer);
-var var_symbol = sse_decode_symbol(deserializer);
-return LocaleOverrides(locale: var_locale, spacing: var_spacing, symbol: var_symbol); }
-
-@protected LocalizedName sse_decode_localized_name(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_locale = sse_decode_String(deserializer);
-var var_name = sse_decode_String(deserializer);
-return LocalizedName(locale: var_locale, name: var_name); }
-
-@protected LogEntry sse_decode_log_entry(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_line = sse_decode_String(deserializer);
-var var_level = sse_decode_String(deserializer);
-return LogEntry(line: var_line, level: var_level); }
-
-@protected MessageSuccessActionData sse_decode_message_success_action_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_message = sse_decode_String(deserializer);
-return MessageSuccessActionData(message: var_message); }
-
-@protected Network sse_decode_network(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return Network.values[inner]; }
-
-@protected OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_send = sse_decode_limits(deserializer);
-var var_receive = sse_decode_limits(deserializer);
-return OnchainPaymentLimitsResponse(send: var_send, receive: var_receive); }
-
-@protected String? sse_decode_opt_String(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_String(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_bool(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_i_64(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_success_action_processed(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected Symbol? sse_decode_opt_box_autoadd_symbol(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_symbol(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_u_32(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_box_autoadd_u_64(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            if (sse_decode_bool(deserializer)) {
-                return (sse_decode_list_payment_type(deserializer));
-            } else {
-                return null;
-            }
-             }
-
-@protected PayOnchainRequest sse_decode_pay_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_address = sse_decode_String(deserializer);
-var var_prepareRes = sse_decode_prepare_pay_onchain_response(deserializer);
-return PayOnchainRequest(address: var_address, prepareRes: var_prepareRes); }
-
-@protected Payment sse_decode_payment(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_txId = sse_decode_opt_String(deserializer);
-var var_swapId = sse_decode_opt_String(deserializer);
-var var_timestamp = sse_decode_u_32(deserializer);
-var var_amountSat = sse_decode_u_64(deserializer);
-var var_feesSat = sse_decode_u_64(deserializer);
-var var_preimage = sse_decode_opt_String(deserializer);
-var var_bolt11 = sse_decode_opt_String(deserializer);
-var var_description = sse_decode_String(deserializer);
-var var_refundTxId = sse_decode_opt_String(deserializer);
-var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_paymentType = sse_decode_payment_type(deserializer);
-var var_status = sse_decode_payment_state(deserializer);
-return Payment(txId: var_txId, swapId: var_swapId, timestamp: var_timestamp, amountSat: var_amountSat, feesSat: var_feesSat, preimage: var_preimage, bolt11: var_bolt11, description: var_description, refundTxId: var_refundTxId, refundTxAmountSat: var_refundTxAmountSat, paymentType: var_paymentType, status: var_status); }
-
-@protected PaymentError sse_decode_payment_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: return PaymentError_AlreadyClaimed();case 1: return PaymentError_AlreadyPaid();case 2: return PaymentError_PaymentInProgress();case 3: return PaymentError_AmountOutOfRange();case 4: var var_err = sse_decode_String(deserializer);
-return PaymentError_Generic(err: var_err);case 5: return PaymentError_InvalidOrExpiredFees();case 6: return PaymentError_InsufficientFunds();case 7: var var_err = sse_decode_String(deserializer);
-return PaymentError_InvalidInvoice(err: var_err);case 8: return PaymentError_InvalidPreimage();case 9: var var_err = sse_decode_String(deserializer);
-return PaymentError_LwkError(err: var_err);case 10: return PaymentError_PairsNotFound();case 11: return PaymentError_PaymentTimeout();case 12: return PaymentError_PersistError();case 13: var var_err = sse_decode_String(deserializer);
-return PaymentError_ReceiveError(err: var_err);case 14: var var_err = sse_decode_String(deserializer);
-var var_refundTxId = sse_decode_String(deserializer);
-return PaymentError_Refunded(err: var_err, refundTxId: var_refundTxId);case 15: return PaymentError_SelfTransferNotSupported();case 16: var var_err = sse_decode_String(deserializer);
-return PaymentError_SendError(err: var_err);case 17: var var_err = sse_decode_String(deserializer);
-return PaymentError_SignerError(err: var_err); default: throw UnimplementedError(''); }
-             }
-
-@protected PaymentState sse_decode_payment_state(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return PaymentState.values[inner]; }
-
-@protected PaymentType sse_decode_payment_type(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var inner = sse_decode_i_32(deserializer);
-        return PaymentType.values[inner]; }
-
-@protected PrepareBuyBitcoinRequest sse_decode_prepare_buy_bitcoin_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_provider = sse_decode_buy_bitcoin_provider(deserializer);
-var var_amountSat = sse_decode_u_64(deserializer);
-return PrepareBuyBitcoinRequest(provider: var_provider, amountSat: var_amountSat); }
-
-@protected PrepareBuyBitcoinResponse sse_decode_prepare_buy_bitcoin_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_provider = sse_decode_buy_bitcoin_provider(deserializer);
-var var_amountSat = sse_decode_u_64(deserializer);
-var var_feesSat = sse_decode_u_64(deserializer);
-return PrepareBuyBitcoinResponse(provider: var_provider, amountSat: var_amountSat, feesSat: var_feesSat); }
-
-@protected PreparePayOnchainRequest sse_decode_prepare_pay_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_receiverAmountSat = sse_decode_u_64(deserializer);
-var var_satPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
-return PreparePayOnchainRequest(receiverAmountSat: var_receiverAmountSat, satPerVbyte: var_satPerVbyte); }
-
-@protected PreparePayOnchainResponse sse_decode_prepare_pay_onchain_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_receiverAmountSat = sse_decode_u_64(deserializer);
-var var_claimFeesSat = sse_decode_u_64(deserializer);
-var var_totalFeesSat = sse_decode_u_64(deserializer);
-return PreparePayOnchainResponse(receiverAmountSat: var_receiverAmountSat, claimFeesSat: var_claimFeesSat, totalFeesSat: var_totalFeesSat); }
-
-@protected PrepareReceiveOnchainRequest sse_decode_prepare_receive_onchain_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payerAmountSat = sse_decode_u_64(deserializer);
-return PrepareReceiveOnchainRequest(payerAmountSat: var_payerAmountSat); }
-
-@protected PrepareReceiveOnchainResponse sse_decode_prepare_receive_onchain_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payerAmountSat = sse_decode_u_64(deserializer);
-var var_feesSat = sse_decode_u_64(deserializer);
-return PrepareReceiveOnchainResponse(payerAmountSat: var_payerAmountSat, feesSat: var_feesSat); }
-
-@protected PrepareReceivePaymentRequest sse_decode_prepare_receive_payment_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_useLightning = sse_decode_bool(deserializer);
-return PrepareReceivePaymentRequest(payerAmountSat: var_payerAmountSat, useLightning: var_useLightning); }
-
-@protected PrepareReceivePaymentResponse sse_decode_prepare_receive_payment_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_feesSat = sse_decode_u_64(deserializer);
-var var_useLightning = sse_decode_bool(deserializer);
-return PrepareReceivePaymentResponse(payerAmountSat: var_payerAmountSat, feesSat: var_feesSat, useLightning: var_useLightning); }
-
-@protected PrepareRefundRequest sse_decode_prepare_refund_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_swapAddress = sse_decode_String(deserializer);
-var var_refundAddress = sse_decode_String(deserializer);
-var var_satPerVbyte = sse_decode_u_32(deserializer);
-return PrepareRefundRequest(swapAddress: var_swapAddress, refundAddress: var_refundAddress, satPerVbyte: var_satPerVbyte); }
-
-@protected PrepareRefundResponse sse_decode_prepare_refund_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_txVsize = sse_decode_u_32(deserializer);
-var var_txFeeSat = sse_decode_u_64(deserializer);
-var var_refundTxId = sse_decode_opt_String(deserializer);
-return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId); }
-
-@protected PrepareSendRequest sse_decode_prepare_send_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_paymentDestination = sse_decode_String(deserializer);
-var var_amountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-return PrepareSendRequest(paymentDestination: var_paymentDestination, amountSat: var_amountSat); }
-
-@protected Rate sse_decode_rate(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_coin = sse_decode_String(deserializer);
-var var_value = sse_decode_f_64(deserializer);
-return Rate(coin: var_coin, value: var_value); }
-
-@protected ReceiveDestination sse_decode_receive_destination(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_uri = sse_decode_String(deserializer);
-return ReceiveDestination_BIP21(uri: var_uri);case 1: var var_address = sse_decode_String(deserializer);
-return ReceiveDestination_Liquid(address: var_address);case 2: var var_id = sse_decode_String(deserializer);
-var var_invoice = sse_decode_String(deserializer);
-return ReceiveDestination_Bolt11(id: var_id, invoice: var_invoice); default: throw UnimplementedError(''); }
-             }
-
-@protected ReceiveOnchainResponse sse_decode_receive_onchain_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_address = sse_decode_String(deserializer);
-var var_bip21 = sse_decode_String(deserializer);
-return ReceiveOnchainResponse(address: var_address, bip21: var_bip21); }
-
-@protected ReceivePaymentRequest sse_decode_receive_payment_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_description = sse_decode_opt_String(deserializer);
-var var_prepareResponse = sse_decode_prepare_receive_payment_response(deserializer);
-return ReceivePaymentRequest(description: var_description, prepareResponse: var_prepareResponse); }
-
-@protected ReceivePaymentResponse sse_decode_receive_payment_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_receiveDestination = sse_decode_receive_destination(deserializer);
-return ReceivePaymentResponse(receiveDestination: var_receiveDestination); }
-
-@protected RecommendedFees sse_decode_recommended_fees(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_fastestFee = sse_decode_u_64(deserializer);
-var var_halfHourFee = sse_decode_u_64(deserializer);
-var var_hourFee = sse_decode_u_64(deserializer);
-var var_economyFee = sse_decode_u_64(deserializer);
-var var_minimumFee = sse_decode_u_64(deserializer);
-return RecommendedFees(fastestFee: var_fastestFee, halfHourFee: var_halfHourFee, hourFee: var_hourFee, economyFee: var_economyFee, minimumFee: var_minimumFee); }
-
-@protected RefundRequest sse_decode_refund_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_swapAddress = sse_decode_String(deserializer);
-var var_refundAddress = sse_decode_String(deserializer);
-var var_satPerVbyte = sse_decode_u_32(deserializer);
-return RefundRequest(swapAddress: var_swapAddress, refundAddress: var_refundAddress, satPerVbyte: var_satPerVbyte); }
-
-@protected RefundResponse sse_decode_refund_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_refundTxId = sse_decode_String(deserializer);
-return RefundResponse(refundTxId: var_refundTxId); }
-
-@protected RefundableSwap sse_decode_refundable_swap(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_swapAddress = sse_decode_String(deserializer);
-var var_timestamp = sse_decode_u_32(deserializer);
-var var_amountSat = sse_decode_u_64(deserializer);
-return RefundableSwap(swapAddress: var_swapAddress, timestamp: var_timestamp, amountSat: var_amountSat); }
-
-@protected RestoreRequest sse_decode_restore_request(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_backupPath = sse_decode_opt_String(deserializer);
-return RestoreRequest(backupPath: var_backupPath); }
-
-@protected RouteHint sse_decode_route_hint(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_hops = sse_decode_list_route_hint_hop(deserializer);
-return RouteHint(hops: var_hops); }
-
-@protected RouteHintHop sse_decode_route_hint_hop(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_srcNodeId = sse_decode_String(deserializer);
-var var_shortChannelId = sse_decode_u_64(deserializer);
-var var_feesBaseMsat = sse_decode_u_32(deserializer);
-var var_feesProportionalMillionths = sse_decode_u_32(deserializer);
-var var_cltvExpiryDelta = sse_decode_u_64(deserializer);
-var var_htlcMinimumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
-var var_htlcMaximumMsat = sse_decode_opt_box_autoadd_u_64(deserializer);
-return RouteHintHop(srcNodeId: var_srcNodeId, shortChannelId: var_shortChannelId, feesBaseMsat: var_feesBaseMsat, feesProportionalMillionths: var_feesProportionalMillionths, cltvExpiryDelta: var_cltvExpiryDelta, htlcMinimumMsat: var_htlcMinimumMsat, htlcMaximumMsat: var_htlcMaximumMsat); }
-
-@protected SdkError sse_decode_sdk_error(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: return SdkError_AlreadyStarted();case 1: var var_err = sse_decode_String(deserializer);
-return SdkError_Generic(err: var_err);case 2: return SdkError_NotStarted();case 3: var var_err = sse_decode_String(deserializer);
-return SdkError_ServiceConnectivity(err: var_err); default: throw UnimplementedError(''); }
-             }
-
-@protected SdkEvent sse_decode_sdk_event(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentFailed(details: var_details);case 1: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentPending(details: var_details);case 2: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentRefunded(details: var_details);case 3: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentRefundPending(details: var_details);case 4: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentSucceeded(details: var_details);case 5: var var_details = sse_decode_box_autoadd_payment(deserializer);
-return SdkEvent_PaymentWaitingConfirmation(details: var_details);case 6: return SdkEvent_Synced(); default: throw UnimplementedError(''); }
-             }
-
-@protected SendPaymentResponse sse_decode_send_payment_response(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_payment = sse_decode_payment(deserializer);
-return SendPaymentResponse(payment: var_payment); }
-
-@protected SuccessActionProcessed sse_decode_success_action_processed(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-            var tag_ = sse_decode_i_32(deserializer);
-            switch (tag_) { case 0: var var_result = sse_decode_box_autoadd_aes_success_action_data_result(deserializer);
-return SuccessActionProcessed_Aes(result: var_result);case 1: var var_data = sse_decode_box_autoadd_message_success_action_data(deserializer);
-return SuccessActionProcessed_Message(data: var_data);case 2: var var_data = sse_decode_box_autoadd_url_success_action_data(deserializer);
-return SuccessActionProcessed_Url(data: var_data); default: throw UnimplementedError(''); }
-             }
-
-@protected Symbol sse_decode_symbol(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_grapheme = sse_decode_opt_String(deserializer);
-var var_template = sse_decode_opt_String(deserializer);
-var var_rtl = sse_decode_opt_box_autoadd_bool(deserializer);
-var var_position = sse_decode_opt_box_autoadd_u_32(deserializer);
-return Symbol(grapheme: var_grapheme, template: var_template, rtl: var_rtl, position: var_position); }
-
-@protected int sse_decode_u_16(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint16(); }
-
-@protected int sse_decode_u_32(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint32(); }
-
-@protected BigInt sse_decode_u_64(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getBigUint64(); }
-
-@protected int sse_decode_u_8(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getUint8(); }
-
-@protected void sse_decode_unit(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
-
-@protected UrlSuccessActionData sse_decode_url_success_action_data(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-var var_description = sse_decode_String(deserializer);
-var var_url = sse_decode_String(deserializer);
-var var_matchesCallbackDomain = sse_decode_bool(deserializer);
-return UrlSuccessActionData(description: var_description, url: var_url, matchesCallbackDomain: var_matchesCallbackDomain); }
-
-@protected BigInt sse_decode_usize(SseDeserializer deserializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-return deserializer.buffer.getBigUint64(); }
-
-@protected int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-            return (raw as BindingLiquidSdkImpl).frbInternalCstEncode(move: true); }
-
-@protected int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(PrepareSendResponse raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-            return (raw as PrepareSendResponseImpl).frbInternalCstEncode(move: true); }
-
-@protected int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SendPaymentRequest raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-            return (raw as SendPaymentRequestImpl).frbInternalCstEncode(move: true); }
-
-@protected int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-            return (raw as BindingLiquidSdkImpl).frbInternalCstEncode(move: false); }
-
-@protected int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-                return (raw as BindingLiquidSdkImpl).frbInternalCstEncode(); }
-
-@protected int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(PrepareSendResponse raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-                return (raw as PrepareSendResponseImpl).frbInternalCstEncode(); }
-
-@protected int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SendPaymentRequest raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-                return (raw as SendPaymentRequestImpl).frbInternalCstEncode(); }
-
-@protected bool cst_encode_bool(bool raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected int cst_encode_buy_bitcoin_provider(BuyBitcoinProvider raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return cst_encode_i_32(raw.index); }
-
-@protected double cst_encode_f_64(double raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected int cst_encode_i_32(int raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected int cst_encode_liquid_network(LiquidNetwork raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return cst_encode_i_32(raw.index); }
-
-@protected int cst_encode_network(Network raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return cst_encode_i_32(raw.index); }
-
-@protected int cst_encode_payment_state(PaymentState raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return cst_encode_i_32(raw.index); }
-
-@protected int cst_encode_payment_type(PaymentType raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return cst_encode_i_32(raw.index); }
-
-@protected int cst_encode_u_16(int raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected int cst_encode_u_32(int raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected int cst_encode_u_8(int raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected void cst_encode_unit(void raw){ // Codec=Cst (C-struct based), see doc to use other codecs
-return raw; }
-
-@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.message, serializer); }
-
-@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: true), serializer); }
-
-@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(PrepareSendResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: true), serializer); }
-
-@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SendPaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as SendPaymentRequestImpl).frbInternalSseEncode(move: true), serializer); }
-
-@protected void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: false), serializer); }
-
-@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(BindingLiquidSdk self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: null), serializer); }
-
-@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrepareSendResponse(PrepareSendResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as PrepareSendResponseImpl).frbInternalSseEncode(move: null), serializer); }
-
-@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSendPaymentRequest(SendPaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_usize((self as SendPaymentRequestImpl).frbInternalSseEncode(move: null), serializer); }
-
-@protected void sse_encode_StreamSink_log_entry_Dco(RustStreamSink<LogEntry> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: DcoCodec(
-            decodeSuccessData: dco_decode_log_entry,
-            decodeErrorData: dco_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_StreamSink_sdk_event_Dco(RustStreamSink<SdkEvent> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.setupAndSerialize(codec: DcoCodec(
-            decodeSuccessData: dco_decode_sdk_event,
-            decodeErrorData: dco_decode_AnyhowException,
-        )), serializer); }
-
-@protected void sse_encode_String(String self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer); }
-
-@protected void sse_encode_aes_success_action_data_decrypted(AesSuccessActionDataDecrypted self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.description, serializer);
-sse_encode_String(self.plaintext, serializer);
- }
-
-@protected void sse_encode_aes_success_action_data_result(AesSuccessActionDataResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case AesSuccessActionDataResult_Decrypted(data: final data): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_aes_success_action_data_decrypted(data, serializer);
-case AesSuccessActionDataResult_ErrorStatus(reason: final reason): sse_encode_i_32(1, serializer); sse_encode_String(reason, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_backup_request(BackupRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_String(self.backupPath, serializer);
- }
-
-@protected void sse_encode_binding_event_listener(BindingEventListener self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_StreamSink_sdk_event_Dco(self.stream, serializer);
- }
-
-@protected void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.address, serializer);
-sse_encode_network(self.network, serializer);
-sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
-sse_encode_opt_String(self.label, serializer);
-sse_encode_opt_String(self.message, serializer);
- }
-
-@protected void sse_encode_bool(bool self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self ? 1 : 0); }
-
-@protected void sse_encode_box_autoadd_aes_success_action_data_decrypted(AesSuccessActionDataDecrypted self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_aes_success_action_data_decrypted(self, serializer); }
-
-@protected void sse_encode_box_autoadd_aes_success_action_data_result(AesSuccessActionDataResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_aes_success_action_data_result(self, serializer); }
-
-@protected void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_backup_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_binding_event_listener(BindingEventListener self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_binding_event_listener(self, serializer); }
-
-@protected void sse_encode_box_autoadd_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_bitcoin_address_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_bool(self, serializer); }
-
-@protected void sse_encode_box_autoadd_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_buy_bitcoin_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_connect_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_64(self, serializer); }
-
-@protected void sse_encode_box_autoadd_list_payments_request(ListPaymentsRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_payments_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_invoice(LNInvoice self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_invoice(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_auth_request_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_error_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_pay_error_data(LnUrlPayErrorData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_pay_error_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_pay_request(LnUrlPayRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_pay_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_pay_request_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_pay_success_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_withdraw_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_withdraw_request_data(LnUrlWithdrawRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_withdraw_request_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_withdraw_success_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_message_success_action_data(MessageSuccessActionData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_message_success_action_data(self, serializer); }
-
-@protected void sse_encode_box_autoadd_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_pay_onchain_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_payment(Payment self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_payment(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_buy_bitcoin_request(PrepareBuyBitcoinRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_buy_bitcoin_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_pay_onchain_request(PreparePayOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_pay_onchain_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_receive_onchain_request(PrepareReceiveOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_receive_onchain_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_receive_onchain_response(PrepareReceiveOnchainResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_receive_onchain_response(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_receive_payment_request(PrepareReceivePaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_receive_payment_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_refund_request(PrepareRefundRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_refund_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_prepare_send_request(PrepareSendRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_send_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_receive_payment_request(ReceivePaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_receive_payment_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_refund_request(RefundRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_refund_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_restore_request(RestoreRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_restore_request(self, serializer); }
-
-@protected void sse_encode_box_autoadd_sdk_event(SdkEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_sdk_event(self, serializer); }
-
-@protected void sse_encode_box_autoadd_success_action_processed(SuccessActionProcessed self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_success_action_processed(self, serializer); }
-
-@protected void sse_encode_box_autoadd_symbol(Symbol self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_symbol(self, serializer); }
-
-@protected void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_32(self, serializer); }
-
-@protected void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self, serializer); }
-
-@protected void sse_encode_box_autoadd_url_success_action_data(UrlSuccessActionData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_url_success_action_data(self, serializer); }
-
-@protected void sse_encode_buy_bitcoin_provider(BuyBitcoinProvider self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_prepare_buy_bitcoin_response(self.prepareRes, serializer);
-sse_encode_opt_String(self.redirectUrl, serializer);
- }
-
-@protected void sse_encode_config(Config self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.liquidElectrumUrl, serializer);
-sse_encode_String(self.bitcoinElectrumUrl, serializer);
-sse_encode_String(self.mempoolspaceUrl, serializer);
-sse_encode_String(self.workingDir, serializer);
-sse_encode_liquid_network(self.network, serializer);
-sse_encode_u_64(self.paymentTimeoutSec, serializer);
-sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
-sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
- }
-
-@protected void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.mnemonic, serializer);
-sse_encode_config(self.config, serializer);
- }
-
-@protected void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.name, serializer);
-sse_encode_u_32(self.fractionSize, serializer);
-sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
-sse_encode_opt_box_autoadd_symbol(self.symbol, serializer);
-sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
-sse_encode_list_localized_name(self.localizedName, serializer);
-sse_encode_list_locale_overrides(self.localeOverrides, serializer);
- }
-
-@protected void sse_encode_f_64(double self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putFloat64(self); }
-
-@protected void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.id, serializer);
-sse_encode_currency_info(self.info, serializer);
- }
-
-@protected void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.balanceSat, serializer);
-sse_encode_u_64(self.pendingSendSat, serializer);
-sse_encode_u_64(self.pendingReceiveSat, serializer);
-sse_encode_String(self.pubkey, serializer);
- }
-
-@protected void sse_encode_i_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putInt32(self); }
-
-@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putPlatformInt64(self); }
-
-@protected void sse_encode_input_type(InputType self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case InputType_BitcoinAddress(address: final address): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_bitcoin_address_data(address, serializer);
-case InputType_Bolt11(invoice: final invoice): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_ln_invoice(invoice, serializer);
-case InputType_NodeId(nodeId: final nodeId): sse_encode_i_32(2, serializer); sse_encode_String(nodeId, serializer);
-case InputType_Url(url: final url): sse_encode_i_32(3, serializer); sse_encode_String(url, serializer);
-case InputType_LnUrlPay(data: final data): sse_encode_i_32(4, serializer); sse_encode_box_autoadd_ln_url_pay_request_data(data, serializer);
-case InputType_LnUrlWithdraw(data: final data): sse_encode_i_32(5, serializer); sse_encode_box_autoadd_ln_url_withdraw_request_data(data, serializer);
-case InputType_LnUrlAuth(data: final data): sse_encode_i_32(6, serializer); sse_encode_box_autoadd_ln_url_auth_request_data(data, serializer);
-case InputType_LnUrlError(data: final data): sse_encode_i_32(7, serializer); sse_encode_box_autoadd_ln_url_error_data(data, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_lightning_payment_limits_response(LightningPaymentLimitsResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_limits(self.send, serializer);
-sse_encode_limits(self.receive, serializer);
- }
-
-@protected void sse_encode_limits(Limits self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.minSat, serializer);
-sse_encode_u_64(self.maxSat, serializer);
-sse_encode_u_64(self.maxZeroConfSat, serializer);
- }
-
-@protected void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_fiat_currency(item, serializer); } }
-
-@protected void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_locale_overrides(item, serializer); } }
-
-@protected void sse_encode_list_localized_name(List<LocalizedName> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_localized_name(item, serializer); } }
-
-@protected void sse_encode_list_payment(List<Payment> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_payment(item, serializer); } }
-
-@protected void sse_encode_list_payment_type(List<PaymentType> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_payment_type(item, serializer); } }
-
-@protected void sse_encode_list_payments_request(ListPaymentsRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_list_payment_type(self.filters, serializer);
-sse_encode_opt_box_autoadd_i_64(self.fromTimestamp, serializer);
-sse_encode_opt_box_autoadd_i_64(self.toTimestamp, serializer);
-sse_encode_opt_box_autoadd_u_32(self.offset, serializer);
-sse_encode_opt_box_autoadd_u_32(self.limit, serializer);
- }
-
-@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-                    serializer.buffer.putUint8List(self); }
-
-@protected void sse_encode_list_rate(List<Rate> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_rate(item, serializer); } }
-
-@protected void sse_encode_list_refundable_swap(List<RefundableSwap> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_refundable_swap(item, serializer); } }
-
-@protected void sse_encode_list_route_hint(List<RouteHint> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_route_hint(item, serializer); } }
-
-@protected void sse_encode_list_route_hint_hop(List<RouteHintHop> self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.length, serializer);
-        for (final item in self) { sse_encode_route_hint_hop(item, serializer); } }
-
-@protected void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.bolt11, serializer);
-sse_encode_network(self.network, serializer);
-sse_encode_String(self.payeePubkey, serializer);
-sse_encode_String(self.paymentHash, serializer);
-sse_encode_opt_String(self.description, serializer);
-sse_encode_opt_String(self.descriptionHash, serializer);
-sse_encode_opt_box_autoadd_u_64(self.amountMsat, serializer);
-sse_encode_u_64(self.timestamp, serializer);
-sse_encode_u_64(self.expiry, serializer);
-sse_encode_list_route_hint(self.routingHints, serializer);
-sse_encode_list_prim_u_8_strict(self.paymentSecret, serializer);
-sse_encode_u_64(self.minFinalCltvExpiryDelta, serializer);
- }
-
-@protected void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlAuthError_Generic(err: final err): sse_encode_i_32(0, serializer); sse_encode_String(err, serializer);
-case LnUrlAuthError_InvalidUri(err: final err): sse_encode_i_32(1, serializer); sse_encode_String(err, serializer);
-case LnUrlAuthError_ServiceConnectivity(err: final err): sse_encode_i_32(2, serializer); sse_encode_String(err, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.k1, serializer);
-sse_encode_opt_String(self.action, serializer);
-sse_encode_String(self.domain, serializer);
-sse_encode_String(self.url, serializer);
- }
-
-@protected void sse_encode_ln_url_callback_status(LnUrlCallbackStatus self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlCallbackStatus_Ok(): sse_encode_i_32(0, serializer); case LnUrlCallbackStatus_ErrorStatus(data: final data): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_ln_url_error_data(data, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.reason, serializer);
- }
-
-@protected void sse_encode_ln_url_pay_error(LnUrlPayError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlPayError_AlreadyPaid(): sse_encode_i_32(0, serializer); case LnUrlPayError_Generic(err: final err): sse_encode_i_32(1, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_InvalidAmount(err: final err): sse_encode_i_32(2, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_InvalidInvoice(err: final err): sse_encode_i_32(3, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_InvalidNetwork(err: final err): sse_encode_i_32(4, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_InvalidUri(err: final err): sse_encode_i_32(5, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_InvoiceExpired(err: final err): sse_encode_i_32(6, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_PaymentFailed(err: final err): sse_encode_i_32(7, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_PaymentTimeout(err: final err): sse_encode_i_32(8, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_RouteNotFound(err: final err): sse_encode_i_32(9, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_RouteTooExpensive(err: final err): sse_encode_i_32(10, serializer); sse_encode_String(err, serializer);
-case LnUrlPayError_ServiceConnectivity(err: final err): sse_encode_i_32(11, serializer); sse_encode_String(err, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_pay_error_data(LnUrlPayErrorData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.paymentHash, serializer);
-sse_encode_String(self.reason, serializer);
- }
-
-@protected void sse_encode_ln_url_pay_request(LnUrlPayRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_pay_request_data(self.data, serializer);
-sse_encode_u_64(self.amountMsat, serializer);
-sse_encode_opt_String(self.comment, serializer);
-sse_encode_opt_String(self.paymentLabel, serializer);
-sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);
- }
-
-@protected void sse_encode_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.callback, serializer);
-sse_encode_u_64(self.minSendable, serializer);
-sse_encode_u_64(self.maxSendable, serializer);
-sse_encode_String(self.metadataStr, serializer);
-sse_encode_u_16(self.commentAllowed, serializer);
-sse_encode_String(self.domain, serializer);
-sse_encode_bool(self.allowsNostr, serializer);
-sse_encode_opt_String(self.nostrPubkey, serializer);
-sse_encode_opt_String(self.lnAddress, serializer);
- }
-
-@protected void sse_encode_ln_url_pay_result(LnUrlPayResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlPayResult_EndpointSuccess(data: final data): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_ln_url_pay_success_data(data, serializer);
-case LnUrlPayResult_EndpointError(data: final data): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_ln_url_error_data(data, serializer);
-case LnUrlPayResult_PayError(data: final data): sse_encode_i_32(2, serializer); sse_encode_box_autoadd_ln_url_pay_error_data(data, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_payment(self.payment, serializer);
-sse_encode_opt_box_autoadd_success_action_processed(self.successAction, serializer);
- }
-
-@protected void sse_encode_ln_url_withdraw_error(LnUrlWithdrawError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlWithdrawError_Generic(err: final err): sse_encode_i_32(0, serializer); sse_encode_String(err, serializer);
-case LnUrlWithdrawError_InvalidAmount(err: final err): sse_encode_i_32(1, serializer); sse_encode_String(err, serializer);
-case LnUrlWithdrawError_InvalidInvoice(err: final err): sse_encode_i_32(2, serializer); sse_encode_String(err, serializer);
-case LnUrlWithdrawError_InvalidUri(err: final err): sse_encode_i_32(3, serializer); sse_encode_String(err, serializer);
-case LnUrlWithdrawError_InvoiceNoRoutingHints(err: final err): sse_encode_i_32(4, serializer); sse_encode_String(err, serializer);
-case LnUrlWithdrawError_ServiceConnectivity(err: final err): sse_encode_i_32(5, serializer); sse_encode_String(err, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_url_withdraw_request_data(self.data, serializer);
-sse_encode_u_64(self.amountMsat, serializer);
-sse_encode_opt_String(self.description, serializer);
- }
-
-@protected void sse_encode_ln_url_withdraw_request_data(LnUrlWithdrawRequestData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.callback, serializer);
-sse_encode_String(self.k1, serializer);
-sse_encode_String(self.defaultDescription, serializer);
-sse_encode_u_64(self.minWithdrawable, serializer);
-sse_encode_u_64(self.maxWithdrawable, serializer);
- }
-
-@protected void sse_encode_ln_url_withdraw_result(LnUrlWithdrawResult self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case LnUrlWithdrawResult_Ok(data: final data): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
-case LnUrlWithdrawResult_Timeout(data: final data): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
-case LnUrlWithdrawResult_ErrorStatus(data: final data): sse_encode_i_32(2, serializer); sse_encode_box_autoadd_ln_url_error_data(data, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_ln_invoice(self.invoice, serializer);
- }
-
-@protected void sse_encode_locale_overrides(LocaleOverrides self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.locale, serializer);
-sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
-sse_encode_symbol(self.symbol, serializer);
- }
-
-@protected void sse_encode_localized_name(LocalizedName self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.locale, serializer);
-sse_encode_String(self.name, serializer);
- }
-
-@protected void sse_encode_log_entry(LogEntry self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.line, serializer);
-sse_encode_String(self.level, serializer);
- }
-
-@protected void sse_encode_message_success_action_data(MessageSuccessActionData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.message, serializer);
- }
-
-@protected void sse_encode_network(Network self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_onchain_payment_limits_response(OnchainPaymentLimitsResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_limits(self.send, serializer);
-sse_encode_limits(self.receive, serializer);
- }
-
-@protected void sse_encode_opt_String(String? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_String(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_bool(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_i_64(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_success_action_processed(SuccessActionProcessed? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_success_action_processed(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_symbol(Symbol? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_symbol(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_u_32(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_box_autoadd_u_64(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-
-                sse_encode_bool(self != null, serializer);
-                if (self != null) {
-                    sse_encode_list_payment_type(self, serializer);
-                }
-                 }
-
-@protected void sse_encode_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.address, serializer);
-sse_encode_prepare_pay_onchain_response(self.prepareRes, serializer);
- }
-
-@protected void sse_encode_payment(Payment self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_String(self.txId, serializer);
-sse_encode_opt_String(self.swapId, serializer);
-sse_encode_u_32(self.timestamp, serializer);
-sse_encode_u_64(self.amountSat, serializer);
-sse_encode_u_64(self.feesSat, serializer);
-sse_encode_opt_String(self.preimage, serializer);
-sse_encode_opt_String(self.bolt11, serializer);
-sse_encode_String(self.description, serializer);
-sse_encode_opt_String(self.refundTxId, serializer);
-sse_encode_opt_box_autoadd_u_64(self.refundTxAmountSat, serializer);
-sse_encode_payment_type(self.paymentType, serializer);
-sse_encode_payment_state(self.status, serializer);
- }
-
-@protected void sse_encode_payment_error(PaymentError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case PaymentError_AlreadyClaimed(): sse_encode_i_32(0, serializer); case PaymentError_AlreadyPaid(): sse_encode_i_32(1, serializer); case PaymentError_PaymentInProgress(): sse_encode_i_32(2, serializer); case PaymentError_AmountOutOfRange(): sse_encode_i_32(3, serializer); case PaymentError_Generic(err: final err): sse_encode_i_32(4, serializer); sse_encode_String(err, serializer);
-case PaymentError_InvalidOrExpiredFees(): sse_encode_i_32(5, serializer); case PaymentError_InsufficientFunds(): sse_encode_i_32(6, serializer); case PaymentError_InvalidInvoice(err: final err): sse_encode_i_32(7, serializer); sse_encode_String(err, serializer);
-case PaymentError_InvalidPreimage(): sse_encode_i_32(8, serializer); case PaymentError_LwkError(err: final err): sse_encode_i_32(9, serializer); sse_encode_String(err, serializer);
-case PaymentError_PairsNotFound(): sse_encode_i_32(10, serializer); case PaymentError_PaymentTimeout(): sse_encode_i_32(11, serializer); case PaymentError_PersistError(): sse_encode_i_32(12, serializer); case PaymentError_ReceiveError(err: final err): sse_encode_i_32(13, serializer); sse_encode_String(err, serializer);
-case PaymentError_Refunded(err: final err,refundTxId: final refundTxId): sse_encode_i_32(14, serializer); sse_encode_String(err, serializer);
-sse_encode_String(refundTxId, serializer);
-case PaymentError_SelfTransferNotSupported(): sse_encode_i_32(15, serializer); case PaymentError_SendError(err: final err): sse_encode_i_32(16, serializer); sse_encode_String(err, serializer);
-case PaymentError_SignerError(err: final err): sse_encode_i_32(17, serializer); sse_encode_String(err, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_payment_state(PaymentState self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_payment_type(PaymentType self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_i_32(self.index, serializer); }
-
-@protected void sse_encode_prepare_buy_bitcoin_request(PrepareBuyBitcoinRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_buy_bitcoin_provider(self.provider, serializer);
-sse_encode_u_64(self.amountSat, serializer);
- }
-
-@protected void sse_encode_prepare_buy_bitcoin_response(PrepareBuyBitcoinResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_buy_bitcoin_provider(self.provider, serializer);
-sse_encode_u_64(self.amountSat, serializer);
-sse_encode_u_64(self.feesSat, serializer);
- }
-
-@protected void sse_encode_prepare_pay_onchain_request(PreparePayOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.receiverAmountSat, serializer);
-sse_encode_opt_box_autoadd_u_32(self.satPerVbyte, serializer);
- }
-
-@protected void sse_encode_prepare_pay_onchain_response(PreparePayOnchainResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.receiverAmountSat, serializer);
-sse_encode_u_64(self.claimFeesSat, serializer);
-sse_encode_u_64(self.totalFeesSat, serializer);
- }
-
-@protected void sse_encode_prepare_receive_onchain_request(PrepareReceiveOnchainRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.payerAmountSat, serializer);
- }
-
-@protected void sse_encode_prepare_receive_onchain_response(PrepareReceiveOnchainResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.payerAmountSat, serializer);
-sse_encode_u_64(self.feesSat, serializer);
- }
-
-@protected void sse_encode_prepare_receive_payment_request(PrepareReceivePaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
-sse_encode_bool(self.useLightning, serializer);
- }
-
-@protected void sse_encode_prepare_receive_payment_response(PrepareReceivePaymentResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
-sse_encode_u_64(self.feesSat, serializer);
-sse_encode_bool(self.useLightning, serializer);
- }
-
-@protected void sse_encode_prepare_refund_request(PrepareRefundRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.swapAddress, serializer);
-sse_encode_String(self.refundAddress, serializer);
-sse_encode_u_32(self.satPerVbyte, serializer);
- }
-
-@protected void sse_encode_prepare_refund_response(PrepareRefundResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_32(self.txVsize, serializer);
-sse_encode_u_64(self.txFeeSat, serializer);
-sse_encode_opt_String(self.refundTxId, serializer);
- }
-
-@protected void sse_encode_prepare_send_request(PrepareSendRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.paymentDestination, serializer);
-sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
- }
-
-@protected void sse_encode_rate(Rate self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.coin, serializer);
-sse_encode_f_64(self.value, serializer);
- }
-
-@protected void sse_encode_receive_destination(ReceiveDestination self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case ReceiveDestination_BIP21(uri: final uri): sse_encode_i_32(0, serializer); sse_encode_String(uri, serializer);
-case ReceiveDestination_Liquid(address: final address): sse_encode_i_32(1, serializer); sse_encode_String(address, serializer);
-case ReceiveDestination_Bolt11(id: final id,invoice: final invoice): sse_encode_i_32(2, serializer); sse_encode_String(id, serializer);
-sse_encode_String(invoice, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_receive_onchain_response(ReceiveOnchainResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.address, serializer);
-sse_encode_String(self.bip21, serializer);
- }
-
-@protected void sse_encode_receive_payment_request(ReceivePaymentRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_String(self.description, serializer);
-sse_encode_prepare_receive_payment_response(self.prepareResponse, serializer);
- }
-
-@protected void sse_encode_receive_payment_response(ReceivePaymentResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_receive_destination(self.receiveDestination, serializer);
- }
-
-@protected void sse_encode_recommended_fees(RecommendedFees self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_u_64(self.fastestFee, serializer);
-sse_encode_u_64(self.halfHourFee, serializer);
-sse_encode_u_64(self.hourFee, serializer);
-sse_encode_u_64(self.economyFee, serializer);
-sse_encode_u_64(self.minimumFee, serializer);
- }
-
-@protected void sse_encode_refund_request(RefundRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.swapAddress, serializer);
-sse_encode_String(self.refundAddress, serializer);
-sse_encode_u_32(self.satPerVbyte, serializer);
- }
-
-@protected void sse_encode_refund_response(RefundResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.refundTxId, serializer);
- }
-
-@protected void sse_encode_refundable_swap(RefundableSwap self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.swapAddress, serializer);
-sse_encode_u_32(self.timestamp, serializer);
-sse_encode_u_64(self.amountSat, serializer);
- }
-
-@protected void sse_encode_restore_request(RestoreRequest self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_String(self.backupPath, serializer);
- }
-
-@protected void sse_encode_route_hint(RouteHint self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_list_route_hint_hop(self.hops, serializer);
- }
-
-@protected void sse_encode_route_hint_hop(RouteHintHop self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.srcNodeId, serializer);
-sse_encode_u_64(self.shortChannelId, serializer);
-sse_encode_u_32(self.feesBaseMsat, serializer);
-sse_encode_u_32(self.feesProportionalMillionths, serializer);
-sse_encode_u_64(self.cltvExpiryDelta, serializer);
-sse_encode_opt_box_autoadd_u_64(self.htlcMinimumMsat, serializer);
-sse_encode_opt_box_autoadd_u_64(self.htlcMaximumMsat, serializer);
- }
-
-@protected void sse_encode_sdk_error(SdkError self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case SdkError_AlreadyStarted(): sse_encode_i_32(0, serializer); case SdkError_Generic(err: final err): sse_encode_i_32(1, serializer); sse_encode_String(err, serializer);
-case SdkError_NotStarted(): sse_encode_i_32(2, serializer); case SdkError_ServiceConnectivity(err: final err): sse_encode_i_32(3, serializer); sse_encode_String(err, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_sdk_event(SdkEvent self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case SdkEvent_PaymentFailed(details: final details): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_PaymentPending(details: final details): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_PaymentRefunded(details: final details): sse_encode_i_32(2, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_PaymentRefundPending(details: final details): sse_encode_i_32(3, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_PaymentSucceeded(details: final details): sse_encode_i_32(4, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_PaymentWaitingConfirmation(details: final details): sse_encode_i_32(5, serializer); sse_encode_box_autoadd_payment(details, serializer);
-case SdkEvent_Synced(): sse_encode_i_32(6, serializer);  default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_send_payment_response(SendPaymentResponse self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_payment(self.payment, serializer);
- }
-
-@protected void sse_encode_success_action_processed(SuccessActionProcessed self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-switch (self) { case SuccessActionProcessed_Aes(result: final result): sse_encode_i_32(0, serializer); sse_encode_box_autoadd_aes_success_action_data_result(result, serializer);
-case SuccessActionProcessed_Message(data: final data): sse_encode_i_32(1, serializer); sse_encode_box_autoadd_message_success_action_data(data, serializer);
-case SuccessActionProcessed_Url(data: final data): sse_encode_i_32(2, serializer); sse_encode_box_autoadd_url_success_action_data(data, serializer);
- default: throw UnimplementedError(''); } }
-
-@protected void sse_encode_symbol(Symbol self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_opt_String(self.grapheme, serializer);
-sse_encode_opt_String(self.template, serializer);
-sse_encode_opt_box_autoadd_bool(self.rtl, serializer);
-sse_encode_opt_box_autoadd_u_32(self.position, serializer);
- }
-
-@protected void sse_encode_u_16(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint16(self); }
-
-@protected void sse_encode_u_32(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint32(self); }
-
-@protected void sse_encode_u_64(BigInt self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putBigUint64(self); }
-
-@protected void sse_encode_u_8(int self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putUint8(self); }
-
-@protected void sse_encode_unit(void self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
- }
-
-@protected void sse_encode_url_success_action_data(UrlSuccessActionData self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-sse_encode_String(self.description, serializer);
-sse_encode_String(self.url, serializer);
-sse_encode_bool(self.matchesCallbackDomain, serializer);
- }
-
-@protected void sse_encode_usize(BigInt self, SseSerializer serializer){ // Codec=Sse (Serialization based), see doc to use other codecs
-serializer.buffer.putBigUint64(self); }
-                }
-                
-
-            @sealed class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
-                // Not to be used by end users
-                BindingLiquidSdkImpl.frbInternalDcoDecode(List<dynamic> wire):
-                    super.frbInternalDcoDecode(wire, _kStaticData);
-
-                // Not to be used by end users
-                BindingLiquidSdkImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative):
-                    super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-                static final _kStaticData = RustArcStaticData(
-                    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_BindingLiquidSdk,
-                    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdk,
-                    rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdkPtr,
-                );
-
-                 Stream<SdkEvent>  addEventListener()=>RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(that: this, );
-
-
- void  backup({required BackupRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, req: req);
-
-
- Future<String>  buyBitcoin({required BuyBitcoinRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkBuyBitcoin(that: this, req: req);
-
-
- Future<void>  disconnect()=>RustLib.instance.api.crateBindingsBindingLiquidSdkDisconnect(that: this, );
-
-
- void  emptyWalletCache()=>RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(that: this, );
-
-
- Future<List<Rate>>  fetchFiatRates()=>RustLib.instance.api.crateBindingsBindingLiquidSdkFetchFiatRates(that: this, );
-
-
- Future<LightningPaymentLimitsResponse>  fetchLightningLimits()=>RustLib.instance.api.crateBindingsBindingLiquidSdkFetchLightningLimits(that: this, );
-
-
- Future<OnchainPaymentLimitsResponse>  fetchOnchainLimits()=>RustLib.instance.api.crateBindingsBindingLiquidSdkFetchOnchainLimits(that: this, );
-
-
- Future<GetInfoResponse>  getInfo()=>RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(that: this, );
-
-
- Future<List<FiatCurrency>>  listFiatCurrencies()=>RustLib.instance.api.crateBindingsBindingLiquidSdkListFiatCurrencies(that: this, );
-
-
- Future<List<Payment>>  listPayments({required ListPaymentsRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkListPayments(that: this, req: req);
-
-
- Future<List<RefundableSwap>>  listRefundables()=>RustLib.instance.api.crateBindingsBindingLiquidSdkListRefundables(that: this, );
-
-
- Future<LnUrlCallbackStatus>  lnurlAuth({required LnUrlAuthRequestData reqData })=>RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlAuth(that: this, reqData: reqData);
-
-
- Future<LnUrlPayResult>  lnurlPay({required LnUrlPayRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlPay(that: this, req: req);
-
-
- Future<LnUrlWithdrawResult>  lnurlWithdraw({required LnUrlWithdrawRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlWithdraw(that: this, req: req);
-
-
- Future<SendPaymentResponse>  payOnchain({required PayOnchainRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
-
-
- Future<PrepareBuyBitcoinResponse>  prepareBuyBitcoin({required PrepareBuyBitcoinRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareBuyBitcoin(that: this, req: req);
-
-
- Future<PreparePayOnchainResponse>  preparePayOnchain({required PreparePayOnchainRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPreparePayOnchain(that: this, req: req);
-
-
- Future<PrepareReceiveOnchainResponse>  prepareReceiveOnchain({required PrepareReceiveOnchainRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareReceiveOnchain(that: this, req: req);
-
-
- Future<PrepareReceivePaymentResponse>  prepareReceivePayment({required PrepareReceivePaymentRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareReceivePayment(that: this, req: req);
-
-
- Future<PrepareRefundResponse>  prepareRefund({required PrepareRefundRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareRefund(that: this, req: req);
-
-
- Future<PrepareSendResponse>  prepareSendPayment({required PrepareSendRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareSendPayment(that: this, req: req);
-
-
- Future<ReceiveOnchainResponse>  receiveOnchain({required PrepareReceiveOnchainResponse req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkReceiveOnchain(that: this, req: req);
-
-
- Future<ReceivePaymentResponse>  receivePayment({required ReceivePaymentRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req);
-
-
- Future<RecommendedFees>  recommendedFees()=>RustLib.instance.api.crateBindingsBindingLiquidSdkRecommendedFees(that: this, );
-
-
- Future<RefundResponse>  refund({required RefundRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkRefund(that: this, req: req);
-
-
- Future<void>  rescanOnchainSwaps()=>RustLib.instance.api.crateBindingsBindingLiquidSdkRescanOnchainSwaps(that: this, );
-
-
- void  restore({required RestoreRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkRestore(that: this, req: req);
-
-
- Future<SendPaymentResponse>  sendPayment({required SendPaymentRequest req })=>RustLib.instance.api.crateBindingsBindingLiquidSdkSendPayment(that: this, req: req);
-
-
- Future<void>  sync()=>RustLib.instance.api.crateBindingsBindingLiquidSdkSync(that: this, );
-
-
-            }
-            @sealed class PrepareSendResponseImpl extends RustOpaque implements PrepareSendResponse {
-                // Not to be used by end users
-                PrepareSendResponseImpl.frbInternalDcoDecode(List<dynamic> wire):
-                    super.frbInternalDcoDecode(wire, _kStaticData);
-
-                // Not to be used by end users
-                PrepareSendResponseImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative):
-                    super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-                static final _kStaticData = RustArcStaticData(
-                    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_PrepareSendResponse,
-                    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponse,
-                    rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponsePtr,
-                );
-
-                
-            }
-            @sealed class SendPaymentRequestImpl extends RustOpaque implements SendPaymentRequest {
-                // Not to be used by end users
-                SendPaymentRequestImpl.frbInternalDcoDecode(List<dynamic> wire):
-                    super.frbInternalDcoDecode(wire, _kStaticData);
-
-                // Not to be used by end users
-                SendPaymentRequestImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative):
-                    super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-                static final _kStaticData = RustArcStaticData(
-                    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_SendPaymentRequest,
-                    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_SendPaymentRequest,
-                    rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_SendPaymentRequestPtr,
-                );
-
-                
-            }
+        )),
+        serializer);
+  }
+
+  @protected
+  void sse_encode_StreamSink_sdk_event_Dco(RustStreamSink<SdkEvent> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+        self.setupAndSerialize(
+            codec: DcoCodec(
+          decodeSuccessData: dco_decode_sdk_event,
+          decodeErrorData: dco_decode_AnyhowException,
+        )),
+        serializer);
+  }
+
+  @protected
+  void sse_encode_String(String self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_aes_success_action_data_decrypted(
+      AesSuccessActionDataDecrypted self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.description, serializer);
+    sse_encode_String(self.plaintext, serializer);
+  }
+
+  @protected
+  void sse_encode_aes_success_action_data_result(AesSuccessActionDataResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case AesSuccessActionDataResult_Decrypted(data: final data):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_aes_success_action_data_decrypted(data, serializer);
+      case AesSuccessActionDataResult_ErrorStatus(reason: final reason):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(reason, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_backup_request(BackupRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.backupPath, serializer);
+  }
+
+  @protected
+  void sse_encode_binding_event_listener(BindingEventListener self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_StreamSink_sdk_event_Dco(self.stream, serializer);
+  }
+
+  @protected
+  void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.address, serializer);
+    sse_encode_network(self.network, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
+    sse_encode_opt_String(self.label, serializer);
+    sse_encode_opt_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_aes_success_action_data_decrypted(
+      AesSuccessActionDataDecrypted self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_aes_success_action_data_decrypted(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_aes_success_action_data_result(
+      AesSuccessActionDataResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_aes_success_action_data_result(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_backup_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_binding_event_listener(BindingEventListener self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_binding_event_listener(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bitcoin_address_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_buy_bitcoin_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_connect_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_list_payments_request(ListPaymentsRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_payments_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_invoice(LNInvoice self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_invoice(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_auth_request_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_error_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_pay_error_data(LnUrlPayErrorData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_error_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_pay_request(LnUrlPayRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_request_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_success_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_request_data(
+      LnUrlWithdrawRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_request_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ln_url_withdraw_success_data(
+      LnUrlWithdrawSuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_success_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_message_success_action_data(
+      MessageSuccessActionData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_message_success_action_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_pay_onchain_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_payment(Payment self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_buy_bitcoin_request(
+      PrepareBuyBitcoinRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_buy_bitcoin_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_pay_onchain_request(
+      PreparePayOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_pay_onchain_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_receive_onchain_request(
+      PrepareReceiveOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_receive_onchain_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_receive_onchain_response(
+      PrepareReceiveOnchainResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_receive_onchain_response(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_receive_payment_request(
+      PrepareReceivePaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_receive_payment_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_refund_request(PrepareRefundRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_refund_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_send_request(PrepareSendRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_send_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_receive_payment_request(ReceivePaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_receive_payment_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_refund_request(RefundRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_refund_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_restore_request(RestoreRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_restore_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_sdk_event(SdkEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_sdk_event(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_success_action_processed(
+      SuccessActionProcessed self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_success_action_processed(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_symbol(Symbol self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_symbol(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_url_success_action_data(UrlSuccessActionData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_url_success_action_data(self, serializer);
+  }
+
+  @protected
+  void sse_encode_buy_bitcoin_provider(BuyBitcoinProvider self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_buy_bitcoin_response(self.prepareRes, serializer);
+    sse_encode_opt_String(self.redirectUrl, serializer);
+  }
+
+  @protected
+  void sse_encode_config(Config self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.liquidElectrumUrl, serializer);
+    sse_encode_String(self.bitcoinElectrumUrl, serializer);
+    sse_encode_String(self.mempoolspaceUrl, serializer);
+    sse_encode_String(self.workingDir, serializer);
+    sse_encode_liquid_network(self.network, serializer);
+    sse_encode_u_64(self.paymentTimeoutSec, serializer);
+    sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.mnemonic, serializer);
+    sse_encode_config(self.config, serializer);
+  }
+
+  @protected
+  void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_u_32(self.fractionSize, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
+    sse_encode_opt_box_autoadd_symbol(self.symbol, serializer);
+    sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
+    sse_encode_list_localized_name(self.localizedName, serializer);
+    sse_encode_list_locale_overrides(self.localeOverrides, serializer);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_currency_info(self.info, serializer);
+  }
+
+  @protected
+  void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.balanceSat, serializer);
+    sse_encode_u_64(self.pendingSendSat, serializer);
+    sse_encode_u_64(self.pendingReceiveSat, serializer);
+    sse_encode_String(self.pubkey, serializer);
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_input_type(InputType self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case InputType_BitcoinAddress(address: final address):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_bitcoin_address_data(address, serializer);
+      case InputType_Bolt11(invoice: final invoice):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_invoice(invoice, serializer);
+      case InputType_NodeId(nodeId: final nodeId):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(nodeId, serializer);
+      case InputType_Url(url: final url):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(url, serializer);
+      case InputType_LnUrlPay(data: final data):
+        sse_encode_i_32(4, serializer);
+        sse_encode_box_autoadd_ln_url_pay_request_data(data, serializer);
+      case InputType_LnUrlWithdraw(data: final data):
+        sse_encode_i_32(5, serializer);
+        sse_encode_box_autoadd_ln_url_withdraw_request_data(data, serializer);
+      case InputType_LnUrlAuth(data: final data):
+        sse_encode_i_32(6, serializer);
+        sse_encode_box_autoadd_ln_url_auth_request_data(data, serializer);
+      case InputType_LnUrlError(data: final data):
+        sse_encode_i_32(7, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_lightning_payment_limits_response(
+      LightningPaymentLimitsResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_limits(self.send, serializer);
+    sse_encode_limits(self.receive, serializer);
+  }
+
+  @protected
+  void sse_encode_limits(Limits self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.minSat, serializer);
+    sse_encode_u_64(self.maxSat, serializer);
+    sse_encode_u_64(self.maxZeroConfSat, serializer);
+  }
+
+  @protected
+  void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_fiat_currency(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_locale_overrides(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_localized_name(List<LocalizedName> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_localized_name(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_payment(List<Payment> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_payment(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_payment_type(List<PaymentType> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_payment_type(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_payments_request(ListPaymentsRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_list_payment_type(self.filters, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.fromTimestamp, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.toTimestamp, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.offset, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.limit, serializer);
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_rate(List<Rate> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_rate(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_refundable_swap(List<RefundableSwap> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_refundable_swap(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_route_hint(List<RouteHint> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_hint(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_route_hint_hop(List<RouteHintHop> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_hint_hop(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.bolt11, serializer);
+    sse_encode_network(self.network, serializer);
+    sse_encode_String(self.payeePubkey, serializer);
+    sse_encode_String(self.paymentHash, serializer);
+    sse_encode_opt_String(self.description, serializer);
+    sse_encode_opt_String(self.descriptionHash, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.amountMsat, serializer);
+    sse_encode_u_64(self.timestamp, serializer);
+    sse_encode_u_64(self.expiry, serializer);
+    sse_encode_list_route_hint(self.routingHints, serializer);
+    sse_encode_list_prim_u_8_strict(self.paymentSecret, serializer);
+    sse_encode_u_64(self.minFinalCltvExpiryDelta, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlAuthError_Generic(err: final err):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlAuthError_InvalidUri(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlAuthError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.k1, serializer);
+    sse_encode_opt_String(self.action, serializer);
+    sse_encode_String(self.domain, serializer);
+    sse_encode_String(self.url, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_callback_status(LnUrlCallbackStatus self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlCallbackStatus_Ok():
+        sse_encode_i_32(0, serializer);
+      case LnUrlCallbackStatus_ErrorStatus(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_error_data(LnUrlErrorData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.reason, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_error(LnUrlPayError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlPayError_AlreadyPaid():
+        sse_encode_i_32(0, serializer);
+      case LnUrlPayError_Generic(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidAmount(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidInvoice(err: final err):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidNetwork(err: final err):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvalidUri(err: final err):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_InvoiceExpired(err: final err):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_PaymentFailed(err: final err):
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_PaymentTimeout(err: final err):
+        sse_encode_i_32(8, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_RouteNotFound(err: final err):
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_RouteTooExpensive(err: final err):
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(11, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_error_data(LnUrlPayErrorData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.paymentHash, serializer);
+    sse_encode_String(self.reason, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_request(LnUrlPayRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_pay_request_data(self.data, serializer);
+    sse_encode_u_64(self.amountMsat, serializer);
+    sse_encode_opt_String(self.comment, serializer);
+    sse_encode_opt_String(self.paymentLabel, serializer);
+    sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_request_data(LnUrlPayRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.callback, serializer);
+    sse_encode_u_64(self.minSendable, serializer);
+    sse_encode_u_64(self.maxSendable, serializer);
+    sse_encode_String(self.metadataStr, serializer);
+    sse_encode_u_16(self.commentAllowed, serializer);
+    sse_encode_String(self.domain, serializer);
+    sse_encode_bool(self.allowsNostr, serializer);
+    sse_encode_opt_String(self.nostrPubkey, serializer);
+    sse_encode_opt_String(self.lnAddress, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_result(LnUrlPayResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlPayResult_EndpointSuccess(data: final data):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_ln_url_pay_success_data(data, serializer);
+      case LnUrlPayResult_EndpointError(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      case LnUrlPayResult_PayError(data: final data):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_ln_url_pay_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_pay_success_data(LnUrlPaySuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment(self.payment, serializer);
+    sse_encode_opt_box_autoadd_success_action_processed(self.successAction, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_error(LnUrlWithdrawError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlWithdrawError_Generic(err: final err):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidAmount(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidInvoice(err: final err):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvalidUri(err: final err):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_InvoiceNoRoutingHints(err: final err):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlWithdrawError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_request(LnUrlWithdrawRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_url_withdraw_request_data(self.data, serializer);
+    sse_encode_u_64(self.amountMsat, serializer);
+    sse_encode_opt_String(self.description, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_request_data(LnUrlWithdrawRequestData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.callback, serializer);
+    sse_encode_String(self.k1, serializer);
+    sse_encode_String(self.defaultDescription, serializer);
+    sse_encode_u_64(self.minWithdrawable, serializer);
+    sse_encode_u_64(self.maxWithdrawable, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_result(LnUrlWithdrawResult self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LnUrlWithdrawResult_Ok(data: final data):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
+      case LnUrlWithdrawResult_Timeout(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_ln_url_withdraw_success_data(data, serializer);
+      case LnUrlWithdrawResult_ErrorStatus(data: final data):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_ln_url_error_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_ln_url_withdraw_success_data(LnUrlWithdrawSuccessData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ln_invoice(self.invoice, serializer);
+  }
+
+  @protected
+  void sse_encode_locale_overrides(LocaleOverrides self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.locale, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.spacing, serializer);
+    sse_encode_symbol(self.symbol, serializer);
+  }
+
+  @protected
+  void sse_encode_localized_name(LocalizedName self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.locale, serializer);
+    sse_encode_String(self.name, serializer);
+  }
+
+  @protected
+  void sse_encode_log_entry(LogEntry self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.line, serializer);
+    sse_encode_String(self.level, serializer);
+  }
+
+  @protected
+  void sse_encode_message_success_action_data(MessageSuccessActionData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_network(Network self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_onchain_payment_limits_response(
+      OnchainPaymentLimitsResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_limits(self.send, serializer);
+    sse_encode_limits(self.receive, serializer);
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_success_action_processed(
+      SuccessActionProcessed? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_success_action_processed(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_symbol(Symbol? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_symbol(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_payment_type(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.address, serializer);
+    sse_encode_prepare_pay_onchain_response(self.prepareRes, serializer);
+  }
+
+  @protected
+  void sse_encode_payment(Payment self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.txId, serializer);
+    sse_encode_opt_String(self.swapId, serializer);
+    sse_encode_u_32(self.timestamp, serializer);
+    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_opt_String(self.preimage, serializer);
+    sse_encode_opt_String(self.bolt11, serializer);
+    sse_encode_String(self.description, serializer);
+    sse_encode_opt_String(self.refundTxId, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.refundTxAmountSat, serializer);
+    sse_encode_payment_type(self.paymentType, serializer);
+    sse_encode_payment_state(self.status, serializer);
+  }
+
+  @protected
+  void sse_encode_payment_error(PaymentError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case PaymentError_AlreadyClaimed():
+        sse_encode_i_32(0, serializer);
+      case PaymentError_AlreadyPaid():
+        sse_encode_i_32(1, serializer);
+      case PaymentError_PaymentInProgress():
+        sse_encode_i_32(2, serializer);
+      case PaymentError_AmountOutOfRange():
+        sse_encode_i_32(3, serializer);
+      case PaymentError_Generic(err: final err):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(err, serializer);
+      case PaymentError_InvalidOrExpiredFees():
+        sse_encode_i_32(5, serializer);
+      case PaymentError_InsufficientFunds():
+        sse_encode_i_32(6, serializer);
+      case PaymentError_InvalidInvoice(err: final err):
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(err, serializer);
+      case PaymentError_InvalidPreimage():
+        sse_encode_i_32(8, serializer);
+      case PaymentError_LwkError(err: final err):
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(err, serializer);
+      case PaymentError_PairsNotFound():
+        sse_encode_i_32(10, serializer);
+      case PaymentError_PaymentTimeout():
+        sse_encode_i_32(11, serializer);
+      case PaymentError_PersistError():
+        sse_encode_i_32(12, serializer);
+      case PaymentError_ReceiveError(err: final err):
+        sse_encode_i_32(13, serializer);
+        sse_encode_String(err, serializer);
+      case PaymentError_Refunded(err: final err, refundTxId: final refundTxId):
+        sse_encode_i_32(14, serializer);
+        sse_encode_String(err, serializer);
+        sse_encode_String(refundTxId, serializer);
+      case PaymentError_SelfTransferNotSupported():
+        sse_encode_i_32(15, serializer);
+      case PaymentError_SendError(err: final err):
+        sse_encode_i_32(16, serializer);
+        sse_encode_String(err, serializer);
+      case PaymentError_SignerError(err: final err):
+        sse_encode_i_32(17, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_payment_state(PaymentState self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_payment_type(PaymentType self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_buy_bitcoin_request(PrepareBuyBitcoinRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_buy_bitcoin_provider(self.provider, serializer);
+    sse_encode_u_64(self.amountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_buy_bitcoin_response(PrepareBuyBitcoinResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_buy_bitcoin_provider(self.provider, serializer);
+    sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_pay_onchain_request(PreparePayOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.receiverAmountSat, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.satPerVbyte, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_pay_onchain_response(PreparePayOnchainResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.receiverAmountSat, serializer);
+    sse_encode_u_64(self.claimFeesSat, serializer);
+    sse_encode_u_64(self.totalFeesSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_receive_onchain_request(
+      PrepareReceiveOnchainRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.payerAmountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_receive_onchain_response(
+      PrepareReceiveOnchainResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.payerAmountSat, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_receive_payment_request(
+      PrepareReceivePaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
+    sse_encode_bool(self.useLightning, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_receive_payment_response(
+      PrepareReceivePaymentResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_bool(self.useLightning, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_refund_request(PrepareRefundRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapAddress, serializer);
+    sse_encode_String(self.refundAddress, serializer);
+    sse_encode_u_32(self.satPerVbyte, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_refund_response(PrepareRefundResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.txVsize, serializer);
+    sse_encode_u_64(self.txFeeSat, serializer);
+    sse_encode_opt_String(self.refundTxId, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_send_request(PrepareSendRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.paymentDestination, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_rate(Rate self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.coin, serializer);
+    sse_encode_f_64(self.value, serializer);
+  }
+
+  @protected
+  void sse_encode_receive_destination(ReceiveDestination self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case ReceiveDestination_BIP21(uri: final uri):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(uri, serializer);
+      case ReceiveDestination_Liquid(address: final address):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(address, serializer);
+      case ReceiveDestination_Bolt11(id: final id, invoice: final invoice):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(id, serializer);
+        sse_encode_String(invoice, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_receive_onchain_response(ReceiveOnchainResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.address, serializer);
+    sse_encode_String(self.bip21, serializer);
+  }
+
+  @protected
+  void sse_encode_receive_payment_request(ReceivePaymentRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.description, serializer);
+    sse_encode_prepare_receive_payment_response(self.prepareResponse, serializer);
+  }
+
+  @protected
+  void sse_encode_receive_payment_response(ReceivePaymentResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_receive_destination(self.receiveDestination, serializer);
+  }
+
+  @protected
+  void sse_encode_recommended_fees(RecommendedFees self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.fastestFee, serializer);
+    sse_encode_u_64(self.halfHourFee, serializer);
+    sse_encode_u_64(self.hourFee, serializer);
+    sse_encode_u_64(self.economyFee, serializer);
+    sse_encode_u_64(self.minimumFee, serializer);
+  }
+
+  @protected
+  void sse_encode_refund_request(RefundRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapAddress, serializer);
+    sse_encode_String(self.refundAddress, serializer);
+    sse_encode_u_32(self.satPerVbyte, serializer);
+  }
+
+  @protected
+  void sse_encode_refund_response(RefundResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.refundTxId, serializer);
+  }
+
+  @protected
+  void sse_encode_refundable_swap(RefundableSwap self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapAddress, serializer);
+    sse_encode_u_32(self.timestamp, serializer);
+    sse_encode_u_64(self.amountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_restore_request(RestoreRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.backupPath, serializer);
+  }
+
+  @protected
+  void sse_encode_route_hint(RouteHint self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_route_hint_hop(self.hops, serializer);
+  }
+
+  @protected
+  void sse_encode_route_hint_hop(RouteHintHop self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.srcNodeId, serializer);
+    sse_encode_u_64(self.shortChannelId, serializer);
+    sse_encode_u_32(self.feesBaseMsat, serializer);
+    sse_encode_u_32(self.feesProportionalMillionths, serializer);
+    sse_encode_u_64(self.cltvExpiryDelta, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.htlcMinimumMsat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.htlcMaximumMsat, serializer);
+  }
+
+  @protected
+  void sse_encode_sdk_error(SdkError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case SdkError_AlreadyStarted():
+        sse_encode_i_32(0, serializer);
+      case SdkError_Generic(err: final err):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(err, serializer);
+      case SdkError_NotStarted():
+        sse_encode_i_32(2, serializer);
+      case SdkError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(err, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_sdk_event(SdkEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case SdkEvent_PaymentFailed(details: final details):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_PaymentPending(details: final details):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_PaymentRefunded(details: final details):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_PaymentRefundPending(details: final details):
+        sse_encode_i_32(3, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_PaymentSucceeded(details: final details):
+        sse_encode_i_32(4, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_PaymentWaitingConfirmation(details: final details):
+        sse_encode_i_32(5, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_Synced():
+        sse_encode_i_32(6, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_send_payment_response(SendPaymentResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment(self.payment, serializer);
+  }
+
+  @protected
+  void sse_encode_success_action_processed(SuccessActionProcessed self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case SuccessActionProcessed_Aes(result: final result):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_aes_success_action_data_result(result, serializer);
+      case SuccessActionProcessed_Message(data: final data):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_message_success_action_data(data, serializer);
+      case SuccessActionProcessed_Url(data: final data):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_url_success_action_data(data, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  void sse_encode_symbol(Symbol self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_String(self.grapheme, serializer);
+    sse_encode_opt_String(self.template, serializer);
+    sse_encode_opt_box_autoadd_bool(self.rtl, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.position, serializer);
+  }
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint16(self);
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_u_8(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self);
+  }
+
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_url_success_action_data(UrlSuccessActionData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.description, serializer);
+    sse_encode_String(self.url, serializer);
+    sse_encode_bool(self.matchesCallbackDomain, serializer);
+  }
+
+  @protected
+  void sse_encode_usize(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
+  }
+}
+
+@sealed
+class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
+  // Not to be used by end users
+  BindingLiquidSdkImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  BindingLiquidSdkImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_BindingLiquidSdk,
+    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdk,
+    rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdkPtr,
+  );
+
+  Stream<SdkEvent> addEventListener() => RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(
+        that: this,
+      );
+
+  void backup({required BackupRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkBackup(that: this, req: req);
+
+  Future<String> buyBitcoin({required BuyBitcoinRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkBuyBitcoin(that: this, req: req);
+
+  Future<void> disconnect() => RustLib.instance.api.crateBindingsBindingLiquidSdkDisconnect(
+        that: this,
+      );
+
+  void emptyWalletCache() => RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(
+        that: this,
+      );
+
+  Future<List<Rate>> fetchFiatRates() => RustLib.instance.api.crateBindingsBindingLiquidSdkFetchFiatRates(
+        that: this,
+      );
+
+  Future<LightningPaymentLimitsResponse> fetchLightningLimits() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkFetchLightningLimits(
+        that: this,
+      );
+
+  Future<OnchainPaymentLimitsResponse> fetchOnchainLimits() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkFetchOnchainLimits(
+        that: this,
+      );
+
+  Future<GetInfoResponse> getInfo() => RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(
+        that: this,
+      );
+
+  Future<List<FiatCurrency>> listFiatCurrencies() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkListFiatCurrencies(
+        that: this,
+      );
+
+  Future<List<Payment>> listPayments({required ListPaymentsRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkListPayments(that: this, req: req);
+
+  Future<List<RefundableSwap>> listRefundables() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkListRefundables(
+        that: this,
+      );
+
+  Future<LnUrlCallbackStatus> lnurlAuth({required LnUrlAuthRequestData reqData}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlAuth(that: this, reqData: reqData);
+
+  Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlPay(that: this, req: req);
+
+  Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlWithdraw(that: this, req: req);
+
+  Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
+
+  Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareBuyBitcoin(that: this, req: req);
+
+  Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPreparePayOnchain(that: this, req: req);
+
+  Future<PrepareReceiveOnchainResponse> prepareReceiveOnchain({required PrepareReceiveOnchainRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareReceiveOnchain(that: this, req: req);
+
+  Future<PrepareReceivePaymentResponse> prepareReceivePayment({required PrepareReceivePaymentRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareReceivePayment(that: this, req: req);
+
+  Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareRefund(that: this, req: req);
+
+  Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareSendPayment(that: this, req: req);
+
+  Future<ReceiveOnchainResponse> receiveOnchain({required PrepareReceiveOnchainResponse req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkReceiveOnchain(that: this, req: req);
+
+  Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req);
+
+  Future<RecommendedFees> recommendedFees() =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkRecommendedFees(
+        that: this,
+      );
+
+  Future<RefundResponse> refund({required RefundRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkRefund(that: this, req: req);
+
+  Future<void> rescanOnchainSwaps() => RustLib.instance.api.crateBindingsBindingLiquidSdkRescanOnchainSwaps(
+        that: this,
+      );
+
+  void restore({required RestoreRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkRestore(that: this, req: req);
+
+  Future<SendPaymentResponse> sendPayment({required SendPaymentRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkSendPayment(that: this, req: req);
+
+  Future<void> sync() => RustLib.instance.api.crateBindingsBindingLiquidSdkSync(
+        that: this,
+      );
+}
+
+@sealed
+class PrepareSendResponseImpl extends RustOpaque implements PrepareSendResponse {
+  // Not to be used by end users
+  PrepareSendResponseImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PrepareSendResponseImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_PrepareSendResponse,
+    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponse,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PrepareSendResponsePtr,
+  );
+}
+
+@sealed
+class SendPaymentRequestImpl extends RustOpaque implements SendPaymentRequest {
+  // Not to be used by end users
+  SendPaymentRequestImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  SendPaymentRequestImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_SendPaymentRequest,
+    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_SendPaymentRequest,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_SendPaymentRequestPtr,
+  );
+}

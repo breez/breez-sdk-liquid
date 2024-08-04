@@ -272,7 +272,7 @@ pub struct PrepareSendRequest {
 #[derive(Clone, Debug, Serialize)]
 pub enum PayDestination {
     BIP21 { address_data: LiquidAddressData },
-    Bolt11 { invoice: String },
+    Bolt11 { invoice: LNInvoice },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].

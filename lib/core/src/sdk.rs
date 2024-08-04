@@ -731,9 +731,7 @@ impl LiquidSdk {
                         lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
                     }
                 };
-                payment_destination = PayDestination::Bolt11 {
-                    invoice: invoice.bolt11,
-                };
+                payment_destination = PayDestination::Bolt11 { invoice };
             }
             _ => {
                 return Err(PaymentError::Generic {
@@ -810,10 +808,8 @@ impl LiquidSdk {
                 self.send_direct_payment(&liquid_address_data.address, amount_sat, *fees_sat)
                     .await
             }
-            PayDestination::Bolt11 {
-                invoice: raw_invoice,
-            } => {
-                self.check_send_payment_invoice(&raw_invoice, *fees_sat)
+            PayDestination::Bolt11 { invoice } => {
+                self.check_send_payment_invoice(&invoice.bolt11, *fees_sat)
                     .await
             }
         }

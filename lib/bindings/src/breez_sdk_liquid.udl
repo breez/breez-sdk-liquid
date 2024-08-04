@@ -331,7 +331,7 @@ dictionary PrepareSendRequest {
 [Enum]
 interface PayDestination {
     BIP21(LiquidAddressData address_data);
-    Bolt11(string invoice);
+    Bolt11(LNInvoice invoice);
 };
 
 dictionary PrepareSendResponse {
