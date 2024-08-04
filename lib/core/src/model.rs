@@ -270,7 +270,7 @@ pub struct PrepareSendRequest {
 
 /// Specifies the supported destinations which can be payed by the SDK
 #[derive(Clone, Debug, Serialize)]
-pub enum PayDestination {
+pub enum SendDestination {
     BIP21 { address_data: LiquidAddressData },
     Bolt11 { invoice: LNInvoice },
 }
@@ -278,7 +278,7 @@ pub enum PayDestination {
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub payment_destination: PayDestination,
+    pub payment_destination: SendDestination,
     pub fees_sat: u64,
 }
 

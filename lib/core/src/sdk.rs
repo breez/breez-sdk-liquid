@@ -700,7 +700,7 @@ impl LiquidSdk {
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
-                payment_destination = PayDestination::BIP21 {
+                payment_destination = SendDestination::BIP21 {
                     address_data: liquid_address_data,
                 };
             }
@@ -731,7 +731,7 @@ impl LiquidSdk {
                         lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
                     }
                 };
-                payment_destination = PayDestination::Bolt11 { invoice };
+                payment_destination = SendDestination::Bolt11 { invoice };
             }
             _ => {
                 return Err(PaymentError::Generic {
@@ -785,7 +785,7 @@ impl LiquidSdk {
         } = &req.prepare_response;
 
         match payment_destination {
-            PayDestination::BIP21 {
+            SendDestination::BIP21 {
                 address_data: liquid_address_data,
             } => {
                 ensure_sdk!(
@@ -808,7 +808,7 @@ impl LiquidSdk {
                 self.send_direct_payment(&liquid_address_data.address, amount_sat, *fees_sat)
                     .await
             }
-            PayDestination::Bolt11 { invoice } => {
+            SendDestination::Bolt11 { invoice } => {
                 self.check_send_payment_invoice(&invoice.bolt11, *fees_sat)
                     .await
             }
