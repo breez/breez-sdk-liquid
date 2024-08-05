@@ -77,7 +77,7 @@ pub(crate) async fn derive_fee_rate(
         .values()
         .sum::<u64>() as f32;
 
-    Ok(0.1 * absolute_fees as f32 / standard_fees)
+    Ok(STANDARD_FEE_RATE_SAT_PER_VBYTE * absolute_fees as f32 / standard_fees)
 }
 
 pub(crate) fn estimate_refund_fees(
