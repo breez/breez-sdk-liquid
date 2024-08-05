@@ -315,7 +315,7 @@ pub(crate) async fn handle_command(
             receiver_amount_sat,
             sat_per_vbyte,
         } => {
-            let prepare_res = sdk
+            let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
                     receiver_amount_sat,
                     sat_per_vbyte,
@@ -325,7 +325,7 @@ pub(crate) async fn handle_command(
             wait_confirmation!(
                 format!(
                     "Fees: {} sat (incl claim fee: {} sat). Are the fees acceptable? (y/N) ",
-                    prepare_res.total_fees_sat, prepare_res.claim_fees_sat
+                    prepare_response.total_fees_sat, prepare_response.claim_fees_sat
                 ),
                 "Payment send halted"
             );
@@ -333,25 +333,25 @@ pub(crate) async fn handle_command(
             let response = sdk
                 .pay_onchain(&PayOnchainRequest {
                     address,
-                    prepare_res,
+                    prepare_response,
                 })
                 .await?;
             command_result!(response)
         }
         Command::ReceiveOnchainPayment { payer_amount_sat } => {
-            let prepare_res = sdk
+            let prepare_response = sdk
                 .prepare_receive_onchain(&PrepareReceiveOnchainRequest { payer_amount_sat })
                 .await?;
 
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_res.fees_sat
+                    prepare_response.fees_sat
                 ),
                 "Payment receive halted"
             );
 
-            let response = sdk.receive_onchain(&prepare_res).await?;
+            let response = sdk.receive_onchain(&prepare_response).await?;
             let bip21 = response.bip21.clone();
 
             let mut result = command_result!(response);
@@ -363,7 +363,7 @@ pub(crate) async fn handle_command(
             provider,
             amount_sat,
         } => {
-            let prepare_res = sdk
+            let prepare_response = sdk
                 .prepare_buy_bitcoin(&PrepareBuyBitcoinRequest {
                     provider,
                     amount_sat,
@@ -373,14 +373,14 @@ pub(crate) async fn handle_command(
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_res.fees_sat
+                    prepare_response.fees_sat
                 ),
                 "Buy Bitcoin halted"
             );
 
             let url = sdk
                 .buy_bitcoin(&BuyBitcoinRequest {
-                    prepare_res,
+                    prepare_response,
                     redirect_url: None,
                 })
                 .await?;

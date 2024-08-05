@@ -306,7 +306,7 @@ pub struct PreparePayOnchainResponse {
 #[derive(Debug, Serialize)]
 pub struct PayOnchainRequest {
     pub address: String,
-    pub prepare_res: PreparePayOnchainResponse,
+    pub prepare_response: PreparePayOnchainResponse,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
@@ -1135,7 +1135,7 @@ pub struct PrepareBuyBitcoinResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::buy_bitcoin].
 #[derive(Clone, Debug, Serialize)]
 pub struct BuyBitcoinRequest {
-    pub prepare_res: PrepareBuyBitcoinResponse,
+    pub prepare_response: PrepareBuyBitcoinResponse,
 
     /// The optional URL to redirect to after completing the buy.
     ///

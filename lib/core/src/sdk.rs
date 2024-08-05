@@ -1089,9 +1089,9 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let receiver_amount_sat = req.prepare_res.receiver_amount_sat;
+        let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
-        let claim_fees_sat = req.prepare_res.claim_fees_sat;
+        let claim_fees_sat = req.prepare_response.claim_fees_sat;
         let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
         let lockup_fees_sat = self
@@ -1099,7 +1099,7 @@ impl LiquidSdk {
             .await?;
 
         ensure_sdk!(
-            req.prepare_res.total_fees_sat
+            req.prepare_response.total_fees_sat
                 == pair.fees.boltz(server_lockup_amount_sat)
                     + lockup_fees_sat
                     + claim_fees_sat
@@ -1107,7 +1107,7 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let payer_amount_sat = req.prepare_res.total_fees_sat + receiver_amount_sat;
+        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -1142,7 +1142,7 @@ impl LiquidSdk {
         let create_response_json = ChainSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
-        let payer_amount_sat = req.prepare_res.total_fees_sat + receiver_amount_sat;
+        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
         let claim_address = req.address.clone();
 
         let swap = ChainSwap {
@@ -1677,12 +1677,19 @@ impl LiquidSdk {
     ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
         let swap = self
-            .create_chain_swap(req.prepare_res.amount_sat, req.prepare_res.fees_sat)
+            .create_chain_swap(
+                req.prepare_response.amount_sat,
+                req.prepare_response.fees_sat,
+            )
             .await?;
 
         Ok(self
             .buy_bitcoin_service
-            .buy_bitcoin(req.prepare_res.provider, &swap, req.redirect_url.clone())
+            .buy_bitcoin(
+                req.prepare_response.provider,
+                &swap,
+                req.redirect_url.clone(),
+            )
             .await?)
     }
 

@@ -396,7 +396,7 @@ dictionary PreparePayOnchainResponse {
 
 dictionary PayOnchainRequest {
     string address;
-    PreparePayOnchainResponse prepare_res;
+    PreparePayOnchainResponse prepare_response;
 };
 
 dictionary PrepareReceiveOnchainRequest {
@@ -429,7 +429,7 @@ dictionary PrepareBuyBitcoinResponse {
 };
 
 dictionary BuyBitcoinRequest {
-    PrepareBuyBitcoinResponse prepare_res;
+    PrepareBuyBitcoinResponse prepare_response;
     string? redirect_url = null;
 };
 
