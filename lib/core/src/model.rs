@@ -14,7 +14,7 @@ use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
-use sdk_common::{liquid::LiquidAddressData, prelude::*};
+use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
@@ -264,8 +264,12 @@ pub struct PrepareSendRequest {
 /// Specifies the supported destinations which can be payed by the SDK
 #[derive(Clone, Debug, Serialize)]
 pub enum SendDestination {
-    BIP21 { address_data: LiquidAddressData },
-    Bolt11 { invoice: LNInvoice },
+    BIP21 {
+        address_data: liquid::LiquidAddressData,
+    },
+    Bolt11 {
+        invoice: LNInvoice,
+    },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
