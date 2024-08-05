@@ -368,15 +368,8 @@ dictionary ReceivePaymentRequest {
     string? description = null;
 };
 
-[Enum]
-interface ReceiveDestination {
-    BIP21(string uri);
-    Liquid(string address):
-    Bolt11(string id, string invoice);
-};
-
 dictionary ReceivePaymentResponse {
-    ReceiveDestination receive_destination;
+    string receive_destination;
 };
 
 dictionary Limits {

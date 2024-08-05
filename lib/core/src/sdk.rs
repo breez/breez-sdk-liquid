@@ -1318,7 +1318,7 @@ impl LiquidSdk {
             (false, None) => {
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
                 Ok(ReceivePaymentResponse {
-                    receive_destination: ReceiveDestination::Liquid { address },
+                    receive_destination: address,
                 })
             }
             (false, Some(payer_amount_sat)) => {
@@ -1326,7 +1326,7 @@ impl LiquidSdk {
                 let uri =
                     utils::new_liquid_bip21(&address, self.config.network, Some(payer_amount_sat));
                 Ok(ReceivePaymentResponse {
-                    receive_destination: ReceiveDestination::BIP21 { uri },
+                    receive_destination: uri,
                 })
             }
         }
@@ -1443,10 +1443,7 @@ impl LiquidSdk {
         self.status_stream.track_swap_id(&swap_id)?;
 
         Ok(ReceivePaymentResponse {
-            receive_destination: ReceiveDestination::Bolt11 {
-                id: swap_id,
-                invoice: invoice.to_string(),
-            },
+            receive_destination: invoice.to_string(),
         })
     }
 
@@ -1957,8 +1954,7 @@ impl LiquidSdk {
             })
             .await?;
 
-        if let ReceiveDestination::Bolt11 { invoice, .. } = receive_res.receive_destination {
-            let invoice = parse_invoice(&invoice)?;
+        if let Ok(invoice) = parse_invoice(&receive_res.receive_destination) {
             let res = validate_lnurl_withdraw(req.data, invoice).await?;
             Ok(res)
         } else {

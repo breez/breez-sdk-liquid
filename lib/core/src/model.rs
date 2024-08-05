@@ -216,18 +216,11 @@ pub struct ReceivePaymentRequest {
     pub prepare_response: PrepareReceivePaymentResponse,
 }
 
-/// Specifies the supported destinations through which payments can be received
-#[derive(Debug, Serialize)]
-pub enum ReceiveDestination {
-    BIP21 { uri: String },
-    Liquid { address: String },
-    Bolt11 { id: String, invoice: String },
-}
-
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
-    pub receive_destination: ReceiveDestination,
+    /// Either a BIP21 URI, a Liquid Address or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+    pub receive_destination: String,
 }
 
 /// The minimum and maximum in satoshis of a Lightning or onchain payment.
