@@ -22,7 +22,17 @@ pub(crate) enum Command {
     /// Send lbtc and receive btc lightning through a swap
     SendPayment {
         /// Invoice which has to be paid
-        bolt11: String,
+        #[arg(long)]
+        bolt11: Option<String>,
+
+        /// Either BIP21 URI or Liquid address we intend to pay to
+        #[arg(long)]
+        address: Option<String>,
+
+        /// The amount in satoshi to pay, in case of a direct Liquid address
+        /// or amount-less BIP21
+        #[arg(long = "amount")]
+        amount_sat: Option<u64>,
 
         /// Delay for the send, in seconds
         #[arg(short, long)]
@@ -46,8 +56,13 @@ pub(crate) enum Command {
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
+        /// Whether or not to receive via lightning
+        use_lightning: bool,
+
         /// Amount the payer will send, in satoshi
-        payer_amount_sat: u64,
+        /// If not specified, it will generate a BIP21 URI/Liquid address with no amount
+        #[arg(short = 'a', long = "amount")]
+        payer_amount_sat: Option<u64>,
 
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
@@ -201,23 +216,27 @@ pub(crate) async fn handle_command(
     Ok(match command {
         Command::ReceivePayment {
             payer_amount_sat,
+            use_lightning,
             description,
         } => {
-            let prepare_res = sdk
-                .prepare_receive_payment(&PrepareReceivePaymentRequest { payer_amount_sat })
+            let prepare_response = sdk
+                .prepare_receive_payment(&PrepareReceivePaymentRequest {
+                    payer_amount_sat,
+                    use_lightning,
+                })
                 .await?;
 
             wait_confirmation!(
                 format!(
                     "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_res.fees_sat
+                    prepare_response.fees_sat
                 ),
                 "Payment receive halted"
             );
 
             let response = sdk
                 .receive_payment(&ReceivePaymentRequest {
-                    prepare_res,
+                    prepare_response,
                     description,
                 })
                 .await?;
@@ -236,10 +255,38 @@ pub(crate) async fn handle_command(
             let limits = sdk.fetch_onchain_limits().await?;
             command_result!(limits)
         }
-        Command::SendPayment { bolt11, delay } => {
-            let prepare_response = sdk
-                .prepare_send_payment(&PrepareSendRequest { invoice: bolt11 })
-                .await?;
+        Command::SendPayment {
+            bolt11,
+            address,
+            amount_sat,
+            delay,
+        } => {
+            let prepare_response = match (bolt11, address) {
+                (None, None) => {
+                    return Err(anyhow::anyhow!(
+                        "Must specify either a `bolt11` invoice or a direct/BIP21 `address`."
+                    ))
+                }
+                (Some(bolt11), None) => {
+                    sdk.prepare_send_payment(&PrepareSendRequest {
+                        payment_destination: bolt11,
+                        amount_sat: req.amount_sat,
+                    })
+                    .await?
+                }
+                (None, Some(address)) => {
+                    sdk.prepare_send_payment(&PrepareSendRequest {
+                        payment_destination: address,
+                        amount_sat: req.amount_sat,
+                    })
+                    .await?
+                }
+                (Some(_), Some(_)) => {
+                    return Err(anyhow::anyhow!(
+                        "Cannot specify both `bolt11` and `address` at the same time."
+                    ))
+                }
+            };
 
             wait_confirmation!(
                 format!(
