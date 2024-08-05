@@ -138,6 +138,7 @@ pub(crate) fn new_liquid_bip21(
     address: &str,
     network: LiquidNetwork,
     amount_sat: Option<u64>,
+    message: Option<String>,
 ) -> String {
     let (scheme, asset_id) = match network {
         LiquidNetwork::Mainnet => ("liquidnetwork", AssetId::LIQUID_BTC),
@@ -154,6 +155,10 @@ pub(crate) fn new_liquid_bip21(
         let amount_btc = amount_sat as f64 / 100_000_000.0;
         optional_keys.insert("amount", format!("{amount_btc:.8}"));
         optional_keys.insert("assetid", asset_id.to_hex());
+    }
+
+    if let Some(message) = message {
+        optional_keys.insert("message", message);
     }
 
     let suffix_str = if optional_keys.len() == 0 {

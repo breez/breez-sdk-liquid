@@ -1323,8 +1323,12 @@ impl LiquidSdk {
             }
             (false, Some(payer_amount_sat)) => {
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                let uri =
-                    utils::new_liquid_bip21(&address, self.config.network, Some(payer_amount_sat));
+                let uri = utils::new_liquid_bip21(
+                    &address,
+                    self.config.network,
+                    Some(payer_amount_sat),
+                    req.description.clone(),
+                );
                 Ok(ReceivePaymentResponse {
                     receive_destination: uri,
                 })
