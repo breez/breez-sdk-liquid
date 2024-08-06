@@ -229,7 +229,7 @@ pub struct ReceivePaymentRequest {
 pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
     /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
-    pub receive_destination: String,
+    pub destination: String,
 }
 
 /// The minimum and maximum in satoshis of a Lightning or onchain payment.
@@ -263,7 +263,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
     /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
-    pub payment_destination: String,
+    pub destination: String,
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified
@@ -273,7 +273,7 @@ pub struct PrepareSendRequest {
 /// Specifies the supported destinations which can be payed by the SDK
 #[derive(Clone, Debug, Serialize)]
 pub enum SendDestination {
-    BIP21 {
+    LiquidAddress {
         address_data: liquid::LiquidAddressData,
     },
     Bolt11 {
@@ -284,7 +284,7 @@ pub enum SendDestination {
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
-    pub payment_destination: SendDestination,
+    pub destination: SendDestination,
     pub fees_sat: u64,
 }
 

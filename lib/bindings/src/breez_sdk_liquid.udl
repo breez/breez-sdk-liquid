@@ -325,18 +325,18 @@ dictionary GetInfoResponse {
 };
 
 dictionary PrepareSendRequest {
-    string payment_destination;
+    string destination;
     u64? amount_sat;
 };
 
 [Enum]
 interface SendDestination {
-    BIP21(LiquidAddressData address_data);
+    LiquidAddress(LiquidAddressData address_data);
     Bolt11(LNInvoice invoice);
 };
 
 dictionary PrepareSendResponse {
-    SendDestination payment_destination;
+    SendDestination destination;
     u64 fees_sat;
 };
 
@@ -365,7 +365,7 @@ dictionary ReceivePaymentRequest {
 };
 
 dictionary ReceivePaymentResponse {
-    string receive_destination;
+    string destination;
 };
 
 dictionary Limits {

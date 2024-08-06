@@ -680,7 +680,7 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let payment_destination;
 
-        match sdk_common::input_parser::parse(&req.payment_destination).await? {
+        match sdk_common::input_parser::parse(&req.destination).await? {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
@@ -700,7 +700,7 @@ impl LiquidSdk {
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
-                payment_destination = SendDestination::BIP21 {
+                payment_destination = SendDestination::LiquidAddress {
                     address_data: liquid_address_data,
                 };
             }
@@ -708,8 +708,9 @@ impl LiquidSdk {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_invoice(&invoice.bolt11)?;
 
-                receiver_amount_sat =
-                    invoice.amount_msat.ok_or(PaymentError::AmountOutOfRange)? / 1000;
+                receiver_amount_sat = invoice.amount_msat.ok_or(PaymentError::AmountMissing {
+                    err: "Expected invoice with an amount".to_string(),
+                })? / 1000;
 
                 if let Some(amount_sat) = req.amount_sat {
                     ensure_sdk!(
@@ -747,7 +748,7 @@ impl LiquidSdk {
         );
 
         Ok(PrepareSendResponse {
-            payment_destination,
+            destination: payment_destination,
             fees_sat,
         })
     }
@@ -781,11 +782,11 @@ impl LiquidSdk {
 
         let PrepareSendResponse {
             fees_sat,
-            payment_destination,
+            destination: payment_destination,
         } = &req.prepare_response;
 
         match payment_destination {
-            SendDestination::BIP21 {
+            SendDestination::LiquidAddress {
                 address_data: liquid_address_data,
             } => {
                 ensure_sdk!(
@@ -796,7 +797,7 @@ impl LiquidSdk {
                 );
 
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
-                    return Err(PaymentError::AmountOutOfRange);
+                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
                 };
 
                 let payer_amount_sat = amount_sat + fees_sat;
@@ -805,17 +806,16 @@ impl LiquidSdk {
                     PaymentError::InsufficientFunds
                 );
 
-                self.send_direct_payment(&liquid_address_data.address, amount_sat, *fees_sat)
+                self.pay_liquid_address(&liquid_address_data.address, amount_sat, *fees_sat)
                     .await
             }
             SendDestination::Bolt11 { invoice } => {
-                self.check_send_payment_invoice(&invoice.bolt11, *fees_sat)
-                    .await
+                self.pay_invoice(&invoice.bolt11, *fees_sat).await
             }
         }
     }
 
-    async fn check_send_payment_invoice(
+    async fn pay_invoice(
         &self,
         invoice: &str,
         fees_sat: u64,
@@ -834,7 +834,7 @@ impl LiquidSdk {
             // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
             Some((address, _amount_sat)) => {
                 info!("Found MRH for L-BTC address {address} and amount_sat {amount_sat}");
-                self.send_direct_payment(&address, amount_sat, fees_sat)
+                self.pay_liquid_address(&address, amount_sat, fees_sat)
                     .await
             }
 
@@ -844,7 +844,7 @@ impl LiquidSdk {
     }
 
     /// Performs a Send Payment by doing an onchain tx to a L-BTC address
-    async fn send_direct_payment(
+    async fn pay_liquid_address(
         &self,
         lbtc_address: &str,
         receiver_amount_sat: u64,
@@ -1346,7 +1346,7 @@ impl LiquidSdk {
                 };
 
                 Ok(ReceivePaymentResponse {
-                    receive_destination,
+                    destination: receive_destination,
                 })
             }
         }
@@ -1463,7 +1463,7 @@ impl LiquidSdk {
         self.status_stream.track_swap_id(&swap_id)?;
 
         Ok(ReceivePaymentResponse {
-            receive_destination: invoice.to_string(),
+            destination: invoice.to_string(),
         })
     }
 
@@ -1558,9 +1558,7 @@ impl LiquidSdk {
             "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
         ));
 
-        Ok(ReceivePaymentResponse {
-            receive_destination: bip21,
-        })
+        Ok(ReceivePaymentResponse { destination: bip21 })
     }
 
     /// List all failed chain swaps that need to be refunded.
@@ -1878,7 +1876,7 @@ impl LiquidSdk {
             ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
-                        payment_destination: cb.pr.clone(),
+                        destination: cb.pr.clone(),
                         amount_sat: None,
                     })
                     .await?;
@@ -1960,7 +1958,7 @@ impl LiquidSdk {
             })
             .await?;
 
-        if let Ok(invoice) = parse_invoice(&receive_res.receive_destination) {
+        if let Ok(invoice) = parse_invoice(&receive_res.destination) {
             let res = validate_lnurl_withdraw(req.data, invoice).await?;
             Ok(res)
         } else {
