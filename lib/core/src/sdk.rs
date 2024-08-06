@@ -670,8 +670,7 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareSendRequest] containing:
     ///     * `destination` - Either a BIP21 URI, Bolt11 invoice or Liquid Address
-    ///     * `amount_sat` - Should only be specified when paying directly onchain or via
-    ///     amount-less BIP21
+    ///     * `amount_sat` - Should only be specified when paying directly onchain or via amount-less BIP21
     ///
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
@@ -1258,8 +1257,7 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareReceivePaymentRequest] containing:
     ///     * `amount_sat` - the amount in satoshis to be paid by the payer
-    ///     * `payment_method` - the supported payment methods; either an invoice, a Liquid address
-    ///     or a Bitcoin address
+    ///     * `payment_method` - the supported payment methods; either an invoice, a Liquid address or a Bitcoin address
     pub async fn prepare_receive_payment(
         &self,
         req: &PrepareReceiveRequest,
@@ -1329,8 +1327,7 @@ impl LiquidSdk {
     /// # Returns
     ///
     /// * A [ReceivePaymentResponse] containing:
-    ///     * `destination` - the final destination to be paid by the payer, either a BIP21 URI
-    ///     (Liquid or Bitcoin), a Liquid address or an invoice
+    ///     * `destination` - the final destination to be paid by the payer, either a BIP21 URI (Liquid or Bitcoin), a Liquid address or an invoice
     pub async fn receive_payment(
         &self,
         req: &ReceivePaymentRequest,
@@ -2475,7 +2472,7 @@ mod tests {
                         Some(true) // sets `update.zero_conf_rejected`
                     );
                     assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_tx_id.clone()));
-                    assert_eq!(persisted_swap.accept_zero_conf, false);
+                    assert!(!persisted_swap.accept_zero_conf);
                 }
 
                 // Verify that `TransactionServerMempool` correctly:
