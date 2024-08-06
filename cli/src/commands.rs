@@ -58,9 +58,9 @@ pub(crate) enum Command {
     /// TODO Add BIP21 Support
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
-        /// Whether or not to receive via lightning
+        /// The method to use when receiving. Either "lightning", "bitcoin" or "liquid"
         #[arg(short = 'm', long = "method")]
-        payment_method: Option<PaymentMethod>,
+        payment_method: Option<String>,
 
         /// Amount the payer will send, in satoshi
         /// If not specified, it will generate a BIP21 URI/Liquid address with no amount
@@ -217,7 +217,13 @@ pub(crate) async fn handle_command(
             amount_sat,
             description,
         } => {
-            let payment_method = payment_method.unwrap_or(PaymentMethod::Lightning);
+            let payment_method = match payment_method.as_deref() {
+                Some("bitcoin") => PaymentMethod::BitcoinAddress,
+                Some("liquid") => PaymentMethod::LiquidAddress,
+                Some("lightning") | None => PaymentMethod::Lightning,
+                Some(_) => return Err(anyhow::anyhow!("Invalid payment method")),
+            };
+
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
                     amount_sat,
@@ -240,14 +246,11 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
 
-            let mut result = command_result!(response);
-            match parse(&response.receive_destination).await {
-                Ok(InputType::Bolt11 { invoice }) => {
-                    result.push('\n');
-                    result.push_str(&build_qr_text(&invoice));
-                }
-                _ => {}
-            };
+            let mut result = command_result!(&response);
+            if let Ok(InputType::Bolt11 { invoice }) = parse(&response.destination).await {
+                result.push('\n');
+                result.push_str(&build_qr_text(&invoice.bolt11));
+            }
             result
         }
         Command::FetchLightningLimits => {
@@ -264,32 +267,27 @@ pub(crate) async fn handle_command(
             amount_sat,
             delay,
         } => {
-            let prepare_response = match (bolt11, address) {
+            let destination = match (bolt11, address) {
                 (None, None) => {
                     return Err(anyhow::anyhow!(
                         "Must specify either a `bolt11` invoice or a direct/BIP21 `address`."
                     ))
                 }
-                (Some(bolt11), None) => {
-                    sdk.prepare_send_payment(&PrepareSendRequest {
-                        payment_destination: bolt11,
-                        amount_sat: req.amount_sat,
-                    })
-                    .await?
-                }
-                (None, Some(address)) => {
-                    sdk.prepare_send_payment(&PrepareSendRequest {
-                        payment_destination: address,
-                        amount_sat: req.amount_sat,
-                    })
-                    .await?
-                }
+                (Some(bolt11), None) => bolt11,
+                (None, Some(address)) => address,
                 (Some(_), Some(_)) => {
                     return Err(anyhow::anyhow!(
                         "Cannot specify both `bolt11` and `address` at the same time."
                     ))
                 }
             };
+
+            let prepare_response = sdk
+                .prepare_send_payment(&PrepareSendRequest {
+                    destination,
+                    amount_sat,
+                })
+                .await?;
 
             wait_confirmation!(
                 format!(
@@ -298,6 +296,10 @@ pub(crate) async fn handle_command(
                 ),
                 "Payment send halted"
             );
+
+            let send_payment_req = SendPaymentRequest {
+                prepare_response: prepare_response.clone(),
+            };
 
             if let Some(delay) = delay {
                 let sdk_cloned = sdk.clone();

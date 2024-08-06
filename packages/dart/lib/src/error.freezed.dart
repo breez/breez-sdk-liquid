@@ -213,6 +213,85 @@ abstract class PaymentError_AmountOutOfRange extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_AmountMissingImplCopyWith<$Res> {
+  factory _$$PaymentError_AmountMissingImplCopyWith(
+          _$PaymentError_AmountMissingImpl value, $Res Function(_$PaymentError_AmountMissingImpl) then) =
+      __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String err});
+}
+
+/// @nodoc
+class __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AmountMissingImpl>
+    implements _$$PaymentError_AmountMissingImplCopyWith<$Res> {
+  __$$PaymentError_AmountMissingImplCopyWithImpl(
+      _$PaymentError_AmountMissingImpl _value, $Res Function(_$PaymentError_AmountMissingImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_$PaymentError_AmountMissingImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentError_AmountMissingImpl extends PaymentError_AmountMissing {
+  const _$PaymentError_AmountMissingImpl({required this.err}) : super._();
+
+  @override
+  final String err;
+
+  @override
+  String toString() {
+    return 'PaymentError.amountMissing(err: $err)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_AmountMissingImpl &&
+            (identical(other.err, err) || other.err == err));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, err);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl> get copyWith =>
+      __$$PaymentError_AmountMissingImplCopyWithImpl<_$PaymentError_AmountMissingImpl>(this, _$identity);
+}
+
+abstract class PaymentError_AmountMissing extends PaymentError {
+  const factory PaymentError_AmountMissing({required final String err}) = _$PaymentError_AmountMissingImpl;
+  const PaymentError_AmountMissing._() : super._();
+
+  String get err;
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$PaymentError_GenericImplCopyWith<$Res> {
   factory _$$PaymentError_GenericImplCopyWith(
           _$PaymentError_GenericImpl value, $Res Function(_$PaymentError_GenericImpl) then) =

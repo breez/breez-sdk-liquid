@@ -195,7 +195,7 @@ pub struct ConnectRequest {
 }
 
 /// The receive methods supported by the SDK
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Eq, PartialEq)]
 pub enum PaymentMethod {
     Lightning,
     BitcoinAddress,
@@ -262,7 +262,7 @@ pub struct OnchainPaymentLimitsResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
-    /// Currently supports BIP21 URIs, BOLT11 invoices and Liquid addresses
+    /// Supports BIP21 URIs, BOLT11 invoices and Liquid addresses
     pub destination: String,
 
     /// Should only be set when paying directly onchain or to a BIP21 URI

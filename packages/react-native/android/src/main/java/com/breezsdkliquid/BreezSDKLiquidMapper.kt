@@ -118,23 +118,23 @@ fun asBuyBitcoinRequest(buyBitcoinRequest: ReadableMap): BuyBitcoinRequest? {
     if (!validateMandatoryFields(
             buyBitcoinRequest,
             arrayOf(
-                "prepareRes",
+                "prepareResponse",
             ),
         )
     ) {
         return null
     }
-    val prepareRes = buyBitcoinRequest.getMap("prepareRes")?.let { asPrepareBuyBitcoinResponse(it) }!!
+    val prepareResponse = buyBitcoinRequest.getMap("prepareResponse")?.let { asPrepareBuyBitcoinResponse(it) }!!
     val redirectUrl = if (hasNonNullKey(buyBitcoinRequest, "redirectUrl")) buyBitcoinRequest.getString("redirectUrl") else null
     return BuyBitcoinRequest(
-        prepareRes,
+        prepareResponse,
         redirectUrl,
     )
 }
 
 fun readableMapOf(buyBitcoinRequest: BuyBitcoinRequest): ReadableMap =
     readableMapOf(
-        "prepareRes" to readableMapOf(buyBitcoinRequest.prepareRes),
+        "prepareResponse" to readableMapOf(buyBitcoinRequest.prepareResponse),
         "redirectUrl" to buyBitcoinRequest.redirectUrl,
     )
 
@@ -1213,24 +1213,24 @@ fun asPayOnchainRequest(payOnchainRequest: ReadableMap): PayOnchainRequest? {
             payOnchainRequest,
             arrayOf(
                 "address",
-                "prepareRes",
+                "prepareResponse",
             ),
         )
     ) {
         return null
     }
     val address = payOnchainRequest.getString("address")!!
-    val prepareRes = payOnchainRequest.getMap("prepareRes")?.let { asPreparePayOnchainResponse(it) }!!
+    val prepareResponse = payOnchainRequest.getMap("prepareResponse")?.let { asPreparePayOnchainResponse(it) }!!
     return PayOnchainRequest(
         address,
-        prepareRes,
+        prepareResponse,
     )
 }
 
 fun readableMapOf(payOnchainRequest: PayOnchainRequest): ReadableMap =
     readableMapOf(
         "address" to payOnchainRequest.address,
-        "prepareRes" to readableMapOf(payOnchainRequest.prepareRes),
+        "prepareResponse" to readableMapOf(payOnchainRequest.prepareResponse),
     )
 
 fun asPayOnchainRequestList(arr: ReadableArray): List<PayOnchainRequest> {
@@ -1474,164 +1474,83 @@ fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainR
     return list
 }
 
-fun asPrepareReceiveOnchainRequest(prepareReceiveOnchainRequest: ReadableMap): PrepareReceiveOnchainRequest? {
+fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveRequest? {
     if (!validateMandatoryFields(
-            prepareReceiveOnchainRequest,
+            prepareReceiveRequest,
             arrayOf(
-                "payerAmountSat",
+                "paymentMethod",
             ),
         )
     ) {
         return null
     }
-    val payerAmountSat = prepareReceiveOnchainRequest.getDouble("payerAmountSat").toULong()
-    return PrepareReceiveOnchainRequest(
-        payerAmountSat,
+    val amountSat = if (hasNonNullKey(prepareReceiveRequest, "amountSat")) prepareReceiveRequest.getDouble("amountSat").toULong() else null
+    val paymentMethod = prepareReceiveRequest.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
+    return PrepareReceiveRequest(
+        amountSat,
+        paymentMethod,
     )
 }
 
-fun readableMapOf(prepareReceiveOnchainRequest: PrepareReceiveOnchainRequest): ReadableMap =
+fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
-        "payerAmountSat" to prepareReceiveOnchainRequest.payerAmountSat,
+        "amountSat" to prepareReceiveRequest.amountSat,
+        "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
     )
 
-fun asPrepareReceiveOnchainRequestList(arr: ReadableArray): List<PrepareReceiveOnchainRequest> {
-    val list = ArrayList<PrepareReceiveOnchainRequest>()
+fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
+    val list = ArrayList<PrepareReceiveRequest>()
     for (value in arr.toArrayList()) {
         when (value) {
-            is ReadableMap -> list.add(asPrepareReceiveOnchainRequest(value)!!)
+            is ReadableMap -> list.add(asPrepareReceiveRequest(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
     return list
 }
 
-fun asPrepareReceiveOnchainResponse(prepareReceiveOnchainResponse: ReadableMap): PrepareReceiveOnchainResponse? {
+fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiveResponse? {
     if (!validateMandatoryFields(
-            prepareReceiveOnchainResponse,
+            prepareReceiveResponse,
             arrayOf(
-                "payerAmountSat",
+                "paymentMethod",
                 "feesSat",
             ),
         )
     ) {
         return null
     }
-    val payerAmountSat = prepareReceiveOnchainResponse.getDouble("payerAmountSat").toULong()
-    val feesSat = prepareReceiveOnchainResponse.getDouble("feesSat").toULong()
-    return PrepareReceiveOnchainResponse(
-        payerAmountSat,
+    val amountSat =
+        if (hasNonNullKey(
+                prepareReceiveResponse,
+                "amountSat",
+            )
+        ) {
+            prepareReceiveResponse.getDouble("amountSat").toULong()
+        } else {
+            null
+        }
+    val paymentMethod = prepareReceiveResponse.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
+    val feesSat = prepareReceiveResponse.getDouble("feesSat").toULong()
+    return PrepareReceiveResponse(
+        amountSat,
+        paymentMethod,
         feesSat,
     )
 }
 
-fun readableMapOf(prepareReceiveOnchainResponse: PrepareReceiveOnchainResponse): ReadableMap =
+fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
     readableMapOf(
-        "payerAmountSat" to prepareReceiveOnchainResponse.payerAmountSat,
-        "feesSat" to prepareReceiveOnchainResponse.feesSat,
+        "amountSat" to prepareReceiveResponse.amountSat,
+        "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
+        "feesSat" to prepareReceiveResponse.feesSat,
     )
 
-fun asPrepareReceiveOnchainResponseList(arr: ReadableArray): List<PrepareReceiveOnchainResponse> {
-    val list = ArrayList<PrepareReceiveOnchainResponse>()
+fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveResponse> {
+    val list = ArrayList<PrepareReceiveResponse>()
     for (value in arr.toArrayList()) {
         when (value) {
-            is ReadableMap -> list.add(asPrepareReceiveOnchainResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asPrepareReceivePaymentRequest(prepareReceivePaymentRequest: ReadableMap): PrepareReceivePaymentRequest? {
-    if (!validateMandatoryFields(
-            prepareReceivePaymentRequest,
-            arrayOf(
-                "payerAmountSat",
-            ),
-        )
-    ) {
-        return null
-    }
-    val payerAmountSat = prepareReceivePaymentRequest.getDouble("payerAmountSat").toULong()
-    val receiveMethod =
-        if (hasNonNullKey(
-                prepareReceivePaymentRequest,
-                "receiveMethod",
-            )
-        ) {
-            prepareReceivePaymentRequest.getString("receiveMethod")?.let {
-                asReceiveMethod(it)
-            }
-        } else {
-            null
-        }
-    return PrepareReceivePaymentRequest(
-        payerAmountSat,
-        receiveMethod,
-    )
-}
-
-fun readableMapOf(prepareReceivePaymentRequest: PrepareReceivePaymentRequest): ReadableMap =
-    readableMapOf(
-        "payerAmountSat" to prepareReceivePaymentRequest.payerAmountSat,
-        "receiveMethod" to prepareReceivePaymentRequest.receiveMethod?.let { it.name.lowercase() },
-    )
-
-fun asPrepareReceivePaymentRequestList(arr: ReadableArray): List<PrepareReceivePaymentRequest> {
-    val list = ArrayList<PrepareReceivePaymentRequest>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asPrepareReceivePaymentRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asPrepareReceivePaymentResponse(prepareReceivePaymentResponse: ReadableMap): PrepareReceivePaymentResponse? {
-    if (!validateMandatoryFields(
-            prepareReceivePaymentResponse,
-            arrayOf(
-                "payerAmountSat",
-                "feesSat",
-            ),
-        )
-    ) {
-        return null
-    }
-    val payerAmountSat = prepareReceivePaymentResponse.getDouble("payerAmountSat").toULong()
-    val feesSat = prepareReceivePaymentResponse.getDouble("feesSat").toULong()
-    val receiveMethod =
-        if (hasNonNullKey(
-                prepareReceivePaymentResponse,
-                "receiveMethod",
-            )
-        ) {
-            prepareReceivePaymentResponse.getString("receiveMethod")?.let {
-                asReceiveMethod(it)
-            }
-        } else {
-            null
-        }
-    return PrepareReceivePaymentResponse(
-        payerAmountSat,
-        feesSat,
-        receiveMethod,
-    )
-}
-
-fun readableMapOf(prepareReceivePaymentResponse: PrepareReceivePaymentResponse): ReadableMap =
-    readableMapOf(
-        "payerAmountSat" to prepareReceivePaymentResponse.payerAmountSat,
-        "feesSat" to prepareReceivePaymentResponse.feesSat,
-        "receiveMethod" to prepareReceivePaymentResponse.receiveMethod?.let { it.name.lowercase() },
-    )
-
-fun asPrepareReceivePaymentResponseList(arr: ReadableArray): List<PrepareReceivePaymentResponse> {
-    val list = ArrayList<PrepareReceivePaymentResponse>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asPrepareReceivePaymentResponse(value)!!)
+            is ReadableMap -> list.add(asPrepareReceiveResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -1721,23 +1640,23 @@ fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
     if (!validateMandatoryFields(
             prepareSendRequest,
             arrayOf(
-                "paymentDestination",
+                "destination",
             ),
         )
     ) {
         return null
     }
-    val paymentDestination = prepareSendRequest.getString("paymentDestination")!!
+    val destination = prepareSendRequest.getString("destination")!!
     val amountSat = if (hasNonNullKey(prepareSendRequest, "amountSat")) prepareSendRequest.getDouble("amountSat").toULong() else null
     return PrepareSendRequest(
-        paymentDestination,
+        destination,
         amountSat,
     )
 }
 
 fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
     readableMapOf(
-        "paymentDestination" to prepareSendRequest.paymentDestination,
+        "destination" to prepareSendRequest.destination,
         "amountSat" to prepareSendRequest.amountSat,
     )
 
@@ -1756,24 +1675,24 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
     if (!validateMandatoryFields(
             prepareSendResponse,
             arrayOf(
-                "paymentDestination",
+                "destination",
                 "feesSat",
             ),
         )
     ) {
         return null
     }
-    val paymentDestination = prepareSendResponse.getMap("paymentDestination")?.let { asPaymentDestination(it) }!!
+    val destination = prepareSendResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = prepareSendResponse.getDouble("feesSat").toULong()
     return PrepareSendResponse(
-        paymentDestination,
+        destination,
         feesSat,
     )
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
     readableMapOf(
-        "paymentDestination" to readableMapOf(prepareSendResponse.paymentDestination),
+        "destination" to readableMapOf(prepareSendResponse.destination),
         "feesSat" to prepareSendResponse.feesSat,
     )
 
@@ -1824,63 +1743,27 @@ fun asRateList(arr: ReadableArray): List<Rate> {
     return list
 }
 
-fun asReceiveOnchainResponse(receiveOnchainResponse: ReadableMap): ReceiveOnchainResponse? {
-    if (!validateMandatoryFields(
-            receiveOnchainResponse,
-            arrayOf(
-                "address",
-                "bip21",
-            ),
-        )
-    ) {
-        return null
-    }
-    val address = receiveOnchainResponse.getString("address")!!
-    val bip21 = receiveOnchainResponse.getString("bip21")!!
-    return ReceiveOnchainResponse(
-        address,
-        bip21,
-    )
-}
-
-fun readableMapOf(receiveOnchainResponse: ReceiveOnchainResponse): ReadableMap =
-    readableMapOf(
-        "address" to receiveOnchainResponse.address,
-        "bip21" to receiveOnchainResponse.bip21,
-    )
-
-fun asReceiveOnchainResponseList(arr: ReadableArray): List<ReceiveOnchainResponse> {
-    val list = ArrayList<ReceiveOnchainResponse>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is ReadableMap -> list.add(asReceiveOnchainResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
 fun asReceivePaymentRequest(receivePaymentRequest: ReadableMap): ReceivePaymentRequest? {
     if (!validateMandatoryFields(
             receivePaymentRequest,
             arrayOf(
-                "prepareRes",
+                "prepareResponse",
             ),
         )
     ) {
         return null
     }
-    val prepareRes = receivePaymentRequest.getMap("prepareRes")?.let { asPrepareReceivePaymentResponse(it) }!!
+    val prepareResponse = receivePaymentRequest.getMap("prepareResponse")?.let { asPrepareReceiveResponse(it) }!!
     val description = if (hasNonNullKey(receivePaymentRequest, "description")) receivePaymentRequest.getString("description") else null
     return ReceivePaymentRequest(
-        prepareRes,
+        prepareResponse,
         description,
     )
 }
 
 fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
     readableMapOf(
-        "prepareRes" to readableMapOf(receivePaymentRequest.prepareRes),
+        "prepareResponse" to readableMapOf(receivePaymentRequest.prepareResponse),
         "description" to receivePaymentRequest.description,
     )
 
@@ -1899,28 +1782,21 @@ fun asReceivePaymentResponse(receivePaymentResponse: ReadableMap): ReceivePaymen
     if (!validateMandatoryFields(
             receivePaymentResponse,
             arrayOf(
-                "id",
-                "invoice",
+                "destination",
             ),
         )
     ) {
         return null
     }
-    val id = receivePaymentResponse.getString("id")!!
-    val invoice = receivePaymentResponse.getString("invoice")!!
-    val bip21 = if (hasNonNullKey(receivePaymentResponse, "bip21")) receivePaymentResponse.getString("bip21") else null
+    val destination = receivePaymentResponse.getString("destination")!!
     return ReceivePaymentResponse(
-        id,
-        invoice,
-        bip21,
+        destination,
     )
 }
 
 fun readableMapOf(receivePaymentResponse: ReceivePaymentResponse): ReadableMap =
     readableMapOf(
-        "id" to receivePaymentResponse.id,
-        "invoice" to receivePaymentResponse.invoice,
-        "bip21" to receivePaymentResponse.bip21,
+        "destination" to receivePaymentResponse.destination,
     )
 
 fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentResponse> {
@@ -2646,38 +2522,13 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     return list
 }
 
-fun asPaymentDestination(paymentDestination: ReadableMap): PaymentDestination? {
-    val type = paymentDestination.getString("type")
+fun asPaymentMethod(type: String): PaymentMethod = PaymentMethod.valueOf(camelToUpperSnakeCase(type))
 
-    if (type == "bip21") {
-        return PaymentDestination.BIP21(paymentDestination.getMap("address")?.let { asLiquidAddressData(it) }!!)
-    }
-    if (type == "bolt11") {
-        return PaymentDestination.Bolt11(paymentDestination.getString("invoice")!!)
-    }
-    return null
-}
-
-fun readableMapOf(paymentDestination: PaymentDestination): ReadableMap? {
-    val map = Arguments.createMap()
-    when (paymentDestination) {
-        is PaymentDestination.BIP21 -> {
-            pushToMap(map, "type", "bip21")
-            pushToMap(map, "address", readableMapOf(paymentDestination.address))
-        }
-        is PaymentDestination.Bolt11 -> {
-            pushToMap(map, "type", "bolt11")
-            pushToMap(map, "invoice", paymentDestination.invoice)
-        }
-    }
-    return map
-}
-
-fun asPaymentDestinationList(arr: ReadableArray): List<PaymentDestination> {
-    val list = ArrayList<PaymentDestination>()
+fun asPaymentMethodList(arr: ReadableArray): List<PaymentMethod> {
+    val list = ArrayList<PaymentMethod>()
     for (value in arr.toArrayList()) {
         when (value) {
-            is ReadableMap -> list.add(asPaymentDestination(value)!!)
+            is String -> list.add(asPaymentMethod(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -2704,19 +2555,6 @@ fun asPaymentTypeList(arr: ReadableArray): List<PaymentType> {
     for (value in arr.toArrayList()) {
         when (value) {
             is String -> list.add(asPaymentType(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
-        }
-    }
-    return list
-}
-
-fun asReceiveMethod(type: String): ReceiveMethod = ReceiveMethod.valueOf(camelToUpperSnakeCase(type))
-
-fun asReceiveMethodList(arr: ReadableArray): List<ReceiveMethod> {
-    val list = ArrayList<ReceiveMethod>()
-    for (value in arr.toArrayList()) {
-        when (value) {
-            is String -> list.add(asReceiveMethod(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }
@@ -2789,6 +2627,44 @@ fun asSdkEventList(arr: ReadableArray): List<SdkEvent> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSdkEvent(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
+    val type = sendDestination.getString("type")
+
+    if (type == "liquidAddress") {
+        return SendDestination.LiquidAddress(sendDestination.getMap("addressData")?.let { asLiquidAddressData(it) }!!)
+    }
+    if (type == "bolt11") {
+        return SendDestination.Bolt11(sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!)
+    }
+    return null
+}
+
+fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
+    val map = Arguments.createMap()
+    when (sendDestination) {
+        is SendDestination.LiquidAddress -> {
+            pushToMap(map, "type", "liquidAddress")
+            pushToMap(map, "addressData", readableMapOf(sendDestination.addressData))
+        }
+        is SendDestination.Bolt11 -> {
+            pushToMap(map, "type", "bolt11")
+            pushToMap(map, "invoice", readableMapOf(sendDestination.invoice))
+        }
+    }
+    return map
+}
+
+fun asSendDestinationList(arr: ReadableArray): List<SendDestination> {
+    val list = ArrayList<SendDestination>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSendDestination(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

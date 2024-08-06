@@ -157,6 +157,10 @@ pub(crate) fn new_liquid_bip21(
         optional_keys.insert("assetid", asset_id.to_hex());
     }
 
+    if let Some(message) = message {
+        optional_keys.insert("message", message);
+    }
+
     let suffix_str = if optional_keys.is_empty() {
         "".to_string()
     } else {
