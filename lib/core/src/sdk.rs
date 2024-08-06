@@ -993,7 +993,6 @@ impl LiquidSdk {
                         status: Some(vec![
                             SubSwapStates::InvoiceFailedToPay,
                             SubSwapStates::SwapExpired,
-                            SubSwapStates::TransactionClaimed,
                             SubSwapStates::TransactionClaimPending,
                             SubSwapStates::TransactionLockupFailed,
                         ]),
@@ -1204,7 +1203,6 @@ impl LiquidSdk {
             url,
             hash_swap_id: Some(true),
             status: Some(vec![
-                ChainSwapStates::SwapExpired,
                 ChainSwapStates::TransactionConfirmed,
                 ChainSwapStates::TransactionFailed,
                 ChainSwapStates::TransactionLockupFailed,
@@ -1476,17 +1474,18 @@ impl LiquidSdk {
         let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
         let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
 
+        let receiver_amount_sat = payer_amount_sat - fees_sat;
+        let webhook_claim_status =
+            match receiver_amount_sat > self.config.zero_conf_max_amount_sat() {
+                true => RevSwapStates::TransactionConfirmed,
+                false => RevSwapStates::TransactionMempool,
+            };
         let webhook = self.persister.get_webhook_url()?.map(|url| ReverseWebhook {
             url,
             hash_swap_id: Some(true),
-            status: Some(vec![
-                RevSwapStates::InvoiceExpired,
-                RevSwapStates::SwapExpired,
-                RevSwapStates::TransactionConfirmed,
-                RevSwapStates::TransactionFailed,
-                RevSwapStates::TransactionMempool,
-            ]),
+            status: Some(vec![webhook_claim_status]),
         });
+
         let v2_req = CreateReverseRequest {
             invoice_amount: payer_amount_sat as u32, // TODO update our model
             from: "BTC".to_string(),
@@ -1551,7 +1550,7 @@ impl LiquidSdk {
                 invoice: invoice.to_string(),
                 description,
                 payer_amount_sat,
-                receiver_amount_sat: payer_amount_sat - fees_sat,
+                receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 created_at: utils::now(),
@@ -1596,7 +1595,6 @@ impl LiquidSdk {
             url,
             hash_swap_id: Some(true),
             status: Some(vec![
-                ChainSwapStates::SwapExpired,
                 ChainSwapStates::TransactionConfirmed,
                 ChainSwapStates::TransactionFailed,
                 ChainSwapStates::TransactionLockupFailed,
