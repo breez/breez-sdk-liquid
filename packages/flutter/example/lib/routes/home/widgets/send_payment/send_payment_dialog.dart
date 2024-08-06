@@ -85,13 +85,13 @@ class _SendPaymentDialogState extends State<SendPaymentDialog> {
                         try {
                           setState(() => paymentInProgress = true);
                           PrepareSendRequest prepareSendReq = PrepareSendRequest(
-                            paymentDestination: ReceiveMethod.bolt11.name,
+                            destination: invoiceController.text,
                           );
                           PrepareSendResponse req = await widget.liquidSdk.prepareSendPayment(
                             req: prepareSendReq,
                           );
                           debugPrint(
-                            "PrepareSendResponse for  ${req.paymentDestination}, fees: ${req.feesSat}",
+                            "PrepareSendResponse for  ${req.destination}, fees: ${req.feesSat}",
                           );
                           setState(() => sendPaymentReq = SendPaymentRequest(prepareResponse: req));
                         } catch (e) {
