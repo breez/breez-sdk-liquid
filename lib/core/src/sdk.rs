@@ -830,10 +830,20 @@ impl LiquidSdk {
                     compressed: true,
                     inner: keypair.public_key(),
                 };
-                let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
-                    url,
-                    hash_swap_id: Some(true),
-                });
+                let webhook = self
+                    .persister
+                    .get_webhook_url()?
+                    .map(|url| SubmarineWebhook {
+                        url,
+                        hash_swap_id: Some(true),
+                        status: Some(vec![
+                            SubSwapStates::InvoiceFailedToPay,
+                            SubSwapStates::SwapExpired,
+                            SubSwapStates::TransactionClaimed,
+                            SubSwapStates::TransactionClaimPending,
+                            SubSwapStates::TransactionLockupFailed,
+                        ]),
+                    });
                 let create_response = self.swapper.create_send_swap(CreateSubmarineRequest {
                     from: "L-BTC".to_string(),
                     to: "BTC".to_string(),
@@ -1036,9 +1046,16 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
-        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| ChainWebhook {
             url,
             hash_swap_id: Some(true),
+            status: Some(vec![
+                ChainSwapStates::SwapExpired,
+                ChainSwapStates::TransactionConfirmed,
+                ChainSwapStates::TransactionFailed,
+                ChainSwapStates::TransactionLockupFailed,
+                ChainSwapStates::TransactionServerConfirmed,
+            ]),
         });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "L-BTC".to_string(),
@@ -1223,9 +1240,16 @@ impl LiquidSdk {
         let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
         let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
 
-        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| ReverseWebhook {
             url,
             hash_swap_id: Some(true),
+            status: Some(vec![
+                RevSwapStates::InvoiceExpired,
+                RevSwapStates::SwapExpired,
+                RevSwapStates::TransactionConfirmed,
+                RevSwapStates::TransactionFailed,
+                RevSwapStates::TransactionMempool,
+            ]),
         });
         let v2_req = CreateReverseRequest {
             invoice_amount: payer_amount_sat as u32, // TODO update our model
@@ -1365,9 +1389,16 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
-        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| ChainWebhook {
             url,
             hash_swap_id: Some(true),
+            status: Some(vec![
+                ChainSwapStates::SwapExpired,
+                ChainSwapStates::TransactionConfirmed,
+                ChainSwapStates::TransactionFailed,
+                ChainSwapStates::TransactionLockupFailed,
+                ChainSwapStates::TransactionServerConfirmed,
+            ]),
         });
         let create_response = self.swapper.create_chain_swap(CreateChainRequest {
             from: "BTC".to_string(),
