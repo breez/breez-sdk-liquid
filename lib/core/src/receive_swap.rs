@@ -156,16 +156,11 @@ impl ReceiveSwapStateHandler {
                 Ok(())
             }
             Ok(RevSwapStates::TransactionConfirmed) => {
-                // TODO: We need to ensure that the lockup tx is actually confirmed
-                // if lockup_tx_history.height <= 0 {
-                //     return Err(anyhow!("Tx state mismatch: Lockup transaction was marked as confirmed by the swapper, but isn't."));
-                // }
-
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
 
-                // looking for lockup script history to verify lockup was broadcasted
+                // looking for lockup script history to verify lockup was broadcasted and confirmed
                 if let Err(e) = self
                     .verify_lockup_tx(&receive_swap, &transaction, true)
                     .await
