@@ -70,6 +70,9 @@ pub enum PaymentError {
     #[error("Amount is out of range")]
     AmountOutOfRange,
 
+    #[error("Amount is missing: {err}")]
+    AmountMissing { err: String },
+
     #[error("Generic error: {err}")]
     Generic { err: String },
 

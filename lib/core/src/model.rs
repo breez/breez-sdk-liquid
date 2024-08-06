@@ -194,32 +194,41 @@ pub struct ConnectRequest {
     pub config: Config,
 }
 
+/// The receive methods supported by the SDK
+#[derive(Clone, Debug, Serialize)]
+pub enum PaymentMethod {
+    Lightning,
+    BitcoinAddress,
+    LiquidAddress,
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceivePaymentRequest {
-    pub payer_amount_sat: Option<u64>,
-    pub use_lightning: bool,
+pub struct PrepareReceiveRequest {
+    pub amount_sat: Option<u64>,
+    pub payment_method: PaymentMethod,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
-pub struct PrepareReceivePaymentResponse {
-    pub payer_amount_sat: Option<u64>,
+pub struct PrepareReceiveResponse {
+    pub payment_method: PaymentMethod,
+    pub amount_sat: Option<u64>,
     pub fees_sat: u64,
-    pub use_lightning: bool,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentRequest {
     pub description: Option<String>,
-    pub prepare_response: PrepareReceivePaymentResponse,
+    pub prepare_response: PrepareReceiveResponse,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
-    /// Either a BIP21 URI, a Liquid Address or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+    /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
+    /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
     pub receive_destination: String,
 }
 
@@ -311,26 +320,6 @@ pub struct PreparePayOnchainResponse {
 pub struct PayOnchainRequest {
     pub address: String,
     pub prepare_response: PreparePayOnchainResponse,
-}
-
-/// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
-#[derive(Debug, Serialize, Clone)]
-pub struct PrepareReceiveOnchainRequest {
-    pub payer_amount_sat: u64,
-}
-
-/// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_onchain].
-#[derive(Debug, Serialize, Clone)]
-pub struct PrepareReceiveOnchainResponse {
-    pub payer_amount_sat: u64,
-    pub fees_sat: u64,
-}
-
-/// Returned when calling [crate::sdk::LiquidSdk::receive_onchain].
-#[derive(Debug, Serialize)]
-pub struct ReceiveOnchainResponse {
-    pub address: String,
-    pub bip21: String,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

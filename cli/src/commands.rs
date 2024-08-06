@@ -57,21 +57,17 @@ pub(crate) enum Command {
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
         /// Whether or not to receive via lightning
-        use_lightning: bool,
+        #[arg(short = 'm', long = "method")]
+        payment_method: Option<PaymentMethod>,
 
         /// Amount the payer will send, in satoshi
         /// If not specified, it will generate a BIP21 URI/Liquid address with no amount
-        #[arg(short = 'a', long = "amount")]
-        payer_amount_sat: Option<u64>,
+        #[arg(short, long)]
+        amount_sat: Option<u64>,
 
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
         description: Option<String>,
-    },
-    /// Receive lbtc and send btc onchain through a swap
-    ReceiveOnchainPayment {
-        /// Amount the payer will send, in satoshi
-        payer_amount_sat: u64,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
     BuyBitcoin {
@@ -215,14 +211,15 @@ pub(crate) async fn handle_command(
 ) -> Result<String> {
     Ok(match command {
         Command::ReceivePayment {
-            payer_amount_sat,
-            use_lightning,
+            payment_method,
+            amount_sat,
             description,
         } => {
+            let payment_method = payment_method.unwrap_or(PaymentMethod::Lightning);
             let prepare_response = sdk
-                .prepare_receive_payment(&PrepareReceivePaymentRequest {
-                    payer_amount_sat,
-                    use_lightning,
+                .prepare_receive_payment(&PrepareReceiveRequest {
+                    amount_sat,
+                    payment_method,
                 })
                 .await?;
 
@@ -240,11 +237,15 @@ pub(crate) async fn handle_command(
                     description,
                 })
                 .await?;
-            let invoice = response.invoice.clone();
 
             let mut result = command_result!(response);
-            result.push('\n');
-            result.push_str(&build_qr_text(&invoice));
+            match parse(&response.receive_destination).await {
+                Ok(InputType::Bolt11 { invoice }) => {
+                    result.push('\n');
+                    result.push_str(&build_qr_text(&invoice));
+                }
+                _ => {}
+            };
             result
         }
         Command::FetchLightningLimits => {
@@ -337,27 +338,6 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
             command_result!(response)
-        }
-        Command::ReceiveOnchainPayment { payer_amount_sat } => {
-            let prepare_response = sdk
-                .prepare_receive_onchain(&PrepareReceiveOnchainRequest { payer_amount_sat })
-                .await?;
-
-            wait_confirmation!(
-                format!(
-                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.fees_sat
-                ),
-                "Payment receive halted"
-            );
-
-            let response = sdk.receive_onchain(&prepare_response).await?;
-            let bip21 = response.bip21.clone();
-
-            let mut result = command_result!(response);
-            result.push('\n');
-            result.push_str(&build_qr_text(&bip21));
-            result
         }
         Command::BuyBitcoin {
             provider,

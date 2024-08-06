@@ -279,6 +279,7 @@ enum PaymentError {
     "AlreadyPaid",
     "PaymentInProgress",
     "AmountOutOfRange",
+    "AmountMissing",
     "Generic",
     "InvalidOrExpiredFees",
     "InsufficientFunds",
@@ -347,19 +348,19 @@ dictionary SendPaymentResponse {
     Payment payment;
 };
 
-dictionary PrepareReceivePaymentRequest {
+dictionary PrepareReceiveRequest {
     u64? payer_amount_sat;
     bool use_lightning;
 };
 
-dictionary PrepareReceivePaymentResponse {
+dictionary PrepareReceiveResponse {
     u64? payer_amount_sat;
     bool use_lightning;
     u64 fees_sat;
 };
 
 dictionary ReceivePaymentRequest {
-    PrepareReceivePaymentResponse prepare_response;
+    PrepareReceiveResponse prepare_response;
     string? description = null;
 };
 
@@ -397,20 +398,6 @@ dictionary PreparePayOnchainResponse {
 dictionary PayOnchainRequest {
     string address;
     PreparePayOnchainResponse prepare_response;
-};
-
-dictionary PrepareReceiveOnchainRequest {
-    u64 payer_amount_sat;
-};
-
-dictionary PrepareReceiveOnchainResponse {
-    u64 payer_amount_sat;
-    u64 fees_sat;
-};
-
-dictionary ReceiveOnchainResponse {
-    string address;
-    string bip21;
 };
 
 enum BuyBitcoinProvider {
@@ -572,7 +559,7 @@ interface BindingLiquidSdk {
     SendPaymentResponse send_payment(SendPaymentRequest req);
 
     [Throws=PaymentError]
-    PrepareReceivePaymentResponse prepare_receive_payment(PrepareReceivePaymentRequest req);
+    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
@@ -588,12 +575,6 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     SendPaymentResponse pay_onchain(PayOnchainRequest req);
-
-    [Throws=PaymentError]
-    PrepareReceiveOnchainResponse prepare_receive_onchain(PrepareReceiveOnchainRequest req);
-
-    [Throws=PaymentError]
-    ReceiveOnchainResponse receive_onchain(PrepareReceiveOnchainResponse req);
 
     [Throws=PaymentError]
     PrepareBuyBitcoinResponse prepare_buy_bitcoin(PrepareBuyBitcoinRequest req);

@@ -1238,46 +1238,59 @@ impl LiquidSdk {
     ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
     pub async fn prepare_receive_payment(
         &self,
-        req: &PrepareReceivePaymentRequest,
-    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
+        req: &PrepareReceiveRequest,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
         let fees_sat;
-        match (req.use_lightning, req.payer_amount_sat) {
-            (true, None) => {
-                return Err(PaymentError::Generic {
-                    err: "Payer amount was not set.".to_string(),
-                });
-            }
-            (true, Some(payer_amount_sat)) => {
+        let amount_sat = req.amount_sat;
+        match req.payment_method {
+            PaymentMethod::Lightning => {
+                let Some(amount_sat) = req.amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::Lightning` is used.".to_string() });
+                };
                 let reverse_pair = self
                     .swapper
                     .get_reverse_swap_pairs()?
                     .ok_or(PaymentError::PairsNotFound)?;
 
-                fees_sat = reverse_pair.fees.total(payer_amount_sat);
+                fees_sat = reverse_pair.fees.total(amount_sat);
 
-                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+                ensure_sdk!(amount_sat > fees_sat, PaymentError::AmountOutOfRange);
 
                 reverse_pair
                     .limits
-                    .within(payer_amount_sat)
+                    .within(amount_sat)
                     .map_err(|_| PaymentError::AmountOutOfRange)?;
 
                 debug!(
-                    "Preparing Receive Swap with: payer_amount_sat {} sat, fees_sat {fees_sat} sat",
-                    payer_amount_sat
+                    "Preparing Lightning Receive Swap with: amount_sat {amount_sat} sat, fees_sat {fees_sat} sat"
                 );
             }
-            (false, _) => {
+            PaymentMethod::BitcoinAddress => {
+                let Some(amount_sat) = req.amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
+                };
+                let pair = self.validate_chain_pairs(Direction::Incoming, amount_sat)?;
+                let claim_fees_sat = pair.fees.claim_estimate();
+                let server_fees_sat = pair.fees.server();
+                fees_sat = pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat;
+                debug!(
+                    "Preparing Chain Receive Swap with: amount_sat {amount_sat} sat, fees_sat {fees_sat} sat"
+                );
+            }
+            PaymentMethod::LiquidAddress => {
                 fees_sat = 0;
+                debug!(
+                    "Preparing Liquid Receive Swap with: amount_sat {amount_sat:?} sat, fees_sat {fees_sat} sat"
+                );
             }
         };
 
-        Ok(PrepareReceivePaymentResponse {
-            payer_amount_sat: req.payer_amount_sat,
-            use_lightning: req.use_lightning,
+        Ok(PrepareReceiveResponse {
+            amount_sat,
             fees_sat,
+            payment_method: req.payment_method.clone(),
         })
     }
 
@@ -1299,38 +1312,41 @@ impl LiquidSdk {
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let PrepareReceivePaymentResponse {
-            payer_amount_sat,
-            use_lightning,
+        let PrepareReceiveResponse {
+            payment_method,
+            amount_sat,
             fees_sat,
-        } = req.prepare_response;
+        } = &req.prepare_response;
 
-        match (use_lightning, payer_amount_sat) {
-            (true, None) => {
-                return Err(PaymentError::Generic {
-                    err: "Payer amount was not set.".to_string(),
-                });
-            }
-            (true, Some(payer_amount_sat)) => {
-                self.create_receive_swap(payer_amount_sat, fees_sat, req.description.clone())
+        match payment_method {
+            PaymentMethod::Lightning => {
+                let Some(amount_sat) = amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::Lightning` is used.".to_string() });
+                };
+                self.create_receive_swap(*amount_sat, *fees_sat, req.description.clone())
                     .await
             }
-            (false, None) => {
-                let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                Ok(ReceivePaymentResponse {
-                    receive_destination: address,
-                })
+            PaymentMethod::BitcoinAddress => {
+                let Some(amount_sat) = amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
+                };
+                self.receive_onchain(*amount_sat, *fees_sat).await
             }
-            (false, Some(payer_amount_sat)) => {
+            PaymentMethod::LiquidAddress => {
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                let uri = utils::new_liquid_bip21(
-                    &address,
-                    self.config.network,
-                    Some(payer_amount_sat),
-                    req.description.clone(),
-                );
+
+                let receive_destination = match amount_sat {
+                    Some(amount_sat) => utils::new_liquid_bip21(
+                        &address,
+                        self.config.network,
+                        Some(*amount_sat),
+                        req.description.clone(),
+                    ),
+                    None => address,
+                };
+
                 Ok(ReceivePaymentResponse {
-                    receive_destination: uri,
+                    receive_destination,
                 })
             }
         }
@@ -1451,29 +1467,6 @@ impl LiquidSdk {
         })
     }
 
-    /// Prepares to receive from a Bitcoin transaction via a chain swap.
-    ///
-    /// # Arguments
-    ///
-    /// * `req` - the [PrepareReceiveOnchainRequest] containing:
-    ///     * `payer_amount_sat` - the amount in satoshi that will be paid by the payer
-    pub async fn prepare_receive_onchain(
-        &self,
-        req: &PrepareReceiveOnchainRequest,
-    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
-        self.ensure_is_started().await?;
-
-        let payer_amount_sat = req.payer_amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
-        let claim_fees_sat = pair.fees.claim_estimate();
-        let server_fees_sat = pair.fees.server();
-
-        Ok(PrepareReceiveOnchainResponse {
-            payer_amount_sat,
-            fees_sat: pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
-        })
-    }
-
     async fn create_chain_swap(
         &self,
         payer_amount_sat: u64,
@@ -1549,25 +1542,14 @@ impl LiquidSdk {
     }
 
     /// Receive from a Bitcoin transaction via a chain swap.
-    ///
-    /// # Arguments
-    ///
-    /// * `req` - The [PrepareReceiveOnchainResponse] from calling [LiquidSdk::prepare_receive_onchain]
-    ///
-    /// # Returns
-    ///
-    /// * A [ReceiveOnchainResponse] containing:
-    ///     * `address` - the Bitcoin address the payer should pay to
-    ///     * `bip21` - the BIP-21 URI scheme to pay to. See <https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki>
-    pub async fn receive_onchain(
+    async fn receive_onchain(
         &self,
-        req: &PrepareReceiveOnchainResponse,
-    ) -> Result<ReceiveOnchainResponse, PaymentError> {
+        payer_amount_sat: u64,
+        fees_sat: u64,
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let swap = self
-            .create_chain_swap(req.payer_amount_sat, req.fees_sat)
-            .await?;
+        let swap = self.create_chain_swap(payer_amount_sat, fees_sat).await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
 
@@ -1576,7 +1558,9 @@ impl LiquidSdk {
             "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
         ));
 
-        Ok(ReceiveOnchainResponse { address, bip21 })
+        Ok(ReceivePaymentResponse {
+            receive_destination: bip21,
+        })
     }
 
     /// List all failed chain swaps that need to be refunded.
@@ -1657,13 +1641,24 @@ impl LiquidSdk {
         }
 
         let res = self
-            .prepare_receive_onchain(&PrepareReceiveOnchainRequest {
-                payer_amount_sat: req.amount_sat,
+            .prepare_receive_payment(&PrepareReceiveRequest {
+                payment_method: PaymentMethod::BitcoinAddress,
+                amount_sat: Some(req.amount_sat),
             })
             .await?;
+
+        let Some(amount_sat) = res.amount_sat else {
+            return Err(PaymentError::Generic {
+                err: format!(
+                    "Expected field `amount_sat` from response, got {:?}",
+                    res.amount_sat
+                ),
+            });
+        };
+
         Ok(PrepareBuyBitcoinResponse {
             provider: req.provider,
-            amount_sat: res.payer_amount_sat,
+            amount_sat,
             fees_sat: res.fees_sat,
         })
     }
@@ -1952,9 +1947,9 @@ impl LiquidSdk {
     ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
         let prepare_res = self
             .prepare_receive_payment(&{
-                PrepareReceivePaymentRequest {
-                    use_lightning: true,
-                    payer_amount_sat: Some(req.amount_msat / 1_000),
+                PrepareReceiveRequest {
+                    payment_method: PaymentMethod::Lightning,
+                    amount_sat: Some(req.amount_msat / 1_000),
                 }
             })
             .await?;
