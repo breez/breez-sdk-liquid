@@ -34,7 +34,6 @@ Pod::Spec.new do |spec|
   spec.osx.deployment_target = '10.11'
 
   spec.dependency 'Flutter'
-  spec.platform = :ios, '11.0'
   spec.static_framework = true
 
   # Flutter.framework does not contain a i386 slice.
