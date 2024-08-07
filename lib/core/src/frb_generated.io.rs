@@ -1120,50 +1120,56 @@ impl CstDecode<crate::error::PaymentError> for wire_cst_payment_error {
                 }
             }
             5 => {
+                let ans = unsafe { self.kind.NetworkMismatch };
+                crate::error::PaymentError::NetworkMismatch {
+                    err: ans.err.cst_decode(),
+                }
+            }
+            6 => {
                 let ans = unsafe { self.kind.Generic };
                 crate::error::PaymentError::Generic {
                     err: ans.err.cst_decode(),
                 }
             }
-            6 => crate::error::PaymentError::InvalidOrExpiredFees,
-            7 => crate::error::PaymentError::InsufficientFunds,
-            8 => {
+            7 => crate::error::PaymentError::InvalidOrExpiredFees,
+            8 => crate::error::PaymentError::InsufficientFunds,
+            9 => {
                 let ans = unsafe { self.kind.InvalidInvoice };
                 crate::error::PaymentError::InvalidInvoice {
                     err: ans.err.cst_decode(),
                 }
             }
-            9 => crate::error::PaymentError::InvalidPreimage,
-            10 => {
+            10 => crate::error::PaymentError::InvalidPreimage,
+            11 => {
                 let ans = unsafe { self.kind.LwkError };
                 crate::error::PaymentError::LwkError {
                     err: ans.err.cst_decode(),
                 }
             }
-            11 => crate::error::PaymentError::PairsNotFound,
-            12 => crate::error::PaymentError::PaymentTimeout,
-            13 => crate::error::PaymentError::PersistError,
-            14 => {
+            12 => crate::error::PaymentError::PairsNotFound,
+            13 => crate::error::PaymentError::PaymentTimeout,
+            14 => crate::error::PaymentError::PersistError,
+            15 => {
                 let ans = unsafe { self.kind.ReceiveError };
                 crate::error::PaymentError::ReceiveError {
                     err: ans.err.cst_decode(),
                 }
             }
-            15 => {
+            16 => {
                 let ans = unsafe { self.kind.Refunded };
                 crate::error::PaymentError::Refunded {
                     err: ans.err.cst_decode(),
                     refund_tx_id: ans.refund_tx_id.cst_decode(),
                 }
             }
-            16 => crate::error::PaymentError::SelfTransferNotSupported,
-            17 => {
+            17 => crate::error::PaymentError::SelfTransferNotSupported,
+            18 => {
                 let ans = unsafe { self.kind.SendError };
                 crate::error::PaymentError::SendError {
                     err: ans.err.cst_decode(),
                 }
             }
-            18 => {
+            19 => {
                 let ans = unsafe { self.kind.SignerError };
                 crate::error::PaymentError::SignerError {
                     err: ans.err.cst_decode(),
@@ -3816,6 +3822,7 @@ pub struct wire_cst_payment_error {
 #[derive(Clone, Copy)]
 pub union PaymentErrorKind {
     AmountMissing: wire_cst_PaymentError_AmountMissing,
+    NetworkMismatch: wire_cst_PaymentError_NetworkMismatch,
     Generic: wire_cst_PaymentError_Generic,
     InvalidInvoice: wire_cst_PaymentError_InvalidInvoice,
     LwkError: wire_cst_PaymentError_LwkError,
@@ -3828,6 +3835,11 @@ pub union PaymentErrorKind {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_AmountMissing {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_NetworkMismatch {
     err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]

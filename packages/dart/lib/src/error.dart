@@ -19,6 +19,9 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.amountMissing({
     required String err,
   }) = PaymentError_AmountMissing;
+  const factory PaymentError.networkMismatch({
+    required String err,
+  }) = PaymentError_NetworkMismatch;
   const factory PaymentError.generic({
     required String err,
   }) = PaymentError_Generic;

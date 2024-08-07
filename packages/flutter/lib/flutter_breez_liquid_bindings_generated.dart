@@ -2282,6 +2282,10 @@ final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_NetworkMismatch extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -2314,6 +2318,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 
 final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_AmountMissing AmountMissing;
+
+  external wire_cst_PaymentError_NetworkMismatch NetworkMismatch;
 
   external wire_cst_PaymentError_Generic Generic;
 

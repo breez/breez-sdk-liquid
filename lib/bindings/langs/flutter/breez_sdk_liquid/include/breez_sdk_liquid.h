@@ -741,6 +741,10 @@ typedef struct wire_cst_PaymentError_AmountMissing {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_AmountMissing;
 
+typedef struct wire_cst_PaymentError_NetworkMismatch {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_PaymentError_NetworkMismatch;
+
 typedef struct wire_cst_PaymentError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_Generic;
@@ -772,6 +776,7 @@ typedef struct wire_cst_PaymentError_SignerError {
 
 typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_AmountMissing AmountMissing;
+  struct wire_cst_PaymentError_NetworkMismatch NetworkMismatch;
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
   struct wire_cst_PaymentError_LwkError LwkError;

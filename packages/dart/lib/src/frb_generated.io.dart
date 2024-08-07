@@ -2214,75 +2214,81 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.AmountMissing.err = pre_err;
       return;
     }
-    if (apiObj is PaymentError_Generic) {
+    if (apiObj is PaymentError_NetworkMismatch) {
       var pre_err = cst_encode_String(apiObj.err);
       wireObj.tag = 5;
+      wireObj.kind.NetworkMismatch.err = pre_err;
+      return;
+    }
+    if (apiObj is PaymentError_Generic) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 6;
       wireObj.kind.Generic.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidOrExpiredFees) {
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       return;
     }
     if (apiObj is PaymentError_InsufficientFunds) {
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       return;
     }
     if (apiObj is PaymentError_InvalidInvoice) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       wireObj.kind.InvalidInvoice.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidPreimage) {
-      wireObj.tag = 9;
+      wireObj.tag = 10;
       return;
     }
     if (apiObj is PaymentError_LwkError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 10;
+      wireObj.tag = 11;
       wireObj.kind.LwkError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_PairsNotFound) {
-      wireObj.tag = 11;
-      return;
-    }
-    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 12;
       return;
     }
-    if (apiObj is PaymentError_PersistError) {
+    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 13;
+      return;
+    }
+    if (apiObj is PaymentError_PersistError) {
+      wireObj.tag = 14;
       return;
     }
     if (apiObj is PaymentError_ReceiveError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 14;
+      wireObj.tag = 15;
       wireObj.kind.ReceiveError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
       var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
-      wireObj.tag = 15;
+      wireObj.tag = 16;
       wireObj.kind.Refunded.err = pre_err;
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
     if (apiObj is PaymentError_SelfTransferNotSupported) {
-      wireObj.tag = 16;
+      wireObj.tag = 17;
       return;
     }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 17;
+      wireObj.tag = 18;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 18;
+      wireObj.tag = 19;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -5277,6 +5283,10 @@ final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_NetworkMismatch extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5309,6 +5319,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 
 final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_AmountMissing AmountMissing;
+
+  external wire_cst_PaymentError_NetworkMismatch NetworkMismatch;
 
   external wire_cst_PaymentError_Generic Generic;
 
