@@ -73,6 +73,9 @@ pub enum PaymentError {
     #[error("Amount is missing: {err}")]
     AmountMissing { err: String },
 
+    #[error("Network mismatch: {err}")]
+    NetworkMismatch { err: String },
+
     #[error("Generic error: {err}")]
     Generic { err: String },
 

@@ -576,7 +576,7 @@ impl LiquidSdk {
             ("bitcoin", LiquidNetwork::Mainnet) => {}
             ("testnet", LiquidNetwork::Testnet) => {}
             _ => {
-                return Err(PaymentError::InvalidInvoice {
+                return Err(PaymentError::NetworkMismatch {
                     err: "Invoice cannot be paid on the current network".to_string(),
                 })
             }
@@ -688,6 +688,17 @@ impl LiquidSdk {
                     return Err(PaymentError::AmountOutOfRange);
                 };
 
+                ensure_sdk!(
+                    liquid_address_data.network != self.config.network.into(),
+                    PaymentError::NetworkMismatch {
+                        err: format!(
+                            "Cannot send payment from {} to {}",
+                            Into::<sdk_common::bitcoin::Network>::into(self.config.network),
+                            liquid_address_data.network
+                        )
+                    }
+                );
+
                 receiver_amount_sat = amount_sat;
                 // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
                 // once Esplora broadcast is enabled
@@ -789,16 +800,20 @@ impl LiquidSdk {
             SendDestination::LiquidAddress {
                 address_data: liquid_address_data,
             } => {
-                ensure_sdk!(
-                    liquid_address_data.network == self.config.network.into(),
-                    PaymentError::Generic {
-                        err: "Cannot pay to the given network".to_string()
-                    }
-                );
-
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
                     return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
                 };
+
+                ensure_sdk!(
+                    liquid_address_data.network != self.config.network.into(),
+                    PaymentError::NetworkMismatch {
+                        err: format!(
+                            "Cannot send payment from {} to {}",
+                            Into::<sdk_common::bitcoin::Network>::into(self.config.network),
+                            liquid_address_data.network
+                        )
+                    }
+                );
 
                 let payer_amount_sat = amount_sat + fees_sat;
                 ensure_sdk!(
@@ -1633,7 +1648,7 @@ impl LiquidSdk {
         req: &PrepareBuyBitcoinRequest,
     ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
         if self.config.network != LiquidNetwork::Mainnet {
-            return Err(PaymentError::Generic {
+            return Err(PaymentError::NetworkMismatch {
                 err: "Can only buy bitcoin on Mainnet".to_string(),
             });
         }

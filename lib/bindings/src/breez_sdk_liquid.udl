@@ -284,6 +284,7 @@ enum PaymentError {
     "InvalidOrExpiredFees",
     "InsufficientFunds",
     "InvalidInvoice",
+    "NetworkMismatch",
     "InvalidPreimage",
     "LwkError",
     "PairsNotFound",
