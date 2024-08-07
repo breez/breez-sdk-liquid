@@ -31,6 +31,7 @@ impl TxMap {
 
 pub(crate) struct RecoveredOnchainDataSend {
     lockup_tx_ids: HashMap<String, HistoryTxId>,
+    claim_tx_ids: HashMap<String, HistoryTxId>,
     refund_tx_ids: HashMap<String, HistoryTxId>,
 }
 
@@ -112,6 +113,7 @@ impl LiquidSdk {
         send_histories_by_swap_id: HashMap<String, SendSwapHistory>,
     ) -> Result<RecoveredOnchainDataSend> {
         let mut lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut claim_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
         let mut refund_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
 
         for (swap_id, history) in send_histories_by_swap_id {
@@ -135,19 +137,24 @@ impl LiquidSdk {
             if let Some(refund_tx_id) = maybe_refund_tx_id {
                 refund_tx_map.insert(swap_id.clone(), refund_tx_id.clone());
             }
+
+            // A history tx that is neither a known incoming or outgoing tx is a claim tx
+            let maybe_claim_tx_id = history
+                .iter()
+                .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
+            if let Some(claim_tx_id) = maybe_claim_tx_id {
+                claim_tx_map.insert(swap_id.clone(), claim_tx_id.clone());
+            }
         }
 
-        info!(
-            "[Recover Send] Found {} lockup txs from onchain data",
-            lockup_tx_map.len()
-        );
-        info!(
-            "[Recover Send] Found {} refund txs from onchain data",
-            refund_tx_map.len()
-        );
+        info!("[Recover Send] Found {} lockup txs", lockup_tx_map.len());
+        info!("[Recover Send] Found {} claim txs", claim_tx_map.len());
+        info!("[Recover Send] Found {} refund txs", refund_tx_map.len());
 
         Ok(RecoveredOnchainDataSend {
             lockup_tx_ids: lockup_tx_map,
+            claim_tx_ids: claim_tx_map,
             refund_tx_ids: refund_tx_map,
         })
     }
