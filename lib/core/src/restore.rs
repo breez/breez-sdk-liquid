@@ -30,29 +30,29 @@ impl TxMap {
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
-    lockup_tx_ids: HashMap<String, Txid>,
-    refund_tx_ids: HashMap<String, Txid>,
+    lockup_tx_ids: HashMap<String, HistoryTxId>,
+    refund_tx_ids: HashMap<String, HistoryTxId>,
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
-    lockup_claim_tx_ids: HashMap<String, (Txid, Txid)>,
+    lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)>,
 }
 
 pub(crate) struct RecoveredOnchainDataChainSend {
-    lbtc_user_lockup_tx_ids: HashMap<String, Txid>,
-    lbtc_refund_tx_ids: HashMap<String, Txid>,
-    btc_server_lockup_tx_ids: HashMap<String, Txid>,
-    btc_claim_tx_ids: HashMap<String, Txid>,
+    lbtc_user_lockup_tx_ids: HashMap<String, HistoryTxId>,
+    lbtc_refund_tx_ids: HashMap<String, HistoryTxId>,
+    btc_server_lockup_tx_ids: HashMap<String, HistoryTxId>,
+    btc_claim_tx_ids: HashMap<String, HistoryTxId>,
 }
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// Server lockup tx ID, claim tx ID.
     ///
     /// We store them in a pair because when they are present, we always expect both to be present.
-    lbtc_server_lockup_claim_tx_ids: HashMap<String, (Txid, Txid)>,
+    lbtc_server_lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)>,
 
-    btc_user_lockup_tx_ids: HashMap<String, Txid>,
-    btc_refund_tx_ids: HashMap<String, Txid>,
+    btc_user_lockup_tx_ids: HashMap<String, HistoryTxId>,
+    btc_refund_tx_ids: HashMap<String, HistoryTxId>,
 }
 
 pub(crate) struct RecoveredOnchainData {
@@ -111,29 +111,29 @@ impl LiquidSdk {
         tx_map: &TxMap,
         send_histories_by_swap_id: HashMap<String, SendSwapHistory>,
     ) -> Result<RecoveredOnchainDataSend> {
-        let mut lockup_tx_map: HashMap<String, Txid> = HashMap::new();
-        let mut refund_tx_map: HashMap<String, Txid> = HashMap::new();
+        let mut lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut refund_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
 
         for (swap_id, history) in send_histories_by_swap_id {
             // If a history tx is one of our outgoing txs, it's a lockup tx
             let maybe_lockup_tx_id = history
                 .iter()
-                .find(|tx_id| tx_map.outgoing_tx_map.contains_key::<Txid>(tx_id));
+                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
             match maybe_lockup_tx_id {
                 None => {
                     error!("No lockup tx found when recovering data for Send Swap {swap_id}")
                 }
                 Some(lockup_tx_id) => {
-                    lockup_tx_map.insert(swap_id.clone(), *lockup_tx_id);
+                    lockup_tx_map.insert(swap_id.clone(), lockup_tx_id.clone());
                 }
             }
 
             // If a history tx is one of our incoming txs, it's a refund tx
             let maybe_refund_tx_id = history
                 .iter()
-                .find(|tx_id| tx_map.incoming_tx_map.contains_key::<Txid>(tx_id));
+                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid));
             if let Some(refund_tx_id) = maybe_refund_tx_id {
-                refund_tx_map.insert(swap_id.clone(), *refund_tx_id);
+                refund_tx_map.insert(swap_id.clone(), refund_tx_id.clone());
             }
         }
 
@@ -158,7 +158,8 @@ impl LiquidSdk {
         tx_map: &TxMap,
         receive_histories_by_swap_id: HashMap<String, ReceiveSwapHistory>,
     ) -> Result<RecoveredOnchainDataReceive> {
-        let mut lockup_claim_tx_ids_map: HashMap<String, (Txid, Txid)> = HashMap::new();
+        let mut lockup_claim_tx_ids_map: HashMap<String, (HistoryTxId, HistoryTxId)> =
+            HashMap::new();
 
         for (swap_id, history) in receive_histories_by_swap_id {
             match history.len() {
@@ -168,11 +169,12 @@ impl LiquidSdk {
 
                     // If a history tx is a known incoming txs, it's the claim tx
                     let (lockup_tx_id, claim_tx_id) =
-                        match tx_map.incoming_tx_map.contains_key::<Txid>(first) {
+                        match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
                             true => (second, first),
                             false => (first, second),
                         };
-                    lockup_claim_tx_ids_map.insert(swap_id.clone(), (*lockup_tx_id, *claim_tx_id));
+                    lockup_claim_tx_ids_map
+                        .insert(swap_id.clone(), (lockup_tx_id.clone(), claim_tx_id.clone()));
                 }
                 n => {
                     error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}")
@@ -196,10 +198,10 @@ impl LiquidSdk {
         tx_map: &TxMap,
         chain_send_histories_by_swap_id: HashMap<String, SendChainSwapHistory>,
     ) -> Result<RecoveredOnchainDataChainSend> {
-        let mut lbtc_user_lockup_tx_map: HashMap<String, Txid> = HashMap::new();
-        let mut lbtc_refund_tx_map: HashMap<String, Txid> = HashMap::new();
-        let mut btc_server_lockup_tx_map: HashMap<String, Txid> = HashMap::new();
-        let mut btc_claim_tx_map: HashMap<String, Txid> = HashMap::new();
+        let mut lbtc_user_lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut lbtc_refund_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut btc_server_lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut btc_claim_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
 
         for (swap_id, history) in chain_send_histories_by_swap_id {
             info!("[Recover Chain Send] Checking swap {swap_id}");
@@ -208,13 +210,13 @@ impl LiquidSdk {
             let maybe_lockup_tx_id = history
                 .lbtc_lockup_script_history
                 .iter()
-                .find(|tx_id| tx_map.outgoing_tx_map.contains_key::<Txid>(tx_id));
+                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
             match maybe_lockup_tx_id {
                 None => {
                     error!("No lockup tx found when recovering data for Chain Send Swap {swap_id}")
                 }
                 Some(lockup_tx_id) => {
-                    lbtc_user_lockup_tx_map.insert(swap_id.clone(), *lockup_tx_id);
+                    lbtc_user_lockup_tx_map.insert(swap_id.clone(), lockup_tx_id.clone());
                 }
             }
 
@@ -222,17 +224,18 @@ impl LiquidSdk {
             let maybe_refund_tx_id = history
                 .lbtc_lockup_script_history
                 .iter()
-                .find(|tx_id| tx_map.incoming_tx_map.contains_key::<Txid>(tx_id));
+                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid));
             if let Some(refund_tx_id) = maybe_refund_tx_id {
-                lbtc_refund_tx_map.insert(swap_id.clone(), *refund_tx_id);
+                lbtc_refund_tx_map.insert(swap_id.clone(), refund_tx_id.clone());
             }
 
             match history.btc_claim_script_history.len() {
                 2 => {
                     // TODO How to tell the claim tx apart from the lockup tx? Is the order in which they're received from Electrum reliable?
                     btc_server_lockup_tx_map
-                        .insert(swap_id.clone(), history.btc_claim_script_history[0]);
-                    btc_claim_tx_map.insert(swap_id.clone(), history.btc_claim_script_history[1]);
+                        .insert(swap_id.clone(), history.btc_claim_script_history[0].clone());
+                    btc_claim_tx_map
+                        .insert(swap_id.clone(), history.btc_claim_script_history[1].clone());
                 }
                 n => {
                     error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}")
@@ -271,9 +274,10 @@ impl LiquidSdk {
         tx_map: &TxMap,
         chain_receive_histories_by_swap_id: HashMap<String, ReceiveChainSwapHistory>,
     ) -> Result<RecoveredOnchainDataChainReceive> {
-        let mut lbtc_server_lockup_claim_tx_ids: HashMap<String, (Txid, Txid)> = HashMap::new();
-        let mut btc_user_lockup_tx_ids: HashMap<String, Txid> = HashMap::new();
-        let mut btc_refund_tx_ids: HashMap<String, Txid> = HashMap::new();
+        let mut lbtc_server_lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)> =
+            HashMap::new();
+        let mut btc_user_lockup_tx_ids: HashMap<String, HistoryTxId> = HashMap::new();
+        let mut btc_refund_tx_ids: HashMap<String, HistoryTxId> = HashMap::new();
 
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             info!("[Recover Chain Receive] Checking swap {swap_id}");
@@ -285,12 +289,12 @@ impl LiquidSdk {
 
                     // If a history tx is a known incoming txs, it's the claim tx
                     let (lockup_tx_id, claim_tx_id) =
-                        match tx_map.incoming_tx_map.contains_key::<Txid>(first) {
+                        match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
                             true => (second, first),
                             false => (first, second),
                         };
                     lbtc_server_lockup_claim_tx_ids
-                        .insert(swap_id.clone(), (*lockup_tx_id, *claim_tx_id));
+                        .insert(swap_id.clone(), (lockup_tx_id.clone(), claim_tx_id.clone()));
                 }
                 n => {
                     error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}")
@@ -302,9 +306,14 @@ impl LiquidSdk {
                 x if x >= 2 => {
                     // TODO How to tell the user lockup tx apart from the refund tx? Is the order in which they're received from Electrum reliable?
                     // TODO How to tell BTC refund apart from BTC server claim tx?
-                    btc_user_lockup_tx_ids
-                        .insert(swap_id.clone(), history.btc_lockup_script_history[0]);
-                    btc_refund_tx_ids.insert(swap_id.clone(), history.btc_lockup_script_history[1]);
+                    btc_user_lockup_tx_ids.insert(
+                        swap_id.clone(),
+                        history.btc_lockup_script_history[0].clone(),
+                    );
+                    btc_refund_tx_ids.insert(
+                        swap_id.clone(),
+                        history.btc_lockup_script_history[1].clone(),
+                    );
                 }
                 n => {
                     error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}")
@@ -339,6 +348,7 @@ pub(crate) mod immutable {
     use boltz_client::{BtcSwapScript, LBtcSwapScript};
     use log::{error, info};
     use lwk_wollet::elements::Txid;
+    use lwk_wollet::History;
 
     use crate::prelude::*;
     use crate::sdk::LiquidSdk;
@@ -346,8 +356,22 @@ pub(crate) mod immutable {
     type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
     type LBtcScript = lwk_wollet::elements::Script;
 
-    pub(crate) type SendSwapHistory = Vec<Txid>;
-    pub(crate) type ReceiveSwapHistory = Vec<Txid>;
+    pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
+    pub(crate) type ReceiveSwapHistory = Vec<HistoryTxId>;
+
+    #[derive(Clone)]
+    pub(crate) struct HistoryTxId {
+        pub txid: Txid,
+        pub confirmed: bool,
+    }
+    impl From<History> for HistoryTxId {
+        fn from(value: History) -> Self {
+            Self {
+                txid: value.txid,
+                confirmed: value.height > 0,
+            }
+        }
+    }
 
     #[allow(dead_code)]
     #[derive(Clone)]
@@ -376,8 +400,8 @@ pub(crate) mod immutable {
     }
 
     pub(crate) struct SendChainSwapHistory {
-        pub(crate) lbtc_lockup_script_history: Vec<Txid>,
-        pub(crate) btc_claim_script_history: Vec<Txid>,
+        pub(crate) lbtc_lockup_script_history: Vec<HistoryTxId>,
+        pub(crate) btc_claim_script_history: Vec<HistoryTxId>,
     }
 
     #[allow(dead_code)]
@@ -391,8 +415,8 @@ pub(crate) mod immutable {
     }
 
     pub(crate) struct ReceiveChainSwapHistory {
-        pub(crate) lbtc_claim_script_history: Vec<Txid>,
-        pub(crate) btc_lockup_script_history: Vec<Txid>,
+        pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
+        pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
     }
 
     /// Swap data received from the immutable DB
@@ -558,7 +582,7 @@ pub(crate) mod immutable {
 
         fn send_histories_by_swap_id(
             &self,
-            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<Txid>>,
+            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
         ) -> HashMap<String, SendSwapHistory> {
             let send_swaps_by_script = self.send_swaps_by_script();
 
@@ -583,7 +607,7 @@ pub(crate) mod immutable {
 
         fn receive_histories_by_swap_id(
             &self,
-            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<Txid>>,
+            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
         ) -> HashMap<String, ReceiveSwapHistory> {
             let receive_swaps_by_script = self.receive_swaps_by_script();
 
@@ -610,8 +634,8 @@ pub(crate) mod immutable {
 
         fn send_chain_histories_by_swap_id(
             &self,
-            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<Txid>>,
-            btc_script_to_history_map: &HashMap<BtcScript, Vec<Txid>>,
+            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
+            btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
         ) -> HashMap<String, SendChainSwapHistory> {
             let send_chain_swaps_by_lbtc_script = self.send_chain_swaps_by_lbtc_lockup_script();
 
@@ -649,8 +673,8 @@ pub(crate) mod immutable {
 
         fn receive_chain_histories_by_swap_id(
             &self,
-            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<Txid>>,
-            btc_script_to_history_map: &HashMap<BtcScript, Vec<Txid>>,
+            lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
+            btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
         ) -> HashMap<String, ReceiveChainSwapHistory> {
             let receive_chain_swaps_by_lbtc_script =
                 self.receive_chain_swaps_by_lbtc_claim_script();
@@ -774,11 +798,12 @@ pub(crate) mod immutable {
                 lbtc_swap_scripts_len == lbtc_script_histories_len,
                 anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
             );
-            let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<Txid>> = swap_lbtc_scripts
-                .into_iter()
-                .zip(lbtc_script_histories.into_iter())
-                .map(|(k, v)| (k, v.into_iter().map(|h| h.txid).collect()))
-                .collect();
+            let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>> =
+                swap_lbtc_scripts
+                    .into_iter()
+                    .zip(lbtc_script_histories.into_iter())
+                    .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
+                    .collect();
 
             let swap_btc_scripts = swaps_list.get_all_swap_btc_scripts();
             let btc_script_histories = self
@@ -797,10 +822,10 @@ pub(crate) mod immutable {
                 btc_swap_scripts_len == btc_script_histories_len,
                 anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
             );
-            let btc_script_to_history_map: HashMap<BtcScript, Vec<Txid>> = swap_btc_scripts
+            let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_scripts
                 .into_iter()
                 .zip(btc_script_histories.into_iter())
-                .map(|(k, v)| (k, v.into_iter().map(|h| h.txid).collect()))
+                .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
                 .collect();
 
             Ok(SwapsHistories {
