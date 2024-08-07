@@ -2001,22 +2001,24 @@ impl ReconnectHandler for SwapperReconnectHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{str::FromStr, sync::Arc};
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
         boltz::{self, SwapUpdateTxDetails},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::hashes::hex::DisplayHex;
+    use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
+    use tokio::sync::Mutex;
 
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
+            chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
             persist::{new_persister, new_receive_swap, new_send_swap},
-            sdk::new_liquid_sdk,
+            sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
             status_stream::MockStatusStream,
             swapper::MockSwapper,
             wallet::TEST_LIQUID_TX,
@@ -2262,11 +2264,15 @@ mod tests {
         let persister = Arc::new(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
-        let sdk = Arc::new(new_liquid_sdk(
+        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
         )?);
 
         LiquidSdk::track_swap_updates(&sdk).await;
@@ -2295,10 +2301,53 @@ mod tests {
                     assert_eq!(persisted_swap.state, PaymentState::Failed);
                 }
 
+                let (mock_tx_hex, mock_tx_id) = match direction {
+                    Direction::Incoming => {
+                        let tx = TEST_LIQUID_TX.clone();
+                        (
+                            lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
+                    Direction::Outgoing => {
+                        let tx = TEST_BITCOIN_TX.clone();
+                        (
+                            sdk_common::bitcoin::consensus::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
+                };
+
                 // Verify that `TransactionLockupFailed` correctly sets the state as
                 // `RefundPending`/`Refundable` or as `Failed` depending on whether or not
                 // `user_lockup_tx_id` is present
-                for user_lockup_tx_id in &[None, Some("user-lockup-tx-id".to_string())] {
+                for user_lockup_tx_id in &[None, Some(mock_tx_id.clone())] {
+                    if let Some(user_lockup_tx_id) = user_lockup_tx_id {
+                        match direction {
+                            Direction::Incoming => {
+                                bitcoin_chain_service
+                                    .lock()
+                                    .await
+                                    .set_history(vec![MockHistory {
+                                        txid: Txid::from_str(&user_lockup_tx_id).unwrap(),
+                                        height: 0,
+                                        block_hash: None,
+                                        block_timestamp: None,
+                                    }]);
+                            }
+                            Direction::Outgoing => {
+                                liquid_chain_service
+                                    .lock()
+                                    .await
+                                    .set_history(vec![MockHistory {
+                                        txid: Txid::from_str(&user_lockup_tx_id).unwrap(),
+                                        height: 0,
+                                        block_hash: None,
+                                        block_timestamp: None,
+                                    }]);
+                            }
+                        }
+                    }
                     let persisted_swap = trigger_swap_update!(
                         "chain",
                         NewSwapArgs::default()
@@ -2321,23 +2370,6 @@ mod tests {
                     };
                     assert_eq!(persisted_swap.state, expected_state);
                 }
-
-                let (mock_tx_hex, mock_tx_id) = match direction {
-                    Direction::Incoming => {
-                        let tx = TEST_LIQUID_TX.clone();
-                        (
-                            lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string(),
-                            tx.txid().to_string(),
-                        )
-                    }
-                    Direction::Outgoing => {
-                        let tx = TEST_BITCOIN_TX.clone();
-                        (
-                            sdk_common::bitcoin::consensus::serialize(&tx).to_lower_hex_string(),
-                            tx.txid().to_string(),
-                        )
-                    }
-                };
 
                 // Verify that `TransactionMempool` and `TransactionConfirmed` correctly set
                 // `user_lockup_tx_id` and `accept_zero_conf`
