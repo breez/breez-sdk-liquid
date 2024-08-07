@@ -830,19 +830,16 @@ impl LiquidSdk {
                     compressed: true,
                     inner: keypair.public_key(),
                 };
-                let webhook = self
-                    .persister
-                    .get_webhook_url()?
-                    .map(|url| SubmarineWebhook {
-                        url,
-                        hash_swap_id: Some(true),
-                        status: Some(vec![
-                            SubSwapStates::InvoiceFailedToPay,
-                            SubSwapStates::SwapExpired,
-                            SubSwapStates::TransactionClaimPending,
-                            SubSwapStates::TransactionLockupFailed,
-                        ]),
-                    });
+                let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+                    url,
+                    hash_swap_id: Some(true),
+                    status: Some(vec![
+                        SubSwapStates::InvoiceFailedToPay,
+                        SubSwapStates::SwapExpired,
+                        SubSwapStates::TransactionClaimPending,
+                        SubSwapStates::TransactionLockupFailed,
+                    ]),
+                });
                 let create_response = self.swapper.create_send_swap(CreateSubmarineRequest {
                     from: "L-BTC".to_string(),
                     to: "BTC".to_string(),
@@ -1045,11 +1042,10 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
-        let webhook = self.persister.get_webhook_url()?.map(|url| ChainWebhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
             hash_swap_id: Some(true),
             status: Some(vec![
-                ChainSwapStates::TransactionConfirmed,
                 ChainSwapStates::TransactionFailed,
                 ChainSwapStates::TransactionLockupFailed,
                 ChainSwapStates::TransactionServerConfirmed,
@@ -1244,7 +1240,7 @@ impl LiquidSdk {
                 true => RevSwapStates::TransactionConfirmed,
                 false => RevSwapStates::TransactionMempool,
             };
-        let webhook = self.persister.get_webhook_url()?.map(|url| ReverseWebhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
             hash_swap_id: Some(true),
             status: Some(vec![webhook_claim_status]),
@@ -1388,11 +1384,10 @@ impl LiquidSdk {
             compressed: true,
             inner: refund_keypair.public_key(),
         };
-        let webhook = self.persister.get_webhook_url()?.map(|url| ChainWebhook {
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
             url,
             hash_swap_id: Some(true),
             status: Some(vec![
-                ChainSwapStates::TransactionConfirmed,
                 ChainSwapStates::TransactionFailed,
                 ChainSwapStates::TransactionLockupFailed,
                 ChainSwapStates::TransactionServerConfirmed,

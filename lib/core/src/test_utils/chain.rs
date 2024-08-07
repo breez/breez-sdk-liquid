@@ -47,6 +47,14 @@ impl LiquidChainService for MockLiquidChainService {
         unimplemented!()
     }
 
+    async fn get_script_history_with_retry(
+        &self,
+        _script: &lwk_wollet::elements::Script,
+        _retries: u64,
+    ) -> Result<Vec<lwk_wollet::History>> {
+        unimplemented!()
+    }
+
     async fn verify_tx(
         &self,
         _address: &boltz_client::ElementsAddress,
@@ -89,6 +97,14 @@ impl BitcoinChainService for MockBitcoinChainService {
     fn get_script_history(
         &self,
         _script: &boltz_client::bitcoin::Script,
+    ) -> Result<Vec<lwk_wollet::History>> {
+        unimplemented!()
+    }
+
+    async fn get_script_history_with_retry(
+        &self,
+        _script: &boltz_client::bitcoin::Script,
+        _retries: u64,
     ) -> Result<Vec<lwk_wollet::History>> {
         unimplemented!()
     }
