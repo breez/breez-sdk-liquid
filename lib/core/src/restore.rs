@@ -6,9 +6,10 @@ use anyhow::Result;
 use log::{error, info};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
+use sdk_common::bitcoin::hashes::hex::ToHex;
 
+use crate::prelude::*;
 use crate::restore::immutable::*;
-use crate::sdk::LiquidSdk;
 
 /// A map of all our known LWK onchain txs, indexed by tx ID
 pub(crate) struct TxMap {
@@ -65,23 +66,237 @@ pub(crate) struct RecoveredOnchainData {
 
 impl LiquidSdk {
     pub(crate) async fn recover_from_onchain(&self, tx_map: TxMap) -> Result<()> {
-        let immutable_db = self.get_swaps_list().await?;
+        // Immutable DB, as fetched from endpoint
+        let imm_db = self.get_swaps_list().await?;
 
-        let _recovered = self.get_onchain_data(tx_map, immutable_db).await?;
+        // Recovered onchain data (txs) per swap
+        let recovered = self.get_onchain_data(tx_map, &imm_db).await?;
 
-        // TODO Persist updated swaps
-        // TODO     Send updates with found txids
-        // TODO     How to set tx IDs without having to also set state?
-        // self.send_swap_state_handler
-        //     .update_swap_info(&swap_id, Failed, None, None, Some(&refund_tx_id_str))
-        //     .await?;
+        // Persist updated swaps
+        // TODO Optimize: persist in batches
+        self.event_manager.pause_notifications();
+        for send_swap_id in imm_db.send_swap_immutable_db_by_swap_id.keys() {
+            self.persist_send_swap(send_swap_id, &recovered.send).await;
+        }
+        for receive_swap_id in imm_db.receive_swap_immutable_db_by_swap_id_.keys() {
+            self.persist_receive_swap(receive_swap_id, &recovered.receive)
+                .await;
+        }
+        for send_chain_swap_id in imm_db.send_chain_swap_immutable_db_by_swap_id.keys() {
+            self.persist_send_chain_swap(send_chain_swap_id, &recovered.chain_send)
+                .await;
+        }
+        for receive_chain_swap_id in imm_db.receive_chain_swap_immutable_db_by_swap_id.keys() {
+            self.persist_receive_chain_swap(receive_chain_swap_id, &recovered.chain_receive)
+                .await;
+        }
+        self.event_manager.resume_notifications();
 
         Ok(())
     }
+
+    async fn persist_send_swap(
+        &self,
+        send_swap_id: &String,
+        recovered_send: &RecoveredOnchainDataSend,
+    ) {
+        let lockup_tx_id = recovered_send.lockup_tx_ids.get(send_swap_id);
+        let lockup_tx_id_str = lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let claim_tx_id = recovered_send.claim_tx_ids.get(send_swap_id);
+        let refund_tx_id = recovered_send.refund_tx_ids.get(send_swap_id);
+        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
+
+        let state = match lockup_tx_id {
+            Some(_) => match claim_tx_id {
+                Some(_) => PaymentState::Complete,
+                None => match refund_tx_id {
+                    Some(refund_tx_id) => match refund_tx_id.confirmed {
+                        true => PaymentState::Failed,
+                        false => PaymentState::RefundPending,
+                    },
+                    None => PaymentState::Pending,
+                },
+            },
+            None => PaymentState::TimedOut,
+        };
+
+        if let Err(e) = self
+            .send_swap_state_handler
+            .update_swap_info(
+                send_swap_id,
+                state,
+                None, // TODO Get preimage (from immutable DB?)
+                lockup_tx_id_str.as_deref(),
+                refund_tx_id_str.as_deref(),
+            )
+            .await
+        {
+            error!("Failed to persist Send Swap {send_swap_id}: {e}");
+        }
+    }
+
+    async fn persist_receive_swap(
+        &self,
+        receive_swap_id: &String,
+        recovered_receive: &RecoveredOnchainDataReceive,
+    ) {
+        let lockup_claim_tx_ids = recovered_receive.lockup_claim_tx_ids.get(receive_swap_id);
+        let (lockup_tx_id, claim_tx_id) = match lockup_claim_tx_ids {
+            Some((x, y)) => (Some(x), Some(y)),
+            None => (None, None),
+        };
+        let lockup_tx_id_str = lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let claim_tx_id_str = claim_tx_id.map(|tx| tx.txid.to_hex());
+
+        let state = match lockup_claim_tx_ids {
+            Some((_lockup_tx_id, claim_tx_id)) => match claim_tx_id.confirmed {
+                true => PaymentState::Complete,
+                false => PaymentState::Pending,
+            },
+            // TODO How to distinguish between Failed and Created (if in both cases, no lockup or claim tx present)
+            //   See https://docs.boltz.exchange/v/api/lifecycle#reverse-submarine-swaps
+            None => PaymentState::Failed,
+        };
+
+        if let Err(e) = self
+            .receive_swap_state_handler
+            .update_swap_info(
+                receive_swap_id,
+                state,
+                lockup_tx_id_str.as_deref(),
+                claim_tx_id_str.as_deref(),
+            )
+            .await
+        {
+            error!("Failed to persist Receive Swap {receive_swap_id}: {e}");
+        }
+    }
+
+    async fn persist_send_chain_swap(
+        &self,
+        send_chain_swap_id: &String,
+        recovered_send_chain: &RecoveredOnchainDataChainSend,
+    ) {
+        let server_lockup_tx_id = recovered_send_chain
+            .btc_server_lockup_tx_ids
+            .get(send_chain_swap_id);
+        let server_lockup_tx_id_str = server_lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let user_lockup_tx_id = recovered_send_chain
+            .lbtc_user_lockup_tx_ids
+            .get(send_chain_swap_id);
+        let user_lockup_tx_id_str = user_lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let claim_tx_id = recovered_send_chain
+            .btc_claim_tx_ids
+            .get(send_chain_swap_id);
+        let claim_tx_id_str = claim_tx_id.map(|tx| tx.txid.to_hex());
+        let refund_tx_id = recovered_send_chain
+            .lbtc_refund_tx_ids
+            .get(send_chain_swap_id);
+        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
+
+        // TODO How to detect TimedOut state?
+        ///     TimedOut: This covers the case when the swap state is still Created and the swap fails to reach the
+        ///     Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+        let state = match user_lockup_tx_id {
+            Some(_) => {
+                match claim_tx_id {
+                    Some(_) => PaymentState::Complete,
+                    None => {
+                        match refund_tx_id {
+                            Some(tx) => match tx.confirmed {
+                                true => PaymentState::Failed,
+                                false => PaymentState::RefundPending,
+                            },
+                            // TODO Created or TimedOut
+                            None => PaymentState::Created,
+                        }
+                    }
+                }
+            }
+            None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
+        };
+
+        if let Err(e) = self
+            .chain_swap_state_handler
+            .update_swap_info(
+                send_chain_swap_id,
+                state,
+                server_lockup_tx_id_str.as_deref(),
+                user_lockup_tx_id_str.as_deref(),
+                claim_tx_id_str.as_deref(),
+                refund_tx_id_str.as_deref(),
+            )
+            .await
+        {
+            error!("Failed to persist Send Chain Swap {send_chain_swap_id}: {e}");
+        }
+    }
+
+    async fn persist_receive_chain_swap(
+        &self,
+        receive_chain_swap_id: &String,
+        recovered_receive_chain: &RecoveredOnchainDataChainReceive,
+    ) {
+        let (server_lockup_tx_id, server_claim_tx_id) = match recovered_receive_chain
+            .lbtc_server_lockup_claim_tx_ids
+            .get(receive_chain_swap_id)
+        {
+            Some((server_lockup_tx_id, server_claim_tx_id)) => {
+                (Some(server_lockup_tx_id), Some(server_claim_tx_id))
+            }
+            None => (None, None),
+        };
+        let server_lockup_tx_id_str = server_lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let server_claim_tx_id_str = server_claim_tx_id.map(|tx| tx.txid.to_hex());
+        let user_lockup_tx_id = recovered_receive_chain
+            .btc_user_lockup_tx_ids
+            .get(receive_chain_swap_id);
+        let user_lockup_tx_id_str = user_lockup_tx_id.map(|tx| tx.txid.to_hex());
+        let refund_tx_id = recovered_receive_chain
+            .btc_refund_tx_ids
+            .get(receive_chain_swap_id);
+        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
+
+        // // TODO How to detect TimedOut state?
+        let state = match user_lockup_tx_id {
+            Some(_) => {
+                match server_claim_tx_id {
+                    Some(_) => PaymentState::Complete,
+                    None => {
+                        match refund_tx_id {
+                            Some(tx) => match tx.confirmed {
+                                true => PaymentState::Failed,
+                                false => PaymentState::RefundPending,
+                            },
+                            // TODO Created or TimedOut
+                            None => PaymentState::Created,
+                        }
+                    }
+                }
+            }
+            None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
+        };
+
+        if let Err(e) = self
+            .chain_swap_state_handler
+            .update_swap_info(
+                receive_chain_swap_id,
+                state,
+                server_lockup_tx_id_str.as_deref(),
+                user_lockup_tx_id_str.as_deref(),
+                server_claim_tx_id_str.as_deref(),
+                refund_tx_id_str.as_deref(),
+            )
+            .await
+        {
+            error!("Failed to persist Receive Chain Swap {receive_chain_swap_id}: {e}");
+        }
+    }
+
     pub(crate) async fn get_onchain_data(
         &self,
         tx_map: TxMap,
-        immutable_db: SwapsList,
+        immutable_db: &SwapsList,
     ) -> Result<RecoveredOnchainData> {
         let histories = self.fetch_swaps_histories(immutable_db).await?;
 
@@ -148,9 +363,18 @@ impl LiquidSdk {
             }
         }
 
-        info!("[Recover Send] Found {} lockup txs", lockup_tx_map.len());
-        info!("[Recover Send] Found {} claim txs", claim_tx_map.len());
-        info!("[Recover Send] Found {} refund txs", refund_tx_map.len());
+        info!(
+            "[Recover Send] Found {} lockup txs from onchain data",
+            lockup_tx_map.len()
+        );
+        info!(
+            "[Recover Send] Found {} claim txs from onchain data",
+            claim_tx_map.len()
+        );
+        info!(
+            "[Recover Send] Found {} refund txs from onchain data",
+            refund_tx_map.len()
+        );
 
         Ok(RecoveredOnchainDataSend {
             lockup_tx_ids: lockup_tx_map,
@@ -382,7 +606,7 @@ pub(crate) mod immutable {
 
     #[allow(dead_code)]
     #[derive(Clone)]
-    struct SendSwapImmutableData {
+    pub(crate) struct SendSwapImmutableData {
         pub(crate) swap_id: String,
         pub(crate) swap_script: LBtcSwapScript,
         pub(crate) script: LBtcScript,
@@ -390,7 +614,7 @@ pub(crate) mod immutable {
 
     #[allow(dead_code)]
     #[derive(Clone)]
-    struct ReceiveSwapImmutableData {
+    pub(crate) struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
         pub(crate) swap_script: LBtcSwapScript,
         pub(crate) script: LBtcScript,
@@ -398,7 +622,7 @@ pub(crate) mod immutable {
 
     #[allow(dead_code)]
     #[derive(Clone)]
-    struct SendChainSwapImmutableData {
+    pub(crate) struct SendChainSwapImmutableData {
         swap_id: String,
         lockup_swap_script: LBtcSwapScript,
         lockup_script: LBtcScript,
@@ -413,7 +637,7 @@ pub(crate) mod immutable {
 
     #[allow(dead_code)]
     #[derive(Clone)]
-    struct ReceiveChainSwapImmutableData {
+    pub(crate) struct ReceiveChainSwapImmutableData {
         swap_id: String,
         lockup_swap_script: BtcSwapScript,
         lockup_script: BtcScript,
@@ -428,10 +652,12 @@ pub(crate) mod immutable {
 
     /// Swap data received from the immutable DB
     pub(crate) struct SwapsList {
-        send_swap_immutable_db_by_swap_id: HashMap<String, SendSwapImmutableData>,
-        receive_swap_immutable_db_by_swap_id_: HashMap<String, ReceiveSwapImmutableData>,
-        send_chain_swap_immutable_db_by_swap_id: HashMap<String, SendChainSwapImmutableData>,
-        receive_chain_swap_immutable_db_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData>,
+        pub(crate) send_swap_immutable_db_by_swap_id: HashMap<String, SendSwapImmutableData>,
+        pub(crate) receive_swap_immutable_db_by_swap_id_: HashMap<String, ReceiveSwapImmutableData>,
+        pub(crate) send_chain_swap_immutable_db_by_swap_id:
+            HashMap<String, SendChainSwapImmutableData>,
+        pub(crate) receive_chain_swap_immutable_db_by_swap_id:
+            HashMap<String, ReceiveChainSwapImmutableData>,
     }
 
     impl SwapsList {
@@ -789,7 +1015,7 @@ pub(crate) mod immutable {
         /// For a given [SwapList], this fetches the script histories from the chain services
         pub(crate) async fn fetch_swaps_histories(
             &self,
-            swaps_list: SwapsList,
+            swaps_list: &SwapsList,
         ) -> Result<SwapsHistories> {
             let swap_lbtc_scripts = swaps_list.get_all_swap_lbtc_scripts();
 
