@@ -16,6 +16,7 @@ import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.security.MessageDigest
 
 @Serializable
 data class SwapUpdatedRequest(
@@ -28,7 +29,7 @@ class SwapUpdatedJob(
     private val fgService: SdkForegroundService,
     private val payload: String,
     private val logger: ServiceLogger,
-    private var swapId: String? = null,
+    private var swapIdHash: String? = null,
 ) : Job {
     companion object {
         private const val TAG = "SwapUpdatedJob"
@@ -37,7 +38,7 @@ class SwapUpdatedJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         try {
             val request = Json.decodeFromString(SwapUpdatedRequest.serializer(), payload)
-            this.swapId = request.id
+            this.swapIdHash = request.id
         } catch (e: Exception) {
             logger.log(TAG, "Failed to decode payload: ${e.message}", "WARN")
         }
@@ -47,8 +48,17 @@ class SwapUpdatedJob(
         when (e) {
             is SdkEvent.PaymentSucceeded -> {
                 val payment = e.details
-                logger.log(TAG, "Received payment succeeded event: ${payment.txId}", "TRACE")
-                notifySuccess()
+
+                payment.swapId?.let { swapId ->
+                    if (this.swapIdHash == hashId(swapId)) {
+                        logger.log(
+                            TAG,
+                            "Received payment succeeded event: ${this.swapIdHash}",
+                            "TRACE"
+                        )
+                        notifySuccess()
+                    }
+                }
             }
 
             else -> {
@@ -61,9 +71,15 @@ class SwapUpdatedJob(
         notifyFailure()
     }
 
+    private fun hashId(id: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(id.toByteArray())
+            .fold(StringBuilder()) { sb, it -> sb.append("%02x".format(it)) }
+            .toString()
+
     private fun notifySuccess() {
-        this.swapId?.let{swapId -> 
-            logger.log(TAG, "Swap $swapId processed successfully", "INFO")
+        this.swapIdHash?.let { swapIdHash ->
+            logger.log(TAG, "Swap $swapIdHash processed successfully", "INFO")
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_SWAP_UPDATED,
@@ -78,8 +94,8 @@ class SwapUpdatedJob(
     }
 
     private fun notifyFailure() {
-        this.swapId?.let{swapId -> 
-            logger.log(TAG, "Swap $swapId processing failed", "INFO")
+        this.swapIdHash?.let { swapIdHash ->
+            logger.log(TAG, "Swap $swapIdHash processing failed", "INFO")
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_SWAP_UPDATED,
