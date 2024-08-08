@@ -13,7 +13,6 @@ use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use migrations::current_migrations;
-use openssl::sha::Sha256;
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
 
@@ -436,13 +435,6 @@ fn filter_to_where_clause(
     }
 
     where_clause.join(" and ")
-}
-
-fn hash_str(s: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(s.as_bytes());
-
-    hex::encode(hasher.finish())
 }
 
 #[cfg(test)]

@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use anyhow::Result;
 use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row};
+use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
-
-use super::hash_str;
 
 impl Persister {
     pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
@@ -35,7 +34,7 @@ impl Persister {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
-        let id_hash = hash_str(&receive_swap.id);
+        let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
             &receive_swap.id,
             id_hash,
