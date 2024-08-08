@@ -46,9 +46,11 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           path: build
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: 3.22.3 # Pinned until resource linking issues on Android is resolved with 3.24
 
       - name: Copy package files
         working-directory: dist
