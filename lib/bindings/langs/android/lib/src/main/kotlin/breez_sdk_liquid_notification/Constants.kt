@@ -59,7 +59,7 @@ object Constants {
         "swap_updated_notification_channel_description"
     const val SWAP_UPDATED_NOTIFICATION_CHANNEL_NAME =
         "swap_updated_notification_channel_name"
-    const val SWAP_UPDATED_WORKGROUP_ID = "txs_confirmed"
+    const val SWAP_UPDATED_WORKGROUP_ID = "swap_updated"
     const val SWAP_UPDATED_WORKGROUP_DESCRIPTION =
         "swap_updated_work_group_description"
     const val SWAP_UPDATED_WORKGROUP_NAME = "swap_updated_work_group_name"
