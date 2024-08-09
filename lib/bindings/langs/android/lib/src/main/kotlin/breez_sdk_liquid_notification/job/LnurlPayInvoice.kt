@@ -5,8 +5,10 @@ import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.PrepareReceivePaymentRequest
 import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_INVOICE_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_LNURL_PAY
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
@@ -63,11 +65,20 @@ class LnurlPayInvoiceJob(
                 )
                 return
             }
+            val plainTextMetadata = getString(
+                context,
+                LNURL_PAY_METADATA_PLAIN_TEXT,
+                DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
+            )
             val prepareReceivePaymentRes = liquidSDK.prepareReceivePayment(
                 PrepareReceivePaymentRequest(amountSat)
             )
             val receivePaymentResponse = liquidSDK.receivePayment(
-                ReceivePaymentRequest(prepareReceivePaymentRes)
+                ReceivePaymentRequest(
+                    prepareReceivePaymentRes,
+                    description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
+                    useDescriptionHash = true
+                )
             )
             val response =
                 LnurlPayInvoiceResponse(
