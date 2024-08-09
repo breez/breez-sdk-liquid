@@ -85,6 +85,9 @@ pub enum PaymentError {
     #[error("Cannot pay: not enough funds")]
     InsufficientFunds,
 
+    #[error("Invalid description: {err}")]
+    InvalidDescription { err: String },
+
     #[error("The specified invoice is not valid: {err}")]
     InvalidInvoice { err: String },
 

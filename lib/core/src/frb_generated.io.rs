@@ -3927,6 +3927,7 @@ pub union PaymentErrorKind {
     AmountMissing: wire_cst_PaymentError_AmountMissing,
     NetworkMismatch: wire_cst_PaymentError_NetworkMismatch,
     Generic: wire_cst_PaymentError_Generic,
+    InvalidDescription: wire_cst_PaymentError_InvalidDescription,
     InvalidInvoice: wire_cst_PaymentError_InvalidInvoice,
     LwkError: wire_cst_PaymentError_LwkError,
     ReceiveError: wire_cst_PaymentError_ReceiveError,
@@ -3948,6 +3949,11 @@ pub struct wire_cst_PaymentError_NetworkMismatch {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct wire_cst_PaymentError_Generic {
+    err: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_PaymentError_InvalidDescription {
     err: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]

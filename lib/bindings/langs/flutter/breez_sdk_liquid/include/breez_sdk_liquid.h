@@ -155,8 +155,9 @@ typedef struct wire_cst_prepare_receive_response {
 } wire_cst_prepare_receive_response;
 
 typedef struct wire_cst_receive_payment_request {
-  struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_prepare_receive_response prepare_response;
+  struct wire_cst_list_prim_u_8_strict *description;
+  bool *use_description_hash;
 } wire_cst_receive_payment_request;
 
 typedef struct wire_cst_refund_request {
@@ -777,6 +778,10 @@ typedef struct wire_cst_PaymentError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_Generic;
 
+typedef struct wire_cst_PaymentError_InvalidDescription {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_PaymentError_InvalidDescription;
+
 typedef struct wire_cst_PaymentError_InvalidInvoice {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_InvalidInvoice;
@@ -806,6 +811,7 @@ typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_AmountMissing AmountMissing;
   struct wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
   struct wire_cst_PaymentError_Generic Generic;
+  struct wire_cst_PaymentError_InvalidDescription InvalidDescription;
   struct wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
   struct wire_cst_PaymentError_LwkError LwkError;
   struct wire_cst_PaymentError_ReceiveError ReceiveError;

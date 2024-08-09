@@ -285,6 +285,7 @@ export interface Rate {
 export interface ReceivePaymentRequest {
     prepareResponse: PrepareReceiveResponse
     description?: string
+    useDescriptionHash?: boolean
 }
 
 export interface ReceivePaymentResponse {
