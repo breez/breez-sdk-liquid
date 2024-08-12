@@ -11,7 +11,7 @@ use sdk_common::bitcoin::hashes::hex::ToHex;
 use crate::prelude::*;
 use crate::restore::immutable::*;
 
-/// A map of all our known LWK onchain txs, indexed by tx ID
+/// A map of all our known LWK onchain txs, indexed by tx ID. Essentially our own cache of the LWK txs.
 pub(crate) struct TxMap {
     outgoing_tx_map: HashMap<Txid, WalletTx>,
     incoming_tx_map: HashMap<Txid, WalletTx>,
@@ -31,8 +31,10 @@ impl TxMap {
 }
 
 trait PartialSwapState {
-    /// Determine partial swap state, based on recovered chain data
-    fn get_state(&self) -> PaymentState;
+    /// Determine partial swap state, based on recovered chain data.
+    /// For example, it cannot distinguish between [PaymentState::Created] and [PaymentState::TimedOut],
+    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed].
+    fn get_partial_state(&self) -> PaymentState;
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
@@ -41,7 +43,7 @@ pub(crate) struct RecoveredOnchainDataSend {
     refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataSend {
-    fn get_state(&self) -> PaymentState {
+    fn get_partial_state(&self) -> PaymentState {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(_) => PaymentState::Complete,
@@ -63,7 +65,7 @@ pub(crate) struct RecoveredOnchainDataReceive {
     claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataReceive {
-    fn get_state(&self) -> PaymentState {
+    fn get_partial_state(&self) -> PaymentState {
         match (&self.lockup_tx_id, &self.claim_tx_id) {
             (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed {
                 true => PaymentState::Complete,
@@ -84,10 +86,10 @@ pub(crate) struct RecoveredOnchainDataChainSend {
     btc_claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainSend {
-    fn get_state(&self) -> PaymentState {
+    fn get_partial_state(&self) -> PaymentState {
         // TODO How to detect TimedOut state?
-        ///     TimedOut: This covers the case when the swap state is still Created and the swap fails to reach the
-        ///     Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
+        //     TimedOut: This covers the case when the swap state is still Created and the swap fails to reach the
+        //     Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => {
                 match &self.btc_claim_tx_id {
@@ -98,13 +100,12 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
                                 true => PaymentState::Failed,
                                 false => PaymentState::RefundPending,
                             },
-                            // TODO Created or TimedOut
                             None => PaymentState::Created,
                         }
                     }
                 }
             }
-            None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
+            None => PaymentState::Created,
         }
     }
 }
@@ -116,8 +117,7 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     btc_refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
-    fn get_state(&self) -> PaymentState {
-        // TODO How to detect TimedOut state?
+    fn get_partial_state(&self) -> PaymentState {
         match &self.btc_user_lockup_tx_id {
             Some(_) => {
                 match &self.lbtc_server_claim_tx_id {
@@ -128,13 +128,12 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
                                 true => PaymentState::Failed,
                                 false => PaymentState::RefundPending,
                             },
-                            // TODO Created or TimedOut
                             None => PaymentState::Created,
                         }
                     }
                 }
             }
-            None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
+            None => PaymentState::Created,
         }
     }
 }
@@ -181,7 +180,7 @@ impl LiquidSdk {
                     info!("refund_tx_id: {exp_refund_tx_id:?} / {rec_refund_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_state();
+                    let rec_state = recovered.get_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Send Swap {send_swap_id}"),
@@ -204,7 +203,7 @@ impl LiquidSdk {
                     info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_state();
+                    let rec_state = recovered.get_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Receive Swap {receive_swap_id}"),
@@ -237,7 +236,7 @@ impl LiquidSdk {
                     info!("btc_claim_tx_id: {exp_btc_claim_tx_id:?} / {rec_btc_claim_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_state();
+                    let rec_state = recovered.get_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Send Chain Swap {send_chain_swap_id}"),
@@ -271,7 +270,7 @@ impl LiquidSdk {
                     info!("btc_refund_tx_id: {exp_btc_refund_tx_id:?} / {rec_btc_refund_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_state();
+                    let rec_state = recovered.get_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Receive Chain Swap {receive_chain_swap_id}"),
