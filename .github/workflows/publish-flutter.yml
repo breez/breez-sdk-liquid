@@ -46,9 +46,11 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           path: build
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: 3.22.3 # Pinned until resource linking issues on Android is resolved with 3.24
 
       - name: Copy package files
         working-directory: dist
@@ -58,6 +60,7 @@ jobs:
           rm -rf lib
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
+          mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
           cp -r ../build/packages/flutter/lib .
           cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquid/include/breez_sdk_liquid.h ios/Classes
           cp ../build/packages/flutter/analysis_options.yaml .

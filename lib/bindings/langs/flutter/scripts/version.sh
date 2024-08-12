@@ -1,5 +1,5 @@
 #!/bin/bash
-ROOT="../../../.."
+ROOT="../../../../.."
 TAG_NAME=`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
 
 # iOS & macOS

@@ -95,11 +95,9 @@ impl HybridLiquidChainService {
             match script_history.is_empty() {
                 true => {
                     retry += 1;
-                    info!(
-                        "Script history for {} got zero transactions, retrying in {} seconds...",
-                        script_hash, retry
-                    );
-                    thread::sleep(Duration::from_secs(retry));
+                    info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
+                    // Waiting 1s between retries, so we detect the new tx as soon as possible
+                    thread::sleep(Duration::from_secs(1));
                 }
                 false => break,
             }
@@ -178,7 +176,7 @@ impl LiquidChainService for HybridLiquidChainService {
         )
         .map_err(|e| anyhow!("Failed to get script from address {e:?}"))?;
 
-        let script_history = self.get_script_history_with_retry(&script, 5).await?;
+        let script_history = self.get_script_history_with_retry(&script, 30).await?;
         let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
 
         match lockup_tx_history {

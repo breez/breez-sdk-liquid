@@ -32,7 +32,9 @@ The *Liquid* implementation is a nodeless Lightning integration. It offers a s
 - [x]  Fiat on-ramps
 - [x]  Open-source
 
-**Get started with the Breez SDK - *Liquid* [here](https://sdk-doc-liquid.breez.technology/).**
+## Getting Started 
+
+Head over to the [Breez SDK - Liquid documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
 
 ## **API**
 

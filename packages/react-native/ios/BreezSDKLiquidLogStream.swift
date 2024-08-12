@@ -1,7 +1,7 @@
 import Foundation
 import BreezSDKLiquid
 
-class BreezSDKLiquidLogger: Logger {
+class BreezSDKLiquidLogger: BreezSDKLiquid.Logger {
     static let emitterName: String = "breezSdkLiquidLog"
 
     func log(l: LogEntry) {
