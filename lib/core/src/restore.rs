@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use log::{error, info};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
@@ -169,8 +169,6 @@ impl LiquidSdk {
                     let rec_lockup_tx_id = recovered.lockup_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("lockup_tx_id: {exp_lockup_tx_id:?} / {rec_lockup_tx_id:?}");
 
-                    // TODO We don't store the claim tx ID
-
                     let exp_refund_tx_id = expected.refund_tx_id;
                     let rec_refund_tx_id = recovered.refund_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("refund_tx_id: {exp_refund_tx_id:?} / {rec_refund_tx_id:?}");
@@ -196,8 +194,6 @@ impl LiquidSdk {
             info!("[Restore Receive] Validating {receive_swap_id}");
             match (full_swap, recovered_data) {
                 (Some(expected), Some(recovered)) => {
-                    // TODO We don't store the lockup tx ID
-
                     let exp_claim_tx_id = expected.claim_tx_id;
                     let rec_claim_tx_id = recovered.claim_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
@@ -297,7 +293,6 @@ impl LiquidSdk {
                         .map(|h| h.txid.to_hex());
                     info!("btc_user_lockup_tx_id: {exp_btc_user_lockup_tx_id:?} / {rec_btc_user_lockup_tx_id:?}");
 
-                    // TODO Expected.refund_tx_id is empty?
                     let exp_btc_refund_tx_id = expected.refund_tx_id;
                     let rec_btc_refund_tx_id =
                         recovered.btc_refund_tx_id.as_ref().map(|h| h.txid.to_hex());
@@ -338,7 +333,11 @@ impl LiquidSdk {
             .recover_send_chain_swap_tx_ids(&tx_map, histories.send_chain)
             .await?;
         let recovered_chain_receive_data = self
-            .recover_receive_chain_swap_tx_ids(&tx_map, histories.receive_chain)
+            .recover_receive_chain_swap_tx_ids(
+                &tx_map,
+                histories.receive_chain,
+                &immutable_db.receive_chain_swap_immutable_db_by_swap_id,
+            )
             .await?;
 
         Ok(RecoveredOnchainData {
@@ -405,7 +404,7 @@ impl LiquidSdk {
                     let first = history[0].clone();
                     let second = history[1].clone();
 
-                    // If a history tx is a known incoming txs, it's the claim tx
+                    // If a history tx is a known incoming tx, it's the claim tx
                     match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
                         true => (Some(second), Some(first)),
                         false => (Some(first), Some(second)),
@@ -492,6 +491,7 @@ impl LiquidSdk {
         &self,
         tx_map: &TxMap,
         chain_receive_histories_by_swap_id: HashMap<String, ReceiveChainSwapHistory>,
+        receive_chain_swap_immutable_db_by_swap_id: &HashMap<String, ReceiveChainSwapImmutableData>,
     ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
         let mut res: HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
         for (swap_id, history) in chain_receive_histories_by_swap_id {
@@ -505,7 +505,7 @@ impl LiquidSdk {
                     let first = &history.lbtc_claim_script_history[0];
                     let second = &history.lbtc_claim_script_history[1];
 
-                    // If a history tx is a known incoming txs, it's the claim tx
+                    // If a history tx is a known incoming tx, it's the claim tx
                     let (lockup_tx_id, claim_tx_id) =
                         match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
                             true => (second, first),
@@ -523,14 +523,40 @@ impl LiquidSdk {
                 .btc_lockup_script_history
                 .len()
             {
-                // TODO How to treat case when history length > 2? (address re-use)
-                x if x >= 2 => {
-                    // TODO How to tell the user lockup tx apart from the refund tx? Is the order in which they're received from Electrum reliable?
-                    // TODO How to tell BTC refund apart from BTC server claim tx?
-                    (
-                        Some(history.btc_lockup_script_history[0].clone()),
-                        Some(history.btc_lockup_script_history[1].clone()),
-                    )
+                // Only lockup tx available
+                1 => (Some(history.btc_lockup_script_history[0].clone()), None),
+
+                // Both txs available (lockup + claim, or lockup + refund)
+                // Any tx above the first two, we ignore, as that is address re-use which is not supported
+                n if n >= 2 => {
+                    let first_tx = history.btc_lockup_script_txs[0].clone();
+                    let first_tx_id = history.btc_lockup_script_history[0].clone();
+                    let second_tx_id = history.btc_lockup_script_history[1].clone();
+
+                    let btc_lockup_script = receive_chain_swap_immutable_db_by_swap_id
+                        .get(&swap_id)
+                        .map(|imm| imm.lockup_script.clone())
+                        .ok_or_else(|| {
+                            anyhow!(
+                                "BTC lockup script not found for Onchain Receive Swap {swap_id}"
+                            )
+                        })?;
+
+                    // We check the full tx, to determine if this is the BTC lockup tx
+                    let is_first_tx_lockup_tx = first_tx
+                        .output
+                        .iter()
+                        .any(|out| matches!(&out.script_pubkey, x if x == &btc_lockup_script));
+
+                    // The btc_lockup_script_history can contain 3 kinds of txs, of which only 2 are expected:
+                    // - 1) btc_user_lockup_tx_id (initial BTC funds sent by the sender)
+                    // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in Success case)
+                    // - 2B) btc_refund_tx_id (refund tx we initiate, in Failure case)
+                    // TODO How to tell the BTC server claim (2A) apart from the BTC refund (2B)?
+                    match is_first_tx_lockup_tx {
+                        true => (Some(first_tx_id), Some(second_tx_id)),
+                        false => (Some(second_tx_id), Some(first_tx_id)),
+                    }
                 }
                 n => {
                     error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
@@ -580,6 +606,11 @@ pub(crate) mod immutable {
     }
     impl From<History> for HistoryTxId {
         fn from(value: History) -> Self {
+            Self::from(&value)
+        }
+    }
+    impl From<&History> for HistoryTxId {
+        fn from(value: &History) -> Self {
             Self {
                 txid: value.txid,
                 confirmed: value.height > 0,
@@ -623,7 +654,7 @@ pub(crate) mod immutable {
     pub(crate) struct ReceiveChainSwapImmutableData {
         swap_id: String,
         lockup_swap_script: BtcSwapScript,
-        lockup_script: BtcScript,
+        pub(crate) lockup_script: BtcScript,
         claim_swap_script: LBtcSwapScript,
         claim_script: LBtcScript,
     }
@@ -631,6 +662,7 @@ pub(crate) mod immutable {
     pub(crate) struct ReceiveChainSwapHistory {
         pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
         pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
+        pub(crate) btc_lockup_script_txs: Vec<boltz_client::bitcoin::Transaction>,
     }
 
     /// Swap data received from the immutable DB
@@ -891,6 +923,7 @@ pub(crate) mod immutable {
             &self,
             lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
             btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
+            btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
         ) -> HashMap<String, ReceiveChainSwapHistory> {
             let receive_chain_swaps_by_lbtc_script =
                 self.receive_chain_swaps_by_lbtc_claim_script();
@@ -904,12 +937,17 @@ pub(crate) mod immutable {
                             .get(&imm.lockup_script)
                             .cloned()
                             .unwrap_or_default();
+                        let btc_script_txs = btc_script_to_txs_map
+                            .get(&imm.lockup_script)
+                            .cloned()
+                            .unwrap_or_default();
 
                         data.insert(
                             imm.swap_id.clone(),
                             ReceiveChainSwapHistory {
                                 lbtc_claim_script_history: lbtc_script_history.clone(),
                                 btc_lockup_script_history: btc_script_history.clone(),
+                                btc_lockup_script_txs: btc_script_txs.clone(),
                             },
                         );
                     }
@@ -1032,6 +1070,13 @@ pub(crate) mod immutable {
                         .map(|x| x.as_script())
                         .collect::<Vec<&lwk_wollet::bitcoin::Script>>(),
                 )?;
+            let btx_script_tx_ids: Vec<lwk_wollet::bitcoin::Txid> = btc_script_histories
+                .iter()
+                .flatten()
+                .map(|h| h.txid.to_raw_hash())
+                .map(lwk_wollet::bitcoin::Txid::from_raw_hash)
+                .collect::<Vec<lwk_wollet::bitcoin::Txid>>();
+
             let btc_swap_scripts_len = swap_btc_scripts.len();
             let btc_script_histories_len = btc_script_histories.len();
             ensure!(
@@ -1039,10 +1084,32 @@ pub(crate) mod immutable {
                 anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
             );
             let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_scripts
+                .clone()
                 .into_iter()
-                .zip(btc_script_histories.into_iter())
-                .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
+                .zip(btc_script_histories.iter())
+                .map(|(k, v)| (k, v.iter().map(HistoryTxId::from).collect()))
                 .collect();
+
+            let btc_script_txs = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .get_transactions(&btx_script_tx_ids)?;
+            let btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>> =
+                swap_btc_scripts
+                    .into_iter()
+                    .zip(btc_script_histories.iter())
+                    .map(|(script, history)| {
+                        let relevant_tx_ids: Vec<Txid> = history.iter().map(|h| h.txid).collect();
+                        let relevant_txs: Vec<boltz_client::bitcoin::Transaction> = btc_script_txs
+                            .iter()
+                            .filter(|&tx| relevant_tx_ids.contains(&tx.txid().to_raw_hash().into()))
+                            .cloned()
+                            .collect();
+
+                        (script, relevant_txs)
+                    })
+                    .collect();
 
             Ok(SwapsHistories {
                 send: swaps_list.send_histories_by_swap_id(&lbtc_script_to_history_map),
@@ -1054,6 +1121,7 @@ pub(crate) mod immutable {
                 receive_chain: swaps_list.receive_chain_histories_by_swap_id(
                     &lbtc_script_to_history_map,
                     &btc_script_to_history_map,
+                    &btc_script_to_txs_map,
                 ),
             })
         }
