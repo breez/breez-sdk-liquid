@@ -59,18 +59,20 @@ impl PartialSwapState for RecoveredOnchainDataSend {
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
-    lockup_claim_tx_ids: Option<(HistoryTxId, HistoryTxId)>,
+    lockup_tx_id: Option<HistoryTxId>,
+    claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataReceive {
     fn get_state(&self) -> PaymentState {
-        match &self.lockup_claim_tx_ids {
-            Some((_lockup_tx_id, claim_tx_id)) => match claim_tx_id.confirmed {
+        match (&self.lockup_tx_id, &self.claim_tx_id) {
+            (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed {
                 true => PaymentState::Complete,
                 false => PaymentState::Pending,
             },
+            (Some(_), None) => PaymentState::Pending,
             // TODO How to distinguish between Failed and Created (if in both cases, no lockup or claim tx present)
             //   See https://docs.boltz.exchange/v/api/lifecycle#reverse-submarine-swaps
-            None => PaymentState::Failed,
+            _ => PaymentState::Failed,
         }
     }
 }
@@ -108,25 +110,17 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
 }
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
-    /// Server lockup tx ID, claim tx ID.
-    ///
-    /// We store them in a pair because when they are present, we always expect both to be present.
-    lbtc_server_lockup_claim_tx_ids: Option<(HistoryTxId, HistoryTxId)>,
-
+    lbtc_server_lockup_tx_id: Option<HistoryTxId>,
+    lbtc_server_claim_tx_id: Option<HistoryTxId>,
     btc_user_lockup_tx_id: Option<HistoryTxId>,
     btc_refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
     fn get_state(&self) -> PaymentState {
-        let _server_lockup_tx_id = self.lbtc_server_lockup_claim_tx_ids.as_ref()
-            .map(|(lockup, _claim)| lockup.clone());
-        let server_claim_tx_id = self.lbtc_server_lockup_claim_tx_ids.as_ref()
-            .map(|(_lockup, claim)| claim.clone());
-
         // TODO How to detect TimedOut state?
         match &self.btc_user_lockup_tx_id {
             Some(_) => {
-                match server_claim_tx_id {
+                match &self.lbtc_server_claim_tx_id {
                     Some(_) => PaymentState::Complete,
                     None => {
                         match &self.btc_refund_tx_id {
@@ -206,7 +200,7 @@ impl LiquidSdk {
                     // TODO We don't store the lockup tx ID
 
                     let exp_claim_tx_id = expected.claim_tx_id;
-                    let rec_claim_tx_id = recovered.lockup_claim_tx_ids.as_ref().map(|(_lockup, claim)| claim.txid.to_hex());
+                    let rec_claim_tx_id = recovered.claim_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
 
                     let exp_state = expected.state;
@@ -260,11 +254,11 @@ impl LiquidSdk {
             match (full_swap, recovered_data) {
                 (Some(expected), Some(recovered)) => {
                     let exp_lbtc_server_lockup_tx_id = expected.server_lockup_tx_id;
-                    let rec_lbtc_server_lockup_tx_id = recovered.lbtc_server_lockup_claim_tx_ids.as_ref().map(|(server_lockup, _server_claim)| server_lockup.txid.to_hex());
+                    let rec_lbtc_server_lockup_tx_id = recovered.lbtc_server_lockup_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("lbtc_server_lockup_tx_id: {exp_lbtc_server_lockup_tx_id:?} / {rec_lbtc_server_lockup_tx_id:?}");
 
                     let exp_lbtc_server_claim_tx_id = expected.claim_tx_id;
-                    let rec_lbtc_server_claim_tx_id = recovered.lbtc_server_lockup_claim_tx_ids.as_ref().map(|(_server_lockup, server_claim)| server_claim.txid.to_hex());
+                    let rec_lbtc_server_claim_tx_id = recovered.lbtc_server_claim_tx_id.as_ref().map(|h| h.txid.to_hex());
                     info!("lbtc_server_claim_tx_id: {exp_lbtc_server_claim_tx_id:?} / {rec_lbtc_server_claim_tx_id:?}");
 
                     let exp_btc_user_lockup_tx_id = expected.user_lockup_tx_id;
@@ -366,25 +360,26 @@ impl LiquidSdk {
     ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
         let mut res : HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
-            let lockup_claim_tx_ids = match history.len() {
+            let (lockup_tx_id, claim_tx_id) = match history.len() {
                 2 => {
                     let first = history[0].clone();
                     let second = history[1].clone();
 
                     // If a history tx is a known incoming txs, it's the claim tx
                     match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                        true => Some((second, first)),
-                        false => Some((first, second)),
+                        true => (Some(second), Some(first)),
+                        false => (Some(first), Some(second)),
                     }
                 }
                 n => {
                     error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
-                    None
+                    (None, None)
                 }
             };
 
             res.insert(swap_id, RecoveredOnchainDataReceive {
-                lockup_claim_tx_ids,
+                lockup_tx_id,
+                claim_tx_id,
             });
         }
 
@@ -453,7 +448,7 @@ impl LiquidSdk {
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             info!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            let lbtc_server_lockup_claim_tx_ids = match history.lbtc_claim_script_history.len() {
+            let (lbtc_server_lockup_tx_id, lbtc_server_claim_tx_id) = match history.lbtc_claim_script_history.len() {
                 2 => {
                     let first = &history.lbtc_claim_script_history[0];
                     let second = &history.lbtc_claim_script_history[1];
@@ -464,11 +459,11 @@ impl LiquidSdk {
                             true => (second, first),
                             false => (first, second),
                         };
-                    Some((lockup_tx_id.clone(), claim_tx_id.clone()))
+                    (Some(lockup_tx_id.clone()), Some(claim_tx_id.clone()))
                 }
                 n => {
                     error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
-                    None
+                    (None, None)
                 }
             };
 
@@ -489,7 +484,8 @@ impl LiquidSdk {
             };
 
             res.insert(swap_id, RecoveredOnchainDataChainReceive {
-                lbtc_server_lockup_claim_tx_ids,
+                lbtc_server_lockup_tx_id,
+                lbtc_server_claim_tx_id,
                 btc_user_lockup_tx_id,
                 btc_refund_tx_id,
             });
