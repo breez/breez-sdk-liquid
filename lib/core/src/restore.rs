@@ -30,86 +30,22 @@ impl TxMap {
     }
 }
 
+trait PartialSwapState {
+    /// Determine partial swap state, based on recovered chain data
+    fn get_state(&self) -> PaymentState;
+}
+
 pub(crate) struct RecoveredOnchainDataSend {
-    lockup_tx_ids: HashMap<String, HistoryTxId>,
-    claim_tx_ids: HashMap<String, HistoryTxId>,
-    refund_tx_ids: HashMap<String, HistoryTxId>,
+    lockup_tx_id: Option<HistoryTxId>,
+    claim_tx_id: Option<HistoryTxId>,
+    refund_tx_id: Option<HistoryTxId>,
 }
-
-pub(crate) struct RecoveredOnchainDataReceive {
-    lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)>,
-}
-
-pub(crate) struct RecoveredOnchainDataChainSend {
-    lbtc_user_lockup_tx_ids: HashMap<String, HistoryTxId>,
-    lbtc_refund_tx_ids: HashMap<String, HistoryTxId>,
-    btc_server_lockup_tx_ids: HashMap<String, HistoryTxId>,
-    btc_claim_tx_ids: HashMap<String, HistoryTxId>,
-}
-
-pub(crate) struct RecoveredOnchainDataChainReceive {
-    /// Server lockup tx ID, claim tx ID.
-    ///
-    /// We store them in a pair because when they are present, we always expect both to be present.
-    lbtc_server_lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)>,
-
-    btc_user_lockup_tx_ids: HashMap<String, HistoryTxId>,
-    btc_refund_tx_ids: HashMap<String, HistoryTxId>,
-}
-
-pub(crate) struct RecoveredOnchainData {
-    send: RecoveredOnchainDataSend,
-    receive: RecoveredOnchainDataReceive,
-    chain_send: RecoveredOnchainDataChainSend,
-    chain_receive: RecoveredOnchainDataChainReceive,
-}
-
-impl LiquidSdk {
-    pub(crate) async fn recover_from_onchain(&self, tx_map: TxMap) -> Result<()> {
-        // Immutable DB, as fetched from endpoint
-        let imm_db = self.get_swaps_list().await?;
-
-        // Recovered onchain data (txs) per swap
-        let recovered = self.get_onchain_data(tx_map, &imm_db).await?;
-
-        // Persist updated swaps
-        // TODO Optimize: persist in batches
-        self.event_manager.pause_notifications();
-        for send_swap_id in imm_db.send_swap_immutable_db_by_swap_id.keys() {
-            self.persist_send_swap(send_swap_id, &recovered.send).await;
-        }
-        for receive_swap_id in imm_db.receive_swap_immutable_db_by_swap_id_.keys() {
-            self.persist_receive_swap(receive_swap_id, &recovered.receive)
-                .await;
-        }
-        for send_chain_swap_id in imm_db.send_chain_swap_immutable_db_by_swap_id.keys() {
-            self.persist_send_chain_swap(send_chain_swap_id, &recovered.chain_send)
-                .await;
-        }
-        for receive_chain_swap_id in imm_db.receive_chain_swap_immutable_db_by_swap_id.keys() {
-            self.persist_receive_chain_swap(receive_chain_swap_id, &recovered.chain_receive)
-                .await;
-        }
-        self.event_manager.resume_notifications();
-
-        Ok(())
-    }
-
-    async fn persist_send_swap(
-        &self,
-        send_swap_id: &String,
-        recovered_send: &RecoveredOnchainDataSend,
-    ) {
-        let lockup_tx_id = recovered_send.lockup_tx_ids.get(send_swap_id);
-        let lockup_tx_id_str = lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let claim_tx_id = recovered_send.claim_tx_ids.get(send_swap_id);
-        let refund_tx_id = recovered_send.refund_tx_ids.get(send_swap_id);
-        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
-
-        let state = match lockup_tx_id {
-            Some(_) => match claim_tx_id {
+impl PartialSwapState for RecoveredOnchainDataSend {
+    fn get_state(&self) -> PaymentState {
+        match &self.lockup_tx_id {
+            Some(_) => match &self.claim_tx_id {
                 Some(_) => PaymentState::Complete,
-                None => match refund_tx_id {
+                None => match &self.refund_tx_id {
                     Some(refund_tx_id) => match refund_tx_id.confirmed {
                         true => PaymentState::Failed,
                         false => PaymentState::RefundPending,
@@ -118,37 +54,16 @@ impl LiquidSdk {
                 },
             },
             None => PaymentState::TimedOut,
-        };
-
-        if let Err(e) = self
-            .send_swap_state_handler
-            .update_swap_info(
-                send_swap_id,
-                state,
-                None, // TODO Get preimage (from immutable DB?)
-                lockup_tx_id_str.as_deref(),
-                refund_tx_id_str.as_deref(),
-            )
-            .await
-        {
-            error!("Failed to persist Send Swap {send_swap_id}: {e}");
         }
     }
+}
 
-    async fn persist_receive_swap(
-        &self,
-        receive_swap_id: &String,
-        recovered_receive: &RecoveredOnchainDataReceive,
-    ) {
-        let lockup_claim_tx_ids = recovered_receive.lockup_claim_tx_ids.get(receive_swap_id);
-        let (lockup_tx_id, claim_tx_id) = match lockup_claim_tx_ids {
-            Some((x, y)) => (Some(x), Some(y)),
-            None => (None, None),
-        };
-        let lockup_tx_id_str = lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let claim_tx_id_str = claim_tx_id.map(|tx| tx.txid.to_hex());
-
-        let state = match lockup_claim_tx_ids {
+pub(crate) struct RecoveredOnchainDataReceive {
+    lockup_claim_tx_ids: Option<(HistoryTxId, HistoryTxId)>,
+}
+impl PartialSwapState for RecoveredOnchainDataReceive {
+    fn get_state(&self) -> PaymentState {
+        match &self.lockup_claim_tx_ids {
             Some((_lockup_tx_id, claim_tx_id)) => match claim_tx_id.confirmed {
                 true => PaymentState::Complete,
                 false => PaymentState::Pending,
@@ -156,53 +71,27 @@ impl LiquidSdk {
             // TODO How to distinguish between Failed and Created (if in both cases, no lockup or claim tx present)
             //   See https://docs.boltz.exchange/v/api/lifecycle#reverse-submarine-swaps
             None => PaymentState::Failed,
-        };
-
-        if let Err(e) = self
-            .receive_swap_state_handler
-            .update_swap_info(
-                receive_swap_id,
-                state,
-                lockup_tx_id_str.as_deref(),
-                claim_tx_id_str.as_deref(),
-            )
-            .await
-        {
-            error!("Failed to persist Receive Swap {receive_swap_id}: {e}");
         }
     }
+}
 
-    async fn persist_send_chain_swap(
-        &self,
-        send_chain_swap_id: &String,
-        recovered_send_chain: &RecoveredOnchainDataChainSend,
-    ) {
-        let server_lockup_tx_id = recovered_send_chain
-            .btc_server_lockup_tx_ids
-            .get(send_chain_swap_id);
-        let server_lockup_tx_id_str = server_lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let user_lockup_tx_id = recovered_send_chain
-            .lbtc_user_lockup_tx_ids
-            .get(send_chain_swap_id);
-        let user_lockup_tx_id_str = user_lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let claim_tx_id = recovered_send_chain
-            .btc_claim_tx_ids
-            .get(send_chain_swap_id);
-        let claim_tx_id_str = claim_tx_id.map(|tx| tx.txid.to_hex());
-        let refund_tx_id = recovered_send_chain
-            .lbtc_refund_tx_ids
-            .get(send_chain_swap_id);
-        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
-
+pub(crate) struct RecoveredOnchainDataChainSend {
+    lbtc_user_lockup_tx_id: Option<HistoryTxId>,
+    lbtc_refund_tx_id: Option<HistoryTxId>,
+    btc_server_lockup_tx_id: Option<HistoryTxId>,
+    btc_claim_tx_id: Option<HistoryTxId>,
+}
+impl PartialSwapState for RecoveredOnchainDataChainSend {
+    fn get_state(&self) -> PaymentState {
         // TODO How to detect TimedOut state?
         ///     TimedOut: This covers the case when the swap state is still Created and the swap fails to reach the
         ///     Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
-        let state = match user_lockup_tx_id {
+        match &self.lbtc_user_lockup_tx_id {
             Some(_) => {
-                match claim_tx_id {
+                match &self.btc_claim_tx_id {
                     Some(_) => PaymentState::Complete,
                     None => {
-                        match refund_tx_id {
+                        match &self.lbtc_refund_tx_id {
                             Some(tx) => match tx.confirmed {
                                 true => PaymentState::Failed,
                                 false => PaymentState::RefundPending,
@@ -214,56 +103,33 @@ impl LiquidSdk {
                 }
             }
             None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
-        };
-
-        if let Err(e) = self
-            .chain_swap_state_handler
-            .update_swap_info(
-                send_chain_swap_id,
-                state,
-                server_lockup_tx_id_str.as_deref(),
-                user_lockup_tx_id_str.as_deref(),
-                claim_tx_id_str.as_deref(),
-                refund_tx_id_str.as_deref(),
-            )
-            .await
-        {
-            error!("Failed to persist Send Chain Swap {send_chain_swap_id}: {e}");
         }
     }
+}
 
-    async fn persist_receive_chain_swap(
-        &self,
-        receive_chain_swap_id: &String,
-        recovered_receive_chain: &RecoveredOnchainDataChainReceive,
-    ) {
-        let (server_lockup_tx_id, server_claim_tx_id) = match recovered_receive_chain
-            .lbtc_server_lockup_claim_tx_ids
-            .get(receive_chain_swap_id)
-        {
-            Some((server_lockup_tx_id, server_claim_tx_id)) => {
-                (Some(server_lockup_tx_id), Some(server_claim_tx_id))
-            }
-            None => (None, None),
-        };
-        let server_lockup_tx_id_str = server_lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let server_claim_tx_id_str = server_claim_tx_id.map(|tx| tx.txid.to_hex());
-        let user_lockup_tx_id = recovered_receive_chain
-            .btc_user_lockup_tx_ids
-            .get(receive_chain_swap_id);
-        let user_lockup_tx_id_str = user_lockup_tx_id.map(|tx| tx.txid.to_hex());
-        let refund_tx_id = recovered_receive_chain
-            .btc_refund_tx_ids
-            .get(receive_chain_swap_id);
-        let refund_tx_id_str = refund_tx_id.map(|tx| tx.txid.to_hex());
+pub(crate) struct RecoveredOnchainDataChainReceive {
+    /// Server lockup tx ID, claim tx ID.
+    ///
+    /// We store them in a pair because when they are present, we always expect both to be present.
+    lbtc_server_lockup_claim_tx_ids: Option<(HistoryTxId, HistoryTxId)>,
 
-        // // TODO How to detect TimedOut state?
-        let state = match user_lockup_tx_id {
+    btc_user_lockup_tx_id: Option<HistoryTxId>,
+    btc_refund_tx_id: Option<HistoryTxId>,
+}
+impl PartialSwapState for RecoveredOnchainDataChainReceive {
+    fn get_state(&self) -> PaymentState {
+        let _server_lockup_tx_id = self.lbtc_server_lockup_claim_tx_ids.as_ref()
+            .map(|(lockup, _claim)| lockup.clone());
+        let server_claim_tx_id = self.lbtc_server_lockup_claim_tx_ids.as_ref()
+            .map(|(_lockup, claim)| claim.clone());
+
+        // TODO How to detect TimedOut state?
+        match &self.btc_user_lockup_tx_id {
             Some(_) => {
                 match server_claim_tx_id {
                     Some(_) => PaymentState::Complete,
                     None => {
-                        match refund_tx_id {
+                        match &self.btc_refund_tx_id {
                             Some(tx) => match tx.confirmed {
                                 true => PaymentState::Failed,
                                 false => PaymentState::RefundPending,
@@ -275,22 +141,153 @@ impl LiquidSdk {
                 }
             }
             None => PaymentState::Created, // TODO Does immutable DB include Created swaps?
-        };
-
-        if let Err(e) = self
-            .chain_swap_state_handler
-            .update_swap_info(
-                receive_chain_swap_id,
-                state,
-                server_lockup_tx_id_str.as_deref(),
-                user_lockup_tx_id_str.as_deref(),
-                server_claim_tx_id_str.as_deref(),
-                refund_tx_id_str.as_deref(),
-            )
-            .await
-        {
-            error!("Failed to persist Receive Chain Swap {receive_chain_swap_id}: {e}");
         }
+    }
+}
+
+pub(crate) struct RecoveredOnchainData {
+    send: HashMap<String, RecoveredOnchainDataSend>,
+    receive: HashMap<String, RecoveredOnchainDataReceive>,
+    chain_send: HashMap<String, RecoveredOnchainDataChainSend>,
+    chain_receive: HashMap<String, RecoveredOnchainDataChainReceive>,
+}
+
+impl LiquidSdk {
+    /// For each swap, recovers data from chain services.
+    ///
+    /// The returned data include txs and the partial swap state. This is a partial state, because
+    /// certain swap states cannot be determined based on initial and onchain data (e.g. [PaymentState::TimedOut])
+    ///
+    /// The caller is expected to merge this data with any other data available, then persist the
+    /// reconstructed swap.
+    pub(crate) async fn recover_from_onchain(&self, tx_map: TxMap) -> Result<RecoveredOnchainData> {
+        // Immutable DB, as fetched from endpoint
+        let imm_db = self.get_swaps_list().await?;
+
+        // Recovered onchain data (txs) per swap
+        let recovered = self.get_onchain_data(tx_map, &imm_db).await?;
+
+        // Validation
+        // Checks if recovered data (txs, partial state) matches known data
+        for send_swap_id in imm_db.send_swap_immutable_db_by_swap_id.keys() {
+            let full_swap = self.persister.fetch_send_swap_by_id(send_swap_id).ok().flatten();
+            let recovered_data = recovered.send.get(send_swap_id);
+
+            info!("[Restore Send] Validating {send_swap_id}");
+            match (full_swap, recovered_data) {
+                (Some(expected), Some(recovered)) => {
+                    let exp_lockup_tx_id = expected.lockup_tx_id;
+                    let rec_lockup_tx_id = recovered.lockup_tx_id.as_ref().map(|h|h.txid.to_hex());
+                    info!("lockup_tx_id: {exp_lockup_tx_id:?} / {rec_lockup_tx_id:?}");
+
+                    // TODO We don't store the claim tx ID
+
+                    let exp_refund_tx_id = expected.refund_tx_id;
+                    let rec_refund_tx_id = recovered.refund_tx_id.as_ref().map(|h|h.txid.to_hex());
+                    info!("refund_tx_id: {exp_refund_tx_id:?} / {rec_refund_tx_id:?}");
+
+                    let exp_state = expected.state;
+                    let rec_state = recovered.get_state();
+                    info!("state: {exp_state:?} / {rec_state:?}");
+                }
+                (Some(_), None) => error!("No recovered data for Send Swap {send_swap_id}"),
+                (None, Some(_)) => error!("No expected data for Send Swap {send_swap_id}"),
+                (None, None) => error!("No expected and recovered data for Send Swap {send_swap_id}"),
+            }
+            info!("[Restore Send] Validated {send_swap_id}");
+        }
+        for receive_swap_id in imm_db.receive_swap_immutable_db_by_swap_id_.keys() {
+            let full_swap = self.persister.fetch_receive_swap_by_id(receive_swap_id).ok().flatten();
+            let recovered_data = recovered.receive.get(receive_swap_id);
+
+            info!("[Restore Receive] Validating {receive_swap_id}");
+            match (full_swap, recovered_data) {
+                (Some(expected), Some(recovered)) => {
+                    // TODO We don't store the lockup tx ID
+
+                    let exp_claim_tx_id = expected.claim_tx_id;
+                    let rec_claim_tx_id = recovered.lockup_claim_tx_ids.as_ref().map(|(_lockup, claim)| claim.txid.to_hex());
+                    info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
+
+                    let exp_state = expected.state;
+                    let rec_state = recovered.get_state();
+                    info!("state: {exp_state:?} / {rec_state:?}");
+                }
+                (Some(_), None) => error!("No recovered data for Receive Swap {receive_swap_id}"),
+                (None, Some(_)) => error!("No expected data for Receive Swap {receive_swap_id}"),
+                (None, None) => error!("No expected and recovered data for Receive Swap {receive_swap_id}"),
+            }
+            info!("[Restore Receive] Validated {receive_swap_id}");
+        }
+        for send_chain_swap_id in imm_db.send_chain_swap_immutable_db_by_swap_id.keys() {
+            let full_swap = self.persister.fetch_chain_swap_by_id(send_chain_swap_id).ok().flatten();
+            let recovered_data = recovered.chain_send.get(send_chain_swap_id);
+
+            info!("[Restore Chain Send] Validating {send_chain_swap_id}");
+            match (full_swap, recovered_data) {
+                (Some(expected), Some(recovered)) => {
+                    let exp_lbtc_user_lockup_tx_id = expected.user_lockup_tx_id;
+                    let rec_lbtc_user_lockup_tx_id = recovered.lbtc_user_lockup_tx_id.as_ref().map(|h| h.txid.to_hex());
+                    info!("lbtc_user_lockup_tx_id: {exp_lbtc_user_lockup_tx_id:?} / {rec_lbtc_user_lockup_tx_id:?}");
+
+                    let exp_lbtc_refund_tx_id = expected.refund_tx_id;
+                    let rec_lbtc_refund_tx_id = recovered.lbtc_refund_tx_id.as_ref().map(|h| h.txid.to_hex());
+                    info!("lbtc_refund_tx_id: {exp_lbtc_refund_tx_id:?} / {rec_lbtc_refund_tx_id:?}");
+
+                    let exp_btc_server_lockup_tx_id = expected.server_lockup_tx_id;
+                    let rec_btc_server_lockup_tx_id = recovered.btc_server_lockup_tx_id.as_ref().map(|h| h.txid.to_hex());
+                    info!("btc_server_lockup_tx_id: {exp_btc_server_lockup_tx_id:?} / {rec_btc_server_lockup_tx_id:?}");
+
+                    let exp_btc_claim_tx_id = expected.claim_tx_id;
+                    let rec_btc_claim_tx_id = recovered.btc_claim_tx_id.as_ref().map(|h| h.txid.to_hex());
+                    info!("btc_claim_tx_id: {exp_btc_claim_tx_id:?} / {rec_btc_claim_tx_id:?}");
+
+                    let exp_state = expected.state;
+                    let rec_state = recovered.get_state();
+                    info!("state: {exp_state:?} / {rec_state:?}");
+                }
+                (Some(_), None) => error!("No recovered data for Send Chain Swap {send_chain_swap_id}"),
+                (None, Some(_)) => error!("No expected data for Send Chain Swap {send_chain_swap_id}"),
+                (None, None) => error!("No expected and recovered data for Send Chain Swap {send_chain_swap_id}"),
+            }
+            info!("[Restore Chain Send] Validated {send_chain_swap_id}");
+        }
+        for receive_chain_swap_id in imm_db.receive_chain_swap_immutable_db_by_swap_id.keys() {
+            let full_swap = self.persister.fetch_chain_swap_by_id(receive_chain_swap_id).ok().flatten();
+            let recovered_data = recovered.chain_receive.get(receive_chain_swap_id);
+
+            info!("[Restore Chain Receive] Validating {receive_chain_swap_id}");
+            match (full_swap, recovered_data) {
+                (Some(expected), Some(recovered)) => {
+                    let exp_lbtc_server_lockup_tx_id = expected.server_lockup_tx_id;
+                    let rec_lbtc_server_lockup_tx_id = recovered.lbtc_server_lockup_claim_tx_ids.as_ref().map(|(server_lockup, _server_claim)| server_lockup.txid.to_hex());
+                    info!("lbtc_server_lockup_tx_id: {exp_lbtc_server_lockup_tx_id:?} / {rec_lbtc_server_lockup_tx_id:?}");
+
+                    let exp_lbtc_server_claim_tx_id = expected.claim_tx_id;
+                    let rec_lbtc_server_claim_tx_id = recovered.lbtc_server_lockup_claim_tx_ids.as_ref().map(|(_server_lockup, server_claim)| server_claim.txid.to_hex());
+                    info!("lbtc_server_claim_tx_id: {exp_lbtc_server_claim_tx_id:?} / {rec_lbtc_server_claim_tx_id:?}");
+
+                    let exp_btc_user_lockup_tx_id = expected.user_lockup_tx_id;
+                    let rec_btc_user_lockup_tx_id = recovered.btc_user_lockup_tx_id.as_ref().map(|h|h.txid.to_hex());
+                    info!("btc_user_lockup_tx_id: {exp_btc_user_lockup_tx_id:?} / {rec_btc_user_lockup_tx_id:?}");
+
+                    // TODO Expected.refund_tx_id is empty?
+                    let exp_btc_refund_tx_id = expected.refund_tx_id;
+                    let rec_btc_refund_tx_id = recovered.btc_refund_tx_id.as_ref().map(|h|h.txid.to_hex());
+                    info!("btc_refund_tx_id: {exp_btc_refund_tx_id:?} / {rec_btc_refund_tx_id:?}");
+
+                    let exp_state = expected.state;
+                    let rec_state = recovered.get_state();
+                    info!("state: {exp_state:?} / {rec_state:?}");
+                }
+                (Some(_), None) => error!("No recovered data for Receive Chain Swap {receive_chain_swap_id}"),
+                (None, Some(_)) => error!("No expected data for Receive Chain Swap {receive_chain_swap_id}"),
+                (None, None) => error!("No expected and recovered data for Receive Chain Swap {receive_chain_swap_id}"),
+            }
+            info!("[Restore Chain Receive] Validated {receive_chain_swap_id}");
+        }
+
+        Ok(recovered)
     }
 
     pub(crate) async fn get_onchain_data(
@@ -326,61 +323,39 @@ impl LiquidSdk {
         &self,
         tx_map: &TxMap,
         send_histories_by_swap_id: HashMap<String, SendSwapHistory>,
-    ) -> Result<RecoveredOnchainDataSend> {
-        let mut lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut claim_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut refund_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-
+    ) -> Result<HashMap<String, RecoveredOnchainDataSend>> {
+        let mut res : HashMap<String, RecoveredOnchainDataSend> = HashMap::new();
         for (swap_id, history) in send_histories_by_swap_id {
             // If a history tx is one of our outgoing txs, it's a lockup tx
-            let maybe_lockup_tx_id = history
+            let lockup_tx_id = history
                 .iter()
-                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
-            match maybe_lockup_tx_id {
-                None => {
-                    error!("No lockup tx found when recovering data for Send Swap {swap_id}")
-                }
-                Some(lockup_tx_id) => {
-                    lockup_tx_map.insert(swap_id.clone(), lockup_tx_id.clone());
-                }
+                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
+            if lockup_tx_id.is_none() {
+                error!("No lockup tx found when recovering data for Send Swap {swap_id}");
             }
 
             // If a history tx is one of our incoming txs, it's a refund tx
-            let maybe_refund_tx_id = history
+            let refund_tx_id = history
                 .iter()
-                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid));
-            if let Some(refund_tx_id) = maybe_refund_tx_id {
-                refund_tx_map.insert(swap_id.clone(), refund_tx_id.clone());
-            }
+                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
 
             // A history tx that is neither a known incoming or outgoing tx is a claim tx
-            let maybe_claim_tx_id = history
+            let claim_tx_id = history
                 .iter()
                 .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
-            if let Some(claim_tx_id) = maybe_claim_tx_id {
-                claim_tx_map.insert(swap_id.clone(), claim_tx_id.clone());
-            }
+                .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
+
+            res.insert(swap_id, RecoveredOnchainDataSend {
+                lockup_tx_id,
+                claim_tx_id,
+                refund_tx_id,
+            });
         }
 
-        info!(
-            "[Recover Send] Found {} lockup txs from onchain data",
-            lockup_tx_map.len()
-        );
-        info!(
-            "[Recover Send] Found {} claim txs from onchain data",
-            claim_tx_map.len()
-        );
-        info!(
-            "[Recover Send] Found {} refund txs from onchain data",
-            refund_tx_map.len()
-        );
-
-        Ok(RecoveredOnchainDataSend {
-            lockup_tx_ids: lockup_tx_map,
-            claim_tx_ids: claim_tx_map,
-            refund_tx_ids: refund_tx_map,
-        })
+        Ok(res)
     }
 
     /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable DB data
@@ -388,39 +363,32 @@ impl LiquidSdk {
         &self,
         tx_map: &TxMap,
         receive_histories_by_swap_id: HashMap<String, ReceiveSwapHistory>,
-    ) -> Result<RecoveredOnchainDataReceive> {
-        let mut lockup_claim_tx_ids_map: HashMap<String, (HistoryTxId, HistoryTxId)> =
-            HashMap::new();
-
+    ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
+        let mut res : HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
-            match history.len() {
+            let lockup_claim_tx_ids = match history.len() {
                 2 => {
-                    let first = &history[0];
-                    let second = &history[1];
+                    let first = history[0].clone();
+                    let second = history[1].clone();
 
                     // If a history tx is a known incoming txs, it's the claim tx
-                    let (lockup_tx_id, claim_tx_id) =
-                        match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                            true => (second, first),
-                            false => (first, second),
-                        };
-                    lockup_claim_tx_ids_map
-                        .insert(swap_id.clone(), (lockup_tx_id.clone(), claim_tx_id.clone()));
+                    match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
+                        true => Some((second, first)),
+                        false => Some((first, second)),
+                    }
                 }
                 n => {
-                    error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}")
+                    error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
+                    None
                 }
-            }
+            };
+
+            res.insert(swap_id, RecoveredOnchainDataReceive {
+                lockup_claim_tx_ids,
+            });
         }
 
-        info!(
-            "[Recover Receive] Found {} lockup and claim tx pairs from onchain data",
-            lockup_claim_tx_ids_map.len()
-        );
-
-        Ok(RecoveredOnchainDataReceive {
-            lockup_claim_tx_ids: lockup_claim_tx_ids_map,
-        })
+        Ok(res)
     }
 
     /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable DB data
@@ -428,75 +396,51 @@ impl LiquidSdk {
         &self,
         tx_map: &TxMap,
         chain_send_histories_by_swap_id: HashMap<String, SendChainSwapHistory>,
-    ) -> Result<RecoveredOnchainDataChainSend> {
-        let mut lbtc_user_lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut lbtc_refund_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut btc_server_lockup_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut btc_claim_tx_map: HashMap<String, HistoryTxId> = HashMap::new();
-
+    ) -> Result<HashMap<String, RecoveredOnchainDataChainSend>> {
+        let mut res : HashMap<String, RecoveredOnchainDataChainSend> = HashMap::new();
         for (swap_id, history) in chain_send_histories_by_swap_id {
             info!("[Recover Chain Send] Checking swap {swap_id}");
 
             // If a history tx is one of our outgoing txs, it's a lockup tx
-            let maybe_lockup_tx_id = history
+            let lbtc_user_lockup_tx_id = history
                 .lbtc_lockup_script_history
                 .iter()
-                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid));
-            match maybe_lockup_tx_id {
-                None => {
-                    error!("No lockup tx found when recovering data for Chain Send Swap {swap_id}")
-                }
-                Some(lockup_tx_id) => {
-                    lbtc_user_lockup_tx_map.insert(swap_id.clone(), lockup_tx_id.clone());
-                }
+                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
+            if lbtc_user_lockup_tx_id.is_none() {
+                error!("No lockup tx found when recovering data for Chain Send Swap {swap_id}");
             }
 
             // If a history tx is one of our incoming txs, it's a refund tx
-            let maybe_refund_tx_id = history
+            let lbtc_refund_tx_id = history
                 .lbtc_lockup_script_history
                 .iter()
-                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid));
-            if let Some(refund_tx_id) = maybe_refund_tx_id {
-                lbtc_refund_tx_map.insert(swap_id.clone(), refund_tx_id.clone());
-            }
+                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
 
-            match history.btc_claim_script_history.len() {
+            let (btc_server_lockup_tx_id, btc_claim_tx_id) = match history.btc_claim_script_history.len() {
                 2 => {
                     // TODO How to tell the claim tx apart from the lockup tx? Is the order in which they're received from Electrum reliable?
-                    btc_server_lockup_tx_map
-                        .insert(swap_id.clone(), history.btc_claim_script_history[0].clone());
-                    btc_claim_tx_map
-                        .insert(swap_id.clone(), history.btc_claim_script_history[1].clone());
+                    (
+                        Some(history.btc_claim_script_history[0].clone()),
+                        Some(history.btc_claim_script_history[1].clone())
+                    )
                 }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}")
+                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
+                    (None, None)
                 }
-            }
+            };
+
+            res.insert(swap_id, RecoveredOnchainDataChainSend {
+                lbtc_user_lockup_tx_id,
+                lbtc_refund_tx_id,
+                btc_server_lockup_tx_id,
+                btc_claim_tx_id,
+            });
         }
 
-        info!(
-            "[Recover Chain Send] Found {} user L-BTC lockup txs from onchain data",
-            lbtc_user_lockup_tx_map.len()
-        );
-        info!(
-            "[Recover Chain Send] Found {} L-BTC refund txs from onchain data",
-            lbtc_refund_tx_map.len()
-        );
-        info!(
-            "[Recover Chain Send] Found {} server BTC lockup txs from onchain data",
-            btc_server_lockup_tx_map.len()
-        );
-        info!(
-            "[Recover Chain Send] Found {} BTC claim txs from onchain data",
-            btc_claim_tx_map.len()
-        );
-
-        Ok(RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_ids: lbtc_user_lockup_tx_map,
-            lbtc_refund_tx_ids: lbtc_refund_tx_map,
-            btc_server_lockup_tx_ids: btc_server_lockup_tx_map,
-            btc_claim_tx_ids: btc_claim_tx_map,
-        })
+        Ok(res)
     }
 
     /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable DB data
@@ -504,16 +448,12 @@ impl LiquidSdk {
         &self,
         tx_map: &TxMap,
         chain_receive_histories_by_swap_id: HashMap<String, ReceiveChainSwapHistory>,
-    ) -> Result<RecoveredOnchainDataChainReceive> {
-        let mut lbtc_server_lockup_claim_tx_ids: HashMap<String, (HistoryTxId, HistoryTxId)> =
-            HashMap::new();
-        let mut btc_user_lockup_tx_ids: HashMap<String, HistoryTxId> = HashMap::new();
-        let mut btc_refund_tx_ids: HashMap<String, HistoryTxId> = HashMap::new();
-
+    ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
+        let mut res : HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             info!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            match history.lbtc_claim_script_history.len() {
+            let lbtc_server_lockup_claim_tx_ids = match history.lbtc_claim_script_history.len() {
                 2 => {
                     let first = &history.lbtc_claim_script_history[0];
                     let second = &history.lbtc_claim_script_history[1];
@@ -524,49 +464,38 @@ impl LiquidSdk {
                             true => (second, first),
                             false => (first, second),
                         };
-                    lbtc_server_lockup_claim_tx_ids
-                        .insert(swap_id.clone(), (lockup_tx_id.clone(), claim_tx_id.clone()));
+                    Some((lockup_tx_id.clone(), claim_tx_id.clone()))
                 }
                 n => {
-                    error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}")
+                    error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    None
                 }
-            }
+            };
 
-            match history.btc_lockup_script_history.len() {
+            let (btc_user_lockup_tx_id, btc_refund_tx_id) = match history.btc_lockup_script_history.len() {
                 // TODO How to treat case when history length > 2? (address re-use)
                 x if x >= 2 => {
                     // TODO How to tell the user lockup tx apart from the refund tx? Is the order in which they're received from Electrum reliable?
                     // TODO How to tell BTC refund apart from BTC server claim tx?
-                    btc_user_lockup_tx_ids.insert(
-                        swap_id.clone(),
-                        history.btc_lockup_script_history[0].clone(),
-                    );
-                    btc_refund_tx_ids.insert(
-                        swap_id.clone(),
-                        history.btc_lockup_script_history[1].clone(),
-                    );
+                    (
+                        Some(history.btc_lockup_script_history[0].clone()),
+                        Some(history.btc_lockup_script_history[1].clone())
+                    )
                 }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}")
+                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    (None, None)
                 }
-            }
+            };
+
+            res.insert(swap_id, RecoveredOnchainDataChainReceive {
+                lbtc_server_lockup_claim_tx_ids,
+                btc_user_lockup_tx_id,
+                btc_refund_tx_id,
+            });
         }
 
-        info!("[Recover Chain Receive] Found {} L-BTC server lockup and claim tx pairs from onchain data", lbtc_server_lockup_claim_tx_ids.len());
-        info!(
-            "[Recover Chain Receive] Found {} BTC user lockup tx IDs from onchain data",
-            btc_user_lockup_tx_ids.len()
-        );
-        info!(
-            "[Recover Chain Receive] Found {} BTC refund tx IDs from onchain data",
-            btc_refund_tx_ids.len()
-        );
-
-        Ok(RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_claim_tx_ids,
-            btc_user_lockup_tx_ids,
-            btc_refund_tx_ids,
-        })
+        Ok(res)
     }
 }
 
