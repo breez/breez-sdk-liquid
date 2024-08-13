@@ -33,7 +33,8 @@ impl TxMap {
 trait PartialSwapState {
     /// Determine partial swap state, based on recovered chain data.
     /// For example, it cannot distinguish between [PaymentState::Created] and [PaymentState::TimedOut],
-    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed].
+    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed]. In these
+    /// cases, it defaults to [PaymentState::Created].
     fn get_partial_state(&self) -> PaymentState;
 }
 
@@ -74,7 +75,7 @@ impl PartialSwapState for RecoveredOnchainDataReceive {
             (Some(_), None) => PaymentState::Pending,
             // TODO How to distinguish between Failed and Created (if in both cases, no lockup or claim tx present)
             //   See https://docs.boltz.exchange/v/api/lifecycle#reverse-submarine-swaps
-            _ => PaymentState::Failed,
+            _ => PaymentState::Created,
         }
     }
 }
