@@ -547,7 +547,12 @@ impl LiquidSdk {
                 }
             };
 
-            let (btc_user_lockup_tx_id, btc_refund_tx_id) = match history
+            // The btc_lockup_script_history can contain 3 kinds of txs, of which only 2 are expected:
+            // - 1) btc_user_lockup_tx_id (initial BTC funds sent by the sender)
+            // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in Success case)
+            // - 2B) btc_refund_tx_id (refund tx we initiate, in Failure case)
+            // The exact type of the second is found in the next step.
+            let (btc_user_lockup_tx_id, btc_second_tx_id) = match history
                 .btc_lockup_script_history
                 .len()
             {
@@ -576,11 +581,6 @@ impl LiquidSdk {
                         .iter()
                         .any(|out| matches!(&out.script_pubkey, x if x == &btc_lockup_script));
 
-                    // The btc_lockup_script_history can contain 3 kinds of txs, of which only 2 are expected:
-                    // - 1) btc_user_lockup_tx_id (initial BTC funds sent by the sender)
-                    // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in Success case)
-                    // - 2B) btc_refund_tx_id (refund tx we initiate, in Failure case)
-                    // TODO How to tell the BTC server claim (2A) apart from the BTC refund (2B)?
                     match is_first_tx_lockup_tx {
                         true => (Some(first_tx_id), Some(second_tx_id)),
                         false => (Some(second_tx_id), Some(first_tx_id)),
@@ -590,6 +590,13 @@ impl LiquidSdk {
                     error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
+            };
+
+            // The second BTC tx is only a refund in case we didn't claim.
+            // If we claimed, then the second BTC tx was an internal BTC server claim tx, which we're not tracking.
+            let btc_refund_tx_id = match lbtc_server_claim_tx_id.is_some() {
+                true => None,
+                false => btc_second_tx_id,
             };
 
             res.insert(
