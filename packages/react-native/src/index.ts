@@ -41,6 +41,16 @@ export interface BuyBitcoinRequest {
     redirectUrl?: string
 }
 
+export interface CheckMessageRequest {
+    message: string
+    pubkey: string
+    signature: string
+}
+
+export interface CheckMessageResponse {
+    isValid: boolean
+}
+
 export interface Config {
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
@@ -342,6 +352,14 @@ export interface SendPaymentResponse {
     payment: Payment
 }
 
+export interface SignMessageRequest {
+    message: string
+}
+
+export interface SignMessageResponse {
+    signature: string
+}
+
 export interface SymbolType {
     grapheme?: string
     template?: string
@@ -628,6 +646,16 @@ export const removeEventListener = async (id: string): Promise<void> => {
 
 export const getInfo = async (): Promise<GetInfoResponse> => {
     const response = await BreezSDKLiquid.getInfo()
+    return response
+}
+
+export const signMessage = async (req: SignMessageRequest): Promise<SignMessageResponse> => {
+    const response = await BreezSDKLiquid.signMessage(req)
+    return response
+}
+
+export const checkMessage = async (req: CheckMessageRequest): Promise<CheckMessageResponse> => {
+    const response = await BreezSDKLiquid.checkMessage(req)
     return response
 }
 

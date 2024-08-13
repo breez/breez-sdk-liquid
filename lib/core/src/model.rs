@@ -377,6 +377,37 @@ pub struct GetInfoResponse {
     pub pubkey: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::sign_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct SignMessageRequest {
+    pub message: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::sign_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct SignMessageResponse {
+    pub signature: String,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::check_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckMessageRequest {
+    /// The message that was signed.
+    pub message: String,
+    /// The public key of the node that signed the message.
+    pub pubkey: String,
+    /// The zbase encoded signature to verify.
+    pub signature: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::check_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckMessageResponse {
+    /// Boolean value indicating whether the signature covers the message and
+    /// was signed by the given pubkey.
+    pub is_valid: bool,
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 #[derive(Debug, Serialize)]
 pub struct BackupRequest {
