@@ -94,6 +94,14 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.get_info()).map_err(Into::into)
     }
 
+    pub fn sign_message(&self, req: SignMessageRequest) -> SdkResult<SignMessageResponse> {
+        self.sdk.sign_message(&req)
+    }
+
+    pub fn check_message(&self, req: CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
+        self.sdk.check_message(&req)
+    }
+
     pub fn prepare_send_payment(
         &self,
         req: PrepareSendRequest,

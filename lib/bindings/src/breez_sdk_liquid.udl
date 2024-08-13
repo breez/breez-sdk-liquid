@@ -313,6 +313,24 @@ dictionary GetInfoResponse {
     string pubkey;
 };
 
+dictionary SignMessageRequest {
+    string message;
+};
+
+dictionary SignMessageResponse {
+    string signature;
+};
+
+dictionary CheckMessageRequest {
+    string message;
+    string pubkey;
+    string signature;
+};
+
+dictionary CheckMessageResponse {
+    boolean is_valid;
+};
+
 dictionary PrepareSendRequest {
     string invoice;
 };
@@ -543,6 +561,12 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     GetInfoResponse get_info();
+
+    [Throws=SdkError]
+    SignMessageResponse sign_message(SignMessageRequest req);
+
+    [Throws=SdkError]
+    CheckMessageResponse check_message(CheckMessageRequest req);
 
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);

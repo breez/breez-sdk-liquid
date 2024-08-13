@@ -89,6 +89,19 @@ impl BindingLiquidSdk {
         self.sdk.get_info().await.map_err(Into::into)
     }
 
+    #[frb(sync)]
+    pub fn sign_message(&self, req: SignMessageRequest) -> Result<SignMessageResponse, SdkError> {
+        self.sdk.sign_message(&req)
+    }
+
+    #[frb(sync)]
+    pub fn check_message(
+        &self,
+        req: CheckMessageRequest,
+    ) -> Result<CheckMessageResponse, SdkError> {
+        self.sdk.check_message(&req)
+    }
+
     pub async fn add_event_listener(
         &self,
         listener: StreamSink<SdkEvent>,

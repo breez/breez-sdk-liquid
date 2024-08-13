@@ -565,6 +565,27 @@ impl LiquidSdk {
         })
     }
 
+    /// Sign given message with the private key. Returns a zbase encoded signature.
+    pub fn sign_message(&self, req: &SignMessageRequest) -> SdkResult<SignMessageResponse> {
+        let mut msg: String = "Lightning Signed Message:".to_string();
+        msg.push_str(&req.message);
+
+        let signature = self.onchain_wallet.sign_message(&msg)?;
+        Ok(SignMessageResponse { signature })
+    }
+
+    /// Check whether given message was signed by the given
+    /// pubkey and the signature (zbase encoded) is valid.
+    pub fn check_message(&self, req: &CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
+        let mut msg: String = "Lightning Signed Message:".to_string();
+        msg.push_str(&req.message);
+
+        let is_valid = self
+            .onchain_wallet
+            .check_message(&msg, &req.pubkey, &req.signature)?;
+        Ok(CheckMessageResponse { is_valid })
+    }
+
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
         let invoice = invoice.trim().parse::<Bolt11Invoice>().map_err(|err| {
             PaymentError::InvalidInvoice {

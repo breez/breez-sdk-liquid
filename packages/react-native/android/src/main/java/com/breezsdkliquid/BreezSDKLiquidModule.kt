@@ -187,6 +187,40 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun signMessage(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val signMessageRequest =
+                    asSignMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SignMessageRequest")) }
+                val res = getBindingLiquidSdk().signMessage(signMessageRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun checkMessage(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val checkMessageRequest =
+                    asCheckMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "CheckMessageRequest")) }
+                val res = getBindingLiquidSdk().checkMessage(checkMessageRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun prepareSendPayment(
         req: ReadableMap,
         promise: Promise,

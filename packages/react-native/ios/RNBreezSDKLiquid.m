@@ -49,6 +49,18 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
+    signMessage: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    checkMessage: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     prepareSendPayment: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
