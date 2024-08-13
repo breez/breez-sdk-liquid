@@ -238,6 +238,7 @@ impl BindingLiquidSdk {
         self.sdk.rescan_onchain_swaps().await
     }
 
+    #[frb(name = "sync")]
     pub async fn sync(&self) -> Result<(), SdkError> {
         self.sdk.sync().await.map_err(Into::into)
     }
