@@ -191,6 +191,13 @@ impl CstDecode<crate::model::BuyBitcoinRequest> for *mut wire_cst_buy_bitcoin_re
         CstDecode::<crate::model::BuyBitcoinRequest>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::CheckMessageRequest> for *mut wire_cst_check_message_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::CheckMessageRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::CheckMessageRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -402,6 +409,13 @@ impl CstDecode<crate::model::SdkEvent> for *mut wire_cst_sdk_event {
         CstDecode::<crate::model::SdkEvent>::cst_decode(*wrap).into()
     }
 }
+impl CstDecode<crate::model::SignMessageRequest> for *mut wire_cst_sign_message_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SignMessageRequest {
+        let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+        CstDecode::<crate::model::SignMessageRequest>::cst_decode(*wrap).into()
+    }
+}
 impl CstDecode<crate::bindings::SuccessActionProcessed> for *mut wire_cst_success_action_processed {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::bindings::SuccessActionProcessed {
@@ -441,6 +455,24 @@ impl CstDecode<crate::model::BuyBitcoinRequest> for wire_cst_buy_bitcoin_request
         crate::model::BuyBitcoinRequest {
             prepare_res: self.prepare_res.cst_decode(),
             redirect_url: self.redirect_url.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::CheckMessageRequest> for wire_cst_check_message_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::CheckMessageRequest {
+        crate::model::CheckMessageRequest {
+            message: self.message.cst_decode(),
+            pubkey: self.pubkey.cst_decode(),
+            signature: self.signature.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::CheckMessageResponse> for wire_cst_check_message_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::CheckMessageResponse {
+        crate::model::CheckMessageResponse {
+            is_valid: self.is_valid.cst_decode(),
         }
     }
 }
@@ -1466,6 +1498,22 @@ impl CstDecode<crate::model::SendPaymentResponse> for wire_cst_send_payment_resp
         }
     }
 }
+impl CstDecode<crate::model::SignMessageRequest> for wire_cst_sign_message_request {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SignMessageRequest {
+        crate::model::SignMessageRequest {
+            message: self.message.cst_decode(),
+        }
+    }
+}
+impl CstDecode<crate::model::SignMessageResponse> for wire_cst_sign_message_response {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SignMessageResponse {
+        crate::model::SignMessageResponse {
+            signature: self.signature.cst_decode(),
+        }
+    }
+}
 impl CstDecode<crate::bindings::SuccessActionProcessed> for wire_cst_success_action_processed {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> crate::bindings::SuccessActionProcessed {
@@ -1588,6 +1636,32 @@ impl NewWithNullPtr for wire_cst_buy_bitcoin_request {
     }
 }
 impl Default for wire_cst_buy_bitcoin_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_check_message_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            message: core::ptr::null_mut(),
+            pubkey: core::ptr::null_mut(),
+            signature: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_check_message_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_check_message_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            is_valid: Default::default(),
+        }
+    }
+}
+impl Default for wire_cst_check_message_response {
     fn default() -> Self {
         Self::new_with_null_ptr()
     }
@@ -2418,6 +2492,30 @@ impl Default for wire_cst_send_payment_response {
         Self::new_with_null_ptr()
     }
 }
+impl NewWithNullPtr for wire_cst_sign_message_request {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            message: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_sign_message_request {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
+impl NewWithNullPtr for wire_cst_sign_message_response {
+    fn new_with_null_ptr() -> Self {
+        Self {
+            signature: core::ptr::null_mut(),
+        }
+    }
+}
+impl Default for wire_cst_sign_message_response {
+    fn default() -> Self {
+        Self::new_with_null_ptr()
+    }
+}
 impl NewWithNullPtr for wire_cst_success_action_processed {
     fn new_with_null_ptr() -> Self {
         Self {
@@ -2485,6 +2583,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_bu
     req: *mut wire_cst_buy_bitcoin_request,
 ) {
     wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(port_, that, req)
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message(
+    that: usize,
+    req: *mut wire_cst_check_message_request,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__BindingLiquidSdk_check_message_impl(that, req)
 }
 
 #[no_mangle]
@@ -2719,6 +2825,14 @@ pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_se
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message(
+    that: usize,
+    req: *mut wire_cst_sign_message_request,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    wire__crate__bindings__BindingLiquidSdk_sign_message_impl(that, req)
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
     port_: i64,
     that: usize,
@@ -2849,6 +2963,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request(
 ) -> *mut wire_cst_buy_bitcoin_request {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
         wire_cst_buy_bitcoin_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_check_message_request(
+) -> *mut wire_cst_check_message_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_check_message_request::new_with_null_ptr(),
     )
 }
 
@@ -3065,6 +3187,14 @@ pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_sdk_event() -> *mut wi
 }
 
 #[no_mangle]
+pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request(
+) -> *mut wire_cst_sign_message_request {
+    flutter_rust_bridge::for_generated::new_leak_box_ptr(
+        wire_cst_sign_message_request::new_with_null_ptr(),
+    )
+}
+
+#[no_mangle]
 pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(
 ) -> *mut wire_cst_success_action_processed {
     flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -3278,6 +3408,18 @@ pub struct wire_cst_bitcoin_address_data {
 pub struct wire_cst_buy_bitcoin_request {
     prepare_res: wire_cst_prepare_buy_bitcoin_response,
     redirect_url: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_check_message_request {
+    message: *mut wire_cst_list_prim_u_8_strict,
+    pubkey: *mut wire_cst_list_prim_u_8_strict,
+    signature: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_check_message_response {
+    is_valid: bool,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -4108,6 +4250,16 @@ pub struct wire_cst_SdkEvent_PaymentWaitingConfirmation {
 #[derive(Clone, Copy)]
 pub struct wire_cst_send_payment_response {
     payment: wire_cst_payment,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_sign_message_request {
+    message: *mut wire_cst_list_prim_u_8_strict,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct wire_cst_sign_message_response {
+    signature: *mut wire_cst_list_prim_u_8_strict,
 }
 #[repr(C)]
 #[derive(Clone, Copy)]

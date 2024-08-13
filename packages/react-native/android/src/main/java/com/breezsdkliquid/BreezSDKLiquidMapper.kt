@@ -149,6 +149,78 @@ fun asBuyBitcoinRequestList(arr: ReadableArray): List<BuyBitcoinRequest> {
     return list
 }
 
+fun asCheckMessageRequest(checkMessageRequest: ReadableMap): CheckMessageRequest? {
+    if (!validateMandatoryFields(
+            checkMessageRequest,
+            arrayOf(
+                "message",
+                "pubkey",
+                "signature",
+            ),
+        )
+    ) {
+        return null
+    }
+    val message = checkMessageRequest.getString("message")!!
+    val pubkey = checkMessageRequest.getString("pubkey")!!
+    val signature = checkMessageRequest.getString("signature")!!
+    return CheckMessageRequest(
+        message,
+        pubkey,
+        signature,
+    )
+}
+
+fun readableMapOf(checkMessageRequest: CheckMessageRequest): ReadableMap =
+    readableMapOf(
+        "message" to checkMessageRequest.message,
+        "pubkey" to checkMessageRequest.pubkey,
+        "signature" to checkMessageRequest.signature,
+    )
+
+fun asCheckMessageRequestList(arr: ReadableArray): List<CheckMessageRequest> {
+    val list = ArrayList<CheckMessageRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCheckMessageRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asCheckMessageResponse(checkMessageResponse: ReadableMap): CheckMessageResponse? {
+    if (!validateMandatoryFields(
+            checkMessageResponse,
+            arrayOf(
+                "isValid",
+            ),
+        )
+    ) {
+        return null
+    }
+    val isValid = checkMessageResponse.getBoolean("isValid")
+    return CheckMessageResponse(
+        isValid,
+    )
+}
+
+fun readableMapOf(checkMessageResponse: CheckMessageResponse): ReadableMap =
+    readableMapOf(
+        "isValid" to checkMessageResponse.isValid,
+    )
+
+fun asCheckMessageResponseList(arr: ReadableArray): List<CheckMessageResponse> {
+    val list = ArrayList<CheckMessageResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCheckMessageResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
@@ -2166,6 +2238,70 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSignMessageRequest(signMessageRequest: ReadableMap): SignMessageRequest? {
+    if (!validateMandatoryFields(
+            signMessageRequest,
+            arrayOf(
+                "message",
+            ),
+        )
+    ) {
+        return null
+    }
+    val message = signMessageRequest.getString("message")!!
+    return SignMessageRequest(
+        message,
+    )
+}
+
+fun readableMapOf(signMessageRequest: SignMessageRequest): ReadableMap =
+    readableMapOf(
+        "message" to signMessageRequest.message,
+    )
+
+fun asSignMessageRequestList(arr: ReadableArray): List<SignMessageRequest> {
+    val list = ArrayList<SignMessageRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSignMessageRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSignMessageResponse(signMessageResponse: ReadableMap): SignMessageResponse? {
+    if (!validateMandatoryFields(
+            signMessageResponse,
+            arrayOf(
+                "signature",
+            ),
+        )
+    ) {
+        return null
+    }
+    val signature = signMessageResponse.getString("signature")!!
+    return SignMessageResponse(
+        signature,
+    )
+}
+
+fun readableMapOf(signMessageResponse: SignMessageResponse): ReadableMap =
+    readableMapOf(
+        "signature" to signMessageResponse.signature,
+    )
+
+fun asSignMessageResponseList(arr: ReadableArray): List<SignMessageResponse> {
+    val list = ArrayList<SignMessageResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSignMessageResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

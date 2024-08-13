@@ -62,6 +62,55 @@ class BuyBitcoinRequest {
           redirectUrl == other.redirectUrl;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::check_message].
+class CheckMessageRequest {
+  /// The message that was signed.
+  final String message;
+
+  /// The public key of the node that signed the message.
+  final String pubkey;
+
+  /// The zbase encoded signature to verify.
+  final String signature;
+
+  const CheckMessageRequest({
+    required this.message,
+    required this.pubkey,
+    required this.signature,
+  });
+
+  @override
+  int get hashCode => message.hashCode ^ pubkey.hashCode ^ signature.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CheckMessageRequest &&
+          runtimeType == other.runtimeType &&
+          message == other.message &&
+          pubkey == other.pubkey &&
+          signature == other.signature;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::check_message].
+class CheckMessageResponse {
+  /// Boolean value indicating whether the signature covers the message and
+  /// was signed by the given pubkey.
+  final bool isValid;
+
+  const CheckMessageResponse({
+    required this.isValid,
+  });
+
+  @override
+  int get hashCode => isValid.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CheckMessageResponse && runtimeType == other.runtimeType && isValid == other.isValid;
+}
+
 /// Configuration for the Liquid SDK
 class Config {
   final String liquidElectrumUrl;
@@ -1072,4 +1121,38 @@ class SendPaymentResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SendPaymentResponse && runtimeType == other.runtimeType && payment == other.payment;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::sign_message].
+class SignMessageRequest {
+  final String message;
+
+  const SignMessageRequest({
+    required this.message,
+  });
+
+  @override
+  int get hashCode => message.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SignMessageRequest && runtimeType == other.runtimeType && message == other.message;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::sign_message].
+class SignMessageResponse {
+  final String signature;
+
+  const SignMessageResponse({
+    required this.signature,
+  });
+
+  @override
+  int get hashCode => signature.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
 }
