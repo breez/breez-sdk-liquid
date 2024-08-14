@@ -56,6 +56,9 @@ impl PartialSwapState for RecoveredOnchainDataSend {
                     None => PaymentState::Pending,
                 },
             },
+            // For Send swaps, no lockup could mean both Created or TimedOut.
+            // However, we're in Created for a very short period of time in the originating instance,
+            // after which we expect Pending or TimedOut. Therefore here we default to TimedOut.
             None => PaymentState::TimedOut,
         }
     }
@@ -88,9 +91,6 @@ pub(crate) struct RecoveredOnchainDataChainSend {
 }
 impl PartialSwapState for RecoveredOnchainDataChainSend {
     fn get_partial_state(&self) -> PaymentState {
-        // TODO How to detect TimedOut state?
-        //     TimedOut: This covers the case when the swap state is still Created and the swap fails to reach the
-        //     Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => match &self.btc_claim_tx_id {
                 Some(_) => PaymentState::Complete,
@@ -102,7 +102,10 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
                     None => PaymentState::Created,
                 },
             },
-            None => PaymentState::Created,
+            // For Send swaps, no lockup could mean both Created or TimedOut.
+            // However, we're in Created for a very short period of time in the originating instance,
+            // after which we expect Pending or TimedOut. Therefore here we default to TimedOut.
+            None => PaymentState::TimedOut,
         }
     }
 }
