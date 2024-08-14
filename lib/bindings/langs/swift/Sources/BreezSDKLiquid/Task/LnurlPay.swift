@@ -71,3 +71,19 @@ class LnurlPayTask : TaskProtocol {
         self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
     }
 }
+
+enum InvalidLnurlPayError: Error {
+    case minSendable
+    case amount(amount: UInt64)
+}
+
+extension InvalidLnurlPayError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .minSendable:
+            return NSLocalizedString("Minimum sendable amount is invalid", comment: "InvalidLnurlPayError")
+        case .amount(amount: let amount):
+            return NSLocalizedString("Invalid amount requested \(amount)", comment: "InvalidLnurlPayError")
+        }
+    }
+}

@@ -41,8 +41,7 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             // Check amount is within limits
             let amountSat = request!.amount / UInt64(1000)
             if amountSat < limits.receive.minSat || amountSat > limits.receive.maxSat {
-                fail(withError: "Invalid amount requested \(request!.amount)", replyURL: request!.reply_url)
-                return
+                throw InvalidLnurlPayError.amount(amount: request!.amount)
             }
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"

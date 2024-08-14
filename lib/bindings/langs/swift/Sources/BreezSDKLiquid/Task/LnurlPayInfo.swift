@@ -44,8 +44,13 @@ class LnurlPayInfoTask : LnurlPayTask {
         do {
             // Get the lightning limits
             let limits = try liquidSDK.fetchLightningLimits()
+            // Max millisatoshi amount LN SERVICE is willing to receive
             let maxSendableMsat = limits.receive.maxSat * UInt64(1000)
+            // Min millisatoshi amount LN SERVICE is willing to receive, can not be less than 1 or more than `maxSendableMsat`
             let minSendableMsat = limits.receive.minSat * UInt64(1000)
+            if minSendableMsat < UInt64(1) || minSendableMsat > maxSendableMsat {
+                throw InvalidLnurlPayError.minSendable
+            }
             // Format the response
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
