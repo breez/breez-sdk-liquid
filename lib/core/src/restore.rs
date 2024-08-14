@@ -32,10 +32,13 @@ impl TxMap {
 
 trait PartialSwapState {
     /// Determine partial swap state, based on recovered chain data.
+    ///
+    /// This is a partial state, which means it may be incomplete because it's based on partial
+    /// information. Some swap states cannot be determined based only on chain data.
+    ///
     /// For example, it cannot distinguish between [PaymentState::Created] and [PaymentState::TimedOut],
-    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed]. In these
-    /// cases, it defaults to [PaymentState::Created].
-    fn get_partial_state(&self) -> PaymentState;
+    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed].
+    fn derive_partial_state(&self) -> PaymentState;
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
@@ -44,7 +47,7 @@ pub(crate) struct RecoveredOnchainDataSend {
     refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataSend {
-    fn get_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> PaymentState {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(_) => PaymentState::Complete,
@@ -69,7 +72,7 @@ pub(crate) struct RecoveredOnchainDataReceive {
     claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataReceive {
-    fn get_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> PaymentState {
         match (&self.lockup_tx_id, &self.claim_tx_id) {
             (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed() {
                 true => PaymentState::Complete,
@@ -94,7 +97,7 @@ pub(crate) struct RecoveredOnchainDataChainSend {
     btc_claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainSend {
-    fn get_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> PaymentState {
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => match &self.btc_claim_tx_id {
                 Some(_) => PaymentState::Complete,
@@ -125,7 +128,7 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     btc_refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
-    fn get_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> PaymentState {
         match &self.btc_user_lockup_tx_id {
             Some(_) => match &self.lbtc_server_claim_tx_id {
                 Some(_) => PaymentState::Complete,
@@ -152,8 +155,7 @@ pub(crate) struct RecoveredOnchainData {
 impl LiquidSdk {
     /// For each swap, recovers data from chain services.
     ///
-    /// The returned data include txs and the partial swap state. This is a partial state, because
-    /// certain swap states cannot be determined based on initial and onchain data (e.g. [PaymentState::TimedOut])
+    /// The returned data include txs and the partial swap state. See [PartialSwapState::derive_partial_state].
     ///
     /// The caller is expected to merge this data with any other data available, then persist the
     /// reconstructed swap.
@@ -192,7 +194,7 @@ impl LiquidSdk {
                     info!("refund_tx_id: {exp_refund_tx_id:?} / {rec_refund_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_partial_state();
+                    let rec_state = recovered.derive_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Send Swap {send_swap_id}"),
@@ -217,7 +219,7 @@ impl LiquidSdk {
                     info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_partial_state();
+                    let rec_state = recovered.derive_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => error!("No recovered data for Receive Swap {receive_swap_id}"),
@@ -266,7 +268,7 @@ impl LiquidSdk {
                     info!("btc_claim_tx_id: {exp_btc_claim_tx_id:?} / {rec_btc_claim_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_partial_state();
+                    let rec_state = recovered.derive_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => {
@@ -317,7 +319,7 @@ impl LiquidSdk {
                     info!("btc_refund_tx_id: {exp_btc_refund_tx_id:?} / {rec_btc_refund_tx_id:?}");
 
                     let exp_state = expected.state;
-                    let rec_state = recovered.get_partial_state();
+                    let rec_state = recovered.derive_partial_state();
                     info!("state: {exp_state:?} / {rec_state:?}");
                 }
                 (Some(_), None) => {
