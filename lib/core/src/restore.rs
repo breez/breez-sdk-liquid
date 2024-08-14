@@ -416,6 +416,9 @@ impl LiquidSdk {
         let mut res: HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
             let (lockup_tx_id, claim_tx_id) = match history.len() {
+                // Only lockup tx available
+                1 => (Some(history[0].clone()), None),
+
                 2 => {
                     let first = history[0].clone();
                     let second = history[1].clone();
