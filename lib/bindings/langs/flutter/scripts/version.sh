@@ -1,5 +1,6 @@
 #!/bin/bash
-ROOT="../../../../.."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$SCRIPT_DIR/../../../../.."
 TAG_NAME=`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
 
 # iOS & macOS
