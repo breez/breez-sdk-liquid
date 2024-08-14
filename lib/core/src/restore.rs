@@ -423,10 +423,34 @@ impl LiquidSdk {
                     let first = history[0].clone();
                     let second = history[1].clone();
 
-                    // If a history tx is a known incoming tx, it's the claim tx
-                    match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                        true => (Some(second), Some(first)),
-                        false => (Some(first), Some(second)),
+                    if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
+                        // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
+                        (Some(second), Some(first))
+                    } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
+                        // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
+                        (Some(first), Some(second))
+                    } else {
+                        // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
+                        // If so, we expect them to be confirmed at different heights
+                        let first_conf_height = first.height;
+                        let second_conf_height = second.height;
+                        match (first.confirmed(), second.confirmed()) {
+                            // If they're both confirmed, the one with the lowest confirmation height is the lockup
+                            (true, true) => match first_conf_height < second_conf_height {
+                                true => (Some(first), None),
+                                false => (Some(second), None),
+                            },
+
+                            // If only one tx is confirmed, then that is the lockup
+                            (true, false) => (Some(first), None),
+                            (false, true) => (Some(second), None),
+
+                            // If neither is confirmed, this is an edge-case
+                            (false, false) => {
+                                error!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
+                                (None, None)
+                            }
+                        }
                     }
                 }
                 n => {
