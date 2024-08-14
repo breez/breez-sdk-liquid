@@ -92,6 +92,10 @@ jobs:
           rm android/build.gradle.bak
           rm android/CMakeLists.txt.bak
           rm ios/flutter_breez_liquid.podspec.bak
+      
+      - name: Update version number on podspec files & CMake scripts
+        working-directory: build/lib/bindings/langs/flutter/
+        run: bash scripts/version.sh
 
       - name: Archive flutter release
         uses: actions/upload-artifact@v4
