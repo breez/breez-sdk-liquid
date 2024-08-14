@@ -84,9 +84,13 @@ impl PartialSwapState for RecoveredOnchainDataReceive {
 }
 
 pub(crate) struct RecoveredOnchainDataChainSend {
+    /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
     lbtc_user_lockup_tx_id: Option<HistoryTxId>,
+    /// LBTC tx initiated by the SDK to itself, in case the initial funds have to be refunded.
     lbtc_refund_tx_id: Option<HistoryTxId>,
+    /// BTC tx locking up funds by the swapper
     btc_server_lockup_tx_id: Option<HistoryTxId>,
+    /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
     btc_claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainSend {
@@ -111,9 +115,13 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
 }
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
+    /// LBTC tx locking up funds by the swapper
     lbtc_server_lockup_tx_id: Option<HistoryTxId>,
+    /// LBTC tx that claims to our wallet. The final step in a successful swap.
     lbtc_server_claim_tx_id: Option<HistoryTxId>,
+    /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
     btc_user_lockup_tx_id: Option<HistoryTxId>,
+    /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     btc_refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
