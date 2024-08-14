@@ -51,8 +51,13 @@ class LnurlPayInfoJob(
             request = Json.decodeFromString(LnurlInfoRequest.serializer(), payload)
             // Get the lightning limits
             val limits = liquidSDK.fetchLightningLimits()
-            val maxSendableMsat = limits.receive.maxSat * 1000UL 
-            val minSendableMsat = limits.receive.minSat * 1000UL 
+            // Max millisatoshi amount LN SERVICE is willing to receive
+            val maxSendableMsat = limits.receive.maxSat * 1000UL
+            // Min millisatoshi amount LN SERVICE is willing to receive, can not be less than 1 or more than `maxSendableMsat`
+            val minSendableMsat = limits.receive.minSat * 1000UL
+            if (minSendableMsat < 1UL || minSendableMsat > maxSendableMsat) {
+                throw InvalidLnurlPayException("Minimum sendable amount is invalid")
+            }
             // Format the response
             val plainTextMetadata = getString(
                 context, LNURL_PAY_METADATA_PLAIN_TEXT, DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT

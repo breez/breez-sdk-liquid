@@ -53,17 +53,7 @@ class LnurlPayInvoiceJob(
             // Check amount is within limits
             val amountSat = request.amount / 1000UL
             if (amountSat < limits.receive.minSat || amountSat > limits.receive.maxSat) {
-                fail("Invalid amount requested ${request.amount}", request.replyURL)
-                notifyChannel(
-                    context,
-                    NOTIFICATION_CHANNEL_LNURL_PAY,
-                    getString(
-                        context,
-                        LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
-                        DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
-                    ),
-                )
-                return
+                throw InvalidLnurlPayException("Invalid amount requested ${request.amount}")
             }
             val plainTextMetadata = getString(
                 context,
