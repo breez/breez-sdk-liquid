@@ -49,7 +49,7 @@ impl PartialSwapState for RecoveredOnchainDataSend {
             Some(_) => match &self.claim_tx_id {
                 Some(_) => PaymentState::Complete,
                 None => match &self.refund_tx_id {
-                    Some(refund_tx_id) => match refund_tx_id.confirmed {
+                    Some(refund_tx_id) => match refund_tx_id.confirmed() {
                         true => PaymentState::Failed,
                         false => PaymentState::RefundPending,
                     },
@@ -71,7 +71,7 @@ pub(crate) struct RecoveredOnchainDataReceive {
 impl PartialSwapState for RecoveredOnchainDataReceive {
     fn get_partial_state(&self) -> PaymentState {
         match (&self.lockup_tx_id, &self.claim_tx_id) {
-            (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed {
+            (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed() {
                 true => PaymentState::Complete,
                 false => PaymentState::Pending,
             },
@@ -99,7 +99,7 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
             Some(_) => match &self.btc_claim_tx_id {
                 Some(_) => PaymentState::Complete,
                 None => match &self.lbtc_refund_tx_id {
-                    Some(tx) => match tx.confirmed {
+                    Some(tx) => match tx.confirmed() {
                         true => PaymentState::Failed,
                         false => PaymentState::RefundPending,
                     },
@@ -130,7 +130,7 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
             Some(_) => match &self.lbtc_server_claim_tx_id {
                 Some(_) => PaymentState::Complete,
                 None => match &self.btc_refund_tx_id {
-                    Some(tx) => match tx.confirmed {
+                    Some(tx) => match tx.confirmed() {
                         true => PaymentState::Failed,
                         false => PaymentState::RefundPending,
                     },
@@ -651,7 +651,16 @@ pub(crate) mod immutable {
     #[derive(Clone)]
     pub(crate) struct HistoryTxId {
         pub txid: Txid,
-        pub confirmed: bool,
+        /// Confirmation height of txid
+        ///
+        /// -1 means unconfirmed with unconfirmed parents
+        ///  0 means unconfirmed with confirmed parents
+        pub height: i32,
+    }
+    impl HistoryTxId {
+        pub(crate) fn confirmed(&self) -> bool {
+            self.height > 0
+        }
     }
     impl From<History> for HistoryTxId {
         fn from(value: History) -> Self {
@@ -662,7 +671,7 @@ pub(crate) mod immutable {
         fn from(value: &History) -> Self {
             Self {
                 txid: value.txid,
-                confirmed: value.height > 0,
+                height: value.height,
             }
         }
     }
