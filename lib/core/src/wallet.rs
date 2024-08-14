@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -185,7 +186,10 @@ impl OnchainWallet for LiquidOnchainWallet {
             .map_err(|e| anyhow!("Could not get signer keypair: {e}"))?
             .to_keypair(&secp);
         // Prefix and double hash message
-        let hashed_msg = sha256::Hash::hash(&[LN_MESSAGE_PREFIX, message.as_bytes()].concat());
+        let mut engine = sha256::HashEngine::default();
+        engine.write_all(LN_MESSAGE_PREFIX)?;
+        engine.write_all(message.as_bytes())?;
+        let hashed_msg = sha256::Hash::from_engine(engine);
         let double_hashed_msg = Message::from(sha256::Hash::hash(&hashed_msg));
         // Get message signature and encode to zbase32
         let recoverable_sig =
