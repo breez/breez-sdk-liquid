@@ -169,179 +169,7 @@ impl LiquidSdk {
         tx_map: TxMap,
         swaps: SwapsList,
     ) -> Result<RecoveredOnchainData> {
-        // Recovered onchain data (txs) per swap
-        let recovered = self.get_onchain_data(tx_map, &swaps).await?;
-
-        // Validation
-        // Checks if recovered data (txs, partial state) matches known data
-        for send_swap_id in swaps.send_swap_immutable_db_by_swap_id.keys() {
-            let full_swap = self
-                .persister
-                .fetch_send_swap_by_id(send_swap_id)
-                .ok()
-                .flatten();
-            let recovered_data = recovered.send.get(send_swap_id);
-
-            info!("[Restore Send] Validating {send_swap_id}");
-            match (full_swap, recovered_data) {
-                (Some(expected), Some(recovered)) => {
-                    let exp_lockup_tx_id = expected.lockup_tx_id;
-                    let rec_lockup_tx_id = recovered.lockup_tx_id.as_ref().map(|h| h.txid.to_hex());
-                    info!("lockup_tx_id: {exp_lockup_tx_id:?} / {rec_lockup_tx_id:?}");
-
-                    let exp_refund_tx_id = expected.refund_tx_id;
-                    let rec_refund_tx_id = recovered.refund_tx_id.as_ref().map(|h| h.txid.to_hex());
-                    info!("refund_tx_id: {exp_refund_tx_id:?} / {rec_refund_tx_id:?}");
-
-                    let exp_state = expected.state;
-                    let rec_state = recovered.derive_partial_state();
-                    info!("state: {exp_state:?} / {rec_state:?}");
-                }
-                (Some(_), None) => error!("No recovered data for Send Swap {send_swap_id}"),
-                (None, Some(_)) => error!("No expected data for Send Swap {send_swap_id}"),
-                (None, None) => error!("Unknown Send Swap {send_swap_id}"),
-            }
-            info!("[Restore Send] Validated {send_swap_id}");
-        }
-        for receive_swap_id in swaps.receive_swap_immutable_db_by_swap_id_.keys() {
-            let full_swap = self
-                .persister
-                .fetch_receive_swap_by_id(receive_swap_id)
-                .ok()
-                .flatten();
-            let recovered_data = recovered.receive.get(receive_swap_id);
-
-            info!("[Restore Receive] Validating {receive_swap_id}");
-            match (full_swap, recovered_data) {
-                (Some(expected), Some(recovered)) => {
-                    let exp_claim_tx_id = expected.claim_tx_id;
-                    let rec_claim_tx_id = recovered.claim_tx_id.as_ref().map(|h| h.txid.to_hex());
-                    info!("claim_tx_id: {exp_claim_tx_id:?} / {rec_claim_tx_id:?}");
-
-                    let exp_state = expected.state;
-                    let rec_state = recovered.derive_partial_state();
-                    info!("state: {exp_state:?} / {rec_state:?}");
-                }
-                (Some(_), None) => error!("No recovered data for Receive Swap {receive_swap_id}"),
-                (None, Some(_)) => error!("No expected data for Receive Swap {receive_swap_id}"),
-                (None, None) => error!("Unknown Receive Swap {receive_swap_id}"),
-            }
-            info!("[Restore Receive] Validated {receive_swap_id}");
-        }
-        for send_chain_swap_id in swaps.send_chain_swap_immutable_db_by_swap_id.keys() {
-            let full_swap = self
-                .persister
-                .fetch_chain_swap_by_id(send_chain_swap_id)
-                .ok()
-                .flatten();
-            let recovered_data = recovered.chain_send.get(send_chain_swap_id);
-
-            info!("[Restore Chain Send] Validating {send_chain_swap_id}");
-            match (full_swap, recovered_data) {
-                (Some(expected), Some(recovered)) => {
-                    let exp_lbtc_user_lockup_tx_id = expected.user_lockup_tx_id;
-                    let rec_lbtc_user_lockup_tx_id = recovered
-                        .lbtc_user_lockup_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!("lbtc_user_lockup_tx_id: {exp_lbtc_user_lockup_tx_id:?} / {rec_lbtc_user_lockup_tx_id:?}");
-
-                    let exp_lbtc_refund_tx_id = expected.refund_tx_id;
-                    let rec_lbtc_refund_tx_id = recovered
-                        .lbtc_refund_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!(
-                        "lbtc_refund_tx_id: {exp_lbtc_refund_tx_id:?} / {rec_lbtc_refund_tx_id:?}"
-                    );
-
-                    let exp_btc_server_lockup_tx_id = expected.server_lockup_tx_id;
-                    let rec_btc_server_lockup_tx_id = recovered
-                        .btc_server_lockup_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!("btc_server_lockup_tx_id: {exp_btc_server_lockup_tx_id:?} / {rec_btc_server_lockup_tx_id:?}");
-
-                    let exp_btc_claim_tx_id = expected.claim_tx_id;
-                    let rec_btc_claim_tx_id =
-                        recovered.btc_claim_tx_id.as_ref().map(|h| h.txid.to_hex());
-                    info!("btc_claim_tx_id: {exp_btc_claim_tx_id:?} / {rec_btc_claim_tx_id:?}");
-
-                    let exp_state = expected.state;
-                    let rec_state = recovered.derive_partial_state();
-                    info!("state: {exp_state:?} / {rec_state:?}");
-                }
-                (Some(_), None) => {
-                    error!("No recovered data for Send Chain Swap {send_chain_swap_id}")
-                }
-                (None, Some(_)) => {
-                    error!("No expected data for Send Chain Swap {send_chain_swap_id}")
-                }
-                (None, None) => error!("Unknown Send Chain Swap {send_chain_swap_id}"),
-            }
-            info!("[Restore Chain Send] Validated {send_chain_swap_id}");
-        }
-        for receive_chain_swap_id in swaps.receive_chain_swap_immutable_db_by_swap_id.keys() {
-            let full_swap = self
-                .persister
-                .fetch_chain_swap_by_id(receive_chain_swap_id)
-                .ok()
-                .flatten();
-            let recovered_data = recovered.chain_receive.get(receive_chain_swap_id);
-
-            info!("[Restore Chain Receive] Validating {receive_chain_swap_id}");
-            match (full_swap, recovered_data) {
-                (Some(expected), Some(recovered)) => {
-                    let exp_lbtc_server_lockup_tx_id = expected.server_lockup_tx_id;
-                    let rec_lbtc_server_lockup_tx_id = recovered
-                        .lbtc_server_lockup_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!("lbtc_server_lockup_tx_id: {exp_lbtc_server_lockup_tx_id:?} / {rec_lbtc_server_lockup_tx_id:?}");
-
-                    let exp_lbtc_server_claim_tx_id = expected.claim_tx_id;
-                    let rec_lbtc_server_claim_tx_id = recovered
-                        .lbtc_server_claim_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!("lbtc_server_claim_tx_id: {exp_lbtc_server_claim_tx_id:?} / {rec_lbtc_server_claim_tx_id:?}");
-
-                    let exp_btc_user_lockup_tx_id = expected.user_lockup_tx_id;
-                    let rec_btc_user_lockup_tx_id = recovered
-                        .btc_user_lockup_tx_id
-                        .as_ref()
-                        .map(|h| h.txid.to_hex());
-                    info!("btc_user_lockup_tx_id: {exp_btc_user_lockup_tx_id:?} / {rec_btc_user_lockup_tx_id:?}");
-
-                    let exp_btc_refund_tx_id = expected.refund_tx_id;
-                    let rec_btc_refund_tx_id =
-                        recovered.btc_refund_tx_id.as_ref().map(|h| h.txid.to_hex());
-                    info!("btc_refund_tx_id: {exp_btc_refund_tx_id:?} / {rec_btc_refund_tx_id:?}");
-
-                    let exp_state = expected.state;
-                    let rec_state = recovered.derive_partial_state();
-                    info!("state: {exp_state:?} / {rec_state:?}");
-                }
-                (Some(_), None) => {
-                    error!("No recovered data for Receive Chain Swap {receive_chain_swap_id}")
-                }
-                (None, Some(_)) => {
-                    error!("No expected data for Receive Chain Swap {receive_chain_swap_id}")
-                }
-                (None, None) => error!("Unknown Receive Chain Swap {receive_chain_swap_id}"),
-            }
-            info!("[Restore Chain Receive] Validated {receive_chain_swap_id}");
-        }
-
-        Ok(recovered)
-    }
-
-    pub(crate) async fn get_onchain_data(
-        &self,
-        tx_map: TxMap,
-        immutable_db: &SwapsList,
-    ) -> Result<RecoveredOnchainData> {
-        let histories = self.fetch_swaps_histories(immutable_db).await?;
+        let histories = self.fetch_swaps_histories(&swaps).await?;
 
         let recovered_send_data = self
             .recover_send_swap_tx_ids(&tx_map, histories.send)
@@ -353,14 +181,14 @@ impl LiquidSdk {
             .recover_send_chain_swap_tx_ids(
                 &tx_map,
                 histories.send_chain,
-                &immutable_db.send_chain_swap_immutable_db_by_swap_id,
+                &swaps.send_chain_swap_immutable_db_by_swap_id,
             )
             .await?;
         let recovered_chain_receive_data = self
             .recover_receive_chain_swap_tx_ids(
                 &tx_map,
                 histories.receive_chain,
-                &immutable_db.receive_chain_swap_immutable_db_by_swap_id,
+                &swaps.receive_chain_swap_immutable_db_by_swap_id,
             )
             .await?;
 
