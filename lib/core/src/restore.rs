@@ -157,16 +157,22 @@ impl LiquidSdk {
     ///
     /// The caller is expected to merge this data with any other data available, then persist the
     /// reconstructed swap.
-    pub(crate) async fn recover_from_onchain(&self, tx_map: TxMap) -> Result<RecoveredOnchainData> {
-        // Immutable DB, as fetched from endpoint
-        let imm_db = self.get_swaps_list().await?;
-
+    ///
+    /// ### Arguments
+    ///
+    /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
+    /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
+    pub(crate) async fn recover_from_onchain(
+        &self,
+        tx_map: TxMap,
+        swaps: SwapsList,
+    ) -> Result<RecoveredOnchainData> {
         // Recovered onchain data (txs) per swap
-        let recovered = self.get_onchain_data(tx_map, &imm_db).await?;
+        let recovered = self.get_onchain_data(tx_map, &swaps).await?;
 
         // Validation
         // Checks if recovered data (txs, partial state) matches known data
-        for send_swap_id in imm_db.send_swap_immutable_db_by_swap_id.keys() {
+        for send_swap_id in swaps.send_swap_immutable_db_by_swap_id.keys() {
             let full_swap = self
                 .persister
                 .fetch_send_swap_by_id(send_swap_id)
@@ -195,7 +201,7 @@ impl LiquidSdk {
             }
             info!("[Restore Send] Validated {send_swap_id}");
         }
-        for receive_swap_id in imm_db.receive_swap_immutable_db_by_swap_id_.keys() {
+        for receive_swap_id in swaps.receive_swap_immutable_db_by_swap_id_.keys() {
             let full_swap = self
                 .persister
                 .fetch_receive_swap_by_id(receive_swap_id)
@@ -220,7 +226,7 @@ impl LiquidSdk {
             }
             info!("[Restore Receive] Validated {receive_swap_id}");
         }
-        for send_chain_swap_id in imm_db.send_chain_swap_immutable_db_by_swap_id.keys() {
+        for send_chain_swap_id in swaps.send_chain_swap_immutable_db_by_swap_id.keys() {
             let full_swap = self
                 .persister
                 .fetch_chain_swap_by_id(send_chain_swap_id)
@@ -273,7 +279,7 @@ impl LiquidSdk {
             }
             info!("[Restore Chain Send] Validated {send_chain_swap_id}");
         }
-        for receive_chain_swap_id in imm_db.receive_chain_swap_immutable_db_by_swap_id.keys() {
+        for receive_chain_swap_id in swaps.receive_chain_swap_immutable_db_by_swap_id.keys() {
             let full_swap = self
                 .persister
                 .fetch_chain_swap_by_id(receive_chain_swap_id)
