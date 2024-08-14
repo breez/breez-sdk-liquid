@@ -8087,51 +8087,86 @@ mod io {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 7 => crate::error::PaymentError::InvalidOrExpiredFees,
                 8 => crate::error::PaymentError::InsufficientFunds,
                 9 => {
+=======
+                5 => crate::error::PaymentError::InvalidOrExpiredFees,
+                6 => crate::error::PaymentError::InsufficientFunds,
+                7 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.InvalidDescription };
                     crate::error::PaymentError::InvalidDescription {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 10 => {
+=======
+                8 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.InvalidInvoice };
                     crate::error::PaymentError::InvalidInvoice {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 11 => crate::error::PaymentError::InvalidPreimage,
                 12 => {
+=======
+                9 => crate::error::PaymentError::InvalidPreimage,
+                10 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.LwkError };
                     crate::error::PaymentError::LwkError {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 13 => crate::error::PaymentError::PairsNotFound,
                 14 => crate::error::PaymentError::PaymentTimeout,
                 15 => crate::error::PaymentError::PersistError,
                 16 => {
+=======
+                11 => crate::error::PaymentError::PairsNotFound,
+                12 => crate::error::PaymentError::PaymentTimeout,
+                13 => crate::error::PaymentError::PersistError,
+                14 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.ReceiveError };
                     crate::error::PaymentError::ReceiveError {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 17 => {
+=======
+                15 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.Refunded };
                     crate::error::PaymentError::Refunded {
                         err: ans.err.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 18 => crate::error::PaymentError::SelfTransferNotSupported,
                 19 => {
+=======
+                16 => crate::error::PaymentError::SelfTransferNotSupported,
+                17 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.SendError };
                     crate::error::PaymentError::SendError {
                         err: ans.err.cst_decode(),
                     }
                 }
+<<<<<<< HEAD
                 20 => {
+=======
+                18 => {
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                     let ans = unsafe { self.kind.SignerError };
                     crate::error::PaymentError::SignerError {
                         err: ans.err.cst_decode(),
@@ -8249,7 +8284,11 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
             crate::model::ReceivePaymentRequest {
+<<<<<<< HEAD
                 prepare_response: self.prepare_response.cst_decode(),
+=======
+                prepare_res: self.prepare_res.cst_decode(),
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                 description: self.description.cst_decode(),
                 use_description_hash: self.use_description_hash.cst_decode(),
             }
@@ -9219,7 +9258,11 @@ mod io {
     impl NewWithNullPtr for wire_cst_receive_payment_request {
         fn new_with_null_ptr() -> Self {
             Self {
+<<<<<<< HEAD
                 prepare_response: Default::default(),
+=======
+                prepare_res: Default::default(),
+>>>>>>> f1fe45f5 (Fix Flutter gen)
                 description: core::ptr::null_mut(),
                 use_description_hash: core::ptr::null_mut(),
             }
@@ -10996,7 +11039,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_receive_payment_request {
+<<<<<<< HEAD
         prepare_response: wire_cst_prepare_receive_response,
+=======
+        prepare_res: wire_cst_prepare_receive_payment_response,
+>>>>>>> f1fe45f5 (Fix Flutter gen)
         description: *mut wire_cst_list_prim_u_8_strict,
         use_description_hash: *mut bool,
     }
