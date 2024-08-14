@@ -3,7 +3,6 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
-use log::info;
 use lwk_common::Signer;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
@@ -13,15 +12,17 @@ use lwk_wollet::{
     WolletDescriptor,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
-use sdk_common::bitcoin::secp256k1::ecdsa::{RecoverableSignature, RecoveryId};
-use sdk_common::bitcoin::secp256k1::{Message, Secp256k1};
+use sdk_common::bitcoin::secp256k1::{Message, PublicKey, Secp256k1};
 use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
+use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
 use crate::{
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
+
+static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
 #[async_trait]
 pub trait OnchainWallet: Send + Sync {
@@ -98,11 +99,6 @@ impl LiquidOnchainWallet {
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
-    }
-
-    fn double_hash(msg: &str) -> Message {
-        let hashed_msg = sha256::Hash::hash(msg.as_bytes());
-        Message::from(sha256::Hash::hash(&hashed_msg))
     }
 }
 
@@ -188,28 +184,20 @@ impl OnchainWallet for LiquidOnchainWallet {
         let keypair = ExtendedPrivKey::new_master(self.config.network.into(), &seed)
             .map_err(|e| anyhow!("Could not get signer keypair: {e}"))?
             .to_keypair(&secp);
-        let hashed_msg = LiquidOnchainWallet::double_hash(message);
-        let recoverable_sig = secp.sign_ecdsa_recoverable(&hashed_msg, &keypair.secret_key());
+        // Prefix and double hash message
+        let hashed_msg = sha256::Hash::hash(&[LN_MESSAGE_PREFIX, message.as_bytes()].concat());
+        let double_hashed_msg = Message::from(sha256::Hash::hash(&hashed_msg));
+        // Get message signature and encode to zbase32
+        let recoverable_sig =
+            secp.sign_ecdsa_recoverable(&double_hashed_msg, &keypair.secret_key());
         let (recovery_id, sig) = recoverable_sig.serialize_compact();
-        let mut complete_signature = vec![0x1f + recovery_id.to_i32() as u8];
+        let mut complete_signature = vec![31 + recovery_id.to_i32() as u8];
         complete_signature.extend_from_slice(&sig);
         Ok(zbase32::encode_full_bytes(&complete_signature))
     }
 
     fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool> {
-        let hashed_msg = LiquidOnchainWallet::double_hash(message);
-        let decoded_signature = zbase32::decode_full_bytes_str(signature)
-            .map_err(|e| anyhow!("Invalid signature: {e}"))?;
-        let (recovery_id, sig) = decoded_signature
-            .split_first()
-            .ok_or(anyhow!("Invalid signature"))?;
-        let recovery_id = recovery_id
-            .checked_sub(0x1f)
-            .ok_or(anyhow!("Invalid signature"))?;
-        let recovery_id = RecoveryId::from_i32(recovery_id.into())?;
-        let recoverable_sig = RecoverableSignature::from_compact(sig, recovery_id)?;
-        let recovered_pubkey = Secp256k1::new().recover_ecdsa(&hashed_msg, &recoverable_sig)?;
-        info!("Pubkey: {}", recovered_pubkey.to_string());
-        Ok(recovered_pubkey.to_string() == pubkey)
+        let pk = PublicKey::from_str(pubkey)?;
+        Ok(verify(message.as_bytes(), signature, &pk))
     }
 }

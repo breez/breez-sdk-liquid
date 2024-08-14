@@ -576,22 +576,16 @@ impl LiquidSdk {
 
     /// Sign given message with the private key. Returns a zbase encoded signature.
     pub fn sign_message(&self, req: &SignMessageRequest) -> SdkResult<SignMessageResponse> {
-        let mut msg: String = "Lightning Signed Message:".to_string();
-        msg.push_str(&req.message);
-
-        let signature = self.onchain_wallet.sign_message(&msg)?;
+        let signature = self.onchain_wallet.sign_message(&req.message)?;
         Ok(SignMessageResponse { signature })
     }
 
     /// Check whether given message was signed by the given
     /// pubkey and the signature (zbase encoded) is valid.
     pub fn check_message(&self, req: &CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
-        let mut msg: String = "Lightning Signed Message:".to_string();
-        msg.push_str(&req.message);
-
-        let is_valid = self
-            .onchain_wallet
-            .check_message(&msg, &req.pubkey, &req.signature)?;
+        let is_valid =
+            self.onchain_wallet
+                .check_message(&req.message, &req.pubkey, &req.signature)?;
         Ok(CheckMessageResponse { is_valid })
     }
 
