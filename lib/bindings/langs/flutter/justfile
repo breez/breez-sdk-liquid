@@ -87,6 +87,10 @@ init *args:
 init-sdk:
 	brew install protobuf
 
+# Update version number on podspec files & CMake scripts
+version:
+	bash scripts/version.sh
+
 # (melos) Generate docs for packages in workspace
 docs:
 	melos docs
