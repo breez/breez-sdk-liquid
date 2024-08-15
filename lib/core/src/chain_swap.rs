@@ -4,7 +4,7 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
 use boltz_client::swaps::{boltz::ChainSwapStates, boltz::CreateChainResponse};
-use boltz_client::Secp256k1;
+use boltz_client::{Address, Secp256k1, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::Transaction;
 use tokio::sync::{broadcast, watch, Mutex};
@@ -67,7 +67,10 @@ impl ChainSwapStateHandler {
                 tokio::select! {
                     _ = interval.tick() => {
                         if let Err(e) = cloned.rescan_incoming_chain_swaps().await {
-                            error!("Error checking chain swaps: {e:?}");
+                            error!("Error checking incoming chain swaps: {e:?}");
+                        }
+                        if let Err(e) = cloned.rescan_outgoing_chain_swaps().await {
+                            error!("Error checking outgoing chain swaps: {e:?}");
                         }
                     },
                     _ = shutdown.changed() => {
@@ -106,13 +109,13 @@ impl ChainSwapStateHandler {
             .filter(|s| s.direction == Direction::Incoming)
             .collect();
         info!(
-            "Rescanning {} Chain Swap(s) at height {}",
+            "Rescanning {} incoming Chain Swap(s) at height {}",
             chain_swaps.len(),
             current_height
         );
         for swap in chain_swaps {
             if let Err(e) = self.rescan_incoming_chain_swap(&swap, current_height).await {
-                error!("Error rescanning Chain Swap {}: {e:?}", swap.id);
+                error!("Error rescanning incoming Chain Swap {}: {e:?}", swap.id);
             }
         }
         Ok(())
@@ -140,7 +143,7 @@ impl ChainSwapStateHandler {
                 .await
                 .script_get_balance(script_pubkey.as_script())?;
             info!(
-                "Chain Swap {} has {} confirmed and {} unconfirmed sats",
+                "Incoming Chain Swap {} has {} confirmed and {} unconfirmed sats",
                 swap.id, script_balance.confirmed, script_balance.unconfirmed
             );
 
@@ -151,7 +154,7 @@ impl ChainSwapStateHandler {
                 // If there are unspent funds sent to the lockup script address then set
                 // the state to Refundable.
                 info!(
-                    "Chain Swap {} has {} unspent sats. Setting the swap to refundable",
+                    "Incoming Chain Swap {} has {} unspent sats. Setting the swap to refundable",
                     swap.id, script_balance.confirmed
                 );
                 self.update_swap_info(&swap.id, Refundable, None, None, None, None)
@@ -166,13 +169,61 @@ impl ChainSwapStateHandler {
 
                 if to_state != swap.state {
                     info!(
-                        "Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
+                        "Incoming Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
                         swap.id, to_state
                     );
                     self.update_swap_info(&swap.id, to_state, None, None, None, None)
                         .await?;
                 }
             }
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn rescan_outgoing_chain_swaps(&self) -> Result<()> {
+        let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+        let chain_swaps: Vec<ChainSwap> = self
+            .persister
+            .list_chain_swaps()?
+            .into_iter()
+            .filter(|s| {
+                s.direction == Direction::Outgoing
+                    && s.state == PaymentState::Pending
+                    && s.claim_tx_id.is_some()
+            })
+            .collect();
+        info!(
+            "Rescanning {} outgoing Chain Swap(s) at height {}",
+            chain_swaps.len(),
+            current_height
+        );
+        for swap in chain_swaps {
+            if let Err(e) = self.rescan_outgoing_chain_swap(&swap).await {
+                error!("Error rescanning incoming Chain Swap {}: {e:?}", swap.id);
+            }
+        }
+        Ok(())
+    }
+
+    async fn rescan_outgoing_chain_swap(&self, swap: &ChainSwap) -> Result<()> {
+        let address = Address::from_str(&swap.claim_address)?;
+        let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
+        let script_pubkey = address.assume_checked().script_pubkey();
+        let script_history = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .get_script_history(script_pubkey.as_script())?;
+        let claim_tx_history = script_history
+            .iter()
+            .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
+        if claim_tx_history.is_some() {
+            info!(
+                "Incoming Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
+                swap.id
+            );
+            self.update_swap_info(&swap.id, Complete, None, None, None, None)
+                .await?;
         }
         Ok(())
     }
@@ -594,7 +645,7 @@ impl ChainSwapStateHandler {
 
         self.update_swap_info(
             &chain_swap.id,
-            Complete,
+            Pending,
             None,
             None,
             Some(&claim_tx_id),

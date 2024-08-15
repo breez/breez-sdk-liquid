@@ -1555,6 +1555,8 @@ impl LiquidSdk {
             self.persister.list_pending_receive_swaps_by_claim_tx_id()?;
         let pending_send_swaps_by_refund_tx_id =
             self.persister.list_pending_send_swaps_by_refund_tx_id()?;
+        let pending_chain_swaps_by_claim_tx_id =
+            self.persister.list_pending_chain_swaps_by_claim_tx_id()?;
         let pending_chain_swaps_by_refund_tx_id =
             self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
 
@@ -1585,6 +1587,12 @@ impl LiquidSdk {
                 if is_tx_confirmed {
                     self.send_swap_state_handler
                         .update_swap_info(&swap.id, Failed, None, None, None)
+                        .await?;
+                }
+            } else if let Some(swap) = pending_chain_swaps_by_claim_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
+                    self.chain_swap_state_handler
+                        .update_swap_info(&swap.id, Complete, None, None, None, None)
                         .await?;
                 }
             } else if let Some(swap) = pending_chain_swaps_by_refund_tx_id.get(&tx_id) {

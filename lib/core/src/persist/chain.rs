@@ -221,6 +221,23 @@ impl Persister {
         Ok(res)
     }
 
+    pub(crate) fn list_pending_chain_swaps_by_claim_tx_id(
+        &self,
+    ) -> Result<HashMap<String, ChainSwap>> {
+        let con: Connection = self.get_connection()?;
+        let res: HashMap<String, ChainSwap> = self
+            .list_chain_swaps_by_state(&con, vec![PaymentState::Pending])?
+            .iter()
+            .filter_map(|pending_chain_swap| {
+                pending_chain_swap
+                    .claim_tx_id
+                    .as_ref()
+                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_chain_swap.clone()))
+            })
+            .collect();
+        Ok(res)
+    }
+
     pub(crate) fn update_chain_swap_accept_zero_conf(
         &self,
         swap_id: &str,
