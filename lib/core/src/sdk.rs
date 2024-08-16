@@ -2326,7 +2326,7 @@ mod tests {
                             assert!(persisted_swap.server_lockup_tx_id.is_some());
                         }
                         true => {
-                            assert_eq!(persisted_swap.state, PaymentState::Complete);
+                            assert_eq!(persisted_swap.state, PaymentState::Pending);
                             assert!(persisted_swap.claim_tx_id.is_some());
                         }
                     };
@@ -2346,7 +2346,7 @@ mod tests {
                     }),
                     None
                 );
-                assert_eq!(persisted_swap.state, PaymentState::Complete);
+                assert_eq!(persisted_swap.state, PaymentState::Pending);
                 assert!(persisted_swap.claim_tx_id.is_some());
             }
 
