@@ -221,6 +221,7 @@ impl Persister {
         Ok(res)
     }
 
+    /// This only returns the swaps that have a claim tx, skipping the pending ones that are being refunded.
     pub(crate) fn list_pending_chain_swaps_by_claim_tx_id(
         &self,
     ) -> Result<HashMap<String, ChainSwap>> {

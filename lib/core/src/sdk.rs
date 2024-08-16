@@ -2303,7 +2303,7 @@ mod tests {
                 // Verify that `TransactionServerMempool` correctly:
                 // 1. Sets the payment as `Pending` and creates `server_lockup_tx_id` when
                 //    `accepts_zero_conf` is false
-                // 2. Sets the payment as `Complete` and creates `claim_tx_id` when `accepts_zero_conf`
+                // 2. Sets the payment as `Pending` and creates `claim_tx_id` when `accepts_zero_conf`
                 //    is true
                 for accepts_zero_conf in [false, true] {
                     let persisted_swap = trigger_swap_update!(
@@ -2333,7 +2333,7 @@ mod tests {
                 }
 
                 // Verify that `TransactionServerConfirmed` correctly
-                // sets the payment as `Complete` and creates `claim_tx_id`
+                // sets the payment as `Pending` and creates `claim_tx_id`
                 let persisted_swap = trigger_swap_update!(
                     "chain",
                     NewSwapArgs::default().set_direction(direction),
