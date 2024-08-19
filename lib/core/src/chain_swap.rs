@@ -199,7 +199,7 @@ impl ChainSwapStateHandler {
         );
         for swap in chain_swaps {
             if let Err(e) = self.rescan_outgoing_chain_swap(&swap).await {
-                error!("Error rescanning incoming Chain Swap {}: {e:?}", swap.id);
+                error!("Error rescanning outgoing Chain Swap {}: {e:?}", swap.id);
             }
         }
         Ok(())
@@ -219,7 +219,7 @@ impl ChainSwapStateHandler {
             .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
         if claim_tx_history.is_some() {
             info!(
-                "Incoming Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
+                "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
                 swap.id
             );
             self.update_swap_info(&swap.id, Complete, None, None, None, None)
