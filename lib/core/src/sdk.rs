@@ -1546,6 +1546,8 @@ impl LiquidSdk {
             self.persister.list_pending_receive_swaps_by_claim_tx_id()?;
         let pending_send_swaps_by_refund_tx_id =
             self.persister.list_pending_send_swaps_by_refund_tx_id()?;
+        let pending_chain_swaps_by_claim_tx_id =
+            self.persister.list_pending_chain_swaps_by_claim_tx_id()?;
         let pending_chain_swaps_by_refund_tx_id =
             self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
 
@@ -1576,6 +1578,12 @@ impl LiquidSdk {
                 if is_tx_confirmed {
                     self.send_swap_state_handler
                         .update_swap_info(&swap.id, Failed, None, None, None)
+                        .await?;
+                }
+            } else if let Some(swap) = pending_chain_swaps_by_claim_tx_id.get(&tx_id) {
+                if is_tx_confirmed {
+                    self.chain_swap_state_handler
+                        .update_swap_info(&swap.id, Complete, None, None, None, None)
                         .await?;
                 }
             } else if let Some(swap) = pending_chain_swaps_by_refund_tx_id.get(&tx_id) {
@@ -2286,7 +2294,7 @@ mod tests {
                 // Verify that `TransactionServerMempool` correctly:
                 // 1. Sets the payment as `Pending` and creates `server_lockup_tx_id` when
                 //    `accepts_zero_conf` is false
-                // 2. Sets the payment as `Complete` and creates `claim_tx_id` when `accepts_zero_conf`
+                // 2. Sets the payment as `Pending` and creates `claim_tx_id` when `accepts_zero_conf`
                 //    is true
                 for accepts_zero_conf in [false, true] {
                     let persisted_swap = trigger_swap_update!(
@@ -2309,14 +2317,14 @@ mod tests {
                             assert!(persisted_swap.server_lockup_tx_id.is_some());
                         }
                         true => {
-                            assert_eq!(persisted_swap.state, PaymentState::Complete);
+                            assert_eq!(persisted_swap.state, PaymentState::Pending);
                             assert!(persisted_swap.claim_tx_id.is_some());
                         }
                     };
                 }
 
                 // Verify that `TransactionServerConfirmed` correctly
-                // sets the payment as `Complete` and creates `claim_tx_id`
+                // sets the payment as `Pending` and creates `claim_tx_id`
                 let persisted_swap = trigger_swap_update!(
                     "chain",
                     NewSwapArgs::default().set_direction(direction),
@@ -2329,7 +2337,7 @@ mod tests {
                     }),
                     None
                 );
-                assert_eq!(persisted_swap.state, PaymentState::Complete);
+                assert_eq!(persisted_swap.state, PaymentState::Pending);
                 assert!(persisted_swap.claim_tx_id.is_some());
             }
 
