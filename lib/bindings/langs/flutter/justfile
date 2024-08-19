@@ -86,6 +86,23 @@ link-other:
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
 
+# Copies library archives from platform-build to their expected locations
+copy:
+	just copy-apple
+	just copy-android
+	just copy-other
+
+copy-apple:
+	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
+	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
+
+copy-android:
+	cp $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
+
+copy-other:
+	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
+	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
+
 # (melos) use instead of flutter pub get
 init *args:
 	dart pub global activate melos
