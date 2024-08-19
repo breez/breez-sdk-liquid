@@ -13,7 +13,7 @@ local_zip_name = "#{release_tag_name}.zip"
 Pod::Spec.new do |spec|
   spec.name          = 'flutter_breez_liquid'
   spec.version       = "#{version}"
-  spec.license       = { :file => '../LICENSE' }
+  spec.license       = { :file => '../LICENSE', :type => 'MIT License' }
   spec.homepage      = 'https://breez.technology'
   spec.authors       = { 'Breez' => 'contact@breez.technology' }
   spec.summary       = 'iOS/macOS Flutter bindings for Breez Liquid'
