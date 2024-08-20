@@ -132,6 +132,7 @@ export interface LnUrlPayErrorData {
 export interface LnUrlPayRequest {
     data: LnUrlPayRequestData
     amountMsat: number
+    useTrampoline: boolean
     comment?: string
     paymentLabel?: string
     validateSuccessActionUrl?: boolean

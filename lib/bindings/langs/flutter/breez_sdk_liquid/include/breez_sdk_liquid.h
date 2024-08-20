@@ -92,6 +92,7 @@ typedef struct wire_cst_ln_url_pay_request_data {
 typedef struct wire_cst_ln_url_pay_request {
   struct wire_cst_ln_url_pay_request_data data;
   uint64_t amount_msat;
+  bool use_trampoline;
   struct wire_cst_list_prim_u_8_strict *comment;
   struct wire_cst_list_prim_u_8_strict *payment_label;
   bool *validate_success_action_url;

@@ -1673,6 +1673,7 @@ const _: fn() = || {
         let LnUrlPayRequest = None::<crate::bindings::LnUrlPayRequest>.unwrap();
         let _: crate::bindings::LnUrlPayRequestData = LnUrlPayRequest.data;
         let _: u64 = LnUrlPayRequest.amount_msat;
+        let _: bool = LnUrlPayRequest.use_trampoline;
         let _: Option<String> = LnUrlPayRequest.comment;
         let _: Option<String> = LnUrlPayRequest.payment_label;
         let _: Option<bool> = LnUrlPayRequest.validate_success_action_url;
@@ -2556,12 +2557,14 @@ impl SseDecode for crate::bindings::LnUrlPayRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
         let mut var_amountMsat = <u64>::sse_decode(deserializer);
+        let mut var_useTrampoline = <bool>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_paymentLabel = <Option<String>>::sse_decode(deserializer);
         let mut var_validateSuccessActionUrl = <Option<bool>>::sse_decode(deserializer);
         return crate::bindings::LnUrlPayRequest {
             data: var_data,
             amount_msat: var_amountMsat,
+            use_trampoline: var_useTrampoline,
             comment: var_comment,
             payment_label: var_paymentLabel,
             validate_success_action_url: var_validateSuccessActionUrl,
@@ -4175,6 +4178,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LnUrlPayReque
         [
             self.0.data.into_into_dart().into_dart(),
             self.0.amount_msat.into_into_dart().into_dart(),
+            self.0.use_trampoline.into_into_dart().into_dart(),
             self.0.comment.into_into_dart().into_dart(),
             self.0.payment_label.into_into_dart().into_dart(),
             self.0
@@ -5812,6 +5816,7 @@ impl SseEncode for crate::bindings::LnUrlPayRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
         <u64>::sse_encode(self.amount_msat, serializer);
+        <bool>::sse_encode(self.use_trampoline, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<String>>::sse_encode(self.payment_label, serializer);
         <Option<bool>>::sse_encode(self.validate_success_action_url, serializer);
@@ -7449,6 +7454,7 @@ mod io {
             crate::bindings::LnUrlPayRequest {
                 data: self.data.cst_decode(),
                 amount_msat: self.amount_msat.cst_decode(),
+                use_trampoline: self.use_trampoline.cst_decode(),
                 comment: self.comment.cst_decode(),
                 payment_label: self.payment_label.cst_decode(),
                 validate_success_action_url: self.validate_success_action_url.cst_decode(),
@@ -8414,6 +8420,7 @@ mod io {
             Self {
                 data: Default::default(),
                 amount_msat: Default::default(),
+                use_trampoline: Default::default(),
                 comment: core::ptr::null_mut(),
                 payment_label: core::ptr::null_mut(),
                 validate_success_action_url: core::ptr::null_mut(),
@@ -10195,6 +10202,7 @@ mod io {
     pub struct wire_cst_ln_url_pay_request {
         data: wire_cst_ln_url_pay_request_data,
         amount_msat: u64,
+        use_trampoline: bool,
         comment: *mut wire_cst_list_prim_u_8_strict,
         payment_label: *mut wire_cst_list_prim_u_8_strict,
         validate_success_action_url: *mut bool,

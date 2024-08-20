@@ -2000,6 +2000,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_ln_url_pay_request(LnUrlPayRequest apiObj, wire_cst_ln_url_pay_request wireObj) {
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
     wireObj.amount_msat = cst_encode_u_64(apiObj.amountMsat);
+    wireObj.use_trampoline = cst_encode_bool(apiObj.useTrampoline);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.payment_label = cst_encode_opt_String(apiObj.paymentLabel);
     wireObj.validate_success_action_url = cst_encode_opt_box_autoadd_bool(apiObj.validateSuccessActionUrl);
@@ -4464,6 +4465,9 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
 
   @ffi.Uint64()
   external int amount_msat;
+
+  @ffi.Bool()
+  external bool use_trampoline;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 

@@ -1828,13 +1828,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LnUrlPayRequest dco_decode_ln_url_pay_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return LnUrlPayRequest(
       data: dco_decode_ln_url_pay_request_data(arr[0]),
       amountMsat: dco_decode_u_64(arr[1]),
-      comment: dco_decode_opt_String(arr[2]),
-      paymentLabel: dco_decode_opt_String(arr[3]),
-      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),
+      useTrampoline: dco_decode_bool(arr[2]),
+      comment: dco_decode_opt_String(arr[3]),
+      paymentLabel: dco_decode_opt_String(arr[4]),
+      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[5]),
     );
   }
 
@@ -3395,12 +3396,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_data = sse_decode_ln_url_pay_request_data(deserializer);
     var var_amountMsat = sse_decode_u_64(deserializer);
+    var var_useTrampoline = sse_decode_bool(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_paymentLabel = sse_decode_opt_String(deserializer);
     var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
     return LnUrlPayRequest(
         data: var_data,
         amountMsat: var_amountMsat,
+        useTrampoline: var_useTrampoline,
         comment: var_comment,
         paymentLabel: var_paymentLabel,
         validateSuccessActionUrl: var_validateSuccessActionUrl);
@@ -4931,6 +4934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_pay_request_data(self.data, serializer);
     sse_encode_u_64(self.amountMsat, serializer);
+    sse_encode_bool(self.useTrampoline, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_String(self.paymentLabel, serializer);
     sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);

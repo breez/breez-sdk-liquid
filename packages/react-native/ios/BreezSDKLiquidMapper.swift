@@ -852,6 +852,9 @@ enum BreezSDKLiquidMapper {
         guard let amountMsat = lnUrlPayRequest["amountMsat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "LnUrlPayRequest"))
         }
+        guard let useTrampoline = lnUrlPayRequest["useTrampoline"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useTrampoline", typeName: "LnUrlPayRequest"))
+        }
         var comment: String?
         if hasNonNilKey(data: lnUrlPayRequest, key: "comment") {
             guard let commentTmp = lnUrlPayRequest["comment"] as? String else {
@@ -877,6 +880,7 @@ enum BreezSDKLiquidMapper {
         return LnUrlPayRequest(
             data: data,
             amountMsat: amountMsat,
+            useTrampoline: useTrampoline,
             comment: comment,
             paymentLabel: paymentLabel,
             validateSuccessActionUrl: validateSuccessActionUrl
@@ -887,6 +891,7 @@ enum BreezSDKLiquidMapper {
         return [
             "data": dictionaryOf(lnUrlPayRequestData: lnUrlPayRequest.data),
             "amountMsat": lnUrlPayRequest.amountMsat,
+            "useTrampoline": lnUrlPayRequest.useTrampoline,
             "comment": lnUrlPayRequest.comment == nil ? nil : lnUrlPayRequest.comment,
             "paymentLabel": lnUrlPayRequest.paymentLabel == nil ? nil : lnUrlPayRequest.paymentLabel,
             "validateSuccessActionUrl": lnUrlPayRequest.validateSuccessActionUrl == nil ? nil : lnUrlPayRequest.validateSuccessActionUrl,

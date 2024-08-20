@@ -1474,6 +1474,9 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   @ffi.Uint64()
   external int amount_msat;
 
+  @ffi.Bool()
+  external bool use_trampoline;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;

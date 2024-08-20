@@ -396,6 +396,7 @@ class LnUrlPayErrorData {
 class LnUrlPayRequest {
   final LnUrlPayRequestData data;
   final BigInt amountMsat;
+  final bool useTrampoline;
   final String? comment;
   final String? paymentLabel;
   final bool? validateSuccessActionUrl;
@@ -403,6 +404,7 @@ class LnUrlPayRequest {
   const LnUrlPayRequest({
     required this.data,
     required this.amountMsat,
+    required this.useTrampoline,
     this.comment,
     this.paymentLabel,
     this.validateSuccessActionUrl,
@@ -412,6 +414,7 @@ class LnUrlPayRequest {
   int get hashCode =>
       data.hashCode ^
       amountMsat.hashCode ^
+      useTrampoline.hashCode ^
       comment.hashCode ^
       paymentLabel.hashCode ^
       validateSuccessActionUrl.hashCode;
@@ -423,6 +426,7 @@ class LnUrlPayRequest {
           runtimeType == other.runtimeType &&
           data == other.data &&
           amountMsat == other.amountMsat &&
+          useTrampoline == other.useTrampoline &&
           comment == other.comment &&
           paymentLabel == other.paymentLabel &&
           validateSuccessActionUrl == other.validateSuccessActionUrl;
