@@ -10,9 +10,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     var currentTask: TaskProtocol?
     public var logger: ServiceLogger = ServiceLogger(logStream: nil)
     
-    public init(logger: Logger) {
-        self.logger = ServiceLogger(logStream: logger)
-    }
+    override init() { }
 
     override open func didReceive(
         _ request: UNNotificationRequest,
