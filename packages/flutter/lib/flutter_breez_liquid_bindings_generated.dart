@@ -846,6 +846,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_i_64 =
       _frbgen_breez_liquid_cst_new_box_autoadd_i_64Ptr.asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
 
+  ffi.Pointer<wire_cst_liquid_address_data> frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_liquid_address_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data =
+      _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_dataPtr
+          .asFunction<ffi.Pointer<wire_cst_liquid_address_data> Function()>();
+
   ffi.Pointer<wire_cst_list_payments_request>
       frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request();
@@ -1474,9 +1485,6 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   @ffi.Uint64()
   external int amount_msat;
 
-  @ffi.Bool()
-  external bool use_trampoline;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
@@ -1751,6 +1759,21 @@ final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
+final class wire_cst_liquid_address_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+
+  @ffi.Int32()
+  external int network;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<ffi.Uint64> amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
 final class wire_cst_route_hint_hop extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
 
@@ -2002,6 +2025,10 @@ final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {
   external ffi.Pointer<wire_cst_bitcoin_address_data> address;
 }
 
+final class wire_cst_InputType_LiquidAddress extends ffi.Struct {
+  external ffi.Pointer<wire_cst_liquid_address_data> address;
+}
+
 final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
@@ -2032,6 +2059,8 @@ final class wire_cst_InputType_LnUrlError extends ffi.Struct {
 
 final class InputTypeKind extends ffi.Union {
   external wire_cst_InputType_BitcoinAddress BitcoinAddress;
+
+  external wire_cst_InputType_LiquidAddress LiquidAddress;
 
   external wire_cst_InputType_Bolt11 Bolt11;
 

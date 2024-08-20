@@ -1246,6 +1246,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiquidAddressData dco_decode_box_autoadd_liquid_address_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_liquid_address_data(raw);
+  }
+
+  @protected
   ListPaymentsRequest dco_decode_box_autoadd_list_payments_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_list_payments_request(raw);
@@ -1543,30 +1549,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           address: dco_decode_box_autoadd_bitcoin_address_data(raw[1]),
         );
       case 1:
+        return InputType_LiquidAddress(
+          address: dco_decode_box_autoadd_liquid_address_data(raw[1]),
+        );
+      case 2:
         return InputType_Bolt11(
           invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),
         );
-      case 2:
+      case 3:
         return InputType_NodeId(
           nodeId: dco_decode_String(raw[1]),
         );
-      case 3:
+      case 4:
         return InputType_Url(
           url: dco_decode_String(raw[1]),
         );
-      case 4:
+      case 5:
         return InputType_LnUrlPay(
           data: dco_decode_box_autoadd_ln_url_pay_request_data(raw[1]),
         );
-      case 5:
+      case 6:
         return InputType_LnUrlWithdraw(
           data: dco_decode_box_autoadd_ln_url_withdraw_request_data(raw[1]),
         );
-      case 6:
+      case 7:
         return InputType_LnUrlAuth(
           data: dco_decode_box_autoadd_ln_url_auth_request_data(raw[1]),
         );
-      case 7:
+      case 8:
         return InputType_LnUrlError(
           data: dco_decode_box_autoadd_ln_url_error_data(raw[1]),
         );
@@ -1595,6 +1605,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       minSat: dco_decode_u_64(arr[0]),
       maxSat: dco_decode_u_64(arr[1]),
       maxZeroConfSat: dco_decode_u_64(arr[2]),
+    );
+  }
+
+  @protected
+  LiquidAddressData dco_decode_liquid_address_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return LiquidAddressData(
+      address: dco_decode_String(arr[0]),
+      network: dco_decode_network(arr[1]),
+      assetId: dco_decode_opt_String(arr[2]),
+      amountSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      label: dco_decode_opt_String(arr[4]),
+      message: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -1828,14 +1853,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LnUrlPayRequest dco_decode_ln_url_pay_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return LnUrlPayRequest(
       data: dco_decode_ln_url_pay_request_data(arr[0]),
       amountMsat: dco_decode_u_64(arr[1]),
-      useTrampoline: dco_decode_bool(arr[2]),
-      comment: dco_decode_opt_String(arr[3]),
-      paymentLabel: dco_decode_opt_String(arr[4]),
-      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[5]),
+      comment: dco_decode_opt_String(arr[2]),
+      paymentLabel: dco_decode_opt_String(arr[3]),
+      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),
     );
   }
 
@@ -2771,6 +2795,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiquidAddressData sse_decode_box_autoadd_liquid_address_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_liquid_address_data(deserializer));
+  }
+
+  @protected
   ListPaymentsRequest sse_decode_box_autoadd_list_payments_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_list_payments_request(deserializer));
@@ -3074,24 +3104,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_address = sse_decode_box_autoadd_bitcoin_address_data(deserializer);
         return InputType_BitcoinAddress(address: var_address);
       case 1:
+        var var_address = sse_decode_box_autoadd_liquid_address_data(deserializer);
+        return InputType_LiquidAddress(address: var_address);
+      case 2:
         var var_invoice = sse_decode_box_autoadd_ln_invoice(deserializer);
         return InputType_Bolt11(invoice: var_invoice);
-      case 2:
+      case 3:
         var var_nodeId = sse_decode_String(deserializer);
         return InputType_NodeId(nodeId: var_nodeId);
-      case 3:
+      case 4:
         var var_url = sse_decode_String(deserializer);
         return InputType_Url(url: var_url);
-      case 4:
+      case 5:
         var var_data = sse_decode_box_autoadd_ln_url_pay_request_data(deserializer);
         return InputType_LnUrlPay(data: var_data);
-      case 5:
+      case 6:
         var var_data = sse_decode_box_autoadd_ln_url_withdraw_request_data(deserializer);
         return InputType_LnUrlWithdraw(data: var_data);
-      case 6:
+      case 7:
         var var_data = sse_decode_box_autoadd_ln_url_auth_request_data(deserializer);
         return InputType_LnUrlAuth(data: var_data);
-      case 7:
+      case 8:
         var var_data = sse_decode_box_autoadd_ln_url_error_data(deserializer);
         return InputType_LnUrlError(data: var_data);
       default:
@@ -3114,6 +3147,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_maxSat = sse_decode_u_64(deserializer);
     var var_maxZeroConfSat = sse_decode_u_64(deserializer);
     return Limits(minSat: var_minSat, maxSat: var_maxSat, maxZeroConfSat: var_maxZeroConfSat);
+  }
+
+  @protected
+  LiquidAddressData sse_decode_liquid_address_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_address = sse_decode_String(deserializer);
+    var var_network = sse_decode_network(deserializer);
+    var var_assetId = sse_decode_opt_String(deserializer);
+    var var_amountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_label = sse_decode_opt_String(deserializer);
+    var var_message = sse_decode_opt_String(deserializer);
+    return LiquidAddressData(
+        address: var_address,
+        network: var_network,
+        assetId: var_assetId,
+        amountSat: var_amountSat,
+        label: var_label,
+        message: var_message);
   }
 
   @protected
@@ -3396,14 +3447,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_data = sse_decode_ln_url_pay_request_data(deserializer);
     var var_amountMsat = sse_decode_u_64(deserializer);
-    var var_useTrampoline = sse_decode_bool(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_paymentLabel = sse_decode_opt_String(deserializer);
     var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
     return LnUrlPayRequest(
         data: var_data,
         amountMsat: var_amountMsat,
-        useTrampoline: var_useTrampoline,
         comment: var_comment,
         paymentLabel: var_paymentLabel,
         validateSuccessActionUrl: var_validateSuccessActionUrl);
@@ -4388,6 +4437,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_liquid_address_data(LiquidAddressData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_liquid_address_data(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_list_payments_request(ListPaymentsRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_payments_request(self, serializer);
@@ -4668,26 +4723,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case InputType_BitcoinAddress(address: final address):
         sse_encode_i_32(0, serializer);
         sse_encode_box_autoadd_bitcoin_address_data(address, serializer);
-      case InputType_Bolt11(invoice: final invoice):
+      case InputType_LiquidAddress(address: final address):
         sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_liquid_address_data(address, serializer);
+      case InputType_Bolt11(invoice: final invoice):
+        sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
       case InputType_NodeId(nodeId: final nodeId):
-        sse_encode_i_32(2, serializer);
+        sse_encode_i_32(3, serializer);
         sse_encode_String(nodeId, serializer);
       case InputType_Url(url: final url):
-        sse_encode_i_32(3, serializer);
+        sse_encode_i_32(4, serializer);
         sse_encode_String(url, serializer);
       case InputType_LnUrlPay(data: final data):
-        sse_encode_i_32(4, serializer);
+        sse_encode_i_32(5, serializer);
         sse_encode_box_autoadd_ln_url_pay_request_data(data, serializer);
       case InputType_LnUrlWithdraw(data: final data):
-        sse_encode_i_32(5, serializer);
+        sse_encode_i_32(6, serializer);
         sse_encode_box_autoadd_ln_url_withdraw_request_data(data, serializer);
       case InputType_LnUrlAuth(data: final data):
-        sse_encode_i_32(6, serializer);
+        sse_encode_i_32(7, serializer);
         sse_encode_box_autoadd_ln_url_auth_request_data(data, serializer);
       case InputType_LnUrlError(data: final data):
-        sse_encode_i_32(7, serializer);
+        sse_encode_i_32(8, serializer);
         sse_encode_box_autoadd_ln_url_error_data(data, serializer);
       default:
         throw UnimplementedError('');
@@ -4708,6 +4766,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.minSat, serializer);
     sse_encode_u_64(self.maxSat, serializer);
     sse_encode_u_64(self.maxZeroConfSat, serializer);
+  }
+
+  @protected
+  void sse_encode_liquid_address_data(LiquidAddressData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.address, serializer);
+    sse_encode_network(self.network, serializer);
+    sse_encode_opt_String(self.assetId, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
+    sse_encode_opt_String(self.label, serializer);
+    sse_encode_opt_String(self.message, serializer);
   }
 
   @protected
@@ -4934,7 +5003,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_pay_request_data(self.data, serializer);
     sse_encode_u_64(self.amountMsat, serializer);
-    sse_encode_bool(self.useTrampoline, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_String(self.paymentLabel, serializer);
     sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);

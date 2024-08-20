@@ -92,7 +92,6 @@ typedef struct wire_cst_ln_url_pay_request_data {
 typedef struct wire_cst_ln_url_pay_request {
   struct wire_cst_ln_url_pay_request_data data;
   uint64_t amount_msat;
-  bool use_trampoline;
   struct wire_cst_list_prim_u_8_strict *comment;
   struct wire_cst_list_prim_u_8_strict *payment_label;
   bool *validate_success_action_url;
@@ -285,6 +284,15 @@ typedef struct wire_cst_bitcoin_address_data {
   struct wire_cst_list_prim_u_8_strict *message;
 } wire_cst_bitcoin_address_data;
 
+typedef struct wire_cst_liquid_address_data {
+  struct wire_cst_list_prim_u_8_strict *address;
+  int32_t network;
+  struct wire_cst_list_prim_u_8_strict *asset_id;
+  uint64_t *amount_sat;
+  struct wire_cst_list_prim_u_8_strict *label;
+  struct wire_cst_list_prim_u_8_strict *message;
+} wire_cst_liquid_address_data;
+
 typedef struct wire_cst_route_hint_hop {
   struct wire_cst_list_prim_u_8_strict *src_node_id;
   uint64_t short_channel_id;
@@ -460,6 +468,10 @@ typedef struct wire_cst_InputType_BitcoinAddress {
   struct wire_cst_bitcoin_address_data *address;
 } wire_cst_InputType_BitcoinAddress;
 
+typedef struct wire_cst_InputType_LiquidAddress {
+  struct wire_cst_liquid_address_data *address;
+} wire_cst_InputType_LiquidAddress;
+
 typedef struct wire_cst_InputType_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
 } wire_cst_InputType_Bolt11;
@@ -490,6 +502,7 @@ typedef struct wire_cst_InputType_LnUrlError {
 
 typedef union InputTypeKind {
   struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
+  struct wire_cst_InputType_LiquidAddress LiquidAddress;
   struct wire_cst_InputType_Bolt11 Bolt11;
   struct wire_cst_InputType_NodeId NodeId;
   struct wire_cst_InputType_Url Url;
@@ -947,6 +960,8 @@ struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect
 
 int64_t *frbgen_breez_liquid_cst_new_box_autoadd_i_64(int64_t value);
 
+struct wire_cst_liquid_address_data *frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data(void);
+
 struct wire_cst_list_payments_request *frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(void);
 
 struct wire_cst_ln_invoice *frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice(void);
@@ -1039,6 +1054,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);

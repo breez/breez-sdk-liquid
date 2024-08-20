@@ -243,6 +243,9 @@ sealed class InputType with _$InputType {
   const factory InputType.bitcoinAddress({
     required BitcoinAddressData address,
   }) = InputType_BitcoinAddress;
+  const factory InputType.liquidAddress({
+    required LiquidAddressData address,
+  }) = InputType_LiquidAddress;
   const factory InputType.bolt11({
     required LNInvoice invoice,
   }) = InputType_Bolt11;
@@ -264,6 +267,45 @@ sealed class InputType with _$InputType {
   const factory InputType.lnUrlError({
     required LnUrlErrorData data,
   }) = InputType_LnUrlError;
+}
+
+class LiquidAddressData {
+  final String address;
+  final Network network;
+  final String? assetId;
+  final BigInt? amountSat;
+  final String? label;
+  final String? message;
+
+  const LiquidAddressData({
+    required this.address,
+    required this.network,
+    this.assetId,
+    this.amountSat,
+    this.label,
+    this.message,
+  });
+
+  @override
+  int get hashCode =>
+      address.hashCode ^
+      network.hashCode ^
+      assetId.hashCode ^
+      amountSat.hashCode ^
+      label.hashCode ^
+      message.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LiquidAddressData &&
+          runtimeType == other.runtimeType &&
+          address == other.address &&
+          network == other.network &&
+          assetId == other.assetId &&
+          amountSat == other.amountSat &&
+          label == other.label &&
+          message == other.message;
 }
 
 class LNInvoice {
@@ -396,7 +438,6 @@ class LnUrlPayErrorData {
 class LnUrlPayRequest {
   final LnUrlPayRequestData data;
   final BigInt amountMsat;
-  final bool useTrampoline;
   final String? comment;
   final String? paymentLabel;
   final bool? validateSuccessActionUrl;
@@ -404,7 +445,6 @@ class LnUrlPayRequest {
   const LnUrlPayRequest({
     required this.data,
     required this.amountMsat,
-    required this.useTrampoline,
     this.comment,
     this.paymentLabel,
     this.validateSuccessActionUrl,
@@ -414,7 +454,6 @@ class LnUrlPayRequest {
   int get hashCode =>
       data.hashCode ^
       amountMsat.hashCode ^
-      useTrampoline.hashCode ^
       comment.hashCode ^
       paymentLabel.hashCode ^
       validateSuccessActionUrl.hashCode;
@@ -426,7 +465,6 @@ class LnUrlPayRequest {
           runtimeType == other.runtimeType &&
           data == other.data &&
           amountMsat == other.amountMsat &&
-          useTrampoline == other.useTrampoline &&
           comment == other.comment &&
           paymentLabel == other.paymentLabel &&
           validateSuccessActionUrl == other.validateSuccessActionUrl;

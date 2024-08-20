@@ -96,6 +96,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  LiquidAddressData dco_decode_box_autoadd_liquid_address_data(dynamic raw);
+
+  @protected
   ListPaymentsRequest dco_decode_box_autoadd_list_payments_request(dynamic raw);
 
   @protected
@@ -226,6 +229,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Limits dco_decode_limits(dynamic raw);
+
+  @protected
+  LiquidAddressData dco_decode_liquid_address_data(dynamic raw);
 
   @protected
   LiquidNetwork dco_decode_liquid_network(dynamic raw);
@@ -547,6 +553,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  LiquidAddressData sse_decode_box_autoadd_liquid_address_data(SseDeserializer deserializer);
+
+  @protected
   ListPaymentsRequest sse_decode_box_autoadd_list_payments_request(SseDeserializer deserializer);
 
   @protected
@@ -680,6 +689,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Limits sse_decode_limits(SseDeserializer deserializer);
+
+  @protected
+  LiquidAddressData sse_decode_liquid_address_data(SseDeserializer deserializer);
 
   @protected
   LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
@@ -1032,6 +1044,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Int64> cst_encode_box_autoadd_i_64(PlatformInt64 raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_i_64(cst_encode_i_64(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_liquid_address_data> cst_encode_box_autoadd_liquid_address_data(
+      LiquidAddressData raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_liquid_address_data();
+    cst_api_fill_to_wire_liquid_address_data(raw, ptr.ref);
+    return ptr;
   }
 
   @protected
@@ -1552,6 +1573,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_liquid_address_data(
+      LiquidAddressData apiObj, ffi.Pointer<wire_cst_liquid_address_data> wireObj) {
+    cst_api_fill_to_wire_liquid_address_data(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_list_payments_request(
       ListPaymentsRequest apiObj, ffi.Pointer<wire_cst_list_payments_request> wireObj) {
     cst_api_fill_to_wire_list_payments_request(apiObj, wireObj.ref);
@@ -1780,45 +1807,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.BitcoinAddress.address = pre_address;
       return;
     }
+    if (apiObj is InputType_LiquidAddress) {
+      var pre_address = cst_encode_box_autoadd_liquid_address_data(apiObj.address);
+      wireObj.tag = 1;
+      wireObj.kind.LiquidAddress.address = pre_address;
+      return;
+    }
     if (apiObj is InputType_Bolt11) {
       var pre_invoice = cst_encode_box_autoadd_ln_invoice(apiObj.invoice);
-      wireObj.tag = 1;
+      wireObj.tag = 2;
       wireObj.kind.Bolt11.invoice = pre_invoice;
       return;
     }
     if (apiObj is InputType_NodeId) {
       var pre_node_id = cst_encode_String(apiObj.nodeId);
-      wireObj.tag = 2;
+      wireObj.tag = 3;
       wireObj.kind.NodeId.node_id = pre_node_id;
       return;
     }
     if (apiObj is InputType_Url) {
       var pre_url = cst_encode_String(apiObj.url);
-      wireObj.tag = 3;
+      wireObj.tag = 4;
       wireObj.kind.Url.url = pre_url;
       return;
     }
     if (apiObj is InputType_LnUrlPay) {
       var pre_data = cst_encode_box_autoadd_ln_url_pay_request_data(apiObj.data);
-      wireObj.tag = 4;
+      wireObj.tag = 5;
       wireObj.kind.LnUrlPay.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlWithdraw) {
       var pre_data = cst_encode_box_autoadd_ln_url_withdraw_request_data(apiObj.data);
-      wireObj.tag = 5;
+      wireObj.tag = 6;
       wireObj.kind.LnUrlWithdraw.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlAuth) {
       var pre_data = cst_encode_box_autoadd_ln_url_auth_request_data(apiObj.data);
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       wireObj.kind.LnUrlAuth.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlError) {
       var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       wireObj.kind.LnUrlError.data = pre_data;
       return;
     }
@@ -1836,6 +1869,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.min_sat = cst_encode_u_64(apiObj.minSat);
     wireObj.max_sat = cst_encode_u_64(apiObj.maxSat);
     wireObj.max_zero_conf_sat = cst_encode_u_64(apiObj.maxZeroConfSat);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_liquid_address_data(
+      LiquidAddressData apiObj, wire_cst_liquid_address_data wireObj) {
+    wireObj.address = cst_encode_String(apiObj.address);
+    wireObj.network = cst_encode_network(apiObj.network);
+    wireObj.asset_id = cst_encode_opt_String(apiObj.assetId);
+    wireObj.amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.amountSat);
+    wireObj.label = cst_encode_opt_String(apiObj.label);
+    wireObj.message = cst_encode_opt_String(apiObj.message);
   }
 
   @protected
@@ -2000,7 +2044,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_ln_url_pay_request(LnUrlPayRequest apiObj, wire_cst_ln_url_pay_request wireObj) {
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
     wireObj.amount_msat = cst_encode_u_64(apiObj.amountMsat);
-    wireObj.use_trampoline = cst_encode_bool(apiObj.useTrampoline);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.payment_label = cst_encode_opt_String(apiObj.paymentLabel);
     wireObj.validate_success_action_url = cst_encode_opt_box_autoadd_bool(apiObj.validateSuccessActionUrl);
@@ -2679,6 +2722,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_liquid_address_data(LiquidAddressData self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_list_payments_request(ListPaymentsRequest self, SseSerializer serializer);
 
   @protected
@@ -2818,6 +2864,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_limits(Limits self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_liquid_address_data(LiquidAddressData self, SseSerializer serializer);
 
   @protected
   void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
@@ -3893,6 +3942,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_i_64 =
       _cst_new_box_autoadd_i_64Ptr.asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
 
+  ffi.Pointer<wire_cst_liquid_address_data> cst_new_box_autoadd_liquid_address_data() {
+    return _cst_new_box_autoadd_liquid_address_data();
+  }
+
+  late final _cst_new_box_autoadd_liquid_address_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_liquid_address_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data');
+  late final _cst_new_box_autoadd_liquid_address_data = _cst_new_box_autoadd_liquid_address_dataPtr
+      .asFunction<ffi.Pointer<wire_cst_liquid_address_data> Function()>();
+
   ffi.Pointer<wire_cst_list_payments_request> cst_new_box_autoadd_list_payments_request() {
     return _cst_new_box_autoadd_list_payments_request();
   }
@@ -4466,9 +4525,6 @@ final class wire_cst_ln_url_pay_request extends ffi.Struct {
   @ffi.Uint64()
   external int amount_msat;
 
-  @ffi.Bool()
-  external bool use_trampoline;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
@@ -4743,6 +4799,21 @@ final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
+final class wire_cst_liquid_address_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+
+  @ffi.Int32()
+  external int network;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<ffi.Uint64> amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
 final class wire_cst_route_hint_hop extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
 
@@ -4994,6 +5065,10 @@ final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {
   external ffi.Pointer<wire_cst_bitcoin_address_data> address;
 }
 
+final class wire_cst_InputType_LiquidAddress extends ffi.Struct {
+  external ffi.Pointer<wire_cst_liquid_address_data> address;
+}
+
 final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
@@ -5024,6 +5099,8 @@ final class wire_cst_InputType_LnUrlError extends ffi.Struct {
 
 final class InputTypeKind extends ffi.Union {
   external wire_cst_InputType_BitcoinAddress BitcoinAddress;
+
+  external wire_cst_InputType_LiquidAddress LiquidAddress;
 
   external wire_cst_InputType_Bolt11 Bolt11;
 
