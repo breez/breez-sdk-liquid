@@ -5,17 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
-pub use sdk_common::{
-    liquid::LiquidAddressData,
-    prelude::{
-        AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData,
-        CurrencyInfo, FiatCurrency, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData,
-        LnUrlPayErrorData, LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawRequest,
-        LnUrlWithdrawRequestData, LocaleOverrides, LocalizedName, MessageSuccessActionData,
-        Network, Rate, RouteHint, RouteHintHop, SuccessActionProcessed, Symbol,
-        UrlSuccessActionData,
-    },
-};
+pub use sdk_common::prelude::*;
 
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk};
 
