@@ -105,6 +105,15 @@ export interface Limits {
     maxZeroConfSat: number
 }
 
+export interface LiquidAddressData {
+    address: string
+    network: Network
+    assetId?: string
+    amountSat?: number
+    label?: string
+    message?: string
+}
+
 export interface ListPaymentsRequest {
     filters?: PaymentType[]
     fromTimestamp?: number
@@ -132,7 +141,6 @@ export interface LnUrlPayErrorData {
 export interface LnUrlPayRequest {
     data: LnUrlPayRequestData
     amountMsat: number
-    useTrampoline: boolean
     comment?: string
     paymentLabel?: string
     validateSuccessActionUrl?: boolean
@@ -377,6 +385,7 @@ export enum BuyBitcoinProvider {
 
 export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
+    LIQUID_ADDRESS = "liquidAddress",
     BOLT11 = "bolt11",
     NODE_ID = "nodeId",
     URL = "url",
@@ -389,6 +398,9 @@ export enum InputTypeVariant {
 export type InputType = {
     type: InputTypeVariant.BITCOIN_ADDRESS,
     address: BitcoinAddressData
+} | {
+    type: InputTypeVariant.LIQUID_ADDRESS,
+    address: LiquidAddressData
 } | {
     type: InputTypeVariant.BOLT11,
     invoice: LnInvoice

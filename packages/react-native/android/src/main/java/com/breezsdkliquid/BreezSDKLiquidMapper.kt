@@ -535,6 +535,54 @@ fun asLimitsList(arr: ReadableArray): List<Limits> {
     return list
 }
 
+fun asLiquidAddressData(liquidAddressData: ReadableMap): LiquidAddressData? {
+    if (!validateMandatoryFields(
+            liquidAddressData,
+            arrayOf(
+                "address",
+                "network",
+            ),
+        )
+    ) {
+        return null
+    }
+    val address = liquidAddressData.getString("address")!!
+    val network = liquidAddressData.getString("network")?.let { asNetwork(it) }!!
+    val assetId = if (hasNonNullKey(liquidAddressData, "assetId")) liquidAddressData.getString("assetId") else null
+    val amountSat = if (hasNonNullKey(liquidAddressData, "amountSat")) liquidAddressData.getDouble("amountSat").toULong() else null
+    val label = if (hasNonNullKey(liquidAddressData, "label")) liquidAddressData.getString("label") else null
+    val message = if (hasNonNullKey(liquidAddressData, "message")) liquidAddressData.getString("message") else null
+    return LiquidAddressData(
+        address,
+        network,
+        assetId,
+        amountSat,
+        label,
+        message,
+    )
+}
+
+fun readableMapOf(liquidAddressData: LiquidAddressData): ReadableMap =
+    readableMapOf(
+        "address" to liquidAddressData.address,
+        "network" to liquidAddressData.network.name.lowercase(),
+        "assetId" to liquidAddressData.assetId,
+        "amountSat" to liquidAddressData.amountSat,
+        "label" to liquidAddressData.label,
+        "message" to liquidAddressData.message,
+    )
+
+fun asLiquidAddressDataList(arr: ReadableArray): List<LiquidAddressData> {
+    val list = ArrayList<LiquidAddressData>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLiquidAddressData(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest? {
     if (!validateMandatoryFields(
             listPaymentsRequest,
@@ -710,7 +758,6 @@ fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
             arrayOf(
                 "data",
                 "amountMsat",
-                "useTrampoline",
             ),
         )
     ) {
@@ -718,7 +765,6 @@ fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
     }
     val data = lnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
     val amountMsat = lnUrlPayRequest.getDouble("amountMsat").toULong()
-    val useTrampoline = lnUrlPayRequest.getBoolean("useTrampoline")
     val comment = if (hasNonNullKey(lnUrlPayRequest, "comment")) lnUrlPayRequest.getString("comment") else null
     val paymentLabel = if (hasNonNullKey(lnUrlPayRequest, "paymentLabel")) lnUrlPayRequest.getString("paymentLabel") else null
     val validateSuccessActionUrl =
@@ -734,7 +780,6 @@ fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
     return LnUrlPayRequest(
         data,
         amountMsat,
-        useTrampoline,
         comment,
         paymentLabel,
         validateSuccessActionUrl,
@@ -745,7 +790,6 @@ fun readableMapOf(lnUrlPayRequest: LnUrlPayRequest): ReadableMap =
     readableMapOf(
         "data" to readableMapOf(lnUrlPayRequest.data),
         "amountMsat" to lnUrlPayRequest.amountMsat,
-        "useTrampoline" to lnUrlPayRequest.useTrampoline,
         "comment" to lnUrlPayRequest.comment,
         "paymentLabel" to lnUrlPayRequest.paymentLabel,
         "validateSuccessActionUrl" to lnUrlPayRequest.validateSuccessActionUrl,
@@ -2302,6 +2346,9 @@ fun asInputType(inputType: ReadableMap): InputType? {
     if (type == "bitcoinAddress") {
         return InputType.BitcoinAddress(inputType.getMap("address")?.let { asBitcoinAddressData(it) }!!)
     }
+    if (type == "liquidAddress") {
+        return InputType.LiquidAddress(inputType.getMap("address")?.let { asLiquidAddressData(it) }!!)
+    }
     if (type == "bolt11") {
         return InputType.Bolt11(inputType.getMap("invoice")?.let { asLnInvoice(it) }!!)
     }
@@ -2331,6 +2378,10 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
     when (inputType) {
         is InputType.BitcoinAddress -> {
             pushToMap(map, "type", "bitcoinAddress")
+            pushToMap(map, "address", readableMapOf(inputType.address))
+        }
+        is InputType.LiquidAddress -> {
+            pushToMap(map, "type", "liquidAddress")
             pushToMap(map, "address", readableMapOf(inputType.address))
         }
         is InputType.Bolt11 -> {
