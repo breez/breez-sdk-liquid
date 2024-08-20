@@ -650,6 +650,82 @@ enum BreezSDKLiquidMapper {
         return limitsList.map { v -> [String: Any?] in return dictionaryOf(limits: v) }
     }
 
+    static func asLiquidAddressData(liquidAddressData: [String: Any?]) throws -> LiquidAddressData {
+        guard let address = liquidAddressData["address"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "LiquidAddressData"))
+        }
+        guard let networkTmp = liquidAddressData["network"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "network", typeName: "LiquidAddressData"))
+        }
+        let network = try asNetwork(network: networkTmp)
+
+        var assetId: String?
+        if hasNonNilKey(data: liquidAddressData, key: "assetId") {
+            guard let assetIdTmp = liquidAddressData["assetId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "assetId"))
+            }
+            assetId = assetIdTmp
+        }
+        var amountSat: UInt64?
+        if hasNonNilKey(data: liquidAddressData, key: "amountSat") {
+            guard let amountSatTmp = liquidAddressData["amountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "amountSat"))
+            }
+            amountSat = amountSatTmp
+        }
+        var label: String?
+        if hasNonNilKey(data: liquidAddressData, key: "label") {
+            guard let labelTmp = liquidAddressData["label"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "label"))
+            }
+            label = labelTmp
+        }
+        var message: String?
+        if hasNonNilKey(data: liquidAddressData, key: "message") {
+            guard let messageTmp = liquidAddressData["message"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "message"))
+            }
+            message = messageTmp
+        }
+
+        return LiquidAddressData(
+            address: address,
+            network: network,
+            assetId: assetId,
+            amountSat: amountSat,
+            label: label,
+            message: message
+        )
+    }
+
+    static func dictionaryOf(liquidAddressData: LiquidAddressData) -> [String: Any?] {
+        return [
+            "address": liquidAddressData.address,
+            "network": valueOf(network: liquidAddressData.network),
+            "assetId": liquidAddressData.assetId == nil ? nil : liquidAddressData.assetId,
+            "amountSat": liquidAddressData.amountSat == nil ? nil : liquidAddressData.amountSat,
+            "label": liquidAddressData.label == nil ? nil : liquidAddressData.label,
+            "message": liquidAddressData.message == nil ? nil : liquidAddressData.message,
+        ]
+    }
+
+    static func asLiquidAddressDataList(arr: [Any]) throws -> [LiquidAddressData] {
+        var list = [LiquidAddressData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var liquidAddressData = try asLiquidAddressData(liquidAddressData: val)
+                list.append(liquidAddressData)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "LiquidAddressData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(liquidAddressDataList: [LiquidAddressData]) -> [Any] {
+        return liquidAddressDataList.map { v -> [String: Any?] in return dictionaryOf(liquidAddressData: v) }
+    }
+
     static func asListPaymentsRequest(listPaymentsRequest: [String: Any?]) throws -> ListPaymentsRequest {
         var filters: [PaymentType]?
         if let filtersTmp = listPaymentsRequest["filters"] as? [String] {
@@ -2698,6 +2774,14 @@ enum BreezSDKLiquidMapper {
 
             return InputType.bitcoinAddress(address: _address)
         }
+        if type == "liquidAddress" {
+            guard let addressTmp = inputType["address"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "InputType"))
+            }
+            let _address = try asLiquidAddressData(liquidAddressData: addressTmp)
+
+            return InputType.liquidAddress(address: _address)
+        }
         if type == "bolt11" {
             guard let invoiceTmp = inputType["invoice"] as? [String: Any?] else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "InputType"))
@@ -2762,6 +2846,14 @@ enum BreezSDKLiquidMapper {
             return [
                 "type": "bitcoinAddress",
                 "address": dictionaryOf(bitcoinAddressData: address),
+            ]
+
+        case let .liquidAddress(
+            address
+        ):
+            return [
+                "type": "liquidAddress",
+                "address": dictionaryOf(liquidAddressData: address),
             ]
 
         case let .bolt11(

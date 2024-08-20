@@ -41,6 +41,7 @@ dictionary RouteHintHop {
 [Enum]
 interface InputType {
     BitcoinAddress(BitcoinAddressData address);
+    LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
     NodeId(string node_id);
     Url(string url);
@@ -53,6 +54,15 @@ interface InputType {
 dictionary BitcoinAddressData {
     string address;
     Network network;
+    u64? amount_sat;
+    string? label;
+    string? message;
+};
+
+dictionary LiquidAddressData {
+    string address;
+    Network network;
+    string? asset_id;
     u64? amount_sat;
     string? label;
     string? message;
