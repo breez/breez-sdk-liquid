@@ -10,14 +10,14 @@ fileprivate var logger = OSLog(
 fileprivate var logger = OSLog.disabled
 #endif
 
-class ServiceLogger {
+open class ServiceLogger {
     var logStream: Logger?
     
     init(logStream: Logger?) {
         self.logStream = logStream
     }
     
-    func log(tag: String, line: String, level: String) {
+    public func log(tag: String, line: String, level: String) {
         if let logger = logStream {
             logger.log(l: LogEntry(line: line, level: level))
         } else {
