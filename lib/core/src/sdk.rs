@@ -76,17 +76,23 @@ impl LiquidSdk {
     ///     * `mnemonic` - the Liquid wallet mnemonic
     ///     * `config` - the SDK [Config]
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
+        info!("Get BreezServer");
         let maybe_swapper_proxy_url =
             match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
-                Ok(breez_server) => breez_server
-                    .fetch_boltz_swapper_urls()
-                    .await
-                    .ok()
-                    .and_then(|swapper_urls| swapper_urls.first().cloned()),
+                Ok(breez_server) => {
+                    info!("Fetch Boltz swapper URLs");
+                    breez_server
+                        .fetch_boltz_swapper_urls()
+                        .await
+                        .ok()
+                        .and_then(|swapper_urls| swapper_urls.first().cloned())
+                }
                 Err(_) => None,
             };
 
+        info!("Instantiate LiquidSdk");
         let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, req.mnemonic)?;
+        info!("Start SDK");
         sdk.start().await?;
 
         Ok(sdk)
@@ -97,16 +103,24 @@ impl LiquidSdk {
         swapper_proxy_url: Option<String>,
         mnemonic: String,
     ) -> Result<Arc<Self>> {
-        fs::create_dir_all(&config.working_dir)?;
+        info!("fs::create_dir_all");
+        let working_dir = PathBuf::from_str(&config.working_dir)?;
+        if !working_dir.exists() {
+            fs::create_dir_all(&working_dir)?;
+        }
 
+        info!("LiquidOnchainWallet::new");
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
 
+        info!("Persister::new");
         let persister = Arc::new(Persister::new(
             &config.get_wallet_working_dir(&onchain_wallet.lwk_signer)?,
             config.network,
         )?);
+        info!("persister.init");
         persister.init()?;
 
+        info!("EventManager::new");
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 

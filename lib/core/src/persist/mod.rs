@@ -12,6 +12,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
+use log::info;
 use migrations::current_migrations;
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use rusqlite_migration::{Migrations, M};
@@ -38,9 +39,11 @@ fn get_where_clause_state_in(allowed_states: &[PaymentState]) -> String {
 impl Persister {
     pub fn new(working_dir: &str, network: LiquidNetwork) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
+        info!("main_db_dir: {}", working_dir);
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;
         }
+        info!("Persister");
         Ok(Persister {
             main_db_dir,
             network,
