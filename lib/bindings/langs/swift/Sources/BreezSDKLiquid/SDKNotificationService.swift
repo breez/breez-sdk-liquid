@@ -8,10 +8,10 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
     var currentTask: TaskProtocol?
-    var logger: ServiceLogger = ServiceLogger(logStream: nil)
+    public var logger: ServiceLogger = ServiceLogger(logStream: nil)
     
-    override init() { }
-    
+    override public init() { }
+
     override open func didReceive(
         _ request: UNNotificationRequest,
         withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
@@ -88,7 +88,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.currentTask?.onShutdown()
     }
     
-    func setLogger(logger: Logger) {
+    public func setLogger(logger: Logger) {
         self.logger = ServiceLogger(logStream: logger)
     }
 }
