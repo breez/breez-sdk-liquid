@@ -86,14 +86,17 @@ impl SendSwapStateHandler {
 
                         // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
                         // This makes the tx known to the SDK (get_info, list_payments) instantly
-                        self.persister.insert_or_update_payment(PaymentTxData {
-                            tx_id: lockup_tx_id.clone(),
-                            timestamp: Some(utils::now()),
-                            amount_sat: swap.payer_amount_sat,
-                            fees_sat: lockup_tx_fees_sat,
-                            payment_type: PaymentType::Send,
-                            is_confirmed: false,
-                        })?;
+                        self.persister.insert_or_update_payment(
+                            PaymentTxData {
+                                tx_id: lockup_tx_id.clone(),
+                                timestamp: Some(utils::now()),
+                                amount_sat: swap.payer_amount_sat,
+                                fees_sat: lockup_tx_fees_sat,
+                                payment_type: PaymentType::Send,
+                                is_confirmed: false,
+                            },
+                            None,
+                        )?;
 
                         self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None)
                             .await?;
@@ -229,7 +232,9 @@ impl SendSwapStateHandler {
         let lockup_tx = self
             .onchain_wallet
             .build_tx(
-                self.config.lowball_fee_rate_msat_per_vbyte(),
+                self.config
+                    .lowball_fee_rate_msat_per_vbyte()
+                    .map(|v| v as f32),
                 &create_response.address,
                 create_response.expected_amount,
             )

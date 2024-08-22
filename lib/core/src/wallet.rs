@@ -28,7 +28,7 @@ pub trait OnchainWallet: Send + Sync {
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
-        fee_rate: Option<f32>,
+        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
@@ -103,7 +103,7 @@ impl OnchainWallet for LiquidOnchainWallet {
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
-        fee_rate: Option<f32>,
+        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
@@ -119,7 +119,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 })?,
                 amount_sat,
             )?
-            .fee_rate(fee_rate)
+            .fee_rate(fee_rate_sats_per_kvb)
             .finish(&lwk_wollet)?;
         let signer = AnySigner::Software(self.lwk_signer.clone());
         signer.sign(&mut pset)?;

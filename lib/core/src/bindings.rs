@@ -101,15 +101,15 @@ impl BindingLiquidSdk {
 
     pub async fn send_payment(
         &self,
-        req: PrepareSendResponse,
+        req: SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.sdk.send_payment(&req).await
     }
 
     pub async fn prepare_receive_payment(
         &self,
-        req: PrepareReceivePaymentRequest,
-    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
+        req: PrepareReceiveRequest,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.sdk.prepare_receive_payment(&req).await
     }
 
@@ -142,20 +142,6 @@ impl BindingLiquidSdk {
         req: PayOnchainRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.sdk.pay_onchain(&req).await
-    }
-
-    pub async fn prepare_receive_onchain(
-        &self,
-        req: PrepareReceiveOnchainRequest,
-    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
-        self.sdk.prepare_receive_onchain(&req).await
-    }
-
-    pub async fn receive_onchain(
-        &self,
-        req: PrepareReceiveOnchainResponse,
-    ) -> Result<ReceiveOnchainResponse, PaymentError> {
-        self.sdk.receive_onchain(&req).await
     }
 
     pub async fn prepare_buy_bitcoin(

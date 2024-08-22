@@ -399,7 +399,7 @@ impl ChainSwapStateHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
-                        })?;
+                        }, None)?;
 
                         self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None, None)
                             .await?;
@@ -633,14 +633,17 @@ impl ChainSwapStateHandler {
         if chain_swap.direction == Direction::Incoming {
             // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
             // This makes the tx known to the SDK (get_info, list_payments) instantly
-            self.persister.insert_or_update_payment(PaymentTxData {
-                tx_id: claim_tx_id.clone(),
-                timestamp: Some(utils::now()),
-                amount_sat: chain_swap.receiver_amount_sat,
-                fees_sat: 0,
-                payment_type: PaymentType::Receive,
-                is_confirmed: false,
-            })?;
+            self.persister.insert_or_update_payment(
+                PaymentTxData {
+                    tx_id: claim_tx_id.clone(),
+                    timestamp: Some(utils::now()),
+                    amount_sat: chain_swap.receiver_amount_sat,
+                    fees_sat: 0,
+                    payment_type: PaymentType::Receive,
+                    is_confirmed: false,
+                },
+                None,
+            )?;
         }
 
         self.update_swap_info(

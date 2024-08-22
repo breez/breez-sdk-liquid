@@ -153,7 +153,13 @@ class CancelScanButton extends StatelessWidget {
           ),
         ),
         onPressed: () async {
-          controller.stop().then((_) => Navigator.of(context).pop());
+          controller.stop().then(
+            (_) {
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          );
         },
         child: const Text(
           "CANCEL",

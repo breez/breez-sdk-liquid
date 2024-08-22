@@ -34,10 +34,12 @@ class QrActionButton extends StatelessWidget {
     ).then((barcode) {
       if (barcode == null || barcode.isEmpty) return;
       debugPrint("Scanned string: '$barcode'");
-      showDialog(
-        context: context,
-        builder: (context) => SendPaymentDialog(barcodeValue: barcode, liquidSdk: liquidSDK),
-      );
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => SendPaymentDialog(barcodeValue: barcode, liquidSdk: liquidSDK),
+        );
+      }
     });
   }
 }
