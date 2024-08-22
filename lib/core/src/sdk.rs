@@ -668,7 +668,9 @@ impl LiquidSdk {
         self.estimate_onchain_tx_fee(
             amount_sat,
             temp_p2tr_addr,
-            self.config.lowball_fee_rate_msat_per_vbyte(),
+            self.config
+                .lowball_fee_rate_msat_per_vbyte()
+                .map(|v| v as f32),
         )
         .await
     }
@@ -895,7 +897,7 @@ impl LiquidSdk {
         // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
         // once Esplora broadcast is enabled
         // Ensure we use the same fee-rate from the `PrepareSendResponse`
-        let fee_rate = utils::derive_fee_rate(
+        let fee_rate_sats_per_kvb = utils::derive_fee_rate_sats_per_kvb(
             self.onchain_wallet.clone(),
             receiver_amount_sat,
             &address_data.address,
@@ -904,7 +906,11 @@ impl LiquidSdk {
         .await?;
         let tx = self
             .onchain_wallet
-            .build_tx(Some(fee_rate), &address_data.address, receiver_amount_sat)
+            .build_tx(
+                Some(fee_rate_sats_per_kvb),
+                &address_data.address,
+                receiver_amount_sat,
+            )
             .await?;
 
         let tx_id = tx.txid().to_string();

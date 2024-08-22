@@ -14,6 +14,7 @@ use boltz_client::boltz::{
 };
 use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::Amount;
+use log::debug;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::elements::{
@@ -61,20 +62,28 @@ pub(crate) fn deserialize_tx_hex(tx_hex: &str) -> Result<Transaction> {
     )?)?)
 }
 
-pub(crate) async fn derive_fee_rate(
+pub(crate) async fn derive_fee_rate_sats_per_kvb(
     wallet: Arc<dyn OnchainWallet>,
     amount_sat: u64,
     recipient_address: &str,
-    absolute_fees: u64,
+    absolute_fees_sat: u64,
 ) -> Result<f32> {
-    let standard_fees = wallet
+    let standard_fees_sat = wallet
         .build_tx(None, recipient_address, amount_sat)
         .await?
         .all_fees()
         .values()
-        .sum::<u64>() as f32;
+        .sum::<u64>() as f64;
 
-    Ok(STANDARD_FEE_RATE_SAT_PER_VBYTE * absolute_fees as f32 * 1000.0 / standard_fees)
+    // Multiply sats/vb value by 1000 i.e. 1.0 sat/byte = 1000.0 sat/kvb
+    // We calculate using f64 and convert to f32 in the last step, so we keep the maximum precision possible
+    let result_sat_per_vb =
+        STANDARD_FEE_RATE_SAT_PER_VBYTE * absolute_fees_sat as f64 / standard_fees_sat;
+    let result_sat_per_kvb = result_sat_per_vb * 1000.0;
+    let result_sat_per_kvb_f32 = result_sat_per_kvb as f32;
+    debug!("derive_fee_rate_sats_per_kvb: result_sat_per_kvb_f32 {} from inputs: absolute_fees_sat {}, result_sat_per_kvb: {}",
+        result_sat_per_kvb_f32, absolute_fees_sat, result_sat_per_kvb);
+    Ok(result_sat_per_kvb_f32)
 }
 
 pub(crate) fn estimate_refund_fees(
@@ -128,5 +137,5 @@ pub(crate) fn estimate_refund_fees(
     };
     let dummy_tx = swap_tx.sign_refund(&swap.get_refund_keypair()?, dummy_fees, cooperative)?;
 
-    Ok((dummy_tx.vsize() as f32 * fee_rate).ceil() as u64)
+    Ok((dummy_tx.vsize() as f64 * fee_rate).ceil() as u64)
 }

@@ -25,8 +25,9 @@ use crate::receive_swap::{
 };
 use crate::utils;
 
-pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f32 = 0.1;
-pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f32 = 0.01;
+// Both use f64 for the maximum precision when converting between units
+pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
+pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -95,7 +96,7 @@ impl Config {
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 
-    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
+    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f64> {
         match self.network {
             LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
             LiquidNetwork::Testnet => None,
