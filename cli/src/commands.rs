@@ -19,7 +19,6 @@ use serde_json::to_string_pretty;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
-    /// TODO Add BIP21 Support
     /// Send lbtc and receive btc lightning through a swap
     SendPayment {
         /// Invoice which has to be paid
