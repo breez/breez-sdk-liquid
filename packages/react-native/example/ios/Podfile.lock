@@ -1,11 +1,11 @@
 PODS:
   - boost (1.76.0)
-  - breez_sdk_liquid (0.1.1-dev1):
-    - BreezSDKLiquid (= 0.1.1-dev1)
+  - breez_sdk_liquid (0.2.2-dev9):
+    - BreezSDKLiquid (= 0.2.2-dev9)
     - React-Core
-  - breez_sdk_liquidFFI (0.1.1-dev1)
-  - BreezSDKLiquid (0.1.1-dev1):
-    - breez_sdk_liquidFFI (= 0.1.1-dev1)
+  - breez_sdk_liquidFFI (0.2.2-dev9)
+  - BreezSDKLiquid (0.2.2-dev9):
+    - breez_sdk_liquidFFI (= 0.2.2-dev9)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.70.15)
@@ -558,9 +558,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 9fa78656d705f55b1220151d997e57e2a3f2cde0
-  breez_sdk_liquid: c714a5070588921e44ee4f980079f7b5162f1f11
-  breez_sdk_liquidFFI: d01a5daa6b72967c04dce366479dec90fbcdc165
-  BreezSDKLiquid: dac9addd0109e4d6d893c66be708cfe373e8edd3
+  breez_sdk_liquid: 9a0f8f1827dc3fd47f0319b34a657278e6a03f10
+  breez_sdk_liquidFFI: ba5620cdfd34d3cd2b3adf32c8ed1e3b61c80670
+  BreezSDKLiquid: d2a466cfdf36bdcfe8a80f7c62a79417bfe87409
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 9cf707e46f9bd90816b7c91b2c1c8b8a2f549527
@@ -614,6 +614,6 @@ SPEC CHECKSUMS:
   Yoga: d6134eb3d6e3675afc1d6d65ccb3169b60e21980
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 8741374df2d18c097f581557ec59033aefb561e8
+PODFILE CHECKSUM: aa18360f01c2d457ab24a8f42acc05ce22067077
 
 COCOAPODS: 1.15.2
