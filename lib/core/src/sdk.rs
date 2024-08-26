@@ -701,8 +701,12 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
-                let Some(amount_sat) = liquid_address_data.amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
+                let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
+                    (None, None) => {
+                        return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
+                    }
+                    (Some(bip21_amount_sat), None) => bip21_amount_sat,
+                    (_, Some(request_amount_sat)) => request_amount_sat,
                 };
 
                 ensure_sdk!(
