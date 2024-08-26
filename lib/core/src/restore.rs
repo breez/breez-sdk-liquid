@@ -6,7 +6,6 @@ use anyhow::{anyhow, Result};
 use log::{error, info};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
-use sdk_common::bitcoin::hashes::hex::ToHex;
 
 use crate::prelude::*;
 use crate::restore::immutable::*;
@@ -30,6 +29,7 @@ impl TxMap {
     }
 }
 
+#[allow(dead_code)]
 trait PartialSwapState {
     /// Determine partial swap state, based on recovered chain data.
     ///
@@ -41,6 +41,7 @@ trait PartialSwapState {
     fn derive_partial_state(&self) -> PaymentState;
 }
 
+#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataSend {
     lockup_tx_id: Option<HistoryTxId>,
     claim_tx_id: Option<HistoryTxId>,
@@ -67,6 +68,7 @@ impl PartialSwapState for RecoveredOnchainDataSend {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataReceive {
     lockup_tx_id: Option<HistoryTxId>,
     claim_tx_id: Option<HistoryTxId>,
@@ -86,6 +88,7 @@ impl PartialSwapState for RecoveredOnchainDataReceive {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataChainSend {
     /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
     lbtc_user_lockup_tx_id: Option<HistoryTxId>,
@@ -120,6 +123,7 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
     lbtc_server_lockup_tx_id: Option<HistoryTxId>,
@@ -151,6 +155,7 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainData {
     send: HashMap<String, RecoveredOnchainDataSend>,
     receive: HashMap<String, RecoveredOnchainDataReceive>,
