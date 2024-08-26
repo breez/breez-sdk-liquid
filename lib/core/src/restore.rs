@@ -100,7 +100,10 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
     fn derive_partial_state(&self) -> PaymentState {
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => match &self.btc_claim_tx_id {
-                Some(_) => PaymentState::Complete,
+                Some(btc_claim_tx_id) => match btc_claim_tx_id.confirmed() {
+                    true => PaymentState::Complete,
+                    false => PaymentState::Pending,
+                },
                 None => match &self.lbtc_refund_tx_id {
                     Some(tx) => match tx.confirmed() {
                         true => PaymentState::Failed,
@@ -131,7 +134,10 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
     fn derive_partial_state(&self) -> PaymentState {
         match &self.btc_user_lockup_tx_id {
             Some(_) => match &self.lbtc_server_claim_tx_id {
-                Some(_) => PaymentState::Complete,
+                Some(lbtc_server_claim_tx_id) => match lbtc_server_claim_tx_id.confirmed() {
+                    true => PaymentState::Complete,
+                    false => PaymentState::Pending,
+                },
                 None => match &self.btc_refund_tx_id {
                     Some(tx) => match tx.confirmed() {
                         true => PaymentState::Failed,
