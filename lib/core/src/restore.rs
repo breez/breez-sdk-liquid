@@ -29,7 +29,6 @@ impl TxMap {
     }
 }
 
-#[allow(dead_code)]
 trait PartialSwapState {
     /// Determine partial swap state, based on recovered chain data.
     ///
@@ -41,7 +40,6 @@ trait PartialSwapState {
     fn derive_partial_state(&self) -> PaymentState;
 }
 
-#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataSend {
     lockup_tx_id: Option<HistoryTxId>,
     claim_tx_id: Option<HistoryTxId>,
@@ -68,7 +66,6 @@ impl PartialSwapState for RecoveredOnchainDataSend {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataReceive {
     lockup_tx_id: Option<HistoryTxId>,
     claim_tx_id: Option<HistoryTxId>,
@@ -88,7 +85,6 @@ impl PartialSwapState for RecoveredOnchainDataReceive {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataChainSend {
     /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
     lbtc_user_lockup_tx_id: Option<HistoryTxId>,
@@ -123,7 +119,6 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
     lbtc_server_lockup_tx_id: Option<HistoryTxId>,
@@ -155,7 +150,6 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) struct RecoveredOnchainData {
     send: HashMap<String, RecoveredOnchainDataSend>,
     receive: HashMap<String, RecoveredOnchainDataReceive>,
@@ -547,7 +541,6 @@ pub(crate) mod immutable {
         }
     }
 
-    #[allow(dead_code)]
     #[derive(Clone)]
     pub(crate) struct SendSwapImmutableData {
         pub(crate) swap_id: String,
@@ -555,7 +548,6 @@ pub(crate) mod immutable {
         pub(crate) script: LBtcScript,
     }
 
-    #[allow(dead_code)]
     #[derive(Clone)]
     pub(crate) struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
@@ -563,7 +555,6 @@ pub(crate) mod immutable {
         pub(crate) script: LBtcScript,
     }
 
-    #[allow(dead_code)]
     #[derive(Clone)]
     pub(crate) struct SendChainSwapImmutableData {
         swap_id: String,
@@ -579,7 +570,6 @@ pub(crate) mod immutable {
         pub(crate) btc_claim_script_txs: Vec<boltz_client::bitcoin::Transaction>,
     }
 
-    #[allow(dead_code)]
     #[derive(Clone)]
     pub(crate) struct ReceiveChainSwapImmutableData {
         swap_id: String,
