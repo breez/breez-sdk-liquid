@@ -705,15 +705,8 @@ impl LiquidSdk {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
                     }
-                    (None, Some(amount_sat)) => amount_sat,
-                    (Some(amount_sat), None) => amount_sat,
-                    (Some(bip21_amount_sat), Some(req_amount_sat)) => {
-                        ensure_sdk!(
-                            bip21_amount_sat == req_amount_sat,
-                            PaymentError::Generic { err: "The BIP21 amount differs from the one in the request. Make sure to specify only one of the two or that they are matching.".to_string() }
-                        );
-                        req_amount_sat
-                    }
+                    (Some(bip21_amount_sat), None) => bip21_amount_sat,
+                    (_, Some(request_amount_sat)) => request_amount_sat,
                 };
 
                 ensure_sdk!(
