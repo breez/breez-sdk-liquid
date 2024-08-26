@@ -5,13 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
-pub use sdk_common::prelude::{
-    AesSuccessActionDataDecrypted, AesSuccessActionDataResult, BitcoinAddressData, CurrencyInfo,
-    FiatCurrency, InputType, LNInvoice, LnUrlAuthRequestData, LnUrlErrorData, LnUrlPayErrorData,
-    LnUrlPayRequest, LnUrlPayRequestData, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
-    LocaleOverrides, LocalizedName, MessageSuccessActionData, Network, Rate, RouteHint,
-    RouteHintHop, SuccessActionProcessed, Symbol, UrlSuccessActionData,
-};
+pub use sdk_common::prelude::*;
 
 use crate::{error::*, frb_generated::StreamSink, model::*, sdk::LiquidSdk};
 
@@ -107,15 +101,15 @@ impl BindingLiquidSdk {
 
     pub async fn send_payment(
         &self,
-        req: PrepareSendResponse,
+        req: SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.sdk.send_payment(&req).await
     }
 
     pub async fn prepare_receive_payment(
         &self,
-        req: PrepareReceivePaymentRequest,
-    ) -> Result<PrepareReceivePaymentResponse, PaymentError> {
+        req: PrepareReceiveRequest,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.sdk.prepare_receive_payment(&req).await
     }
 
@@ -148,20 +142,6 @@ impl BindingLiquidSdk {
         req: PayOnchainRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.sdk.pay_onchain(&req).await
-    }
-
-    pub async fn prepare_receive_onchain(
-        &self,
-        req: PrepareReceiveOnchainRequest,
-    ) -> Result<PrepareReceiveOnchainResponse, PaymentError> {
-        self.sdk.prepare_receive_onchain(&req).await
-    }
-
-    pub async fn receive_onchain(
-        &self,
-        req: PrepareReceiveOnchainResponse,
-    ) -> Result<ReceiveOnchainResponse, PaymentError> {
-        self.sdk.receive_onchain(&req).await
     }
 
     pub async fn prepare_buy_bitcoin(
@@ -238,6 +218,7 @@ impl BindingLiquidSdk {
         self.sdk.rescan_onchain_swaps().await
     }
 
+    #[frb(name = "sync")]
     pub async fn sync(&self) -> Result<(), SdkError> {
         self.sdk.sync().await.map_err(Into::into)
     }
@@ -315,6 +296,7 @@ pub struct _RouteHintHop {
 #[frb(mirror(InputType))]
 pub enum _InputType {
     BitcoinAddress { address: BitcoinAddressData },
+    LiquidAddress { address: LiquidAddressData },
     Bolt11 { invoice: LNInvoice },
     NodeId { node_id: String },
     Url { url: String },
@@ -328,6 +310,16 @@ pub enum _InputType {
 pub struct _BitcoinAddressData {
     pub address: String,
     pub network: sdk_common::prelude::Network,
+    pub amount_sat: Option<u64>,
+    pub label: Option<String>,
+    pub message: Option<String>,
+}
+
+#[frb(mirror(LiquidAddressData))]
+pub struct _LiquidAddressData {
+    pub address: String,
+    pub network: Network,
+    pub asset_id: Option<String>,
     pub amount_sat: Option<u64>,
     pub label: Option<String>,
     pub message: Option<String>,

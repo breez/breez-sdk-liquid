@@ -10,43 +10,7 @@ class PaymentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onLongPress: item.preimage != null
-          ? () {
-              try {
-                debugPrint("Store payment preimage on clipboard. Preimage: ${item.preimage!}");
-                Clipboard.setData(ClipboardData(text: item.preimage!));
-                const snackBar = SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Copied payment preimage to clipboard.'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              } catch (e) {
-                final snackBar = SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Failed to copy payment preimage to clipboard. $e'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              }
-            }
-          : item.swapId != null
-              ? () {
-                  try {
-                    debugPrint("Store swap ID on clipboard. Swap ID: ${item.swapId!}");
-                    Clipboard.setData(ClipboardData(text: item.swapId!));
-                    const snackBar = SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      content: Text('Copied swap ID to clipboard.'),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  } catch (e) {
-                    final snackBar = SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      content: Text('Failed to copy payment preimage to clipboard. $e'),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                }
-              : null,
+      onLongPress: () => _onLongPress(context),
       title: Text(_paymentTitle(item)),
       subtitle: Text(
         DateFormat('dd/MM/yyyy, HH:mm').format(
@@ -68,6 +32,67 @@ class PaymentItem extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _onLongPress(BuildContext context) {
+    final details = item.details;
+    if (details == null) return;
+
+    if (details is PaymentDetails_Lightning && details.preimage != null) {
+      try {
+        debugPrint("Store payment preimage on clipboard. Preimage: ${details.preimage!}");
+        Clipboard.setData(ClipboardData(text: details.preimage!));
+        const snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Copied payment preimage to clipboard.'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } catch (e) {
+        final snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Failed to copy payment preimage to clipboard. $e'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+
+    if (details is PaymentDetails_Bitcoin) {
+      try {
+        debugPrint("Store swap ID on clipboard. Swap ID: ${details.swapId}");
+        Clipboard.setData(ClipboardData(text: details.swapId));
+        const snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Copied swap ID to clipboard.'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } catch (e) {
+        final snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Failed to copy payment swap ID to clipboard. $e'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+
+    if (details is PaymentDetails_Liquid) {
+      try {
+        debugPrint("Store Liquid Address on clipboard. Liquid Address: ${details.destination}");
+        Clipboard.setData(ClipboardData(text: details.destination));
+        const snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Copied Liquid Address to clipboard.'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } catch (e) {
+        final snackBar = SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Failed to copy payment Liquid Address to clipboard. $e'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+
+    return;
   }
 
   String _paymentTitle(Payment payment) {

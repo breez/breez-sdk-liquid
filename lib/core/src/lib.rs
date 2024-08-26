@@ -45,32 +45,39 @@
 //!
 //! // Set the amount you wish the payer to send, which should be within the above limits
 //! let prepare_receive_response = sdk
-//!     .prepare_receive_payment(&PrepareReceivePaymentRequest {
-//!         payer_amount_sat: 5_000,
+//!     .prepare_receive_payment(&PrepareReceiveRequest {
+//!         payment_method: PaymentMethod::Lightning,
+//!         payer_amount_sat: Some(5_000),
 //!     })
 //!     .await?;
 //!
 //! // If the fees are acceptable, continue to create the Receive Payment
 //! let receive_fees_sat = prepare_receive_response.fees_sat;
 //!
-//! let receive_payment_response = sdk.receive_payment(&prepare_receive_response).await?;
+//! let receive_payment_response = sdk.receive_payment(&ReceivePaymentRequest {
+//!     description: Some("my description".to_string()),
+//!     prepare_response: receive_payment_response,
+//! }).await?;
 //!
-//! let invoice = receive_payment_response.invoice;
+//! let destination = receive_payment_response.destination;
 //! ```
 //!
 //! or make payments
 //! ```ignore
-//! // Set the BOLT11 invoice you wish to pay
+//! // Set the BOLT11 invoice or Liquid BIP21/address you wish to pay
 //! let prepare_send_response = sdk
 //!     .prepare_send_payment(&PrepareSendRequest {
-//!         invoice: "...".to_string(),
+//!         destination: "invoice or Liquid BIP21/address".to_string(),
+//!         amount_sat: Some(3_000),
 //!     })
 //!     .await?;
 //!
 //! // If the fees are acceptable, continue to create the Send Payment
 //! let send_fees_sat = prepare_send_response.fees_sat;
 //!
-//! let send_response = sdk.send_payment(&prepare_send_response).await?;
+//! let send_response = sdk.send_payment(&SendPayentRequest {
+//!     prepare_response: prepare_send_response,
+//! }).await?;
 //! let payment = send_response.payment;
 //! ```
 //!
@@ -108,20 +115,18 @@
 //! * [sdk::LiquidSdk::prepare_send_payment] to check fees
 //! * [sdk::LiquidSdk::send_payment] to pay an invoice
 //!
-//! ### Receiving a Lightning payment
+//! ### Receiving a Lightning/onchain payment
 //!
 //! * [sdk::LiquidSdk::prepare_receive_payment] to check fees
-//! * [sdk::LiquidSdk::receive_payment] to generate an invoice
+//! * [sdk::LiquidSdk::receive_payment] to generate an invoice/Liquid BIP21/Liquid address
 //!
 //! ### Sending an onchain payment
 //!
 //! * [sdk::LiquidSdk::prepare_pay_onchain] to check fees
 //! * [sdk::LiquidSdk::pay_onchain] to pay to a Bitcoin address
 //!
-//! ### Receiving an onchain payment
+//! ### Refunding a payment
 //!
-//! * [sdk::LiquidSdk::prepare_receive_onchain] to check fees
-//! * [sdk::LiquidSdk::receive_onchain] to generate a Bitcoin address
 //! * [sdk::LiquidSdk::list_refundables] to get a list of refundable swaps
 //! * [sdk::LiquidSdk::prepare_refund] to check the refund fees
 //! * [sdk::LiquidSdk::refund] to broadcast a refund transaction

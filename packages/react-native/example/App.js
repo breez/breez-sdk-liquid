@@ -19,7 +19,8 @@ import {
     prepareReceivePayment,
     prepareSendPayment,
     receivePayment,
-    sendPayment
+    sendPayment,
+    PaymentMethod
 } from "@breeztech/react-native-breez-sdk-liquid"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
@@ -83,26 +84,26 @@ const App = () => {
 
                 /* Receive lightning payment */
 
-                let prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000 })
+                let prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000, paymentMethod: PaymentMethod.LIGHTNING })
                 addLine("prepareReceivePayment", JSON.stringify(prepareReceiveRes))
                 // Get the fees required for this payment
                 addLine("Payment fees", `${prepareReceiveRes.feesSat}`)
 
-                let receivePaymentRes = await receivePayment({prepareRes: prepareReceiveRes})
+                let receivePaymentRes = await receivePayment({ prepareResponse: prepareReceiveRes })
                 addLine("receivePayment", JSON.stringify(receivePaymentRes))
                 // Wait for payer to pay.... once successfully paid an event of `paymentSucceeded` will be emitted.
-                addLine("Bolt11 invoice", `${receivePaymentRes.invoice}`)
+                addLine("Bolt11 invoice", `${receivePaymentRes.destination}`)
 
                 /* Send lightning payment */
 
                 // Set the `bolt11Invoice` to enable sending in the example app
                 if (bolt11Invoice) {
-                    let prepareSendRes = await prepareSendPayment({ invoice: bolt11Invoice })
+                    let prepareSendRes = await prepareSendPayment({ destination: bolt11Invoice })
                     addLine("prepareSendPayment", JSON.stringify(prepareSendRes))
                     // Get the fees required for this payment
                     addLine("Payment fees", `${prepareSendRes.feesSat}`)
 
-                    let sendPaymentRes = await sendPayment(prepareSendRes)
+                    let sendPaymentRes = await sendPayment({ prepareResponse: prepareSendRes })
                     addLine("sendPayment", JSON.stringify(sendPaymentRes))
                     // Once successfully paid an event of `paymentSucceeded` will be emitted.
                     addLine("Payment", `${sendPaymentRes.payment}`)

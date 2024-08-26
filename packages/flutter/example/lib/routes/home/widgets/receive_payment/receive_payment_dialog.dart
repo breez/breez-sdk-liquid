@@ -22,8 +22,7 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
   int? feesSat;
   bool creatingInvoice = false;
 
-  String? invoice;
-  String? invoiceId;
+  String? invoiceDestination;
 
   StreamSubscription<List<Payment>>? streamSubscription;
 
@@ -31,10 +30,19 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
   void initState() {
     super.initState();
     streamSubscription = widget.paymentsStream.listen((paymentList) {
-      if (invoiceId != null && invoiceId!.isNotEmpty) {
-        if (paymentList.any((e) => e.swapId == invoiceId!)) {
-          debugPrint("Payment Received! Id: $invoiceId");
-          if (context.mounted) {
+      if (invoiceDestination != null && invoiceDestination!.isNotEmpty) {
+        if (paymentList.any(
+          (e) {
+            final details = e.details;
+            if (details == null) return false;
+            if (details is PaymentDetails_Lightning && details.preimage != null) {
+              return details.preimage! == invoiceDestination!;
+            }
+            return false;
+          },
+        )) {
+          debugPrint("Payment Received! Id: $invoiceDestination");
+          if (mounted) {
             Navigator.of(context).pop();
           }
         }
@@ -51,13 +59,13 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: creatingInvoice ? null : Text(invoice != null ? "Invoice" : "Receive Payment"),
-      content: creatingInvoice || invoice != null
+      title: creatingInvoice ? null : Text(invoiceDestination != null ? "Invoice" : "Receive Payment"),
+      content: creatingInvoice || invoiceDestination != null
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (invoice != null) ...[
+                if (invoiceDestination != null) ...[
                   AspectRatio(
                     aspectRatio: 1,
                     child: SizedBox(
@@ -65,7 +73,7 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
                       height: 200.0,
                       child: QrImageView(
                         embeddedImage: const AssetImage("assets/icons/app_icon.png"),
-                        data: invoice!.toUpperCase(),
+                        data: invoiceDestination!.toUpperCase(),
                         size: 200.0,
                       ),
                     ),
@@ -128,34 +136,36 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
                   Navigator.of(context).pop();
                 },
               ),
-              if (invoice == null) ...[
+              if (invoiceDestination == null) ...[
                 TextButton(
                   onPressed: () async {
                     try {
                       setState(() => creatingInvoice = true);
                       int amountSat = int.parse(payerAmountController.text);
-                      PrepareReceivePaymentRequest prepareReceiveReq =
-                          PrepareReceivePaymentRequest(payerAmountSat: BigInt.from(amountSat));
-                      PrepareReceivePaymentResponse prepareRes = await widget.liquidSDK.prepareReceivePayment(
+                      PrepareReceiveRequest prepareReceiveReq = PrepareReceiveRequest(
+                        paymentMethod: PaymentMethod.lightning,
+                        payerAmountSat: BigInt.from(amountSat),
+                      );
+                      PrepareReceiveResponse prepareResponse = await widget.liquidSDK.prepareReceivePayment(
                         req: prepareReceiveReq,
                       );
                       setState(() {
-                        payerAmountSat = prepareRes.payerAmountSat.toInt();
-                        feesSat = prepareRes.feesSat.toInt();
+                        payerAmountSat = prepareResponse.payerAmountSat?.toInt();
+                        feesSat = prepareResponse.feesSat.toInt();
                       });
-                      ReceivePaymentRequest receiveReq = ReceivePaymentRequest(prepareRes: prepareRes);
+                      ReceivePaymentRequest receiveReq = ReceivePaymentRequest(
+                        prepareResponse: prepareResponse,
+                      );
                       ReceivePaymentResponse resp = await widget.liquidSDK.receivePayment(req: receiveReq);
                       debugPrint(
-                        "Created Invoice for $payerAmountSat sats with $feesSat sats fees.\nInvoice:${resp.invoice}",
+                        "Created Invoice for $payerAmountSat sats with $feesSat sats fees.\nDestination:${resp.destination}",
                       );
-                      setState(() => invoice = resp.invoice);
-                      setState(() => invoiceId = resp.id);
+                      setState(() => invoiceDestination = resp.destination);
                     } catch (e) {
                       setState(() {
                         payerAmountSat = null;
                         feesSat = null;
-                        invoice = null;
-                        invoiceId = null;
+                        invoiceDestination = null;
                       });
                       final errMsg = "Error receiving payment: $e";
                       debugPrint(errMsg);

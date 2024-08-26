@@ -194,6 +194,12 @@ jobs:
         working-directory: lib/bindings/langs/flutter/
         run: melos check-format
 
+      # This step is added to ensure version recipe was run to update podspec files & CMake script.
+      # It does not catch the case where 'packages/flutter/pubspec.yaml' wasn't updated properly.
+      - name: Update version number on podspec files & CMake scripts
+        working-directory: lib/bindings/langs/flutter/
+        run: just version
+
       - name: Check git status
         env:
           GIT_PAGER: cat

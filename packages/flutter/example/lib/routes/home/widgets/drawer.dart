@@ -7,7 +7,11 @@ class HomePageDrawer extends StatefulWidget {
   final BindingLiquidSdk liquidSDK;
   final CredentialsManager credentialsManager;
 
-  const HomePageDrawer({super.key, required this.liquidSDK, required this.credentialsManager});
+  const HomePageDrawer({
+    super.key,
+    required this.liquidSDK,
+    required this.credentialsManager,
+  });
 
   @override
   State<HomePageDrawer> createState() => _HomePageDrawerState();
@@ -32,8 +36,11 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
             enabled: false,
             leading: const Icon(Icons.backup_outlined),
             title: const Text('Backup'),
-            titleTextStyle:
-                const TextStyle(fontSize: 16.0, color: Colors.white, decoration: TextDecoration.lineThrough),
+            titleTextStyle: const TextStyle(
+              fontSize: 16.0,
+              color: Colors.white,
+              decoration: TextDecoration.lineThrough,
+            ),
             onTap: () async {
               try {
                 debugPrint("Creating backup.");
@@ -44,7 +51,10 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to create backup. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
+                  final snackBar = SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(errMsg),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -54,8 +64,11 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
             enabled: false,
             leading: const Icon(Icons.restore),
             title: const Text('Restore'),
-            titleTextStyle:
-                const TextStyle(fontSize: 16.0, color: Colors.white, decoration: TextDecoration.lineThrough),
+            titleTextStyle: const TextStyle(
+              fontSize: 16.0,
+              color: Colors.white,
+              decoration: TextDecoration.lineThrough,
+            ),
             onTap: () async {
               try {
                 debugPrint("Restoring backup.");
@@ -67,7 +80,10 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to restore backup. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
+                  final snackBar = SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(errMsg),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -86,7 +102,10 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
                 final errMsg = "Failed to empty wallet cache. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
+                  final snackBar = SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(errMsg),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
@@ -98,19 +117,26 @@ class _HomePageDrawerState extends State<HomePageDrawer> {
             titleTextStyle: const TextStyle(fontSize: 16.0, color: Colors.white),
             onTap: () async {
               try {
-                await widget.credentialsManager.restoreMnemonic().then((mnemonics) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => MnemonicsDialog(
-                      mnemonics: mnemonics.split(" "),
-                    ),
-                  );
-                });
+                await widget.credentialsManager.restoreMnemonic().then(
+                  (mnemonics) {
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => MnemonicsDialog(
+                          mnemonics: mnemonics.split(" "),
+                        ),
+                      );
+                    }
+                  },
+                );
               } on Exception catch (e) {
                 final errMsg = "Failed to display mnemonics. $e";
                 debugPrint(errMsg);
                 if (context.mounted) {
-                  final snackBar = SnackBar(behavior: SnackBarBehavior.floating, content: Text(errMsg));
+                  final snackBar = SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    content: Text(errMsg),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }

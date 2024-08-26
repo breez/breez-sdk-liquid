@@ -106,37 +106,37 @@ class BreezSDKLiquid {
       (event) async {
         if (event is liquid_sdk.SdkEvent_PaymentFailed) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Payment Failed. ${event.details.swapId}", level: "WARN"),
+            liquid_sdk.LogEntry(line: "Payment Failed. ${event.details}", level: "WARN"),
           );
           _paymentResultStream.addError(PaymentException(event.details));
         }
         if (event is liquid_sdk.SdkEvent_PaymentPending) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Payment Pending. ${event.details.swapId}", level: "INFO"),
+            liquid_sdk.LogEntry(line: "Payment Pending. ${event.details}", level: "INFO"),
           );
           _paymentResultStream.add(event.details);
         }
         if (event is liquid_sdk.SdkEvent_PaymentRefunded) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Payment Refunded. ${event.details.swapId}", level: "INFO"),
+            liquid_sdk.LogEntry(line: "Payment Refunded. ${event.details}", level: "INFO"),
           );
           _paymentResultStream.add(event.details);
         }
         if (event is liquid_sdk.SdkEvent_PaymentRefundPending) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Pending Payment Refund. ${event.details.swapId}", level: "INFO"),
+            liquid_sdk.LogEntry(line: "Pending Payment Refund. ${event.details}", level: "INFO"),
           );
           _paymentResultStream.add(event.details);
         }
         if (event is liquid_sdk.SdkEvent_PaymentSucceeded) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Payment Succeeded. ${event.details.swapId}", level: "INFO"),
+            liquid_sdk.LogEntry(line: "Payment Succeeded. ${event.details}", level: "INFO"),
           );
           _paymentResultStream.add(event.details);
         }
         if (event is liquid_sdk.SdkEvent_PaymentWaitingConfirmation) {
           _logStreamController.add(
-            liquid_sdk.LogEntry(line: "Payment Waiting Confirmation. ${event.details.swapId}", level: "INFO"),
+            liquid_sdk.LogEntry(line: "Payment Waiting Confirmation. ${event.details}", level: "INFO"),
           );
           _paymentResultStream.add(event.details);
         }

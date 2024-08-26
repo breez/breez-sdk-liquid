@@ -80,17 +80,21 @@ class _ConnectPageState extends State<ConnectPage> {
     debugPrint("${mnemonic.isEmpty ? "Creating" : "Restoring"} wallet with $walletMnemonic");
     return await initializeWallet(mnemonic: walletMnemonic).then(
       (liquidSDK) async {
-        await widget.credentialsManager.storeMnemonic(mnemonic: walletMnemonic).then((_) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) => HomePage(
-                liquidSDK: widget.liquidSDK,
-                credentialsManager: widget.credentialsManager,
-              ),
-            ),
-          );
-        });
+        await widget.credentialsManager.storeMnemonic(mnemonic: walletMnemonic).then(
+          (_) {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) => HomePage(
+                    liquidSDK: widget.liquidSDK,
+                    credentialsManager: widget.credentialsManager,
+                  ),
+                ),
+              );
+            }
+          },
+        );
       },
     );
   }
