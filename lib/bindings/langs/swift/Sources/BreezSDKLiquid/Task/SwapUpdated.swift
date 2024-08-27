@@ -36,7 +36,8 @@ class SwapUpdatedTask : TaskProtocol {
         if let swapIdHash = self.request?.id {
             switch e {
             case .paymentSucceeded(details: let payment):
-                if swapIdHash == payment.swapId?.sha256() {
+                let swapId = self.getSwapId(details: payment.details)
+                if swapIdHash == swapId?.sha256() {
                     self.logger.log(tag: TAG, line: "Received payment succeeded event: \(swapIdHash)", level: "INFO")
                     self.notifySuccess()
                 }
@@ -45,6 +46,20 @@ class SwapUpdatedTask : TaskProtocol {
                 break
             }
         }
+    }
+
+    func getSwapId(details: PaymentDetails?) -> String? {
+        if let details = details {
+            switch details {
+            case let .bitcoin(swapId, _, _, _):
+                return swapId
+            case let .lightning(swapId, _, _, _, _, _):
+                return swapId
+            default:
+                break
+            }
+        }
+        return nil
     }
 
     func onShutdown() {
