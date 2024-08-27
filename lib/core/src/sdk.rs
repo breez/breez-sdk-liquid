@@ -601,6 +601,8 @@ impl LiquidSdk {
         Ok(invoice)
     }
 
+    /// For submarine swaps (Liquid -> LN), the output amount (invoice amount) is checked if it fits
+    /// the pair limits. This is unlike all the other swap types, where the input amount is checked.
     fn validate_submarine_pairs(
         &self,
         receiver_amount_sat: u64,
