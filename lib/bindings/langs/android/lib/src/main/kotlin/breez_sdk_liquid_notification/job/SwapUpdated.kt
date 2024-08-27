@@ -50,8 +50,14 @@ class SwapUpdatedJob(
             is SdkEvent.PaymentSucceeded -> {
                 val payment = e.details
 
-                (payment.details as? PaymentDetails.Bitcoin)?.swapId?.let { swapId ->
-                    if (this.swapIdHash == hashId(swapId)) {
+                val swapId = when (val details = payment.details) {
+                    is PaymentDetails.Bitcoin -> details.swapId
+                    is PaymentDetails.Lightning -> details.swapId
+                    else -> null
+                }
+
+                swapId?.let {
+                    if (this.swapIdHash == hashId(it)) {
                         logger.log(
                             TAG,
                             "Received payment succeeded event: ${this.swapIdHash}",
