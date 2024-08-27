@@ -45,9 +45,9 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             }
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
-            let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceivePaymentRequest(payerAmountSat: amountSat))
-            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareRes: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true))
-            self.replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.invoice, routes: []), replyURL: request!.reply_url)
+            let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(payerAmountSat: amountSat, paymentMethod: PaymentMethod.lightning))
+            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true))
+            self.replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: []), replyURL: request!.reply_url)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl: \(e)", level: "ERROR")
             self.fail(withError: e.localizedDescription, replyURL: request!.reply_url)
