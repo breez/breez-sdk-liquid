@@ -70,7 +70,7 @@ pub(crate) enum Command {
         description: Option<String>,
 
         /// Optional if true uses the hash of the description
-        #[clap(short = 'h', long = "hash_description")]
+        #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
         use_description_hash: Option<bool>,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
