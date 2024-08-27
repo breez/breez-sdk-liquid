@@ -1103,18 +1103,17 @@ impl LiquidSdk {
             None => pair.fees.claim_estimate(),
         };
         let server_fees_sat = pair.fees.server();
-        let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
-        let lockup_fees_sat = self
-            .estimate_lockup_tx_fee(server_lockup_amount_sat)
-            .await?;
+
+        let user_lockup_amount_sat_without_service_fee =
+            receiver_amount_sat + claim_fees_sat + server_fees_sat;
+        let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
+        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fees_sat;
+        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
         let res = PreparePayOnchainResponse {
             receiver_amount_sat,
             claim_fees_sat,
-            total_fees_sat: pair.fees.boltz(server_lockup_amount_sat)
-                + lockup_fees_sat
-                + claim_fees_sat
-                + server_fees_sat,
+            total_fees_sat: boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat,
         };
 
         let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
@@ -1153,16 +1152,16 @@ impl LiquidSdk {
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
         let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
-        let lockup_fees_sat = self
-            .estimate_lockup_tx_fee(server_lockup_amount_sat)
-            .await?;
+
+        let user_lockup_amount_sat_without_service_fee =
+            receiver_amount_sat + claim_fees_sat + server_fees_sat;
+        let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
+        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
+        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
         ensure_sdk!(
             req.prepare_response.total_fees_sat
-                == pair.fees.boltz(server_lockup_amount_sat)
-                    + lockup_fees_sat
-                    + claim_fees_sat
-                    + server_fees_sat,
+                == boltz_fee_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
