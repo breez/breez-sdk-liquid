@@ -622,22 +622,33 @@ impl LiquidSdk {
         Ok(lbtc_pair)
     }
 
-    fn validate_chain_pairs(
+    fn get_chain_pair(&self, direction: Direction) -> Result<ChainPair, PaymentError> {
+        self.swapper
+            .get_chain_pair(direction)?
+            .ok_or(PaymentError::PairsNotFound)
+    }
+
+    /// Validates if the `payer_amount_sat` fits within the limits of this pair
+    fn validate_payer_amount_for_chain_pair(
+        &self,
+        pair: &ChainPair,
+        payer_amount_sat: u64,
+    ) -> Result<(), PaymentError> {
+        pair.limits.within(payer_amount_sat)?;
+
+        let fees_sat = pair.fees.total(payer_amount_sat);
+        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+
+        Ok(())
+    }
+
+    fn get_and_validate_chain_pair(
         &self,
         direction: Direction,
-        amount_sat: u64,
+        payer_amount_sat: u64,
     ) -> Result<ChainPair, PaymentError> {
-        let pair = self
-            .swapper
-            .get_chain_pair(direction)?
-            .ok_or(PaymentError::PairsNotFound)?;
-
-        pair.limits.within(amount_sat)?;
-
-        let fees_sat = pair.fees.total(amount_sat);
-
-        ensure_sdk!(amount_sat > fees_sat, PaymentError::AmountOutOfRange);
-
+        let pair = self.get_chain_pair(direction)?;
+        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
         Ok(pair)
     }
 
@@ -1097,10 +1108,10 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let receiver_amount_sat = req.receiver_amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
+        let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = match req.sat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
-            None => pair.fees.claim_estimate(),
+            None => pair.clone().fees.claim_estimate(),
         };
         let server_fees_sat = pair.fees.server();
 
@@ -1117,6 +1128,7 @@ impl LiquidSdk {
         };
 
         let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
+        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -1148,7 +1160,7 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
-        let pair = self.validate_chain_pairs(Direction::Outgoing, receiver_amount_sat)?;
+        let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
         let server_fees_sat = pair.fees.server();
         let server_lockup_amount_sat = receiver_amount_sat + claim_fees_sat;
@@ -1166,6 +1178,7 @@ impl LiquidSdk {
         );
 
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
+        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -1327,15 +1340,16 @@ impl LiquidSdk {
                 );
             }
             PaymentMethod::BitcoinAddress => {
-                let Some(amount_sat) = req.payer_amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
+                let Some(payer_amount_sat) = req.payer_amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`payer_amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
                 };
-                let pair = self.validate_chain_pairs(Direction::Incoming, amount_sat)?;
+                let pair =
+                    self.get_and_validate_chain_pair(Direction::Incoming, payer_amount_sat)?;
                 let claim_fees_sat = pair.fees.claim_estimate();
                 let server_fees_sat = pair.fees.server();
-                fees_sat = pair.fees.boltz(amount_sat) + claim_fees_sat + server_fees_sat;
+                fees_sat = pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat;
                 debug!(
-                    "Preparing Chain Receive Swap with: amount_sat {amount_sat} sat, fees_sat {fees_sat} sat"
+                    "Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
                 );
             }
             PaymentMethod::LiquidAddress => {
@@ -1530,7 +1544,7 @@ impl LiquidSdk {
         payer_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<ChainSwap, PaymentError> {
-        let pair = self.validate_chain_pairs(Direction::Incoming, payer_amount_sat)?;
+        let pair = self.get_and_validate_chain_pair(Direction::Incoming, payer_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
