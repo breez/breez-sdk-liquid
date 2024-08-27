@@ -1320,25 +1320,25 @@ impl LiquidSdk {
         let fees_sat;
         match req.payment_method {
             PaymentMethod::Lightning => {
-                let Some(amount_sat) = req.payer_amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::Lightning` is used.".to_string() });
+                let Some(payer_amount_sat) = req.payer_amount_sat else {
+                    return Err(PaymentError::AmountMissing { err: "`payer_amount_sat` must be specified when `PaymentMethod::Lightning` is used.".to_string() });
                 };
                 let reverse_pair = self
                     .swapper
                     .get_reverse_swap_pairs()?
                     .ok_or(PaymentError::PairsNotFound)?;
 
-                fees_sat = reverse_pair.fees.total(amount_sat);
+                fees_sat = reverse_pair.fees.total(payer_amount_sat);
 
-                ensure_sdk!(amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
 
                 reverse_pair
                     .limits
-                    .within(amount_sat)
+                    .within(payer_amount_sat)
                     .map_err(|_| PaymentError::AmountOutOfRange)?;
 
                 debug!(
-                    "Preparing Lightning Receive Swap with: amount_sat {amount_sat} sat, fees_sat {fees_sat} sat"
+                    "Preparing Lightning Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
                 );
             }
             PaymentMethod::BitcoinAddress => {
