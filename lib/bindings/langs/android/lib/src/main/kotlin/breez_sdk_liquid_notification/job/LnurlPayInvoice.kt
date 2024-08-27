@@ -62,7 +62,7 @@ class LnurlPayInvoiceJob(
                 DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
             )
             val prepareReceivePaymentRes = liquidSDK.prepareReceivePayment(
-                PrepareReceivePaymentRequest(amountSat, PaymentMethod.LIGHTNING)
+                PrepareReceiveRequest(amountSat, PaymentMethod.LIGHTNING)
             )
             val receivePaymentResponse = liquidSDK.receivePayment(
                 ReceivePaymentRequest(
@@ -73,7 +73,7 @@ class LnurlPayInvoiceJob(
             )
             val response =
                 LnurlPayInvoiceResponse(
-                    receivePaymentResponse.invoice,
+                    receivePaymentResponse.destination,
                     listOf(),
                 )
             val success = replyServer(Json.encodeToString(response), request.replyURL)

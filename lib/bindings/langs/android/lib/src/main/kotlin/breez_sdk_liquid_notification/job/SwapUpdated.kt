@@ -2,6 +2,7 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
+import breez_sdk_liquid.PaymentDetails
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
@@ -49,7 +50,7 @@ class SwapUpdatedJob(
             is SdkEvent.PaymentSucceeded -> {
                 val payment = e.details
 
-                payment.swapId?.let { swapId ->
+                (payment.details as? PaymentDetails.Bitcoin)?.swapId?.let { swapId ->
                     if (this.swapIdHash == hashId(swapId)) {
                         logger.log(
                             TAG,
