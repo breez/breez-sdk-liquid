@@ -2,7 +2,8 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
-import breez_sdk_liquid.PrepareReceivePaymentRequest
+import breez_sdk_liquid.PaymentMethod
+import breez_sdk_liquid.PrepareReceiveRequest
 import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
@@ -61,7 +62,7 @@ class LnurlPayInvoiceJob(
                 DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
             )
             val prepareReceivePaymentRes = liquidSDK.prepareReceivePayment(
-                PrepareReceivePaymentRequest(amountSat)
+                PrepareReceivePaymentRequest(amountSat, PaymentMethod.LIGHTNING)
             )
             val receivePaymentResponse = liquidSDK.receivePayment(
                 ReceivePaymentRequest(
