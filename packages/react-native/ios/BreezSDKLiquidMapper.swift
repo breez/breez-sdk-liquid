@@ -1350,20 +1350,6 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
-        var destination: String?
-        if hasNonNilKey(data: payment, key: "destination") {
-            guard let destinationTmp = payment["destination"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "destination"))
-            }
-            destination = destinationTmp
-        }
-        var txId: String?
-        if hasNonNilKey(data: payment, key: "txId") {
-            guard let txIdTmp = payment["txId"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "txId"))
-            }
-            txId = txIdTmp
-        }
         guard let timestamp = payment["timestamp"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "Payment"))
         }
@@ -1383,23 +1369,37 @@ enum BreezSDKLiquidMapper {
         }
         let status = try asPaymentState(paymentState: statusTmp)
 
+        var destination: String?
+        if hasNonNilKey(data: payment, key: "destination") {
+            guard let destinationTmp = payment["destination"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "destination"))
+            }
+            destination = destinationTmp
+        }
+        var txId: String?
+        if hasNonNilKey(data: payment, key: "txId") {
+            guard let txIdTmp = payment["txId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "txId"))
+            }
+            txId = txIdTmp
+        }
         var details: PaymentDetails?
         if let detailsTmp = payment["details"] as? [String: Any?] {
             details = try asPaymentDetails(paymentDetails: detailsTmp)
         }
 
-        return Payment(destination: destination, txId: txId, timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details)
+        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, destination: destination, txId: txId, details: details)
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
         return [
-            "destination": payment.destination == nil ? nil : payment.destination,
-            "txId": payment.txId == nil ? nil : payment.txId,
             "timestamp": payment.timestamp,
             "amountSat": payment.amountSat,
             "feesSat": payment.feesSat,
             "paymentType": valueOf(paymentType: payment.paymentType),
             "status": valueOf(paymentState: payment.status),
+            "destination": payment.destination == nil ? nil : payment.destination,
+            "txId": payment.txId == nil ? nil : payment.txId,
             "details": payment.details == nil ? nil : dictionaryOf(paymentDetails: payment.details!),
         ]
     }
