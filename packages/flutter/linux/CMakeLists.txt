@@ -1,4 +1,4 @@
-set(TagName "v0.2.2-dev11") # generated; do not edit
+set(TagName "v0.2.2-dev12") # generated; do not edit
 set(LibraryVersion "breez_liquid-${TagName}")
 
 # The Flutter tooling requires that developers have CMake 3.10 or later
