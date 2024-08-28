@@ -646,23 +646,29 @@ class PrepareBuyBitcoinResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
-  final BigInt receiverAmountSat;
+  /// Depending on `amount_type`, this may be the desired payer amount or the desired receiver amount.
+  final BigInt amountSat;
+  final SwapAmountType amountType;
+
+  /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
   final int? satPerVbyte;
 
   const PreparePayOnchainRequest({
-    required this.receiverAmountSat,
+    required this.amountSat,
+    required this.amountType,
     this.satPerVbyte,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => amountSat.hashCode ^ amountType.hashCode ^ satPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
-          receiverAmountSat == other.receiverAmountSat &&
+          amountSat == other.amountSat &&
+          amountType == other.amountType &&
           satPerVbyte == other.satPerVbyte;
 }
 
@@ -1079,4 +1085,10 @@ class SendPaymentResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SendPaymentResponse && runtimeType == other.runtimeType && payment == other.payment;
+}
+
+enum SwapAmountType {
+  send,
+  receive,
+  ;
 }

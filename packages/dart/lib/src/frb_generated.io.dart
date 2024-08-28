@@ -459,6 +459,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SuccessActionProcessed dco_decode_success_action_processed(dynamic raw);
 
   @protected
+  SwapAmountType dco_decode_swap_amount_type(dynamic raw);
+
+  @protected
   Symbol dco_decode_symbol(dynamic raw);
 
   @protected
@@ -917,6 +920,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SuccessActionProcessed sse_decode_success_action_processed(SseDeserializer deserializer);
+
+  @protected
+  SwapAmountType sse_decode_swap_amount_type(SseDeserializer deserializer);
 
   @protected
   Symbol sse_decode_symbol(SseDeserializer deserializer);
@@ -2386,7 +2392,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
-    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
+    wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.amount_type = cst_encode_swap_amount_type(apiObj.amountType);
     wireObj.sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(apiObj.satPerVbyte);
   }
 
@@ -2684,6 +2691,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int cst_encode_payment_type(PaymentType raw);
+
+  @protected
+  int cst_encode_swap_amount_type(SwapAmountType raw);
 
   @protected
   int cst_encode_u_16(int raw);
@@ -3139,6 +3149,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_success_action_processed(SuccessActionProcessed self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_swap_amount_type(SwapAmountType self, SseSerializer serializer);
 
   @protected
   void sse_encode_symbol(Symbol self, SseSerializer serializer);
@@ -4567,7 +4580,10 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
-  external int receiver_amount_sat;
+  external int amount_sat;
+
+  @ffi.Int32()
+  external int amount_type;
 
   external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }

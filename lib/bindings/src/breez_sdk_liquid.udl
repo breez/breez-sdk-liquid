@@ -390,8 +390,14 @@ dictionary OnchainPaymentLimitsResponse {
     Limits receive;
 };
 
+enum SwapAmountType {
+    "Send",
+    "Receive",
+};
+
 dictionary PreparePayOnchainRequest {
-    u64 receiver_amount_sat;
+    u64 amount_sat;
+    SwapAmountType amount_type;
     u32? sat_per_vbyte = null;
 };
 

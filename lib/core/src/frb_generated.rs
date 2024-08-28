@@ -1770,6 +1770,16 @@ impl CstDecode<crate::model::PaymentType> for i32 {
         }
     }
 }
+impl CstDecode<crate::model::SwapAmountType> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::SwapAmountType {
+        match self {
+            0 => crate::model::SwapAmountType::Send,
+            1 => crate::model::SwapAmountType::Receive,
+            _ => unreachable!("Invalid variant for SwapAmountType: {}", self),
+        }
+    }
+}
 impl CstDecode<u16> for u16 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u16 {
@@ -3122,10 +3132,12 @@ impl SseDecode for crate::model::PrepareBuyBitcoinResponse {
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_amountSat = <u64>::sse_decode(deserializer);
+        let mut var_amountType = <crate::model::SwapAmountType>::sse_decode(deserializer);
         let mut var_satPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
-            receiver_amount_sat: var_receiverAmountSat,
+            amount_sat: var_amountSat,
+            amount_type: var_amountType,
             sat_per_vbyte: var_satPerVbyte,
         };
     }
@@ -3500,6 +3512,18 @@ impl SseDecode for crate::bindings::SuccessActionProcessed {
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseDecode for crate::model::SwapAmountType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::SwapAmountType::Send,
+            1 => crate::model::SwapAmountType::Receive,
+            _ => unreachable!("Invalid variant for SwapAmountType: {}", inner),
+        };
     }
 }
 
@@ -4841,7 +4865,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareBuyBitcoinResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.receiver_amount_sat.into_into_dart().into_dart(),
+            self.amount_sat.into_into_dart().into_dart(),
+            self.amount_type.into_into_dart().into_dart(),
             self.sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -5346,6 +5371,24 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::SuccessAction
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::SuccessActionProcessed> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::SwapAmountType {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Send => 0.into_dart(),
+            Self::Receive => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::SwapAmountType {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::SwapAmountType>
+    for crate::model::SwapAmountType
+{
+    fn into_into_dart(self) -> crate::model::SwapAmountType {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -6466,7 +6509,8 @@ impl SseEncode for crate::model::PrepareBuyBitcoinResponse {
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
+        <u64>::sse_encode(self.amount_sat, serializer);
+        <crate::model::SwapAmountType>::sse_encode(self.amount_type, serializer);
         <Option<u32>>::sse_encode(self.sat_per_vbyte, serializer);
     }
 }
@@ -6733,6 +6777,22 @@ impl SseEncode for crate::bindings::SuccessActionProcessed {
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseEncode for crate::model::SwapAmountType {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::SwapAmountType::Send => 0,
+                crate::model::SwapAmountType::Receive => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -8049,7 +8109,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
             crate::model::PreparePayOnchainRequest {
-                receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
+                amount_sat: self.amount_sat.cst_decode(),
+                amount_type: self.amount_type.cst_decode(),
                 sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
             }
         }
@@ -8982,7 +9043,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                receiver_amount_sat: Default::default(),
+                amount_sat: Default::default(),
+                amount_type: Default::default(),
                 sat_per_vbyte: core::ptr::null_mut(),
             }
         }
@@ -10798,7 +10860,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
-        receiver_amount_sat: u64,
+        amount_sat: u64,
+        amount_type: i32,
         sat_per_vbyte: *mut u32,
     }
     #[repr(C)]

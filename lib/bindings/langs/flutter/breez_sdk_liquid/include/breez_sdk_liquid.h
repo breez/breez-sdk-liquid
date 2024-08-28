@@ -128,7 +128,8 @@ typedef struct wire_cst_prepare_buy_bitcoin_request {
 } wire_cst_prepare_buy_bitcoin_request;
 
 typedef struct wire_cst_prepare_pay_onchain_request {
-  uint64_t receiver_amount_sat;
+  uint64_t amount_sat;
+  int32_t amount_type;
   uint32_t *sat_per_vbyte;
 } wire_cst_prepare_pay_onchain_request;
 

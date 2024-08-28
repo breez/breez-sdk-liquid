@@ -304,10 +304,21 @@ pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+#[derive(Debug, EnumString, Serialize, Clone, PartialEq)]
+pub enum SwapAmountType {
+    #[strum(serialize = "send")]
+    Send,
+    #[strum(serialize = "receive")]
+    Receive,
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
-    pub receiver_amount_sat: u64,
+    /// Depending on `amount_type`, this may be the desired payer amount or the desired receiver amount.
+    pub amount_sat: u64,
+    pub amount_type: SwapAmountType,
+    /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
     pub sat_per_vbyte: Option<u32>,
 }
 

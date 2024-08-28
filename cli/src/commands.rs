@@ -48,9 +48,13 @@ pub(crate) enum Command {
         address: String,
 
         /// Amount that will be received, in satoshi
-        receiver_amount_sat: u64,
+        amount_sat: u64,
 
-        // The optional fee rate to use, in satoshi/vbyte
+        /// The amount type. Either "send" or "receive". Defaults to "receive" if not set.
+        #[arg(short = 't', long = "amount-type")]
+        amount_type: Option<SwapAmountType>,
+
+        /// The optional claim fee rate to use, in satoshi/vbyte
         #[clap(short = 'f', long = "fee_rate")]
         sat_per_vbyte: Option<u32>,
     },
@@ -319,12 +323,15 @@ pub(crate) async fn handle_command(
         }
         Command::SendOnchainPayment {
             address,
-            receiver_amount_sat,
+            amount_sat,
+            amount_type,
             sat_per_vbyte,
         } => {
+            let amount_type = amount_type.unwrap_or(SwapAmountType::Receive);
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
-                    receiver_amount_sat,
+                    amount_sat,
+                    amount_type,
                     sat_per_vbyte,
                 })
                 .await?;
