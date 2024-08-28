@@ -562,14 +562,24 @@ impl ChainSwapStateHandler {
             lockup_details.amount, lockup_details.lockup_address
         );
 
-        let lockup_tx = self
-            .onchain_wallet
-            .build_tx(
-                None,
-                &lockup_details.lockup_address,
-                lockup_details.amount as u64,
-            )
-            .await?;
+        // TODO How to check if this is a drain? We'd need to know balance_sat, but that doesn't belong in ChainSwapStateHandler
+        let is_drain = true;
+        let lockup_tx = match is_drain {
+            true => {
+                self.onchain_wallet
+                    .build_drain_tx(None, &lockup_details.lockup_address)
+                    .await?
+            }
+            false => {
+                self.onchain_wallet
+                    .build_tx(
+                        None,
+                        &lockup_details.lockup_address,
+                        lockup_details.amount as u64,
+                    )
+                    .await?
+            }
+        };
 
         let lockup_tx_id = self
             .liquid_chain_service
