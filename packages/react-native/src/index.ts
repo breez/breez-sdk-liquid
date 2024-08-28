@@ -212,13 +212,13 @@ export interface PayOnchainRequest {
 }
 
 export interface Payment {
-    destination?: string
-    txId?: string
     timestamp: number
     amountSat: number
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    destination?: string
+    txId?: string
     details?: PaymentDetails
 }
 

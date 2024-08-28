@@ -450,14 +450,14 @@ interface PaymentDetails {
 };
 
 dictionary Payment {
-    string? destination;
-    string? tx_id = null;
     u32 timestamp;
     u64 amount_sat;
     u64 fees_sat;
     PaymentType payment_type;
     PaymentState status;
-    PaymentDetails? details;
+    string? destination = null;
+    string? tx_id = null;
+    PaymentDetails? details = null;
 };
 
 enum PaymentType {
