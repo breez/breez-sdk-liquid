@@ -630,16 +630,19 @@ impl LiquidSdk {
             .ok_or(PaymentError::PairsNotFound)
     }
 
-    /// Validates if the `payer_amount_sat` fits within the limits of this pair
-    fn validate_payer_amount_for_chain_pair(
+    /// Validates if the `user_lockup_amount_sat` fits within the limits of this pair
+    fn validate_user_lockup_amount_for_chain_pair(
         &self,
         pair: &ChainPair,
-        payer_amount_sat: u64,
+        user_lockup_amount_sat: u64,
     ) -> Result<(), PaymentError> {
-        pair.limits.within(payer_amount_sat)?;
+        pair.limits.within(user_lockup_amount_sat)?;
 
-        let fees_sat = pair.fees.total(payer_amount_sat);
-        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+        let fees_sat = pair.fees.total(user_lockup_amount_sat);
+        ensure_sdk!(
+            user_lockup_amount_sat > fees_sat,
+            PaymentError::AmountOutOfRange
+        );
 
         Ok(())
     }
@@ -647,10 +650,10 @@ impl LiquidSdk {
     fn get_and_validate_chain_pair(
         &self,
         direction: Direction,
-        payer_amount_sat: u64,
+        user_lockup_amount_sat: u64,
     ) -> Result<ChainPair, PaymentError> {
         let pair = self.get_chain_pair(direction)?;
-        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
+        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
         Ok(pair)
     }
 
@@ -1121,6 +1124,7 @@ impl LiquidSdk {
             receiver_amount_sat + claim_fees_sat + server_fees_sat;
         let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
         let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fees_sat;
+        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
         let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
         let res = PreparePayOnchainResponse {
@@ -1130,7 +1134,6 @@ impl LiquidSdk {
         };
 
         let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
-        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
@@ -1171,6 +1174,7 @@ impl LiquidSdk {
             receiver_amount_sat + claim_fees_sat + server_fees_sat;
         let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
         let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
+        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
         let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
         ensure_sdk!(
@@ -1180,7 +1184,6 @@ impl LiquidSdk {
         );
 
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
-        self.validate_payer_amount_for_chain_pair(&pair, payer_amount_sat)?;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
