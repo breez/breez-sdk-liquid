@@ -1142,7 +1142,7 @@ impl LiquidSdk {
                 let payer_amount_sat = req.amount_sat;
 
                 let lockup_fees_sat = match payer_amount_sat == balance_sat {
-                    true =>  self.estimate_drain_tx_fee().await?,
+                    true => self.estimate_drain_tx_fee().await?,
                     false => self.estimate_lockup_tx_fee(payer_amount_sat).await?, // TODO Correct?
                 };
 
@@ -1224,6 +1224,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let balance_sat = self.get_info().await?.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
@@ -1235,8 +1236,7 @@ impl LiquidSdk {
 
         // The resulting invoice amount contains the service fee, which is rounded up with ceil()
         // Therefore, when calculating the user_lockup amount, we must also round it up with ceil()
-        let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64
-            * 100.0
+        let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64 * 100.0
             / (100.0 - pair.fees.percentage))
             .ceil() as u64;
 
@@ -1244,10 +1244,15 @@ impl LiquidSdk {
         // let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
         // let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
         self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
-        // let lockup_fees_sat = self.estimate_drain_tx_fee().await?; // TODO How to handle drain case?
 
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
+
+        let lockup_fees_sat = match payer_amount_sat == balance_sat {
+            true => self.estimate_drain_tx_fee().await?,
+
+            // TODO Correct for all other amounts? Test with balance_sat - 1.
+            false => self.estimate_lockup_tx_fee(payer_amount_sat).await?,
+        };
 
         info!("payer_amount_sat: {payer_amount_sat}");
         info!("receiver_amount_sat: {receiver_amount_sat}");
@@ -1263,7 +1268,7 @@ impl LiquidSdk {
         );
 
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
