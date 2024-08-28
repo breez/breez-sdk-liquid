@@ -1156,26 +1156,26 @@ fun asPayment(payment: ReadableMap): Payment? {
     ) {
         return null
     }
-    val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
-    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()
     val feesSat = payment.getDouble("feesSat").toULong()
     val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
+    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val details = if (hasNonNullKey(payment, "details")) payment.getMap("details")?.let { asPaymentDetails(it) } else null
-    return Payment(destination, txId, timestamp, amountSat, feesSat, paymentType, status, details)
+    return Payment(timestamp, amountSat, feesSat, paymentType, status, destination, txId, details)
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
     readableMapOf(
-        "destination" to payment.destination,
-        "txId" to payment.txId,
         "timestamp" to payment.timestamp,
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
         "paymentType" to payment.paymentType.name.lowercase(),
         "status" to payment.status.name.lowercase(),
+        "destination" to payment.destination,
+        "txId" to payment.txId,
         "details" to payment.details?.let { readableMapOf(it) },
     )
 
