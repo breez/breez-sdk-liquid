@@ -70,5 +70,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             destination TEXT NOT NULL,
             description TEXT NOT NULL
         );",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN id_hash TEXT;
+        ALTER TABLE send_swaps ADD COLUMN id_hash TEXT;
+        ALTER TABLE chain_swaps ADD COLUMN id_hash TEXT;
+        ",
     ]
 }
