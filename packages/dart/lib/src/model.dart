@@ -844,24 +844,31 @@ class PrepareSendResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
 class ReceivePaymentRequest {
-  final String? description;
   final PrepareReceiveResponse prepareResponse;
 
+  /// The description for this payment request.
+  final String? description;
+
+  /// If set to true, then the hash of the description will be used.
+  final bool? useDescriptionHash;
+
   const ReceivePaymentRequest({
-    this.description,
     required this.prepareResponse,
+    this.description,
+    this.useDescriptionHash,
   });
 
   @override
-  int get hashCode => description.hashCode ^ prepareResponse.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ReceivePaymentRequest &&
           runtimeType == other.runtimeType &&
+          prepareResponse == other.prepareResponse &&
           description == other.description &&
-          prepareResponse == other.prepareResponse;
+          useDescriptionHash == other.useDescriptionHash;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].

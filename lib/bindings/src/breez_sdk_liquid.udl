@@ -282,6 +282,7 @@ enum PaymentError {
     "Generic",
     "InvalidOrExpiredFees",
     "InsufficientFunds",
+    "InvalidDescription",
     "InvalidInvoice",
     "InvalidNetwork",
     "InvalidPreimage",
@@ -368,6 +369,7 @@ dictionary PrepareReceiveResponse {
 dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
     string? description = null;
+    boolean? use_description_hash = null;
 };
 
 dictionary ReceivePaymentResponse {

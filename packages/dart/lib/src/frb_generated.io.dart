@@ -2308,61 +2308,67 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 8;
       return;
     }
-    if (apiObj is PaymentError_InvalidInvoice) {
+    if (apiObj is PaymentError_InvalidDescription) {
       var pre_err = cst_encode_String(apiObj.err);
       wireObj.tag = 9;
+      wireObj.kind.InvalidDescription.err = pre_err;
+      return;
+    }
+    if (apiObj is PaymentError_InvalidInvoice) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 10;
       wireObj.kind.InvalidInvoice.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidPreimage) {
-      wireObj.tag = 10;
+      wireObj.tag = 11;
       return;
     }
     if (apiObj is PaymentError_LwkError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 11;
+      wireObj.tag = 12;
       wireObj.kind.LwkError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_PairsNotFound) {
-      wireObj.tag = 12;
-      return;
-    }
-    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 13;
       return;
     }
-    if (apiObj is PaymentError_PersistError) {
+    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 14;
+      return;
+    }
+    if (apiObj is PaymentError_PersistError) {
+      wireObj.tag = 15;
       return;
     }
     if (apiObj is PaymentError_ReceiveError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 15;
+      wireObj.tag = 16;
       wireObj.kind.ReceiveError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
       var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
-      wireObj.tag = 16;
+      wireObj.tag = 17;
       wireObj.kind.Refunded.err = pre_err;
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
     if (apiObj is PaymentError_SelfTransferNotSupported) {
-      wireObj.tag = 17;
+      wireObj.tag = 18;
       return;
     }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 18;
+      wireObj.tag = 19;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 19;
+      wireObj.tag = 20;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -2452,8 +2458,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_receive_payment_request(
       ReceivePaymentRequest apiObj, wire_cst_receive_payment_request wireObj) {
-    wireObj.description = cst_encode_opt_String(apiObj.description);
     cst_api_fill_to_wire_prepare_receive_response(apiObj.prepareResponse, wireObj.prepare_response);
+    wireObj.description = cst_encode_opt_String(apiObj.description);
+    wireObj.use_description_hash = cst_encode_opt_box_autoadd_bool(apiObj.useDescriptionHash);
   }
 
   @protected
@@ -4641,9 +4648,11 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {
+  external wire_cst_prepare_receive_response prepare_response;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external wire_cst_prepare_receive_response prepare_response;
+  external ffi.Pointer<ffi.Bool> use_description_hash;
 }
 
 final class wire_cst_refund_request extends ffi.Struct {
@@ -5457,6 +5466,10 @@ final class wire_cst_PaymentError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_InvalidDescription extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_InvalidInvoice extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5489,6 +5502,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
 
   external wire_cst_PaymentError_Generic Generic;
+
+  external wire_cst_PaymentError_InvalidDescription InvalidDescription;
 
   external wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
 

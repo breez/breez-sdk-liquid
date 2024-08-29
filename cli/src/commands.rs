@@ -68,6 +68,10 @@ pub(crate) enum Command {
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
         description: Option<String>,
+
+        /// Optional if true uses the hash of the description
+        #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
+        use_description_hash: Option<bool>,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
     BuyBitcoin {
@@ -218,6 +222,7 @@ pub(crate) async fn handle_command(
             payment_method,
             payer_amount_sat,
             description,
+            use_description_hash,
         } => {
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
@@ -238,6 +243,7 @@ pub(crate) async fn handle_command(
                 .receive_payment(&ReceivePaymentRequest {
                     prepare_response,
                     description,
+                    use_description_hash,
                 })
                 .await?;
 

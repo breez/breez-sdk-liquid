@@ -2196,37 +2196,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 8:
         return PaymentError_InsufficientFunds();
       case 9:
-        return PaymentError_InvalidInvoice(
+        return PaymentError_InvalidDescription(
           err: dco_decode_String(raw[1]),
         );
       case 10:
-        return PaymentError_InvalidPreimage();
+        return PaymentError_InvalidInvoice(
+          err: dco_decode_String(raw[1]),
+        );
       case 11:
+        return PaymentError_InvalidPreimage();
+      case 12:
         return PaymentError_LwkError(
           err: dco_decode_String(raw[1]),
         );
-      case 12:
-        return PaymentError_PairsNotFound();
       case 13:
-        return PaymentError_PaymentTimeout();
+        return PaymentError_PairsNotFound();
       case 14:
-        return PaymentError_PersistError();
+        return PaymentError_PaymentTimeout();
       case 15:
+        return PaymentError_PersistError();
+      case 16:
         return PaymentError_ReceiveError(
           err: dco_decode_String(raw[1]),
         );
-      case 16:
+      case 17:
         return PaymentError_Refunded(
           err: dco_decode_String(raw[1]),
           refundTxId: dco_decode_String(raw[2]),
         );
-      case 17:
-        return PaymentError_SelfTransferNotSupported();
       case 18:
+        return PaymentError_SelfTransferNotSupported();
+      case 19:
         return PaymentError_SendError(
           err: dco_decode_String(raw[1]),
         );
-      case 19:
+      case 20:
         return PaymentError_SignerError(
           err: dco_decode_String(raw[1]),
         );
@@ -2383,10 +2387,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ReceivePaymentRequest dco_decode_receive_payment_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ReceivePaymentRequest(
-      description: dco_decode_opt_String(arr[0]),
-      prepareResponse: dco_decode_prepare_receive_response(arr[1]),
+      prepareResponse: dco_decode_prepare_receive_response(arr[0]),
+      description: dco_decode_opt_String(arr[1]),
+      useDescriptionHash: dco_decode_opt_box_autoadd_bool(arr[2]),
     );
   }
 
@@ -3860,31 +3865,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentError_InsufficientFunds();
       case 9:
         var var_err = sse_decode_String(deserializer);
-        return PaymentError_InvalidInvoice(err: var_err);
+        return PaymentError_InvalidDescription(err: var_err);
       case 10:
-        return PaymentError_InvalidPreimage();
+        var var_err = sse_decode_String(deserializer);
+        return PaymentError_InvalidInvoice(err: var_err);
       case 11:
+        return PaymentError_InvalidPreimage();
+      case 12:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_LwkError(err: var_err);
-      case 12:
-        return PaymentError_PairsNotFound();
       case 13:
-        return PaymentError_PaymentTimeout();
+        return PaymentError_PairsNotFound();
       case 14:
-        return PaymentError_PersistError();
+        return PaymentError_PaymentTimeout();
       case 15:
+        return PaymentError_PersistError();
+      case 16:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_ReceiveError(err: var_err);
-      case 16:
+      case 17:
         var var_err = sse_decode_String(deserializer);
         var var_refundTxId = sse_decode_String(deserializer);
         return PaymentError_Refunded(err: var_err, refundTxId: var_refundTxId);
-      case 17:
-        return PaymentError_SelfTransferNotSupported();
       case 18:
+        return PaymentError_SelfTransferNotSupported();
+      case 19:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_SendError(err: var_err);
-      case 19:
+      case 20:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_SignerError(err: var_err);
       default:
@@ -4014,9 +4022,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ReceivePaymentRequest sse_decode_receive_payment_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_description = sse_decode_opt_String(deserializer);
     var var_prepareResponse = sse_decode_prepare_receive_response(deserializer);
-    return ReceivePaymentRequest(description: var_description, prepareResponse: var_prepareResponse);
+    var var_description = sse_decode_opt_String(deserializer);
+    var var_useDescriptionHash = sse_decode_opt_box_autoadd_bool(deserializer);
+    return ReceivePaymentRequest(
+        prepareResponse: var_prepareResponse,
+        description: var_description,
+        useDescriptionHash: var_useDescriptionHash);
   }
 
   @protected
@@ -5414,34 +5426,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(7, serializer);
       case PaymentError_InsufficientFunds():
         sse_encode_i_32(8, serializer);
-      case PaymentError_InvalidInvoice(err: final err):
+      case PaymentError_InvalidDescription(err: final err):
         sse_encode_i_32(9, serializer);
         sse_encode_String(err, serializer);
-      case PaymentError_InvalidPreimage():
+      case PaymentError_InvalidInvoice(err: final err):
         sse_encode_i_32(10, serializer);
-      case PaymentError_LwkError(err: final err):
+        sse_encode_String(err, serializer);
+      case PaymentError_InvalidPreimage():
         sse_encode_i_32(11, serializer);
+      case PaymentError_LwkError(err: final err):
+        sse_encode_i_32(12, serializer);
         sse_encode_String(err, serializer);
       case PaymentError_PairsNotFound():
-        sse_encode_i_32(12, serializer);
-      case PaymentError_PaymentTimeout():
         sse_encode_i_32(13, serializer);
-      case PaymentError_PersistError():
+      case PaymentError_PaymentTimeout():
         sse_encode_i_32(14, serializer);
-      case PaymentError_ReceiveError(err: final err):
+      case PaymentError_PersistError():
         sse_encode_i_32(15, serializer);
+      case PaymentError_ReceiveError(err: final err):
+        sse_encode_i_32(16, serializer);
         sse_encode_String(err, serializer);
       case PaymentError_Refunded(err: final err, refundTxId: final refundTxId):
-        sse_encode_i_32(16, serializer);
+        sse_encode_i_32(17, serializer);
         sse_encode_String(err, serializer);
         sse_encode_String(refundTxId, serializer);
       case PaymentError_SelfTransferNotSupported():
-        sse_encode_i_32(17, serializer);
-      case PaymentError_SendError(err: final err):
         sse_encode_i_32(18, serializer);
+      case PaymentError_SendError(err: final err):
+        sse_encode_i_32(19, serializer);
         sse_encode_String(err, serializer);
       case PaymentError_SignerError(err: final err):
-        sse_encode_i_32(19, serializer);
+        sse_encode_i_32(20, serializer);
         sse_encode_String(err, serializer);
       default:
         throw UnimplementedError('');
@@ -5551,8 +5566,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_receive_payment_request(ReceivePaymentRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_opt_String(self.description, serializer);
     sse_encode_prepare_receive_response(self.prepareResponse, serializer);
+    sse_encode_opt_String(self.description, serializer);
+    sse_encode_opt_box_autoadd_bool(self.useDescriptionHash, serializer);
   }
 
   @protected

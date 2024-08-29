@@ -1400,8 +1400,9 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [ReceivePaymentRequest] containing:
-    ///     * `description` - the optional payment description
     ///     * `prepare_response` - the [PrepareReceiveResponse] from calling [LiquidSdk::prepare_receive_payment]
+    ///     * `description` - the optional payment description
+    ///     * `use_description_hash` - optional if true uses the hash of the description
     ///
     /// # Returns
     ///
@@ -1424,7 +1425,22 @@ impl LiquidSdk {
                 let Some(amount_sat) = amount_sat else {
                     return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::Lightning` is used.".to_string() });
                 };
-                self.create_receive_swap(*amount_sat, *fees_sat, req.description.clone())
+                let (description, description_hash) = match (
+                    req.description.clone(),
+                    req.use_description_hash.unwrap_or_default(),
+                ) {
+                    (Some(description), true) => (
+                        None,
+                        Some(sha256::Hash::hash(description.as_bytes()).to_hex()),
+                    ),
+                    (_, false) => (req.description.clone(), None),
+                    _ => {
+                        return Err(PaymentError::InvalidDescription {
+                            err: "Missing payment description to hash".to_string(),
+                        })
+                    }
+                };
+                self.create_receive_swap(*amount_sat, *fees_sat, description, description_hash)
                     .await
             }
             PaymentMethod::BitcoinAddress => {
@@ -1464,6 +1480,7 @@ impl LiquidSdk {
         payer_amount_sat: u64,
         fees_sat: u64,
         description: Option<String>,
+        description_hash: Option<String>,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         let reverse_pair = self
             .swapper
@@ -1507,6 +1524,7 @@ impl LiquidSdk {
             preimage_hash: preimage.sha256,
             claim_public_key: keypair.public_key().into(),
             description,
+            description_hash,
             address: Some(mrh_addr_str.clone()),
             address_signature: Some(mrh_addr_hash_sig.to_hex()),
             referral_id: None,
@@ -1551,7 +1569,7 @@ impl LiquidSdk {
             &swap_id,
             &invoice.to_string(),
         )?;
-        let description = match invoice.description() {
+        let invoice_description = match invoice.description() {
             Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
             Bolt11InvoiceDescription::Hash(_) => None,
         };
@@ -1562,7 +1580,7 @@ impl LiquidSdk {
                 create_response_json,
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
-                description,
+                description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
@@ -2094,6 +2112,7 @@ impl LiquidSdk {
             .receive_payment(&ReceivePaymentRequest {
                 prepare_response,
                 description: None,
+                use_description_hash: Some(false),
             })
             .await?;
 
