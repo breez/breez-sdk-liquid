@@ -90,6 +90,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BuyBitcoinRequest dco_decode_box_autoadd_buy_bitcoin_request(dynamic raw);
 
   @protected
+  CheckMessageRequest dco_decode_box_autoadd_check_message_request(dynamic raw);
+
+  @protected
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
 
   @protected
@@ -174,6 +177,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SendPaymentRequest dco_decode_box_autoadd_send_payment_request(dynamic raw);
 
   @protected
+  SignMessageRequest dco_decode_box_autoadd_sign_message_request(dynamic raw);
+
+  @protected
   SuccessActionProcessed dco_decode_box_autoadd_success_action_processed(dynamic raw);
 
   @protected
@@ -193,6 +199,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BuyBitcoinRequest dco_decode_buy_bitcoin_request(dynamic raw);
+
+  @protected
+  CheckMessageRequest dco_decode_check_message_request(dynamic raw);
+
+  @protected
+  CheckMessageResponse dco_decode_check_message_response(dynamic raw);
 
   @protected
   Config dco_decode_config(dynamic raw);
@@ -456,6 +468,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SendPaymentResponse dco_decode_send_payment_response(dynamic raw);
 
   @protected
+  SignMessageRequest dco_decode_sign_message_request(dynamic raw);
+
+  @protected
+  SignMessageResponse dco_decode_sign_message_response(dynamic raw);
+
+  @protected
   SuccessActionProcessed dco_decode_success_action_processed(dynamic raw);
 
   @protected
@@ -550,6 +568,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BuyBitcoinRequest sse_decode_box_autoadd_buy_bitcoin_request(SseDeserializer deserializer);
 
   @protected
+  CheckMessageRequest sse_decode_box_autoadd_check_message_request(SseDeserializer deserializer);
+
+  @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
 
   @protected
@@ -634,6 +655,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SendPaymentRequest sse_decode_box_autoadd_send_payment_request(SseDeserializer deserializer);
 
   @protected
+  SignMessageRequest sse_decode_box_autoadd_sign_message_request(SseDeserializer deserializer);
+
+  @protected
   SuccessActionProcessed sse_decode_box_autoadd_success_action_processed(SseDeserializer deserializer);
 
   @protected
@@ -653,6 +677,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BuyBitcoinRequest sse_decode_buy_bitcoin_request(SseDeserializer deserializer);
+
+  @protected
+  CheckMessageRequest sse_decode_check_message_request(SseDeserializer deserializer);
+
+  @protected
+  CheckMessageResponse sse_decode_check_message_response(SseDeserializer deserializer);
 
   @protected
   Config sse_decode_config(SseDeserializer deserializer);
@@ -916,6 +946,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SendPaymentResponse sse_decode_send_payment_response(SseDeserializer deserializer);
 
   @protected
+  SignMessageRequest sse_decode_sign_message_request(SseDeserializer deserializer);
+
+  @protected
+  SignMessageResponse sse_decode_sign_message_response(SseDeserializer deserializer);
+
+  @protected
   SuccessActionProcessed sse_decode_success_action_processed(SseDeserializer deserializer);
 
   @protected
@@ -1032,6 +1068,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_buy_bitcoin_request();
     cst_api_fill_to_wire_buy_bitcoin_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_check_message_request> cst_encode_box_autoadd_check_message_request(
+      CheckMessageRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_check_message_request();
+    cst_api_fill_to_wire_check_message_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -1272,6 +1317,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_send_payment_request();
     cst_api_fill_to_wire_send_payment_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_sign_message_request> cst_encode_box_autoadd_sign_message_request(
+      SignMessageRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_sign_message_request();
+    cst_api_fill_to_wire_sign_message_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -1566,6 +1620,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_check_message_request(
+      CheckMessageRequest apiObj, ffi.Pointer<wire_cst_check_message_request> wireObj) {
+    cst_api_fill_to_wire_check_message_request(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_connect_request(
       ConnectRequest apiObj, ffi.Pointer<wire_cst_connect_request> wireObj) {
     cst_api_fill_to_wire_connect_request(apiObj, wireObj.ref);
@@ -1726,6 +1786,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_sign_message_request(
+      SignMessageRequest apiObj, ffi.Pointer<wire_cst_sign_message_request> wireObj) {
+    cst_api_fill_to_wire_sign_message_request(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_success_action_processed(
       SuccessActionProcessed apiObj, ffi.Pointer<wire_cst_success_action_processed> wireObj) {
     cst_api_fill_to_wire_success_action_processed(apiObj, wireObj.ref);
@@ -1747,6 +1813,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BuyBitcoinRequest apiObj, wire_cst_buy_bitcoin_request wireObj) {
     cst_api_fill_to_wire_prepare_buy_bitcoin_response(apiObj.prepareResponse, wireObj.prepare_response);
     wireObj.redirect_url = cst_encode_opt_String(apiObj.redirectUrl);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_check_message_request(
+      CheckMessageRequest apiObj, wire_cst_check_message_request wireObj) {
+    wireObj.message = cst_encode_String(apiObj.message);
+    wireObj.pubkey = cst_encode_String(apiObj.pubkey);
+    wireObj.signature = cst_encode_String(apiObj.signature);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_check_message_response(
+      CheckMessageResponse apiObj, wire_cst_check_message_response wireObj) {
+    wireObj.is_valid = cst_encode_bool(apiObj.isValid);
   }
 
   @protected
@@ -2615,6 +2695,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_sign_message_request(
+      SignMessageRequest apiObj, wire_cst_sign_message_request wireObj) {
+    wireObj.message = cst_encode_String(apiObj.message);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_sign_message_response(
+      SignMessageResponse apiObj, wire_cst_sign_message_response wireObj) {
+    wireObj.signature = cst_encode_String(apiObj.signature);
+  }
+
+  @protected
   void cst_api_fill_to_wire_success_action_processed(
       SuccessActionProcessed apiObj, wire_cst_success_action_processed wireObj) {
     if (apiObj is SuccessActionProcessed_Aes) {
@@ -2771,6 +2863,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_check_message_request(CheckMessageRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
 
   @protected
@@ -2860,6 +2955,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_send_payment_request(SendPaymentRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_sign_message_request(SignMessageRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_success_action_processed(SuccessActionProcessed self, SseSerializer serializer);
 
   @protected
@@ -2879,6 +2977,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_buy_bitcoin_request(BuyBitcoinRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_check_message_request(CheckMessageRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_check_message_response(CheckMessageResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_config(Config self, SseSerializer serializer);
@@ -3145,6 +3249,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_send_payment_response(SendPaymentResponse self, SseSerializer serializer);
 
   @protected
+  void sse_encode_sign_message_request(SignMessageRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sign_message_response(SignMessageResponse self, SseSerializer serializer);
+
+  @protected
   void sse_encode_success_action_processed(SuccessActionProcessed self, SseSerializer serializer);
 
   @protected
@@ -3264,6 +3374,24 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_buy_bitcoin =
       _wire__crate__bindings__BindingLiquidSdk_buy_bitcoinPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_buy_bitcoin_request>)>();
+
+  WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_check_message(
+    int that,
+    ffi.Pointer<wire_cst_check_message_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_check_message(
+      that,
+      req,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_check_messagePtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_check_message_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message');
+  late final _wire__crate__bindings__BindingLiquidSdk_check_message =
+      _wire__crate__bindings__BindingLiquidSdk_check_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_check_message_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_disconnect(
     int port_,
@@ -3723,6 +3851,24 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_send_payment_request>)>();
 
+  WireSyncRust2DartDco wire__crate__bindings__BindingLiquidSdk_sign_message(
+    int that,
+    ffi.Pointer<wire_cst_sign_message_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_sign_message(
+      that,
+      req,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_sign_messagePtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_sign_message_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message');
+  late final _wire__crate__bindings__BindingLiquidSdk_sign_message =
+      _wire__crate__bindings__BindingLiquidSdk_sign_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_sign_message_request>)>();
+
   void wire__crate__bindings__BindingLiquidSdk_sync(
     int port_,
     int that,
@@ -3961,6 +4107,16 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request');
   late final _cst_new_box_autoadd_buy_bitcoin_request = _cst_new_box_autoadd_buy_bitcoin_requestPtr
       .asFunction<ffi.Pointer<wire_cst_buy_bitcoin_request> Function()>();
+
+  ffi.Pointer<wire_cst_check_message_request> cst_new_box_autoadd_check_message_request() {
+    return _cst_new_box_autoadd_check_message_request();
+  }
+
+  late final _cst_new_box_autoadd_check_message_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_check_message_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_check_message_request');
+  late final _cst_new_box_autoadd_check_message_request = _cst_new_box_autoadd_check_message_requestPtr
+      .asFunction<ffi.Pointer<wire_cst_check_message_request> Function()>();
 
   ffi.Pointer<wire_cst_connect_request> cst_new_box_autoadd_connect_request() {
     return _cst_new_box_autoadd_connect_request();
@@ -4251,6 +4407,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_send_payment_request = _cst_new_box_autoadd_send_payment_requestPtr
       .asFunction<ffi.Pointer<wire_cst_send_payment_request> Function()>();
 
+  ffi.Pointer<wire_cst_sign_message_request> cst_new_box_autoadd_sign_message_request() {
+    return _cst_new_box_autoadd_sign_message_request();
+  }
+
+  late final _cst_new_box_autoadd_sign_message_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_sign_message_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request');
+  late final _cst_new_box_autoadd_sign_message_request = _cst_new_box_autoadd_sign_message_requestPtr
+      .asFunction<ffi.Pointer<wire_cst_sign_message_request> Function()>();
+
   ffi.Pointer<wire_cst_success_action_processed> cst_new_box_autoadd_success_action_processed() {
     return _cst_new_box_autoadd_success_action_processed();
   }
@@ -4492,6 +4658,14 @@ final class wire_cst_buy_bitcoin_request extends ffi.Struct {
   external wire_cst_prepare_buy_bitcoin_response prepare_response;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> redirect_url;
+}
+
+final class wire_cst_check_message_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
 final class wire_cst_list_payment_type extends ffi.Struct {
@@ -4781,6 +4955,10 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
+}
+
+final class wire_cst_sign_message_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
 final class wire_cst_binding_event_listener extends ffi.Struct {
@@ -5131,6 +5309,11 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_cst_check_message_response extends ffi.Struct {
+  @ffi.Bool()
+  external bool is_valid;
 }
 
 final class wire_cst_get_info_response extends ffi.Struct {
@@ -5583,6 +5766,10 @@ final class wire_cst_sdk_error extends ffi.Struct {
 
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
+}
+
+final class wire_cst_sign_message_response extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;

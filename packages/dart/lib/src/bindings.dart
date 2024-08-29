@@ -37,6 +37,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<String> buyBitcoin({required BuyBitcoinRequest req});
 
+  CheckMessageResponse checkMessage({required CheckMessageRequest req});
+
   Future<void> disconnect();
 
   void emptyWalletCache();
@@ -86,6 +88,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   void restore({required RestoreRequest req});
 
   Future<SendPaymentResponse> sendPayment({required SendPaymentRequest req});
+
+  SignMessageResponse signMessage({required SignMessageRequest req});
 
   Future<void> sync();
 

@@ -164,6 +164,28 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(signMessage:resolve:reject:)
+    func signMessage(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let signMessageRequest = try BreezSDKLiquidMapper.asSignMessageRequest(signMessageRequest: req)
+            var res = try getBindingLiquidSdk().signMessage(req: signMessageRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(signMessageResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(checkMessage:resolve:reject:)
+    func checkMessage(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let checkMessageRequest = try BreezSDKLiquidMapper.asCheckMessageRequest(checkMessageRequest: req)
+            var res = try getBindingLiquidSdk().checkMessage(req: checkMessageRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(checkMessageResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(prepareSendPayment:resolve:reject:)
     func prepareSendPayment(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

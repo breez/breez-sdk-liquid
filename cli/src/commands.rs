@@ -122,6 +122,17 @@ pub(crate) enum Command {
     RescanOnchainSwaps,
     /// Get the balance and general info of the current instance
     GetInfo,
+    /// Sign a message using the wallet private key
+    SignMessage {
+        /// The message to sign
+        message: String,
+    },
+    /// Verify a message with a public key
+    CheckMessage {
+        message: String,
+        pubkey: String,
+        signature: String,
+    },
     /// Sync local data with mempool and onchain data
     Sync,
     /// Get the recommended BTC fees based on the configured mempool.space instance
@@ -388,6 +399,24 @@ pub(crate) async fn handle_command(
         }
         Command::GetInfo => {
             command_result!(sdk.get_info().await?)
+        }
+        Command::SignMessage { message } => {
+            let req = SignMessageRequest { message };
+            let res = sdk.sign_message(&req)?;
+            command_result!(format!("Message signature: {}", res.signature))
+        }
+        Command::CheckMessage {
+            message,
+            pubkey,
+            signature,
+        } => {
+            let req = CheckMessageRequest {
+                message,
+                pubkey,
+                signature,
+            };
+            let res = sdk.check_message(&req)?;
+            command_result!(format!("Message was signed by pubkey: {}", res.is_valid))
         }
         Command::ListPayments {
             from_timestamp,
