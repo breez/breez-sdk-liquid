@@ -449,44 +449,65 @@ impl LiquidSdk {
                             .await?
                         }
                         Pending => {
-                            let Some(details) = &payment.details else {
-                                return Err(anyhow::anyhow!("No payment details found"));
-                            };
-
-                            // The swap state has changed to Pending
-                            match details.get_swap_id() {
-                                Some(swap_id) => match self.persister.fetch_swap_by_id(&swap_id)? {
-                                    Swap::Chain(ChainSwap { claim_tx_id, .. })
-                                    | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
-                                        match claim_tx_id {
-                                            Some(_) => {
-                                                // The claim tx has now been broadcast
-                                                self.notify_event_listeners(
-                                                    SdkEvent::PaymentWaitingConfirmation {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
+                            match &payment.details {
+                                Some(details) =>
+                                // The swap state has changed to Pending
+                                {
+                                    match details.get_swap_id() {
+                                        Some(swap_id) => match self
+                                            .persister
+                                            .fetch_swap_by_id(&swap_id)?
+                                        {
+                                            Swap::Chain(ChainSwap { claim_tx_id, .. })
+                                            | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
+                                                match claim_tx_id {
+                                                    Some(_) => {
+                                                        // The claim tx has now been broadcast
+                                                        self.notify_event_listeners(
+                                                            SdkEvent::PaymentWaitingConfirmation {
+                                                                details: payment,
+                                                            },
+                                                        )
+                                                        .await?
+                                                    }
+                                                    None => {
+                                                        // The lockup tx is in the mempool/confirmed
+                                                        self.notify_event_listeners(
+                                                            SdkEvent::PaymentPending {
+                                                                details: payment,
+                                                            },
+                                                        )
+                                                        .await?
+                                                    }
+                                                }
                                             }
-                                            None => {
+                                            Swap::Send(_) => {
                                                 // The lockup tx is in the mempool/confirmed
                                                 self.notify_event_listeners(
                                                     SdkEvent::PaymentPending { details: payment },
                                                 )
                                                 .await?
                                             }
+                                        },
+                                        // Here we probably have liquid address payment details so we emit PaymentWaitingConfirmation
+                                        None => {
+                                            self.notify_event_listeners(
+                                                SdkEvent::PaymentWaitingConfirmation {
+                                                    details: payment,
+                                                },
+                                            )
+                                            .await?
                                         }
                                     }
-                                    Swap::Send(_) => {
-                                        // The lockup tx is in the mempool/confirmed
-                                        self.notify_event_listeners(SdkEvent::PaymentPending {
-                                            details: payment,
-                                        })
-                                        .await?
-                                    }
-                                },
-                                None => debug!("Payment has no swap id"),
-                            }
+                                }
+                                // Here we probably have a transation without any details so we emit PaymentWaitingConfirmation
+                                None => {
+                                    self.notify_event_listeners(
+                                        SdkEvent::PaymentWaitingConfirmation { details: payment },
+                                    )
+                                    .await?
+                                }
+                            };
                         }
                         RefundPending => {
                             // The swap state has changed to RefundPending
