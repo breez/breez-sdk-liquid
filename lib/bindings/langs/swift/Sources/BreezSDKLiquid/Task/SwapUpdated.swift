@@ -39,7 +39,7 @@ class SwapUpdatedTask : TaskProtocol {
                 let swapId = self.getSwapId(details: payment.details)
                 if swapIdHash == swapId?.sha256() {
                     self.logger.log(tag: TAG, line: "Received payment succeeded event: \(swapIdHash)", level: "INFO")
-                    self.notifySuccess()
+                    self.notifySuccess(payment: payment)
                 }
                 break
             default:
@@ -68,11 +68,13 @@ class SwapUpdatedTask : TaskProtocol {
         self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
     }
 
-    func notifySuccess() {
-        if let swapIdHash = self.request?.id {
-            self.logger.log(tag: TAG, line: "Swap \(swapIdHash) processed successfully", level: "INFO")
-            let notificationTitle = ResourceHelper.shared.getString(key: Constants.SWAP_CONFIRMED_NOTIFICATION_TITLE, fallback: Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_TITLE)
-            self.displayPushNotification(title: notificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
-        }
+    func notifySuccess(payment: Payment) {
+        self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") completed successfully", level: "INFO")
+        let received = payment.paymentType == PaymentType.receive
+        let notificationTitle = ResourceHelper.shared.getString(
+            key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE, 
+            validateContains: "%d", 
+            fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
+        self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
     }
 }

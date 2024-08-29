@@ -18,7 +18,8 @@ struct Constants {
     static let LNURL_PAY_INVOICE_NOTIFICATION_TITLE = "lnurl_pay_invoice_notification_title"
     static let LNURL_PAY_METADATA_PLAIN_TEXT = "lnurl_pay_metadata_plain_text"
     static let LNURL_PAY_NOTIFICATION_FAILURE_TITLE = "lnurl_pay_notification_failure_title"
-    static let SWAP_CONFIRMED_NOTIFICATION_TITLE = "swap_confirmed_notification_title"
+    static let PAYMENT_RECEIVED_NOTIFICATION_TITLE = "payment_received_notification_title"
+    static let PAYMENT_SENT_NOTIFICATION_TITLE = "payment_sent_notification_title"
     static let SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT = "swap_confirmed_notification_failure_text"
     static let SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE = "swap_confirmed_notification_failure_title"
     
@@ -27,7 +28,8 @@ struct Constants {
     static let DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE = "Fetching Invoice"
     static let DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT = "Pay with LNURL"
     static let DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE = "Receive Payment Failed"
-    static let DEFAULT_SWAP_CONFIRMED_NOTIFICATION_TITLE = "Payment Complete"
+    static let DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE = "Received %d sats"
+    static let DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE = "Sent %d sats"
     static let DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT = "Tap to complete payment"
     static let DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE = "Payment Pending"
 }
