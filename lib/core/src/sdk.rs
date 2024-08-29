@@ -790,9 +790,11 @@ impl LiquidSdk {
                             .await?
                     }
                     None => {
-                        let lockup_fees_sat =
-                            self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
-                        lbtc_pair.fees.total(receiver_amount_sat) + lockup_fees_sat
+                        let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
+                        let lockup_fees_sat = self
+                            .estimate_lockup_tx_fee(receiver_amount_sat + boltz_fees_total)
+                            .await?;
+                        boltz_fees_total + lockup_fees_sat
                     }
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
@@ -991,9 +993,13 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         let receiver_amount_sat = get_invoice_amount!(invoice);
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
-        let lockup_tx_fees_sat = self.estimate_lockup_tx_fee(receiver_amount_sat).await?;
+
+        let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
+        let lockup_tx_fees_sat = self
+            .estimate_lockup_tx_fee(receiver_amount_sat + boltz_fees_total)
+            .await?;
         ensure_sdk!(
-            fees_sat == lbtc_pair.fees.total(receiver_amount_sat) + lockup_tx_fees_sat,
+            fees_sat == boltz_fees_total + lockup_tx_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -2619,7 +2625,7 @@ mod tests {
                                     .lock()
                                     .await
                                     .set_history(vec![MockHistory {
-                                        txid: Txid::from_str(&user_lockup_tx_id).unwrap(),
+                                        txid: Txid::from_str(user_lockup_tx_id).unwrap(),
                                         height: 0,
                                         block_hash: None,
                                         block_timestamp: None,
@@ -2630,7 +2636,7 @@ mod tests {
                                     .lock()
                                     .await
                                     .set_history(vec![MockHistory {
-                                        txid: Txid::from_str(&user_lockup_tx_id).unwrap(),
+                                        txid: Txid::from_str(user_lockup_tx_id).unwrap(),
                                         height: 0,
                                         block_hash: None,
                                         block_timestamp: None,
