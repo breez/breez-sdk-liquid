@@ -2,15 +2,23 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
+import breez_sdk_liquid.Payment
 import breez_sdk_liquid.PaymentDetails
+import breez_sdk_liquid.PaymentType
 import breez_sdk_liquid.SdkEvent
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
-import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_SWAP_UPDATED
+import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TEXT
+import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.PAYMENT_SENT_NOTIFICATION_TEXT
+import breez_sdk_liquid_notification.Constants.PAYMENT_SENT_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
-import breez_sdk_liquid_notification.Constants.SWAP_CONFIRMED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
@@ -63,7 +71,7 @@ class SwapUpdatedJob(
                             "Received payment succeeded event: ${this.swapIdHash}",
                             "TRACE"
                         )
-                        notifySuccess()
+                        notifySuccess(payment)
                     }
                 }
             }
@@ -84,20 +92,27 @@ class SwapUpdatedJob(
             .fold(StringBuilder()) { sb, it -> sb.append("%02x".format(it)) }
             .toString()
 
-    private fun notifySuccess() {
-        this.swapIdHash?.let { swapIdHash ->
-            logger.log(TAG, "Swap $swapIdHash processed successfully", "INFO")
-            notifyChannel(
+    private fun notifySuccess(payment: Payment) {
+        logger.log(TAG, "Payment ${payment.txId} completed successfully", "INFO")
+        val received = payment.paymentType == PaymentType.RECEIVE
+        notifyChannel(
+            context,
+            NOTIFICATION_CHANNEL_SWAP_UPDATED,
+            getString(
                 context,
-                NOTIFICATION_CHANNEL_SWAP_UPDATED,
+                if (received) PAYMENT_RECEIVED_NOTIFICATION_TITLE else PAYMENT_SENT_NOTIFICATION_TITLE,
+                if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE else DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
+            ),
+            String.format(
                 getString(
                     context,
-                    SWAP_CONFIRMED_NOTIFICATION_TITLE,
-                    DEFAULT_SWAP_CONFIRMED_NOTIFICATION_TITLE
-                ),
+                    if (received) PAYMENT_RECEIVED_NOTIFICATION_TEXT else PAYMENT_SENT_NOTIFICATION_TEXT,
+                    "%d",
+                    if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
+                ), payment.amountSat.toLong()
             )
-            fgService.onFinished(this)
-        }
+        )
+        fgService.onFinished(this)
     }
 
     private fun notifyFailure() {

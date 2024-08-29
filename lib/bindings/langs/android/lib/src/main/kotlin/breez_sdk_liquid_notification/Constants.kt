@@ -49,6 +49,14 @@ object Constants {
     const val LNURL_PAY_WORKGROUP_NAME = "lnurl_pay_work_group_name"
     const val NOTIFICATION_COLOR = "default_notification_color"
     const val NOTIFICATION_ICON = "ic_stat_ic_notification"
+    const val PAYMENT_RECEIVED_NOTIFICATION_TEXT =
+        "payment_received_notification_text"
+    const val PAYMENT_RECEIVED_NOTIFICATION_TITLE =
+        "payment_received_notification_title"
+    const val PAYMENT_SENT_NOTIFICATION_TEXT =
+        "payment_sent_notification_text"
+    const val PAYMENT_SENT_NOTIFICATION_TITLE =
+        "payment_sent_notification_title"
     const val SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT =
         "swap_confirmed_notification_failure_text"
     const val SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =
@@ -86,12 +94,18 @@ object Constants {
         "Required to handle LNURL pay requests when the application is in the background"
     const val DEFAULT_LNURL_PAY_WORKGROUP_NAME = "LNURL Payments"
     const val DEFAULT_NOTIFICATION_COLOR = "#0089F9"
+    const val DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT =
+        "Received %d sats"
+    const val DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE =
+        "Payment Received"
+    const val DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT =
+        "Sent %d sats"
+    const val DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE =
+        "Payment Sent"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT =
         "Tap to complete payment"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =
         "Payment Pending"
-    const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_TITLE =
-        "Payment Complete"
     const val DEFAULT_SWAP_UPDATED_NOTIFICATION_CHANNEL_DESCRIPTION =
         "Notifications for swap updates when the application is in the background"
     const val DEFAULT_SWAP_UPDATED_NOTIFICATION_CHANNEL_NAME =
