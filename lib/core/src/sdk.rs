@@ -1141,25 +1141,49 @@ impl LiquidSdk {
             SwapAmountType::Send => {
                 let payer_amount_sat = req.amount_sat;
 
-                let lockup_fees_sat = match payer_amount_sat == balance_sat {
-                    true => self.estimate_drain_tx_fee().await?,
-                    false => self.estimate_lockup_tx_fee(payer_amount_sat).await?, // TODO Correct?
+                let (lockup_fees_sat, user_lockup_amount_sat) = match payer_amount_sat == balance_sat {
+                    true => {
+                        let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+                        let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+                        (lockup_fees_sat, user_lockup_amount_sat)
+                    },
+
+                    // TODO How to find user_lockup_amount and lockup_fees_sat? They depend on each other.
+                    false => {
+                        // We start with an approximation of the lockup amount
+                        let lockup_fees_sat = self.estimate_lockup_tx_fee(payer_amount_sat).await?;
+                        let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+
+                        // We check if the lockup fees found above are correct for the lockup amount
+                        // If they're different, we abort
+                        // This is because, depending on available coins and the coin selection algorithm,
+                        // it could be there is no lockup_amount and lockup_fee where they add up to the chosen payer_amount.
+                        let check_lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+                        ensure_sdk!(lockup_fees_sat == check_lockup_fees_sat, PaymentError::Generic {
+                            err: "Cannot prepare payment for chosen amount".to_string()
+                        });
+
+                        (lockup_fees_sat, user_lockup_amount_sat)
+                    },
                 };
 
-                let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
 
                 let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
                 let total_fees_sat =
                     boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+
+                info!("user_lockup_amount_sat: {user_lockup_amount_sat}");
+                info!("lockup_fees_sat: {lockup_fees_sat}");
+                info!("claim_fees_sat: {claim_fees_sat}");
+                info!("server_fees_sat: {server_fees_sat}");
+                info!("total_fees_sat: {total_fees_sat}");
 
                 let receiver_amount_sat = payer_amount_sat - total_fees_sat;
 
                 info!("payer_amount_sat: {payer_amount_sat}");
                 info!("receiver_amount_sat: {receiver_amount_sat}");
                 info!("boltz_fees_sat: {boltz_fees_sat}");
-                info!("lockup_fees_sat: {lockup_fees_sat}");
-                info!("claim_fees_sat: {claim_fees_sat}");
-                info!("server_fees_sat: {server_fees_sat}");
 
                 (payer_amount_sat, total_fees_sat, receiver_amount_sat)
             }
@@ -1176,6 +1200,7 @@ impl LiquidSdk {
                     / (100.0 - pair.fees.percentage))
                     .ceil() as u64;
                 self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+                // TODO This can also be a drain, if the receiver_amount is high enough
                 let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
                 let boltz_fees_sat =
@@ -1239,10 +1264,7 @@ impl LiquidSdk {
         let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64 * 100.0
             / (100.0 - pair.fees.percentage))
             .ceil() as u64;
-
         let boltz_fee_sat = user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
-        // let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
-        // let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
         self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
 
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
