@@ -1,6 +1,6 @@
 {
   "name": "react-native-breez-sdk-liquid-example",
-  "version": "0.2.1",
+  "version": "0.2.2-dev16",
   "private": true,
   "scripts": {
     "clean": "rm -rf /tmp/metro-* && yarn start --reset-cache",
@@ -13,7 +13,7 @@
     "rebuild": "rm -rf node_modules && yarn && yarn pods"
   },
   "dependencies": {
-    "@breeztech/react-native-breez-sdk-liquid": "0.2.2-dev9",
+    "@breeztech/react-native-breez-sdk-liquid": "0.2.2-dev16",
     "@dreson4/react-native-quick-bip39": "^0.0.5",
     "react": "18.1.0",
     "react-native": "0.70.15",
