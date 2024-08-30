@@ -1573,6 +1573,9 @@ enum BreezSDKLiquidMapper {
         guard let receiverAmountSat = preparePayOnchainRequest["receiverAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainRequest"))
         }
+        guard let drain = preparePayOnchainRequest["drain"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "drain", typeName: "PreparePayOnchainRequest"))
+        }
         var satPerVbyte: UInt32?
         if hasNonNilKey(data: preparePayOnchainRequest, key: "satPerVbyte") {
             guard let satPerVbyteTmp = preparePayOnchainRequest["satPerVbyte"] as? UInt32 else {
@@ -1580,18 +1583,15 @@ enum BreezSDKLiquidMapper {
             }
             satPerVbyte = satPerVbyteTmp
         }
-        guard let drain = preparePayOnchainRequest["drain"] as? Bool else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "drain", typeName: "PreparePayOnchainRequest"))
-        }
 
-        return PreparePayOnchainRequest(receiverAmountSat: receiverAmountSat, satPerVbyte: satPerVbyte, drain: drain)
+        return PreparePayOnchainRequest(receiverAmountSat: receiverAmountSat, drain: drain, satPerVbyte: satPerVbyte)
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainRequest.receiverAmountSat,
-            "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
             "drain": preparePayOnchainRequest.drain,
+            "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
         ]
     }
 

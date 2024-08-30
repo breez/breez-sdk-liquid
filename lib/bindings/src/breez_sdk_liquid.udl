@@ -412,8 +412,8 @@ dictionary OnchainPaymentLimitsResponse {
 
 dictionary PreparePayOnchainRequest {
     u64 receiver_amount_sat;
-    u32? sat_per_vbyte = null;
     boolean drain;
+    u32? sat_per_vbyte = null;
 };
 
 dictionary PreparePayOnchainResponse {

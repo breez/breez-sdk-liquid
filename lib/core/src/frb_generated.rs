@@ -3319,12 +3319,12 @@ impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_satPerVbyte = <Option<u32>>::sse_decode(deserializer);
         let mut var_drain = <bool>::sse_decode(deserializer);
+        let mut var_satPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
             receiver_amount_sat: var_receiverAmountSat,
-            sat_per_vbyte: var_satPerVbyte,
             drain: var_drain,
+            sat_per_vbyte: var_satPerVbyte,
         };
     }
 }
@@ -5104,8 +5104,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.receiver_amount_sat.into_into_dart().into_dart(),
-            self.sat_per_vbyte.into_into_dart().into_dart(),
             self.drain.into_into_dart().into_dart(),
+            self.sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6785,8 +6785,8 @@ impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.receiver_amount_sat, serializer);
-        <Option<u32>>::sse_encode(self.sat_per_vbyte, serializer);
         <bool>::sse_encode(self.drain, serializer);
+        <Option<u32>>::sse_encode(self.sat_per_vbyte, serializer);
     }
 }
 
@@ -8422,8 +8422,8 @@ mod io {
         fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
             crate::model::PreparePayOnchainRequest {
                 receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
-                sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
                 drain: self.drain.cst_decode(),
+                sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
             }
         }
     }
@@ -9399,8 +9399,8 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 receiver_amount_sat: Default::default(),
-                sat_per_vbyte: core::ptr::null_mut(),
                 drain: Default::default(),
+                sat_per_vbyte: core::ptr::null_mut(),
             }
         }
     }
@@ -11308,8 +11308,8 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
         receiver_amount_sat: u64,
-        sat_per_vbyte: *mut u32,
         drain: bool,
+        sat_per_vbyte: *mut u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
