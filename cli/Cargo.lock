@@ -500,7 +500,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/dangeross/boltz-rust?branch=savage-breez-latest#108d745dbdb2f8fb957d50dc92b5821562fb917d"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=c140193dab075093e1cfdcc1dd608be8e828d1ef#c140193dab075093e1cfdcc1dd608be8e828d1ef"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",
@@ -569,6 +569,7 @@ dependencies = [
  "tokio-stream",
  "tokio-tungstenite",
  "url",
+ "zbase32",
 ]
 
 [[package]]
@@ -3974,6 +3975,12 @@ dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "zbase32"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f9079049688da5871a7558ddacb7f04958862c703e68258594cb7a862b5e33f"
 
 [[package]]
 name = "zerocopy"

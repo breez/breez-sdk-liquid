@@ -68,6 +68,10 @@ pub(crate) enum Command {
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
         description: Option<String>,
+
+        /// Optional if true uses the hash of the description
+        #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
+        use_description_hash: Option<bool>,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
     BuyBitcoin {
@@ -118,6 +122,17 @@ pub(crate) enum Command {
     RescanOnchainSwaps,
     /// Get the balance and general info of the current instance
     GetInfo,
+    /// Sign a message using the wallet private key
+    SignMessage {
+        /// The message to sign
+        message: String,
+    },
+    /// Verify a message with a public key
+    CheckMessage {
+        message: String,
+        pubkey: String,
+        signature: String,
+    },
     /// Sync local data with mempool and onchain data
     Sync,
     /// Get the recommended BTC fees based on the configured mempool.space instance
@@ -158,6 +173,10 @@ pub(crate) enum Command {
         /// LNURL-auth endpoint
         lnurl: String,
     },
+    /// Register a webhook URL
+    RegisterWebhook { url: String },
+    /// Unregister the webhook URL
+    UnregisterWebhook,
     /// List fiat currencies
     ListFiat {},
     /// Fetch available fiat rates
@@ -214,6 +233,7 @@ pub(crate) async fn handle_command(
             payment_method,
             payer_amount_sat,
             description,
+            use_description_hash,
         } => {
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
@@ -234,6 +254,7 @@ pub(crate) async fn handle_command(
                 .receive_payment(&ReceivePaymentRequest {
                     prepare_response,
                     description,
+                    use_description_hash,
                 })
                 .await?;
 
@@ -378,6 +399,24 @@ pub(crate) async fn handle_command(
         }
         Command::GetInfo => {
             command_result!(sdk.get_info().await?)
+        }
+        Command::SignMessage { message } => {
+            let req = SignMessageRequest { message };
+            let res = sdk.sign_message(&req)?;
+            command_result!(format!("Message signature: {}", res.signature))
+        }
+        Command::CheckMessage {
+            message,
+            pubkey,
+            signature,
+        } => {
+            let req = CheckMessageRequest {
+                message,
+                pubkey,
+                signature,
+            };
+            let res = sdk.check_message(&req)?;
+            command_result!(format!("Message was signed by pubkey: {}", res.is_valid))
         }
         Command::ListPayments {
             from_timestamp,
@@ -525,6 +564,14 @@ pub(crate) async fn handle_command(
             }?;
 
             command_result!(res)
+        }
+        Command::RegisterWebhook { url } => {
+            sdk.register_webhook(url).await?;
+            command_result!("Url registered successfully")
+        }
+        Command::UnregisterWebhook => {
+            sdk.unregister_webhook().await?;
+            command_result!("Url unregistered successfully")
         }
         Command::FetchFiatRates {} => {
             let res = sdk.fetch_fiat_rates().await?;

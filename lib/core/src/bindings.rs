@@ -83,6 +83,19 @@ impl BindingLiquidSdk {
         self.sdk.get_info().await.map_err(Into::into)
     }
 
+    #[frb(sync)]
+    pub fn sign_message(&self, req: SignMessageRequest) -> Result<SignMessageResponse, SdkError> {
+        self.sdk.sign_message(&req)
+    }
+
+    #[frb(sync)]
+    pub fn check_message(
+        &self,
+        req: CheckMessageRequest,
+    ) -> Result<CheckMessageResponse, SdkError> {
+        self.sdk.check_message(&req)
+    }
+
     pub async fn add_event_listener(
         &self,
         listener: StreamSink<SdkEvent>,
@@ -189,6 +202,14 @@ impl BindingLiquidSdk {
             .await
             .map(Into::into)
             .map_err(Into::into)
+    }
+
+    pub async fn register_webhook(&self, webhook_url: String) -> Result<(), SdkError> {
+        self.sdk.register_webhook(webhook_url).await
+    }
+
+    pub async fn unregister_webhook(&self) -> Result<(), SdkError> {
+        self.sdk.unregister_webhook().await
     }
 
     pub async fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, SdkError> {

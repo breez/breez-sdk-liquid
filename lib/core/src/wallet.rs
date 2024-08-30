@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -11,14 +12,18 @@ use lwk_wollet::{
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
-use sdk_common::bitcoin::secp256k1::Secp256k1;
+use sdk_common::bitcoin::hashes::{sha256, Hash};
+use sdk_common::bitcoin::secp256k1::{Message, PublicKey, Secp256k1};
 use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
+use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
 use crate::{
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
+
+static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
 #[async_trait]
 pub trait OnchainWallet: Send + Sync {
@@ -43,6 +48,14 @@ pub trait OnchainWallet: Send + Sync {
     fn pubkey(&self) -> String;
 
     fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError>;
+
+    /// Sign given message with the wallet private key. Returns a zbase
+    /// encoded signature.
+    fn sign_message(&self, msg: &str) -> Result<String>;
+
+    /// Check whether given message was signed by the given
+    /// pubkey and the signature (zbase encoded) is valid.
+    fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool>;
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
@@ -161,5 +174,34 @@ impl OnchainWallet for LiquidOnchainWallet {
         let bip32_xpriv = ExtendedPrivKey::new_master(self.config.network.into(), &seed)?
             .derive_priv(&Secp256k1::new(), &path)?;
         Ok(bip32_xpriv)
+    }
+
+    fn sign_message(&self, message: &str) -> Result<String> {
+        let seed = self
+            .lwk_signer
+            .seed()
+            .ok_or(anyhow!("Could not get signer seed"))?;
+        let secp = Secp256k1::new();
+        let keypair = ExtendedPrivKey::new_master(self.config.network.into(), &seed)
+            .map_err(|e| anyhow!("Could not get signer keypair: {e}"))?
+            .to_keypair(&secp);
+        // Prefix and double hash message
+        let mut engine = sha256::HashEngine::default();
+        engine.write_all(LN_MESSAGE_PREFIX)?;
+        engine.write_all(message.as_bytes())?;
+        let hashed_msg = sha256::Hash::from_engine(engine);
+        let double_hashed_msg = Message::from(sha256::Hash::hash(&hashed_msg));
+        // Get message signature and encode to zbase32
+        let recoverable_sig =
+            secp.sign_ecdsa_recoverable(&double_hashed_msg, &keypair.secret_key());
+        let (recovery_id, sig) = recoverable_sig.serialize_compact();
+        let mut complete_signature = vec![31 + recovery_id.to_i32() as u8];
+        complete_signature.extend_from_slice(&sig);
+        Ok(zbase32::encode_full_bytes(&complete_signature))
+    }
+
+    fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool> {
+        let pk = PublicKey::from_str(pubkey)?;
+        Ok(verify(message.as_bytes(), signature, &pk))
     }
 }

@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.2.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1074530283;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1532646653;
 
 // Section: executor
 
@@ -181,6 +181,43 @@ fn wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(
                     .await,
                 )
             }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_check_message_impl(
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::CheckMessageRequest>,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_check_message",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            transform_result_dco::<_, _, crate::error::SdkError>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
+                let output_ok =
+                    crate::bindings::BindingLiquidSdk::check_message(&*api_that_guard, api_req)?;
+                Ok(output_ok)
+            })())
         },
     )
 }
@@ -1164,6 +1201,55 @@ fn wire__crate__bindings__BindingLiquidSdk_refund_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_register_webhook_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    webhook_url: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_register_webhook",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_webhook_url = webhook_url.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::register_webhook(
+                            &*api_that_guard,
+                            api_webhook_url,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -1296,6 +1382,43 @@ fn wire__crate__bindings__BindingLiquidSdk_send_payment_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_sign_message_impl(
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::SignMessageRequest>,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_sign_message",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            transform_result_dco::<_, _, crate::error::SdkError>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
+                let output_ok =
+                    crate::bindings::BindingLiquidSdk::sign_message(&*api_that_guard, api_req)?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_sync_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -1332,6 +1455,51 @@ fn wire__crate__bindings__BindingLiquidSdk_sync_impl(
                         let api_that_guard = api_that_guard.unwrap();
                         let output_ok =
                             crate::bindings::BindingLiquidSdk::sync(&*api_that_guard).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_unregister_webhook_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_unregister_webhook",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok =
+                            crate::bindings::BindingLiquidSdk::unregister_webhook(&*api_that_guard)
+                                .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1957,6 +2125,30 @@ impl SseDecode for crate::model::BuyBitcoinRequest {
         return crate::model::BuyBitcoinRequest {
             prepare_response: var_prepareResponse,
             redirect_url: var_redirectUrl,
+        };
+    }
+}
+
+impl SseDecode for crate::model::CheckMessageRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_message = <String>::sse_decode(deserializer);
+        let mut var_pubkey = <String>::sse_decode(deserializer);
+        let mut var_signature = <String>::sse_decode(deserializer);
+        return crate::model::CheckMessageRequest {
+            message: var_message,
+            pubkey: var_pubkey,
+            signature: var_signature,
+        };
+    }
+}
+
+impl SseDecode for crate::model::CheckMessageResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_isValid = <bool>::sse_decode(deserializer);
+        return crate::model::CheckMessageResponse {
+            is_valid: var_isValid,
         };
     }
 }
@@ -3003,29 +3195,33 @@ impl SseDecode for crate::error::PaymentError {
             }
             9 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::InvalidInvoice { err: var_err };
+                return crate::error::PaymentError::InvalidDescription { err: var_err };
             }
             10 => {
-                return crate::error::PaymentError::InvalidPreimage;
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::InvalidInvoice { err: var_err };
             }
             11 => {
+                return crate::error::PaymentError::InvalidPreimage;
+            }
+            12 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::LwkError { err: var_err };
             }
-            12 => {
+            13 => {
                 return crate::error::PaymentError::PairsNotFound;
             }
-            13 => {
+            14 => {
                 return crate::error::PaymentError::PaymentTimeout;
             }
-            14 => {
+            15 => {
                 return crate::error::PaymentError::PersistError;
             }
-            15 => {
+            16 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::ReceiveError { err: var_err };
             }
-            16 => {
+            17 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 let mut var_refundTxId = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
@@ -3033,14 +3229,14 @@ impl SseDecode for crate::error::PaymentError {
                     refund_tx_id: var_refundTxId,
                 };
             }
-            17 => {
+            18 => {
                 return crate::error::PaymentError::SelfTransferNotSupported;
             }
-            18 => {
+            19 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            19 => {
+            20 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -3238,12 +3434,14 @@ impl SseDecode for crate::bindings::Rate {
 impl SseDecode for crate::model::ReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_description = <Option<String>>::sse_decode(deserializer);
         let mut var_prepareResponse =
             <crate::model::PrepareReceiveResponse>::sse_decode(deserializer);
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_useDescriptionHash = <Option<bool>>::sse_decode(deserializer);
         return crate::model::ReceivePaymentRequest {
-            description: var_description,
             prepare_response: var_prepareResponse,
+            description: var_description,
+            use_description_hash: var_useDescriptionHash,
         };
     }
 }
@@ -3472,6 +3670,26 @@ impl SseDecode for crate::model::SendPaymentResponse {
         let mut var_payment = <crate::model::Payment>::sse_decode(deserializer);
         return crate::model::SendPaymentResponse {
             payment: var_payment,
+        };
+    }
+}
+
+impl SseDecode for crate::model::SignMessageRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_message = <String>::sse_decode(deserializer);
+        return crate::model::SignMessageRequest {
+            message: var_message,
+        };
+    }
+}
+
+impl SseDecode for crate::model::SignMessageResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_signature = <String>::sse_decode(deserializer);
+        return crate::model::SignMessageResponse {
+            signature: var_signature,
         };
     }
 }
@@ -3756,6 +3974,45 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::BuyBitcoinRequest>
     for crate::model::BuyBitcoinRequest
 {
     fn into_into_dart(self) -> crate::model::BuyBitcoinRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::CheckMessageRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.message.into_into_dart().into_dart(),
+            self.pubkey.into_into_dart().into_dart(),
+            self.signature.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::CheckMessageRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::CheckMessageRequest>
+    for crate::model::CheckMessageRequest
+{
+    fn into_into_dart(self) -> crate::model::CheckMessageRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::CheckMessageResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.is_valid.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::CheckMessageResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::CheckMessageResponse>
+    for crate::model::CheckMessageResponse
+{
+    fn into_into_dart(self) -> crate::model::CheckMessageResponse {
         self
     }
 }
@@ -4700,31 +4957,34 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             }
             crate::error::PaymentError::InvalidOrExpiredFees => [7.into_dart()].into_dart(),
             crate::error::PaymentError::InsufficientFunds => [8.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidInvoice { err } => {
+            crate::error::PaymentError::InvalidDescription { err } => {
                 [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidPreimage => [10.into_dart()].into_dart(),
-            crate::error::PaymentError::LwkError { err } => {
-                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            crate::error::PaymentError::InvalidInvoice { err } => {
+                [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::PairsNotFound => [12.into_dart()].into_dart(),
-            crate::error::PaymentError::PaymentTimeout => [13.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [14.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidPreimage => [11.into_dart()].into_dart(),
+            crate::error::PaymentError::LwkError { err } => {
+                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::error::PaymentError::PairsNotFound => [13.into_dart()].into_dart(),
+            crate::error::PaymentError::PaymentTimeout => [14.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [15.into_dart()].into_dart(),
             crate::error::PaymentError::ReceiveError { err } => {
-                [15.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [16.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::Refunded { err, refund_tx_id } => [
-                16.into_dart(),
+                17.into_dart(),
                 err.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::error::PaymentError::SelfTransferNotSupported => [17.into_dart()].into_dart(),
+            crate::error::PaymentError::SelfTransferNotSupported => [18.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [18.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [19.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [19.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [20.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -5034,8 +5294,9 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Rate>>
 impl flutter_rust_bridge::IntoDart for crate::model::ReceivePaymentRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.description.into_into_dart().into_dart(),
             self.prepare_response.into_into_dart().into_dart(),
+            self.description.into_into_dart().into_dart(),
+            self.use_description_hash.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5319,6 +5580,40 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::SendPaymentResponse>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::SignMessageRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.message.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::SignMessageRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::SignMessageRequest>
+    for crate::model::SignMessageRequest
+{
+    fn into_into_dart(self) -> crate::model::SignMessageRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::SignMessageResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.signature.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::SignMessageResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::SignMessageResponse>
+    for crate::model::SignMessageResponse
+{
+    fn into_into_dart(self) -> crate::model::SignMessageResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::SuccessActionProcessed> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
@@ -5523,6 +5818,22 @@ impl SseEncode for crate::model::BuyBitcoinRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PrepareBuyBitcoinResponse>::sse_encode(self.prepare_response, serializer);
         <Option<String>>::sse_encode(self.redirect_url, serializer);
+    }
+}
+
+impl SseEncode for crate::model::CheckMessageRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.message, serializer);
+        <String>::sse_encode(self.pubkey, serializer);
+        <String>::sse_encode(self.signature, serializer);
+    }
+}
+
+impl SseEncode for crate::model::CheckMessageResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_valid, serializer);
     }
 }
 
@@ -6345,44 +6656,48 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::InsufficientFunds => {
                 <i32>::sse_encode(8, serializer);
             }
-            crate::error::PaymentError::InvalidInvoice { err } => {
+            crate::error::PaymentError::InvalidDescription { err } => {
                 <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidPreimage => {
+            crate::error::PaymentError::InvalidInvoice { err } => {
                 <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::error::PaymentError::InvalidPreimage => {
+                <i32>::sse_encode(11, serializer);
             }
             crate::error::PaymentError::LwkError { err } => {
-                <i32>::sse_encode(11, serializer);
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::PairsNotFound => {
-                <i32>::sse_encode(12, serializer);
-            }
-            crate::error::PaymentError::PaymentTimeout => {
                 <i32>::sse_encode(13, serializer);
             }
-            crate::error::PaymentError::PersistError => {
+            crate::error::PaymentError::PaymentTimeout => {
                 <i32>::sse_encode(14, serializer);
             }
-            crate::error::PaymentError::ReceiveError { err } => {
+            crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(15, serializer);
+            }
+            crate::error::PaymentError::ReceiveError { err } => {
+                <i32>::sse_encode(16, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::Refunded { err, refund_tx_id } => {
-                <i32>::sse_encode(16, serializer);
+                <i32>::sse_encode(17, serializer);
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(refund_tx_id, serializer);
             }
             crate::error::PaymentError::SelfTransferNotSupported => {
-                <i32>::sse_encode(17, serializer);
+                <i32>::sse_encode(18, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(18, serializer);
+                <i32>::sse_encode(19, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(19, serializer);
+                <i32>::sse_encode(20, serializer);
                 <String>::sse_encode(err, serializer);
             }
             _ => {
@@ -6542,8 +6857,9 @@ impl SseEncode for crate::bindings::Rate {
 impl SseEncode for crate::model::ReceivePaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<String>>::sse_encode(self.description, serializer);
         <crate::model::PrepareReceiveResponse>::sse_encode(self.prepare_response, serializer);
+        <Option<String>>::sse_encode(self.description, serializer);
+        <Option<bool>>::sse_encode(self.use_description_hash, serializer);
     }
 }
 
@@ -6710,6 +7026,20 @@ impl SseEncode for crate::model::SendPaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::Payment>::sse_encode(self.payment, serializer);
+    }
+}
+
+impl SseEncode for crate::model::SignMessageRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.message, serializer);
+    }
+}
+
+impl SseEncode for crate::model::SignMessageResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.signature, serializer);
     }
 }
 
@@ -6999,6 +7329,13 @@ mod io {
             CstDecode::<crate::model::BuyBitcoinRequest>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::CheckMessageRequest> for *mut wire_cst_check_message_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CheckMessageRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::CheckMessageRequest>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::model::ConnectRequest> for *mut wire_cst_connect_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::ConnectRequest {
@@ -7205,6 +7542,13 @@ mod io {
             CstDecode::<crate::model::SendPaymentRequest>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::SignMessageRequest> for *mut wire_cst_sign_message_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::SignMessageRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::SignMessageRequest>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::bindings::SuccessActionProcessed> for *mut wire_cst_success_action_processed {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::SuccessActionProcessed {
@@ -7244,6 +7588,24 @@ mod io {
             crate::model::BuyBitcoinRequest {
                 prepare_response: self.prepare_response.cst_decode(),
                 redirect_url: self.redirect_url.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::CheckMessageRequest> for wire_cst_check_message_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CheckMessageRequest {
+            crate::model::CheckMessageRequest {
+                message: self.message.cst_decode(),
+                pubkey: self.pubkey.cst_decode(),
+                signature: self.signature.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::CheckMessageResponse> for wire_cst_check_message_response {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CheckMessageResponse {
+            crate::model::CheckMessageResponse {
+                is_valid: self.is_valid.cst_decode(),
             }
         }
     }
@@ -7981,42 +8343,48 @@ mod io {
                 7 => crate::error::PaymentError::InvalidOrExpiredFees,
                 8 => crate::error::PaymentError::InsufficientFunds,
                 9 => {
+                    let ans = unsafe { self.kind.InvalidDescription };
+                    crate::error::PaymentError::InvalidDescription {
+                        err: ans.err.cst_decode(),
+                    }
+                }
+                10 => {
                     let ans = unsafe { self.kind.InvalidInvoice };
                     crate::error::PaymentError::InvalidInvoice {
                         err: ans.err.cst_decode(),
                     }
                 }
-                10 => crate::error::PaymentError::InvalidPreimage,
-                11 => {
+                11 => crate::error::PaymentError::InvalidPreimage,
+                12 => {
                     let ans = unsafe { self.kind.LwkError };
                     crate::error::PaymentError::LwkError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                12 => crate::error::PaymentError::PairsNotFound,
-                13 => crate::error::PaymentError::PaymentTimeout,
-                14 => crate::error::PaymentError::PersistError,
-                15 => {
+                13 => crate::error::PaymentError::PairsNotFound,
+                14 => crate::error::PaymentError::PaymentTimeout,
+                15 => crate::error::PaymentError::PersistError,
+                16 => {
                     let ans = unsafe { self.kind.ReceiveError };
                     crate::error::PaymentError::ReceiveError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                16 => {
+                17 => {
                     let ans = unsafe { self.kind.Refunded };
                     crate::error::PaymentError::Refunded {
                         err: ans.err.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                     }
                 }
-                17 => crate::error::PaymentError::SelfTransferNotSupported,
-                18 => {
+                18 => crate::error::PaymentError::SelfTransferNotSupported,
+                19 => {
                     let ans = unsafe { self.kind.SendError };
                     crate::error::PaymentError::SendError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                19 => {
+                20 => {
                     let ans = unsafe { self.kind.SignerError };
                     crate::error::PaymentError::SignerError {
                         err: ans.err.cst_decode(),
@@ -8134,8 +8502,9 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
             crate::model::ReceivePaymentRequest {
-                description: self.description.cst_decode(),
                 prepare_response: self.prepare_response.cst_decode(),
+                description: self.description.cst_decode(),
+                use_description_hash: self.use_description_hash.cst_decode(),
             }
         }
     }
@@ -8320,6 +8689,22 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::SignMessageRequest> for wire_cst_sign_message_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::SignMessageRequest {
+            crate::model::SignMessageRequest {
+                message: self.message.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::SignMessageResponse> for wire_cst_sign_message_response {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::SignMessageResponse {
+            crate::model::SignMessageResponse {
+                signature: self.signature.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::bindings::SuccessActionProcessed> for wire_cst_success_action_processed {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::SuccessActionProcessed {
@@ -8442,6 +8827,32 @@ mod io {
         }
     }
     impl Default for wire_cst_buy_bitcoin_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_check_message_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                message: core::ptr::null_mut(),
+                pubkey: core::ptr::null_mut(),
+                signature: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_check_message_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_check_message_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                is_valid: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_check_message_response {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -9103,8 +9514,9 @@ mod io {
     impl NewWithNullPtr for wire_cst_receive_payment_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                description: core::ptr::null_mut(),
                 prepare_response: Default::default(),
+                description: core::ptr::null_mut(),
+                use_description_hash: core::ptr::null_mut(),
             }
         }
     }
@@ -9286,6 +9698,30 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_sign_message_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                message: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_sign_message_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_sign_message_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                signature: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_sign_message_response {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_success_action_processed {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -9353,6 +9789,14 @@ mod io {
         req: *mut wire_cst_buy_bitcoin_request,
     ) {
         wire__crate__bindings__BindingLiquidSdk_buy_bitcoin_impl(port_, that, req)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message(
+        that: usize,
+        req: *mut wire_cst_check_message_request,
+    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+        wire__crate__bindings__BindingLiquidSdk_check_message_impl(that, req)
     }
 
     #[no_mangle]
@@ -9535,6 +9979,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhook(
+        port_: i64,
+        that: usize,
+        webhook_url: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_register_webhook_impl(port_, that, webhook_url)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
         port_: i64,
         that: usize,
@@ -9560,11 +10013,27 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message(
+        that: usize,
+        req: *mut wire_cst_sign_message_request,
+    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+        wire__crate__bindings__BindingLiquidSdk_sign_message_impl(that, req)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
         port_: i64,
         that: usize,
     ) {
         wire__crate__bindings__BindingLiquidSdk_sync_impl(port_, that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhook(
+        port_: i64,
+        that: usize,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_unregister_webhook_impl(port_, that)
     }
 
     #[no_mangle]
@@ -9682,6 +10151,14 @@ mod io {
     ) -> *mut wire_cst_buy_bitcoin_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_buy_bitcoin_request::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_check_message_request(
+    ) -> *mut wire_cst_check_message_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_check_message_request::new_with_null_ptr(),
         )
     }
 
@@ -9902,6 +10379,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request(
+    ) -> *mut wire_cst_sign_message_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_sign_message_request::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed(
     ) -> *mut wire_cst_success_action_processed {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -10117,6 +10602,18 @@ mod io {
     pub struct wire_cst_buy_bitcoin_request {
         prepare_response: wire_cst_prepare_buy_bitcoin_response,
         redirect_url: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_check_message_request {
+        message: *mut wire_cst_list_prim_u_8_strict,
+        pubkey: *mut wire_cst_list_prim_u_8_strict,
+        signature: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_check_message_response {
+        is_valid: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -10728,6 +11225,7 @@ mod io {
         AmountMissing: wire_cst_PaymentError_AmountMissing,
         InvalidNetwork: wire_cst_PaymentError_InvalidNetwork,
         Generic: wire_cst_PaymentError_Generic,
+        InvalidDescription: wire_cst_PaymentError_InvalidDescription,
         InvalidInvoice: wire_cst_PaymentError_InvalidInvoice,
         LwkError: wire_cst_PaymentError_LwkError,
         ReceiveError: wire_cst_PaymentError_ReceiveError,
@@ -10749,6 +11247,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_PaymentError_Generic {
+        err: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentError_InvalidDescription {
         err: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
@@ -10856,8 +11359,9 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_receive_payment_request {
-        description: *mut wire_cst_list_prim_u_8_strict,
         prepare_response: wire_cst_prepare_receive_response,
+        description: *mut wire_cst_list_prim_u_8_strict,
+        use_description_hash: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11015,6 +11519,16 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_send_payment_response {
         payment: wire_cst_payment,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_sign_message_request {
+        message: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_sign_message_response {
+        signature: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

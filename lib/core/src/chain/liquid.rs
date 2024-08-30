@@ -41,6 +41,13 @@ pub trait LiquidChainService: Send + Sync {
     /// The data is fetched in a single call from the Electrum endpoint.
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
 
+    /// Get the transactions involved in a list of scripts including lowball
+    async fn get_script_history_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<Vec<History>>;
+
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
         &self,
@@ -76,33 +83,6 @@ impl HybridLiquidChainService {
             electrum_client,
             network: config.network,
         })
-    }
-
-    async fn get_script_history_with_retry(
-        &self,
-        script: &Script,
-        retries: u64,
-    ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes())
-            .to_byte_array()
-            .to_hex();
-        info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
-
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
-                    // Waiting 1s between retries, so we detect the new tx as soon as possible
-                    thread::sleep(Duration::from_secs(1));
-                }
-                false => break,
-            }
-        }
-        Ok(script_history)
     }
 }
 
@@ -162,6 +142,33 @@ impl LiquidChainService for HybridLiquidChainService {
         self.electrum_client
             .get_scripts_history(scripts)
             .map_err(Into::into)
+    }
+
+    async fn get_script_history_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<Vec<History>> {
+        let script_hash = sha256::Hash::hash(script.as_bytes())
+            .to_byte_array()
+            .to_hex();
+        info!("Fetching script history for {}", script_hash);
+        let mut script_history = vec![];
+
+        let mut retry = 0;
+        while retry <= retries {
+            script_history = self.get_script_history(script).await?;
+            match script_history.is_empty() {
+                true => {
+                    retry += 1;
+                    info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
+                    // Waiting 1s between retries, so we detect the new tx as soon as possible
+                    thread::sleep(Duration::from_secs(1));
+                }
+                false => break,
+            }
+        }
+        Ok(script_history)
     }
 
     async fn verify_tx(

@@ -95,6 +95,24 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoinPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_buy_bitcoin_request>)>();
 
+  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message(
+    int that,
+    ffi.Pointer<wire_cst_check_message_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message(
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_messagePtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_check_message_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_check_message_request>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(
     int port_,
     int that,
@@ -487,6 +505,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_refundPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_refund_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhook(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> webhook_url,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhook(
+      port_,
+      that,
+      webhook_url,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhookPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhook');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhook =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_register_webhookPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
     int port_,
     int that,
@@ -542,6 +580,24 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_send_payment_request>)>();
 
+  WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message(
+    int that,
+    ffi.Pointer<wire_cst_sign_message_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message(
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_messagePtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.UintPtr, ffi.Pointer<wire_cst_sign_message_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_sign_message_request>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
     int port_,
     int that,
@@ -557,6 +613,23 @@ class FlutterBreezLiquidBindings {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync');
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_syncPtr
+          .asFunction<void Function(int, int)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhook(
+    int port_,
+    int that,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhook(
+      port_,
+      that,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhookPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+          'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhook');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhook =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_unregister_webhookPtr
           .asFunction<void Function(int, int)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
@@ -776,6 +849,18 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request =
       _frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_requestPtr
           .asFunction<ffi.Pointer<wire_cst_buy_bitcoin_request> Function()>();
+
+  ffi.Pointer<wire_cst_check_message_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_check_message_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_check_message_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_check_message_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_check_message_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_check_message_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_check_message_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_check_message_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_check_message_request> Function()>();
 
   ffi.Pointer<wire_cst_connect_request> frbgen_breez_liquid_cst_new_box_autoadd_connect_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_connect_request();
@@ -1102,6 +1187,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_send_payment_requestPtr
           .asFunction<ffi.Pointer<wire_cst_send_payment_request> Function()>();
 
+  ffi.Pointer<wire_cst_sign_message_request> frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_sign_message_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_sign_message_request> Function()>();
+
   ffi.Pointer<wire_cst_success_action_processed>
       frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed();
@@ -1368,6 +1464,14 @@ final class wire_cst_buy_bitcoin_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> redirect_url;
 }
 
+final class wire_cst_check_message_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
+}
+
 final class wire_cst_list_payment_type extends ffi.Struct {
   external ffi.Pointer<ffi.Int32> ptr;
 
@@ -1522,9 +1626,11 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {
+  external wire_cst_prepare_receive_response prepare_response;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external wire_cst_prepare_receive_response prepare_response;
+  external ffi.Pointer<ffi.Bool> use_description_hash;
 }
 
 final class wire_cst_refund_request extends ffi.Struct {
@@ -1653,6 +1759,10 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
+}
+
+final class wire_cst_sign_message_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
 final class wire_cst_binding_event_listener extends ffi.Struct {
@@ -2005,6 +2115,11 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_check_message_response extends ffi.Struct {
+  @ffi.Bool()
+  external bool is_valid;
+}
+
 final class wire_cst_get_info_response extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
@@ -2338,6 +2453,10 @@ final class wire_cst_PaymentError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_InvalidDescription extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_InvalidInvoice extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -2370,6 +2489,8 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
 
   external wire_cst_PaymentError_Generic Generic;
+
+  external wire_cst_PaymentError_InvalidDescription InvalidDescription;
 
   external wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
 
@@ -2449,6 +2570,10 @@ final class wire_cst_sdk_error extends ffi.Struct {
 
 final class wire_cst_send_payment_response extends ffi.Struct {
   external wire_cst_payment payment;
+}
+
+final class wire_cst_sign_message_response extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
 /// EXTRA BEGIN

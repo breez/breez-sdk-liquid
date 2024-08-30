@@ -135,6 +135,72 @@ fun asBuyBitcoinRequestList(arr: ReadableArray): List<BuyBitcoinRequest> {
     return list
 }
 
+fun asCheckMessageRequest(checkMessageRequest: ReadableMap): CheckMessageRequest? {
+    if (!validateMandatoryFields(
+            checkMessageRequest,
+            arrayOf(
+                "message",
+                "pubkey",
+                "signature",
+            ),
+        )
+    ) {
+        return null
+    }
+    val message = checkMessageRequest.getString("message")!!
+    val pubkey = checkMessageRequest.getString("pubkey")!!
+    val signature = checkMessageRequest.getString("signature")!!
+    return CheckMessageRequest(message, pubkey, signature)
+}
+
+fun readableMapOf(checkMessageRequest: CheckMessageRequest): ReadableMap =
+    readableMapOf(
+        "message" to checkMessageRequest.message,
+        "pubkey" to checkMessageRequest.pubkey,
+        "signature" to checkMessageRequest.signature,
+    )
+
+fun asCheckMessageRequestList(arr: ReadableArray): List<CheckMessageRequest> {
+    val list = ArrayList<CheckMessageRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCheckMessageRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asCheckMessageResponse(checkMessageResponse: ReadableMap): CheckMessageResponse? {
+    if (!validateMandatoryFields(
+            checkMessageResponse,
+            arrayOf(
+                "isValid",
+            ),
+        )
+    ) {
+        return null
+    }
+    val isValid = checkMessageResponse.getBoolean("isValid")
+    return CheckMessageResponse(isValid)
+}
+
+fun readableMapOf(checkMessageResponse: CheckMessageResponse): ReadableMap =
+    readableMapOf(
+        "isValid" to checkMessageResponse.isValid,
+    )
+
+fun asCheckMessageResponseList(arr: ReadableArray): List<CheckMessageResponse> {
+    val list = ArrayList<CheckMessageResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCheckMessageResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
 fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
@@ -1156,26 +1222,26 @@ fun asPayment(payment: ReadableMap): Payment? {
     ) {
         return null
     }
-    val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
-    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()
     val feesSat = payment.getDouble("feesSat").toULong()
     val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
+    val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val details = if (hasNonNullKey(payment, "details")) payment.getMap("details")?.let { asPaymentDetails(it) } else null
-    return Payment(destination, txId, timestamp, amountSat, feesSat, paymentType, status, details)
+    return Payment(timestamp, amountSat, feesSat, paymentType, status, destination, txId, details)
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
     readableMapOf(
-        "destination" to payment.destination,
-        "txId" to payment.txId,
         "timestamp" to payment.timestamp,
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
         "paymentType" to payment.paymentType.name.lowercase(),
         "status" to payment.status.name.lowercase(),
+        "destination" to payment.destination,
+        "txId" to payment.txId,
         "details" to payment.details?.let { readableMapOf(it) },
     )
 
@@ -1602,13 +1668,24 @@ fun asReceivePaymentRequest(receivePaymentRequest: ReadableMap): ReceivePaymentR
     }
     val prepareResponse = receivePaymentRequest.getMap("prepareResponse")?.let { asPrepareReceiveResponse(it) }!!
     val description = if (hasNonNullKey(receivePaymentRequest, "description")) receivePaymentRequest.getString("description") else null
-    return ReceivePaymentRequest(prepareResponse, description)
+    val useDescriptionHash =
+        if (hasNonNullKey(
+                receivePaymentRequest,
+                "useDescriptionHash",
+            )
+        ) {
+            receivePaymentRequest.getBoolean("useDescriptionHash")
+        } else {
+            null
+        }
+    return ReceivePaymentRequest(prepareResponse, description, useDescriptionHash)
 }
 
 fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(receivePaymentRequest.prepareResponse),
         "description" to receivePaymentRequest.description,
+        "useDescriptionHash" to receivePaymentRequest.useDescriptionHash,
     )
 
 fun asReceivePaymentRequestList(arr: ReadableArray): List<ReceivePaymentRequest> {
@@ -1962,6 +2039,66 @@ fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     for (value in arr.toArrayList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSignMessageRequest(signMessageRequest: ReadableMap): SignMessageRequest? {
+    if (!validateMandatoryFields(
+            signMessageRequest,
+            arrayOf(
+                "message",
+            ),
+        )
+    ) {
+        return null
+    }
+    val message = signMessageRequest.getString("message")!!
+    return SignMessageRequest(message)
+}
+
+fun readableMapOf(signMessageRequest: SignMessageRequest): ReadableMap =
+    readableMapOf(
+        "message" to signMessageRequest.message,
+    )
+
+fun asSignMessageRequestList(arr: ReadableArray): List<SignMessageRequest> {
+    val list = ArrayList<SignMessageRequest>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSignMessageRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        }
+    }
+    return list
+}
+
+fun asSignMessageResponse(signMessageResponse: ReadableMap): SignMessageResponse? {
+    if (!validateMandatoryFields(
+            signMessageResponse,
+            arrayOf(
+                "signature",
+            ),
+        )
+    ) {
+        return null
+    }
+    val signature = signMessageResponse.getString("signature")!!
+    return SignMessageResponse(signature)
+}
+
+fun readableMapOf(signMessageResponse: SignMessageResponse): ReadableMap =
+    readableMapOf(
+        "signature" to signMessageResponse.signature,
+    )
+
+fun asSignMessageResponseList(arr: ReadableArray): List<SignMessageResponse> {
+    val list = ArrayList<SignMessageResponse>()
+    for (value in arr.toArrayList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSignMessageResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
         }
     }

@@ -56,6 +56,14 @@ impl OnchainWallet for MockWallet {
         unimplemented!()
     }
 
+    fn sign_message(&self, _message: &str) -> Result<String> {
+        unimplemented!()
+    }
+
+    fn check_message(&self, _message: &str, _pubkey: &str, _signature: &str) -> Result<bool> {
+        unimplemented!()
+    }
+
     async fn full_scan(&self) -> Result<(), PaymentError> {
         Ok(())
     }

@@ -41,6 +41,16 @@ export interface BuyBitcoinRequest {
     redirectUrl?: string
 }
 
+export interface CheckMessageRequest {
+    message: string
+    pubkey: string
+    signature: string
+}
+
+export interface CheckMessageResponse {
+    isValid: boolean
+}
+
 export interface Config {
     liquidElectrumUrl: string
     bitcoinElectrumUrl: string
@@ -212,13 +222,13 @@ export interface PayOnchainRequest {
 }
 
 export interface Payment {
-    destination?: string
-    txId?: string
     timestamp: number
     amountSat: number
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    destination?: string
+    txId?: string
     details?: PaymentDetails
 }
 
@@ -285,6 +295,7 @@ export interface Rate {
 export interface ReceivePaymentRequest {
     prepareResponse: PrepareReceiveResponse
     description?: string
+    useDescriptionHash?: boolean
 }
 
 export interface ReceivePaymentResponse {
@@ -339,6 +350,14 @@ export interface SendPaymentRequest {
 
 export interface SendPaymentResponse {
     payment: Payment
+}
+
+export interface SignMessageRequest {
+    message: string
+}
+
+export interface SignMessageResponse {
+    signature: string
 }
 
 export interface SymbolType {
@@ -630,6 +649,16 @@ export const getInfo = async (): Promise<GetInfoResponse> => {
     return response
 }
 
+export const signMessage = async (req: SignMessageRequest): Promise<SignMessageResponse> => {
+    const response = await BreezSDKLiquid.signMessage(req)
+    return response
+}
+
+export const checkMessage = async (req: CheckMessageRequest): Promise<CheckMessageResponse> => {
+    const response = await BreezSDKLiquid.checkMessage(req)
+    return response
+}
+
 export const prepareSendPayment = async (req: PrepareSendRequest): Promise<PrepareSendResponse> => {
     const response = await BreezSDKLiquid.prepareSendPayment(req)
     return response
@@ -738,6 +767,14 @@ export const lnurlWithdraw = async (req: LnUrlWithdrawRequest): Promise<LnUrlWit
 export const lnurlAuth = async (reqData: LnUrlAuthRequestData): Promise<LnUrlCallbackStatus> => {
     const response = await BreezSDKLiquid.lnurlAuth(reqData)
     return response
+}
+
+export const registerWebhook = async (webhookUrl: string): Promise<void> => {
+    await BreezSDKLiquid.registerWebhook(webhookUrl)
+}
+
+export const unregisterWebhook = async (): Promise<void> => {
+    await BreezSDKLiquid.unregisterWebhook()
 }
 
 export const fetchFiatRates = async (): Promise<Rate[]> => {

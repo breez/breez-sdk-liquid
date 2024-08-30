@@ -174,6 +174,76 @@ enum BreezSDKLiquidMapper {
         return buyBitcoinRequestList.map { v -> [String: Any?] in return dictionaryOf(buyBitcoinRequest: v) }
     }
 
+    static func asCheckMessageRequest(checkMessageRequest: [String: Any?]) throws -> CheckMessageRequest {
+        guard let message = checkMessageRequest["message"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "message", typeName: "CheckMessageRequest"))
+        }
+        guard let pubkey = checkMessageRequest["pubkey"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "CheckMessageRequest"))
+        }
+        guard let signature = checkMessageRequest["signature"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "signature", typeName: "CheckMessageRequest"))
+        }
+
+        return CheckMessageRequest(message: message, pubkey: pubkey, signature: signature)
+    }
+
+    static func dictionaryOf(checkMessageRequest: CheckMessageRequest) -> [String: Any?] {
+        return [
+            "message": checkMessageRequest.message,
+            "pubkey": checkMessageRequest.pubkey,
+            "signature": checkMessageRequest.signature,
+        ]
+    }
+
+    static func asCheckMessageRequestList(arr: [Any]) throws -> [CheckMessageRequest] {
+        var list = [CheckMessageRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var checkMessageRequest = try asCheckMessageRequest(checkMessageRequest: val)
+                list.append(checkMessageRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "CheckMessageRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(checkMessageRequestList: [CheckMessageRequest]) -> [Any] {
+        return checkMessageRequestList.map { v -> [String: Any?] in return dictionaryOf(checkMessageRequest: v) }
+    }
+
+    static func asCheckMessageResponse(checkMessageResponse: [String: Any?]) throws -> CheckMessageResponse {
+        guard let isValid = checkMessageResponse["isValid"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "isValid", typeName: "CheckMessageResponse"))
+        }
+
+        return CheckMessageResponse(isValid: isValid)
+    }
+
+    static func dictionaryOf(checkMessageResponse: CheckMessageResponse) -> [String: Any?] {
+        return [
+            "isValid": checkMessageResponse.isValid,
+        ]
+    }
+
+    static func asCheckMessageResponseList(arr: [Any]) throws -> [CheckMessageResponse] {
+        var list = [CheckMessageResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var checkMessageResponse = try asCheckMessageResponse(checkMessageResponse: val)
+                list.append(checkMessageResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "CheckMessageResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(checkMessageResponseList: [CheckMessageResponse]) -> [Any] {
+        return checkMessageResponseList.map { v -> [String: Any?] in return dictionaryOf(checkMessageResponse: v) }
+    }
+
     static func asConfig(config: [String: Any?]) throws -> Config {
         guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
@@ -1350,20 +1420,6 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPayment(payment: [String: Any?]) throws -> Payment {
-        var destination: String?
-        if hasNonNilKey(data: payment, key: "destination") {
-            guard let destinationTmp = payment["destination"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "destination"))
-            }
-            destination = destinationTmp
-        }
-        var txId: String?
-        if hasNonNilKey(data: payment, key: "txId") {
-            guard let txIdTmp = payment["txId"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "txId"))
-            }
-            txId = txIdTmp
-        }
         guard let timestamp = payment["timestamp"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "timestamp", typeName: "Payment"))
         }
@@ -1383,23 +1439,37 @@ enum BreezSDKLiquidMapper {
         }
         let status = try asPaymentState(paymentState: statusTmp)
 
+        var destination: String?
+        if hasNonNilKey(data: payment, key: "destination") {
+            guard let destinationTmp = payment["destination"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "destination"))
+            }
+            destination = destinationTmp
+        }
+        var txId: String?
+        if hasNonNilKey(data: payment, key: "txId") {
+            guard let txIdTmp = payment["txId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "txId"))
+            }
+            txId = txIdTmp
+        }
         var details: PaymentDetails?
         if let detailsTmp = payment["details"] as? [String: Any?] {
             details = try asPaymentDetails(paymentDetails: detailsTmp)
         }
 
-        return Payment(destination: destination, txId: txId, timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details)
+        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, destination: destination, txId: txId, details: details)
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
         return [
-            "destination": payment.destination == nil ? nil : payment.destination,
-            "txId": payment.txId == nil ? nil : payment.txId,
             "timestamp": payment.timestamp,
             "amountSat": payment.amountSat,
             "feesSat": payment.feesSat,
             "paymentType": valueOf(paymentType: payment.paymentType),
             "status": valueOf(paymentState: payment.status),
+            "destination": payment.destination == nil ? nil : payment.destination,
+            "txId": payment.txId == nil ? nil : payment.txId,
             "details": payment.details == nil ? nil : dictionaryOf(paymentDetails: payment.details!),
         ]
     }
@@ -1868,14 +1938,22 @@ enum BreezSDKLiquidMapper {
             }
             description = descriptionTmp
         }
+        var useDescriptionHash: Bool?
+        if hasNonNilKey(data: receivePaymentRequest, key: "useDescriptionHash") {
+            guard let useDescriptionHashTmp = receivePaymentRequest["useDescriptionHash"] as? Bool else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "useDescriptionHash"))
+            }
+            useDescriptionHash = useDescriptionHashTmp
+        }
 
-        return ReceivePaymentRequest(prepareResponse: prepareResponse, description: description)
+        return ReceivePaymentRequest(prepareResponse: prepareResponse, description: description, useDescriptionHash: useDescriptionHash)
     }
 
     static func dictionaryOf(receivePaymentRequest: ReceivePaymentRequest) -> [String: Any?] {
         return [
             "prepareResponse": dictionaryOf(prepareReceiveResponse: receivePaymentRequest.prepareResponse),
             "description": receivePaymentRequest.description == nil ? nil : receivePaymentRequest.description,
+            "useDescriptionHash": receivePaymentRequest.useDescriptionHash == nil ? nil : receivePaymentRequest.useDescriptionHash,
         ]
     }
 
@@ -2275,6 +2353,68 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(sendPaymentResponseList: [SendPaymentResponse]) -> [Any] {
         return sendPaymentResponseList.map { v -> [String: Any?] in return dictionaryOf(sendPaymentResponse: v) }
+    }
+
+    static func asSignMessageRequest(signMessageRequest: [String: Any?]) throws -> SignMessageRequest {
+        guard let message = signMessageRequest["message"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "message", typeName: "SignMessageRequest"))
+        }
+
+        return SignMessageRequest(message: message)
+    }
+
+    static func dictionaryOf(signMessageRequest: SignMessageRequest) -> [String: Any?] {
+        return [
+            "message": signMessageRequest.message,
+        ]
+    }
+
+    static func asSignMessageRequestList(arr: [Any]) throws -> [SignMessageRequest] {
+        var list = [SignMessageRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var signMessageRequest = try asSignMessageRequest(signMessageRequest: val)
+                list.append(signMessageRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "SignMessageRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(signMessageRequestList: [SignMessageRequest]) -> [Any] {
+        return signMessageRequestList.map { v -> [String: Any?] in return dictionaryOf(signMessageRequest: v) }
+    }
+
+    static func asSignMessageResponse(signMessageResponse: [String: Any?]) throws -> SignMessageResponse {
+        guard let signature = signMessageResponse["signature"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "signature", typeName: "SignMessageResponse"))
+        }
+
+        return SignMessageResponse(signature: signature)
+    }
+
+    static func dictionaryOf(signMessageResponse: SignMessageResponse) -> [String: Any?] {
+        return [
+            "signature": signMessageResponse.signature,
+        ]
+    }
+
+    static func asSignMessageResponseList(arr: [Any]) throws -> [SignMessageResponse] {
+        var list = [SignMessageResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var signMessageResponse = try asSignMessageResponse(signMessageResponse: val)
+                list.append(signMessageResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "SignMessageResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(signMessageResponseList: [SignMessageResponse]) -> [Any] {
+        return signMessageResponseList.map { v -> [String: Any?] in return dictionaryOf(signMessageResponse: v) }
     }
 
     static func asSymbol(symbol: [String: Any?]) throws -> Symbol {

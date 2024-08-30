@@ -85,6 +85,14 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.get_info()).map_err(Into::into)
     }
 
+    pub fn sign_message(&self, req: SignMessageRequest) -> SdkResult<SignMessageResponse> {
+        self.sdk.sign_message(&req)
+    }
+
+    pub fn check_message(&self, req: CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
+        self.sdk.check_message(&req)
+    }
+
     pub fn prepare_send_payment(
         &self,
         req: PrepareSendRequest,
@@ -164,6 +172,14 @@ impl BindingLiquidSdk {
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
         rt().block_on(self.sdk.lnurl_auth(req_data))
+    }
+
+    pub fn register_webhook(&self, webhook_url: String) -> Result<(), SdkError> {
+        rt().block_on(self.sdk.register_webhook(webhook_url))
+    }
+
+    pub fn unregister_webhook(&self) -> Result<(), SdkError> {
+        rt().block_on(self.sdk.unregister_webhook())
     }
 
     pub fn fetch_fiat_rates(&self) -> Result<Vec<Rate>, SdkError> {

@@ -282,6 +282,7 @@ enum PaymentError {
     "Generic",
     "InvalidOrExpiredFees",
     "InsufficientFunds",
+    "InvalidDescription",
     "InvalidInvoice",
     "InvalidNetwork",
     "InvalidPreimage",
@@ -322,6 +323,24 @@ dictionary GetInfoResponse {
     u64 pending_send_sat;
     u64 pending_receive_sat;
     string pubkey;
+};
+
+dictionary SignMessageRequest {
+    string message;
+};
+
+dictionary SignMessageResponse {
+    string signature;
+};
+
+dictionary CheckMessageRequest {
+    string message;
+    string pubkey;
+    string signature;
+};
+
+dictionary CheckMessageResponse {
+    boolean is_valid;
 };
 
 dictionary PrepareSendRequest {
@@ -368,6 +387,7 @@ dictionary PrepareReceiveResponse {
 dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
     string? description = null;
+    boolean? use_description_hash = null;
 };
 
 dictionary ReceivePaymentResponse {
@@ -450,14 +470,14 @@ interface PaymentDetails {
 };
 
 dictionary Payment {
-    string? destination;
-    string? tx_id = null;
     u32 timestamp;
     u64 amount_sat;
     u64 fees_sat;
     PaymentType payment_type;
     PaymentState status;
-    PaymentDetails? details;
+    string? destination = null;
+    string? tx_id = null;
+    PaymentDetails? details = null;
 };
 
 enum PaymentType {
@@ -561,6 +581,12 @@ interface BindingLiquidSdk {
     [Throws=SdkError]
     GetInfoResponse get_info();
 
+    [Throws=SdkError]
+    SignMessageResponse sign_message(SignMessageRequest req);
+
+    [Throws=SdkError]
+    CheckMessageResponse check_message(CheckMessageRequest req);
+
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
 
@@ -629,6 +655,12 @@ interface BindingLiquidSdk {
 
     [Throws=LnUrlAuthError]
     LnUrlCallbackStatus lnurl_auth(LnUrlAuthRequestData req_data);
+
+    [Throws=SdkError]
+    void register_webhook(string webhook_url);
+
+    [Throws=SdkError]
+    void unregister_webhook();
 
     [Throws=SdkError]
     sequence<Rate> fetch_fiat_rates();

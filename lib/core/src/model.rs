@@ -224,8 +224,11 @@ pub struct PrepareReceiveResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentRequest {
-    pub description: Option<String>,
     pub prepare_response: PrepareReceiveResponse,
+    /// The description for this payment request.
+    pub description: Option<String>,
+    /// If set to true, then the hash of the description will be used.
+    pub use_description_hash: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -372,6 +375,37 @@ pub struct GetInfoResponse {
     /// Incoming amount that is pending from ongoing Receive swaps
     pub pending_receive_sat: u64,
     pub pubkey: String,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::sign_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct SignMessageRequest {
+    pub message: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::sign_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct SignMessageResponse {
+    pub signature: String,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::check_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckMessageRequest {
+    /// The message that was signed.
+    pub message: String,
+    /// The public key of the node that signed the message.
+    pub pubkey: String,
+    /// The zbase encoded signature to verify.
+    pub signature: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::check_message].
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckMessageResponse {
+    /// Boolean value indicating whether the signature covers the message and
+    /// was signed by the given pubkey.
+    pub is_valid: bool,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
