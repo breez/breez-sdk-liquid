@@ -519,6 +519,8 @@ impl FromSql for Direction {
 }
 
 /// A chain swap
+///
+/// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
 #[derive(Clone, Debug)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,

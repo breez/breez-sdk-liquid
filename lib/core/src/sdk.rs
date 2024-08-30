@@ -14,10 +14,10 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
-use lwk_wollet::elements::AssetId;
+use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork};
+use lwk_wollet::{elements, ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::liquid::LiquidAddressData;
@@ -1871,7 +1871,15 @@ impl LiquidSdk {
         let pending_chain_swaps_by_refund_tx_id =
             self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
 
-        for tx in self.onchain_wallet.transactions().await? {
+        let tx_map: HashMap<Txid, WalletTx> = self
+            .onchain_wallet
+            .transactions()
+            .await?
+            .iter()
+            .map(|tx| (tx.txid, tx.clone()))
+            .collect();
+
+        for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();

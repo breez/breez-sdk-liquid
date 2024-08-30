@@ -175,6 +175,8 @@ pub mod logger;
 pub mod model;
 pub mod persist;
 pub(crate) mod receive_swap;
+#[allow(dead_code)]
+mod restore;
 pub mod sdk;
 pub(crate) mod send_swap;
 pub(crate) mod swapper;
