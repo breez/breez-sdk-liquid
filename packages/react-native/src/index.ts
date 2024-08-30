@@ -245,8 +245,8 @@ export interface PrepareBuyBitcoinResponse {
 
 export interface PreparePayOnchainRequest {
     receiverAmountSat: number
-    drain: boolean
     satPerVbyte?: number
+    drain?: boolean
 }
 
 export interface PreparePayOnchainResponse {

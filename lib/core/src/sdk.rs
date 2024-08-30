@@ -1179,7 +1179,8 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
-        let (payer_amount_sat, total_fees_sat, receiver_amount_sat) = match req.drain {
+        let is_drain = req.drain.unwrap_or(false);
+        let (payer_amount_sat, total_fees_sat, receiver_amount_sat) = match is_drain {
             true => {
                 let payer_amount_sat = balance_sat;
                 let lockup_fees_sat = self.estimate_drain_tx_fee().await?;

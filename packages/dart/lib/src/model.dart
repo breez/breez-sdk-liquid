@@ -698,21 +698,21 @@ class PreparePayOnchainRequest {
   /// The amount in satoshi that will be received
   final BigInt receiverAmountSat;
 
-  /// If set to true, the chosen `receiver_amount_sat` will be ignored. Instead, amounts and fees
-  /// will be returned such that all the wallet's funds are used.
-  final bool drain;
-
   /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
   final int? satPerVbyte;
 
+  /// If set to true, the chosen `receiver_amount_sat` will be ignored. Instead, amounts and fees
+  /// will be returned such that all the wallet's funds are used.
+  final bool? drain;
+
   const PreparePayOnchainRequest({
     required this.receiverAmountSat,
-    required this.drain,
     this.satPerVbyte,
+    this.drain,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ drain.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode ^ drain.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -720,8 +720,8 @@ class PreparePayOnchainRequest {
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
           receiverAmountSat == other.receiverAmountSat &&
-          drain == other.drain &&
-          satPerVbyte == other.satPerVbyte;
+          satPerVbyte == other.satPerVbyte &&
+          drain == other.drain;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

@@ -347,7 +347,6 @@ pub(crate) async fn handle_command(
             sat_per_vbyte,
             drain,
         } => {
-            let drain = drain.unwrap_or_default();
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
                     receiver_amount_sat,

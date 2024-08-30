@@ -135,8 +135,8 @@ typedef struct wire_cst_prepare_buy_bitcoin_request {
 
 typedef struct wire_cst_prepare_pay_onchain_request {
   uint64_t receiver_amount_sat;
-  bool drain;
   uint32_t *sat_per_vbyte;
+  bool *drain;
 } wire_cst_prepare_pay_onchain_request;
 
 typedef struct wire_cst_prepare_receive_request {

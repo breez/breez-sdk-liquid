@@ -2473,8 +2473,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
     wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
-    wireObj.drain = cst_encode_bool(apiObj.drain);
     wireObj.sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(apiObj.satPerVbyte);
+    wireObj.drain = cst_encode_opt_box_autoadd_bool(apiObj.drain);
   }
 
   @protected
@@ -4787,10 +4787,9 @@ final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   @ffi.Uint64()
   external int receiver_amount_sat;
 
-  @ffi.Bool()
-  external bool drain;
-
   external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
+
+  external ffi.Pointer<ffi.Bool> drain;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
