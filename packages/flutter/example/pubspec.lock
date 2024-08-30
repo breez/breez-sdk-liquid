@@ -39,7 +39,7 @@ packages:
       path: "../../dart"
       relative: true
     source: path
-    version: "0.2.2-dev14"
+    version: "0.2.2-dev15"
   build_cli_annotations:
     dependency: transitive
     description:
@@ -139,7 +139,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.2.2-dev14"
+    version: "0.2.2-dev15"
   flutter_lints:
     dependency: "direct dev"
     description:

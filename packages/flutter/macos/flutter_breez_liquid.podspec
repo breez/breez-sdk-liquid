@@ -1,4 +1,4 @@
-version = '0.2.2-dev14' # generated; do not edit
+version = '0.2.2-dev15' # generated; do not edit
 tag_name = "v#{version}"
 release_tag_name = "breez_liquid-#{tag_name}"
 
