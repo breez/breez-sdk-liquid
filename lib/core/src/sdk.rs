@@ -688,13 +688,17 @@ impl LiquidSdk {
             .sum())
     }
 
-    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64, PaymentError> {
+    fn get_temp_p2tr_addr(&self) -> &str {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
-        let temp_p2tr_addr = match self.config.network {
+        match self.config.network {
             LiquidNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
             LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
-        };
+        }
+    }
+
+    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64, PaymentError> {
+        let temp_p2tr_addr = self.get_temp_p2tr_addr();
 
         self.estimate_onchain_tx_fee(
             amount_sat,
@@ -704,6 +708,25 @@ impl LiquidSdk {
                 .map(|v| v as f32),
         )
         .await
+    }
+
+    async fn estimate_drain_tx_fee(&self) -> Result<u64, PaymentError> {
+        let temp_p2tr_addr = self.get_temp_p2tr_addr();
+
+        let fee_sat = self
+            .onchain_wallet
+            .build_drain_tx(
+                // TODO If this is None (defaulting to standard fee of 0.1),
+                //  shouldn't it be None for estimate_onchain_tx_fee() too? (chain swap non-drain lockup fee)
+                None,
+                temp_p2tr_addr,
+            )
+            .await?
+            .all_fees()
+            .values()
+            .sum();
+
+        Ok(fee_sat)
     }
 
     /// Prepares to pay a Lightning invoice via a submarine swap.
@@ -1132,19 +1155,13 @@ impl LiquidSdk {
     }
 
     /// Prepares to pay to a Bitcoin address via a chain swap.
-    ///
-    /// # Arguments
-    ///
-    /// * `req` - the [PreparePayOnchainRequest] containing:
-    ///     * `receiver_amount_sat` - the amount in satoshi that will be received
-    ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,
     ) -> Result<PreparePayOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let receiver_amount_sat = req.receiver_amount_sat;
+        let balance_sat = self.get_info().await?.balance_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = match req.sat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
@@ -1152,22 +1169,56 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
-        let user_lockup_amount_sat_without_service_fee =
-            receiver_amount_sat + claim_fees_sat + server_fees_sat;
-        let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
-        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fees_sat;
-        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+        let (payer_amount_sat, total_fees_sat, receiver_amount_sat) = match req.drain {
+            true => {
+                let payer_amount_sat = balance_sat;
+                let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+                let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+
+                let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
+                let total_fees_sat =
+                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+
+                let receiver_amount_sat = payer_amount_sat - total_fees_sat;
+
+                (payer_amount_sat, total_fees_sat, receiver_amount_sat)
+            }
+            false => {
+                let receiver_amount_sat = req.receiver_amount_sat;
+
+                let user_lockup_amount_sat_without_service_fee =
+                    receiver_amount_sat + claim_fees_sat + server_fees_sat;
+
+                // The resulting invoice amount contains the service fee, which is rounded up with ceil()
+                // Therefore, when calculating the user_lockup amount, we must also round it up with ceil()
+                let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64
+                    * 100.0
+                    / (100.0 - pair.fees.percentage))
+                    .ceil() as u64;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+
+                // TODO This can also be a drain, if the receiver_amount is high enough
+                let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+
+                let boltz_fees_sat =
+                    user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
+                let total_fees_sat =
+                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+                let payer_amount_sat = receiver_amount_sat + total_fees_sat;
+
+                (payer_amount_sat, total_fees_sat, receiver_amount_sat)
+            }
+        };
 
         let res = PreparePayOnchainResponse {
             receiver_amount_sat,
             claim_fees_sat,
-            total_fees_sat: boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat,
+            total_fees_sat,
         };
 
-        let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1196,6 +1247,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let balance_sat = self.get_info().await?.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
@@ -1204,10 +1256,21 @@ impl LiquidSdk {
 
         let user_lockup_amount_sat_without_service_fee =
             receiver_amount_sat + claim_fees_sat + server_fees_sat;
-        let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
-        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
+
+        // The resulting invoice amount contains the service fee, which is rounded up with ceil()
+        // Therefore, when calculating the user_lockup amount, we must also round it up with ceil()
+        let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64 * 100.0
+            / (100.0 - pair.fees.percentage))
+            .ceil() as u64;
+        let boltz_fee_sat = user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
         self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+
+        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
+
+        let lockup_fees_sat = match payer_amount_sat == balance_sat {
+            true => self.estimate_drain_tx_fee().await?,
+            false => self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?,
+        };
 
         ensure_sdk!(
             req.prepare_response.total_fees_sat
@@ -1215,9 +1278,8 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1617,17 +1679,17 @@ impl LiquidSdk {
         })
     }
 
-    async fn create_chain_swap(
+    async fn create_receive_chain_swap(
         &self,
-        payer_amount_sat: u64,
+        user_lockup_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<ChainSwap, PaymentError> {
-        let pair = self.get_and_validate_chain_pair(Direction::Incoming, payer_amount_sat)?;
+        let pair = self.get_and_validate_chain_pair(Direction::Incoming, user_lockup_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            fees_sat == pair.fees.boltz(user_lockup_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1659,7 +1721,7 @@ impl LiquidSdk {
             preimage_hash: preimage.sha256,
             claim_public_key: Some(claim_public_key),
             refund_public_key: Some(refund_public_key),
-            user_lock_amount: Some(payer_amount_sat as u32), // TODO update our model
+            user_lock_amount: Some(user_lockup_amount_sat as u32), // TODO update our model
             server_lock_amount: None,
             pair_hash: Some(pair.hash),
             referral_id: None,
@@ -1670,8 +1732,8 @@ impl LiquidSdk {
         let create_response_json =
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
-        let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - fees_sat;
+        let accept_zero_conf = user_lockup_amount_sat <= pair.limits.maximal_zero_conf;
+        let receiver_amount_sat = user_lockup_amount_sat - fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
         let swap = ChainSwap {
@@ -1682,7 +1744,7 @@ impl LiquidSdk {
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
-            payer_amount_sat,
+            payer_amount_sat: user_lockup_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
             accept_zero_conf,
@@ -1709,7 +1771,9 @@ impl LiquidSdk {
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let swap = self.create_chain_swap(payer_amount_sat, fees_sat).await?;
+        let swap = self
+            .create_receive_chain_swap(payer_amount_sat, fees_sat)
+            .await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
 
@@ -1830,7 +1894,7 @@ impl LiquidSdk {
     ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
         let swap = self
-            .create_chain_swap(
+            .create_receive_chain_swap(
                 req.prepare_response.amount_sat,
                 req.prepare_response.fees_sat,
             )

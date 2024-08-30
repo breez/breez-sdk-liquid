@@ -1580,14 +1580,18 @@ enum BreezSDKLiquidMapper {
             }
             satPerVbyte = satPerVbyteTmp
         }
+        guard let drain = preparePayOnchainRequest["drain"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "drain", typeName: "PreparePayOnchainRequest"))
+        }
 
-        return PreparePayOnchainRequest(receiverAmountSat: receiverAmountSat, satPerVbyte: satPerVbyte)
+        return PreparePayOnchainRequest(receiverAmountSat: receiverAmountSat, satPerVbyte: satPerVbyte, drain: drain)
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
             "receiverAmountSat": preparePayOnchainRequest.receiverAmountSat,
             "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
+            "drain": preparePayOnchainRequest.drain,
         ]
     }
 

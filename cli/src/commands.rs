@@ -50,9 +50,12 @@ pub(crate) enum Command {
         /// Amount that will be received, in satoshi
         receiver_amount_sat: u64,
 
-        // The optional fee rate to use, in satoshi/vbyte
+        /// The optional fee rate to use, in satoshi/vbyte
         #[clap(short = 'f', long = "fee_rate")]
         sat_per_vbyte: Option<u32>,
+
+        #[arg(short, long)]
+        drain: Option<bool>,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -342,11 +345,14 @@ pub(crate) async fn handle_command(
             address,
             receiver_amount_sat,
             sat_per_vbyte,
+            drain,
         } => {
+            let drain = drain.unwrap_or_default();
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
                     receiver_amount_sat,
                     sat_per_vbyte,
+                    drain,
                 })
                 .await?;
 

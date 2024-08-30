@@ -310,8 +310,13 @@ pub struct SendPaymentResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
+    /// The amount in satoshi that will be received
     pub receiver_amount_sat: u64,
+    /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
     pub sat_per_vbyte: Option<u32>,
+    /// If set to true, the chosen `receiver_amount_sat` will be ignored. Instead, amounts and fees
+    /// will be returned such that all the wallet's funds are used.
+    pub drain: bool,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

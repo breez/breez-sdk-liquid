@@ -1330,6 +1330,7 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
             preparePayOnchainRequest,
             arrayOf(
                 "receiverAmountSat",
+                "drain",
             ),
         )
     ) {
@@ -1346,13 +1347,15 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         } else {
             null
         }
-    return PreparePayOnchainRequest(receiverAmountSat, satPerVbyte)
+    val drain = preparePayOnchainRequest.getBoolean("drain")
+    return PreparePayOnchainRequest(receiverAmountSat, satPerVbyte, drain)
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
         "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
         "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
+        "drain" to preparePayOnchainRequest.drain,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {

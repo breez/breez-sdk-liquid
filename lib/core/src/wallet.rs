@@ -38,6 +38,12 @@ pub trait OnchainWallet: Send + Sync {
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
+    async fn build_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+    ) -> Result<Transaction, PaymentError>;
+
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
 
@@ -134,6 +140,31 @@ impl OnchainWallet for LiquidOnchainWallet {
             )?
             .fee_rate(fee_rate_sats_per_kvb)
             .finish(&lwk_wollet)?;
+        let signer = AnySigner::Software(self.lwk_signer.clone());
+        signer.sign(&mut pset)?;
+        Ok(lwk_wollet.finalize(&mut pset)?)
+    }
+
+    async fn build_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+    ) -> Result<Transaction, PaymentError> {
+        let lwk_wollet = self.wallet.lock().await;
+
+        let address =
+            ElementsAddress::from_str(recipient_address).map_err(|e| PaymentError::Generic {
+                err: format!(
+                    "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
+                ),
+            })?;
+        let mut pset = lwk_wollet
+            .tx_builder()
+            .drain_lbtc_wallet()
+            .drain_lbtc_to(address)
+            .fee_rate(fee_rate_sats_per_kvb)
+            .finish()?;
+
         let signer = AnySigner::Software(self.lwk_signer.clone());
         signer.sign(&mut pset)?;
         Ok(lwk_wollet.finalize(&mut pset)?)
