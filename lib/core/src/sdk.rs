@@ -500,7 +500,7 @@ impl LiquidSdk {
                                         }
                                     }
                                 }
-                                // Here we probably have a transation without any details so we emit PaymentWaitingConfirmation
+                                // Here we probably have a transaction without any details so we emit PaymentWaitingConfirmation
                                 None => {
                                     self.notify_event_listeners(
                                         SdkEvent::PaymentWaitingConfirmation { details: payment },
