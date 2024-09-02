@@ -730,7 +730,7 @@ impl LiquidSdk {
 
         let fee_sat = self
             .onchain_wallet
-            .build_drain_tx(None, temp_p2tr_addr)
+            .build_drain_tx(None, temp_p2tr_addr, None)
             .await?
             .all_fees()
             .values()

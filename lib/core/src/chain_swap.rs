@@ -594,7 +594,11 @@ impl ChainSwapStateHandler {
             Err(PaymentError::InsufficientFunds) => {
                 warn!("Cannot build normal lockup tx due to insufficient funds, attempting to build drain tx");
                 self.onchain_wallet
-                    .build_drain_tx(None, &lockup_details.lockup_address)
+                    .build_drain_tx(
+                        None,
+                        &lockup_details.lockup_address,
+                        Some(lockup_details.amount as u64),
+                    )
                     .await
             }
             Err(e) => Err(e),
