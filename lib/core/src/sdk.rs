@@ -1179,21 +1179,29 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
-        let is_drain = req.drain.unwrap_or(false);
+        let drain_payer_amount_sat = balance_sat;
+        let drain_lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+        let drain_user_lockup_amount_sat = drain_payer_amount_sat - drain_lockup_fees_sat;
+        let drain_boltz_fees_sat = pair.fees.boltz(drain_user_lockup_amount_sat);
+        let drain_total_fees_sat =
+            drain_boltz_fees_sat + drain_lockup_fees_sat + claim_fees_sat + server_fees_sat;
+        let drain_receiver_amount_sat = drain_payer_amount_sat - drain_total_fees_sat;
+
+        let is_drain = req
+            .drain
+            .unwrap_or(req.receiver_amount_sat == drain_receiver_amount_sat);
         let (payer_amount_sat, total_fees_sat, receiver_amount_sat) = match is_drain {
             true => {
-                let payer_amount_sat = balance_sat;
-                let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
-                let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
-                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+                self.validate_user_lockup_amount_for_chain_pair(
+                    &pair,
+                    drain_user_lockup_amount_sat,
+                )?;
 
-                let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
-                let total_fees_sat =
-                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
-
-                let receiver_amount_sat = payer_amount_sat - total_fees_sat;
-
-                (payer_amount_sat, total_fees_sat, receiver_amount_sat)
+                (
+                    drain_payer_amount_sat,
+                    drain_total_fees_sat,
+                    drain_receiver_amount_sat,
+                )
             }
             false => {
                 let receiver_amount_sat = req.receiver_amount_sat;
@@ -1209,7 +1217,6 @@ impl LiquidSdk {
                     .ceil() as u64;
                 self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
 
-                // TODO This can also be a drain, if the receiver_amount is high enough
                 let lockup_fees_sat = self
                     .estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
                     .await?;

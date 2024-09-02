@@ -357,8 +357,8 @@ pub(crate) async fn handle_command(
 
             wait_confirmation!(
                 format!(
-                    "Fees: {} sat (incl claim fee: {} sat). Are the fees acceptable? (y/N) ",
-                    prepare_response.total_fees_sat, prepare_response.claim_fees_sat
+                    "Fees: {} sat (incl claim fee: {} sat). Receiver amount: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.total_fees_sat, prepare_response.claim_fees_sat, prepare_response.receiver_amount_sat
                 ),
                 "Payment send halted"
             );
