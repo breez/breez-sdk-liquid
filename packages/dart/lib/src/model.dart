@@ -405,6 +405,19 @@ class OnchainPaymentLimitsResponse {
           receive == other.receive;
 }
 
+@freezed
+sealed class PayOnchainAmount with _$PayOnchainAmount {
+  const PayOnchainAmount._();
+
+  /// The amount in satoshi that will be received
+  const factory PayOnchainAmount.receiver({
+    required BigInt amountSat,
+  }) = PayOnchainAmount_Receiver;
+
+  /// Indicates that all available funds should be sent
+  const factory PayOnchainAmount.drain() = PayOnchainAmount_Drain;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
 class PayOnchainRequest {
   final String address;
@@ -695,33 +708,26 @@ class PrepareBuyBitcoinResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
-  /// The amount in satoshi that will be received
-  final BigInt receiverAmountSat;
+  final PayOnchainAmount amount;
 
   /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
   final int? satPerVbyte;
 
-  /// If set to true, the chosen `receiver_amount_sat` will be ignored. Instead, amounts and fees
-  /// will be returned such that all the wallet's funds are used.
-  final bool? drain;
-
   const PreparePayOnchainRequest({
-    required this.receiverAmountSat,
+    required this.amount,
     this.satPerVbyte,
-    this.drain,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode ^ drain.hashCode;
+  int get hashCode => amount.hashCode ^ satPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
-          receiverAmountSat == other.receiverAmountSat &&
-          satPerVbyte == other.satPerVbyte &&
-          drain == other.drain;
+          amount == other.amount &&
+          satPerVbyte == other.satPerVbyte;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

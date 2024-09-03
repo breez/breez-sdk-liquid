@@ -1187,25 +1187,24 @@ impl LiquidSdk {
             drain_boltz_fees_sat + drain_lockup_fees_sat + claim_fees_sat + server_fees_sat;
         let drain_receiver_amount_sat = drain_payer_amount_sat - drain_total_fees_sat;
 
-        let is_drain = req
-            .drain
-            .unwrap_or(req.receiver_amount_sat == drain_receiver_amount_sat);
-        let (payer_amount_sat, total_fees_sat, receiver_amount_sat) = match is_drain {
+        let receiver_amount_sat = match req.amount {
+            PayOnchainAmount::Receiver { amount_sat } => amount_sat,
+            PayOnchainAmount::Drain => drain_receiver_amount_sat,
+        };
+        let is_drain = match req.amount {
+            PayOnchainAmount::Receiver { amount_sat } => amount_sat == drain_receiver_amount_sat,
+            PayOnchainAmount::Drain => true,
+        };
+        let (payer_amount_sat, total_fees_sat) = match is_drain {
             true => {
                 self.validate_user_lockup_amount_for_chain_pair(
                     &pair,
                     drain_user_lockup_amount_sat,
                 )?;
 
-                (
-                    drain_payer_amount_sat,
-                    drain_total_fees_sat,
-                    drain_receiver_amount_sat,
-                )
+                (drain_payer_amount_sat, drain_total_fees_sat)
             }
             false => {
-                let receiver_amount_sat = req.receiver_amount_sat;
-
                 let user_lockup_amount_sat_without_service_fee =
                     receiver_amount_sat + claim_fees_sat + server_fees_sat;
 
@@ -1227,7 +1226,7 @@ impl LiquidSdk {
                     boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
                 let payer_amount_sat = receiver_amount_sat + total_fees_sat;
 
-                (payer_amount_sat, total_fees_sat, receiver_amount_sat)
+                (payer_amount_sat, total_fees_sat)
             }
         };
 

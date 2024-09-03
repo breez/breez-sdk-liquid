@@ -284,6 +284,153 @@ abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
 }
 
 /// @nodoc
+mixin _$PayOnchainAmount {}
+
+/// @nodoc
+abstract class $PayOnchainAmountCopyWith<$Res> {
+  factory $PayOnchainAmountCopyWith(PayOnchainAmount value, $Res Function(PayOnchainAmount) then) =
+      _$PayOnchainAmountCopyWithImpl<$Res, PayOnchainAmount>;
+}
+
+/// @nodoc
+class _$PayOnchainAmountCopyWithImpl<$Res, $Val extends PayOnchainAmount>
+    implements $PayOnchainAmountCopyWith<$Res> {
+  _$PayOnchainAmountCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of PayOnchainAmount
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+abstract class _$$PayOnchainAmount_ReceiverImplCopyWith<$Res> {
+  factory _$$PayOnchainAmount_ReceiverImplCopyWith(
+          _$PayOnchainAmount_ReceiverImpl value, $Res Function(_$PayOnchainAmount_ReceiverImpl) then) =
+      __$$PayOnchainAmount_ReceiverImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({BigInt amountSat});
+}
+
+/// @nodoc
+class __$$PayOnchainAmount_ReceiverImplCopyWithImpl<$Res>
+    extends _$PayOnchainAmountCopyWithImpl<$Res, _$PayOnchainAmount_ReceiverImpl>
+    implements _$$PayOnchainAmount_ReceiverImplCopyWith<$Res> {
+  __$$PayOnchainAmount_ReceiverImplCopyWithImpl(
+      _$PayOnchainAmount_ReceiverImpl _value, $Res Function(_$PayOnchainAmount_ReceiverImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PayOnchainAmount
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? amountSat = null,
+  }) {
+    return _then(_$PayOnchainAmount_ReceiverImpl(
+      amountSat: null == amountSat
+          ? _value.amountSat
+          : amountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PayOnchainAmount_ReceiverImpl extends PayOnchainAmount_Receiver {
+  const _$PayOnchainAmount_ReceiverImpl({required this.amountSat}) : super._();
+
+  @override
+  final BigInt amountSat;
+
+  @override
+  String toString() {
+    return 'PayOnchainAmount.receiver(amountSat: $amountSat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PayOnchainAmount_ReceiverImpl &&
+            (identical(other.amountSat, amountSat) || other.amountSat == amountSat));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, amountSat);
+
+  /// Create a copy of PayOnchainAmount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PayOnchainAmount_ReceiverImplCopyWith<_$PayOnchainAmount_ReceiverImpl> get copyWith =>
+      __$$PayOnchainAmount_ReceiverImplCopyWithImpl<_$PayOnchainAmount_ReceiverImpl>(this, _$identity);
+}
+
+abstract class PayOnchainAmount_Receiver extends PayOnchainAmount {
+  const factory PayOnchainAmount_Receiver({required final BigInt amountSat}) =
+      _$PayOnchainAmount_ReceiverImpl;
+  const PayOnchainAmount_Receiver._() : super._();
+
+  BigInt get amountSat;
+
+  /// Create a copy of PayOnchainAmount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PayOnchainAmount_ReceiverImplCopyWith<_$PayOnchainAmount_ReceiverImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$PayOnchainAmount_DrainImplCopyWith<$Res> {
+  factory _$$PayOnchainAmount_DrainImplCopyWith(
+          _$PayOnchainAmount_DrainImpl value, $Res Function(_$PayOnchainAmount_DrainImpl) then) =
+      __$$PayOnchainAmount_DrainImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$PayOnchainAmount_DrainImplCopyWithImpl<$Res>
+    extends _$PayOnchainAmountCopyWithImpl<$Res, _$PayOnchainAmount_DrainImpl>
+    implements _$$PayOnchainAmount_DrainImplCopyWith<$Res> {
+  __$$PayOnchainAmount_DrainImplCopyWithImpl(
+      _$PayOnchainAmount_DrainImpl _value, $Res Function(_$PayOnchainAmount_DrainImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PayOnchainAmount
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$PayOnchainAmount_DrainImpl extends PayOnchainAmount_Drain {
+  const _$PayOnchainAmount_DrainImpl() : super._();
+
+  @override
+  String toString() {
+    return 'PayOnchainAmount.drain()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$PayOnchainAmount_DrainImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+}
+
+abstract class PayOnchainAmount_Drain extends PayOnchainAmount {
+  const factory PayOnchainAmount_Drain() = _$PayOnchainAmount_DrainImpl;
+  const PayOnchainAmount_Drain._() : super._();
+}
+
+/// @nodoc
 mixin _$PaymentDetails {
   /// Represents the invoice description
   String get description => throw _privateConstructorUsedError;

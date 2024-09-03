@@ -410,10 +410,15 @@ dictionary OnchainPaymentLimitsResponse {
     Limits receive;
 };
 
+[Enum]
+interface PayOnchainAmount {
+    Receiver(u64 amount_sat);
+    Drain();
+};
+
 dictionary PreparePayOnchainRequest {
-    u64 receiver_amount_sat;
+    PayOnchainAmount amount;
     u32? sat_per_vbyte = null;
-    boolean? drain = null;
 };
 
 dictionary PreparePayOnchainResponse {

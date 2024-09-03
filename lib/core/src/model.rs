@@ -307,16 +307,20 @@ pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub enum PayOnchainAmount {
+    /// The amount in satoshi that will be received
+    Receiver { amount_sat: u64 },
+    /// Indicates that all available funds should be sent
+    Drain,
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
-    /// The amount in satoshi that will be received
-    pub receiver_amount_sat: u64,
+    pub amount: PayOnchainAmount,
     /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
     pub sat_per_vbyte: Option<u32>,
-    /// If set to true, the chosen `receiver_amount_sat` will be ignored. Instead, amounts and fees
-    /// will be returned such that all the wallet's funds are used.
-    pub drain: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

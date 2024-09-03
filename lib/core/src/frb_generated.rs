@@ -3073,6 +3073,27 @@ impl SseDecode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
+impl SseDecode for crate::model::PayOnchainAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_amountSat = <u64>::sse_decode(deserializer);
+                return crate::model::PayOnchainAmount::Receiver {
+                    amount_sat: var_amountSat,
+                };
+            }
+            1 => {
+                return crate::model::PayOnchainAmount::Drain;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::PayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3318,13 +3339,11 @@ impl SseDecode for crate::model::PrepareBuyBitcoinResponse {
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayOnchainAmount>::sse_decode(deserializer);
         let mut var_satPerVbyte = <Option<u32>>::sse_decode(deserializer);
-        let mut var_drain = <Option<bool>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
-            receiver_amount_sat: var_receiverAmountSat,
+            amount: var_amount,
             sat_per_vbyte: var_satPerVbyte,
-            drain: var_drain,
         };
     }
 }
@@ -4841,6 +4860,31 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::OnchainPaymentLimitsRespons
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PayOnchainAmount {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+                [0.into_dart(), amount_sat.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::PayOnchainAmount::Drain => [1.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PayOnchainAmount
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PayOnchainAmount>
+    for crate::model::PayOnchainAmount
+{
+    fn into_into_dart(self) -> crate::model::PayOnchainAmount {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5103,9 +5147,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareBuyBitcoinResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.receiver_amount_sat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.sat_per_vbyte.into_into_dart().into_dart(),
-            self.drain.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6556,6 +6599,24 @@ impl SseEncode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
+impl SseEncode for crate::model::PayOnchainAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+                <i32>::sse_encode(0, serializer);
+                <u64>::sse_encode(amount_sat, serializer);
+            }
+            crate::model::PayOnchainAmount::Drain => {
+                <i32>::sse_encode(1, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::PayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6784,9 +6845,8 @@ impl SseEncode for crate::model::PrepareBuyBitcoinResponse {
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
+        <crate::model::PayOnchainAmount>::sse_encode(self.amount, serializer);
         <Option<u32>>::sse_encode(self.sat_per_vbyte, serializer);
-        <Option<bool>>::sse_encode(self.drain, serializer);
     }
 }
 
@@ -8259,6 +8319,21 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::PayOnchainAmount> for wire_cst_pay_onchain_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PayOnchainAmount {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Receiver };
+                    crate::model::PayOnchainAmount::Receiver {
+                        amount_sat: ans.amount_sat.cst_decode(),
+                    }
+                }
+                1 => crate::model::PayOnchainAmount::Drain,
+                _ => unreachable!(),
+            }
+        }
+    }
     impl CstDecode<crate::model::PayOnchainRequest> for wire_cst_pay_onchain_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PayOnchainRequest {
@@ -8421,9 +8496,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
             crate::model::PreparePayOnchainRequest {
-                receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
+                amount: self.amount.cst_decode(),
                 sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
-                drain: self.drain.cst_decode(),
             }
         }
     }
@@ -9310,6 +9384,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_pay_onchain_amount {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: PayOnchainAmountKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_pay_onchain_amount {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_pay_onchain_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -9398,9 +9485,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                receiver_amount_sat: Default::default(),
+                amount: Default::default(),
                 sat_per_vbyte: core::ptr::null_mut(),
-                drain: core::ptr::null_mut(),
             }
         }
     }
@@ -11165,6 +11251,23 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_pay_onchain_amount {
+        tag: i32,
+        kind: PayOnchainAmountKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union PayOnchainAmountKind {
+        Receiver: wire_cst_PayOnchainAmount_Receiver,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PayOnchainAmount_Receiver {
+        amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_pay_onchain_request {
         address: *mut wire_cst_list_prim_u_8_strict,
         prepare_response: wire_cst_prepare_pay_onchain_response,
@@ -11307,9 +11410,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
-        receiver_amount_sat: u64,
+        amount: wire_cst_pay_onchain_amount,
         sat_per_vbyte: *mut u32,
-        drain: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

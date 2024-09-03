@@ -347,11 +347,16 @@ pub(crate) async fn handle_command(
             sat_per_vbyte,
             drain,
         } => {
+            let amount = match drain.unwrap_or(false) {
+                true => PayOnchainAmount::Drain,
+                false => PayOnchainAmount::Receiver {
+                    amount_sat: receiver_amount_sat,
+                },
+            };
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
-                    receiver_amount_sat,
+                    amount,
                     sat_per_vbyte,
-                    drain,
                 })
                 .await?;
 

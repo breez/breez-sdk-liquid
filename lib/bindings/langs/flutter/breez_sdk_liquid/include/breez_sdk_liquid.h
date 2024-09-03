@@ -133,10 +133,22 @@ typedef struct wire_cst_prepare_buy_bitcoin_request {
   uint64_t amount_sat;
 } wire_cst_prepare_buy_bitcoin_request;
 
+typedef struct wire_cst_PayOnchainAmount_Receiver {
+  uint64_t amount_sat;
+} wire_cst_PayOnchainAmount_Receiver;
+
+typedef union PayOnchainAmountKind {
+  struct wire_cst_PayOnchainAmount_Receiver Receiver;
+} PayOnchainAmountKind;
+
+typedef struct wire_cst_pay_onchain_amount {
+  int32_t tag;
+  union PayOnchainAmountKind kind;
+} wire_cst_pay_onchain_amount;
+
 typedef struct wire_cst_prepare_pay_onchain_request {
-  uint64_t receiver_amount_sat;
+  struct wire_cst_pay_onchain_amount amount;
   uint32_t *sat_per_vbyte;
-  bool *drain;
 } wire_cst_prepare_pay_onchain_request;
 
 typedef struct wire_cst_prepare_receive_request {
