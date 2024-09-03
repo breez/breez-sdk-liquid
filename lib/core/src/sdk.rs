@@ -1874,9 +1874,25 @@ impl LiquidSdk {
             .list_payments(&ListPaymentsRequest::default())
             .await?
             .into_iter()
-            .filter_map(|payment| {
+            .flat_map(|payment| {
                 let tx_id = payment.tx_id.clone();
-                tx_id.map(|tx_id| (tx_id, payment))
+                let refund_tx_id = match payment.details.clone() {
+                    None => None,
+                    Some(PaymentDetails::Lightning { refund_tx_id, .. }) => Some(refund_tx_id),
+                    Some(PaymentDetails::Bitcoin { refund_tx_id, .. }) => Some(refund_tx_id),
+                    Some(PaymentDetails::Liquid { .. }) => None,
+                }
+                .flatten();
+
+                // Index payments by both tx_id (lockup/claim) and refund_tx_id
+                let mut res = vec![];
+                if let Some(tx_id) = tx_id {
+                    res.push((tx_id, payment.clone()));
+                }
+                if let Some(refund_tx_id) = refund_tx_id {
+                    res.push((refund_tx_id, payment.clone()));
+                }
+                res
             })
             .collect();
         if with_scan {
