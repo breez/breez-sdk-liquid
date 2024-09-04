@@ -1,4 +1,4 @@
-set(TagName "v0.2.2-dev16") # generated; do not edit
+set(TagName "v0.2.2-dev17") # generated; do not edit
 set(LibraryVersion "breez_liquid-${TagName}")
 
 # TODO Remove this workaround once Flutter supports Windows ARM.
