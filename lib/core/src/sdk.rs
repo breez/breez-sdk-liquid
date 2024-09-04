@@ -1244,6 +1244,67 @@ impl LiquidSdk {
         Ok(res)
     }
 
+    /// Find the maximum `receiver_amount_sat` that can be used as argument in `prepare_pay_onchain`.
+    ///
+    /// Note that when using this amount in `prepare_pay_onchain`, the resulting `pay_onchain` will
+    /// leave 1 sat in the wallet. To send all funds and leave no sats in the wallet,
+    /// `prepare_pay_onchain` should be called with `PayOnchainAmount::Drain`.
+    ///
+    /// ### Arguments
+    /// - `sat_per_vbyte`: optional user-chosen BTC claim tx feerate
+    pub async fn get_max_receiver_amount_sat(
+        &self,
+        sat_per_vbyte: Option<u32>,
+    ) -> Result<u64, PaymentError> {
+        let res_drain = self
+            .prepare_pay_onchain(&PreparePayOnchainRequest {
+                amount: PayOnchainAmount::Drain,
+                sat_per_vbyte,
+            })
+            .await?;
+        let drain_receiver_amount_sat = res_drain.receiver_amount_sat;
+        let pair = self.get_chain_pair(Direction::Outgoing)?;
+        let server_fees_sat = pair.fees.server();
+
+        // We start with the maximum possible receiver_amount, which is drain_receiver_amount_sat.
+        // However that amount will only work for drain operations and is not a usable maximum for
+        // normal Sends, where we expect a change output. Therefore, we expect this to not be a valid max.
+        // Through trial and error, we figure out the actual max receiver_amount by subtracting 1 sat
+        // and calling estimate_lockup_tx_fee_chain_send to check if the onchain LWK wallet has
+        // enough funds to send that amount.
+        // Finding out this value cannot be done programmatically, as it depends on the available
+        // utxos and the resulting tx size, which is why we call LWK to determine it.
+        let mut max_receiver_amount_sat = drain_receiver_amount_sat;
+        loop {
+            let user_lockup_amount_sat_without_service_fee =
+                max_receiver_amount_sat + res_drain.claim_fees_sat + server_fees_sat;
+            let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64 * 100.0
+                / (100.0 - pair.fees.percentage))
+                .ceil() as u64;
+
+            match self
+                .estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
+                .await
+            {
+                Err(PaymentError::InsufficientFunds) => {
+                    max_receiver_amount_sat -= 1;
+                }
+                Err(e) => {
+                    error!("Unexpected error when trying to find max_receiver_amount_sat: {e:?}");
+                    return Err(e);
+                }
+                Ok(_) => {
+                    let delta = drain_receiver_amount_sat - max_receiver_amount_sat;
+                    info!("Found max_receiver_amount_sat = {max_receiver_amount_sat}, which is {delta} sat below the drain max");
+
+                    break;
+                }
+            }
+        }
+
+        Ok(max_receiver_amount_sat)
+    }
+
     /// Pays to a Bitcoin address via a chain swap.
     ///
     /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
