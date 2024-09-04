@@ -76,7 +76,7 @@ impl ChainSwapHandler {
             loop {
                 tokio::select! {
                     _ = rescan_interval.tick() => {
-                        if let Err(e) = cloned.rescan_incoming_chain_swaps().await {
+                        if let Err(e) = cloned.rescan_incoming_chain_swaps(false).await {
                             error!("Error checking incoming chain swaps: {e:?}");
                         }
                         if let Err(e) = cloned.rescan_outgoing_chain_swaps().await {
@@ -110,7 +110,10 @@ impl ChainSwapHandler {
         }
     }
 
-    pub(crate) async fn rescan_incoming_chain_swaps(&self) -> Result<()> {
+    pub(crate) async fn rescan_incoming_chain_swaps(
+        &self,
+        ignore_monitoring_block_height: bool,
+    ) -> Result<()> {
         let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
         let chain_swaps: Vec<ChainSwap> = self
             .persister
@@ -124,22 +127,34 @@ impl ChainSwapHandler {
             current_height
         );
         for swap in chain_swaps {
-            if let Err(e) = self.rescan_incoming_chain_swap(&swap, current_height).await {
+            if let Err(e) = self
+                .rescan_incoming_chain_swap(&swap, current_height, ignore_monitoring_block_height)
+                .await
+            {
                 error!("Error rescanning incoming Chain Swap {}: {e:?}", swap.id);
             }
         }
         Ok(())
     }
 
+    /// ### Arguments
+    /// - `swap`: the swap being rescanned
+    /// - `current_height`: the tip
+    /// - `ignore_monitoring_block_height`: if true, it rescans an expired swap even after the
+    ///   cutoff monitoring block height
     async fn rescan_incoming_chain_swap(
         &self,
         swap: &ChainSwap,
         current_height: u32,
+        ignore_monitoring_block_height: bool,
     ) -> Result<()> {
         let monitoring_block_height =
             swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
         let is_swap_expired = current_height > swap.timeout_block_height;
-        let is_monitoring_expired = current_height > monitoring_block_height;
+        let is_monitoring_expired = match ignore_monitoring_block_height {
+            true => false,
+            false => current_height > monitoring_block_height,
+        };
 
         if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
             let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
