@@ -1412,6 +1412,7 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
     ) {
         return null
     }
+    val paymentMethod = prepareReceiveRequest.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
     val payerAmountSat =
         if (hasNonNullKey(
                 prepareReceiveRequest,
@@ -1422,14 +1423,13 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
         } else {
             null
         }
-    val paymentMethod = prepareReceiveRequest.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
-    return PrepareReceiveRequest(payerAmountSat, paymentMethod)
+    return PrepareReceiveRequest(paymentMethod, payerAmountSat)
 }
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
-        "payerAmountSat" to prepareReceiveRequest.payerAmountSat,
         "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
+        "payerAmountSat" to prepareReceiveRequest.payerAmountSat,
     )
 
 fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
