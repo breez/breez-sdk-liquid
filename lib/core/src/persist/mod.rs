@@ -442,7 +442,7 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
-        prelude::ListPaymentsRequest,
+        prelude::{ListPaymentsRequest, PaymentDetails},
         test_utils::persist::{
             new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
         },
@@ -455,7 +455,13 @@ mod tests {
         let (_temp_dir, storage) = new_persister()?;
 
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
-        storage.insert_or_update_payment(payment_tx_data.clone(), None)?;
+        storage.insert_or_update_payment(
+            payment_tx_data.clone(),
+            Some(PaymentDetails::Liquid {
+                destination: "mock-address".to_string(),
+                description: "Liquid transfer".to_string(),
+            }),
+        )?;
 
         assert!(storage
             .get_payments(&ListPaymentsRequest {

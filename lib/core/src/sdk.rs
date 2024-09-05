@@ -451,7 +451,7 @@ impl LiquidSdk {
                         }
                         Pending => {
                             match &payment.details.get_swap_id() {
-                                Some(swap_id) => match self.persister.fetch_swap_by_id(&swap_id)? {
+                                Some(swap_id) => match self.persister.fetch_swap_by_id(swap_id)? {
                                     Swap::Chain(ChainSwap { claim_tx_id, .. })
                                     | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
                                         match claim_tx_id {
