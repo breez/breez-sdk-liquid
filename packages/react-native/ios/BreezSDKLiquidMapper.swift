@@ -1453,10 +1453,10 @@ enum BreezSDKLiquidMapper {
             }
             txId = txIdTmp
         }
-        var details: PaymentDetails?
-        if let detailsTmp = payment["details"] as? [String: Any?] {
-            details = try asPaymentDetails(paymentDetails: detailsTmp)
+        guard let detailsTmp = payment["details"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "Payment"))
         }
+        let details = try asPaymentDetails(paymentDetails: detailsTmp)
 
         return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, destination: destination, txId: txId, details: details)
     }
@@ -1470,7 +1470,7 @@ enum BreezSDKLiquidMapper {
             "status": valueOf(paymentState: payment.status),
             "destination": payment.destination == nil ? nil : payment.destination,
             "txId": payment.txId == nil ? nil : payment.txId,
-            "details": payment.details == nil ? nil : dictionaryOf(paymentDetails: payment.details!),
+            "details": dictionaryOf(paymentDetails: payment.details),
         ]
     }
 

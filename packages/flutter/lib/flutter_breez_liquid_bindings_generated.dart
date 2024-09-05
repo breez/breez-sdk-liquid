@@ -1061,17 +1061,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_paymentPtr
           .asFunction<ffi.Pointer<wire_cst_payment> Function()>();
 
-  ffi.Pointer<wire_cst_payment_details> frbgen_breez_liquid_cst_new_box_autoadd_payment_details() {
-    return _frbgen_breez_liquid_cst_new_box_autoadd_payment_details();
-  }
-
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_payment_detailsPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_payment_details> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_payment_details');
-  late final _frbgen_breez_liquid_cst_new_box_autoadd_payment_details =
-      _frbgen_breez_liquid_cst_new_box_autoadd_payment_detailsPtr
-          .asFunction<ffi.Pointer<wire_cst_payment_details> Function()>();
-
   ffi.Pointer<wire_cst_prepare_buy_bitcoin_request>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request();
@@ -1834,7 +1823,7 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Int32()
   external int status;
 
-  external ffi.Pointer<wire_cst_payment_details> details;
+  external wire_cst_payment_details details;
 }
 
 final class wire_cst_SdkEvent_PaymentFailed extends ffi.Struct {

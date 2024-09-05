@@ -3005,17 +3005,6 @@ impl SseDecode for Option<i64> {
     }
 }
 
-impl SseDecode for Option<crate::model::PaymentDetails> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<crate::model::PaymentDetails>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
 impl SseDecode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3096,7 +3085,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
         let mut var_status = <crate::model::PaymentState>::sse_decode(deserializer);
-        let mut var_details = <Option<crate::model::PaymentDetails>>::sse_decode(deserializer);
+        let mut var_details = <crate::model::PaymentDetails>::sse_decode(deserializer);
         return crate::model::Payment {
             destination: var_destination,
             tx_id: var_txId,
@@ -6493,16 +6482,6 @@ impl SseEncode for Option<i64> {
     }
 }
 
-impl SseEncode for Option<crate::model::PaymentDetails> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <crate::model::PaymentDetails>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6571,7 +6550,7 @@ impl SseEncode for crate::model::Payment {
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
         <crate::model::PaymentState>::sse_encode(self.status, serializer);
-        <Option<crate::model::PaymentDetails>>::sse_encode(self.details, serializer);
+        <crate::model::PaymentDetails>::sse_encode(self.details, serializer);
     }
 }
 
@@ -7459,13 +7438,6 @@ mod io {
         fn cst_decode(self) -> crate::model::Payment {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::model::PaymentDetails> for *mut wire_cst_payment_details {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::PaymentDetails {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::model::PaymentDetails>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
@@ -9328,7 +9300,7 @@ mod io {
                 fees_sat: Default::default(),
                 payment_type: Default::default(),
                 status: Default::default(),
-                details: core::ptr::null_mut(),
+                details: Default::default(),
             }
         }
     }
@@ -10293,14 +10265,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment_details(
-    ) -> *mut wire_cst_payment_details {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_payment_details::new_with_null_ptr(),
-        )
-    }
-
-    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request(
     ) -> *mut wire_cst_prepare_buy_bitcoin_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -11173,7 +11137,7 @@ mod io {
         fees_sat: u64,
         payment_type: i32,
         status: i32,
-        details: *mut wire_cst_payment_details,
+        details: wire_cst_payment_details,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

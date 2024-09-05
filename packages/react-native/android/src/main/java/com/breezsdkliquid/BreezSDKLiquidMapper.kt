@@ -1217,6 +1217,7 @@ fun asPayment(payment: ReadableMap): Payment? {
                 "feesSat",
                 "paymentType",
                 "status",
+                "details",
             ),
         )
     ) {
@@ -1229,7 +1230,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
     val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
     val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
-    val details = if (hasNonNullKey(payment, "details")) payment.getMap("details")?.let { asPaymentDetails(it) } else null
+    val details = payment.getMap("details")?.let { asPaymentDetails(it) }!!
     return Payment(timestamp, amountSat, feesSat, paymentType, status, destination, txId, details)
 }
 
@@ -1242,7 +1243,7 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "status" to payment.status.name.lowercase(),
         "destination" to payment.destination,
         "txId" to payment.txId,
-        "details" to payment.details?.let { readableMapOf(it) },
+        "details" to readableMapOf(payment.details),
     )
 
 fun asPaymentList(arr: ReadableArray): List<Payment> {

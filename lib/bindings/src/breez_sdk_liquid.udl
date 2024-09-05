@@ -477,7 +477,7 @@ dictionary Payment {
     PaymentState status;
     string? destination = null;
     string? tx_id = null;
-    PaymentDetails? details = null;
+    PaymentDetails details;
 };
 
 enum PaymentType {
