@@ -347,9 +347,6 @@ pub(crate) async fn handle_command(
             sat_per_vbyte,
             drain,
         } => {
-            let max_receiver_amount_sat = sdk.get_max_receiver_amount_sat(sat_per_vbyte).await?;
-            println!("Given the current fees, max_receiver_amount_sat: {max_receiver_amount_sat}");
-
             let amount = match drain.unwrap_or(false) {
                 true => PayOnchainAmount::Drain,
                 false => PayOnchainAmount::Receiver {
