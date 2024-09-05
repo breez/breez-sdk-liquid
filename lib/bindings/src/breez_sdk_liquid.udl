@@ -628,6 +628,9 @@ interface BindingLiquidSdk {
     [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
+    [Throws=PaymentError]
+    Payment? payment_by_destination(string destination);
+
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();
 

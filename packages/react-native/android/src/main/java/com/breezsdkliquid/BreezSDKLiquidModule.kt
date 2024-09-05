@@ -404,6 +404,21 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun paymentByDestination(
+        destination: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().paymentByDestination(destination)
+                promise.resolve(res?.let { readableMapOf(res) })
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listRefundables(promise: Promise) {
         executor.execute {
             try {

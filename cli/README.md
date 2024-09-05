@@ -39,6 +39,7 @@ To get a full list of commands run `-h` or `<command> -h` to get more informatio
 - **receive-payment** - Receive lbtc and send btc through a swap
 - **buy-bitcoin** - Generates an URL to buy bitcoin from a 3rd party provider
 - **list-payments** - List incoming and outgoing payments
+- **payment-by-destination** - Retrieve a payment by its destination
 - **list-refundables** - List refundable chain swaps
 - **prepare-refund** - Prepare a refund transaction for an incomplete swap
 - **refund** - Broadcast a refund transaction for an incomplete swap

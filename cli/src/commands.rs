@@ -102,6 +102,8 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
     },
+    /// Retrieve a payment by its destination
+    PaymentByDestination { destination: String },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -447,6 +449,10 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
             command_result!(payments)
+        }
+        Command::PaymentByDestination { destination } => {
+            let payment = sdk.payment_by_destination(&destination).await?;
+            command_result!(payment)
         }
         Command::ListRefundables => {
             let refundables = sdk.list_refundables().await?;

@@ -396,7 +396,7 @@ impl LiquidSdk {
 
     async fn emit_payment_updated(&self, payment_id: Option<String>) -> Result<()> {
         if let Some(id) = payment_id {
-            match self.persister.get_payment(id.clone())? {
+            match self.persister.get_payment(&id)? {
                 Some(payment) => {
                     match payment.status {
                         Complete => {
@@ -2038,6 +2038,24 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         Ok(self.persister.get_payments(req)?)
+    }
+
+    /// Retrieves a payment by its destination.
+    ///
+    /// # Arguments
+    ///
+    /// * `destination` - The destination of the payment to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given destination.
+    pub async fn payment_by_destination(
+        &self,
+        destination: &str,
+    ) -> Result<Option<Payment>, PaymentError> {
+        self.ensure_is_started().await?;
+
+        Ok(self.persister.get_payment_by_destination(destination)?)
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].

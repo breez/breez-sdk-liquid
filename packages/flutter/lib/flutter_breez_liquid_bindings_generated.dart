@@ -347,6 +347,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> destination,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
+      port_,
+      that,
+      destination,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
     int port_,
     int that,
@@ -1726,6 +1746,26 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchainPtr
           .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destination(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer destination,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destination(
+      ptr,
+      destination,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destinationPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destination');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destination =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destinationPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(
     ffi.Pointer<ffi.Void> ptr,
     RustBuffer req,
@@ -2088,20 +2128,22 @@ class FlutterBreezLiquidBindings {
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
     RustBuffer network,
+    RustBuffer breez_api_key,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
       network,
+      breez_api_key,
       out_status,
     );
   }
 
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
           'uniffi_breez_sdk_liquid_bindings_fn_func_default_config');
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_config =
       _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr
-          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<RustBuffer Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(
     RustBuffer input,
@@ -3296,6 +3338,17 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchainPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destination() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destination();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destinationPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destination');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destination =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destinationPtr
           .asFunction<int Function()>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin() {

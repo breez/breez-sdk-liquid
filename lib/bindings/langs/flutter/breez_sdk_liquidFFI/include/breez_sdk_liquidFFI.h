@@ -97,6 +97,8 @@ RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_wit
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_payment_by_destination(void*_Nonnull ptr, RustBuffer destination, RustCallStatus *_Nonnull out_status
+);
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
@@ -135,7 +137,7 @@ void uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(ForeignCallback _N
 );
 void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect(RustBuffer req, RustCallStatus *_Nonnull out_status
 );
-RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(RustBuffer network, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(RustBuffer network, RustBuffer breez_api_key, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(RustBuffer input, RustCallStatus *_Nonnull out_status
 );
@@ -318,6 +320,9 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain(void
+    
+);
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_payment_by_destination(void
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin(void

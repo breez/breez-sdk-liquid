@@ -176,6 +176,13 @@ impl BindingLiquidSdk {
         self.sdk.list_payments(&req).await
     }
 
+    pub async fn payment_by_destination(
+        &self,
+        destination: String,
+    ) -> Result<Option<Payment>, PaymentError> {
+        self.sdk.payment_by_destination(&destination).await
+    }
+
     pub async fn lnurl_pay(
         &self,
         req: LnUrlPayRequest,

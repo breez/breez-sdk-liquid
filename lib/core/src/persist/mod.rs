@@ -404,12 +404,27 @@ impl Persister {
         }
     }
 
-    pub fn get_payment(&self, id: String) -> Result<Option<Payment>> {
+    pub fn get_payment(&self, id: &str) -> Result<Option<Payment>> {
         Ok(self
             .get_connection()?
             .query_row(
                 &self.select_payment_query(Some("ptx.tx_id = ?1"), None, None),
                 params![id],
+                |row| self.sql_row_to_payment(row),
+            )
+            .optional()?)
+    }
+
+    pub fn get_payment_by_destination(&self, destination: &str) -> Result<Option<Payment>> {
+        Ok(self
+            .get_connection()?
+            .query_row(
+                &self.select_payment_query(
+                    Some("(rs.invoice = ?1 OR ss.invoice = ?1 OR cs.claim_address = ?1 OR pd.destination = ?1)"), 
+                    None, 
+                    None,
+                ),
+                params![destination],
                 |row| self.sql_row_to_payment(row),
             )
             .optional()?)
@@ -507,7 +522,7 @@ mod tests {
             })?
             .first()
             .is_some());
-        assert!(storage.get_payment(payment_tx_data.tx_id)?.is_some());
+        assert!(storage.get_payment(&payment_tx_data.tx_id)?.is_some());
 
         Ok(())
     }

@@ -351,6 +351,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
+  Payment? dco_decode_opt_box_autoadd_payment(dynamic raw);
+
+  @protected
   SuccessActionProcessed? dco_decode_opt_box_autoadd_success_action_processed(dynamic raw);
 
   @protected
@@ -824,6 +827,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  Payment? sse_decode_opt_box_autoadd_payment(SseDeserializer deserializer);
 
   @protected
   SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer);
@@ -1473,6 +1479,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Int64> cst_encode_opt_box_autoadd_i_64(PlatformInt64? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_payment> cst_encode_opt_box_autoadd_payment(Payment? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_payment(raw);
   }
 
   @protected
@@ -3120,6 +3132,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_payment(Payment? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_success_action_processed(
       SuccessActionProcessed? self, SseSerializer serializer);
 
@@ -3606,6 +3621,26 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_pay_onchain =
       _wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> destination,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
+      port_,
+      that,
+      destination,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination');
+  late final _wire__crate__bindings__BindingLiquidSdk_payment_by_destination =
+      _wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
     int port_,

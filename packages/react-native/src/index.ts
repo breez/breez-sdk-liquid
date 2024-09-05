@@ -727,6 +727,11 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
     return response
 }
 
+export const paymentByDestination = async (destination: string): Promise<Payment | null> => {
+    const response = await BreezSDKLiquid.paymentByDestination(destination)
+    return response
+}
+
 export const listRefundables = async (): Promise<RefundableSwap[]> => {
     const response = await BreezSDKLiquid.listRefundables()
     return response

@@ -65,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.4.0';
 
   @override
-  int get rustContentHash => 1532646653;
+  int get rustContentHash => 264388282;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -118,6 +118,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain(
       {required BindingLiquidSdk that, required PayOnchainRequest req});
+
+  Future<Payment?> crateBindingsBindingLiquidSdkPaymentByDestination(
+      {required BindingLiquidSdk that, required String destination});
 
   Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin(
       {required BindingLiquidSdk that, required PrepareBuyBitcoinRequest req});
@@ -615,6 +618,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkPayOnchainConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_pay_onchain",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<Payment?> crateBindingsBindingLiquidSdkPaymentByDestination(
+      {required BindingLiquidSdk that, required String destination}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_String(destination);
+        return wire.wire__crate__bindings__BindingLiquidSdk_payment_by_destination(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_opt_box_autoadd_payment,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkPaymentByDestinationConstMeta,
+      argValues: [that, destination],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPaymentByDestinationConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_payment_by_destination",
+        argNames: ["that", "destination"],
       );
 
   @override
@@ -2169,6 +2198,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  Payment? dco_decode_opt_box_autoadd_payment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_payment(raw);
   }
 
   @protected
@@ -3853,6 +3888,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Payment? sse_decode_opt_box_autoadd_payment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_payment(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   SuccessActionProcessed? sse_decode_opt_box_autoadd_success_action_processed(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5477,6 +5523,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_payment(Payment? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_payment(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_success_action_processed(
       SuccessActionProcessed? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -6069,6 +6125,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
+
+  Future<Payment?> paymentByDestination({required String destination}) => RustLib.instance.api
+      .crateBindingsBindingLiquidSdkPaymentByDestination(that: this, destination: destination);
 
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareBuyBitcoin(that: this, req: req);
