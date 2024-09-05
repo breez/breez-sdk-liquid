@@ -345,7 +345,7 @@ dictionary CheckMessageResponse {
 
 dictionary PrepareSendRequest {
     string destination;
-    u64? amount_sat;
+    u64? amount_sat = null;
 };
 
 [Enum]
@@ -374,8 +374,8 @@ enum PaymentMethod {
 };
 
 dictionary PrepareReceiveRequest {
-    u64? payer_amount_sat;
     PaymentMethod payment_method;
+    u64? payer_amount_sat = null;
 };
 
 dictionary PrepareReceiveResponse {

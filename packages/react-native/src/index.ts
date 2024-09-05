@@ -255,8 +255,8 @@ export interface PreparePayOnchainResponse {
 }
 
 export interface PrepareReceiveRequest {
-    payerAmountSat?: number
     paymentMethod: PaymentMethod
+    payerAmountSat?: number
 }
 
 export interface PrepareReceiveResponse {
