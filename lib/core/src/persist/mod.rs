@@ -420,8 +420,8 @@ impl Persister {
             .get_connection()?
             .query_row(
                 &self.select_payment_query(
-                    Some("(rs.invoice = ?1 OR ss.invoice = ?1 OR cs.claim_address = ?1 OR pd.destination = ?1)"), 
-                    None, 
+                    Some("(rs.invoice = ?1 OR ss.invoice = ?1 OR cs.claim_address = ?1 OR pd.destination = ?1)"),
+                    None,
                     None,
                 ),
                 params![destination],
