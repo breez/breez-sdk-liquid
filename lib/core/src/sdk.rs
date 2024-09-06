@@ -970,15 +970,21 @@ impl LiquidSdk {
             payment_type: PaymentType::Send,
             is_confirmed: false,
         };
-        let payment_details = Some(PaymentDetails::Liquid {
-            destination: address_data.to_uri().unwrap_or(address_data.address),
-            description: address_data
-                .message
-                .unwrap_or("Liquid transfer".to_string()),
-        });
-        self.persister
-            .insert_or_update_payment(tx_data.clone(), payment_details.clone())?;
+
+        let destination = address_data.to_uri().unwrap_or(address_data.address);
+        let description = address_data.message;
+
+        self.persister.insert_or_update_payment(
+            tx_data.clone(),
+            Some(destination.clone()),
+            description.clone(),
+        )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        let payment_details = Some(PaymentDetails::Liquid {
+            destination,
+            description: description.unwrap_or("Liquid transfer".to_string()),
+        });
 
         Ok(SendPaymentResponse {
             payment: Payment::from_tx_data(tx_data, None, payment_details),
@@ -1897,12 +1903,10 @@ impl LiquidSdk {
                     is_confirmed: is_tx_confirmed,
                 },
                 match tx.outputs.first() {
-                    Some(Some(output)) => Some(PaymentDetails::Liquid {
-                        destination: output.script_pubkey.to_hex(),
-                        description: "Liquid transfer".to_string(),
-                    }),
+                    Some(Some(output)) => Some(output.script_pubkey.to_hex()),
                     _ => None,
                 },
+                None,
             )?;
 
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {

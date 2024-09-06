@@ -75,5 +75,24 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN id_hash TEXT;
         ALTER TABLE chain_swaps ADD COLUMN id_hash TEXT;
         ",
+        "
+        ALTER TABLE payment_details RENAME TO payment_details_old;
+
+        CREATE TABLE IF NOT EXISTS payment_details (
+            tx_id TEXT NOT NULL PRIMARY KEY,
+            destination TEXT NOT NULL,
+            description TEXT
+        ) STRICT;
+        
+        INSERT INTO payment_details
+         (tx_id, destination, description)
+         SELECT 
+            tx_id,
+            destination,
+            description
+         FROM payment_details_old;
+        
+        DROP TABLE payment_details_old;            
+        ",
     ]
 }

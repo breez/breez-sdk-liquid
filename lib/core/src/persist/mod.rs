@@ -86,7 +86,8 @@ impl Persister {
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
-        details: Option<PaymentDetails>,
+        destination: Option<String>,
+        description: Option<String>,
     ) -> Result<()> {
         let mut con = self.get_connection()?;
 
@@ -111,11 +112,8 @@ impl Persister {
                 ptx.is_confirmed,
             ),
         )?;
-        if let Some(PaymentDetails::Liquid {
-            destination,
-            description,
-        }) = details
-        {
+
+        if let Some(destination) = destination {
             tx.execute(
                 "INSERT OR REPLACE INTO payment_details (
                     tx_id,
@@ -442,7 +440,7 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
-        prelude::{ListPaymentsRequest, PaymentDetails},
+        prelude::ListPaymentsRequest,
         test_utils::persist::{
             new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
         },
@@ -457,10 +455,8 @@ mod tests {
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
-            Some(PaymentDetails::Liquid {
-                destination: "mock-address".to_string(),
-                description: "Liquid transfer".to_string(),
-            }),
+            Some("mock-address".to_string()),
+            None,
         )?;
 
         assert!(storage
