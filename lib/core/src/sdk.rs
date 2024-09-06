@@ -981,10 +981,10 @@ impl LiquidSdk {
         )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
-        let payment_details = Some(PaymentDetails::Liquid {
+        let payment_details = PaymentDetails::Liquid {
             destination,
             description: description.unwrap_or("Liquid transfer".to_string()),
-        });
+        };
 
         Ok(SendPaymentResponse {
             payment: Payment::from_tx_data(tx_data, None, payment_details),
@@ -1902,7 +1902,7 @@ impl LiquidSdk {
                     },
                     is_confirmed: is_tx_confirmed,
                 },
-                match tx.outputs.first() {
+                match tx.outputs.iter().find(|output| output.is_some()) {
                     Some(Some(output)) => Some(output.script_pubkey.to_hex()),
                     _ => None,
                 },

@@ -347,12 +347,54 @@ impl Persister {
             },
         };
 
-        let payment_details =
-            maybe_payment_details_destination.map(|destination| PaymentDetails::Liquid {
-                destination,
+        let description = swap.as_ref().map(|s| s.description.clone());
+        let payment_details = match swap.clone() {
+            Some(
+                PaymentSwapData {
+                    swap_type: PaymentSwapType::Receive,
+                    swap_id,
+                    bolt11,
+                    refund_tx_id,
+                    preimage,
+                    refund_tx_amount_sat,
+                    ..
+                }
+                | PaymentSwapData {
+                    swap_type: PaymentSwapType::Send,
+                    swap_id,
+                    bolt11,
+                    preimage,
+                    refund_tx_id,
+                    refund_tx_amount_sat,
+                    ..
+                },
+            ) => PaymentDetails::Lightning {
+                swap_id,
+                preimage,
+                bolt11,
+                refund_tx_id,
+                refund_tx_amount_sat,
+                description: description.unwrap_or("Liquid transfer".to_string()),
+            },
+            Some(PaymentSwapData {
+                swap_type: PaymentSwapType::Chain,
+                swap_id,
+                refund_tx_id,
+                refund_tx_amount_sat,
+                ..
+            }) => PaymentDetails::Bitcoin {
+                swap_id,
+                refund_tx_id,
+                refund_tx_amount_sat,
+                description: description.unwrap_or("Bitcoin transfer".to_string()),
+            },
+            _ => PaymentDetails::Liquid {
+                destination: maybe_payment_details_destination
+                    .unwrap_or("Destination unknown".to_string()),
                 description: maybe_payment_details_description
                     .unwrap_or("Liquid transfer".to_string()),
-            });
+            },
+        };
 
         match (tx, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
