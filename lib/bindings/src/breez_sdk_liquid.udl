@@ -475,9 +475,9 @@ dictionary Payment {
     u64 fees_sat;
     PaymentType payment_type;
     PaymentState status;
+    PaymentDetails details;
     string? destination = null;
     string? tx_id = null;
-    PaymentDetails details;
 };
 
 enum PaymentType {
