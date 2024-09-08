@@ -54,7 +54,7 @@ pub trait LiquidChainService: Send + Sync {
     ) -> Result<Vec<History>>;
 
     /// Get the tx outpoint associated with a script pubkey
-    async fn get_script_utxos(&self, script: &Script) -> Result<(OutPoint, TxOut)>;
+    async fn get_script_history_outpoint(&self, script: &Script) -> Result<(OutPoint, TxOut)>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -188,8 +188,8 @@ impl LiquidChainService for HybridLiquidChainService {
         Ok(script_history)
     }
 
-    async fn get_script_utxos(&self, script: &Script) -> Result<(OutPoint, TxOut)> {
-        let history = self.get_script_history(script).await?;
+    async fn get_script_history_outpoint(&self, script: &Script) -> Result<(OutPoint, TxOut)> {
+        let history = self.get_script_history_with_retry(script, 3).await?;
         if history.is_empty() {
             return Err(anyhow!("Transaction history is empty."));
         }
@@ -211,6 +211,8 @@ impl LiquidChainService for HybridLiquidChainService {
                 return Ok((outpoint_0, output));
             }
         }
+
+        return Err(anyhow!("Transaction outpoint not found"));
     }
 
     async fn verify_tx(

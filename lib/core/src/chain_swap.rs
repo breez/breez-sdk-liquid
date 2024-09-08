@@ -541,8 +541,8 @@ impl ChainSwapHandler {
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
-                        match self.verify_user_lockup_tx(swap).await {
-                            Ok(_) => {
+                        match swap.user_lockup_tx_id {
+                            Some(_) => {
                                 warn!("Chain Swap {id} user lockup tx has been broadcast.");
                                 if let Err(err) = self.refund_outgoing_swap(swap, true).await {
                                     warn!("Could not refund outgoing Chain swap cooperatively, error: {err:?}");
@@ -560,7 +560,7 @@ impl ChainSwapHandler {
                                     .await?;
                                 };
                             }
-                            Err(_) => {
+                            None => {
                                 warn!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
                                 self.update_swap_info(id, Failed, None, None, None, None)
                                     .await?;

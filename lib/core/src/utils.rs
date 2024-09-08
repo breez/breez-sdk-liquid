@@ -108,7 +108,7 @@ pub(crate) async fn new_lbtc_refund_tx(
 
     let liquid_chain_service = liquid_chain_service.lock().await;
     let (funding_outpoint, funding_utxo) = liquid_chain_service
-        .get_script_utxos(&script_pk)
+        .get_script_history_outpoint(&script_pk)
         .await
         .map_err(|_| anyhow!("Could not retrieve script utxos".to_string()))?;
 

@@ -171,7 +171,7 @@ impl Persister {
             PaymentState::Pending,
             PaymentState::RefundPending,
         ])];
-        Ok(self.list_send_swaps(&con, where_clause)?)
+        self.list_send_swaps_where(&con, where_clause)
     }
 
     /// Pending Send swaps, indexed by refund tx id

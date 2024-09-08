@@ -97,8 +97,8 @@ impl LiquidChainService for MockLiquidChainService {
         unimplemented!()
     }
 
-    async fn get_script_utxos(&self, _script: &Script) -> Result<(OutPoint, TxOut)> {
-        unimplemented!()
+    async fn get_script_history_outpoint(&self, _script: &Script) -> Result<(OutPoint, TxOut)> {
+        Ok((OutPoint::default(), TxOut::default()))
     }
 
     async fn verify_tx(
