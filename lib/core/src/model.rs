@@ -1271,6 +1271,16 @@ impl Payment {
             },
         }
     }
+
+    pub(crate) fn get_refund_tx_id(&self) -> Option<String> {
+        match self.details.clone() {
+            Some(PaymentDetails::Lightning { refund_tx_id, .. }) => Some(refund_tx_id),
+            Some(PaymentDetails::Bitcoin { refund_tx_id, .. }) => Some(refund_tx_id),
+            Some(PaymentDetails::Liquid { .. }) => None,
+            None => None,
+        }
+        .flatten()
+    }
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
