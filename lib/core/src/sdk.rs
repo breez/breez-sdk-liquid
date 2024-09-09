@@ -1179,32 +1179,10 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
-        let drain_payer_amount_sat = balance_sat;
-        let drain_lockup_fees_sat = self.estimate_drain_tx_fee().await?;
-        let drain_user_lockup_amount_sat = drain_payer_amount_sat - drain_lockup_fees_sat;
-        let drain_boltz_fees_sat = pair.fees.boltz(drain_user_lockup_amount_sat);
-        let drain_total_fees_sat =
-            drain_boltz_fees_sat + drain_lockup_fees_sat + claim_fees_sat + server_fees_sat;
-        let drain_receiver_amount_sat = drain_payer_amount_sat - drain_total_fees_sat;
+        let (payer_amount_sat, receiver_amount_sat, total_fees_sat) = match req.amount {
+            PayOnchainAmount::Receiver { amount_sat } => {
+                let receiver_amount_sat = amount_sat;
 
-        let receiver_amount_sat = match req.amount {
-            PayOnchainAmount::Receiver { amount_sat } => amount_sat,
-            PayOnchainAmount::Drain => drain_receiver_amount_sat,
-        };
-        let is_drain = match req.amount {
-            PayOnchainAmount::Receiver { amount_sat } => amount_sat == drain_receiver_amount_sat,
-            PayOnchainAmount::Drain => true,
-        };
-        let (payer_amount_sat, total_fees_sat) = match is_drain {
-            true => {
-                self.validate_user_lockup_amount_for_chain_pair(
-                    &pair,
-                    drain_user_lockup_amount_sat,
-                )?;
-
-                (drain_payer_amount_sat, drain_total_fees_sat)
-            }
-            false => {
                 let user_lockup_amount_sat_without_service_fee =
                     receiver_amount_sat + claim_fees_sat + server_fees_sat;
 
@@ -1226,7 +1204,21 @@ impl LiquidSdk {
                     boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
                 let payer_amount_sat = receiver_amount_sat + total_fees_sat;
 
-                (payer_amount_sat, total_fees_sat)
+                (payer_amount_sat, receiver_amount_sat, total_fees_sat)
+            }
+            PayOnchainAmount::Drain => {
+                let payer_amount_sat = balance_sat;
+                let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+
+                let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+
+                let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
+                let total_fees_sat =
+                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+                let receiver_amount_sat = payer_amount_sat - total_fees_sat;
+
+                (payer_amount_sat, receiver_amount_sat, total_fees_sat)
             }
         };
 
