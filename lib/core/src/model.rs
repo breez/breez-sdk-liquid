@@ -1145,7 +1145,7 @@ pub struct Payment {
 
     /// The details of a payment, depending on its [destination](Payment::destination) and
     /// [type](Payment::payment_type)
-    pub details: Option<PaymentDetails>,
+    pub details: PaymentDetails,
 }
 impl Payment {
     pub(crate) fn from_pending_swap(swap: PaymentSwapData, payment_type: PaymentType) -> Payment {
@@ -1162,23 +1162,22 @@ impl Payment {
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
             payment_type,
             status: swap.status,
-            details: Some(PaymentDetails::Lightning {
+            details: PaymentDetails::Lightning {
                 swap_id: swap.swap_id,
                 preimage: swap.preimage,
                 bolt11: swap.bolt11,
                 description: swap.description,
                 refund_tx_id: swap.refund_tx_id,
                 refund_tx_amount_sat: swap.refund_tx_amount_sat,
-            }),
+            },
         }
     }
 
     pub(crate) fn from_tx_data(
         tx: PaymentTxData,
         swap: Option<PaymentSwapData>,
-        payment_details: Option<PaymentDetails>,
+        details: PaymentDetails,
     ) -> Payment {
-        let description = swap.as_ref().map(|s| s.description.clone());
         Payment {
             tx_id: Some(tx.tx_id),
             // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
@@ -1202,8 +1201,8 @@ impl Payment {
                     claim_address,
                     ..
                 }) => claim_address.clone(),
-                _ => match &payment_details {
-                    Some(PaymentDetails::Liquid { destination, .. }) => Some(destination.clone()),
+                _ => match &details {
+                    PaymentDetails::Liquid { destination, .. } => Some(destination.clone()),
                     _ => None,
                 },
             },
@@ -1227,48 +1226,7 @@ impl Payment {
                     false => PaymentState::Pending,
                 },
             },
-            details: match swap {
-                Some(
-                    PaymentSwapData {
-                        swap_type: PaymentSwapType::Receive,
-                        swap_id,
-                        bolt11,
-                        refund_tx_id,
-                        preimage,
-                        refund_tx_amount_sat,
-                        ..
-                    }
-                    | PaymentSwapData {
-                        swap_type: PaymentSwapType::Send,
-                        swap_id,
-                        bolt11,
-                        preimage,
-                        refund_tx_id,
-                        refund_tx_amount_sat,
-                        ..
-                    },
-                ) => Some(PaymentDetails::Lightning {
-                    swap_id,
-                    preimage,
-                    bolt11,
-                    refund_tx_id,
-                    refund_tx_amount_sat,
-                    description: description.unwrap_or("Liquid transfer".to_string()),
-                }),
-                Some(PaymentSwapData {
-                    swap_type: PaymentSwapType::Chain,
-                    swap_id,
-                    refund_tx_id,
-                    refund_tx_amount_sat,
-                    ..
-                }) => Some(PaymentDetails::Bitcoin {
-                    swap_id,
-                    refund_tx_id,
-                    refund_tx_amount_sat,
-                    description: description.unwrap_or("Bitcoin transfer".to_string()),
-                }),
-                _ => payment_details,
-            },
+            details,
         }
     }
 

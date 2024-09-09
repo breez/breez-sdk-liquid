@@ -34,7 +34,6 @@ class _ReceivePaymentDialogState extends State<ReceivePaymentDialog> {
         if (paymentList.any(
           (e) {
             final details = e.details;
-            if (details == null) return false;
             if (details is PaymentDetails_Lightning && details.preimage != null) {
               return details.preimage! == invoiceDestination!;
             }

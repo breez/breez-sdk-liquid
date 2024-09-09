@@ -299,7 +299,7 @@ typedef struct wire_cst_payment {
   uint64_t fees_sat;
   int32_t payment_type;
   int32_t status;
-  struct wire_cst_payment_details *details;
+  struct wire_cst_payment_details details;
 } wire_cst_payment;
 
 typedef struct wire_cst_SdkEvent_PaymentFailed {
@@ -1069,8 +1069,6 @@ struct wire_cst_pay_onchain_request *frbgen_breez_liquid_cst_new_box_autoadd_pay
 
 struct wire_cst_payment *frbgen_breez_liquid_cst_new_box_autoadd_payment(void);
 
-struct wire_cst_payment_details *frbgen_breez_liquid_cst_new_box_autoadd_payment_details(void);
-
 struct wire_cst_prepare_buy_bitcoin_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request(void);
 
 struct wire_cst_prepare_pay_onchain_request *frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request(void);
@@ -1149,7 +1147,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_payment_details);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_prepare_receive_request);

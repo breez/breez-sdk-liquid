@@ -227,9 +227,9 @@ export interface Payment {
     feesSat: number
     paymentType: PaymentType
     status: PaymentState
+    details: PaymentDetails
     destination?: string
     txId?: string
-    details?: PaymentDetails
 }
 
 export interface PrepareBuyBitcoinRequest {

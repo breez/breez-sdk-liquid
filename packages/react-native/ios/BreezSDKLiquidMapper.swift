@@ -1439,6 +1439,11 @@ enum BreezSDKLiquidMapper {
         }
         let status = try asPaymentState(paymentState: statusTmp)
 
+        guard let detailsTmp = payment["details"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "Payment"))
+        }
+        let details = try asPaymentDetails(paymentDetails: detailsTmp)
+
         var destination: String?
         if hasNonNilKey(data: payment, key: "destination") {
             guard let destinationTmp = payment["destination"] as? String else {
@@ -1453,12 +1458,8 @@ enum BreezSDKLiquidMapper {
             }
             txId = txIdTmp
         }
-        var details: PaymentDetails?
-        if let detailsTmp = payment["details"] as? [String: Any?] {
-            details = try asPaymentDetails(paymentDetails: detailsTmp)
-        }
 
-        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, destination: destination, txId: txId, details: details)
+        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details, destination: destination, txId: txId)
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
@@ -1468,9 +1469,9 @@ enum BreezSDKLiquidMapper {
             "feesSat": payment.feesSat,
             "paymentType": valueOf(paymentType: payment.paymentType),
             "status": valueOf(paymentState: payment.status),
+            "details": dictionaryOf(paymentDetails: payment.details),
             "destination": payment.destination == nil ? nil : payment.destination,
             "txId": payment.txId == nil ? nil : payment.txId,
-            "details": payment.details == nil ? nil : dictionaryOf(paymentDetails: payment.details!),
         ]
     }
 

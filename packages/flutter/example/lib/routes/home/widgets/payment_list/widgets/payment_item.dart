@@ -36,8 +36,6 @@ class PaymentItem extends StatelessWidget {
 
   void _onLongPress(BuildContext context) {
     final details = item.details;
-    if (details == null) return;
-
     if (details is PaymentDetails_Lightning && details.preimage != null) {
       try {
         debugPrint("Store payment preimage on clipboard. Preimage: ${details.preimage!}");

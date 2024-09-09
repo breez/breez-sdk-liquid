@@ -96,6 +96,7 @@ impl SendSwapStateHandler {
                                 is_confirmed: false,
                             },
                             None,
+                            None,
                         )?;
 
                         self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None)

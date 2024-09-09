@@ -266,6 +266,7 @@ impl ReceiveSwapStateHandler {
                 is_confirmed: false,
             },
             None,
+            None,
         )?;
 
         self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)

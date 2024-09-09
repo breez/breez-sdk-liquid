@@ -475,7 +475,7 @@ class Payment {
 
   /// The details of a payment, depending on its [destination](Payment::destination) and
   /// [type](Payment::payment_type)
-  final PaymentDetails? details;
+  final PaymentDetails details;
 
   const Payment({
     this.destination,
@@ -485,7 +485,7 @@ class Payment {
     required this.feesSat,
     required this.paymentType,
     required this.status,
-    this.details,
+    required this.details,
   });
 
   @override
