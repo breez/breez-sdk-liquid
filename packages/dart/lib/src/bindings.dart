@@ -688,7 +688,7 @@ class RouteHint {
 
 class RouteHintHop {
   final String srcNodeId;
-  final BigInt shortChannelId;
+  final String shortChannelId;
   final int feesBaseMsat;
   final int feesProportionalMillionths;
   final BigInt cltvExpiryDelta;

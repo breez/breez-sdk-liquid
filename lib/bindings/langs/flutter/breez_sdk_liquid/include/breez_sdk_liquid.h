@@ -191,7 +191,7 @@ typedef struct wire_cst_SendDestination_LiquidAddress {
 
 typedef struct wire_cst_route_hint_hop {
   struct wire_cst_list_prim_u_8_strict *src_node_id;
-  uint64_t short_channel_id;
+  struct wire_cst_list_prim_u_8_strict *short_channel_id;
   uint32_t fees_base_msat;
   uint32_t fees_proportional_millionths;
   uint64_t cltv_expiry_delta;
