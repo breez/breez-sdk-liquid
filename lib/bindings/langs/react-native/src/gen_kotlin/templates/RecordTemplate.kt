@@ -40,10 +40,10 @@ fun readableMapOf({{ type_name|var_name|unquote }}: {{ type_name }}): ReadableMa
 
 fun as{{ type_name }}List(arr: ReadableArray): List<{{ type_name }}> {
     val list = ArrayList<{{ type_name }}>()
-    for (value in asArrayList(arr)) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(as{{ type_name }}(value)!!)            
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
