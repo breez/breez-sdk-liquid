@@ -45,7 +45,7 @@ fun readableMapOf({{ type_name|var_name|unquote }}: {{ type_name }}): ReadableMa
 
 fun as{{ type_name }}List(arr: ReadableArray): List<{{ type_name }}> {
     val list = ArrayList<{{ type_name }}>()
-    for (value in arr.toArrayList()) {
+    for (value in asArrayList(arr)) {
         when (value) {
 {%- if e.is_flat() %}
             is String -> list.add(as{{ type_name }}(value)!!)            

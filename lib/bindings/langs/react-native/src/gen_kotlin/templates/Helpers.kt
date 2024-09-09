@@ -63,6 +63,21 @@ fun readableArrayOf(values: Iterable<*>?): ReadableArray {
     return array
 }
 
+fun asArrayList(arr: ReadableArray): ArrayList<Any> {
+    val arrayList = ArrayList<Any>();
+    for (i in 0..arr.size()-1) {
+        when (arr.getType(i)) {
+            ReadableType.Boolean -> arrayList.add(arr.getBoolean(i))
+            ReadableType.Number -> arrayList.add(arr.getDouble(i))
+            ReadableType.String -> arrayList.add(arr.getString(i))
+            ReadableType.Map -> arrayList.add(arr.getMap(i))
+            ReadableType.Array -> arrayList.add(arr.getArray(i))
+            else -> throw SdkException.Generic("Could not convert object at index: ${i}")
+        }
+    }
+    return arrayList;
+}
+
 fun asUByteList(arr: ReadableArray): List<UByte> {
     val list = ArrayList<UByte>()
     for (value in arr.toArrayList()) {
