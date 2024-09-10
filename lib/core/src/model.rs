@@ -1255,6 +1255,19 @@ impl Payment {
     }
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::payment_by_destination].
+#[derive(Debug, Clone, EnumString, PartialEq, Serialize)]
+pub enum PaymentDestination {
+    /// The bolt11 Lightning invoice of the payment
+    Lightning { bolt11: String },
+
+    /// The Liquid BIP21 URI or address of the payment
+    Liquid { destination: String },
+
+    /// The Bitcoin address of the payment
+    Bitcoin { address: String },
+}
+
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

@@ -415,16 +415,22 @@ impl Persister {
             .optional()?)
     }
 
-    pub fn get_payment_by_destination(&self, destination: &str) -> Result<Option<Payment>> {
+    pub fn get_payment_by_destination(
+        &self,
+        destination: &PaymentDestination,
+    ) -> Result<Option<Payment>> {
+        let (where_clause, param) = match destination {
+            PaymentDestination::Lightning { bolt11 } => {
+                ("(rs.invoice = ?1 OR ss.invoice = ?1)", bolt11)
+            }
+            PaymentDestination::Liquid { destination } => ("pd.destination = ?1", destination),
+            PaymentDestination::Bitcoin { address } => ("cs.claim_Address = ?1", address),
+        };
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(
-                    Some("(rs.invoice = ?1 OR ss.invoice = ?1 OR pd.destination = ?1)"),
-                    None,
-                    None,
-                ),
-                params![destination],
+                &self.select_payment_query(Some(where_clause), None, None),
+                params![param],
                 |row| self.sql_row_to_payment(row),
             )
             .optional()?)

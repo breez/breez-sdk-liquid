@@ -126,7 +126,7 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    paymentByDestination: (NSString*)destination
+    paymentByDestination: (NSDictionary*)destination
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )

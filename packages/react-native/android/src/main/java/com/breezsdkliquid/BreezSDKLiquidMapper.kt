@@ -2526,6 +2526,54 @@ fun asPayOnchainAmountList(arr: ReadableArray): List<PayOnchainAmount> {
     return list
 }
 
+fun asPaymentDestination(paymentDestination: ReadableMap): PaymentDestination? {
+    val type = paymentDestination.getString("type")
+
+    if (type == "lightning") {
+        val bolt11 = paymentDestination.getString("bolt11")!!
+        return PaymentDestination.Lightning(bolt11)
+    }
+    if (type == "liquid") {
+        val destination = paymentDestination.getString("destination")!!
+        return PaymentDestination.Liquid(destination)
+    }
+    if (type == "bitcoin") {
+        val address = paymentDestination.getString("address")!!
+        return PaymentDestination.Bitcoin(address)
+    }
+    return null
+}
+
+fun readableMapOf(paymentDestination: PaymentDestination): ReadableMap? {
+    val map = Arguments.createMap()
+    when (paymentDestination) {
+        is PaymentDestination.Lightning -> {
+            pushToMap(map, "type", "lightning")
+            pushToMap(map, "bolt11", paymentDestination.bolt11)
+        }
+        is PaymentDestination.Liquid -> {
+            pushToMap(map, "type", "liquid")
+            pushToMap(map, "destination", paymentDestination.destination)
+        }
+        is PaymentDestination.Bitcoin -> {
+            pushToMap(map, "type", "bitcoin")
+            pushToMap(map, "address", paymentDestination.address)
+        }
+    }
+    return map
+}
+
+fun asPaymentDestinationList(arr: ReadableArray): List<PaymentDestination> {
+    val list = ArrayList<PaymentDestination>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPaymentDestination(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     val type = paymentDetails.getString("type")
 

@@ -534,6 +534,26 @@ class Payment {
 }
 
 @freezed
+sealed class PaymentDestination with _$PaymentDestination {
+  const PaymentDestination._();
+
+  /// The bolt11 Lightning invoice of the payment
+  const factory PaymentDestination.lightning({
+    required String bolt11,
+  }) = PaymentDestination_Lightning;
+
+  /// The Liquid BIP21 URI or address of the payment
+  const factory PaymentDestination.liquid({
+    required String destination,
+  }) = PaymentDestination_Liquid;
+
+  /// The Bitcoin address of the payment
+  const factory PaymentDestination.bitcoin({
+    required String address,
+  }) = PaymentDestination_Bitcoin;
+}
+
+@freezed
 sealed class PaymentDetails with _$PaymentDetails {
   const PaymentDetails._();
 

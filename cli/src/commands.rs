@@ -103,7 +103,19 @@ pub(crate) enum Command {
         offset: Option<u32>,
     },
     /// Retrieve a payment by its destination
-    PaymentByDestination { destination: String },
+    PaymentByDestination {
+        /// Optional bolt11 Lightning invoice
+        #[clap(name = "bolt11", long = "lightning")]
+        lightning: Option<String>,
+
+        /// Optional Liquid BIP21 URI / address destination
+        #[clap(name = "destination", long = "liquid")]
+        liquid: Option<String>,
+
+        /// Optional Bitcoin address
+        #[clap(name = "address", long = "bitcoin")]
+        bitcoin: Option<String>,
+    },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -450,7 +462,22 @@ pub(crate) async fn handle_command(
                 .await?;
             command_result!(payments)
         }
-        Command::PaymentByDestination { destination } => {
+        Command::PaymentByDestination {
+            lightning,
+            liquid,
+            bitcoin,
+        } => {
+            let destination = match (lightning, liquid, bitcoin) {
+                (Some(bolt11), None, None) => PaymentDestination::Lightning { bolt11 },
+                (None, Some(destination), None) => PaymentDestination::Liquid { destination },
+                (None, None, Some(address)) => PaymentDestination::Bitcoin { address },
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "Must specify only one of `lightning`, `liquid` or `bitcoin`."
+                    ))
+                }
+            };
+
             let payment = sdk.payment_by_destination(&destination).await?;
             command_result!(payment)
         }

@@ -487,6 +487,13 @@ dictionary Payment {
     string? tx_id = null;
 };
 
+[Enum]
+interface PaymentDestination {
+    Lightning(string bolt11);
+    Liquid(string destination);
+    Bitcoin(string address);
+};
+
 enum PaymentType {
     "Receive",
     "Send",
@@ -629,7 +636,7 @@ interface BindingLiquidSdk {
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
     [Throws=PaymentError]
-    Payment? payment_by_destination(string destination);
+    Payment? payment_by_destination(PaymentDestination destination);
 
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();

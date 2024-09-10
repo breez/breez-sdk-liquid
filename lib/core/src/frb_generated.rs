@@ -820,7 +820,7 @@ fn wire__crate__bindings__BindingLiquidSdk_payment_by_destination_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
     >,
-    destination: impl CstDecode<String>,
+    destination: impl CstDecode<crate::model::PaymentDestination>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -3184,6 +3184,34 @@ impl SseDecode for crate::model::Payment {
     }
 }
 
+impl SseDecode for crate::model::PaymentDestination {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_bolt11 = <String>::sse_decode(deserializer);
+                return crate::model::PaymentDestination::Lightning { bolt11: var_bolt11 };
+            }
+            1 => {
+                let mut var_destination = <String>::sse_decode(deserializer);
+                return crate::model::PaymentDestination::Liquid {
+                    destination: var_destination,
+                };
+            }
+            2 => {
+                let mut var_address = <String>::sse_decode(deserializer);
+                return crate::model::PaymentDestination::Bitcoin {
+                    address: var_address,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::PaymentDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4982,6 +5010,36 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Payment> for crate::model::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PaymentDestination {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::PaymentDestination::Lightning { bolt11 } => {
+                [0.into_dart(), bolt11.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::PaymentDestination::Liquid { destination } => {
+                [1.into_dart(), destination.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::PaymentDestination::Bitcoin { address } => {
+                [2.into_dart(), address.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PaymentDestination
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentDestination>
+    for crate::model::PaymentDestination
+{
+    fn into_into_dart(self) -> crate::model::PaymentDestination {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -6694,6 +6752,29 @@ impl SseEncode for crate::model::Payment {
     }
 }
 
+impl SseEncode for crate::model::PaymentDestination {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::PaymentDestination::Lightning { bolt11 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(bolt11, serializer);
+            }
+            crate::model::PaymentDestination::Liquid { destination } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(destination, serializer);
+            }
+            crate::model::PaymentDestination::Bitcoin { address } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(address, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::PaymentDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7580,6 +7661,13 @@ mod io {
             CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::PaymentDestination> for *mut wire_cst_payment_destination {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PaymentDestination {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::PaymentDestination>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
         for *mut wire_cst_prepare_buy_bitcoin_request
     {
@@ -8404,6 +8492,32 @@ mod io {
                 payment_type: self.payment_type.cst_decode(),
                 status: self.status.cst_decode(),
                 details: self.details.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::PaymentDestination> for wire_cst_payment_destination {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PaymentDestination {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Lightning };
+                    crate::model::PaymentDestination::Lightning {
+                        bolt11: ans.bolt11.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.Liquid };
+                    crate::model::PaymentDestination::Liquid {
+                        destination: ans.destination.cst_decode(),
+                    }
+                }
+                2 => {
+                    let ans = unsafe { self.kind.Bitcoin };
+                    crate::model::PaymentDestination::Bitcoin {
+                        address: ans.address.cst_decode(),
+                    }
+                }
+                _ => unreachable!(),
             }
         }
     }
@@ -9479,6 +9593,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_payment_destination {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: PaymentDestinationKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_payment_destination {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_payment_details {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -10053,7 +10180,7 @@ mod io {
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
         port_: i64,
         that: usize,
-        destination: *mut wire_cst_list_prim_u_8_strict,
+        destination: *mut wire_cst_payment_destination,
     ) {
         wire__crate__bindings__BindingLiquidSdk_payment_by_destination_impl(
             port_,
@@ -10446,6 +10573,14 @@ mod io {
     #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment_destination(
+    ) -> *mut wire_cst_payment_destination {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_payment_destination::new_with_null_ptr(),
+        )
     }
 
     #[no_mangle]
@@ -11340,6 +11475,35 @@ mod io {
         payment_type: i32,
         status: i32,
         details: wire_cst_payment_details,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_payment_destination {
+        tag: i32,
+        kind: PaymentDestinationKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union PaymentDestinationKind {
+        Lightning: wire_cst_PaymentDestination_Lightning,
+        Liquid: wire_cst_PaymentDestination_Liquid,
+        Bitcoin: wire_cst_PaymentDestination_Bitcoin,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentDestination_Lightning {
+        bolt11: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentDestination_Liquid {
+        destination: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentDestination_Bitcoin {
+        address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

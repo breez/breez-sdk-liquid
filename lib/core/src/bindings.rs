@@ -178,7 +178,7 @@ impl BindingLiquidSdk {
 
     pub async fn payment_by_destination(
         &self,
-        destination: String,
+        destination: PaymentDestination,
     ) -> Result<Option<Payment>, PaymentError> {
         self.sdk.payment_by_destination(&destination).await
     }

@@ -144,6 +144,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Payment dco_decode_box_autoadd_payment(dynamic raw);
 
   @protected
+  PaymentDestination dco_decode_box_autoadd_payment_destination(dynamic raw);
+
+  @protected
   PrepareBuyBitcoinRequest dco_decode_box_autoadd_prepare_buy_bitcoin_request(dynamic raw);
 
   @protected
@@ -376,6 +379,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Payment dco_decode_payment(dynamic raw);
+
+  @protected
+  PaymentDestination dco_decode_payment_destination(dynamic raw);
 
   @protected
   PaymentDetails dco_decode_payment_details(dynamic raw);
@@ -622,6 +628,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Payment sse_decode_box_autoadd_payment(SseDeserializer deserializer);
 
   @protected
+  PaymentDestination sse_decode_box_autoadd_payment_destination(SseDeserializer deserializer);
+
+  @protected
   PrepareBuyBitcoinRequest sse_decode_box_autoadd_prepare_buy_bitcoin_request(SseDeserializer deserializer);
 
   @protected
@@ -854,6 +863,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer);
+
+  @protected
+  PaymentDestination sse_decode_payment_destination(SseDeserializer deserializer);
 
   @protected
   PaymentDetails sse_decode_payment_details(SseDeserializer deserializer);
@@ -1222,6 +1234,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_payment();
     cst_api_fill_to_wire_payment(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_payment_destination> cst_encode_box_autoadd_payment_destination(
+      PaymentDestination raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_payment_destination();
+    cst_api_fill_to_wire_payment_destination(raw, ptr.ref);
     return ptr;
   }
 
@@ -1710,6 +1731,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_box_autoadd_payment(Payment apiObj, ffi.Pointer<wire_cst_payment> wireObj) {
     cst_api_fill_to_wire_payment(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_payment_destination(
+      PaymentDestination apiObj, ffi.Pointer<wire_cst_payment_destination> wireObj) {
+    cst_api_fill_to_wire_payment_destination(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2303,6 +2330,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payment_type = cst_encode_payment_type(apiObj.paymentType);
     wireObj.status = cst_encode_payment_state(apiObj.status);
     cst_api_fill_to_wire_payment_details(apiObj.details, wireObj.details);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_payment_destination(
+      PaymentDestination apiObj, wire_cst_payment_destination wireObj) {
+    if (apiObj is PaymentDestination_Lightning) {
+      var pre_bolt11 = cst_encode_String(apiObj.bolt11);
+      wireObj.tag = 0;
+      wireObj.kind.Lightning.bolt11 = pre_bolt11;
+      return;
+    }
+    if (apiObj is PaymentDestination_Liquid) {
+      var pre_destination = cst_encode_String(apiObj.destination);
+      wireObj.tag = 1;
+      wireObj.kind.Liquid.destination = pre_destination;
+      return;
+    }
+    if (apiObj is PaymentDestination_Bitcoin) {
+      var pre_address = cst_encode_String(apiObj.address);
+      wireObj.tag = 2;
+      wireObj.kind.Bitcoin.address = pre_address;
+      return;
+    }
   }
 
   @protected
@@ -2921,6 +2971,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_payment(Payment self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_payment_destination(PaymentDestination self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_prepare_buy_bitcoin_request(
       PrepareBuyBitcoinRequest self, SseSerializer serializer);
 
@@ -3158,6 +3211,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_payment_destination(PaymentDestination self, SseSerializer serializer);
 
   @protected
   void sse_encode_payment_details(PaymentDetails self, SseSerializer serializer);
@@ -3625,7 +3681,7 @@ class RustLibWire implements BaseWire {
   void wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
     int port_,
     int that,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> destination,
+    ffi.Pointer<wire_cst_payment_destination> destination,
   ) {
     return _wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
       port_,
@@ -3636,11 +3692,11 @@ class RustLibWire implements BaseWire {
 
   late final _wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr = _lookup<
           ffi.NativeFunction<
-              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_payment_destination>)>>(
       'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination');
   late final _wire__crate__bindings__BindingLiquidSdk_payment_by_destination =
       _wire__crate__bindings__BindingLiquidSdk_payment_by_destinationPtr
-          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_payment_destination>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
     int port_,
@@ -4319,6 +4375,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_payment =
       _cst_new_box_autoadd_paymentPtr.asFunction<ffi.Pointer<wire_cst_payment> Function()>();
 
+  ffi.Pointer<wire_cst_payment_destination> cst_new_box_autoadd_payment_destination() {
+    return _cst_new_box_autoadd_payment_destination();
+  }
+
+  late final _cst_new_box_autoadd_payment_destinationPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_payment_destination> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_payment_destination');
+  late final _cst_new_box_autoadd_payment_destination = _cst_new_box_autoadd_payment_destinationPtr
+      .asFunction<ffi.Pointer<wire_cst_payment_destination> Function()>();
+
   ffi.Pointer<wire_cst_prepare_buy_bitcoin_request> cst_new_box_autoadd_prepare_buy_bitcoin_request() {
     return _cst_new_box_autoadd_prepare_buy_bitcoin_request();
   }
@@ -4786,6 +4852,33 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
   external wire_cst_prepare_pay_onchain_response prepare_response;
+}
+
+final class wire_cst_PaymentDestination_Lightning extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+}
+
+final class wire_cst_PaymentDestination_Liquid extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+}
+
+final class wire_cst_PaymentDestination_Bitcoin extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+}
+
+final class PaymentDestinationKind extends ffi.Union {
+  external wire_cst_PaymentDestination_Lightning Lightning;
+
+  external wire_cst_PaymentDestination_Liquid Liquid;
+
+  external wire_cst_PaymentDestination_Bitcoin Bitcoin;
+}
+
+final class wire_cst_payment_destination extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PaymentDestinationKind kind;
 }
 
 final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {

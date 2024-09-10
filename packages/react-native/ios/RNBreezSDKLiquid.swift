@@ -307,9 +307,10 @@ class RNBreezSDKLiquid: RCTEventEmitter {
     }
 
     @objc(paymentByDestination:resolve:reject:)
-    func paymentByDestination(_ destination: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func paymentByDestination(_ destination: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            var res = try getBindingLiquidSdk().paymentByDestination(destination: destination)
+            let destinationTmp = try BreezSDKLiquidMapper.asPaymentDestination(paymentDestination: destination)
+            var res = try getBindingLiquidSdk().paymentByDestination(destination: destinationTmp)
             if res != nil {
                 resolve(BreezSDKLiquidMapper.dictionaryOf(payment: res!))
             } else {

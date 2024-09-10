@@ -2051,7 +2051,7 @@ impl LiquidSdk {
     /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given destination.
     pub async fn payment_by_destination(
         &self,
-        destination: &str,
+        destination: &PaymentDestination,
     ) -> Result<Option<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 

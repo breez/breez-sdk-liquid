@@ -3124,6 +3124,75 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asPaymentDestination(paymentDestination: [String: Any?]) throws -> PaymentDestination {
+        let type = paymentDestination["type"] as! String
+        if type == "lightning" {
+            guard let _bolt11 = paymentDestination["bolt11"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bolt11", typeName: "PaymentDestination"))
+            }
+            return PaymentDestination.lightning(bolt11: _bolt11)
+        }
+        if type == "liquid" {
+            guard let _destination = paymentDestination["destination"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "PaymentDestination"))
+            }
+            return PaymentDestination.liquid(destination: _destination)
+        }
+        if type == "bitcoin" {
+            guard let _address = paymentDestination["address"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "PaymentDestination"))
+            }
+            return PaymentDestination.bitcoin(address: _address)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDestination")
+    }
+
+    static func dictionaryOf(paymentDestination: PaymentDestination) -> [String: Any?] {
+        switch paymentDestination {
+        case let .lightning(
+            bolt11
+        ):
+            return [
+                "type": "lightning",
+                "bolt11": bolt11,
+            ]
+
+        case let .liquid(
+            destination
+        ):
+            return [
+                "type": "liquid",
+                "destination": destination,
+            ]
+
+        case let .bitcoin(
+            address
+        ):
+            return [
+                "type": "bitcoin",
+                "address": address,
+            ]
+        }
+    }
+
+    static func arrayOf(paymentDestinationList: [PaymentDestination]) -> [Any] {
+        return paymentDestinationList.map { v -> [String: Any?] in return dictionaryOf(paymentDestination: v) }
+    }
+
+    static func asPaymentDestinationList(arr: [Any]) throws -> [PaymentDestination] {
+        var list = [PaymentDestination]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var paymentDestination = try asPaymentDestination(paymentDestination: val)
+                list.append(paymentDestination)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PaymentDestination"))
+            }
+        }
+        return list
+    }
+
     static func asPaymentDetails(paymentDetails: [String: Any?]) throws -> PaymentDetails {
         let type = paymentDetails["type"] as! String
         if type == "lightning" {

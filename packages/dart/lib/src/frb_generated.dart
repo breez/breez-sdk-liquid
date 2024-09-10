@@ -120,7 +120,7 @@ abstract class RustLibApi extends BaseApi {
       {required BindingLiquidSdk that, required PayOnchainRequest req});
 
   Future<Payment?> crateBindingsBindingLiquidSdkPaymentByDestination(
-      {required BindingLiquidSdk that, required String destination});
+      {required BindingLiquidSdk that, required PaymentDestination destination});
 
   Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin(
       {required BindingLiquidSdk that, required PrepareBuyBitcoinRequest req});
@@ -622,13 +622,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<Payment?> crateBindingsBindingLiquidSdkPaymentByDestination(
-      {required BindingLiquidSdk that, required String destination}) {
+      {required BindingLiquidSdk that, required PaymentDestination destination}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         var arg0 =
             cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
                 that);
-        var arg1 = cst_encode_String(destination);
+        var arg1 = cst_encode_box_autoadd_payment_destination(destination);
         return wire.wire__crate__bindings__BindingLiquidSdk_payment_by_destination(port_, arg0, arg1);
       },
       codec: DcoCodec(
@@ -1434,6 +1434,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Payment dco_decode_box_autoadd_payment(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_payment(raw);
+  }
+
+  @protected
+  PaymentDestination dco_decode_box_autoadd_payment_destination(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_payment_destination(raw);
   }
 
   @protected
@@ -2280,6 +2286,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PaymentDestination dco_decode_payment_destination(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return PaymentDestination_Lightning(
+          bolt11: dco_decode_String(raw[1]),
+        );
+      case 1:
+        return PaymentDestination_Liquid(
+          destination: dco_decode_String(raw[1]),
+        );
+      case 2:
+        return PaymentDestination_Bitcoin(
+          address: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
   PaymentDetails dco_decode_payment_details(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -3089,6 +3116,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Payment sse_decode_box_autoadd_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_payment(deserializer));
+  }
+
+  @protected
+  PaymentDestination sse_decode_box_autoadd_payment_destination(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_payment_destination(deserializer));
   }
 
   @protected
@@ -4000,6 +4033,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PaymentDestination sse_decode_payment_destination(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_bolt11 = sse_decode_String(deserializer);
+        return PaymentDestination_Lightning(bolt11: var_bolt11);
+      case 1:
+        var var_destination = sse_decode_String(deserializer);
+        return PaymentDestination_Liquid(destination: var_destination);
+      case 2:
+        var var_address = sse_decode_String(deserializer);
+        return PaymentDestination_Bitcoin(address: var_address);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   PaymentDetails sse_decode_payment_details(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4858,6 +4911,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_payment_destination(PaymentDestination self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment_destination(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_prepare_buy_bitcoin_request(
       PrepareBuyBitcoinRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -5618,6 +5677,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_payment_destination(PaymentDestination self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case PaymentDestination_Lightning(bolt11: final bolt11):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(bolt11, serializer);
+      case PaymentDestination_Liquid(destination: final destination):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(destination, serializer);
+      case PaymentDestination_Bitcoin(address: final address):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(address, serializer);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   void sse_encode_payment_details(PaymentDetails self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
@@ -6126,7 +6203,7 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
 
-  Future<Payment?> paymentByDestination({required String destination}) => RustLib.instance.api
+  Future<Payment?> paymentByDestination({required PaymentDestination destination}) => RustLib.instance.api
       .crateBindingsBindingLiquidSdkPaymentByDestination(that: this, destination: destination);
 
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req}) =>
