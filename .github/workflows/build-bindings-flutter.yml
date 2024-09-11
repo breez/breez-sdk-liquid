@@ -23,8 +23,30 @@ on:
         default: false
 
 jobs:
+  setup:
+    if: ${{ !inputs.use-dummy-binaries }}
+    runs-on: macOS-latest
+    name: Setup
+    steps:
+      - name: Disk Cleanup
+        run: |
+          echo "::group::Free space before cleanup"
+          df -hI
+          echo "::endgroup::"
+          echo "::group::Cleaned Files"
+          sudo rm -rf /Applications/Xcode_14.3.1.app
+          sudo rm -rf /Applications/Xcode_15.0.1.app
+          sudo rm -rf /Applications/Xcode_15.1.app
+          sudo rm -rf /Applications/Xcode_15.2.app
+          sudo rm -rf /Applications/Xcode_15.3.app
+          echo "::endgroup::"
+          echo "::group::Free space after cleanup"
+          df -hI
+          echo "::endgroup::"
+
   build:
     if: ${{ !inputs.use-dummy-binaries }}
+    needs: setup
     runs-on: macOS-latest
     name: Build Flutter bindings 
     steps:
