@@ -47,10 +47,14 @@ pub(crate) enum Command {
         /// Btc onchain address to send to
         address: String,
 
-        /// Amount that will be received, in satoshi
-        receiver_amount_sat: u64,
+        /// Amount that will be received, in satoshi. Must be set if `drain` is false or unset.
+        receiver_amount_sat: Option<u64>,
 
-        // The optional fee rate to use, in satoshi/vbyte
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
+        #[arg(short, long)]
+        drain: Option<bool>,
+
+        /// The optional fee rate to use, in satoshi/vbyte
         #[clap(short = 'f', long = "fee_rate")]
         sat_per_vbyte: Option<u32>,
     },
@@ -341,19 +345,28 @@ pub(crate) async fn handle_command(
         Command::SendOnchainPayment {
             address,
             receiver_amount_sat,
+            drain,
             sat_per_vbyte,
         } => {
+            let amount = match drain.unwrap_or(false) {
+                true => PayOnchainAmount::Drain,
+                false => PayOnchainAmount::Receiver {
+                    amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
+                        "Must specify `receiver_amount_sat` if not draining"
+                    ))?,
+                },
+            };
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
-                    receiver_amount_sat,
+                    amount,
                     sat_per_vbyte,
                 })
                 .await?;
 
             wait_confirmation!(
                 format!(
-                    "Fees: {} sat (incl claim fee: {} sat). Are the fees acceptable? (y/N) ",
-                    prepare_response.total_fees_sat, prepare_response.claim_fees_sat
+                    "Fees: {} sat (incl claim fee: {} sat). Receiver amount: {} sat. Are the fees acceptable? (y/N) ",
+                    prepare_response.total_fees_sat, prepare_response.claim_fees_sat, prepare_response.receiver_amount_sat
                 ),
                 "Payment send halted"
             );

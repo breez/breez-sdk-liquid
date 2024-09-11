@@ -1571,9 +1571,11 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPreparePayOnchainRequest(preparePayOnchainRequest: [String: Any?]) throws -> PreparePayOnchainRequest {
-        guard let receiverAmountSat = preparePayOnchainRequest["receiverAmountSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "PreparePayOnchainRequest"))
+        guard let amountTmp = preparePayOnchainRequest["amount"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amount", typeName: "PreparePayOnchainRequest"))
         }
+        let amount = try asPayOnchainAmount(payOnchainAmount: amountTmp)
+
         var satPerVbyte: UInt32?
         if hasNonNilKey(data: preparePayOnchainRequest, key: "satPerVbyte") {
             guard let satPerVbyteTmp = preparePayOnchainRequest["satPerVbyte"] as? UInt32 else {
@@ -1582,12 +1584,12 @@ enum BreezSDKLiquidMapper {
             satPerVbyte = satPerVbyteTmp
         }
 
-        return PreparePayOnchainRequest(receiverAmountSat: receiverAmountSat, satPerVbyte: satPerVbyte)
+        return PreparePayOnchainRequest(amount: amount, satPerVbyte: satPerVbyte)
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
-            "receiverAmountSat": preparePayOnchainRequest.receiverAmountSat,
+            "amount": dictionaryOf(payOnchainAmount: preparePayOnchainRequest.amount),
             "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
         ]
     }
@@ -3060,6 +3062,55 @@ enum BreezSDKLiquidMapper {
                 list.append(network)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "Network"))
+            }
+        }
+        return list
+    }
+
+    static func asPayOnchainAmount(payOnchainAmount: [String: Any?]) throws -> PayOnchainAmount {
+        let type = payOnchainAmount["type"] as! String
+        if type == "receiver" {
+            guard let _amountSat = payOnchainAmount["amountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "PayOnchainAmount"))
+            }
+            return PayOnchainAmount.receiver(amountSat: _amountSat)
+        }
+        if type == "drain" {
+            return PayOnchainAmount.drain
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum PayOnchainAmount")
+    }
+
+    static func dictionaryOf(payOnchainAmount: PayOnchainAmount) -> [String: Any?] {
+        switch payOnchainAmount {
+        case let .receiver(
+            amountSat
+        ):
+            return [
+                "type": "receiver",
+                "amountSat": amountSat,
+            ]
+
+        case .drain:
+            return [
+                "type": "drain",
+            ]
+        }
+    }
+
+    static func arrayOf(payOnchainAmountList: [PayOnchainAmount]) -> [Any] {
+        return payOnchainAmountList.map { v -> [String: Any?] in return dictionaryOf(payOnchainAmount: v) }
+    }
+
+    static func asPayOnchainAmountList(arr: [Any]) throws -> [PayOnchainAmount] {
+        var list = [PayOnchainAmount]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var payOnchainAmount = try asPayOnchainAmount(payOnchainAmount: val)
+                list.append(payOnchainAmount)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PayOnchainAmount"))
             }
         }
         return list

@@ -19,6 +19,7 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
 use crate::{
+    ensure_sdk,
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
@@ -36,6 +37,20 @@ pub trait OnchainWallet: Send + Sync {
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
+    ) -> Result<Transaction, PaymentError>;
+
+    /// Builds a drain tx.
+    ///
+    /// ### Arguments
+    /// - `fee_rate_sats_per_kvb`: custom drain tx feerate
+    /// - `recipient_address`: drain tx recipient
+    /// - `enforce_amount_sat`: if set, the drain tx will only be built if the amount transferred is
+    ///   this amount, otherwise it will fail with a validation error
+    async fn build_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError>;
 
     /// Get the next unused address in the wallet
@@ -134,6 +149,49 @@ impl OnchainWallet for LiquidOnchainWallet {
             )?
             .fee_rate(fee_rate_sats_per_kvb)
             .finish(&lwk_wollet)?;
+        let signer = AnySigner::Software(self.lwk_signer.clone());
+        signer.sign(&mut pset)?;
+        Ok(lwk_wollet.finalize(&mut pset)?)
+    }
+
+    async fn build_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        enforce_amount_sat: Option<u64>,
+    ) -> Result<Transaction, PaymentError> {
+        let lwk_wollet = self.wallet.lock().await;
+
+        let address =
+            ElementsAddress::from_str(recipient_address).map_err(|e| PaymentError::Generic {
+                err: format!(
+                    "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
+                ),
+            })?;
+        let mut pset = lwk_wollet
+            .tx_builder()
+            .drain_lbtc_wallet()
+            .drain_lbtc_to(address)
+            .fee_rate(fee_rate_sats_per_kvb)
+            .finish()?;
+
+        if let Some(enforce_amount_sat) = enforce_amount_sat {
+            let pset_details = lwk_wollet.get_details(&pset)?;
+            let pset_balance_sat = pset_details
+                .balance
+                .balances
+                .get(&lwk_wollet.policy_asset())
+                .unwrap_or(&0);
+            let pset_fees = pset_details.balance.fee;
+
+            ensure_sdk!(
+                (*pset_balance_sat * -1) as u64 - pset_fees == enforce_amount_sat,
+                PaymentError::Generic {
+                    err: format!("Drain tx amount {pset_balance_sat} sat doesn't match enforce_amount_sat {enforce_amount_sat} sat")
+                }
+            );
+        }
+
         let signer = AnySigner::Software(self.lwk_signer.clone());
         signer.sign(&mut pset)?;
         Ok(lwk_wollet.finalize(&mut pset)?)

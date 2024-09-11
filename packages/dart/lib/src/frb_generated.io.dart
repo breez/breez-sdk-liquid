@@ -366,6 +366,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw);
 
   @protected
+  PayOnchainAmount dco_decode_pay_onchain_amount(dynamic raw);
+
+  @protected
   PayOnchainRequest dco_decode_pay_onchain_request(dynamic raw);
 
   @protected
@@ -836,6 +839,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer);
+
+  @protected
+  PayOnchainAmount sse_decode_pay_onchain_amount(SseDeserializer deserializer);
 
   @protected
   PayOnchainRequest sse_decode_pay_onchain_request(SseDeserializer deserializer);
@@ -2254,6 +2260,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_pay_onchain_amount(PayOnchainAmount apiObj, wire_cst_pay_onchain_amount wireObj) {
+    if (apiObj is PayOnchainAmount_Receiver) {
+      var pre_amount_sat = cst_encode_u_64(apiObj.amountSat);
+      wireObj.tag = 0;
+      wireObj.kind.Receiver.amount_sat = pre_amount_sat;
+      return;
+    }
+    if (apiObj is PayOnchainAmount_Drain) {
+      wireObj.tag = 1;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_pay_onchain_request(
       PayOnchainRequest apiObj, wire_cst_pay_onchain_request wireObj) {
     wireObj.address = cst_encode_String(apiObj.address);
@@ -2440,7 +2460,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
-    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
+    cst_api_fill_to_wire_pay_onchain_amount(apiObj.amount, wireObj.amount);
     wireObj.sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(apiObj.satPerVbyte);
   }
 
@@ -3113,6 +3133,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_pay_onchain_amount(PayOnchainAmount self, SseSerializer serializer);
 
   @protected
   void sse_encode_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer);
@@ -4734,9 +4757,24 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
   external int amount_sat;
 }
 
-final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
+final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
   @ffi.Uint64()
-  external int receiver_amount_sat;
+  external int amount_sat;
+}
+
+final class PayOnchainAmountKind extends ffi.Union {
+  external wire_cst_PayOnchainAmount_Receiver Receiver;
+}
+
+final class wire_cst_pay_onchain_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PayOnchainAmountKind kind;
+}
+
+final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
+  external wire_cst_pay_onchain_amount amount;
 
   external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }

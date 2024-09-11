@@ -1330,13 +1330,13 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
     if (!validateMandatoryFields(
             preparePayOnchainRequest,
             arrayOf(
-                "receiverAmountSat",
+                "amount",
             ),
         )
     ) {
         return null
     }
-    val receiverAmountSat = preparePayOnchainRequest.getDouble("receiverAmountSat").toULong()
+    val amount = preparePayOnchainRequest.getMap("amount")?.let { asPayOnchainAmount(it) }!!
     val satPerVbyte =
         if (hasNonNullKey(
                 preparePayOnchainRequest,
@@ -1347,12 +1347,12 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         } else {
             null
         }
-    return PreparePayOnchainRequest(receiverAmountSat, satPerVbyte)
+    return PreparePayOnchainRequest(amount, satPerVbyte)
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
-        "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
+        "amount" to readableMapOf(preparePayOnchainRequest.amount),
         "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
     )
 
@@ -2479,6 +2479,44 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asNetwork(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asPayOnchainAmount(payOnchainAmount: ReadableMap): PayOnchainAmount? {
+    val type = payOnchainAmount.getString("type")
+
+    if (type == "receiver") {
+        val amountSat = payOnchainAmount.getDouble("amountSat").toULong()
+        return PayOnchainAmount.Receiver(amountSat)
+    }
+    if (type == "drain") {
+        return PayOnchainAmount.Drain
+    }
+    return null
+}
+
+fun readableMapOf(payOnchainAmount: PayOnchainAmount): ReadableMap? {
+    val map = Arguments.createMap()
+    when (payOnchainAmount) {
+        is PayOnchainAmount.Receiver -> {
+            pushToMap(map, "type", "receiver")
+            pushToMap(map, "amountSat", payOnchainAmount.amountSat)
+        }
+        is PayOnchainAmount.Drain -> {
+            pushToMap(map, "type", "drain")
+        }
+    }
+    return map
+}
+
+fun asPayOnchainAmountList(arr: ReadableArray): List<PayOnchainAmount> {
+    val list = ArrayList<PayOnchainAmount>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPayOnchainAmount(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }

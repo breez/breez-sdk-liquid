@@ -244,7 +244,7 @@ export interface PrepareBuyBitcoinResponse {
 }
 
 export interface PreparePayOnchainRequest {
-    receiverAmountSat: number
+    amount: PayOnchainAmount
     satPerVbyte?: number
 }
 
@@ -487,6 +487,18 @@ export enum Network {
     TESTNET = "testnet",
     SIGNET = "signet",
     REGTEST = "regtest"
+}
+
+export enum PayOnchainAmountVariant {
+    RECEIVER = "receiver",
+    DRAIN = "drain"
+}
+
+export type PayOnchainAmount = {
+    type: PayOnchainAmountVariant.RECEIVER,
+    amountSat: number
+} | {
+    type: PayOnchainAmountVariant.DRAIN
 }
 
 export enum PaymentDetailsVariant {
