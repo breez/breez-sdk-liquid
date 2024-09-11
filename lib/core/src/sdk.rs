@@ -1165,6 +1165,13 @@ impl LiquidSdk {
     }
 
     /// Prepares to pay to a Bitcoin address via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PreparePayOnchainRequest] containing:
+    ///     * `amount` - which can be of two types: [PayOnchainAmount::Drain], which uses all funds,
+    ///        and [PayOnchainAmount::Receiver], which sets the amount the receiver should receive
+    ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,
