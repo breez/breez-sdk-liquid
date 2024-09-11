@@ -2514,10 +2514,10 @@ fun readableMapOf(payOnchainAmount: PayOnchainAmount): ReadableMap? {
 
 fun asPayOnchainAmountList(arr: ReadableArray): List<PayOnchainAmount> {
     val list = ArrayList<PayOnchainAmount>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPayOnchainAmount(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
