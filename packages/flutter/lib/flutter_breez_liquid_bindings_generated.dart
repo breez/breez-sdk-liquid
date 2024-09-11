@@ -1575,9 +1575,24 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
   external int amount_sat;
 }
 
-final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
+final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
   @ffi.Uint64()
-  external int receiver_amount_sat;
+  external int amount_sat;
+}
+
+final class PayOnchainAmountKind extends ffi.Union {
+  external wire_cst_PayOnchainAmount_Receiver Receiver;
+}
+
+final class wire_cst_pay_onchain_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PayOnchainAmountKind kind;
+}
+
+final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
+  external wire_cst_pay_onchain_amount amount;
 
   external ffi.Pointer<ffi.Uint32> sat_per_vbyte;
 }
