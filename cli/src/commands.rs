@@ -47,15 +47,15 @@ pub(crate) enum Command {
         /// Btc onchain address to send to
         address: String,
 
-        /// Amount that will be received, in satoshi
-        receiver_amount_sat: u64,
+        /// Amount that will be received, in satoshi. Must be set if `drain` is false or unset.
+        receiver_amount_sat: Option<u64>,
+
+        #[arg(short, long)]
+        drain: Option<bool>,
 
         /// The optional fee rate to use, in satoshi/vbyte
         #[clap(short = 'f', long = "fee_rate")]
         sat_per_vbyte: Option<u32>,
-
-        #[arg(short, long)]
-        drain: Option<bool>,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -344,13 +344,15 @@ pub(crate) async fn handle_command(
         Command::SendOnchainPayment {
             address,
             receiver_amount_sat,
-            sat_per_vbyte,
             drain,
+            sat_per_vbyte,
         } => {
             let amount = match drain.unwrap_or(false) {
                 true => PayOnchainAmount::Drain,
                 false => PayOnchainAmount::Receiver {
-                    amount_sat: receiver_amount_sat,
+                    amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
+                        "Must specify `receiver_amount_sat` if not draining"
+                    ))?,
                 },
             };
             let prepare_response = sdk
