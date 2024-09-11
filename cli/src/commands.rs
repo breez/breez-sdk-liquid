@@ -50,6 +50,7 @@ pub(crate) enum Command {
         /// Amount that will be received, in satoshi. Must be set if `drain` is false or unset.
         receiver_amount_sat: Option<u64>,
 
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
         drain: Option<bool>,
 
