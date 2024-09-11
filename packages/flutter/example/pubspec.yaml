@@ -1,7 +1,7 @@
 name: flutter_breez_liquid_example
 description: Demonstrates how to use the flutter_breez_liquid plugin.
 publish_to: 'none'
-version: 0.3.1-dev2
+version: 0.3.1-dev3
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
