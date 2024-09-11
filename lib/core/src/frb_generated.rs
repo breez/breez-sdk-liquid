@@ -1812,7 +1812,7 @@ const _: fn() = || {
     {
         let RouteHintHop = None::<crate::bindings::RouteHintHop>.unwrap();
         let _: String = RouteHintHop.src_node_id;
-        let _: u64 = RouteHintHop.short_channel_id;
+        let _: String = RouteHintHop.short_channel_id;
         let _: u32 = RouteHintHop.fees_base_msat;
         let _: u32 = RouteHintHop.fees_proportional_millionths;
         let _: u64 = RouteHintHop.cltv_expiry_delta;
@@ -2164,6 +2164,7 @@ impl SseDecode for crate::model::Config {
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -2173,6 +2174,7 @@ impl SseDecode for crate::model::Config {
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
+            breez_api_key: var_breezApiKey,
         };
     }
 }
@@ -3005,17 +3007,6 @@ impl SseDecode for Option<i64> {
     }
 }
 
-impl SseDecode for Option<crate::model::PaymentDetails> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<crate::model::PaymentDetails>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
 impl SseDecode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3073,6 +3064,27 @@ impl SseDecode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
+impl SseDecode for crate::model::PayOnchainAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_amountSat = <u64>::sse_decode(deserializer);
+                return crate::model::PayOnchainAmount::Receiver {
+                    amount_sat: var_amountSat,
+                };
+            }
+            1 => {
+                return crate::model::PayOnchainAmount::Drain;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::PayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3096,7 +3108,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
         let mut var_status = <crate::model::PaymentState>::sse_decode(deserializer);
-        let mut var_details = <Option<crate::model::PaymentDetails>>::sse_decode(deserializer);
+        let mut var_details = <crate::model::PaymentDetails>::sse_decode(deserializer);
         return crate::model::Payment {
             destination: var_destination,
             tx_id: var_txId,
@@ -3318,10 +3330,10 @@ impl SseDecode for crate::model::PrepareBuyBitcoinResponse {
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayOnchainAmount>::sse_decode(deserializer);
         let mut var_satPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
-            receiver_amount_sat: var_receiverAmountSat,
+            amount: var_amount,
             sat_per_vbyte: var_satPerVbyte,
         };
     }
@@ -3534,7 +3546,7 @@ impl SseDecode for crate::bindings::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_srcNodeId = <String>::sse_decode(deserializer);
-        let mut var_shortChannelId = <u64>::sse_decode(deserializer);
+        let mut var_shortChannelId = <String>::sse_decode(deserializer);
         let mut var_feesBaseMsat = <u32>::sse_decode(deserializer);
         let mut var_feesProportionalMillionths = <u32>::sse_decode(deserializer);
         let mut var_cltvExpiryDelta = <u64>::sse_decode(deserializer);
@@ -4030,6 +4042,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
                 .into_into_dart()
                 .into_dart(),
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
+            self.breez_api_key.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4839,6 +4852,31 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::OnchainPaymentLimitsRespons
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PayOnchainAmount {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+                [0.into_dart(), amount_sat.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::PayOnchainAmount::Drain => [1.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PayOnchainAmount
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PayOnchainAmount>
+    for crate::model::PayOnchainAmount
+{
+    fn into_into_dart(self) -> crate::model::PayOnchainAmount {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5101,7 +5139,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareBuyBitcoinResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.receiver_amount_sat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -5848,6 +5886,7 @@ impl SseEncode for crate::model::Config {
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
+        <Option<String>>::sse_encode(self.breez_api_key, serializer);
     }
 }
 
@@ -6493,16 +6532,6 @@ impl SseEncode for Option<i64> {
     }
 }
 
-impl SseEncode for Option<crate::model::PaymentDetails> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <crate::model::PaymentDetails>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<crate::bindings::SuccessActionProcessed> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6553,6 +6582,24 @@ impl SseEncode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
+impl SseEncode for crate::model::PayOnchainAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+                <i32>::sse_encode(0, serializer);
+                <u64>::sse_encode(amount_sat, serializer);
+            }
+            crate::model::PayOnchainAmount::Drain => {
+                <i32>::sse_encode(1, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::PayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6571,7 +6618,7 @@ impl SseEncode for crate::model::Payment {
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
         <crate::model::PaymentState>::sse_encode(self.status, serializer);
-        <Option<crate::model::PaymentDetails>>::sse_encode(self.details, serializer);
+        <crate::model::PaymentDetails>::sse_encode(self.details, serializer);
     }
 }
 
@@ -6781,7 +6828,7 @@ impl SseEncode for crate::model::PrepareBuyBitcoinResponse {
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.receiver_amount_sat, serializer);
+        <crate::model::PayOnchainAmount>::sse_encode(self.amount, serializer);
         <Option<u32>>::sse_encode(self.sat_per_vbyte, serializer);
     }
 }
@@ -6924,7 +6971,7 @@ impl SseEncode for crate::bindings::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.src_node_id, serializer);
-        <u64>::sse_encode(self.short_channel_id, serializer);
+        <String>::sse_encode(self.short_channel_id, serializer);
         <u32>::sse_encode(self.fees_base_msat, serializer);
         <u32>::sse_encode(self.fees_proportional_millionths, serializer);
         <u64>::sse_encode(self.cltv_expiry_delta, serializer);
@@ -7461,13 +7508,6 @@ mod io {
             CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
         }
     }
-    impl CstDecode<crate::model::PaymentDetails> for *mut wire_cst_payment_details {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::PaymentDetails {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::model::PaymentDetails>::cst_decode(*wrap).into()
-        }
-    }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
         for *mut wire_cst_prepare_buy_bitcoin_request
     {
@@ -7621,6 +7661,7 @@ mod io {
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
                 zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
+                breez_api_key: self.breez_api_key.cst_decode(),
             }
         }
     }
@@ -8255,6 +8296,21 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::PayOnchainAmount> for wire_cst_pay_onchain_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PayOnchainAmount {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Receiver };
+                    crate::model::PayOnchainAmount::Receiver {
+                        amount_sat: ans.amount_sat.cst_decode(),
+                    }
+                }
+                1 => crate::model::PayOnchainAmount::Drain,
+                _ => unreachable!(),
+            }
+        }
+    }
     impl CstDecode<crate::model::PayOnchainRequest> for wire_cst_pay_onchain_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PayOnchainRequest {
@@ -8417,7 +8473,7 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
             crate::model::PreparePayOnchainRequest {
-                receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
+                amount: self.amount.cst_decode(),
                 sat_per_vbyte: self.sat_per_vbyte.cst_decode(),
             }
         }
@@ -8868,6 +8924,7 @@ mod io {
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
                 zero_conf_max_amount_sat: core::ptr::null_mut(),
+                breez_api_key: core::ptr::null_mut(),
             }
         }
     }
@@ -9305,6 +9362,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_pay_onchain_amount {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: PayOnchainAmountKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_pay_onchain_amount {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_pay_onchain_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -9328,7 +9398,7 @@ mod io {
                 fees_sat: Default::default(),
                 payment_type: Default::default(),
                 status: Default::default(),
-                details: core::ptr::null_mut(),
+                details: Default::default(),
             }
         }
     }
@@ -9393,7 +9463,7 @@ mod io {
     impl NewWithNullPtr for wire_cst_prepare_pay_onchain_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                receiver_amount_sat: Default::default(),
+                amount: Default::default(),
                 sat_per_vbyte: core::ptr::null_mut(),
             }
         }
@@ -9621,7 +9691,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 src_node_id: core::ptr::null_mut(),
-                short_channel_id: Default::default(),
+                short_channel_id: core::ptr::null_mut(),
                 fees_base_msat: Default::default(),
                 fees_proportional_millionths: Default::default(),
                 cltv_expiry_delta: Default::default(),
@@ -10293,14 +10363,6 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment_details(
-    ) -> *mut wire_cst_payment_details {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_payment_details::new_with_null_ptr(),
-        )
-    }
-
-    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_request(
     ) -> *mut wire_cst_prepare_buy_bitcoin_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -10626,6 +10688,7 @@ mod io {
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,
         zero_conf_max_amount_sat: *mut u64,
+        breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11159,6 +11222,23 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_pay_onchain_amount {
+        tag: i32,
+        kind: PayOnchainAmountKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union PayOnchainAmountKind {
+        Receiver: wire_cst_PayOnchainAmount_Receiver,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PayOnchainAmount_Receiver {
+        amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_pay_onchain_request {
         address: *mut wire_cst_list_prim_u_8_strict,
         prepare_response: wire_cst_prepare_pay_onchain_response,
@@ -11173,7 +11253,7 @@ mod io {
         fees_sat: u64,
         payment_type: i32,
         status: i32,
-        details: *mut wire_cst_payment_details,
+        details: wire_cst_payment_details,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11301,7 +11381,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
-        receiver_amount_sat: u64,
+        amount: wire_cst_pay_onchain_amount,
         sat_per_vbyte: *mut u32,
     }
     #[repr(C)]
@@ -11410,7 +11490,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_route_hint_hop {
         src_node_id: *mut wire_cst_list_prim_u_8_strict,
-        short_channel_id: u64,
+        short_channel_id: *mut wire_cst_list_prim_u_8_strict,
         fees_base_msat: u32,
         fees_proportional_millionths: u32,
         cltv_expiry_delta: u64,

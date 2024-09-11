@@ -135,6 +135,9 @@ class Config {
   /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
 
+  /// The Breez API key used for making requests to their mempool service
+  final String? breezApiKey;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -144,6 +147,7 @@ class Config {
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
     this.zeroConfMaxAmountSat,
+    this.breezApiKey,
   });
 
   @override
@@ -155,7 +159,8 @@ class Config {
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
-      zeroConfMaxAmountSat.hashCode;
+      zeroConfMaxAmountSat.hashCode ^
+      breezApiKey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -169,7 +174,8 @@ class Config {
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
-          zeroConfMaxAmountSat == other.zeroConfMaxAmountSat;
+          zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
+          breezApiKey == other.breezApiKey;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -405,6 +411,19 @@ class OnchainPaymentLimitsResponse {
           receive == other.receive;
 }
 
+@freezed
+sealed class PayOnchainAmount with _$PayOnchainAmount {
+  const PayOnchainAmount._();
+
+  /// The amount in satoshi that will be received
+  const factory PayOnchainAmount.receiver({
+    required BigInt amountSat,
+  }) = PayOnchainAmount_Receiver;
+
+  /// Indicates that all available funds should be sent
+  const factory PayOnchainAmount.drain() = PayOnchainAmount_Drain;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
 class PayOnchainRequest {
   final String address;
@@ -475,7 +494,7 @@ class Payment {
 
   /// The details of a payment, depending on its [destination](Payment::destination) and
   /// [type](Payment::payment_type)
-  final PaymentDetails? details;
+  final PaymentDetails details;
 
   const Payment({
     this.destination,
@@ -485,7 +504,7 @@ class Payment {
     required this.feesSat,
     required this.paymentType,
     required this.status,
-    this.details,
+    required this.details,
   });
 
   @override
@@ -695,23 +714,25 @@ class PrepareBuyBitcoinResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
-  final BigInt receiverAmountSat;
+  final PayOnchainAmount amount;
+
+  /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
   final int? satPerVbyte;
 
   const PreparePayOnchainRequest({
-    required this.receiverAmountSat,
+    required this.amount,
     this.satPerVbyte,
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => amount.hashCode ^ satPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
-          receiverAmountSat == other.receiverAmountSat &&
+          amount == other.amount &&
           satPerVbyte == other.satPerVbyte;
 }
 

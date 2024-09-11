@@ -27,10 +27,10 @@ fun readableMapOf(aesSuccessActionDataDecrypted: AesSuccessActionDataDecrypted):
 
 fun asAesSuccessActionDataDecryptedList(arr: ReadableArray): List<AesSuccessActionDataDecrypted> {
     val list = ArrayList<AesSuccessActionDataDecrypted>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asAesSuccessActionDataDecrypted(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -55,10 +55,10 @@ fun readableMapOf(backupRequest: BackupRequest): ReadableMap =
 
 fun asBackupRequestList(arr: ReadableArray): List<BackupRequest> {
     val list = ArrayList<BackupRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asBackupRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -94,10 +94,10 @@ fun readableMapOf(bitcoinAddressData: BitcoinAddressData): ReadableMap =
 
 fun asBitcoinAddressDataList(arr: ReadableArray): List<BitcoinAddressData> {
     val list = ArrayList<BitcoinAddressData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asBitcoinAddressData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -126,10 +126,10 @@ fun readableMapOf(buyBitcoinRequest: BuyBitcoinRequest): ReadableMap =
 
 fun asBuyBitcoinRequestList(arr: ReadableArray): List<BuyBitcoinRequest> {
     val list = ArrayList<BuyBitcoinRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asBuyBitcoinRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -162,10 +162,10 @@ fun readableMapOf(checkMessageRequest: CheckMessageRequest): ReadableMap =
 
 fun asCheckMessageRequestList(arr: ReadableArray): List<CheckMessageRequest> {
     val list = ArrayList<CheckMessageRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asCheckMessageRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -192,10 +192,10 @@ fun readableMapOf(checkMessageResponse: CheckMessageResponse): ReadableMap =
 
 fun asCheckMessageResponseList(arr: ReadableArray): List<CheckMessageResponse> {
     val list = ArrayList<CheckMessageResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asCheckMessageResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -234,6 +234,7 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
     return Config(
         liquidElectrumUrl,
         bitcoinElectrumUrl,
@@ -243,6 +244,7 @@ fun asConfig(config: ReadableMap): Config? {
         paymentTimeoutSec,
         zeroConfMinFeeRateMsat,
         zeroConfMaxAmountSat,
+        breezApiKey,
     )
 }
 
@@ -256,14 +258,15 @@ fun readableMapOf(config: Config): ReadableMap =
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
+        "breezApiKey" to config.breezApiKey,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {
     val list = ArrayList<Config>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asConfig(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -293,10 +296,10 @@ fun readableMapOf(connectRequest: ConnectRequest): ReadableMap =
 
 fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
     val list = ArrayList<ConnectRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asConnectRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -338,10 +341,10 @@ fun readableMapOf(currencyInfo: CurrencyInfo): ReadableMap =
 
 fun asCurrencyInfoList(arr: ReadableArray): List<CurrencyInfo> {
     val list = ArrayList<CurrencyInfo>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asCurrencyInfo(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -371,10 +374,10 @@ fun readableMapOf(fiatCurrency: FiatCurrency): ReadableMap =
 
 fun asFiatCurrencyList(arr: ReadableArray): List<FiatCurrency> {
     val list = ArrayList<FiatCurrency>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asFiatCurrency(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -410,10 +413,10 @@ fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap =
 
 fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
     val list = ArrayList<GetInfoResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asGetInfoResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -483,10 +486,10 @@ fun readableMapOf(lnInvoice: LnInvoice): ReadableMap =
 
 fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     val list = ArrayList<LnInvoice>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnInvoice(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -516,10 +519,10 @@ fun readableMapOf(lightningPaymentLimitsResponse: LightningPaymentLimitsResponse
 
 fun asLightningPaymentLimitsResponseList(arr: ReadableArray): List<LightningPaymentLimitsResponse> {
     val list = ArrayList<LightningPaymentLimitsResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLightningPaymentLimitsResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -552,10 +555,10 @@ fun readableMapOf(limits: Limits): ReadableMap =
 
 fun asLimitsList(arr: ReadableArray): List<Limits> {
     val list = ArrayList<Limits>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLimits(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -593,10 +596,10 @@ fun readableMapOf(liquidAddressData: LiquidAddressData): ReadableMap =
 
 fun asLiquidAddressDataList(arr: ReadableArray): List<LiquidAddressData> {
     val list = ArrayList<LiquidAddressData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLiquidAddressData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -645,10 +648,10 @@ fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
 
 fun asListPaymentsRequestList(arr: ReadableArray): List<ListPaymentsRequest> {
     val list = ArrayList<ListPaymentsRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asListPaymentsRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -683,10 +686,10 @@ fun readableMapOf(lnUrlAuthRequestData: LnUrlAuthRequestData): ReadableMap =
 
 fun asLnUrlAuthRequestDataList(arr: ReadableArray): List<LnUrlAuthRequestData> {
     val list = ArrayList<LnUrlAuthRequestData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlAuthRequestData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -713,10 +716,10 @@ fun readableMapOf(lnUrlErrorData: LnUrlErrorData): ReadableMap =
 
 fun asLnUrlErrorDataList(arr: ReadableArray): List<LnUrlErrorData> {
     val list = ArrayList<LnUrlErrorData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlErrorData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -746,10 +749,10 @@ fun readableMapOf(lnUrlPayErrorData: LnUrlPayErrorData): ReadableMap =
 
 fun asLnUrlPayErrorDataList(arr: ReadableArray): List<LnUrlPayErrorData> {
     val list = ArrayList<LnUrlPayErrorData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPayErrorData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -794,10 +797,10 @@ fun readableMapOf(lnUrlPayRequest: LnUrlPayRequest): ReadableMap =
 
 fun asLnUrlPayRequestList(arr: ReadableArray): List<LnUrlPayRequest> {
     val list = ArrayList<LnUrlPayRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPayRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -856,10 +859,10 @@ fun readableMapOf(lnUrlPayRequestData: LnUrlPayRequestData): ReadableMap =
 
 fun asLnUrlPayRequestDataList(arr: ReadableArray): List<LnUrlPayRequestData> {
     val list = ArrayList<LnUrlPayRequestData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPayRequestData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -895,10 +898,10 @@ fun readableMapOf(lnUrlPaySuccessData: LnUrlPaySuccessData): ReadableMap =
 
 fun asLnUrlPaySuccessDataList(arr: ReadableArray): List<LnUrlPaySuccessData> {
     val list = ArrayList<LnUrlPaySuccessData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPaySuccessData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -930,10 +933,10 @@ fun readableMapOf(lnUrlWithdrawRequest: LnUrlWithdrawRequest): ReadableMap =
 
 fun asLnUrlWithdrawRequestList(arr: ReadableArray): List<LnUrlWithdrawRequest> {
     val list = ArrayList<LnUrlWithdrawRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -972,10 +975,10 @@ fun readableMapOf(lnUrlWithdrawRequestData: LnUrlWithdrawRequestData): ReadableM
 
 fun asLnUrlWithdrawRequestDataList(arr: ReadableArray): List<LnUrlWithdrawRequestData> {
     val list = ArrayList<LnUrlWithdrawRequestData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawRequestData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1002,10 +1005,10 @@ fun readableMapOf(lnUrlWithdrawSuccessData: LnUrlWithdrawSuccessData): ReadableM
 
 fun asLnUrlWithdrawSuccessDataList(arr: ReadableArray): List<LnUrlWithdrawSuccessData> {
     val list = ArrayList<LnUrlWithdrawSuccessData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawSuccessData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1037,10 +1040,10 @@ fun readableMapOf(localeOverrides: LocaleOverrides): ReadableMap =
 
 fun asLocaleOverridesList(arr: ReadableArray): List<LocaleOverrides> {
     val list = ArrayList<LocaleOverrides>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLocaleOverrides(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1070,10 +1073,10 @@ fun readableMapOf(localizedName: LocalizedName): ReadableMap =
 
 fun asLocalizedNameList(arr: ReadableArray): List<LocalizedName> {
     val list = ArrayList<LocalizedName>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLocalizedName(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1103,10 +1106,10 @@ fun readableMapOf(logEntry: LogEntry): ReadableMap =
 
 fun asLogEntryList(arr: ReadableArray): List<LogEntry> {
     val list = ArrayList<LogEntry>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLogEntry(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1133,10 +1136,10 @@ fun readableMapOf(messageSuccessActionData: MessageSuccessActionData): ReadableM
 
 fun asMessageSuccessActionDataList(arr: ReadableArray): List<MessageSuccessActionData> {
     val list = ArrayList<MessageSuccessActionData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asMessageSuccessActionData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1166,10 +1169,10 @@ fun readableMapOf(onchainPaymentLimitsResponse: OnchainPaymentLimitsResponse): R
 
 fun asOnchainPaymentLimitsResponseList(arr: ReadableArray): List<OnchainPaymentLimitsResponse> {
     val list = ArrayList<OnchainPaymentLimitsResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asOnchainPaymentLimitsResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1199,10 +1202,10 @@ fun readableMapOf(payOnchainRequest: PayOnchainRequest): ReadableMap =
 
 fun asPayOnchainRequestList(arr: ReadableArray): List<PayOnchainRequest> {
     val list = ArrayList<PayOnchainRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPayOnchainRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1217,6 +1220,7 @@ fun asPayment(payment: ReadableMap): Payment? {
                 "feesSat",
                 "paymentType",
                 "status",
+                "details",
             ),
         )
     ) {
@@ -1227,10 +1231,10 @@ fun asPayment(payment: ReadableMap): Payment? {
     val feesSat = payment.getDouble("feesSat").toULong()
     val paymentType = payment.getString("paymentType")?.let { asPaymentType(it) }!!
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
+    val details = payment.getMap("details")?.let { asPaymentDetails(it) }!!
     val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
     val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
-    val details = if (hasNonNullKey(payment, "details")) payment.getMap("details")?.let { asPaymentDetails(it) } else null
-    return Payment(timestamp, amountSat, feesSat, paymentType, status, destination, txId, details)
+    return Payment(timestamp, amountSat, feesSat, paymentType, status, details, destination, txId)
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
@@ -1240,17 +1244,17 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "feesSat" to payment.feesSat,
         "paymentType" to payment.paymentType.name.lowercase(),
         "status" to payment.status.name.lowercase(),
+        "details" to readableMapOf(payment.details),
         "destination" to payment.destination,
         "txId" to payment.txId,
-        "details" to payment.details?.let { readableMapOf(it) },
     )
 
 fun asPaymentList(arr: ReadableArray): List<Payment> {
     val list = ArrayList<Payment>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPayment(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1280,10 +1284,10 @@ fun readableMapOf(prepareBuyBitcoinRequest: PrepareBuyBitcoinRequest): ReadableM
 
 fun asPrepareBuyBitcoinRequestList(arr: ReadableArray): List<PrepareBuyBitcoinRequest> {
     val list = ArrayList<PrepareBuyBitcoinRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareBuyBitcoinRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1316,10 +1320,10 @@ fun readableMapOf(prepareBuyBitcoinResponse: PrepareBuyBitcoinResponse): Readabl
 
 fun asPrepareBuyBitcoinResponseList(arr: ReadableArray): List<PrepareBuyBitcoinResponse> {
     val list = ArrayList<PrepareBuyBitcoinResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareBuyBitcoinResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1329,13 +1333,13 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
     if (!validateMandatoryFields(
             preparePayOnchainRequest,
             arrayOf(
-                "receiverAmountSat",
+                "amount",
             ),
         )
     ) {
         return null
     }
-    val receiverAmountSat = preparePayOnchainRequest.getDouble("receiverAmountSat").toULong()
+    val amount = preparePayOnchainRequest.getMap("amount")?.let { asPayOnchainAmount(it) }!!
     val satPerVbyte =
         if (hasNonNullKey(
                 preparePayOnchainRequest,
@@ -1346,21 +1350,21 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         } else {
             null
         }
-    return PreparePayOnchainRequest(receiverAmountSat, satPerVbyte)
+    return PreparePayOnchainRequest(amount, satPerVbyte)
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
-        "receiverAmountSat" to preparePayOnchainRequest.receiverAmountSat,
+        "amount" to readableMapOf(preparePayOnchainRequest.amount),
         "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
     val list = ArrayList<PreparePayOnchainRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPreparePayOnchainRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1393,10 +1397,10 @@ fun readableMapOf(preparePayOnchainResponse: PreparePayOnchainResponse): Readabl
 
 fun asPreparePayOnchainResponseList(arr: ReadableArray): List<PreparePayOnchainResponse> {
     val list = ArrayList<PreparePayOnchainResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPreparePayOnchainResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1434,10 +1438,10 @@ fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
 
 fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
     val list = ArrayList<PrepareReceiveRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1478,10 +1482,10 @@ fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
 
 fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveResponse> {
     val list = ArrayList<PrepareReceiveResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareReceiveResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1514,10 +1518,10 @@ fun readableMapOf(prepareRefundRequest: PrepareRefundRequest): ReadableMap =
 
 fun asPrepareRefundRequestList(arr: ReadableArray): List<PrepareRefundRequest> {
     val list = ArrayList<PrepareRefundRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareRefundRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1549,10 +1553,10 @@ fun readableMapOf(prepareRefundResponse: PrepareRefundResponse): ReadableMap =
 
 fun asPrepareRefundResponseList(arr: ReadableArray): List<PrepareRefundResponse> {
     val list = ArrayList<PrepareRefundResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareRefundResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1581,10 +1585,10 @@ fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
 
 fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
     val list = ArrayList<PrepareSendRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareSendRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1614,10 +1618,10 @@ fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
 
 fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
     val list = ArrayList<PrepareSendResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareSendResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1647,10 +1651,10 @@ fun readableMapOf(rate: Rate): ReadableMap =
 
 fun asRateList(arr: ReadableArray): List<Rate> {
     val list = ArrayList<Rate>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRate(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1690,10 +1694,10 @@ fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
 
 fun asReceivePaymentRequestList(arr: ReadableArray): List<ReceivePaymentRequest> {
     val list = ArrayList<ReceivePaymentRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1720,10 +1724,10 @@ fun readableMapOf(receivePaymentResponse: ReceivePaymentResponse): ReadableMap =
 
 fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentResponse> {
     val list = ArrayList<ReceivePaymentResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asReceivePaymentResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1762,10 +1766,10 @@ fun readableMapOf(recommendedFees: RecommendedFees): ReadableMap =
 
 fun asRecommendedFeesList(arr: ReadableArray): List<RecommendedFees> {
     val list = ArrayList<RecommendedFees>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRecommendedFees(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1798,10 +1802,10 @@ fun readableMapOf(refundRequest: RefundRequest): ReadableMap =
 
 fun asRefundRequestList(arr: ReadableArray): List<RefundRequest> {
     val list = ArrayList<RefundRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRefundRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1828,10 +1832,10 @@ fun readableMapOf(refundResponse: RefundResponse): ReadableMap =
 
 fun asRefundResponseList(arr: ReadableArray): List<RefundResponse> {
     val list = ArrayList<RefundResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRefundResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1864,10 +1868,10 @@ fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
 
 fun asRefundableSwapList(arr: ReadableArray): List<RefundableSwap> {
     val list = ArrayList<RefundableSwap>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRefundableSwap(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1892,10 +1896,10 @@ fun readableMapOf(restoreRequest: RestoreRequest): ReadableMap =
 
 fun asRestoreRequestList(arr: ReadableArray): List<RestoreRequest> {
     val list = ArrayList<RestoreRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRestoreRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1922,10 +1926,10 @@ fun readableMapOf(routeHint: RouteHint): ReadableMap =
 
 fun asRouteHintList(arr: ReadableArray): List<RouteHint> {
     val list = ArrayList<RouteHint>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRouteHint(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -1946,7 +1950,7 @@ fun asRouteHintHop(routeHintHop: ReadableMap): RouteHintHop? {
         return null
     }
     val srcNodeId = routeHintHop.getString("srcNodeId")!!
-    val shortChannelId = routeHintHop.getDouble("shortChannelId").toULong()
+    val shortChannelId = routeHintHop.getString("shortChannelId")!!
     val feesBaseMsat = routeHintHop.getInt("feesBaseMsat").toUInt()
     val feesProportionalMillionths = routeHintHop.getInt("feesProportionalMillionths").toUInt()
     val cltvExpiryDelta = routeHintHop.getDouble("cltvExpiryDelta").toULong()
@@ -1976,10 +1980,10 @@ fun readableMapOf(routeHintHop: RouteHintHop): ReadableMap =
 
 fun asRouteHintHopList(arr: ReadableArray): List<RouteHintHop> {
     val list = ArrayList<RouteHintHop>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asRouteHintHop(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2006,10 +2010,10 @@ fun readableMapOf(sendPaymentRequest: SendPaymentRequest): ReadableMap =
 
 fun asSendPaymentRequestList(arr: ReadableArray): List<SendPaymentRequest> {
     val list = ArrayList<SendPaymentRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2036,10 +2040,10 @@ fun readableMapOf(sendPaymentResponse: SendPaymentResponse): ReadableMap =
 
 fun asSendPaymentResponseList(arr: ReadableArray): List<SendPaymentResponse> {
     val list = ArrayList<SendPaymentResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSendPaymentResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2066,10 +2070,10 @@ fun readableMapOf(signMessageRequest: SignMessageRequest): ReadableMap =
 
 fun asSignMessageRequestList(arr: ReadableArray): List<SignMessageRequest> {
     val list = ArrayList<SignMessageRequest>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSignMessageRequest(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2096,10 +2100,10 @@ fun readableMapOf(signMessageResponse: SignMessageResponse): ReadableMap =
 
 fun asSignMessageResponseList(arr: ReadableArray): List<SignMessageResponse> {
     val list = ArrayList<SignMessageResponse>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSignMessageResponse(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2130,10 +2134,10 @@ fun readableMapOf(symbol: Symbol): ReadableMap =
 
 fun asSymbolList(arr: ReadableArray): List<Symbol> {
     val list = ArrayList<Symbol>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSymbol(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2166,10 +2170,10 @@ fun readableMapOf(urlSuccessActionData: UrlSuccessActionData): ReadableMap =
 
 fun asUrlSuccessActionDataList(arr: ReadableArray): List<UrlSuccessActionData> {
     val list = ArrayList<UrlSuccessActionData>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asUrlSuccessActionData(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2206,10 +2210,10 @@ fun readableMapOf(aesSuccessActionDataResult: AesSuccessActionDataResult): Reada
 
 fun asAesSuccessActionDataResultList(arr: ReadableArray): List<AesSuccessActionDataResult> {
     val list = ArrayList<AesSuccessActionDataResult>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asAesSuccessActionDataResult(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2219,10 +2223,10 @@ fun asBuyBitcoinProvider(type: String): BuyBitcoinProvider = BuyBitcoinProvider.
 
 fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
     val list = ArrayList<BuyBitcoinProvider>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asBuyBitcoinProvider(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2315,10 +2319,10 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
 
 fun asInputTypeList(arr: ReadableArray): List<InputType> {
     val list = ArrayList<InputType>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asInputType(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2328,10 +2332,10 @@ fun asLiquidNetwork(type: String): LiquidNetwork = LiquidNetwork.valueOf(camelTo
 
 fun asLiquidNetworkList(arr: ReadableArray): List<LiquidNetwork> {
     val list = ArrayList<LiquidNetwork>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asLiquidNetwork(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2366,10 +2370,10 @@ fun readableMapOf(lnUrlCallbackStatus: LnUrlCallbackStatus): ReadableMap? {
 
 fun asLnUrlCallbackStatusList(arr: ReadableArray): List<LnUrlCallbackStatus> {
     val list = ArrayList<LnUrlCallbackStatus>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlCallbackStatus(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2414,10 +2418,10 @@ fun readableMapOf(lnUrlPayResult: LnUrlPayResult): ReadableMap? {
 
 fun asLnUrlPayResultList(arr: ReadableArray): List<LnUrlPayResult> {
     val list = ArrayList<LnUrlPayResult>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlPayResult(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2462,10 +2466,10 @@ fun readableMapOf(lnUrlWithdrawResult: LnUrlWithdrawResult): ReadableMap? {
 
 fun asLnUrlWithdrawResultList(arr: ReadableArray): List<LnUrlWithdrawResult> {
     val list = ArrayList<LnUrlWithdrawResult>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlWithdrawResult(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2475,10 +2479,48 @@ fun asNetwork(type: String): Network = Network.valueOf(camelToUpperSnakeCase(typ
 
 fun asNetworkList(arr: ReadableArray): List<Network> {
     val list = ArrayList<Network>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asNetwork(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asPayOnchainAmount(payOnchainAmount: ReadableMap): PayOnchainAmount? {
+    val type = payOnchainAmount.getString("type")
+
+    if (type == "receiver") {
+        val amountSat = payOnchainAmount.getDouble("amountSat").toULong()
+        return PayOnchainAmount.Receiver(amountSat)
+    }
+    if (type == "drain") {
+        return PayOnchainAmount.Drain
+    }
+    return null
+}
+
+fun readableMapOf(payOnchainAmount: PayOnchainAmount): ReadableMap? {
+    val map = Arguments.createMap()
+    when (payOnchainAmount) {
+        is PayOnchainAmount.Receiver -> {
+            pushToMap(map, "type", "receiver")
+            pushToMap(map, "amountSat", payOnchainAmount.amountSat)
+        }
+        is PayOnchainAmount.Drain -> {
+            pushToMap(map, "type", "drain")
+        }
+    }
+    return map
+}
+
+fun asPayOnchainAmountList(arr: ReadableArray): List<PayOnchainAmount> {
+    val list = ArrayList<PayOnchainAmount>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPayOnchainAmount(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2559,10 +2601,10 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
 
 fun asPaymentDetailsList(arr: ReadableArray): List<PaymentDetails> {
     val list = ArrayList<PaymentDetails>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPaymentDetails(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2572,10 +2614,10 @@ fun asPaymentMethod(type: String): PaymentMethod = PaymentMethod.valueOf(camelTo
 
 fun asPaymentMethodList(arr: ReadableArray): List<PaymentMethod> {
     val list = ArrayList<PaymentMethod>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asPaymentMethod(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2585,10 +2627,10 @@ fun asPaymentState(type: String): PaymentState = PaymentState.valueOf(camelToUpp
 
 fun asPaymentStateList(arr: ReadableArray): List<PaymentState> {
     val list = ArrayList<PaymentState>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asPaymentState(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2598,10 +2640,10 @@ fun asPaymentType(type: String): PaymentType = PaymentType.valueOf(camelToUpperS
 
 fun asPaymentTypeList(arr: ReadableArray): List<PaymentType> {
     val list = ArrayList<PaymentType>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asPaymentType(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2676,10 +2718,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
 
 fun asSdkEventList(arr: ReadableArray): List<SdkEvent> {
     val list = ArrayList<SdkEvent>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSdkEvent(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2716,10 +2758,10 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
 
 fun asSendDestinationList(arr: ReadableArray): List<SendDestination> {
     val list = ArrayList<SendDestination>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSendDestination(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2764,10 +2806,10 @@ fun readableMapOf(successActionProcessed: SuccessActionProcessed): ReadableMap? 
 
 fun asSuccessActionProcessedList(arr: ReadableArray): List<SuccessActionProcessed> {
     val list = ArrayList<SuccessActionProcessed>()
-    for (value in arr.toArrayList()) {
+    for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSuccessActionProcessed(value)!!)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2815,7 +2857,7 @@ fun pushToArray(
         is UByte -> array.pushInt(value.toInt())
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))
-        else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        else -> throw SdkException.Generic(errUnexpectedType(value))
     }
 }
 
@@ -2863,7 +2905,7 @@ fun asUByteList(arr: ReadableArray): List<UByte> {
             is Double -> list.add(value.toInt().toUByte())
             is Int -> list.add(value.toUByte())
             is UByte -> list.add(value)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -2882,11 +2924,30 @@ fun errMissingMandatoryField(
     typeName: String,
 ): String = "Missing mandatory field $fieldName for type $typeName"
 
-fun errUnexpectedType(typeName: String): String = "Unexpected type $typeName"
+fun errUnexpectedType(type: Any?): String {
+    val typeName = if (type != null) type::class.java.name else "null"
+    return "Unexpected type $typeName"
+}
 
 fun errUnexpectedValue(fieldName: String): String = "Unexpected value for optional field $fieldName"
 
 fun camelToUpperSnakeCase(str: String): String {
     val pattern = "(?<=.)[A-Z]".toRegex()
     return str.replace(pattern, "_$0").uppercase()
+}
+
+internal fun ReadableArray.toList(): List<*> {
+    val arrayList = mutableListOf<Any?>()
+    for (i in 0 until size()) {
+        when (getType(i)) {
+            ReadableType.Null -> arrayList.add(null)
+            ReadableType.Boolean -> arrayList.add(getBoolean(i))
+            ReadableType.Number -> arrayList.add(getDouble(i))
+            ReadableType.String -> arrayList.add(getString(i))
+            ReadableType.Map -> arrayList.add(getMap(i))
+            ReadableType.Array -> arrayList.add(getArray(i))
+            else -> throw SdkException.Generic("Could not convert object at index: $i")
+        }
+    }
+    return arrayList
 }

@@ -8,12 +8,11 @@ use boltz_client::boltz::{
 use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
 use boltz_client::swaps::{boltz::ChainSwapStates, boltz::CreateChainResponse};
-use boltz_client::util::secrets::Preimage;
-use boltz_client::{Address, Amount, BtcSwapTx, Secp256k1, ToHex};
-use futures_util::TryFutureExt;
+use boltz_client::{Address, Secp256k1, Serialize, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::elements::{LockTime, Script, Transaction};
+use lwk_wollet::elements::{Script, Transaction};
+use lwk_wollet::hashes::hex::DisplayHex;
 use lwk_wollet::History;
 use tokio::sync::{broadcast, watch, Mutex};
 use tokio::time::MissedTickBehavior;
@@ -28,8 +27,8 @@ use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
 use crate::prelude::{LiquidNetwork, SwapScriptV2};
 use crate::sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
 use crate::swapper::Swapper;
-use crate::utils;
 use crate::wallet::OnchainWallet;
+use crate::{ensure_sdk, utils};
 use crate::{error::PaymentError, model::PaymentState, persist::Persister};
 
 // Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L78
@@ -417,7 +416,7 @@ impl ChainSwapHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
-                        }, None)?;
+                        }, None, None)?;
 
                         self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None, None)
                             .await?;
@@ -593,14 +592,30 @@ impl ChainSwapHandler {
             lockup_details.amount, lockup_details.lockup_address
         );
 
-        let lockup_tx = self
+        let lockup_tx = match self
             .onchain_wallet
             .build_tx(
-                None,
+                self.config
+                    .lowball_fee_rate_msat_per_vbyte()
+                    .map(|v| v as f32),
                 &lockup_details.lockup_address,
                 lockup_details.amount as u64,
             )
-            .await?;
+            .await
+        {
+            Err(PaymentError::InsufficientFunds) => {
+                warn!("Cannot build normal lockup tx due to insufficient funds, attempting to build drain tx");
+                self.onchain_wallet
+                    .build_drain_tx(
+                        None,
+                        &lockup_details.lockup_address,
+                        Some(lockup_details.amount as u64),
+                    )
+                    .await
+            }
+            Err(e) => Err(e),
+            Ok(lockup_tx) => Ok(lockup_tx),
+        }?;
 
         let lockup_tx_id = self
             .liquid_chain_service
@@ -657,35 +672,56 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn claim(&self, chain_swap: &ChainSwap) -> Result<(), PaymentError> {
-        debug!("Initiating claim for Chain Swap {}", &chain_swap.id);
-        let claim_tx_id = self.swapper.claim_chain_swap(chain_swap)?;
+    async fn claim(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
+        ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
-        if chain_swap.direction == Direction::Incoming {
+        let swap_id = &swap.id;
+
+        debug!("Initiating claim for Chain Swap {swap_id}");
+
+        let claim_tx = self.swapper.new_chain_claim_tx(swap)?;
+        let claim_tx_id = match claim_tx {
+            // We attempt broadcasting via chain service, then fallback to Boltz
+            crate::prelude::Transaction::Liquid(tx) => {
+                let liquid_chain_service = self.liquid_chain_service.lock().await;
+                let broadcast_response = liquid_chain_service.broadcast(&tx, Some(swap_id)).await;
+                match broadcast_response {
+                    Ok(tx_id) => tx_id.to_hex(),
+                    Err(err) => {
+                        debug!(
+                            "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
+                        );
+                        let claim_tx_hex = tx.serialize().to_lower_hex_string();
+                        self.swapper
+                            .broadcast_tx(self.config.network.into(), &claim_tx_hex)?
+                    }
+                }
+            }
+            crate::prelude::Transaction::Bitcoin(tx) => {
+                let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+                bitcoin_chain_service.broadcast(&tx)?.to_hex()
+            }
+        };
+
+        if swap.direction == Direction::Incoming {
             // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
             // This makes the tx known to the SDK (get_info, list_payments) instantly
             self.persister.insert_or_update_payment(
                 PaymentTxData {
                     tx_id: claim_tx_id.clone(),
                     timestamp: Some(utils::now()),
-                    amount_sat: chain_swap.receiver_amount_sat,
+                    amount_sat: swap.receiver_amount_sat,
                     fees_sat: 0,
                     payment_type: PaymentType::Receive,
                     is_confirmed: false,
                 },
                 None,
+                None,
             )?;
         }
 
-        self.update_swap_info(
-            &chain_swap.id,
-            Pending,
-            None,
-            None,
-            Some(&claim_tx_id),
-            None,
-        )
-        .await?;
+        self.update_swap_info(&swap.id, Pending, None, None, Some(&claim_tx_id), None)
+            .await?;
         Ok(())
     }
 

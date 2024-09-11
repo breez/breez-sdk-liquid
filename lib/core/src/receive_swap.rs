@@ -3,7 +3,9 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::RevSwapStates;
 use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
+use boltz_client::{Serialize, ToHex};
 use log::{debug, error, info, warn};
+use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
@@ -11,6 +13,7 @@ use crate::model::PaymentState::{
     Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
 };
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
+use crate::prelude::Transaction;
 use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError, model::PaymentState, persist::Persister, swapper::Swapper,
@@ -243,16 +246,38 @@ impl ReceiveSwapHandler {
         Ok(())
     }
 
-    async fn claim(&self, ongoing_receive_swap: &ReceiveSwap) -> Result<(), PaymentError> {
-        ensure_sdk!(
-            ongoing_receive_swap.claim_tx_id.is_none(),
-            PaymentError::AlreadyClaimed
-        );
-        let swap_id = &ongoing_receive_swap.id;
+    async fn claim(&self, swap: &ReceiveSwap) -> Result<(), PaymentError> {
+        ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
+
+        let swap_id = &swap.id;
+
+        info!("Initiating claim for Receive Swap {swap_id}");
+
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let claim_tx_id = self
-            .swapper
-            .claim_receive_swap(ongoing_receive_swap, claim_address)?;
+        let Transaction::Liquid(claim_tx) =
+            self.swapper.new_receive_claim_tx(swap, claim_address)?
+        else {
+            return Err(PaymentError::Generic {
+                err: format!("Constructed invalid transaction for Receive swap {swap_id}"),
+            });
+        };
+
+        // We attempt broadcasting via chain service, then fallback to Boltz
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let broadcast_response = liquid_chain_service
+            .broadcast(&claim_tx, Some(&swap.id))
+            .await;
+        let claim_tx_id = match broadcast_response {
+            Ok(tx_id) => tx_id.to_hex(),
+            Err(err) => {
+                debug!(
+                    "Could not broadcast claim tx via chain service for Receive swap {swap_id}: {err:?}"
+                );
+                let claim_tx_hex = claim_tx.serialize().to_lower_hex_string();
+                self.swapper
+                    .broadcast_tx(self.config.network.into(), &claim_tx_hex)?
+            }
+        };
 
         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -260,13 +285,16 @@ impl ReceiveSwapHandler {
             PaymentTxData {
                 tx_id: claim_tx_id.clone(),
                 timestamp: Some(utils::now()),
-                amount_sat: ongoing_receive_swap.receiver_amount_sat,
+                amount_sat: swap.receiver_amount_sat,
                 fees_sat: 0,
                 payment_type: PaymentType::Receive,
                 is_confirmed: false,
             },
             None,
+            None,
         )?;
+
+        info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
 
         self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)
             .await?;

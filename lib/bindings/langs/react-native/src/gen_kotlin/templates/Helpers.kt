@@ -26,7 +26,7 @@ fun pushToArray(array: WritableArray, value: Any?) {
 	    {%- endfor %}
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))
-        else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+        else -> throw SdkException.Generic(errUnexpectedType(value))
     }
 }
 
@@ -70,7 +70,7 @@ fun asUByteList(arr: ReadableArray): List<UByte> {
             is Double -> list.add(value.toInt().toUByte())
             is Int -> list.add(value.toUByte())
             is UByte -> list.add(value)
-            else -> throw SdkException.Generic(errUnexpectedType("${value::class.java.name}"))
+            else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
     return list
@@ -85,12 +85,13 @@ fun asStringList(arr: ReadableArray): List<String> {
 }
 
 fun errMissingMandatoryField(fieldName: String, typeName: String): String {
-        return "Missing mandatory field ${fieldName} for type ${typeName}"
-    }
+    return "Missing mandatory field ${fieldName} for type ${typeName}"
+}
 
-fun errUnexpectedType(typeName: String): String {
-        return "Unexpected type ${typeName}"
-    }
+fun errUnexpectedType(type: Any?): String {
+    val typeName = if (type != null) type::class.java.name else "null"
+    return "Unexpected type $typeName"
+}
 
 fun errUnexpectedValue(fieldName: String): String {
     return "Unexpected value for optional field ${fieldName}"
@@ -99,4 +100,20 @@ fun errUnexpectedValue(fieldName: String): String {
 fun camelToUpperSnakeCase(str: String): String {
     val pattern = "(?<=.)[A-Z]".toRegex()
     return str.replace(pattern, "_$0").uppercase()
+}
+
+internal fun ReadableArray.toList(): List<*> {
+    val arrayList = mutableListOf<Any?>()
+    for (i in 0 until size()) {
+        when (getType(i)) {
+            ReadableType.Null -> arrayList.add(null)
+            ReadableType.Boolean -> arrayList.add(getBoolean(i))
+            ReadableType.Number -> arrayList.add(getDouble(i))
+            ReadableType.String -> arrayList.add(getString(i))
+            ReadableType.Map -> arrayList.add(getMap(i))
+            ReadableType.Array -> arrayList.add(getArray(i))
+            else -> throw SdkException.Generic("Could not convert object at index: $i")
+        }
+    }
+    return arrayList
 }

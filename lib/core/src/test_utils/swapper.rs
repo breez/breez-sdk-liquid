@@ -15,6 +15,7 @@ use sdk_common::invoice::parse_invoice;
 use crate::{
     error::PaymentError,
     model::{ChainSwap, Direction, ReceiveSwap, SendSwap},
+    prelude::Transaction,
     swapper::Swapper,
     test_utils::generate_random_string,
     utils,
@@ -179,8 +180,21 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn claim_chain_swap(&self, _swap: &ChainSwap) -> Result<String, PaymentError> {
-        Ok("chain-swap-claim-txid".to_string())
+    fn new_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError> {
+        Ok(match swap.direction {
+            Direction::Outgoing => Transaction::Bitcoin(boltz_client::bitcoin::Transaction {
+                version: lwk_wollet::bitcoin::transaction::Version::TWO,
+                lock_time: boltz_client::LockTime::ZERO,
+                input: vec![],
+                output: vec![],
+            }),
+            Direction::Incoming => Transaction::Liquid(boltz_client::elements::Transaction {
+                version: 2,
+                lock_time: boltz_client::ElementsLockTime::ZERO,
+                input: vec![],
+                output: vec![],
+            }),
+        })
     }
 
     fn claim_send_swap_cooperative(
@@ -226,31 +240,36 @@ impl Swapper for MockSwapper {
         }))
     }
 
-    fn claim_receive_swap(
+    fn new_receive_claim_tx(
         &self,
         _swap: &ReceiveSwap,
         _claim_address: String,
-    ) -> Result<String, PaymentError> {
-        Ok("mock-tx-id".to_string())
+    ) -> Result<Transaction, PaymentError> {
+        Ok(Transaction::Liquid(boltz_client::elements::Transaction {
+            version: 2,
+            lock_time: boltz_client::ElementsLockTime::ZERO,
+            input: vec![],
+            output: vec![],
+        }))
     }
 
     fn broadcast_tx(
         &self,
         _chain: boltz_client::network::Chain,
         tx_hex: &str,
-    ) -> Result<serde_json::Value, PaymentError> {
+    ) -> Result<String, PaymentError> {
         let tx = utils::deserialize_tx_hex(tx_hex)?;
-        Ok(serde_json::Value::Object(serde_json::Map::from_iter([(
-            "id".to_string(),
-            serde_json::Value::String(tx.txid().to_string()),
-        )])))
+        Ok(tx.txid().to_string())
     }
 
     fn create_status_stream(&self) -> Box<dyn crate::swapper::SwapperStatusStream> {
         Box::new(MockStatusStream::new())
     }
 
-    fn check_for_mrh(&self, _invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
+    fn check_for_mrh(
+        &self,
+        _invoice: &str,
+    ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         // Ok(Some(("".to_string(), 0.0)))
         unimplemented!()
     }

@@ -4,20 +4,20 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::ToHex;
+use boltz_client::LockTime;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
-use futures_util::{StreamExt, TryFutureExt};
-use log::{debug, error, info, warn};
-use lwk_wollet::bitcoin::hex::DisplayHex;
+use futures_util::StreamExt;
+use log::{debug, error, info};
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{ElementsNetwork, WalletTx};
+use lwk_wollet::{elements, ElementsNetwork, WalletTx};
+use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::liquid::LiquidAddressData;
@@ -374,58 +374,38 @@ impl LiquidSdk {
                             .await?
                         }
                         Pending => {
-                            match &payment.details {
-                                Some(details) =>
-                                // The swap state has changed to Pending
-                                {
-                                    match details.get_swap_id() {
-                                        Some(swap_id) => match self
-                                            .persister
-                                            .fetch_swap_by_id(&swap_id)?
-                                        {
-                                            Swap::Chain(ChainSwap { claim_tx_id, .. })
-                                            | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
-                                                match claim_tx_id {
-                                                    Some(_) => {
-                                                        // The claim tx has now been broadcast
-                                                        self.notify_event_listeners(
-                                                            SdkEvent::PaymentWaitingConfirmation {
-                                                                details: payment,
-                                                            },
-                                                        )
-                                                        .await?
-                                                    }
-                                                    None => {
-                                                        // The lockup tx is in the mempool/confirmed
-                                                        self.notify_event_listeners(
-                                                            SdkEvent::PaymentPending {
-                                                                details: payment,
-                                                            },
-                                                        )
-                                                        .await?
-                                                    }
-                                                }
+                            match &payment.details.get_swap_id() {
+                                Some(swap_id) => match self.persister.fetch_swap_by_id(swap_id)? {
+                                    Swap::Chain(ChainSwap { claim_tx_id, .. })
+                                    | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
+                                        match claim_tx_id {
+                                            Some(_) => {
+                                                // The claim tx has now been broadcast
+                                                self.notify_event_listeners(
+                                                    SdkEvent::PaymentWaitingConfirmation {
+                                                        details: payment,
+                                                    },
+                                                )
+                                                .await?
                                             }
-                                            Swap::Send(_) => {
+                                            None => {
                                                 // The lockup tx is in the mempool/confirmed
                                                 self.notify_event_listeners(
                                                     SdkEvent::PaymentPending { details: payment },
                                                 )
                                                 .await?
                                             }
-                                        },
-                                        // Here we probably have liquid address payment details so we emit PaymentWaitingConfirmation
-                                        None => {
-                                            self.notify_event_listeners(
-                                                SdkEvent::PaymentWaitingConfirmation {
-                                                    details: payment,
-                                                },
-                                            )
-                                            .await?
                                         }
                                     }
-                                }
-                                // Here we probably have a transaction without any details so we emit PaymentWaitingConfirmation
+                                    Swap::Send(_) => {
+                                        // The lockup tx is in the mempool/confirmed
+                                        self.notify_event_listeners(SdkEvent::PaymentPending {
+                                            details: payment,
+                                        })
+                                        .await?
+                                    }
+                                },
+                                // Here we probably have a liquid address payment so we emit PaymentWaitingConfirmation
                                 None => {
                                     self.notify_event_listeners(
                                         SdkEvent::PaymentWaitingConfirmation { details: payment },
@@ -489,12 +469,10 @@ impl LiquidSdk {
                     Complete => confirmed_sent_sat += p.amount_sat,
                     Failed => {
                         confirmed_sent_sat += p.amount_sat;
-                        if let Some(details) = p.details {
-                            confirmed_received_sat +=
-                                details.get_refund_tx_amount_sat().unwrap_or_default();
-                        }
+                        confirmed_received_sat +=
+                            p.details.get_refund_tx_amount_sat().unwrap_or_default();
                     }
-                    Pending => match p.details.and_then(|d| d.get_refund_tx_amount_sat()) {
+                    Pending => match p.details.get_refund_tx_amount_sat() {
                         Some(refund_tx_amount_sat) => {
                             confirmed_sent_sat += p.amount_sat;
                             pending_receive_sat += refund_tx_amount_sat;
@@ -623,33 +601,63 @@ impl LiquidSdk {
         &self,
         amount_sat: u64,
         address: &str,
-        fee_rate: Option<f32>,
     ) -> Result<u64, PaymentError> {
+        let fee_rate_msat_per_vbyte = self
+            .config
+            .lowball_fee_rate_msat_per_vbyte()
+            .map(|v| v as f32);
         Ok(self
             .onchain_wallet
-            .build_tx(fee_rate, address, amount_sat)
+            .build_tx(fee_rate_msat_per_vbyte, address, amount_sat)
             .await?
             .all_fees()
             .values()
             .sum())
     }
 
-    async fn estimate_lockup_tx_fee(&self, amount_sat: u64) -> Result<u64, PaymentError> {
+    fn get_temp_p2tr_addr(&self) -> &str {
         // TODO Replace this with own address when LWK supports taproot
         //  https://github.com/Blockstream/lwk/issues/31
-        let temp_p2tr_addr = match self.config.network {
+        match self.config.network {
             LiquidNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
             LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
-        };
+        }
+    }
 
-        self.estimate_onchain_tx_fee(
-            amount_sat,
-            temp_p2tr_addr,
-            self.config
-                .lowball_fee_rate_msat_per_vbyte()
-                .map(|v| v as f32),
-        )
-        .await
+    /// Estimate the lockup tx fee for Send swaps
+    async fn estimate_lockup_tx_fee_send(
+        &self,
+        user_lockup_amount_sat: u64,
+    ) -> Result<u64, PaymentError> {
+        let temp_p2tr_addr = self.get_temp_p2tr_addr();
+
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
+            .await
+    }
+
+    /// Estimate the lockup tx fee for Chain Send swaps
+    async fn estimate_lockup_tx_fee_chain_send(
+        &self,
+        user_lockup_amount_sat: u64,
+    ) -> Result<u64, PaymentError> {
+        let temp_p2tr_addr = self.get_temp_p2tr_addr();
+
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
+            .await
+    }
+
+    async fn estimate_drain_tx_fee(&self) -> Result<u64, PaymentError> {
+        let temp_p2tr_addr = self.get_temp_p2tr_addr();
+
+        let fee_sat = self
+            .onchain_wallet
+            .build_drain_tx(None, temp_p2tr_addr, None)
+            .await?
+            .all_fees()
+            .values()
+            .sum();
+
+        Ok(fee_sat)
     }
 
     /// Prepares to pay a Lightning invoice via a submarine swap.
@@ -698,14 +706,8 @@ impl LiquidSdk {
                 );
 
                 receiver_amount_sat = amount_sat;
-                // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
-                // once Esplora broadcast is enabled
                 fees_sat = self
-                    .estimate_onchain_tx_fee(
-                        receiver_amount_sat,
-                        &liquid_address_data.address,
-                        None,
-                    )
+                    .estimate_onchain_tx_fee(receiver_amount_sat, &liquid_address_data.address)
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
@@ -732,13 +734,13 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
-                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address, None)
+                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
                     None => {
                         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
                         let lockup_fees_sat = self
-                            .estimate_lockup_tx_fee(receiver_amount_sat + boltz_fees_total)
+                            .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
                             .await?;
                         boltz_fees_total + lockup_fees_sat
                     }
@@ -847,9 +849,9 @@ impl LiquidSdk {
         );
 
         match self.swapper.check_for_mrh(invoice)? {
-            // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
-            Some((address, _amount_sat)) => {
-                info!("Found MRH for L-BTC address {address} and amount_sat {amount_sat}");
+            // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
+            Some((address, _)) => {
+                info!("Found MRH for L-BTC address {address}, invoice amount_sat {amount_sat}");
                 self.pay_liquid(
                     LiquidAddressData {
                         address,
@@ -902,9 +904,8 @@ impl LiquidSdk {
             "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
 
-        let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
-        self.swapper
-            .broadcast_tx(self.config.network.into(), &tx_hex)?;
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let tx_id = liquid_chain_service.broadcast(&tx, None).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -916,15 +917,21 @@ impl LiquidSdk {
             payment_type: PaymentType::Send,
             is_confirmed: false,
         };
-        let payment_details = Some(PaymentDetails::Liquid {
-            destination: address_data.to_uri().unwrap_or(address_data.address),
-            description: address_data
-                .message
-                .unwrap_or("Liquid transfer".to_string()),
-        });
-        self.persister
-            .insert_or_update_payment(tx_data.clone(), payment_details.clone())?;
+
+        let destination = address_data.to_uri().unwrap_or(address_data.address);
+        let description = address_data.message;
+
+        self.persister.insert_or_update_payment(
+            tx_data.clone(),
+            Some(destination.clone()),
+            description.clone(),
+        )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        let payment_details = PaymentDetails::Liquid {
+            destination,
+            description: description.unwrap_or("Liquid transfer".to_string()),
+        };
 
         Ok(SendPaymentResponse {
             payment: Payment::from_tx_data(tx_data, None, payment_details),
@@ -942,7 +949,7 @@ impl LiquidSdk {
 
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
         let lockup_tx_fees_sat = self
-            .estimate_lockup_tx_fee(receiver_amount_sat + boltz_fees_total)
+            .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
             .await?;
         ensure_sdk!(
             fees_sat == boltz_fees_total + lockup_tx_fees_sat,
@@ -1082,7 +1089,8 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PreparePayOnchainRequest] containing:
-    ///     * `receiver_amount_sat` - the amount in satoshi that will be received
+    ///     * `amount` - which can be of two types: [PayOnchainAmount::Drain], which uses all funds,
+    ///        and [PayOnchainAmount::Receiver], which sets the amount the receiver should receive
     ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
@@ -1090,7 +1098,7 @@ impl LiquidSdk {
     ) -> Result<PreparePayOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let receiver_amount_sat = req.receiver_amount_sat;
+        let balance_sat = self.get_info().await?.balance_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = match req.sat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
@@ -1098,22 +1106,57 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
-        let user_lockup_amount_sat_without_service_fee =
-            receiver_amount_sat + claim_fees_sat + server_fees_sat;
-        let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
-        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fees_sat;
-        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+        let (payer_amount_sat, receiver_amount_sat, total_fees_sat) = match req.amount {
+            PayOnchainAmount::Receiver { amount_sat } => {
+                let receiver_amount_sat = amount_sat;
+
+                let user_lockup_amount_sat_without_service_fee =
+                    receiver_amount_sat + claim_fees_sat + server_fees_sat;
+
+                // The resulting invoice amount contains the service fee, which is rounded up with ceil()
+                // Therefore, when calculating the user_lockup amount, we must also round it up with ceil()
+                let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64
+                    * 100.0
+                    / (100.0 - pair.fees.percentage))
+                    .ceil() as u64;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+
+                let lockup_fees_sat = self
+                    .estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
+                    .await?;
+
+                let boltz_fees_sat =
+                    user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
+                let total_fees_sat =
+                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+                let payer_amount_sat = receiver_amount_sat + total_fees_sat;
+
+                (payer_amount_sat, receiver_amount_sat, total_fees_sat)
+            }
+            PayOnchainAmount::Drain => {
+                let payer_amount_sat = balance_sat;
+                let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+
+                let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
+                self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+
+                let boltz_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
+                let total_fees_sat =
+                    boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat;
+                let receiver_amount_sat = payer_amount_sat - total_fees_sat;
+
+                (payer_amount_sat, receiver_amount_sat, total_fees_sat)
+            }
+        };
 
         let res = PreparePayOnchainResponse {
             receiver_amount_sat,
             claim_fees_sat,
-            total_fees_sat: boltz_fees_sat + lockup_fees_sat + claim_fees_sat + server_fees_sat,
+            total_fees_sat,
         };
 
-        let payer_amount_sat = res.receiver_amount_sat + res.total_fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1142,6 +1185,7 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let balance_sat = self.get_info().await?.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
@@ -1150,10 +1194,24 @@ impl LiquidSdk {
 
         let user_lockup_amount_sat_without_service_fee =
             receiver_amount_sat + claim_fees_sat + server_fees_sat;
-        let boltz_fee_sat = pair.fees.boltz(user_lockup_amount_sat_without_service_fee);
-        let user_lockup_amount_sat = user_lockup_amount_sat_without_service_fee + boltz_fee_sat;
+
+        // The resulting invoice amount contains the service fee, which is rounded up with ceil()
+        // Therefore, when calculating the user_lockup amount, we must also round it up with ceil()
+        let user_lockup_amount_sat = (user_lockup_amount_sat_without_service_fee as f64 * 100.0
+            / (100.0 - pair.fees.percentage))
+            .ceil() as u64;
+        let boltz_fee_sat = user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
         self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
-        let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
+
+        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
+
+        let lockup_fees_sat = match payer_amount_sat == balance_sat {
+            true => self.estimate_drain_tx_fee().await?,
+            false => {
+                self.estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
+                    .await?
+            }
+        };
 
         ensure_sdk!(
             req.prepare_response.total_fees_sat
@@ -1161,9 +1219,8 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1267,7 +1324,7 @@ impl LiquidSdk {
                 },
                 event = events_stream.recv() => match event {
                     Ok(SdkEvent::PaymentPending { details: payment }) => {
-                        let maybe_payment_swap_id = payment.details.as_ref().and_then(|d|d.get_swap_id());
+                        let maybe_payment_swap_id = payment.details.get_swap_id();
                         if matches!(maybe_payment_swap_id, Some(swap_id) if swap_id == expected_swap_id) {
                             match accept_zero_conf {
                                 true => {
@@ -1282,7 +1339,7 @@ impl LiquidSdk {
                         };
                     },
                     Ok(SdkEvent::PaymentSucceeded { details: payment }) => {
-                        let maybe_payment_swap_id = payment.details.as_ref().and_then(|d| d.get_swap_id());
+                        let maybe_payment_swap_id = payment.details.get_swap_id();
                         if matches!(maybe_payment_swap_id, Some(swap_id) if swap_id == expected_swap_id) {
                             debug!("Received Send Payment succeed event");
                             return Ok(payment);
@@ -1563,17 +1620,17 @@ impl LiquidSdk {
         })
     }
 
-    async fn create_chain_swap(
+    async fn create_receive_chain_swap(
         &self,
-        payer_amount_sat: u64,
+        user_lockup_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<ChainSwap, PaymentError> {
-        let pair = self.get_and_validate_chain_pair(Direction::Incoming, payer_amount_sat)?;
+        let pair = self.get_and_validate_chain_pair(Direction::Incoming, user_lockup_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
 
         ensure_sdk!(
-            fees_sat == pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat,
+            fees_sat == pair.fees.boltz(user_lockup_amount_sat) + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1605,7 +1662,7 @@ impl LiquidSdk {
             preimage_hash: preimage.sha256,
             claim_public_key: Some(claim_public_key),
             refund_public_key: Some(refund_public_key),
-            user_lock_amount: Some(payer_amount_sat as u32), // TODO update our model
+            user_lock_amount: Some(user_lockup_amount_sat as u32), // TODO update our model
             server_lock_amount: None,
             pair_hash: Some(pair.hash),
             referral_id: None,
@@ -1616,8 +1673,8 @@ impl LiquidSdk {
         let create_response_json =
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
-        let accept_zero_conf = payer_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = payer_amount_sat - fees_sat;
+        let accept_zero_conf = user_lockup_amount_sat <= pair.limits.maximal_zero_conf;
+        let receiver_amount_sat = user_lockup_amount_sat - fees_sat;
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
         let swap = ChainSwap {
@@ -1628,7 +1685,7 @@ impl LiquidSdk {
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
-            payer_amount_sat,
+            payer_amount_sat: user_lockup_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
             accept_zero_conf,
@@ -1655,7 +1712,9 @@ impl LiquidSdk {
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let swap = self.create_chain_swap(payer_amount_sat, fees_sat).await?;
+        let swap = self
+            .create_receive_chain_swap(payer_amount_sat, fees_sat)
+            .await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
 
@@ -1788,7 +1847,7 @@ impl LiquidSdk {
     ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
         let swap = self
-            .create_chain_swap(
+            .create_receive_chain_swap(
                 req.prepare_response.amount_sat,
                 req.prepare_response.fees_sat,
             )
@@ -1860,6 +1919,10 @@ impl LiquidSdk {
                         false => PaymentType::Send,
                     },
                     is_confirmed: is_tx_confirmed,
+                },
+                match tx.outputs.iter().find(|output| output.is_some()) {
+                    Some(Some(output)) => Some(output.script_pubkey.to_hex()),
+                    _ => None,
                 },
                 None,
             )?;
@@ -2035,8 +2098,7 @@ impl LiquidSdk {
                         let processed_sa = match sa {
                             // For AES, we decrypt the contents on the fly
                             SuccessAction::Aes(data) => {
-                                let Some(PaymentDetails::Lightning { preimage, .. }) =
-                                    &payment.details
+                                let PaymentDetails::Lightning { preimage, .. } = &payment.details
                                 else {
                                     return Err(LnUrlPayError::Generic {
                                         err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
