@@ -2558,7 +2558,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_route_hint_hop(RouteHintHop apiObj, wire_cst_route_hint_hop wireObj) {
     wireObj.src_node_id = cst_encode_String(apiObj.srcNodeId);
-    wireObj.short_channel_id = cst_encode_u_64(apiObj.shortChannelId);
+    wireObj.short_channel_id = cst_encode_String(apiObj.shortChannelId);
     wireObj.fees_base_msat = cst_encode_u_32(apiObj.feesBaseMsat);
     wireObj.fees_proportional_millionths = cst_encode_u_32(apiObj.feesProportionalMillionths);
     wireObj.cltv_expiry_delta = cst_encode_u_64(apiObj.cltvExpiryDelta);
@@ -4816,8 +4816,7 @@ final class wire_cst_SendDestination_LiquidAddress extends ffi.Struct {
 final class wire_cst_route_hint_hop extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
 
-  @ffi.Uint64()
-  external int short_channel_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> short_channel_id;
 
   @ffi.Uint32()
   external int fees_base_msat;

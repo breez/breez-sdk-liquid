@@ -1812,7 +1812,7 @@ const _: fn() = || {
     {
         let RouteHintHop = None::<crate::bindings::RouteHintHop>.unwrap();
         let _: String = RouteHintHop.src_node_id;
-        let _: u64 = RouteHintHop.short_channel_id;
+        let _: String = RouteHintHop.short_channel_id;
         let _: u32 = RouteHintHop.fees_base_msat;
         let _: u32 = RouteHintHop.fees_proportional_millionths;
         let _: u64 = RouteHintHop.cltv_expiry_delta;
@@ -3523,7 +3523,7 @@ impl SseDecode for crate::bindings::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_srcNodeId = <String>::sse_decode(deserializer);
-        let mut var_shortChannelId = <u64>::sse_decode(deserializer);
+        let mut var_shortChannelId = <String>::sse_decode(deserializer);
         let mut var_feesBaseMsat = <u32>::sse_decode(deserializer);
         let mut var_feesProportionalMillionths = <u32>::sse_decode(deserializer);
         let mut var_cltvExpiryDelta = <u64>::sse_decode(deserializer);
@@ -6903,7 +6903,7 @@ impl SseEncode for crate::bindings::RouteHintHop {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.src_node_id, serializer);
-        <u64>::sse_encode(self.short_channel_id, serializer);
+        <String>::sse_encode(self.short_channel_id, serializer);
         <u32>::sse_encode(self.fees_base_msat, serializer);
         <u32>::sse_encode(self.fees_proportional_millionths, serializer);
         <u64>::sse_encode(self.cltv_expiry_delta, serializer);
@@ -9593,7 +9593,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 src_node_id: core::ptr::null_mut(),
-                short_channel_id: Default::default(),
+                short_channel_id: core::ptr::null_mut(),
                 fees_base_msat: Default::default(),
                 fees_proportional_millionths: Default::default(),
                 cltv_expiry_delta: Default::default(),
@@ -11374,7 +11374,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_route_hint_hop {
         src_node_id: *mut wire_cst_list_prim_u_8_strict,
-        short_channel_id: u64,
+        short_channel_id: *mut wire_cst_list_prim_u_8_strict,
         fees_base_msat: u32,
         fees_proportional_millionths: u32,
         cltv_expiry_delta: u64,

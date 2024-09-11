@@ -1657,8 +1657,7 @@ final class wire_cst_SendDestination_LiquidAddress extends ffi.Struct {
 final class wire_cst_route_hint_hop extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> src_node_id;
 
-  @ffi.Uint64()
-  external int short_channel_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> short_channel_id;
 
   @ffi.Uint32()
   external int fees_base_msat;

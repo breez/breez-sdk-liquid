@@ -2570,7 +2570,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return RouteHintHop(
       srcNodeId: dco_decode_String(arr[0]),
-      shortChannelId: dco_decode_u_64(arr[1]),
+      shortChannelId: dco_decode_String(arr[1]),
       feesBaseMsat: dco_decode_u_32(arr[2]),
       feesProportionalMillionths: dco_decode_u_32(arr[3]),
       cltvExpiryDelta: dco_decode_u_64(arr[4]),
@@ -4219,7 +4219,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RouteHintHop sse_decode_route_hint_hop(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_srcNodeId = sse_decode_String(deserializer);
-    var var_shortChannelId = sse_decode_u_64(deserializer);
+    var var_shortChannelId = sse_decode_String(deserializer);
     var var_feesBaseMsat = sse_decode_u_32(deserializer);
     var var_feesProportionalMillionths = sse_decode_u_32(deserializer);
     var var_cltvExpiryDelta = sse_decode_u_64(deserializer);
@@ -5770,7 +5770,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_route_hint_hop(RouteHintHop self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.srcNodeId, serializer);
-    sse_encode_u_64(self.shortChannelId, serializer);
+    sse_encode_String(self.shortChannelId, serializer);
     sse_encode_u_32(self.feesBaseMsat, serializer);
     sse_encode_u_32(self.feesProportionalMillionths, serializer);
     sse_encode_u_64(self.cltvExpiryDelta, serializer);
