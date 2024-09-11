@@ -106,7 +106,7 @@ const App = () => {
                     let sendPaymentRes = await sendPayment({ prepareResponse: prepareSendRes })
                     addLine("sendPayment", JSON.stringify(sendPaymentRes))
                     // Once successfully paid an event of `paymentSucceeded` will be emitted.
-                    addLine("Payment", `${sendPaymentRes.payment}`)
+                    addLine("Payment", JSON.stringify(sendPaymentRes.payment))
                 }
             } catch (e) {
                 addLine("error", e.toString())

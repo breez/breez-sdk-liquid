@@ -4,8 +4,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
+use boltz_client::LockTime;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
-use boltz_client::{LockTime, ToHex};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
@@ -14,10 +14,11 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
 use lwk_wollet::bitcoin::hex::DisplayHex;
-use lwk_wollet::elements::AssetId;
+use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork};
+use lwk_wollet::{elements, ElementsNetwork, WalletTx};
+use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::liquid::LiquidAddressData;
@@ -449,13 +450,8 @@ impl LiquidSdk {
                             .await?
                         }
                         Pending => {
-                            let Some(details) = &payment.details else {
-                                return Err(anyhow::anyhow!("No payment details found"));
-                            };
-
-                            // The swap state has changed to Pending
-                            match details.get_swap_id() {
-                                Some(swap_id) => match self.persister.fetch_swap_by_id(&swap_id)? {
+                            match &payment.details.get_swap_id() {
+                                Some(swap_id) => match self.persister.fetch_swap_by_id(swap_id)? {
                                     Swap::Chain(ChainSwap { claim_tx_id, .. })
                                     | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
                                         match claim_tx_id {
@@ -485,8 +481,14 @@ impl LiquidSdk {
                                         .await?
                                     }
                                 },
-                                None => debug!("Payment has no swap id"),
-                            }
+                                // Here we probably have a liquid address payment so we emit PaymentWaitingConfirmation
+                                None => {
+                                    self.notify_event_listeners(
+                                        SdkEvent::PaymentWaitingConfirmation { details: payment },
+                                    )
+                                    .await?
+                                }
+                            };
                         }
                         RefundPending => {
                             // The swap state has changed to RefundPending
@@ -543,12 +545,10 @@ impl LiquidSdk {
                     Complete => confirmed_sent_sat += p.amount_sat,
                     Failed => {
                         confirmed_sent_sat += p.amount_sat;
-                        if let Some(details) = p.details {
-                            confirmed_received_sat +=
-                                details.get_refund_tx_amount_sat().unwrap_or_default();
-                        }
+                        confirmed_received_sat +=
+                            p.details.get_refund_tx_amount_sat().unwrap_or_default();
                     }
-                    Pending => match p.details.and_then(|d| d.get_refund_tx_amount_sat()) {
+                    Pending => match p.details.get_refund_tx_amount_sat() {
                         Some(refund_tx_amount_sat) => {
                             confirmed_sent_sat += p.amount_sat;
                             pending_receive_sat += refund_tx_amount_sat;
@@ -1003,15 +1003,21 @@ impl LiquidSdk {
             payment_type: PaymentType::Send,
             is_confirmed: false,
         };
-        let payment_details = Some(PaymentDetails::Liquid {
-            destination: address_data.to_uri().unwrap_or(address_data.address),
-            description: address_data
-                .message
-                .unwrap_or("Liquid transfer".to_string()),
-        });
-        self.persister
-            .insert_or_update_payment(tx_data.clone(), payment_details.clone())?;
+
+        let destination = address_data.to_uri().unwrap_or(address_data.address);
+        let description = address_data.message;
+
+        self.persister.insert_or_update_payment(
+            tx_data.clone(),
+            Some(destination.clone()),
+            description.clone(),
+        )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        let payment_details = PaymentDetails::Liquid {
+            destination,
+            description: description.unwrap_or("Liquid transfer".to_string()),
+        };
 
         Ok(SendPaymentResponse {
             payment: Payment::from_tx_data(tx_data, None, payment_details),
@@ -1404,7 +1410,7 @@ impl LiquidSdk {
                 },
                 event = events_stream.recv() => match event {
                     Ok(SdkEvent::PaymentPending { details: payment }) => {
-                        let maybe_payment_swap_id = payment.details.as_ref().and_then(|d|d.get_swap_id());
+                        let maybe_payment_swap_id = payment.details.get_swap_id();
                         if matches!(maybe_payment_swap_id, Some(swap_id) if swap_id == expected_swap_id) {
                             match accept_zero_conf {
                                 true => {
@@ -1419,7 +1425,7 @@ impl LiquidSdk {
                         };
                     },
                     Ok(SdkEvent::PaymentSucceeded { details: payment }) => {
-                        let maybe_payment_swap_id = payment.details.as_ref().and_then(|d| d.get_swap_id());
+                        let maybe_payment_swap_id = payment.details.get_swap_id();
                         if matches!(maybe_payment_swap_id, Some(swap_id) if swap_id == expected_swap_id) {
                             debug!("Received Send Payment succeed event");
                             return Ok(payment);
@@ -1938,9 +1944,16 @@ impl LiquidSdk {
             .list_payments(&ListPaymentsRequest::default())
             .await?
             .into_iter()
-            .filter_map(|payment| {
-                let tx_id = payment.tx_id.clone();
-                tx_id.map(|tx_id| (tx_id, payment))
+            .flat_map(|payment| {
+                // Index payments by both tx_id (lockup/claim) and refund_tx_id
+                let mut res = vec![];
+                if let Some(tx_id) = payment.tx_id.clone() {
+                    res.push((tx_id, payment.clone()));
+                }
+                if let Some(refund_tx_id) = payment.get_refund_tx_id() {
+                    res.push((refund_tx_id, payment));
+                }
+                res
             })
             .collect();
         if with_scan {
@@ -1956,7 +1969,15 @@ impl LiquidSdk {
         let pending_chain_swaps_by_refund_tx_id =
             self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
 
-        for tx in self.onchain_wallet.transactions().await? {
+        let tx_map: HashMap<Txid, WalletTx> = self
+            .onchain_wallet
+            .transactions()
+            .await?
+            .iter()
+            .map(|tx| (tx.txid, tx.clone()))
+            .collect();
+
+        for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
@@ -1972,6 +1993,10 @@ impl LiquidSdk {
                         false => PaymentType::Send,
                     },
                     is_confirmed: is_tx_confirmed,
+                },
+                match tx.outputs.iter().find(|output| output.is_some()) {
+                    Some(Some(output)) => Some(output.script_pubkey.to_hex()),
+                    _ => None,
                 },
                 None,
             )?;
@@ -2147,8 +2172,7 @@ impl LiquidSdk {
                         let processed_sa = match sa {
                             // For AES, we decrypt the contents on the fly
                             SuccessAction::Aes(data) => {
-                                let Some(PaymentDetails::Lightning { preimage, .. }) =
-                                    &payment.details
+                                let PaymentDetails::Lightning { preimage, .. } = &payment.details
                                 else {
                                     return Err(LnUrlPayError::Generic {
                                         err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),

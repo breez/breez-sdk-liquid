@@ -8,7 +8,7 @@ let package = Package(
     platforms: [
         // Required by uniffi 0.25
         // Can be reverted to v12/v11 for uniffi 0.27
-        .macOS(.v15),
+        .macOS("15.0"),
         .iOS(.v13),
     ],
     products: [

@@ -16,6 +16,7 @@ cdylib_name = "breez_sdk_liquid_bindings"
 package_name = "breez_sdk_liquid"
 cdylib_name = "breez_sdk_liquid_bindings"
 namespace = "Breez.Sdk.Liquid"
+access_modifier = "public"
 
 # https://github.com/NordSecurity/uniffi-bindgen-go/blob/main/docs/CONFIGURATION.md
 [bindings.go]

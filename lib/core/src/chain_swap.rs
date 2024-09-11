@@ -410,7 +410,7 @@ impl ChainSwapStateHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
-                        }, None)?;
+                        }, None, None)?;
 
                         self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None, None)
                             .await?;
@@ -676,6 +676,7 @@ impl ChainSwapStateHandler {
                     payment_type: PaymentType::Receive,
                     is_confirmed: false,
                 },
+                None,
                 None,
             )?;
         }
