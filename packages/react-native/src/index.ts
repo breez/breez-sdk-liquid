@@ -653,17 +653,12 @@ export const parseInvoice = async (input: string): Promise<LnInvoice> => {
 }
 
 
-export const removeEventListener = async (id: string): Promise<void> => {
-    await BreezSDKLiquid.removeEventListener(id)
+export const backup = async (req: BackupRequest): Promise<void> => {
+    await BreezSDKLiquid.backup(req)
 }
 
-export const getInfo = async (): Promise<GetInfoResponse> => {
-    const response = await BreezSDKLiquid.getInfo()
-    return response
-}
-
-export const signMessage = async (req: SignMessageRequest): Promise<SignMessageResponse> => {
-    const response = await BreezSDKLiquid.signMessage(req)
+export const buyBitcoin = async (req: BuyBitcoinRequest): Promise<string> => {
+    const response = await BreezSDKLiquid.buyBitcoin(req)
     return response
 }
 
@@ -672,23 +667,12 @@ export const checkMessage = async (req: CheckMessageRequest): Promise<CheckMessa
     return response
 }
 
-export const prepareSendPayment = async (req: PrepareSendRequest): Promise<PrepareSendResponse> => {
-    const response = await BreezSDKLiquid.prepareSendPayment(req)
-    return response
+export const disconnect = async (): Promise<void> => {
+    await BreezSDKLiquid.disconnect()
 }
 
-export const sendPayment = async (req: SendPaymentRequest): Promise<SendPaymentResponse> => {
-    const response = await BreezSDKLiquid.sendPayment(req)
-    return response
-}
-
-export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise<PrepareReceiveResponse> => {
-    const response = await BreezSDKLiquid.prepareReceivePayment(req)
-    return response
-}
-
-export const receivePayment = async (req: ReceivePaymentRequest): Promise<ReceivePaymentResponse> => {
-    const response = await BreezSDKLiquid.receivePayment(req)
+export const fetchFiatRates = async (): Promise<Rate[]> => {
+    const response = await BreezSDKLiquid.fetchFiatRates()
     return response
 }
 
@@ -702,23 +686,13 @@ export const fetchOnchainLimits = async (): Promise<OnchainPaymentLimitsResponse
     return response
 }
 
-export const preparePayOnchain = async (req: PreparePayOnchainRequest): Promise<PreparePayOnchainResponse> => {
-    const response = await BreezSDKLiquid.preparePayOnchain(req)
+export const getInfo = async (): Promise<GetInfoResponse> => {
+    const response = await BreezSDKLiquid.getInfo()
     return response
 }
 
-export const payOnchain = async (req: PayOnchainRequest): Promise<SendPaymentResponse> => {
-    const response = await BreezSDKLiquid.payOnchain(req)
-    return response
-}
-
-export const prepareBuyBitcoin = async (req: PrepareBuyBitcoinRequest): Promise<PrepareBuyBitcoinResponse> => {
-    const response = await BreezSDKLiquid.prepareBuyBitcoin(req)
-    return response
-}
-
-export const buyBitcoin = async (req: BuyBitcoinRequest): Promise<string> => {
-    const response = await BreezSDKLiquid.buyBitcoin(req)
+export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
+    const response = await BreezSDKLiquid.listFiatCurrencies()
     return response
 }
 
@@ -732,39 +706,9 @@ export const listRefundables = async (): Promise<RefundableSwap[]> => {
     return response
 }
 
-export const prepareRefund = async (req: PrepareRefundRequest): Promise<PrepareRefundResponse> => {
-    const response = await BreezSDKLiquid.prepareRefund(req)
+export const lnurlAuth = async (reqData: LnUrlAuthRequestData): Promise<LnUrlCallbackStatus> => {
+    const response = await BreezSDKLiquid.lnurlAuth(reqData)
     return response
-}
-
-export const refund = async (req: RefundRequest): Promise<RefundResponse> => {
-    const response = await BreezSDKLiquid.refund(req)
-    return response
-}
-
-export const rescanOnchainSwaps = async (): Promise<void> => {
-    await BreezSDKLiquid.rescanOnchainSwaps()
-}
-
-export const sync = async (): Promise<void> => {
-    await BreezSDKLiquid.sync()
-}
-
-export const recommendedFees = async (): Promise<RecommendedFees> => {
-    const response = await BreezSDKLiquid.recommendedFees()
-    return response
-}
-
-export const backup = async (req: BackupRequest): Promise<void> => {
-    await BreezSDKLiquid.backup(req)
-}
-
-export const restore = async (req: RestoreRequest): Promise<void> => {
-    await BreezSDKLiquid.restore(req)
-}
-
-export const disconnect = async (): Promise<void> => {
-    await BreezSDKLiquid.disconnect()
 }
 
 export const lnurlPay = async (req: LnUrlPayRequest): Promise<LnUrlPayResult> => {
@@ -777,8 +721,48 @@ export const lnurlWithdraw = async (req: LnUrlWithdrawRequest): Promise<LnUrlWit
     return response
 }
 
-export const lnurlAuth = async (reqData: LnUrlAuthRequestData): Promise<LnUrlCallbackStatus> => {
-    const response = await BreezSDKLiquid.lnurlAuth(reqData)
+export const payOnchain = async (req: PayOnchainRequest): Promise<SendPaymentResponse> => {
+    const response = await BreezSDKLiquid.payOnchain(req)
+    return response
+}
+
+export const prepareBuyBitcoin = async (req: PrepareBuyBitcoinRequest): Promise<PrepareBuyBitcoinResponse> => {
+    const response = await BreezSDKLiquid.prepareBuyBitcoin(req)
+    return response
+}
+
+export const preparePayOnchain = async (req: PreparePayOnchainRequest): Promise<PreparePayOnchainResponse> => {
+    const response = await BreezSDKLiquid.preparePayOnchain(req)
+    return response
+}
+
+export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise<PrepareReceiveResponse> => {
+    const response = await BreezSDKLiquid.prepareReceivePayment(req)
+    return response
+}
+
+export const prepareRefund = async (req: PrepareRefundRequest): Promise<PrepareRefundResponse> => {
+    const response = await BreezSDKLiquid.prepareRefund(req)
+    return response
+}
+
+export const prepareSendPayment = async (req: PrepareSendRequest): Promise<PrepareSendResponse> => {
+    const response = await BreezSDKLiquid.prepareSendPayment(req)
+    return response
+}
+
+export const receivePayment = async (req: ReceivePaymentRequest): Promise<ReceivePaymentResponse> => {
+    const response = await BreezSDKLiquid.receivePayment(req)
+    return response
+}
+
+export const recommendedFees = async (): Promise<RecommendedFees> => {
+    const response = await BreezSDKLiquid.recommendedFees()
+    return response
+}
+
+export const refund = async (req: RefundRequest): Promise<RefundResponse> => {
+    const response = await BreezSDKLiquid.refund(req)
     return response
 }
 
@@ -786,16 +770,33 @@ export const registerWebhook = async (webhookUrl: string): Promise<void> => {
     await BreezSDKLiquid.registerWebhook(webhookUrl)
 }
 
+export const removeEventListener = async (id: string): Promise<void> => {
+    await BreezSDKLiquid.removeEventListener(id)
+}
+
+export const rescanOnchainSwaps = async (): Promise<void> => {
+    await BreezSDKLiquid.rescanOnchainSwaps()
+}
+
+export const restore = async (req: RestoreRequest): Promise<void> => {
+    await BreezSDKLiquid.restore(req)
+}
+
+export const sendPayment = async (req: SendPaymentRequest): Promise<SendPaymentResponse> => {
+    const response = await BreezSDKLiquid.sendPayment(req)
+    return response
+}
+
+export const signMessage = async (req: SignMessageRequest): Promise<SignMessageResponse> => {
+    const response = await BreezSDKLiquid.signMessage(req)
+    return response
+}
+
+export const sync = async (): Promise<void> => {
+    await BreezSDKLiquid.sync()
+}
+
 export const unregisterWebhook = async (): Promise<void> => {
     await BreezSDKLiquid.unregisterWebhook()
 }
 
-export const fetchFiatRates = async (): Promise<Rate[]> => {
-    const response = await BreezSDKLiquid.fetchFiatRates()
-    return response
-}
-
-export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
-    const response = await BreezSDKLiquid.listFiatCurrencies()
-    return response
-}

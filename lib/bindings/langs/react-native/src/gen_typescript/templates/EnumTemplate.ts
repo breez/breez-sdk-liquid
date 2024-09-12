@@ -1,3 +1,4 @@
+{%- if !ci.is_name_used_as_error(name) -%}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {%- if e.is_flat() %}
 
@@ -23,4 +24,5 @@ export type {{ type_name }} = {% for variant in e.variants() -%}{
 }{% if !loop.last %} | {% endif %}
 {%- endfor %}
 
+{%- endif %}
 {%- endif %}

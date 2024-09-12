@@ -38,18 +38,13 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    removeEventListener: (NSString*)id
+    backup: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    getInfo: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    signMessage: (NSDictionary*)req
+    buyBitcoin: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -61,26 +56,12 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    prepareSendPayment: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
+    disconnect: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    sendPayment: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    prepareReceivePayment: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    receivePayment: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
+    fetchFiatRates: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
@@ -95,7 +76,40 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    preparePayOnchain: (NSDictionary*)req
+    getInfo: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    listFiatCurrencies: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    listPayments: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    listRefundables: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    lnurlAuth: (NSDictionary*)reqData
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    lnurlPay: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    lnurlWithdraw: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -113,19 +127,14 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    buyBitcoin: (NSDictionary*)req
+    preparePayOnchain: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    listPayments: (NSDictionary*)req
+    prepareReceivePayment: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    listRefundables: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
@@ -136,18 +145,14 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    refund: (NSDictionary*)req
+    prepareSendPayment: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
 RCT_EXTERN_METHOD(
-    rescanOnchainSwaps: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    sync: (RCTPromiseResolveBlock)resolve
+    receivePayment: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 
@@ -157,36 +162,7 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
-    backup: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    restore: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    disconnect: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    lnurlPay: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    lnurlWithdraw: (NSDictionary*)req
-    resolve: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    lnurlAuth: (NSDictionary*)reqData
+    refund: (NSDictionary*)req
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -198,17 +174,41 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
+    removeEventListener: (NSString*)id
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    rescanOnchainSwaps: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    restore: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    sendPayment: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    signMessage: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    sync: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     unregisterWebhook: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    fetchFiatRates: (RCTPromiseResolveBlock)resolve
-    reject: (RCTPromiseRejectBlock)reject
-)
-
-RCT_EXTERN_METHOD(
-    listFiatCurrencies: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

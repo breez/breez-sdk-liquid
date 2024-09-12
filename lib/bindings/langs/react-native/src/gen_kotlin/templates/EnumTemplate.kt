@@ -1,3 +1,4 @@
+{%- if !ci.is_name_used_as_error(name) -%}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {%- if e.is_flat() %}
 
@@ -14,7 +15,7 @@ fun as{{ type_name }}({{ type_name|var_name|unquote }}: ReadableMap): {{ type_na
         if (type == "{{ variant.name()|var_name|unquote }}") {
             {% if variant.has_fields() -%}
             {%- for field in variant.fields() %}
-            val {{field.name()|var_name|unquote}} = {{ field.type_()|render_from_map(ci, type_name|var_name|unquote, field.name()|var_name|unquote, false) }}    
+            val {{field.name()|var_name|unquote}} = {{ field|render_from_map(ci, type_name|var_name|unquote, field.name()|var_name|unquote, false) }}    
             {%- endfor %}
             return {{ type_name }}.{{ variant.name() }}( {%- call kt::field_list(variant) -%} )    
             {%- else %}
@@ -33,7 +34,7 @@ fun readableMapOf({{ type_name|var_name|unquote }}: {{ type_name }}): ReadableMa
     is {{ type_name }}.{{ variant.name() }} -> {
         pushToMap(map, "type", "{{ variant.name()|var_name|unquote }}")
         {% for f in variant.fields() -%}
-        pushToMap(map, "{{ f.name()|var_name|unquote }}", {{ f.type_()|render_to_map(ci,type_name|var_name|unquote,f.name()|var_name|unquote, false) }})                    
+        pushToMap(map, "{{ f.name()|var_name|unquote }}", {{ f|render_to_map(ci, type_name|var_name|unquote, f.name()|var_name|unquote, false) }})                    
         {% endfor -%}
     }
     {% endfor %}
@@ -57,3 +58,4 @@ fun as{{ type_name }}List(arr: ReadableArray): List<{{ type_name }}> {
     }
     return list
 }
+{%- endif %}

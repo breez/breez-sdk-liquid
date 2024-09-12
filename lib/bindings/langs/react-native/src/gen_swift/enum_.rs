@@ -2,29 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use uniffi_bindgen::backend::{CodeType, Literal};
+use uniffi_bindgen::backend::Literal;
+
+use super::CodeType;
 
 #[derive(Debug)]
-pub struct ObjectCodeType {
+pub struct EnumCodeType {
     id: String,
 }
 
-impl ObjectCodeType {
+impl EnumCodeType {
     pub fn new(id: String) -> Self {
         Self { id }
     }
 }
 
-impl CodeType for ObjectCodeType {
+impl CodeType for EnumCodeType {
     fn type_label(&self) -> String {
-        super::TypescriptCodeOracle.class_name(&self.id)
+        super::SwiftCodeOracle.class_name(&self.id)
     }
 
     fn canonical_name(&self) -> String {
         format!("Type{}", self.id)
     }
 
-    fn literal(&self, _literal: &Literal) -> String {
-        unreachable!();
+    fn literal(&self, literal: &Literal) -> String {
+        if let Literal::Enum(v, _) = literal {
+            format!(".{}", super::SwiftCodeOracle.enum_variant_name(v))
+        } else {
+            unreachable!();
+        }
     }
 }
