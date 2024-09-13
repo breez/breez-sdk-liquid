@@ -25,6 +25,7 @@ impl BoltzSwapper {
             Swap::Chain(swap) => match swap.direction {
                 Direction::Incoming => {
                     let swap_script = swap.get_lockup_swap_script()?;
+                    // TODO Update boltz-client to build refund tx with all utxos
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,

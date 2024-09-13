@@ -749,7 +749,7 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    pub async fn prepare_refund(
+    pub(crate) async fn prepare_refund(
         &self,
         lockup_address: &str,
         refund_address: &str,
@@ -759,7 +759,7 @@ impl ChainSwapHandler {
             .persister
             .fetch_chain_swap_by_lockup_address(lockup_address)?
             .ok_or(SdkError::Generic {
-                err: format!("Swap {} not found", lockup_address),
+                err: format!("Swap for lockup address {} not found", lockup_address),
             })?;
 
         let refund_tx_id = swap.refund_tx_id.clone();
@@ -790,7 +790,7 @@ impl ChainSwapHandler {
             .persister
             .fetch_chain_swap_by_lockup_address(lockup_address)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap {} not found", lockup_address),
+                err: format!("Swap for lockup address {} not found", lockup_address),
             })?;
 
         ensure_sdk!(
