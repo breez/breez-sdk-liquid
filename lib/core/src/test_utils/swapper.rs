@@ -297,7 +297,10 @@ impl Swapper for MockSwapper {
         Box::new(MockStatusStream::new())
     }
 
-    fn check_for_mrh(&self, _invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
+    fn check_for_mrh(
+        &self,
+        _invoice: &str,
+    ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         // Ok(Some(("".to_string(), 0.0)))
         unimplemented!()
     }

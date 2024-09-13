@@ -152,7 +152,10 @@ pub trait Swapper: Send + Sync {
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
 
     /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
-    fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, f64)>, PaymentError>;
+    fn check_for_mrh(
+        &self,
+        invoice: &str,
+    ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError>;
 }
 
 pub struct BoltzSwapper {
@@ -226,6 +229,8 @@ impl BoltzSwapper {
                 swap_script.clone(),
                 refund_address,
                 &self.bitcoin_electrum_config,
+                self.boltz_url.clone(),
+                swap_id,
             )?),
             SwapScriptV2::Liquid(swap_script) => SwapTxV2::Liquid(LBtcSwapTx::new_refund(
                 swap_script.clone(),
@@ -297,6 +302,8 @@ impl BoltzSwapper {
             claim_swap_script,
             swap.claim_address.clone(),
             &self.bitcoin_electrum_config,
+            self.boltz_url.clone(),
+            swap.id.clone(),
         )?;
 
         let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
@@ -749,7 +756,10 @@ impl Swapper for BoltzSwapper {
         Box::new(BoltzStatusStream::new(&self.boltz_url))
     }
 
-    fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, f64)>, PaymentError> {
+    fn check_for_mrh(
+        &self,
+        invoice: &str,
+    ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         boltz_client::swaps::magic_routing::check_for_mrh(
             &self.client,
             invoice,

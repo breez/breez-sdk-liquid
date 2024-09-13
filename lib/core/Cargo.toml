@@ -14,7 +14,7 @@ frb = ["dep:flutter_rust_bridge"]
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "c140193dab075093e1cfdcc1dd608be8e828d1ef" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f1c232ca5f37678d474f28536d0149319dbbb3c1" }
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.3.0", features = ["chrono"], optional = true }
