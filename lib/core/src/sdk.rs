@@ -934,9 +934,9 @@ impl LiquidSdk {
         );
 
         match self.swapper.check_for_mrh(invoice)? {
-            // If we find a valid MRH, extract the BIP21 amount and address, then pay via onchain tx
-            Some((address, _amount_sat)) => {
-                info!("Found MRH for L-BTC address {address} and amount_sat {amount_sat}");
+            // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
+            Some((address, _)) => {
+                info!("Found MRH for L-BTC address {address}, invoice amount_sat {amount_sat}");
                 self.pay_liquid(
                     LiquidAddressData {
                         address,
