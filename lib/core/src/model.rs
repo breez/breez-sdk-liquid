@@ -48,6 +48,8 @@ pub struct Config {
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
+    /// The Breez API key used for making requests to
+    pub breez_api_key: Option<String>,
 }
 
 impl Config {
@@ -61,6 +63,7 @@ impl Config {
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
+            breez_api_key: None,
         }
     }
 
@@ -74,6 +77,7 @@ impl Config {
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
+            breez_api_key: None,
         }
     }
 

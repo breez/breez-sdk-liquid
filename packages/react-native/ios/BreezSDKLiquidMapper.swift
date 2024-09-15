@@ -275,8 +275,15 @@ enum BreezSDKLiquidMapper {
             }
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
+        var breezApiKey: String?
+        if hasNonNilKey(data: config, key: "breezApiKey") {
+            guard let breezApiKeyTmp = config["breezApiKey"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "breezApiKey"))
+            }
+            breezApiKey = breezApiKeyTmp
+        }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, zeroConfMaxAmountSat: zeroConfMaxAmountSat, breezApiKey: breezApiKey)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -289,6 +296,7 @@ enum BreezSDKLiquidMapper {
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
+            "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
         ]
     }
 

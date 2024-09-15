@@ -362,6 +362,7 @@ typedef struct wire_cst_config {
   uint64_t payment_timeout_sec;
   uint32_t zero_conf_min_fee_rate_msat;
   uint64_t *zero_conf_max_amount_sat;
+  struct wire_cst_list_prim_u_8_strict *breez_api_key;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {
