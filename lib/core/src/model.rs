@@ -1373,6 +1373,12 @@ pub struct LnUrlPaySuccessData {
     pub success_action: Option<SuccessActionProcessed>,
 }
 
+#[derive(Debug, Clone)]
+pub enum Transaction {
+    Liquid(boltz_client::elements::Transaction),
+    Bitcoin(boltz_client::bitcoin::Transaction),
+}
+
 #[macro_export]
 macro_rules! get_invoice_amount {
     ($invoice:expr) => {

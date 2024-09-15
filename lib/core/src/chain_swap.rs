@@ -662,7 +662,22 @@ impl ChainSwapStateHandler {
 
     async fn claim(&self, chain_swap: &ChainSwap) -> Result<(), PaymentError> {
         debug!("Initiating claim for Chain Swap {}", &chain_swap.id);
-        let claim_tx_id = self.swapper.claim_chain_swap(chain_swap)?;
+        let claim_tx = self.swapper.new_chain_claim_tx(chain_swap)?;
+
+        let claim_tx_id = match claim_tx {
+            crate::prelude::Transaction::Liquid(tx) => {
+                let liquid_chain_service = self.liquid_chain_service.lock().await;
+
+                liquid_chain_service
+                    .broadcast(&tx, Some(&chain_swap.id))
+                    .await?
+                    .to_hex()
+            }
+            crate::prelude::Transaction::Bitcoin(tx) => {
+                let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+                bitcoin_chain_service.broadcast(&tx)?.to_hex()
+            }
+        };
 
         if chain_swap.direction == Direction::Incoming {
             // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
