@@ -73,6 +73,8 @@ async fn main() -> Result<()> {
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let mut config = LiquidSdk::default_config(network);
     config.working_dir = data_dir_str;
+    config.breez_api_key = std::env::var_os("BREEZ_API_KEY")
+        .map(|var| var.into_string().expect("Invalid API key provided"));
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         config,
