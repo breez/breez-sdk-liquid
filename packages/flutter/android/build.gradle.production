@@ -2,7 +2,6 @@ version '0.2.1' // generated; do not edit
 group 'com.example.flutter_breez_liquid'
 
 buildscript {
-    ext.kotlin_version = '1.8.20'
     repositories {
         google()
         mavenCentral()
@@ -11,7 +10,6 @@ buildscript {
     dependencies {
         // The Android Gradle Plugin knows how to build native code with the NDK.
         classpath 'com.android.tools.build:gradle:7.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -23,8 +21,6 @@ rootProject.allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlinx-serialization'
 
 android {
     // Bumping the plugin compileSdkVersion requires all clients of this plugin
@@ -54,22 +50,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
 
     defaultConfig {
         minSdkVersion 24
     }
-}
-
-dependencies {
-    implementation "net.java.dev.jna:jna:5.14.0@aar"
-    /* JSON serialization */
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3'
 }

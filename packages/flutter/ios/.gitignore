@@ -2,3 +2,4 @@ Flutter/
 Runner/
 Frameworks/*
 !Frameworks/.gitkeep
+bindings-swift
