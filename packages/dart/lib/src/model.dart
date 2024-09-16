@@ -135,7 +135,7 @@ class Config {
   /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
 
-  /// The Breez API key used for making requests to
+  /// The Breez API key used for making requests to their mempool service
   final String? breezApiKey;
 
   const Config({

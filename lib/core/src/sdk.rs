@@ -4,8 +4,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
+use boltz_client::LockTime;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
-use boltz_client::{LockTime};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
@@ -784,13 +784,13 @@ impl LiquidSdk {
                 );
 
                 receiver_amount_sat = amount_sat;
-                // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
-                // once Esplora broadcast is enabled
                 fees_sat = self
                     .estimate_onchain_tx_fee(
                         receiver_amount_sat,
                         &liquid_address_data.address,
-                        None,
+                        self.config
+                            .lowball_fee_rate_msat_per_vbyte()
+                            .map(|v| v as f32),
                     )
                     .await?;
 

@@ -121,9 +121,9 @@ impl BitcoinChainService for MockBitcoinChainService {
 
     fn broadcast(
         &self,
-        _tx: &boltz_client::bitcoin::Transaction,
+        tx: &boltz_client::bitcoin::Transaction,
     ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
-        unimplemented!()
+        Ok(tx.txid())
     }
 
     fn get_transactions(

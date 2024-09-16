@@ -638,19 +638,6 @@ impl Swapper for BoltzSwapper {
         Ok(claim_tx_response)
     }
 
-    /// Claim chain swap.
-    // fn claim_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
-    //     let claim_tx_id = match swap.direction {
-    //         Direction::Incoming => self.claim_incoming_chain_swap(swap),
-    //         Direction::Outgoing => self.claim_outgoing_chain_swap(swap),
-    //     }?;
-    //     info!(
-    //         "Successfully broadcast claim tx {claim_tx_id} for Chain Swap {}",
-    //         swap.id
-    //     );
-    //     Ok(claim_tx_id)
-    // }
-
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
     fn claim_send_swap_cooperative(

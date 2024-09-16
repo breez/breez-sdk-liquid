@@ -48,7 +48,7 @@ pub struct Config {
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
-    /// The Breez API key used for making requests to
+    /// The Breez API key used for making requests to their mempool service
     pub breez_api_key: Option<String>,
 }
 
