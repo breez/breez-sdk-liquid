@@ -4,8 +4,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::LockTime;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
+use boltz_client::{LockTime};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
@@ -13,7 +13,6 @@ use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
-use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -989,9 +988,8 @@ impl LiquidSdk {
             "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
 
-        let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
-        self.swapper
-            .broadcast_tx(self.config.network.into(), &tx_hex)?;
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let tx_id = liquid_chain_service.broadcast(&tx, None).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
