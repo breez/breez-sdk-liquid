@@ -1,8 +1,9 @@
+version = '0.2.1' # generated; do not edit
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint breez_sdk.podspec` to validate before publishing.
 Pod::Spec.new do |s|
   s.name                   = 'BreezSDKLiquid'
-  s.version                = '0.2.1'
+  s.version                = "#{version}"
   s.license                = { :type => "MIT" }
   s.summary                = "Swift bindings to the Breez Liquid SDK"
   s.homepage               = "https://breez.technology"

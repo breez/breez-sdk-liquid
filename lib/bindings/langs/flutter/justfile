@@ -16,7 +16,7 @@ bootstrap frb='true' build='false':
 	@if {{build}} == true; then just build; fi
 	@if {{build}} == true; then melos build; fi
 	@if {{build}} == true; then just link; fi
-	@if {{build}} == true; then just build-bindings; fi	
+	@if {{build}} == true; then just build-uniffi; fi	
 	just check
 
 # Install flutter_rust_bridge_codegen dependencies
@@ -55,15 +55,15 @@ build-android profile='frb-min':
 build-other profile='frb-min':
 	dart scripts/build_other.dart --profile {{profile}}
 
-build-bindings:
-	just build-bindings-android
-	just build-bindings-swift
+build-uniffi:
+	just build-uniffi-android
+	just build-uniffi-swift
 
-build-bindings-android:
-	bash scripts/build_bindings_android.sh
+build-uniffi-android:
+	bash scripts/build_uniffi_android.sh
 
-build-bindings-swift:
-	bash scripts/build_bindings_swift.sh
+build-uniffi-swift:
+	bash scripts/build_uniffi_swift.sh
 
 # (melos) Run tests on packages in workspace
 test build='false':
