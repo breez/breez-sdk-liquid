@@ -676,11 +676,14 @@ impl LiquidSdk {
         &self,
         amount_sat: u64,
         address: &str,
-        fee_rate: Option<f32>,
     ) -> Result<u64, PaymentError> {
+        let fee_rate_msat_per_vbyte = self
+            .config
+            .lowball_fee_rate_msat_per_vbyte()
+            .map(|v| v as f32);
         Ok(self
             .onchain_wallet
-            .build_tx(fee_rate, address, amount_sat)
+            .build_tx(fee_rate_msat_per_vbyte, address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -703,14 +706,8 @@ impl LiquidSdk {
     ) -> Result<u64, PaymentError> {
         let temp_p2tr_addr = self.get_temp_p2tr_addr();
 
-        self.estimate_onchain_tx_fee(
-            user_lockup_amount_sat,
-            temp_p2tr_addr,
-            self.config
-                .lowball_fee_rate_msat_per_vbyte()
-                .map(|v| v as f32),
-        )
-        .await
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
+            .await
     }
 
     /// Estimate the lockup tx fee for Chain Send swaps
@@ -720,7 +717,7 @@ impl LiquidSdk {
     ) -> Result<u64, PaymentError> {
         let temp_p2tr_addr = self.get_temp_p2tr_addr();
 
-        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr, None)
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
             .await
     }
 
@@ -785,13 +782,7 @@ impl LiquidSdk {
 
                 receiver_amount_sat = amount_sat;
                 fees_sat = self
-                    .estimate_onchain_tx_fee(
-                        receiver_amount_sat,
-                        &liquid_address_data.address,
-                        self.config
-                            .lowball_fee_rate_msat_per_vbyte()
-                            .map(|v| v as f32),
-                    )
+                    .estimate_onchain_tx_fee(receiver_amount_sat, &liquid_address_data.address)
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
@@ -818,7 +809,7 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
-                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address, None)
+                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
                     None => {
