@@ -271,7 +271,7 @@ impl ReceiveSwapStateHandler {
             Ok(tx_id) => tx_id.to_hex(),
             Err(err) => {
                 debug!(
-                    "Could not broadcast claim tx via chain service for swap {swap_id}: {err:?}"
+                    "Could not broadcast claim tx via chain service for Receive swap {swap_id}: {err:?}"
                 );
                 let claim_tx_hex = claim_tx.serialize().to_lower_hex_string();
                 self.swapper
