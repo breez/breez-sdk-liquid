@@ -585,7 +585,9 @@ impl ChainSwapStateHandler {
         let lockup_tx = match self
             .onchain_wallet
             .build_tx(
-                None,
+                self.config
+                    .lowball_fee_rate_msat_per_vbyte()
+                    .map(|v| v as f32),
                 &lockup_details.lockup_address,
                 lockup_details.amount as u64,
             )
