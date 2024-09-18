@@ -836,15 +836,6 @@ impl ChainSwapHandler {
         swap: &ChainSwap,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
-        if !is_cooperative && !self.check_swap_expiry(swap).await? {
-            return Err(PaymentError::Generic {
-                err: format!(
-                    "Cannot refund non-cooperatively: Locktime for outgoing Chain swap {} has not elapsed yet.",
-                    swap.id
-                ),
-            });
-        }
-
         ensure_sdk!(
             swap.refund_tx_id.is_none(),
             PaymentError::Generic {
@@ -943,16 +934,29 @@ impl ChainSwapHandler {
                 continue;
             }
 
+            let has_swap_expired = self.check_swap_expiry(&swap).await.unwrap_or(false);
             match swap.direction {
                 // Track refunds
                 Direction::Outgoing => {
                     let refund_tx_id_result: Result<String, PaymentError> = match swap.state {
-                        Pending => self.refund_outgoing_swap(&swap, false).await,
-                        RefundPending => {
-                            self.refund_outgoing_swap(&swap, true)
-                                .or_else(|_| self.refund_outgoing_swap(&swap, false))
-                                .await
+                        Pending => {
+                            if !has_swap_expired {
+                                warn!(
+                                    "Cannot refund non-cooperatively: Locktime for pending outgoing Chain swap {} has not elapsed yet.",
+                                    swap.id
+                                );
+                                continue;
+                            }
+                            self.refund_outgoing_swap(&swap, false).await
                         }
+                        RefundPending => match has_swap_expired {
+                            true => {
+                                self.refund_outgoing_swap(&swap, true)
+                                    .or_else(|_| self.refund_outgoing_swap(&swap, false))
+                                    .await
+                            }
+                            false => self.refund_outgoing_swap(&swap, true).await,
+                        },
                         _ => {
                             warn!(
                                 "Invalid outgoing Chain swap state for swap {} when attempting to refund, state: {:?}",
