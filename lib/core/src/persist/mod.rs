@@ -8,6 +8,7 @@ pub(crate) mod send;
 use std::collections::HashSet;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
+use crate::error::PaymentError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::{get_invoice_description, utils};
@@ -88,11 +89,9 @@ impl Persister {
         ptx: PaymentTxData,
         destination: Option<String>,
         description: Option<String>,
-    ) -> Result<()> {
-        let mut con = self.get_connection()?;
-
-        let tx = con.transaction()?;
-        tx.execute(
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
             "INSERT OR REPLACE INTO payment_tx_data (
            tx_id,
            timestamp,
@@ -111,10 +110,11 @@ impl Persister {
                 ptx.payment_type,
                 ptx.is_confirmed,
             ),
-        )?;
+        )
+        .map_err(|_| PaymentError::PersistError)?;
 
         if let Some(destination) = destination {
-            tx.execute(
+            con.execute(
                 "INSERT OR REPLACE INTO payment_details (
                     tx_id,
                     destination,
@@ -123,9 +123,9 @@ impl Persister {
                 VALUES (?, ?, ?)
             ",
                 (ptx.tx_id, destination, description),
-            )?;
+            )
+            .map_err(|_| PaymentError::PersistError)?;
         }
-        tx.commit()?;
 
         Ok(())
     }
