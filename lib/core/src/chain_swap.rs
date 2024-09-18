@@ -772,6 +772,13 @@ impl ChainSwapHandler {
             })?;
 
         ensure_sdk!(
+            swap.state == Refundable,
+            PaymentError::Generic {
+                err: format!("Chain Swap {} was not marked as `Refundable`", swap.id)
+            }
+        );
+
+        ensure_sdk!(
             swap.refund_tx_id.is_none(),
             PaymentError::Generic {
                 err: format!(
