@@ -79,7 +79,7 @@ kotlin {
 }
 
 android {
-    namespace = "technology.breez"
+    namespace = "technology.breez.liquid"
     compileSdk = 33
 
     defaultConfig {
@@ -95,7 +95,7 @@ android {
 
 val libraryVersion: String by project
 
-group = "technology.breez"
+group = "technology.breez.liquid"
 version = libraryVersion
 
 publishing {
