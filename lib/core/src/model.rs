@@ -358,8 +358,8 @@ pub struct PrepareRefundRequest {
     pub swap_address: String,
     /// The address to refund the swap funds to
     pub refund_address: String,
-    /// The fee rate in sat/vB for the refund transaction
-    pub sat_per_vbyte: u32,
+    /// The fee rate in msat/vB for the refund transaction
+    pub fee_rate_msat_per_vbyte: u32,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
@@ -377,8 +377,8 @@ pub struct RefundRequest {
     pub swap_address: String,
     /// The address to refund the swap funds to
     pub refund_address: String,
-    /// The fee rate in sat/vB for the refund transaction
-    pub sat_per_vbyte: u32,
+    /// The fee rate in msat/vB for the refund transaction
+    pub fee_rate_msat_per_vbyte: u32,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::refund].

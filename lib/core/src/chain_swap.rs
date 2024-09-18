@@ -2,34 +2,37 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use boltz_client::boltz::{
-    BoltzApiClientV2, Cooperative, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
+use boltz_client::{
+    boltz::{self, BoltzApiClientV2, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
+    network::electrum::ElectrumConfig,
+    swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
+    Address, ElementsLockTime, LockTime, Secp256k1, Serialize, ToHex,
 };
-use boltz_client::network::electrum::ElectrumConfig;
-use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
-use boltz_client::swaps::{boltz::ChainSwapStates, boltz::CreateChainResponse};
-use boltz_client::{Address, Secp256k1, Serialize, ToHex};
+use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
-use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::elements::{Script, Transaction};
-use lwk_wollet::hashes::hex::DisplayHex;
-use lwk_wollet::History;
+use lwk_wollet::{
+    elements::{hex::FromHex, Script, Transaction},
+    hashes::hex::DisplayHex,
+    History,
+};
 use tokio::sync::{broadcast, watch, Mutex};
 use tokio::time::MissedTickBehavior;
 
-use crate::chain::bitcoin::BitcoinChainService;
-use crate::chain::liquid::LiquidChainService;
-use crate::error::{SdkError, SdkResult};
-use crate::model::PaymentState::{
-    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
+use crate::{
+    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    ensure_sdk,
+    error::{PaymentError, SdkError, SdkResult},
+    model::{
+        ChainSwap, Config, Direction, LiquidNetwork,
+        PaymentState::{self, *},
+        PaymentTxData, PaymentType, Swap, SwapScriptV2, Transaction as SdkTransaction,
+    },
+    persist::Persister,
+    sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS,
+    swapper::Swapper,
+    utils,
+    wallet::OnchainWallet,
 };
-use crate::model::{ChainSwap, Config, Direction, PaymentTxData, PaymentType};
-use crate::prelude::{LiquidNetwork, SwapScriptV2};
-use crate::sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
-use crate::swapper::Swapper;
-use crate::wallet::OnchainWallet;
-use crate::{ensure_sdk, utils};
-use crate::{error::PaymentError, model::PaymentState, persist::Persister};
 
 // Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L78
 pub const ESTIMATED_BTC_CLAIM_TX_VSIZE: u64 = 111;
@@ -195,9 +198,7 @@ impl ChainSwapHandler {
             .list_chain_swaps()?
             .into_iter()
             .filter(|s| {
-                s.direction == Direction::Outgoing
-                    && s.state == PaymentState::Pending
-                    && s.claim_tx_id.is_some()
+                s.direction == Direction::Outgoing && s.state == Pending && s.claim_tx_id.is_some()
             })
             .collect();
         info!(
@@ -679,10 +680,12 @@ impl ChainSwapHandler {
 
         debug!("Initiating claim for Chain Swap {swap_id}");
 
-        let claim_tx = self.swapper.new_chain_claim_tx(swap)?;
+        let claim_tx = self
+            .swapper
+            .create_claim_tx(Swap::Chain(swap.clone()), None)?;
         let claim_tx_id = match claim_tx {
             // We attempt broadcasting via chain service, then fallback to Boltz
-            crate::prelude::Transaction::Liquid(tx) => {
+            SdkTransaction::Liquid(tx) => {
                 let liquid_chain_service = self.liquid_chain_service.lock().await;
                 let broadcast_response = liquid_chain_service.broadcast(&tx, Some(swap_id)).await;
                 match broadcast_response {
@@ -697,7 +700,7 @@ impl ChainSwapHandler {
                     }
                 }
             }
-            crate::prelude::Transaction::Bitcoin(tx) => {
+            SdkTransaction::Bitcoin(tx) => {
                 let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
                 bitcoin_chain_service.broadcast(&tx)?.to_hex()
             }
@@ -746,8 +749,8 @@ impl ChainSwapHandler {
     pub async fn prepare_refund(
         &self,
         lockup_address: &str,
-        output_address: &str,
-        sat_per_vbyte: u32,
+        refund_address: &str,
+        fee_rate_msat_per_vb: u32,
     ) -> SdkResult<(u32, u64, Option<String>)> {
         let swap = self
             .persister
@@ -755,47 +758,29 @@ impl ChainSwapHandler {
             .ok_or(SdkError::Generic {
                 err: format!("Swap {} not found", lockup_address),
             })?;
-        if let Some(refund_tx_id) = swap.refund_tx_id.clone() {
+
+        let refund_tx_id = swap.refund_tx_id.clone();
+        if let Some(refund_tx_id) = &refund_tx_id {
             warn!(
                 "A refund tx for Chain Swap {} was already broadcast: txid {refund_tx_id}",
                 swap.id
             );
         }
 
-        let refund_keypair = swap.get_refund_keypair()?;
-        let preimage = Preimage::from_str(&swap.preimage)?;
-        let swap_script = swap.get_lockup_swap_script()?;
+        let (refund_tx_size, refund_tx_fees_sat) = self.swapper.estimate_refund_broadcast(
+            Swap::Chain(swap),
+            refund_address,
+            Some(fee_rate_msat_per_vb as f64 / 1000.0),
+        )?;
 
-        let refund_tx_vsize = match swap_script {
-            SwapScriptV2::Bitcoin(swap_script) => {
-                let refund_tx = BtcSwapTx::new_refund(
-                    swap_script,
-                    &output_address.into(),
-                    &self.bitcoin_electrum_config(),
-                )?;
-                refund_tx.size(&refund_keypair, &preimage)? as u32
-            }
-            SwapScriptV2::Liquid(swap_script) => {
-                let refund_tx = utils::new_lbtc_refund_tx(
-                    swap_script,
-                    output_address,
-                    &self.config,
-                    self.liquid_chain_service.clone(),
-                )
-                .await?;
-                refund_tx.size(&refund_keypair, &preimage)? as u32
-            }
-        };
-        let refund_tx_fee_sat = (refund_tx_vsize as f32 * sat_per_vbyte as f32).ceil() as u64;
-
-        Ok((refund_tx_vsize, refund_tx_fee_sat, swap.refund_tx_id))
+        Ok((refund_tx_size, refund_tx_fees_sat, refund_tx_id))
     }
 
     pub(crate) async fn refund_incoming_swap(
         &self,
         lockup_address: &str,
         refund_address: &str,
-        sat_per_vbyte: u32,
+        broadcast_fee_rate_msat_per_vb: u32,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
         let swap = self
@@ -805,12 +790,15 @@ impl ChainSwapHandler {
                 err: format!("Swap {} not found", lockup_address),
             })?;
 
-        if let Some(refund_tx_id) = swap.refund_tx_id.clone() {
-            warn!(
-                "A refund tx for Chain Swap {} was already broadcast: txid {refund_tx_id}",
-                swap.id
-            );
-        }
+        ensure_sdk!(
+            swap.refund_tx_id.is_none(),
+            PaymentError::Generic {
+                err: format!(
+                    "A refund tx for incoming Chain Swap {} was already broadcast",
+                    swap.id
+                )
+            }
+        );
 
         info!(
             "Initiating refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
@@ -822,34 +810,30 @@ impl ChainSwapHandler {
                 err: "Unexpected swap script type found".to_string(),
             });
         };
-        let refund_keypair = swap.get_refund_keypair()?;
 
-        let boltz_client = self.boltz_client();
-        let cooperative = match is_cooperative {
-            true => Some(Cooperative {
-                boltz_api: &boltz_client,
-                swap_id: swap.id.clone(),
-                pub_nonce: None,
-                partial_sig: None,
-            }),
-            false => None,
+        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+        let script_pk = swap_script
+            .to_address(self.config.network.into())
+            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .script_pubkey();
+        let utxos = bitcoin_chain_service.get_script_utxos(&script_pk).await?;
+
+        let SdkTransaction::Bitcoin(refund_tx) = self.swapper.create_refund_tx(
+            Swap::Chain(swap.clone()),
+            &refund_address,
+            utxos,
+            Some(broadcast_fee_rate_msat_per_vb as f64 / 1000.0),
+            is_cooperative,
+        )?
+        else {
+            return Err(PaymentError::Generic {
+                err: format!(
+                    "Unexpected refund tx type returned for incoming Chain swap {}",
+                    swap.id
+                ),
+            });
         };
-
-        let refund_tx = BtcSwapTx::new_refund(
-            swap_script.clone(),
-            &refund_address.into(),
-            &self.bitcoin_electrum_config(),
-        )?;
-        let broadcast_fees_sat = utils::estimate_btc_refund_fees_sat(
-            sat_per_vbyte,
-            &refund_tx,
-            &Preimage::from_str(&swap.preimage)?,
-            &refund_keypair,
-        )?;
-        let signed_tx = refund_tx.sign_refund(&refund_keypair, broadcast_fees_sat, cooperative)?;
-        let refund_tx_id = refund_tx
-            .broadcast(&signed_tx, &self.bitcoin_electrum_config())?
-            .to_string();
+        let refund_tx_id = bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
 
         info!(
             "Successfully broadcast refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
@@ -857,16 +841,6 @@ impl ChainSwapHandler {
         );
 
         Ok(refund_tx_id)
-    }
-
-    fn liquid_electrum_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(
-            self.config.network.into(),
-            &self.config.liquid_electrum_url,
-            true,
-            true,
-            100,
-        )
     }
 
     pub(crate) async fn refund_outgoing_swap(
@@ -883,54 +857,55 @@ impl ChainSwapHandler {
             });
         }
 
+        ensure_sdk!(
+            swap.refund_tx_id.is_none(),
+            PaymentError::Generic {
+                err: format!(
+                    "A refund tx for outgoing Chain Swap {} was already broadcast",
+                    swap.id
+                )
+            }
+        );
+
         info!(
             "Initiating refund for outgoing Chain Swap {}, is_cooperative: {is_cooperative}",
             swap.id
         );
 
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SwapScriptV2::Liquid(swap_script) = swap.get_lockup_swap_script()? else {
             return Err(PaymentError::Generic {
                 err: "Unexpected swap script type found".to_string(),
             });
         };
-        let refund_keypair = swap.get_refund_keypair()?;
 
-        let boltz_client = self.boltz_client();
-        let (cooperative, lowball) = match is_cooperative {
-            true => {
-                let cooperative = Some(Cooperative {
-                    boltz_api: &boltz_client,
-                    swap_id: swap.id.clone(),
-                    pub_nonce: None,
-                    partial_sig: None,
-                });
-                let lowball = Some((&boltz_client, self.config.network.into()));
-                (cooperative, lowball)
-            }
-            false => (None, None),
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let script_pk = swap_script
+            .to_address(self.config.network.into())
+            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .to_unconfidential()
+            .script_pubkey();
+        let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
+
+        let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
+            Swap::Chain(swap.clone()),
+            &refund_address,
+            utxos,
+            None,
+            is_cooperative,
+        )?
+        else {
+            return Err(PaymentError::Generic {
+                err: format!(
+                    "Unexpected refund tx type returned for outgoing Chain swap {}",
+                    swap.id
+                ),
+            });
         };
-
-        let refund_tx = utils::new_lbtc_refund_tx(
-            swap_script,
-            &output_address,
-            &self.config,
-            self.liquid_chain_service.clone(),
-        )
-        .await?;
-        let broadcast_fees_sat = utils::estimate_lbtc_refund_fees_sat(
-            self.config.network,
-            &refund_tx,
-            &refund_keypair,
-            cooperative.clone(),
-        )?;
-        let signed_tx = refund_tx.sign_refund(
-            &refund_keypair,
-            Amount::from_sat(broadcast_fees_sat),
-            cooperative,
-        )?;
-        let refund_tx_id =
-            refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config(), lowball)?;
+        let refund_tx_id = liquid_chain_service
+            .broadcast(&refund_tx, Some(&swap.id))
+            .await?
+            .to_string();
 
         info!(
             "Successfully broadcast refund for outgoing Chain Swap {}, is_cooperative: {is_cooperative}",
@@ -951,8 +926,8 @@ impl ChainSwapHandler {
             Direction::Incoming => {
                 let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
                 let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-                let locktime_from_height = boltz_client::LockTime::from_height(current_height)
-                    .map_err(|e| PaymentError::Generic {
+                let locktime_from_height =
+                    LockTime::from_height(current_height).map_err(|e| PaymentError::Generic {
                         err: format!("Error getting locktime from height {current_height:?}: {e}",),
                     })?;
 
@@ -962,7 +937,7 @@ impl ChainSwapHandler {
             Direction::Outgoing => {
                 let swap_script = swap.get_lockup_swap_script()?.as_liquid_script()?;
                 let current_height = self.liquid_chain_service.lock().await.tip().await?;
-                let locktime_from_height = LockTime::from_height(current_height)?;
+                let locktime_from_height = ElementsLockTime::from_height(current_height)?;
 
                 info!("Checking Chain Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", swap.id, swap_script.locktime);
                 Ok(utils::is_locktime_expired(

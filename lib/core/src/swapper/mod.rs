@@ -12,7 +12,7 @@ use boltz_client::{
 use tokio::sync::{broadcast, watch};
 
 use crate::{
-    error::PaymentError,
+    error::{PaymentError, SdkError},
     prelude::{Direction, SendSwap, Swap, Utxo},
 };
 
@@ -75,6 +75,14 @@ pub trait Swapper: Send + Sync {
         swap: Swap,
         claim_address: Option<String>,
     ) -> Result<crate::prelude::Transaction, PaymentError>;
+
+    /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap
+    fn estimate_refund_broadcast(
+        &self,
+        swap: Swap,
+        refund_address: &str,
+        fee_rate_sat_per_vb: Option<f64>,
+    ) -> Result<(u32, u64), SdkError>;
 
     /// Create a refund transaction for a send or chain swap
     fn create_refund_tx(

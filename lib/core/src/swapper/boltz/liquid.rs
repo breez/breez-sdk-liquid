@@ -10,10 +10,7 @@ use log::info;
 
 use crate::{
     error::{PaymentError, SdkError},
-    prelude::{
-        ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
-        LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
-    },
+    prelude::{ChainSwap, Direction, ReceiveSwap, Swap, Utxo, LOWBALL_FEE_RATE_SAT_PER_VBYTE},
 };
 
 use super::BoltzSwapper;

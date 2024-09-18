@@ -1743,14 +1743,18 @@ impl LiquidSdk {
     /// * `req` - the [PrepareRefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
     ///     * `refund_address` - the Bitcoin address to refund to
-    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
+    ///     * `fee_rate_msat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn prepare_refund(
         &self,
         req: &PrepareRefundRequest,
     ) -> SdkResult<PrepareRefundResponse> {
         let (tx_vsize, tx_fee_sat, refund_tx_id) = self
             .chain_swap_handler
-            .prepare_refund(&req.swap_address, &req.refund_address, req.sat_per_vbyte)
+            .prepare_refund(
+                &req.swap_address,
+                &req.refund_address,
+                req.fee_rate_msat_per_vbyte,
+            )
             .await?;
         Ok(PrepareRefundResponse {
             tx_vsize,
@@ -1766,21 +1770,21 @@ impl LiquidSdk {
     /// * `req` - the [RefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
     ///     * `refund_address` - the Bitcoin address to refund to
-    ///     * `sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
+    ///     * `fee_rate_msat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
         let refund_tx_id = self
             .chain_swap_handler
             .refund_incoming_swap(
                 &req.swap_address,
                 &req.refund_address,
-                req.sat_per_vbyte,
+                req.fee_rate_msat_per_vbyte,
                 true,
             )
             .or_else(|_| {
                 self.chain_swap_handler.refund_incoming_swap(
                     &req.swap_address,
                     &req.refund_address,
-                    req.sat_per_vbyte,
+                    req.fee_rate_msat_per_vbyte,
                     false,
                 )
             })
