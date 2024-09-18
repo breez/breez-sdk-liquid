@@ -374,12 +374,6 @@ impl SendSwapHandler {
         swap: &SendSwap,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
-        if !is_cooperative && !self.check_swap_expiry(swap).await? {
-            return Err(PaymentError::Generic {
-                err: format!("Cannot refund non-cooperatively: Locktime for Send swap {} has not elapsed yet.", swap.id),
-            });
-        }
-
         info!(
             "Initiating refund for Send Swap {}, is_cooperative: {is_cooperative}",
             swap.id
@@ -448,13 +442,24 @@ impl SendSwapHandler {
                 continue;
             }
 
+            let has_swap_expired = self.check_swap_expiry(swap).await.unwrap_or(false);
             let refund_tx_id_result = match swap.state {
-                Pending => self.refund(swap, false).await,
-                RefundPending => {
-                    self.refund(swap, true)
-                        .or_else(|_| self.refund(swap, false))
-                        .await
+                Pending => {
+                    if !has_swap_expired {
+                        warn!("Cannot refund non-cooperatively: Locktime for pending Send swap {} has not elapsed yet.", swap.id);
+                        continue;
+                    }
+
+                    self.refund(swap, false).await
                 }
+                RefundPending => match has_swap_expired {
+                    true => {
+                        self.refund(swap, true)
+                            .or_else(|_| self.refund(swap, false))
+                            .await
+                    }
+                    false => self.refund(swap, true).await,
+                },
                 _ => {
                     continue;
                 }
