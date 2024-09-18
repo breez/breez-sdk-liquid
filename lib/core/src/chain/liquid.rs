@@ -7,7 +7,7 @@ use log::info;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
     elements::{
-        pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, TxOut, Txid,
+        pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, Txid,
     },
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
@@ -15,6 +15,7 @@ use lwk_wollet::{
 use reqwest::{Response, StatusCode};
 use serde::Deserialize;
 
+use crate::prelude::Utxo;
 use crate::{
     model::{Config, LiquidNetwork},
     utils,
@@ -53,8 +54,8 @@ pub trait LiquidChainService: Send + Sync {
         retries: u64,
     ) -> Result<Vec<History>>;
 
-    /// Get the tx outpoint associated with a script pubkey
-    async fn get_script_history_outpoint(&self, script: &Script) -> Result<(OutPoint, TxOut)>;
+    /// Get the utxos associated with a script pubkey
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -196,31 +197,34 @@ impl LiquidChainService for HybridLiquidChainService {
         Ok(script_history)
     }
 
-    async fn get_script_history_outpoint(&self, script: &Script) -> Result<(OutPoint, TxOut)> {
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
         let history = self.get_script_history_with_retry(script, 3).await?;
-        if history.is_empty() {
-            return Err(anyhow!("Transaction history is empty."));
-        }
 
-        let txid = history
-            .last()
-            .ok_or(anyhow!("Expected at least one txid"))?
-            .txid;
-        let tx = self
-            .get_transaction_hex(&txid)
-            .await?
-            .ok_or(anyhow!("Transaction not found"))?;
-
-        let script_pubkey = script.clone();
-        for (vout, output) in tx.clone().output.into_iter().enumerate() {
-            if output.script_pubkey == script_pubkey {
-                let outpoint_0 = OutPoint::new(tx.txid(), vout as u32);
-
-                return Ok((outpoint_0, output));
+        let mut utxos: Vec<Utxo> = vec![];
+        for history_item in history {
+            match self.get_transaction_hex(&history_item.txid).await {
+                Ok(Some(tx)) => {
+                    let mut new_utxos = tx
+                        .output
+                        .iter()
+                        .enumerate()
+                        .map(|(vout, output)| {
+                            Utxo::Liquid((
+                                OutPoint::new(history_item.txid, vout as u32),
+                                output.clone(),
+                            ))
+                        })
+                        .collect();
+                    utxos.append(&mut new_utxos);
+                }
+                _ => {
+                    log::warn!("Could not retrieve transaction from history item");
+                    continue;
+                }
             }
         }
 
-        return Err(anyhow!("Transaction outpoint not found"));
+        return Ok(utxos);
     }
 
     async fn verify_tx(
