@@ -614,7 +614,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=f1c232ca5f37678d474f28536d0149319dbbb3c1#f1c232ca5f37678d474f28536d0149319dbbb3c1"
+source = "git+https://github.com/ok300/boltz-rust?branch=ok300-chain-swap-refund-check-all-utoxs#1917a187998b3f0801532fef350f8530a7544871"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",

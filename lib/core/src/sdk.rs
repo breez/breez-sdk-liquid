@@ -3,8 +3,6 @@ use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
-use async_trait::async_trait;
-use boltz_client::LockTime;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -12,11 +10,12 @@ use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
-use log::{debug, error, info};
+use futures_util::TryFutureExt;
+use log::{debug, error, info, warn};
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{elements, ElementsNetwork, WalletTx};
+use lwk_wollet::{ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::bitcoin::secp256k1::Secp256k1;
 use sdk_common::bitcoin::util::bip32::ChildNumber;
@@ -35,7 +34,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
-use crate::swapper::{BoltzSwapper, ReconnectHandler, Swapper, SwapperStatusStream};
+use crate::swapper::{boltz::BoltzSwapper, Swapper, SwapperReconnectHandler, SwapperStatusStream};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -216,10 +215,10 @@ impl LiquidSdk {
             }
         });
 
-        let reconnect_handler = Box::new(SwapperReconnectHandler {
-            persister: self.persister.clone(),
-            status_stream: self.status_stream.clone(),
-        });
+        let reconnect_handler = Box::new(SwapperReconnectHandler::new(
+            self.persister.clone(),
+            self.status_stream.clone(),
+        ));
         self.status_stream
             .clone()
             .start(reconnect_handler, self.shutdown_receiver.clone())
@@ -2301,32 +2300,6 @@ impl LiquidSdk {
     /// An error is thrown if a global logger is already configured.
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
-    }
-}
-
-struct SwapperReconnectHandler {
-    persister: Arc<Persister>,
-    status_stream: Arc<dyn SwapperStatusStream>,
-}
-
-#[async_trait]
-impl ReconnectHandler for SwapperReconnectHandler {
-    async fn on_stream_reconnect(&self) {
-        match self.persister.list_ongoing_swaps() {
-            Ok(initial_ongoing_swaps) => {
-                info!(
-                    "On stream reconnection, got {} initial ongoing swaps",
-                    initial_ongoing_swaps.len()
-                );
-                for ongoing_swap in initial_ongoing_swaps {
-                    match self.status_stream.track_swap_id(&ongoing_swap.id()) {
-                        Ok(_) => info!("Tracking ongoing swap: {}", ongoing_swap.id()),
-                        Err(e) => error!("Failed to track ongoing swap: {e:?}"),
-                    }
-                }
-            }
-            Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
-        }
     }
 }
 

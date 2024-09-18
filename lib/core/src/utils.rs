@@ -1,22 +1,14 @@
-use boltz_client::util::secrets::Preimage;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::Mutex;
 
-use crate::chain::liquid::LiquidChainService;
 use crate::error::{PaymentError, SdkResult};
-use crate::prelude::{
-    Config, LiquidNetwork, LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
-};
+use crate::prelude::STANDARD_FEE_RATE_SAT_PER_VBYTE;
 use crate::wallet::OnchainWallet;
 use anyhow::{anyhow, Result};
-use boltz_client::boltz::{Cooperative, SwapTxKind, SwapType};
-use boltz_client::{Amount, BtcSwapTx, ElementsAddress, LBtcSwapScript, LBtcSwapTx};
 use log::debug;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::elements::BlockHash;
 use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
@@ -84,76 +76,4 @@ pub(crate) async fn derive_fee_rate_sats_per_kvb(
     debug!("derive_fee_rate_sats_per_kvb: result_sat_per_kvb_f32 {} from inputs: absolute_fees_sat {}, result_sat_per_kvb: {}",
         result_sat_per_kvb_f32, absolute_fees_sat, result_sat_per_kvb);
     Ok(result_sat_per_kvb_f32)
-}
-
-pub(crate) async fn new_lbtc_refund_tx(
-    swap_script: LBtcSwapScript,
-    output_address: &str,
-    config: &Config,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
-) -> Result<LBtcSwapTx> {
-    if swap_script.swap_type == SwapType::ReverseSubmarine {
-        return Err(anyhow!(
-            "Refund Txs cannot be constructed for Reverse Submarine Swaps.".to_string(),
-        ));
-    }
-
-    let output_address = ElementsAddress::from_str(output_address)?;
-
-    let script_pk = swap_script
-        .to_address(config.network.into())
-        .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
-        .to_unconfidential()
-        .script_pubkey();
-
-    let liquid_chain_service = liquid_chain_service.lock().await;
-    let (funding_outpoint, funding_utxo) = liquid_chain_service
-        .get_script_history_outpoint(&script_pk)
-        .await
-        .map_err(|_| anyhow!("Could not retrieve script utxos".to_string()))?;
-
-    let genesis_hash = BlockHash::from_str(match config.network {
-        LiquidNetwork::Mainnet => {
-            "1466275836220db2944ca059a3a10ef6fd2ea684b0688d2c379296888a206003"
-        }
-        LiquidNetwork::Testnet => {
-            "67d5eb1aee63c6c2058a088985503ff0626fd3f7f8022bdc74fab36a359164db"
-        }
-    })
-    .expect("Expecting valid block hash");
-
-    Ok(LBtcSwapTx {
-        kind: SwapTxKind::Refund,
-        swap_script,
-        output_address,
-        funding_outpoint,
-        funding_utxo,
-        genesis_hash,
-    })
-}
-
-pub(crate) fn estimate_lbtc_refund_fees_sat(
-    network: LiquidNetwork,
-    refund_tx: &LBtcSwapTx,
-    refund_keypair: &boltz_client::Keypair,
-    cooperative: Option<Cooperative>,
-) -> Result<u64, PaymentError> {
-    let dummy_fees = Amount::from_sat(100);
-    let fee_rate = match (network, &cooperative) {
-        (LiquidNetwork::Mainnet, Some(_)) => LOWBALL_FEE_RATE_SAT_PER_VBYTE,
-        (LiquidNetwork::Mainnet, None) | (LiquidNetwork::Testnet, _) => {
-            STANDARD_FEE_RATE_SAT_PER_VBYTE
-        }
-    };
-    let dummy_tx = refund_tx.sign_refund(refund_keypair, dummy_fees, cooperative)?;
-    Ok((dummy_tx.vsize() as f64 * fee_rate).ceil() as u64)
-}
-
-pub(crate) fn estimate_btc_refund_fees_sat(
-    sat_per_vbyte: u32,
-    refund_tx: &BtcSwapTx,
-    preimage: &Preimage,
-    refund_keypair: &boltz_client::Keypair,
-) -> Result<u64, PaymentError> {
-    Ok((refund_tx.size(refund_keypair, preimage)? as f64 * sat_per_vbyte as f64).ceil() as u64)
 }

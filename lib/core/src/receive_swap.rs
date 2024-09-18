@@ -13,7 +13,7 @@ use crate::model::PaymentState::{
     Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
 };
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
-use crate::prelude::Transaction;
+use crate::prelude::{Swap, Transaction};
 use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError, model::PaymentState, persist::Persister, swapper::Swapper,
@@ -254,8 +254,9 @@ impl ReceiveSwapHandler {
         info!("Initiating claim for Receive Swap {swap_id}");
 
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let Transaction::Liquid(claim_tx) =
-            self.swapper.new_receive_claim_tx(swap, claim_address)?
+        let Transaction::Liquid(claim_tx) = self
+            .swapper
+            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))?
         else {
             return Err(PaymentError::Generic {
                 err: format!("Constructed invalid transaction for Receive swap {swap_id}"),
