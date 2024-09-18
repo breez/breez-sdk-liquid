@@ -54,9 +54,9 @@ pub(crate) enum Command {
         #[arg(short, long)]
         drain: Option<bool>,
 
-        /// The optional fee rate to use, in satoshi/vbyte
+        /// The optional fee rate to use, in millisatoshi/vbyte
         #[clap(short = 'f', long = "fee_rate")]
-        sat_per_vbyte: Option<u32>,
+        fee_rate_msat_per_vbyte: Option<u32>,
     },
     /// Receive lbtc and send btc through a swap
     ReceivePayment {
@@ -110,8 +110,8 @@ pub(crate) enum Command {
         swap_address: String,
         // Btc onchain address to send the refund to
         refund_address: String,
-        // Fee rate to use, in satoshi/vbyte
-        sat_per_vbyte: u32,
+        // Fee rate to use, in millisatoshi/vbyte
+        fee_rate_msat_per_vbyte: u32,
     },
     /// Broadcast a refund transaction for an incomplete swap
     Refund {
@@ -119,8 +119,8 @@ pub(crate) enum Command {
         swap_address: String,
         // Btc onchain address to send the refund to
         refund_address: String,
-        // Fee rate to use, in satoshi/vbyte
-        sat_per_vbyte: u32,
+        // Fee rate to use, in millisatoshi/vbyte
+        fee_rate_msat_per_vbyte: u32,
     },
     /// Rescan onchain swaps
     RescanOnchainSwaps,
@@ -346,7 +346,7 @@ pub(crate) async fn handle_command(
             address,
             receiver_amount_sat,
             drain,
-            sat_per_vbyte,
+            fee_rate_msat_per_vbyte,
         } => {
             let amount = match drain.unwrap_or(false) {
                 true => PayOnchainAmount::Drain,
@@ -359,7 +359,7 @@ pub(crate) async fn handle_command(
             let prepare_response = sdk
                 .prepare_pay_onchain(&PreparePayOnchainRequest {
                     amount,
-                    sat_per_vbyte,
+                    fee_rate_msat_per_vbyte,
                 })
                 .await?;
 
@@ -455,13 +455,13 @@ pub(crate) async fn handle_command(
         Command::PrepareRefund {
             swap_address,
             refund_address,
-            sat_per_vbyte,
+            fee_rate_msat_per_vbyte,
         } => {
             let res = sdk
                 .prepare_refund(&PrepareRefundRequest {
                     swap_address,
                     refund_address,
-                    sat_per_vbyte,
+                    fee_rate_msat_per_vbyte,
                 })
                 .await?;
             command_result!(res)
@@ -469,13 +469,13 @@ pub(crate) async fn handle_command(
         Command::Refund {
             swap_address,
             refund_address,
-            sat_per_vbyte,
+            fee_rate_msat_per_vbyte,
         } => {
             let res = sdk
                 .refund(&RefundRequest {
                     swap_address,
                     refund_address,
-                    sat_per_vbyte,
+                    fee_rate_msat_per_vbyte,
                 })
                 .await?;
             command_result!(res)
