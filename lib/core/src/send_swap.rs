@@ -2,14 +2,10 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use boltz_client::boltz::{
-    BoltzApiClientV2, Cooperative, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
-};
-use boltz_client::network::electrum::ElectrumConfig;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Amount, Bolt11Invoice, ToHex};
+use boltz_client::{Bolt11Invoice, ToHex};
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::Witness;
@@ -19,13 +15,13 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{Config, PaymentState::*, SendSwap};
-use crate::prelude::LiquidNetwork;
+use crate::prelude::Swap;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError,
-    model::{PaymentState, PaymentTxData, PaymentType},
+    model::{PaymentState, PaymentTxData, PaymentType, Transaction as SdkTransaction},
     persist::Persister,
 };
 
@@ -373,24 +369,6 @@ impl SendSwapHandler {
         Ok(())
     }
 
-    fn liquid_electrum_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(
-            self.config.network.into(),
-            &self.config.liquid_electrum_url,
-            true,
-            true,
-            100,
-        )
-    }
-
-    fn boltz_client(&self) -> BoltzApiClientV2 {
-        let boltz_url = match self.config.network {
-            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
-            LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-        };
-        BoltzApiClientV2::new(boltz_url)
-    }
-
     pub(crate) async fn refund(
         &self,
         swap: &SendSwap,
@@ -407,45 +385,35 @@ impl SendSwapHandler {
             swap.id
         );
 
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let swap_script = swap.get_swap_script()?;
-        let refund_keypair = swap.get_refund_keypair()?;
+        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
-        let boltz_client = self.boltz_client();
-        let (cooperative, lowball) = match is_cooperative {
-            true => {
-                let cooperative = Some(Cooperative {
-                    boltz_api: &boltz_client,
-                    swap_id: swap.id.clone(),
-                    pub_nonce: None,
-                    partial_sig: None,
-                });
-                let lowball = Some((&boltz_client, self.config.network.into()));
-                (cooperative, lowball)
-            }
-            false => (None, None),
+        let liquid_chain_service = self.chain_service.lock().await;
+        let script_pk = swap_script
+            .to_address(self.config.network.into())
+            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .to_unconfidential()
+            .script_pubkey();
+        let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
+        let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
+            Swap::Send(swap.clone()),
+            &refund_address,
+            utxos,
+            None,
+            is_cooperative,
+        )?
+        else {
+            return Err(PaymentError::Generic {
+                err: format!(
+                    "Unexpected refund tx type returned for Send swap {}",
+                    swap.id
+                ),
+            });
         };
-
-        let refund_tx = utils::new_lbtc_refund_tx(
-            swap_script,
-            &output_address,
-            &self.config,
-            self.chain_service.clone(),
-        )
-        .await?;
-        let broadcast_fees_sat = utils::estimate_lbtc_refund_fees_sat(
-            self.config.network,
-            &refund_tx,
-            &refund_keypair,
-            cooperative.clone(),
-        )?;
-        let signed_tx = refund_tx.sign_refund(
-            &refund_keypair,
-            Amount::from_sat(broadcast_fees_sat),
-            cooperative,
-        )?;
-        let refund_tx_id =
-            refund_tx.broadcast(&signed_tx, &self.liquid_electrum_config(), lowball)?;
+        let refund_tx_id = liquid_chain_service
+            .broadcast(&refund_tx, Some(&swap.id))
+            .await?
+            .to_string();
 
         info!(
             "Successfully broadcast refund for Send Swap {}, is_cooperative: {is_cooperative}",
