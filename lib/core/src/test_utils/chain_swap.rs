@@ -12,7 +12,7 @@ use crate::{
     chain_swap::ChainSwapHandler,
     model::{ChainSwap, Config, Direction, PaymentState},
     persist::Persister,
-    swapper::BoltzSwapper,
+    swapper::boltz::BoltzSwapper,
     utils,
 };
 
