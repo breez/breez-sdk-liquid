@@ -54,17 +54,18 @@ impl BoltzSwapper {
         Ok(refund_wrapper)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new_btc_refund_tx(
         &self,
         swap_id: String,
         swap_script: BtcSwapScript,
-        refund_address: &String,
+        refund_address: &str,
         refund_keypair: &Keypair,
         utxos: Vec<Utxo>,
         broadcast_fee_rate_sat_per_vb: f64,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let address = Address::from_str(&refund_address).map_err(|err| SdkError::Generic {
+        let address = Address::from_str(refund_address).map_err(|err| SdkError::Generic {
             err: format!("Could not parse address: {err:?}"),
         })?;
 
@@ -77,8 +78,7 @@ impl BoltzSwapper {
 
         let utxos = utxos
             .iter()
-            .map(|utxo| utxo.as_bitcoin().cloned())
-            .flatten()
+            .filter_map(|utxo| utxo.as_bitcoin().cloned())
             .collect();
 
         let refund_tx = BtcSwapTx {

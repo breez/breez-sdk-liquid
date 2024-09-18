@@ -9,7 +9,7 @@ use boltz_client::{
     },
     ToHex,
 };
-use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
+use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -491,27 +491,6 @@ impl SwapScriptV2 {
     pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScript> {
         match self {
             SwapScriptV2::Liquid(script) => Ok(script.clone()),
-            _ => Err(anyhow!("Invalid chain")),
-        }
-    }
-}
-
-#[allow(clippy::large_enum_variant)]
-pub(crate) enum SwapTxV2 {
-    Bitcoin(BtcSwapTx),
-    Liquid(LBtcSwapTx),
-}
-impl SwapTxV2 {
-    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTx> {
-        match self {
-            SwapTxV2::Bitcoin(tx) => Ok(tx.clone()),
-            _ => Err(anyhow!("Invalid chain")),
-        }
-    }
-
-    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTx> {
-        match self {
-            SwapTxV2::Liquid(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
@@ -1391,10 +1370,10 @@ pub enum Transaction {
 #[derive(Debug, Clone)]
 pub enum Utxo {
     Liquid(
-        (
+        Box<(
             boltz_client::elements::OutPoint,
             boltz_client::elements::TxOut,
-        ),
+        )>,
     ),
     Bitcoin(
         (
@@ -1419,13 +1398,15 @@ impl Utxo {
 
     pub(crate) fn as_liquid(
         &self,
-    ) -> Option<&(
-        boltz_client::elements::OutPoint,
-        boltz_client::elements::TxOut,
-    )> {
+    ) -> Option<
+        Box<(
+            boltz_client::elements::OutPoint,
+            boltz_client::elements::TxOut,
+        )>,
+    > {
         match self {
             Utxo::Bitcoin(_) => None,
-            Utxo::Liquid(utxo) => Some(utxo),
+            Utxo::Liquid(utxo) => Some(utxo.clone()),
         }
     }
 }

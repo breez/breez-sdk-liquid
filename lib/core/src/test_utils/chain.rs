@@ -104,10 +104,10 @@ impl LiquidChainService for MockLiquidChainService {
     }
 
     async fn get_script_utxos(&self, _script: &ElementsScript) -> Result<Vec<Utxo>> {
-        Ok(vec![Utxo::Liquid((
+        Ok(vec![Utxo::Liquid(Box::new((
             ElementsOutPoint::default(),
             ElementsTxOut::default(),
-        ))])
+        )))])
     }
 
     async fn verify_tx(

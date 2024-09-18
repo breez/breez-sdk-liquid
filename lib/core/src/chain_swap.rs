@@ -3,8 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use boltz_client::{
-    boltz::{self, BoltzApiClientV2, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
-    network::electrum::ElectrumConfig,
+    boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
     Address, ElementsLockTime, LockTime, Secp256k1, Serialize, ToHex,
 };
@@ -23,7 +22,7 @@ use crate::{
     ensure_sdk,
     error::{PaymentError, SdkError, SdkResult},
     model::{
-        ChainSwap, Config, Direction, LiquidNetwork,
+        ChainSwap, Config, Direction,
         PaymentState::{self, *},
         PaymentTxData, PaymentType, Swap, SwapScriptV2, Transaction as SdkTransaction,
     },
@@ -728,24 +727,6 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    fn bitcoin_electrum_config(&self) -> ElectrumConfig {
-        ElectrumConfig::new(
-            self.config.network.into(),
-            &self.config.bitcoin_electrum_url,
-            true,
-            true,
-            100,
-        )
-    }
-
-    fn boltz_client(&self) -> BoltzApiClientV2 {
-        let boltz_url = match self.config.network {
-            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
-            LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-        };
-        BoltzApiClientV2::new(boltz_url)
-    }
-
     pub async fn prepare_refund(
         &self,
         lockup_address: &str,
@@ -820,7 +801,7 @@ impl ChainSwapHandler {
 
         let SdkTransaction::Bitcoin(refund_tx) = self.swapper.create_refund_tx(
             Swap::Chain(swap.clone()),
-            &refund_address,
+            refund_address,
             utxos,
             Some(broadcast_fee_rate_msat_per_vb as f64 / 1000.0),
             is_cooperative,

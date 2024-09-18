@@ -14,7 +14,7 @@ use sdk_common::invoice::parse_invoice;
 
 use crate::{
     error::{PaymentError, SdkError},
-    model::{Direction, ReceiveSwap, SendSwap, Swap, Transaction as SdkTransaction, Utxo},
+    model::{Direction, SendSwap, Swap, Transaction as SdkTransaction, Utxo},
     swapper::Swapper,
     test_utils::generate_random_string,
     utils,

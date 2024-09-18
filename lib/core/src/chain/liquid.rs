@@ -209,10 +209,10 @@ impl LiquidChainService for HybridLiquidChainService {
                         .iter()
                         .enumerate()
                         .map(|(vout, output)| {
-                            Utxo::Liquid((
+                            Utxo::Liquid(Box::new((
                                 OutPoint::new(history_item.txid, vout as u32),
                                 output.clone(),
-                            ))
+                            )))
                         })
                         .collect();
                     utxos.append(&mut new_utxos);

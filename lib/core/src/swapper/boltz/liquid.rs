@@ -149,7 +149,7 @@ impl BoltzSwapper {
         &self,
         swap_id: String,
         swap_script: LBtcSwapScript,
-        refund_address: &String,
+        refund_address: &str,
         refund_keypair: &Keypair,
         utxos: Vec<Utxo>,
         is_cooperative: bool,
@@ -160,14 +160,12 @@ impl BoltzSwapper {
 
         let genesis_hash = liquid_genesis_hash(&self.liquid_electrum_config)?;
 
-        let (funding_outpoint, funding_tx_out) = utxos
+        let (funding_outpoint, funding_tx_out) = *utxos
             .first()
-            .map(|utxo| utxo.as_liquid())
-            .flatten()
+            .and_then(|utxo| utxo.as_liquid())
             .ok_or(SdkError::Generic {
-                err: "No refundable UTXOs found".to_string(),
-            })?
-            .clone();
+            err: "No refundable UTXOs found".to_string(),
+        })?;
 
         let refund_tx = LBtcSwapTx {
             kind: SwapTxKind::Refund,
