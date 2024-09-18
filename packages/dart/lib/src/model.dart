@@ -716,16 +716,16 @@ class PrepareBuyBitcoinResponse {
 class PreparePayOnchainRequest {
   final PayOnchainAmount amount;
 
-  /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
-  final int? satPerVbyte;
+  /// The optional fee rate of the Bitcoin claim transaction in msat/vB. Defaults to the swapper estimated claim fee.
+  final int? feeRateMsatPerVbyte;
 
   const PreparePayOnchainRequest({
     required this.amount,
-    this.satPerVbyte,
+    this.feeRateMsatPerVbyte,
   });
 
   @override
-  int get hashCode => amount.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => amount.hashCode ^ feeRateMsatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -733,7 +733,7 @@ class PreparePayOnchainRequest {
       other is PreparePayOnchainRequest &&
           runtimeType == other.runtimeType &&
           amount == other.amount &&
-          satPerVbyte == other.satPerVbyte;
+          feeRateMsatPerVbyte == other.feeRateMsatPerVbyte;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
@@ -816,17 +816,17 @@ class PrepareRefundRequest {
   /// The address to refund the swap funds to
   final String refundAddress;
 
-  /// The fee rate in sat/vB for the refund transaction
-  final int satPerVbyte;
+  /// The fee rate in msat/vB for the refund transaction
+  final int feeRateMsatPerVbyte;
 
   const PrepareRefundRequest({
     required this.swapAddress,
     required this.refundAddress,
-    required this.satPerVbyte,
+    required this.feeRateMsatPerVbyte,
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ feeRateMsatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -835,7 +835,7 @@ class PrepareRefundRequest {
           runtimeType == other.runtimeType &&
           swapAddress == other.swapAddress &&
           refundAddress == other.refundAddress &&
-          satPerVbyte == other.satPerVbyte;
+          feeRateMsatPerVbyte == other.feeRateMsatPerVbyte;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
@@ -1004,17 +1004,17 @@ class RefundRequest {
   /// The address to refund the swap funds to
   final String refundAddress;
 
-  /// The fee rate in sat/vB for the refund transaction
-  final int satPerVbyte;
+  /// The fee rate in msat/vB for the refund transaction
+  final int feeRateMsatPerVbyte;
 
   const RefundRequest({
     required this.swapAddress,
     required this.refundAddress,
-    required this.satPerVbyte,
+    required this.feeRateMsatPerVbyte,
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ satPerVbyte.hashCode;
+  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ feeRateMsatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1023,7 +1023,7 @@ class RefundRequest {
           runtimeType == other.runtimeType &&
           swapAddress == other.swapAddress &&
           refundAddress == other.refundAddress &&
-          satPerVbyte == other.satPerVbyte;
+          feeRateMsatPerVbyte == other.feeRateMsatPerVbyte;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::refund].

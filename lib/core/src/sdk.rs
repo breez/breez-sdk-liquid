@@ -1099,7 +1099,7 @@ impl LiquidSdk {
 
         let balance_sat = self.get_info().await?.balance_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
-        let claim_fees_sat = match req.sat_per_vbyte {
+        let claim_fees_sat = match req.fee_rate_msat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
             None => pair.clone().fees.claim_estimate(),
         };

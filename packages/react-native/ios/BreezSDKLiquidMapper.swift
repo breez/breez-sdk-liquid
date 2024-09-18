@@ -1584,21 +1584,21 @@ enum BreezSDKLiquidMapper {
         }
         let amount = try asPayOnchainAmount(payOnchainAmount: amountTmp)
 
-        var satPerVbyte: UInt32?
-        if hasNonNilKey(data: preparePayOnchainRequest, key: "satPerVbyte") {
-            guard let satPerVbyteTmp = preparePayOnchainRequest["satPerVbyte"] as? UInt32 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "satPerVbyte"))
+        var feeRateMsatPerVbyte: UInt32?
+        if hasNonNilKey(data: preparePayOnchainRequest, key: "feeRateMsatPerVbyte") {
+            guard let feeRateMsatPerVbyteTmp = preparePayOnchainRequest["feeRateMsatPerVbyte"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "feeRateMsatPerVbyte"))
             }
-            satPerVbyte = satPerVbyteTmp
+            feeRateMsatPerVbyte = feeRateMsatPerVbyteTmp
         }
 
-        return PreparePayOnchainRequest(amount: amount, satPerVbyte: satPerVbyte)
+        return PreparePayOnchainRequest(amount: amount, feeRateMsatPerVbyte: feeRateMsatPerVbyte)
     }
 
     static func dictionaryOf(preparePayOnchainRequest: PreparePayOnchainRequest) -> [String: Any?] {
         return [
             "amount": dictionaryOf(payOnchainAmount: preparePayOnchainRequest.amount),
-            "satPerVbyte": preparePayOnchainRequest.satPerVbyte == nil ? nil : preparePayOnchainRequest.satPerVbyte,
+            "feeRateMsatPerVbyte": preparePayOnchainRequest.feeRateMsatPerVbyte == nil ? nil : preparePayOnchainRequest.feeRateMsatPerVbyte,
         ]
     }
 
@@ -1751,18 +1751,18 @@ enum BreezSDKLiquidMapper {
         guard let refundAddress = prepareRefundRequest["refundAddress"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "refundAddress", typeName: "PrepareRefundRequest"))
         }
-        guard let satPerVbyte = prepareRefundRequest["satPerVbyte"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "satPerVbyte", typeName: "PrepareRefundRequest"))
+        guard let feeRateMsatPerVbyte = prepareRefundRequest["feeRateMsatPerVbyte"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feeRateMsatPerVbyte", typeName: "PrepareRefundRequest"))
         }
 
-        return PrepareRefundRequest(swapAddress: swapAddress, refundAddress: refundAddress, satPerVbyte: satPerVbyte)
+        return PrepareRefundRequest(swapAddress: swapAddress, refundAddress: refundAddress, feeRateMsatPerVbyte: feeRateMsatPerVbyte)
     }
 
     static func dictionaryOf(prepareRefundRequest: PrepareRefundRequest) -> [String: Any?] {
         return [
             "swapAddress": prepareRefundRequest.swapAddress,
             "refundAddress": prepareRefundRequest.refundAddress,
-            "satPerVbyte": prepareRefundRequest.satPerVbyte,
+            "feeRateMsatPerVbyte": prepareRefundRequest.feeRateMsatPerVbyte,
         ]
     }
 
@@ -2071,18 +2071,18 @@ enum BreezSDKLiquidMapper {
         guard let refundAddress = refundRequest["refundAddress"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "refundAddress", typeName: "RefundRequest"))
         }
-        guard let satPerVbyte = refundRequest["satPerVbyte"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "satPerVbyte", typeName: "RefundRequest"))
+        guard let feeRateMsatPerVbyte = refundRequest["feeRateMsatPerVbyte"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feeRateMsatPerVbyte", typeName: "RefundRequest"))
         }
 
-        return RefundRequest(swapAddress: swapAddress, refundAddress: refundAddress, satPerVbyte: satPerVbyte)
+        return RefundRequest(swapAddress: swapAddress, refundAddress: refundAddress, feeRateMsatPerVbyte: feeRateMsatPerVbyte)
     }
 
     static func dictionaryOf(refundRequest: RefundRequest) -> [String: Any?] {
         return [
             "swapAddress": refundRequest.swapAddress,
             "refundAddress": refundRequest.refundAddress,
-            "satPerVbyte": refundRequest.satPerVbyte,
+            "feeRateMsatPerVbyte": refundRequest.feeRateMsatPerVbyte,
         ]
     }
 

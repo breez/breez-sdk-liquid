@@ -1340,23 +1340,23 @@ fun asPreparePayOnchainRequest(preparePayOnchainRequest: ReadableMap): PreparePa
         return null
     }
     val amount = preparePayOnchainRequest.getMap("amount")?.let { asPayOnchainAmount(it) }!!
-    val satPerVbyte =
+    val feeRateMsatPerVbyte =
         if (hasNonNullKey(
                 preparePayOnchainRequest,
-                "satPerVbyte",
+                "feeRateMsatPerVbyte",
             )
         ) {
-            preparePayOnchainRequest.getInt("satPerVbyte").toUInt()
+            preparePayOnchainRequest.getInt("feeRateMsatPerVbyte").toUInt()
         } else {
             null
         }
-    return PreparePayOnchainRequest(amount, satPerVbyte)
+    return PreparePayOnchainRequest(amount, feeRateMsatPerVbyte)
 }
 
 fun readableMapOf(preparePayOnchainRequest: PreparePayOnchainRequest): ReadableMap =
     readableMapOf(
         "amount" to readableMapOf(preparePayOnchainRequest.amount),
-        "satPerVbyte" to preparePayOnchainRequest.satPerVbyte,
+        "feeRateMsatPerVbyte" to preparePayOnchainRequest.feeRateMsatPerVbyte,
     )
 
 fun asPreparePayOnchainRequestList(arr: ReadableArray): List<PreparePayOnchainRequest> {
@@ -1497,7 +1497,7 @@ fun asPrepareRefundRequest(prepareRefundRequest: ReadableMap): PrepareRefundRequ
             arrayOf(
                 "swapAddress",
                 "refundAddress",
-                "satPerVbyte",
+                "feeRateMsatPerVbyte",
             ),
         )
     ) {
@@ -1505,15 +1505,15 @@ fun asPrepareRefundRequest(prepareRefundRequest: ReadableMap): PrepareRefundRequ
     }
     val swapAddress = prepareRefundRequest.getString("swapAddress")!!
     val refundAddress = prepareRefundRequest.getString("refundAddress")!!
-    val satPerVbyte = prepareRefundRequest.getInt("satPerVbyte").toUInt()
-    return PrepareRefundRequest(swapAddress, refundAddress, satPerVbyte)
+    val feeRateMsatPerVbyte = prepareRefundRequest.getInt("feeRateMsatPerVbyte").toUInt()
+    return PrepareRefundRequest(swapAddress, refundAddress, feeRateMsatPerVbyte)
 }
 
 fun readableMapOf(prepareRefundRequest: PrepareRefundRequest): ReadableMap =
     readableMapOf(
         "swapAddress" to prepareRefundRequest.swapAddress,
         "refundAddress" to prepareRefundRequest.refundAddress,
-        "satPerVbyte" to prepareRefundRequest.satPerVbyte,
+        "feeRateMsatPerVbyte" to prepareRefundRequest.feeRateMsatPerVbyte,
     )
 
 fun asPrepareRefundRequestList(arr: ReadableArray): List<PrepareRefundRequest> {
@@ -1781,7 +1781,7 @@ fun asRefundRequest(refundRequest: ReadableMap): RefundRequest? {
             arrayOf(
                 "swapAddress",
                 "refundAddress",
-                "satPerVbyte",
+                "feeRateMsatPerVbyte",
             ),
         )
     ) {
@@ -1789,15 +1789,15 @@ fun asRefundRequest(refundRequest: ReadableMap): RefundRequest? {
     }
     val swapAddress = refundRequest.getString("swapAddress")!!
     val refundAddress = refundRequest.getString("refundAddress")!!
-    val satPerVbyte = refundRequest.getInt("satPerVbyte").toUInt()
-    return RefundRequest(swapAddress, refundAddress, satPerVbyte)
+    val feeRateMsatPerVbyte = refundRequest.getInt("feeRateMsatPerVbyte").toUInt()
+    return RefundRequest(swapAddress, refundAddress, feeRateMsatPerVbyte)
 }
 
 fun readableMapOf(refundRequest: RefundRequest): ReadableMap =
     readableMapOf(
         "swapAddress" to refundRequest.swapAddress,
         "refundAddress" to refundRequest.refundAddress,
-        "satPerVbyte" to refundRequest.satPerVbyte,
+        "feeRateMsatPerVbyte" to refundRequest.feeRateMsatPerVbyte,
     )
 
 fun asRefundRequestList(arr: ReadableArray): List<RefundRequest> {

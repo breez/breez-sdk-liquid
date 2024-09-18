@@ -332,8 +332,8 @@ pub enum PayOnchainAmount {
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub amount: PayOnchainAmount,
-    /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
-    pub sat_per_vbyte: Option<u32>,
+    /// The optional fee rate of the Bitcoin claim transaction in msat/vB. Defaults to the swapper estimated claim fee.
+    pub fee_rate_msat_per_vbyte: Option<u32>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

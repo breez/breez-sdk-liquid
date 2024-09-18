@@ -246,7 +246,7 @@ export interface PrepareBuyBitcoinResponse {
 
 export interface PreparePayOnchainRequest {
     amount: PayOnchainAmount
-    satPerVbyte?: number
+    feeRateMsatPerVbyte?: number
 }
 
 export interface PreparePayOnchainResponse {
@@ -269,7 +269,7 @@ export interface PrepareReceiveResponse {
 export interface PrepareRefundRequest {
     swapAddress: string
     refundAddress: string
-    satPerVbyte: number
+    feeRateMsatPerVbyte: number
 }
 
 export interface PrepareRefundResponse {
@@ -314,7 +314,7 @@ export interface RecommendedFees {
 export interface RefundRequest {
     swapAddress: string
     refundAddress: string
-    satPerVbyte: number
+    feeRateMsatPerVbyte: number
 }
 
 export interface RefundResponse {
