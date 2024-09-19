@@ -8,7 +8,8 @@ Pod::Spec.new do |spec|
   spec.license       = { :file => '../LICENSE', :type => 'MIT License' }
   spec.homepage      = 'https://breez.technology'
   spec.authors       = { 'Breez' => 'contact@breez.technology' }
-  spec.summary       = 'iOS/macOS Flutter bindings for Breez Liquid'
+  spec.summary       = 'iOS/macOS Flutter bindings for Breez Liquid SDK'
+  spec.documentation_url      = "https://sdk-doc.breez.technology"
 
   spec.source              = { :path => '.' }
   spec.source_files        = 'Classes/**/*'
@@ -19,15 +20,19 @@ Pod::Spec.new do |spec|
       'Sources/BreezSDKLiquid/**/*.swift'
     ]
   }
-  
+
+  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
+  spec.static_framework = true
+
   spec.ios.deployment_target = '13.0'
   spec.osx.deployment_target = '15.0'
 
   spec.dependency 'Flutter'
-  spec.static_framework = true
-
   # Flutter.framework does not contain a i386 slice.
-  spec.pod_target_xcconfig = {'STRIP_STYLE' => 'non-global', 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  spec.pod_target_xcconfig = {
+    'STRIP_STYLE' => 'non-global',
+    'DEFINES_MODULE' => 'YES',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386'
+  }
   spec.swift_version = '5.0'
-  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
 end
