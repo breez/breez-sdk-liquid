@@ -761,6 +761,12 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
+                if self.config.breez_api_key.is_none() {
+                    return Err(PaymentError::Generic {
+                        err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+                    });
+                }
+
                 let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
@@ -809,6 +815,12 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
+                        if self.config.breez_api_key.is_none() {
+                            return Err(PaymentError::Generic {
+                                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+                            });
+                        }
+
                         self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
@@ -954,8 +966,12 @@ impl LiquidSdk {
         receiver_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
-        // once Esplora broadcast is enabled
+        if self.config.breez_api_key.is_none() {
+            return Err(PaymentError::Generic {
+                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+            });
+        }
+
         // Ensure we use the same fee-rate from the `PrepareSendResponse`
         let fee_rate_msat_per_vb = utils::derive_fee_rate_msat_per_vb(
             self.onchain_wallet.clone(),
