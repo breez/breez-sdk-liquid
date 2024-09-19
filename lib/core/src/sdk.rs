@@ -957,7 +957,7 @@ impl LiquidSdk {
         // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
         // once Esplora broadcast is enabled
         // Ensure we use the same fee-rate from the `PrepareSendResponse`
-        let fee_rate_sats_per_kvb = utils::derive_fee_rate_sats_per_kvb(
+        let fee_rate_msat_per_vb = utils::derive_fee_rate_msat_per_vb(
             self.onchain_wallet.clone(),
             receiver_amount_sat,
             &address_data.address,
@@ -967,7 +967,7 @@ impl LiquidSdk {
         let tx = self
             .onchain_wallet
             .build_tx(
-                Some(fee_rate_sats_per_kvb),
+                Some(fee_rate_msat_per_vb),
                 &address_data.address,
                 receiver_amount_sat,
             )
