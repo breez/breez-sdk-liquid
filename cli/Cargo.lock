@@ -500,7 +500,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/hydra-yse/boltz-rust?branch=yse-fee-calculation#09710fb508a2a188978f37c091ebb488331d627d"
+source = "git+https://github.com/ok300/boltz-rust?branch=ok300-chain-swap-refund-check-all-utoxs#1917a187998b3f0801532fef350f8530a7544871"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",

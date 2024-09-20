@@ -25,7 +25,6 @@ impl BoltzSwapper {
             Swap::Chain(swap) => match swap.direction {
                 Direction::Incoming => {
                     let swap_script = swap.get_lockup_swap_script()?;
-                    // TODO Update boltz-client to build refund tx with all utxos
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,
@@ -77,18 +76,16 @@ impl BoltzSwapper {
             }
         );
 
-        let utxo = utxos
-            .first()
-            .and_then(|utxo| utxo.as_bitcoin().cloned())
-            .ok_or(SdkError::Generic {
-                err: "No UTXO found".to_string(),
-            })?;
+        let utxos = utxos
+            .iter()
+            .filter_map(|utxo| utxo.as_bitcoin().cloned())
+            .collect();
 
         let refund_tx = BtcSwapTx {
             kind: SwapTxKind::Refund,
             swap_script,
             output_address: address.assume_checked(),
-            utxo,
+            utxos,
         };
 
         let refund_tx_size = refund_tx.size(refund_keypair, &Preimage::new())?;
