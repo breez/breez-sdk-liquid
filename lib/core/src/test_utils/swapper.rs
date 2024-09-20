@@ -199,11 +199,11 @@ impl Swapper for MockSwapper {
 
         Ok(match &swap {
             Swap::Chain(swap) => match swap.direction {
-                Direction::Incoming => btc_tx,
-                Direction::Outgoing => lbtc_tx,
+                Direction::Incoming => lbtc_tx,
+                Direction::Outgoing => btc_tx,
             },
-            Swap::Send(_) => lbtc_tx,
-            Swap::Receive(_) => unimplemented!(),
+            Swap::Receive(_) => lbtc_tx,
+            Swap::Send(_) => unimplemented!(),
         })
     }
 

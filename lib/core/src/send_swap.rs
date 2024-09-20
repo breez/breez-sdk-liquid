@@ -168,6 +168,9 @@ impl SendSwapHandler {
                                     None
                                 }
                             };
+                            // Set the payment state to `RefundPending`. This ensures that the
+                            // background thread will pick it up and try to refund it
+                            // periodically
                             self.update_swap_info(
                                 &swap.id,
                                 RefundPending,

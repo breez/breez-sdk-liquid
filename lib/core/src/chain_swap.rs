@@ -537,27 +537,34 @@ impl ChainSwapHandler {
             | ChainSwapStates::TransactionLockupFailed
             | ChainSwapStates::TransactionRefunded
             | ChainSwapStates::SwapExpired => {
-                match swap.refund_tx_id.clone() {
+                match &swap.refund_tx_id {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
                         match swap.user_lockup_tx_id {
                             Some(_) => {
                                 warn!("Chain Swap {id} user lockup tx has been broadcast.");
-                                if let Err(err) = self.refund_outgoing_swap(swap, true).await {
-                                    warn!("Could not refund outgoing Chain swap cooperatively, error: {err:?}");
-                                    // Set the payment state to `RefundPending`. This ensures that the
-                                    // background thread will pick it up and try to refund it
-                                    // periodically
-                                    self.update_swap_info(
-                                        &swap.id,
-                                        RefundPending,
-                                        None,
-                                        None,
-                                        None,
-                                        None,
-                                    )
-                                    .await?;
+                                let refund_tx_id = match self.refund_outgoing_swap(swap, true).await
+                                {
+                                    Ok(refund_tx_id) => Some(refund_tx_id),
+                                    Err(e) => {
+                                        warn!(
+                                            "Could not refund Send swap {id} cooperatively: {e:?}"
+                                        );
+                                        None
+                                    }
                                 };
+                                // Set the payment state to `RefundPending`. This ensures that the
+                                // background thread will pick it up and try to refund it
+                                // periodically
+                                self.update_swap_info(
+                                    &swap.id,
+                                    RefundPending,
+                                    None,
+                                    None,
+                                    None,
+                                    refund_tx_id.as_deref(),
+                                )
+                                .await?;
                             }
                             None => {
                                 warn!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
