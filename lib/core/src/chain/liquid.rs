@@ -6,13 +6,16 @@ use boltz_client::ToHex;
 use log::info;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
-    elements::{pset::serialize::Serialize, Address, BlockHash, Script, Transaction, Txid},
+    elements::{
+        pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, Txid,
+    },
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
-use reqwest::Response;
+use reqwest::{Response, StatusCode};
 use serde::Deserialize;
 
+use crate::prelude::Utxo;
 use crate::{
     model::{Config, LiquidNetwork},
     utils,
@@ -27,6 +30,9 @@ pub trait LiquidChainService: Send + Sync {
 
     /// Broadcast a transaction
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid>;
+
+    /// Get a single transaction from its raw hash
+    async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>>;
 
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
@@ -47,6 +53,9 @@ pub trait LiquidChainService: Send + Sync {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>>;
+
+    /// Get the utxos associated with a script pubkey
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -119,6 +128,15 @@ impl LiquidChainService for HybridLiquidChainService {
         }
     }
 
+    async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
+        let url = format!("{}/tx/{}/hex", LIQUID_ESPLORA_URL, txid.to_hex());
+        let response = get_with_retry(&url, 3).await?;
+        Ok(match response.status() {
+            StatusCode::OK => Some(utils::deserialize_tx_hex(&response.text().await?)?),
+            _ => None,
+        })
+    }
+
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         Ok(self.electrum_client.get_transactions(txids)?)
     }
@@ -177,6 +195,36 @@ impl LiquidChainService for HybridLiquidChainService {
             }
         }
         Ok(script_history)
+    }
+
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+        let history = self.get_script_history_with_retry(script, 3).await?;
+
+        let mut utxos: Vec<Utxo> = vec![];
+        for history_item in history {
+            match self.get_transaction_hex(&history_item.txid).await {
+                Ok(Some(tx)) => {
+                    let mut new_utxos = tx
+                        .output
+                        .iter()
+                        .enumerate()
+                        .map(|(vout, output)| {
+                            Utxo::Liquid(Box::new((
+                                OutPoint::new(history_item.txid, vout as u32),
+                                output.clone(),
+                            )))
+                        })
+                        .collect();
+                    utxos.append(&mut new_utxos);
+                }
+                _ => {
+                    log::warn!("Could not retrieve transaction from history item");
+                    continue;
+                }
+            }
+        }
+
+        return Ok(utxos);
     }
 
     async fn verify_tx(

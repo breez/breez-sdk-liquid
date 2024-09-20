@@ -14,8 +14,7 @@ use sdk_common::invoice::parse_invoice;
 
 use crate::{
     error::{PaymentError, SdkError},
-    model::{ChainSwap, Direction, ReceiveSwap, SendSwap},
-    prelude::Transaction,
+    model::{Direction, SendSwap, Swap, Transaction as SdkTransaction, Utxo},
     swapper::Swapper,
     test_utils::generate_random_string,
     utils,
@@ -166,53 +165,6 @@ impl Swapper for MockSwapper {
         }))
     }
 
-    fn prepare_chain_swap_refund(
-        &self,
-        _swap: &ChainSwap,
-        _output_address: &str,
-        _sat_per_vbyte: f32,
-    ) -> Result<(u32, u64), SdkError> {
-        Ok((0, 0))
-    }
-
-    fn refund_chain_swap_cooperative(
-        &self,
-        _swap: &ChainSwap,
-        _output_address: &str,
-        _broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_send_swap_cooperative(
-        &self,
-        _swap: &SendSwap,
-        _output_address: &str,
-        _broadcast_fees_sat: u64,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_chain_swap_non_cooperative(
-        &self,
-        _swap: &ChainSwap,
-        _broadcast_fees_sat: u64,
-        _output_address: &str,
-        _current_height: u32,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
-    fn refund_send_swap_non_cooperative(
-        &self,
-        _swap: &SendSwap,
-        _broadcast_fees_sat: u64,
-        _output_address: &str,
-        _current_height: u32,
-    ) -> Result<String, PaymentError> {
-        Ok("refund-tx-id".to_string())
-    }
-
     fn get_send_claim_tx_details(
         &self,
         _swap: &SendSwap,
@@ -227,20 +179,71 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn new_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError> {
-        Ok(match swap.direction {
-            Direction::Outgoing => Transaction::Bitcoin(boltz_client::bitcoin::Transaction {
-                version: lwk_wollet::bitcoin::transaction::Version::TWO,
-                lock_time: boltz_client::LockTime::ZERO,
-                input: vec![],
-                output: vec![],
-            }),
-            Direction::Incoming => Transaction::Liquid(boltz_client::elements::Transaction {
-                version: 2,
-                lock_time: boltz_client::ElementsLockTime::ZERO,
-                input: vec![],
-                output: vec![],
-            }),
+    fn create_claim_tx(
+        &self,
+        swap: Swap,
+        _claim_address: Option<String>,
+    ) -> Result<SdkTransaction, PaymentError> {
+        let btc_tx = SdkTransaction::Bitcoin(boltz_client::bitcoin::Transaction {
+            version: lwk_wollet::bitcoin::transaction::Version::TWO,
+            lock_time: boltz_client::LockTime::ZERO,
+            input: vec![],
+            output: vec![],
+        });
+        let lbtc_tx = SdkTransaction::Liquid(boltz_client::elements::Transaction {
+            version: 2,
+            lock_time: boltz_client::ElementsLockTime::ZERO,
+            input: vec![],
+            output: vec![],
+        });
+
+        Ok(match &swap {
+            Swap::Chain(swap) => match swap.direction {
+                Direction::Incoming => lbtc_tx,
+                Direction::Outgoing => btc_tx,
+            },
+            Swap::Receive(_) => lbtc_tx,
+            Swap::Send(_) => unimplemented!(),
+        })
+    }
+
+    fn estimate_refund_broadcast(
+        &self,
+        _swap: Swap,
+        _refund_address: &str,
+        _fee_rate_sat_per_vb: Option<f64>,
+    ) -> Result<(u32, u64), SdkError> {
+        Ok((0, 0))
+    }
+
+    fn create_refund_tx(
+        &self,
+        swap: Swap,
+        _refund_address: &str,
+        _utxos: Vec<Utxo>,
+        _broadcast_fee_rate_sat_per_vb: Option<f64>,
+        _is_cooperative: bool,
+    ) -> Result<SdkTransaction, PaymentError> {
+        let btc_tx = SdkTransaction::Bitcoin(boltz_client::bitcoin::Transaction {
+            version: lwk_wollet::bitcoin::transaction::Version::TWO,
+            lock_time: boltz_client::LockTime::ZERO,
+            input: vec![],
+            output: vec![],
+        });
+        let lbtc_tx = SdkTransaction::Liquid(boltz_client::elements::Transaction {
+            version: 2,
+            lock_time: boltz_client::ElementsLockTime::ZERO,
+            input: vec![],
+            output: vec![],
+        });
+
+        Ok(match &swap {
+            Swap::Chain(swap) => match swap.direction {
+                Direction::Incoming => btc_tx,
+                Direction::Outgoing => lbtc_tx,
+            },
+            Swap::Send(_) => lbtc_tx,
+            Swap::Receive(_) => unimplemented!(),
         })
     }
 
@@ -284,19 +287,6 @@ impl Swapper for MockSwapper {
                     claim: 100,
                 },
             },
-        }))
-    }
-
-    fn new_receive_claim_tx(
-        &self,
-        _swap: &ReceiveSwap,
-        _claim_address: String,
-    ) -> Result<Transaction, PaymentError> {
-        Ok(Transaction::Liquid(boltz_client::elements::Transaction {
-            version: 2,
-            lock_time: boltz_client::ElementsLockTime::ZERO,
-            input: vec![],
-            output: vec![],
         }))
     }
 

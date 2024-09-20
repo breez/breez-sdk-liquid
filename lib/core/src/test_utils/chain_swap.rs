@@ -9,10 +9,10 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::{
-    chain_swap::ChainSwapStateHandler,
+    chain_swap::ChainSwapHandler,
     model::{ChainSwap, Config, Direction, PaymentState},
     persist::Persister,
-    swapper::BoltzSwapper,
+    swapper::boltz::BoltzSwapper,
     utils,
 };
 
@@ -26,16 +26,14 @@ lazy_static! {
     pub(crate) static ref TEST_BITCOIN_TX: Transaction = deserialize(&Vec::<u8>::from_hex("01000000000101da6af195321dfa98218c7deafa2da6d39d8d4a809a811de87269ddc4c4d28c810100000000ffffffff0c30c80700000000002251200894aacf46d0eed22594ed328b1e6806e94e662a4494f07cbca80720c3435e4130c807000000000022512098a3a5a9d34ebf22ced8f0056457164c9a9ee6c6eaef110c1a0cb465ac541d9130c807000000000022512050e1a1af89928af930b3bd0b826b40b2f3072c0009cd3186ae3ae23d0504f97930c80700000000002251201a55eb37d4331f8f367c0d4c727b565da089b8ab3d10e7079f1e3c2ae3b1123a30c8070000000000225120247e5ea29cb7bcec21b1bea1ed1f778adf887ab1bb04faaa014afd4ec8a2c0bb30c8070000000000225120330280e4540a00dace540ec2119d608024c11024a2bc8c7c8b652998fa42248330c80700000000002251202645e1ea344306e9068f1d086a08d22a30b0e5f839f790e924df081255b0a9c930c80700000000002251200b541effc0522207e5284a26071741e2b8302a964cb8b078d24540d73b9ec59430c807000000000022512041a1883aa113fbc5bf69387e0d599eef86181f0c916bdb55378d907291702f5530c80700000000002251206c2eb1f12ce37b57524337c6de7a55ee420edd100d6cb3ea50f512ef68d2075b30c807000000000022512090ea942f7c3eed7eb073682d38202bcae9df106034a3bd406dac13371bf18a0987e2d21f0000000016001471c1c386a4772bbc7f39dc7c7e75a17ff5d1e92402483045022100cbf19c0563a70378e26b5c9c1e2a77e4783f8926717457899efc4491bf3402c4022078e1b5e4d759eea100b3659f8a421866e96ff7e23e161c56dd979961e7b6d205012103bbcd5914f15887ed609c6278c077241cd95f80dc199989f89f968ff007fe8c0000000000").unwrap()).unwrap();
 }
 
-pub(crate) fn new_chain_swap_state_handler(
-    persister: Arc<Persister>,
-) -> Result<ChainSwapStateHandler> {
+pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainSwapHandler> {
     let config = Config::testnet();
     let onchain_wallet = Arc::new(MockWallet::new());
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
-    ChainSwapStateHandler::new(
+    ChainSwapHandler::new(
         config,
         onchain_wallet,
         persister,

@@ -13,7 +13,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
-use super::{ReconnectHandler, SwapperStatusStream};
+use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
 pub(crate) struct BoltzStatusStream {
     url: String,

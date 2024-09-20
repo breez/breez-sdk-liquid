@@ -9,7 +9,7 @@ use boltz_client::{
     },
     ToHex,
 };
-use boltz_client::{BtcSwapScript, BtcSwapTx, Keypair, LBtcSwapScript, LBtcSwapTx};
+use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use lwk_signer::SwSigner;
 use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -18,7 +18,7 @@ use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
-use crate::error::{PaymentError, SdkResult};
+use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::receive_swap::{
     DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
     DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
@@ -166,6 +166,15 @@ impl From<LiquidNetwork> for sdk_common::prelude::Network {
 }
 
 impl From<LiquidNetwork> for sdk_common::bitcoin::Network {
+    fn from(value: LiquidNetwork) -> Self {
+        match value {
+            LiquidNetwork::Mainnet => Self::Bitcoin,
+            LiquidNetwork::Testnet => Self::Testnet,
+        }
+    }
+}
+
+impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
     fn from(value: LiquidNetwork) -> Self {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
@@ -323,8 +332,8 @@ pub enum PayOnchainAmount {
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
     pub amount: PayOnchainAmount,
-    /// The optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee.
-    pub sat_per_vbyte: Option<u32>,
+    /// The optional fee rate of the Bitcoin claim transaction in msat/vB. Defaults to the swapper estimated claim fee.
+    pub fee_rate_msat_per_vbyte: Option<u32>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
@@ -349,8 +358,8 @@ pub struct PrepareRefundRequest {
     pub swap_address: String,
     /// The address to refund the swap funds to
     pub refund_address: String,
-    /// The fee rate in sat/vB for the refund transaction
-    pub sat_per_vbyte: u32,
+    /// The fee rate in msat/vB for the refund transaction
+    pub fee_rate_msat_per_vbyte: u32,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_refund].
@@ -368,8 +377,8 @@ pub struct RefundRequest {
     pub swap_address: String,
     /// The address to refund the swap funds to
     pub refund_address: String,
-    /// The fee rate in sat/vB for the refund transaction
-    pub sat_per_vbyte: u32,
+    /// The fee rate in msat/vB for the refund transaction
+    pub fee_rate_msat_per_vbyte: u32,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::refund].
@@ -482,27 +491,6 @@ impl SwapScriptV2 {
     pub(crate) fn as_liquid_script(&self) -> Result<LBtcSwapScript> {
         match self {
             SwapScriptV2::Liquid(script) => Ok(script.clone()),
-            _ => Err(anyhow!("Invalid chain")),
-        }
-    }
-}
-
-#[allow(clippy::large_enum_variant)]
-pub(crate) enum SwapTxV2 {
-    Bitcoin(BtcSwapTx),
-    Liquid(LBtcSwapTx),
-}
-impl SwapTxV2 {
-    pub(crate) fn as_bitcoin_tx(&self) -> Result<BtcSwapTx> {
-        match self {
-            SwapTxV2::Bitcoin(tx) => Ok(tx.clone()),
-            _ => Err(anyhow!("Invalid chain")),
-        }
-    }
-
-    pub(crate) fn as_liquid_tx(&self) -> Result<LBtcSwapTx> {
-        match self {
-            SwapTxV2::Liquid(tx) => Ok(tx.clone()),
             _ => Err(anyhow!("Invalid chain")),
         }
     }
@@ -661,7 +649,7 @@ pub(crate) struct SendSwap {
     pub(crate) refund_private_key: String,
 }
 impl SendSwap {
-    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, PaymentError> {
+    pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
         utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
     }
 
@@ -688,12 +676,12 @@ impl SendSwap {
         Ok(res)
     }
 
-    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
+    pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, SdkError> {
         LBtcSwapScript::submarine_from_swap_resp(
             &self.get_boltz_create_response()?,
             self.get_refund_keypair()?.public_key().into(),
         )
-        .map_err(|e| PaymentError::Generic {
+        .map_err(|e| SdkError::Generic {
             err: format!(
                 "Failed to create swap script for Send Swap {}: {e:?}",
                 self.id
@@ -892,7 +880,7 @@ pub enum PaymentState {
 
     /// ## Send and Chain Swaps
     ///
-    /// This is the status when a refund was initiated and our refund tx was broadcast
+    /// This is the status when a refund was initiated and/or our refund tx was broadcast
     ///
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
@@ -1377,6 +1365,50 @@ pub struct LnUrlPaySuccessData {
 pub enum Transaction {
     Liquid(boltz_client::elements::Transaction),
     Bitcoin(boltz_client::bitcoin::Transaction),
+}
+
+#[derive(Debug, Clone)]
+pub enum Utxo {
+    Liquid(
+        Box<(
+            boltz_client::elements::OutPoint,
+            boltz_client::elements::TxOut,
+        )>,
+    ),
+    Bitcoin(
+        (
+            boltz_client::bitcoin::OutPoint,
+            boltz_client::bitcoin::TxOut,
+        ),
+    ),
+}
+
+impl Utxo {
+    pub(crate) fn as_bitcoin(
+        &self,
+    ) -> Option<&(
+        boltz_client::bitcoin::OutPoint,
+        boltz_client::bitcoin::TxOut,
+    )> {
+        match self {
+            Utxo::Liquid(_) => None,
+            Utxo::Bitcoin(utxo) => Some(utxo),
+        }
+    }
+
+    pub(crate) fn as_liquid(
+        &self,
+    ) -> Option<
+        Box<(
+            boltz_client::elements::OutPoint,
+            boltz_client::elements::TxOut,
+        )>,
+    > {
+        match self {
+            Utxo::Bitcoin(_) => None,
+            Utxo::Liquid(utxo) => Some(utxo.clone()),
+        }
+    }
 }
 
 #[macro_export]

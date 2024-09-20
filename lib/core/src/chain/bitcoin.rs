@@ -1,21 +1,25 @@
-use std::{thread, time::Duration};
+use std::thread;
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use boltz_client::{Address, ToHex};
-use electrum_client::{Client, ElectrumApi, GetBalanceRes, HeaderNotification};
-use log::info;
-use lwk_wollet::{
+use boltz_client::Amount;
+use electrum_client::{
     bitcoin::{
         consensus::{deserialize, serialize},
-        Script, Transaction, Txid,
+        hashes::{sha256, Hash},
+        Address, OutPoint, Script, Transaction, TxOut, Txid,
     },
-    hashes::{sha256, Hash},
-    ElectrumOptions, ElectrumUrl, Error, History,
+    Client, ElectrumApi, GetBalanceRes, HeaderNotification, ListUnspentRes,
 };
-use sdk_common::prelude::get_parse_and_log_response;
+use log::info;
+use lwk_wollet::{ElectrumOptions, ElectrumUrl, Error, History};
+use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
 
-use crate::model::{Config, RecommendedFees};
+use crate::{
+    model::{Config, RecommendedFees},
+    prelude::Utxo,
+};
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -42,6 +46,9 @@ pub trait BitcoinChainService: Send + Sync {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>>;
+
+    /// Get the utxos associated with a script pubkey
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
@@ -113,7 +120,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self.client.transaction_broadcast_raw(&serialize(tx))?;
+        let txid = self.client.transaction_broadcast_raw(&serialize(&tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
@@ -149,9 +156,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes())
-            .to_byte_array()
-            .to_hex();
+        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         info!("Fetching script history for {}", script_hash);
         let mut script_history = vec![];
 
@@ -173,6 +178,32 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(script_history)
     }
 
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+        let script_pubkey = script.to_p2sh();
+        let utxos = self
+            .client
+            .script_list_unspent(script)?
+            .iter()
+            .map(
+                |ListUnspentRes {
+                     tx_hash,
+                     tx_pos,
+                     value,
+                     ..
+                 }| {
+                    Utxo::Bitcoin((
+                        OutPoint::new(*tx_hash, *tx_pos as u32),
+                        TxOut {
+                            value: Amount::from_sat(*value),
+                            script_pubkey: script_pubkey.clone(),
+                        },
+                    ))
+                },
+            )
+            .collect();
+        Ok(utxos)
+    }
+
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
         Ok(self.client.script_get_balance(script)?)
     }
@@ -184,10 +215,8 @@ impl BitcoinChainService for HybridBitcoinChainService {
         tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<Transaction> {
-        let script_pubkey = address.script_pubkey();
-        let script = script_pubkey.as_script();
-
-        let script_history = self.get_script_history_with_retry(script, 5).await?;
+        let script = address.script_pubkey();
+        let script_history = self.get_script_history_with_retry(&script, 5).await?;
         let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
 
         match lockup_tx_history {
