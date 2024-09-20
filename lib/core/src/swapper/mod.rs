@@ -18,9 +18,8 @@ use boltz_client::swaps::boltz::{
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Amount, Bolt11Invoice, BtcSwapTx, Keypair, LBtcSwapTx, LockTime};
 use boltz_status_stream::BoltzStatusStream;
-use log::{debug, info};
+use log::info;
 use lwk_wollet::elements;
-use serde_json::Value;
 use tokio::sync::{broadcast, watch};
 use url::Url;
 
@@ -28,6 +27,7 @@ use crate::error::{PaymentError, SdkError};
 use crate::model::{
     ChainSwap, Config, Direction, LiquidNetwork, ReceiveSwap, SendSwap, SwapScriptV2, SwapTxV2,
 };
+use crate::prelude::Transaction;
 use crate::utils;
 
 #[async_trait]
@@ -118,9 +118,6 @@ pub trait Swapper: Send + Sync {
         swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError>;
 
-    /// Claim chain swap.
-    fn claim_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError>;
-
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
     fn claim_send_swap_cooperative(
@@ -139,15 +136,18 @@ pub trait Swapper: Send + Sync {
     /// Get a reverse pair information
     fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError>;
 
-    /// Claim receive swap. Here the local swapper is the one that claims.
-    fn claim_receive_swap(
+    /// Create a claim transaction for a receive swap
+    fn new_receive_claim_tx(
         &self,
         swap: &ReceiveSwap,
         claim_address: String,
-    ) -> Result<String, PaymentError>;
+    ) -> Result<Transaction, PaymentError>;
 
-    /// Chain broadcast
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError>;
+    /// Create a claim transaction for a chain swap
+    fn new_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError>;
+
+    /// Broadcasts a transaction and returns its id
+    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
 
@@ -295,7 +295,7 @@ impl BoltzSwapper {
         .map_err(Into::into)
     }
 
-    fn claim_outgoing_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
+    fn new_outgoing_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
         let claim_tx_wrapper = BtcSwapTx::new_claim(
@@ -308,7 +308,7 @@ impl BoltzSwapper {
 
         let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
 
-        let claim_tx = claim_tx_wrapper.sign_claim(
+        let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             swap.claim_fees_sat,
@@ -319,15 +319,11 @@ impl BoltzSwapper {
                 partial_sig: Some(partial_sig),
             }),
         )?;
-        debug!("Claim Tx {:?}", claim_tx);
 
-        let claim_tx_id = claim_tx_wrapper
-            .broadcast(&claim_tx, &self.bitcoin_electrum_config)?
-            .to_string();
-        Ok(claim_tx_id)
+        Ok(Transaction::Bitcoin(signed_tx))
     }
 
-    fn claim_incoming_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
+    fn new_incoming_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
@@ -340,7 +336,7 @@ impl BoltzSwapper {
 
         let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
 
-        let claim_tx = claim_tx_wrapper.sign_claim(
+        let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             Amount::from_sat(swap.claim_fees_sat),
@@ -351,13 +347,8 @@ impl BoltzSwapper {
                 partial_sig: Some(partial_sig),
             }),
         )?;
-        debug!("Claim Tx {:?}", claim_tx);
-        let claim_tx_id = claim_tx_wrapper.broadcast(
-            &claim_tx,
-            &self.liquid_electrum_config,
-            Some((&self.client, self.config.network.into())),
-        )?;
-        Ok(claim_tx_id)
+
+        Ok(Transaction::Liquid(signed_tx))
     }
 
     fn refund_swap_cooperative(
@@ -647,19 +638,6 @@ impl Swapper for BoltzSwapper {
         Ok(claim_tx_response)
     }
 
-    /// Claim chain swap.
-    fn claim_chain_swap(&self, swap: &ChainSwap) -> Result<String, PaymentError> {
-        let claim_tx_id = match swap.direction {
-            Direction::Incoming => self.claim_incoming_chain_swap(swap),
-            Direction::Outgoing => self.claim_outgoing_chain_swap(swap),
-        }?;
-        info!(
-            "Successfully broadcast claim tx {claim_tx_id} for Chain Swap {}",
-            swap.id
-        );
-        Ok(claim_tx_id)
-    }
-
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
     fn claim_send_swap_cooperative(
@@ -709,14 +687,13 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.get_reverse_pairs()?.get_btc_to_lbtc_pair())
     }
 
-    /// Claim receive swap. Here the local swapper is the one that claims.
-    fn claim_receive_swap(
+    /// Claim receive swap
+    fn new_receive_claim_tx(
         &self,
         swap: &ReceiveSwap,
         claim_address: String,
-    ) -> Result<String, PaymentError> {
+    ) -> Result<Transaction, PaymentError> {
         let swap_script = swap.get_swap_script()?;
-        let swap_id = &swap.id;
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
@@ -731,25 +708,36 @@ impl Swapper for BoltzSwapper {
             pub_nonce: None,
             partial_sig: None,
         });
-        let claim_tx = claim_tx_wrapper.sign_claim(
+
+        let signed_tx = claim_tx_wrapper.sign_claim(
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
             Amount::from_sat(swap.claim_fees_sat),
             is_cooperative,
         )?;
 
-        let claim_tx_id = claim_tx_wrapper.broadcast(
-            &claim_tx,
-            &self.liquid_electrum_config,
-            Some((&self.client, self.config.network.into())),
-        )?;
-        info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
-        debug!("Claim Tx {:?}", claim_tx);
-        Ok(claim_tx_id)
+        Ok(Transaction::Liquid(signed_tx))
     }
 
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<Value, PaymentError> {
-        Ok(self.client.broadcast_tx(chain, &tx_hex.into())?)
+    fn new_chain_claim_tx(&self, swap: &ChainSwap) -> Result<Transaction, PaymentError> {
+        match swap.direction {
+            Direction::Incoming => self.new_incoming_chain_claim_tx(swap),
+            Direction::Outgoing => self.new_outgoing_chain_claim_tx(swap),
+        }
+    }
+
+    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError> {
+        let response = self.client.broadcast_tx(chain, &tx_hex.into())?;
+        let err = format!("Unexpected response from Boltz server: {response}");
+        let tx_id = response
+            .as_object()
+            .ok_or(PaymentError::Generic { err: err.clone() })?
+            .get("id")
+            .ok_or(PaymentError::Generic { err: err.clone() })?
+            .as_str()
+            .ok_or(PaymentError::Generic { err })?
+            .to_string();
+        Ok(tx_id)
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {

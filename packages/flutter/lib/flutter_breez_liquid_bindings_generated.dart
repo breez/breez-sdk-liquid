@@ -1904,6 +1904,8 @@ final class wire_cst_config extends ffi.Struct {
   external int zero_conf_min_fee_rate_msat;
 
   external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

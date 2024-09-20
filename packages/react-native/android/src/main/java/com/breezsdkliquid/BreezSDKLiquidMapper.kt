@@ -234,6 +234,7 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
     return Config(
         liquidElectrumUrl,
         bitcoinElectrumUrl,
@@ -243,6 +244,7 @@ fun asConfig(config: ReadableMap): Config? {
         paymentTimeoutSec,
         zeroConfMinFeeRateMsat,
         zeroConfMaxAmountSat,
+        breezApiKey,
     )
 }
 
@@ -256,6 +258,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
+        "breezApiKey" to config.breezApiKey,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {

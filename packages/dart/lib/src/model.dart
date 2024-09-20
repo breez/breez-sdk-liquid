@@ -135,6 +135,9 @@ class Config {
   /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
 
+  /// The Breez API key used for making requests to their mempool service
+  final String? breezApiKey;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -144,6 +147,7 @@ class Config {
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
     this.zeroConfMaxAmountSat,
+    this.breezApiKey,
   });
 
   @override
@@ -155,7 +159,8 @@ class Config {
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
-      zeroConfMaxAmountSat.hashCode;
+      zeroConfMaxAmountSat.hashCode ^
+      breezApiKey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -169,7 +174,8 @@ class Config {
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
-          zeroConfMaxAmountSat == other.zeroConfMaxAmountSat;
+          zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
+          breezApiKey == other.breezApiKey;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].

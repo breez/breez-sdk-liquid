@@ -1545,7 +1545,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
@@ -1555,6 +1555,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       paymentTimeoutSec: dco_decode_u_64(arr[5]),
       zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
+      breezApiKey: dco_decode_opt_String(arr[8]),
     );
   }
 
@@ -3192,6 +3193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_breezApiKey = sse_decode_opt_String(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -3200,7 +3202,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         network: var_network,
         paymentTimeoutSec: var_paymentTimeoutSec,
         zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat,
-        zeroConfMaxAmountSat: var_zeroConfMaxAmountSat);
+        zeroConfMaxAmountSat: var_zeroConfMaxAmountSat,
+        breezApiKey: var_breezApiKey);
   }
 
   @protected
@@ -4940,6 +4943,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
+    sse_encode_opt_String(self.breezApiKey, serializer);
   }
 
   @protected

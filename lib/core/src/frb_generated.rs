@@ -2164,6 +2164,7 @@ impl SseDecode for crate::model::Config {
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -2173,6 +2174,7 @@ impl SseDecode for crate::model::Config {
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
+            breez_api_key: var_breezApiKey,
         };
     }
 }
@@ -4040,6 +4042,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
                 .into_into_dart()
                 .into_dart(),
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
+            self.breez_api_key.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5883,6 +5886,7 @@ impl SseEncode for crate::model::Config {
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
+        <Option<String>>::sse_encode(self.breez_api_key, serializer);
     }
 }
 
@@ -7657,6 +7661,7 @@ mod io {
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
                 zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
+                breez_api_key: self.breez_api_key.cst_decode(),
             }
         }
     }
@@ -8919,6 +8924,7 @@ mod io {
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
                 zero_conf_max_amount_sat: core::ptr::null_mut(),
+                breez_api_key: core::ptr::null_mut(),
             }
         }
     }
@@ -10682,6 +10688,7 @@ mod io {
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,
         zero_conf_max_amount_sat: *mut u64,
+        breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

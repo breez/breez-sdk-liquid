@@ -13,7 +13,6 @@ use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use log::{debug, error, info};
-use lwk_wollet::bitcoin::hex::DisplayHex;
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -677,11 +676,14 @@ impl LiquidSdk {
         &self,
         amount_sat: u64,
         address: &str,
-        fee_rate: Option<f32>,
     ) -> Result<u64, PaymentError> {
+        let fee_rate_msat_per_vbyte = self
+            .config
+            .lowball_fee_rate_msat_per_vbyte()
+            .map(|v| v as f32);
         Ok(self
             .onchain_wallet
-            .build_tx(fee_rate, address, amount_sat)
+            .build_tx(fee_rate_msat_per_vbyte, address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -704,14 +706,8 @@ impl LiquidSdk {
     ) -> Result<u64, PaymentError> {
         let temp_p2tr_addr = self.get_temp_p2tr_addr();
 
-        self.estimate_onchain_tx_fee(
-            user_lockup_amount_sat,
-            temp_p2tr_addr,
-            self.config
-                .lowball_fee_rate_msat_per_vbyte()
-                .map(|v| v as f32),
-        )
-        .await
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
+            .await
     }
 
     /// Estimate the lockup tx fee for Chain Send swaps
@@ -721,7 +717,7 @@ impl LiquidSdk {
     ) -> Result<u64, PaymentError> {
         let temp_p2tr_addr = self.get_temp_p2tr_addr();
 
-        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr, None)
+        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
             .await
     }
 
@@ -765,6 +761,12 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
+                if self.config.breez_api_key.is_none() {
+                    return Err(PaymentError::Generic {
+                        err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+                    });
+                }
+
                 let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
@@ -785,14 +787,8 @@ impl LiquidSdk {
                 );
 
                 receiver_amount_sat = amount_sat;
-                // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
-                // once Esplora broadcast is enabled
                 fees_sat = self
-                    .estimate_onchain_tx_fee(
-                        receiver_amount_sat,
-                        &liquid_address_data.address,
-                        None,
-                    )
+                    .estimate_onchain_tx_fee(receiver_amount_sat, &liquid_address_data.address)
                     .await?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
@@ -819,7 +815,13 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
-                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address, None)
+                        if self.config.breez_api_key.is_none() {
+                            return Err(PaymentError::Generic {
+                                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+                            });
+                        }
+
+                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
                     None => {
@@ -964,10 +966,14 @@ impl LiquidSdk {
         receiver_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        // TODO Ensure that `None` provides the lowest fees possible (0.01 sat/vbyte)
-        // once Esplora broadcast is enabled
+        if self.config.breez_api_key.is_none() {
+            return Err(PaymentError::Generic {
+                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
+            });
+        }
+
         // Ensure we use the same fee-rate from the `PrepareSendResponse`
-        let fee_rate_sats_per_kvb = utils::derive_fee_rate_sats_per_kvb(
+        let fee_rate_msat_per_vb = utils::derive_fee_rate_msat_per_vb(
             self.onchain_wallet.clone(),
             receiver_amount_sat,
             &address_data.address,
@@ -977,7 +983,7 @@ impl LiquidSdk {
         let tx = self
             .onchain_wallet
             .build_tx(
-                Some(fee_rate_sats_per_kvb),
+                Some(fee_rate_msat_per_vb),
                 &address_data.address,
                 receiver_amount_sat,
             )
@@ -989,9 +995,8 @@ impl LiquidSdk {
             "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
 
-        let tx_hex = lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string();
-        self.swapper
-            .broadcast_tx(self.config.network.into(), &tx_hex)?;
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let tx_id = liquid_chain_service.broadcast(&tx, None).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly

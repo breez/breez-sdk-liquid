@@ -60,6 +60,7 @@ export interface Config {
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
     zeroConfMaxAmountSat?: number
+    breezApiKey?: string
 }
 
 export interface ConnectRequest {
