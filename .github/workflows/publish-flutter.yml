@@ -76,11 +76,6 @@ jobs:
           cp ../build/packages/flutter/LICENSE . || true
           cp ../build/packages/flutter/README.md . || true
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-flutter
-          path: bindings/
-
       - name: Set package version
         working-directory: dist
         run: |
@@ -118,16 +113,3 @@ jobs:
           git push
           git tag v${{ inputs.package-version }} -m "v${{ inputs.package-version }}"
           git push --tags
-
-      - name: Release and attach binary artifacts
-        if: ${{ inputs.publish }}
-        uses: softprops/action-gh-release@v2
-        with:
-          repository: breez/breez-sdk-liquid-flutter
-          files: |
-            bindings/android.tar.gz
-            bindings/breez_sdk_liquid.xcframework.zip
-          tag_name: v${{ inputs.package-version || '0.0.1' }}
-          generate_release_notes: false
-          token: ${{ secrets.SWIFT_RELEASE_TOKEN }}
-          prerelease: true

@@ -14,14 +14,26 @@ import 'src/frb_generated.dart';
 typedef BreezLiquid = RustLibApi;
 typedef BreezLiquidImpl = RustLibApiImpl;
 
-const libName = 'breez_sdk_liquid';
+const libName = 'libbreez_sdk_liquid_bindings.so';
+const iosLibName = "breez_sdk_liquidFFI";
+
+class UnsupportedPlatform implements Exception {
+  UnsupportedPlatform(String s);
+}
 
 Future<void> initialize({ExternalLibrary? dylib}) {
-  if (dylib == null && (Platform.isIOS || Platform.isMacOS)) {
-    try {
-      dylib = ExternalLibrary.open("$libName.framework/$libName");
-    } catch (e) {
-      dylib = ExternalLibrary.process(iKnowHowToUseIt: true);
+  if (dylib == null) {
+    if (Platform.isAndroid || Platform.isLinux) {
+      // On Linux the lib needs to be in LD_LIBRARY_PATH or working directory
+      dylib = ExternalLibrary.open(libName);
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      try {
+        dylib = ExternalLibrary.open("$iosLibName.framework/$iosLibName");
+      } catch (e) {
+        dylib = ExternalLibrary.process(iKnowHowToUseIt: true);
+      }
+    } else {
+      throw UnsupportedPlatform('${Platform.operatingSystem} is not yet supported!');
     }
   }
   return RustLib.init(externalLibrary: dylib);
