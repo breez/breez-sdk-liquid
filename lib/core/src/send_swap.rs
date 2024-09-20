@@ -446,15 +446,13 @@ impl SendSwapHandler {
             }
 
             let has_swap_expired = self.check_swap_expiry(swap).await.unwrap_or(false);
-            let refund_tx_id_result = match swap.state {
-                Pending => {
-                    if !has_swap_expired {
-                        warn!("Cannot refund non-cooperatively: Locktime for pending Send swap {} has not elapsed yet.", swap.id);
-                        continue;
-                    }
 
-                    self.refund(swap, false).await
-                }
+            if !has_swap_expired && swap.state == Pending {
+                continue;
+            }
+
+            let refund_tx_id_result = match swap.state {
+                Pending => self.refund(swap, false).await,
                 RefundPending => match has_swap_expired {
                     true => {
                         self.refund(swap, true)

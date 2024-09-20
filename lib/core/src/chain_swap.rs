@@ -942,20 +942,16 @@ impl ChainSwapHandler {
             }
 
             let has_swap_expired = self.check_swap_expiry(&swap).await.unwrap_or(false);
+
+            if !has_swap_expired && swap.state == Pending {
+                continue;
+            }
+
             match swap.direction {
                 // Track refunds
                 Direction::Outgoing => {
                     let refund_tx_id_result: Result<String, PaymentError> = match swap.state {
-                        Pending => {
-                            if !has_swap_expired {
-                                warn!(
-                                    "Cannot refund non-cooperatively: Locktime for pending outgoing Chain swap {} has not elapsed yet.",
-                                    swap.id
-                                );
-                                continue;
-                            }
-                            self.refund_outgoing_swap(&swap, false).await
-                        }
+                        Pending => self.refund_outgoing_swap(&swap, false).await,
                         RefundPending => match has_swap_expired {
                             true => {
                                 self.refund_outgoing_swap(&swap, true)
@@ -965,10 +961,6 @@ impl ChainSwapHandler {
                             false => self.refund_outgoing_swap(&swap, true).await,
                         },
                         _ => {
-                            warn!(
-                                "Invalid outgoing Chain swap state for swap {} when attempting to refund, state: {:?}",
-                                swap.id, swap.state
-                            );
                             continue;
                         }
                     };
@@ -995,9 +987,7 @@ impl ChainSwapHandler {
 
                 // Track refundables by verifying that the expiry has elapsed, and set the state of the incoming swap to `Refundable`
                 Direction::Incoming => {
-                    if swap.user_lockup_tx_id.is_some()
-                        && self.check_swap_expiry(&swap).await.unwrap_or(false)
-                    {
+                    if swap.user_lockup_tx_id.is_some() && has_swap_expired {
                         let update_swap_info_result = self
                             .update_swap_info(&swap.id, Refundable, None, None, None, None)
                             .await;
