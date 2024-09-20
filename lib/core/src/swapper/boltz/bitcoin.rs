@@ -76,16 +76,18 @@ impl BoltzSwapper {
             }
         );
 
-        let utxos = utxos
-            .iter()
-            .filter_map(|utxo| utxo.as_bitcoin().cloned())
-            .collect();
+        let utxo = utxos
+            .first()
+            .and_then(|utxo| utxo.as_bitcoin().cloned())
+            .ok_or(SdkError::Generic {
+                err: "No UTXO found".to_string(),
+            })?;
 
         let refund_tx = BtcSwapTx {
             kind: SwapTxKind::Refund,
             swap_script,
             output_address: address.assume_checked(),
-            utxos,
+            utxo,
         };
 
         let refund_tx_size = refund_tx.size(refund_keypair, &Preimage::new())?;
