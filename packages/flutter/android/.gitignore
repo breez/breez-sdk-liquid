@@ -10,5 +10,6 @@
 
 # Ignore Rust binaries
 src/main/jniLibs/
+src/main/kotlin/
 *.tar.gz
 

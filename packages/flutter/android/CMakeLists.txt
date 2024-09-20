@@ -23,7 +23,6 @@ if(NOT EXISTS ${ArchivePath})
 endif()
 
 # Extract the binaries, overriding any already present.
-file(REMOVE_RECURSE ${LibRoot})
 file(MAKE_DIRECTORY ${LibRoot})
 execute_process(
   COMMAND ${CMAKE_COMMAND} -E tar xzf ${ArchivePath}
