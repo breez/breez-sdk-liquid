@@ -1,12 +1,4 @@
 version = '0.3.4' # generated; do not edit
-tag_name = "v#{version}"
-release_tag_name = "breez_liquid-#{tag_name}"
-
-# We cannot distribute the XCFramework alongside the library directly,
-# so we have to fetch the correct version here.
-framework_name = 'breez_sdk_liquid.xcframework'
-remote_zip_name = "#{framework_name}.zip"
-local_zip_name = "#{release_tag_name}.zip"
 
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint flutter_breez_liquid.podspec` to validate before publishing.
@@ -21,14 +13,7 @@ Pod::Spec.new do |spec|
   spec.source              = { :path => '.' }
   spec.source_files        = 'Classes/**/*'
   spec.public_header_files = 'Classes/**/*.h'
-  spec.vendored_frameworks = "Frameworks/#{framework_name}"
-
-  spec.prepare_command = <<-CMD
-    cd Frameworks
-    rm -rf #{framework_name}
-    unzip #{local_zip_name}
-    cd -
-  CMD
+  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
   
   spec.ios.deployment_target = '12.0'
   spec.osx.deployment_target = '10.11'

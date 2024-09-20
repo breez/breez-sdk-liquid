@@ -12,12 +12,12 @@ Pod::Spec.new do |s|
   s.ios.deployment_target  = "13.0"
   s.source                 = { :path => '.' }
   s.source_files           = [
-    'bindings-swift/Sources/BreezSDKLiquid/*.swift', 
-    'bindings-swift/Sources/BreezSDKLiquid/**/*.swift'
+    'Sources/BreezSDKLiquid/*.swift', 
+    'Sources/BreezSDKLiquid/**/*.swift'
   ]
   s.platform               = :ios, '13.0'
+  s.vendored_frameworks    = "Frameworks/breez_sdk_liquidFFI.xcframework"
   s.static_framework       = true
-  s.vendored_frameworks    = "bindings-swift/breez_sdk_liquidFFI.xcframework"
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig    = {'STRIP_STYLE' => 'non-global', 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

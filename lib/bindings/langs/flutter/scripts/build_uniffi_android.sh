@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ../..
-make android
-rm -r ../../packages/flutter/android/src/main/kotlin
+make init android
+rm -r ../../packages/flutter/android/src/main/kotlin/breez_sdk_liquid*
 mkdir -p ../../packages/flutter/android/src/main/jniLibs/arm64-v8a
 mkdir -p ../../packages/flutter/android/src/main/jniLibs/armeabi-v7a
 mkdir -p ../../packages/flutter/android/src/main/jniLibs/x86
