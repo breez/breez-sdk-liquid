@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Result};
 
 use boltz_client::{
+    bitcoin::ScriptBuf,
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -606,6 +607,18 @@ impl ChainSwap {
             )?),
         };
         Ok(swap_script)
+    }
+
+    pub(crate) fn get_lockup_swap_script_pubkey(
+        &self,
+        network: LiquidNetwork,
+    ) -> SdkResult<ScriptBuf> {
+        let swap_script = self.get_lockup_swap_script()?.as_bitcoin_script()?;
+        let script_pubkey = swap_script
+            .to_address(network.as_bitcoin_chain())
+            .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+            .script_pubkey();
+        Ok(script_pubkey)
     }
 
     pub(crate) fn from_boltz_struct_to_json(

@@ -157,11 +157,7 @@ impl ChainSwapHandler {
         };
 
         if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
-            let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
-            let script_pubkey = swap_script
-                .to_address(self.config.network.as_bitcoin_chain())
-                .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
-                .script_pubkey();
+            let script_pubkey = swap.get_lockup_swap_script_pubkey(self.config.network)?;
             let script_balance = self
                 .bitcoin_chain_service
                 .lock()
