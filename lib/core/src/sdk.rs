@@ -1740,12 +1740,27 @@ impl LiquidSdk {
     /// List all failed chain swaps that need to be refunded.
     /// They can be refunded by calling [LiquidSdk::prepare_refund] then [LiquidSdk::refund].
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
-        Ok(self
-            .persister
-            .list_refundable_chain_swaps()?
-            .into_iter()
-            .map(Into::into)
-            .collect())
+        let chain_swaps = self.persister.list_refundable_chain_swaps()?;
+
+        let mut refundables = vec![];
+        for chain_swap in chain_swaps {
+            let script_pubkey = chain_swap.get_lockup_swap_script_pubkey(self.config.network)?;
+            let script_balance = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .script_get_balance(script_pubkey.as_script())?;
+            info!(
+                "Incoming Chain Swap {} is refundable with {} confirmed sats",
+                chain_swap.id, script_balance.confirmed
+            );
+
+            let mut refundable: RefundableSwap = chain_swap.into();
+            refundable.amount_sat = script_balance.confirmed;
+            refundables.push(refundable);
+        }
+
+        Ok(refundables)
     }
 
     /// Prepares to refund a failed chain swap by calculating the refund transaction size and absolute fee.
