@@ -305,6 +305,36 @@ fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
     return list
 }
 
+fun asConnectWithSignerRequest(connectWithSignerRequest: ReadableMap): ConnectWithSignerRequest? {
+    if (!validateMandatoryFields(
+            connectWithSignerRequest,
+            arrayOf(
+                "config",
+            ),
+        )
+    ) {
+        return null
+    }
+    val config = connectWithSignerRequest.getMap("config")?.let { asConfig(it) }!!
+    return ConnectWithSignerRequest(config)
+}
+
+fun readableMapOf(connectWithSignerRequest: ConnectWithSignerRequest): ReadableMap =
+    readableMapOf(
+        "config" to readableMapOf(connectWithSignerRequest.config),
+    )
+
+fun asConnectWithSignerRequestList(arr: ReadableArray): List<ConnectWithSignerRequest> {
+    val list = ArrayList<ConnectWithSignerRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asConnectWithSignerRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asCurrencyInfo(currencyInfo: ReadableMap): CurrencyInfo? {
     if (!validateMandatoryFields(
             currencyInfo,
