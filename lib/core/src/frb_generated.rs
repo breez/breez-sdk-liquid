@@ -2182,11 +2182,11 @@ impl SseDecode for crate::model::Config {
 impl SseDecode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_mnemonic = <String>::sse_decode(deserializer);
         let mut var_config = <crate::model::Config>::sse_decode(deserializer);
+        let mut var_mnemonic = <String>::sse_decode(deserializer);
         return crate::model::ConnectRequest {
-            mnemonic: var_mnemonic,
             config: var_config,
+            mnemonic: var_mnemonic,
         };
     }
 }
@@ -4057,8 +4057,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Config> for crate::model::C
 impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.mnemonic.into_into_dart().into_dart(),
             self.config.into_into_dart().into_dart(),
+            self.mnemonic.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5893,8 +5893,8 @@ impl SseEncode for crate::model::Config {
 impl SseEncode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.mnemonic, serializer);
         <crate::model::Config>::sse_encode(self.config, serializer);
+        <String>::sse_encode(self.mnemonic, serializer);
     }
 }
 
@@ -7669,8 +7669,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::ConnectRequest {
             crate::model::ConnectRequest {
-                mnemonic: self.mnemonic.cst_decode(),
                 config: self.config.cst_decode(),
+                mnemonic: self.mnemonic.cst_decode(),
             }
         }
     }
@@ -8936,8 +8936,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_connect_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                mnemonic: core::ptr::null_mut(),
                 config: Default::default(),
+                mnemonic: core::ptr::null_mut(),
             }
         }
     }
@@ -10693,8 +10693,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_connect_request {
-        mnemonic: *mut wire_cst_list_prim_u_8_strict,
         config: wire_cst_config,
+        mnemonic: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

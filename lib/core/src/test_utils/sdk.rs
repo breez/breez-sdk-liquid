@@ -7,8 +7,13 @@ use std::sync::Arc;
 use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::{
-    buy::BuyBitcoinService, chain_swap::ChainSwapHandler, event::EventManager, model::Config,
-    persist::Persister, receive_swap::ReceiveSwapHandler, sdk::LiquidSdk,
+    buy::BuyBitcoinService,
+    chain_swap::ChainSwapHandler,
+    event::EventManager,
+    model::{Config, Signer},
+    persist::Persister,
+    receive_swap::ReceiveSwapHandler,
+    sdk::LiquidSdk,
     send_swap::SendSwapHandler,
 };
 
@@ -16,7 +21,7 @@ use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     status_stream::MockStatusStream,
     swapper::MockSwapper,
-    wallet::MockWallet,
+    wallet::{MockSigner, MockWallet},
 };
 
 pub(crate) fn new_liquid_sdk(
@@ -50,6 +55,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         .ok_or(anyhow!("An invalid SDK directory was specified"))?
         .to_string();
 
+    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
     let onchain_wallet = Arc::new(MockWallet::new());
 
     let send_swap_handler = SendSwapHandler::new(
@@ -88,6 +94,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     Ok(LiquidSdk {
         config,
         onchain_wallet,
+        signer,
         persister,
         event_manager,
         status_stream,
