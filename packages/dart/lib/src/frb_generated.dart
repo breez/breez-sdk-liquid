@@ -1565,8 +1565,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ConnectRequest(
-      mnemonic: dco_decode_String(arr[0]),
-      config: dco_decode_config(arr[1]),
+      config: dco_decode_config(arr[0]),
+      mnemonic: dco_decode_String(arr[1]),
     );
   }
 
@@ -3209,9 +3209,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_mnemonic = sse_decode_String(deserializer);
     var var_config = sse_decode_config(deserializer);
-    return ConnectRequest(mnemonic: var_mnemonic, config: var_config);
+    var var_mnemonic = sse_decode_String(deserializer);
+    return ConnectRequest(config: var_config, mnemonic: var_mnemonic);
   }
 
   @protected
@@ -4953,8 +4953,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.mnemonic, serializer);
     sse_encode_config(self.config, serializer);
+    sse_encode_String(self.mnemonic, serializer);
   }
 
   @protected
