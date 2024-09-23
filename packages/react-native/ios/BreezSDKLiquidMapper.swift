@@ -393,6 +393,38 @@ enum BreezSDKLiquidMapper {
         return connectRequestList.map { v -> [String: Any?] in return dictionaryOf(connectRequest: v) }
     }
 
+    static func asConnectWithSignerRequest(connectWithSignerRequest: [String: Any?]) throws -> ConnectWithSignerRequest {
+        guard let configTmp = connectWithSignerRequest["config"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "config", typeName: "ConnectWithSignerRequest"))
+        }
+        let config = try asConfig(config: configTmp)
+
+        return ConnectWithSignerRequest(config: config)
+    }
+
+    static func dictionaryOf(connectWithSignerRequest: ConnectWithSignerRequest) -> [String: Any?] {
+        return [
+            "config": dictionaryOf(config: connectWithSignerRequest.config),
+        ]
+    }
+
+    static func asConnectWithSignerRequestList(arr: [Any]) throws -> [ConnectWithSignerRequest] {
+        var list = [ConnectWithSignerRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var connectWithSignerRequest = try asConnectWithSignerRequest(connectWithSignerRequest: val)
+                list.append(connectWithSignerRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "ConnectWithSignerRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(connectWithSignerRequestList: [ConnectWithSignerRequest]) -> [Any] {
+        return connectWithSignerRequestList.map { v -> [String: Any?] in return dictionaryOf(connectWithSignerRequest: v) }
+    }
+
     static func asCurrencyInfo(currencyInfo: [String: Any?]) throws -> CurrencyInfo {
         guard let name = currencyInfo["name"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "CurrencyInfo"))
