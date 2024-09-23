@@ -13,10 +13,15 @@ Pod::Spec.new do |spec|
   spec.source              = { :path => '.' }
   spec.source_files        = 'Classes/**/*'
   spec.public_header_files = 'Classes/**/*.h'
-  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
+  spec.on_demand_resources = { 
+    'BreezSDKLiquid' => [
+      'Sources/BreezSDKLiquid/*.swift', 
+      'Sources/BreezSDKLiquid/**/*.swift'
+    ]
+  }
   
-  spec.ios.deployment_target = '12.0'
-  spec.osx.deployment_target = '10.11'
+  spec.ios.deployment_target = '13.0'
+  spec.osx.deployment_target = '15.0'
 
   spec.dependency 'Flutter'
   spec.static_framework = true
@@ -24,4 +29,5 @@ Pod::Spec.new do |spec|
   # Flutter.framework does not contain a i386 slice.
   spec.pod_target_xcconfig = {'STRIP_STYLE' => 'non-global', 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   spec.swift_version = '5.0'
+  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
 end
