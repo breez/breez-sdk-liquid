@@ -13,9 +13,6 @@ bootstrap frb='true' build='false':
 	just init
 	just init-sdk
 	just gen
-	@if {{build}} == true; then just build; fi
-	@if {{build}} == true; then melos build; fi
-	@if {{build}} == true; then just link; fi
 	@if {{build}} == true; then just build-uniffi; fi	
 	just check
 
