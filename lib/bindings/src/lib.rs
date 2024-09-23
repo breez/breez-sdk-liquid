@@ -57,6 +57,16 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     })
 }
 
+pub fn connect_with_signer(
+    req: ConnectWithSignerRequest,
+    signer: Box<dyn Signer>,
+) -> Result<Arc<BindingLiquidSdk>, SdkError> {
+    rt().block_on(async {
+        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        Ok(Arc::from(BindingLiquidSdk { sdk }))
+    })
+}
+
 pub fn default_config(network: LiquidNetwork) -> Config {
     LiquidSdk::default_config(network)
 }
