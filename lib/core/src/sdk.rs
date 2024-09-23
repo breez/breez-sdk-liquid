@@ -9,8 +9,8 @@ use chain::bitcoin::HybridBitcoinChainService;
 use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
-use futures_util::StreamExt;
-use futures_util::TryFutureExt;
+use futures_util::{StreamExt, TryFutureExt};
+use lnurl::auth::SdkLnurlAuthSigner;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::{AssetId, Txid};
@@ -18,14 +18,12 @@ use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::hashes::hex::ToHex;
-use sdk_common::bitcoin::secp256k1::Secp256k1;
-use sdk_common::bitcoin::util::bip32::ChildNumber;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
+use signer::SdkSigner;
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
-use url::Url;
 use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;
@@ -34,6 +32,7 @@ use crate::ensure_sdk;
 use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
+use crate::model::Signer;
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::{boltz::BoltzSwapper, Swapper, SwapperReconnectHandler, SwapperStatusStream};
@@ -53,6 +52,7 @@ pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
+    pub(crate) signer: Arc<Box<dyn Signer>>,
     pub(crate) persister: Arc<Persister>,
     pub(crate) event_manager: Arc<EventManager>,
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
@@ -81,6 +81,18 @@ impl LiquidSdk {
     ///     * `mnemonic` - the Liquid wallet mnemonic
     ///     * `config` - the SDK [Config]
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
+        let signer = Box::new(SdkSigner::new(
+            req.mnemonic.as_ref(),
+            req.config.network == LiquidNetwork::Mainnet,
+        )?);
+
+        Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer).await
+    }
+
+    pub async fn connect_with_signer(
+        req: ConnectWithSignerRequest,
+        signer: Box<dyn Signer>,
+    ) -> Result<Arc<LiquidSdk>> {
         let maybe_swapper_proxy_url =
             match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
                 Ok(breez_server) => breez_server
@@ -90,10 +102,8 @@ impl LiquidSdk {
                     .and_then(|swapper_urls| swapper_urls.first().cloned()),
                 Err(_) => None,
             };
-
-        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, req.mnemonic)?;
+        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, Arc::new(signer))?;
         sdk.start().await?;
-
         Ok(sdk)
     }
 
@@ -125,7 +135,7 @@ impl LiquidSdk {
     fn new(
         config: Config,
         swapper_proxy_url: Option<String>,
-        mnemonic: String,
+        signer: Arc<Box<dyn Signer>>,
     ) -> Result<Arc<Self>> {
         match (config.network, &config.breez_api_key) {
             (_, Some(api_key)) => Self::validate_api_key(api_key)?,
@@ -136,13 +146,15 @@ impl LiquidSdk {
         };
 
         fs::create_dir_all(&config.working_dir)?;
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
-
-        let persister = Arc::new(Persister::new(
-            &config.get_wallet_working_dir(&onchain_wallet.lwk_signer)?,
-            config.network,
+        let fingerprint_hex: String = signer.xpub()?[0..4].to_hex();
+        let working_dir = config.get_wallet_working_dir(fingerprint_hex)?;
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
+            signer.clone(),
+            config.clone(),
+            &working_dir,
         )?);
+
+        let persister = Arc::new(Persister::new(&working_dir, config.network)?);
         persister.init()?;
 
         let event_manager = Arc::new(EventManager::new());
@@ -193,6 +205,7 @@ impl LiquidSdk {
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
+            signer: signer.clone(),
             persister: persister.clone(),
             event_manager,
             status_stream: status_stream.clone(),
@@ -526,8 +539,8 @@ impl LiquidSdk {
             balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
             pending_send_sat,
             pending_receive_sat,
-            fingerprint: self.onchain_wallet.fingerprint(),
-            pubkey: self.onchain_wallet.pubkey(),
+            fingerprint: self.onchain_wallet.fingerprint()?,
+            pubkey: self.onchain_wallet.pubkey()?,
         })
     }
 
@@ -2184,7 +2197,8 @@ impl LiquidSdk {
                         destination: data.pr.clone(),
                         amount_sat: None,
                     })
-                    .await?;
+                    .await
+                    .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
 
                 Ok(PrepareLnUrlPayResponse {
                     destination: prepare_response.destination,
@@ -2219,7 +2233,8 @@ impl LiquidSdk {
                     fees_sat: prepare_response.fees_sat,
                 },
             })
-            .await?
+            .await
+            .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?
             .payment;
 
         let maybe_sa_processed: Option<SuccessActionProcessed> = match prepare_response
@@ -2313,20 +2328,7 @@ impl LiquidSdk {
         &self,
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
-        // m/138'/0
-        let hashing_key = self.onchain_wallet.derive_bip32_key(vec![
-            ChildNumber::from_hardened_idx(138).map_err(Into::<LnUrlError>::into)?,
-            ChildNumber::from(0),
-        ])?;
-
-        let url =
-            Url::from_str(&req_data.url).map_err(|e| LnUrlError::InvalidUri(e.to_string()))?;
-
-        let derivation_path = get_derivation_path(hashing_key, url)?;
-        let linking_key = self.onchain_wallet.derive_bip32_key(derivation_path)?;
-        let linking_keys = linking_key.to_keypair(&Secp256k1::new());
-
-        Ok(perform_lnurl_auth(linking_keys, req_data).await?)
+        Ok(perform_lnurl_auth(&req_data, &SdkLnurlAuthSigner::new(self.signer.clone())).await?)
     }
 
     /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the

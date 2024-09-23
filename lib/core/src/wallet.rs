@@ -4,25 +4,26 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
-use lwk_common::Signer;
+use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
-use sdk_common::bitcoin::secp256k1::{Message, PublicKey, Secp256k1};
-use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
+use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
+use crate::model::Signer;
+use crate::signer::SdkLwkSigner;
 use crate::{
     ensure_sdk,
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
+use lwk_wollet::secp256k1::Message;
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
@@ -60,10 +61,10 @@ pub trait OnchainWallet: Send + Sync {
     async fn tip(&self) -> Tip;
 
     /// Get the public key of the wallet
-    fn pubkey(&self) -> String;
-    fn fingerprint(&self) -> String;
+    fn pubkey(&self) -> Result<String>;
 
-    fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError>;
+    /// Get the fingerprint of the wallet
+    fn fingerprint(&self) -> Result<String>;
 
     /// Sign given message with the wallet private key. Returns a zbase
     /// encoded signature.
@@ -80,31 +81,30 @@ pub trait OnchainWallet: Send + Sync {
 pub(crate) struct LiquidOnchainWallet {
     wallet: Arc<Mutex<Wollet>>,
     config: Config,
-    pub(crate) lwk_signer: SwSigner,
+    pub(crate) signer: SdkLwkSigner,
 }
 
 impl LiquidOnchainWallet {
-    pub(crate) fn new(mnemonic: String, config: Config) -> Result<Self> {
-        let is_mainnet = config.network == LiquidNetwork::Mainnet;
-        let lwk_signer = SwSigner::new(&mnemonic, is_mainnet)?;
-        let descriptor = LiquidOnchainWallet::get_descriptor(&lwk_signer, config.network)?;
+    pub(crate) fn new(
+        user_signer: Arc<Box<dyn Signer>>,
+        config: Config,
+        working_dir: &String,
+    ) -> Result<Self> {
+        let signer = crate::signer::SdkLwkSigner::new(user_signer)?;
+        let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
         let elements_network: ElementsNetwork = config.network.into();
 
-        let lwk_persister = FsPersister::new(
-            config.get_wallet_working_dir(&lwk_signer)?,
-            elements_network,
-            &descriptor,
-        )?;
+        let lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
         let wollet = Wollet::new(elements_network, lwk_persister, descriptor)?;
         Ok(Self {
             wallet: Arc::new(Mutex::new(wollet)),
-            lwk_signer,
+            signer,
             config,
         })
     }
 
     fn get_descriptor(
-        signer: &SwSigner,
+        signer: &SdkLwkSigner,
         network: LiquidNetwork,
     ) -> Result<WolletDescriptor, PaymentError> {
         let is_mainnet = network == LiquidNetwork::Mainnet;
@@ -150,8 +150,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             )?
             .fee_rate(fee_rate_sats_per_kvb)
             .finish(&lwk_wollet)?;
-        let signer = AnySigner::Software(self.lwk_signer.clone());
-        signer.sign(&mut pset)?;
+        self.signer
+            .sign(&mut pset)
+            .map_err(|e| PaymentError::Generic {
+                err: format!("Failed to sign transaction: {e:?}"),
+            })?;
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -193,8 +196,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             );
         }
 
-        let signer = AnySigner::Software(self.lwk_signer.clone());
-        signer.sign(&mut pset)?;
+        self.signer
+            .sign(&mut pset)
+            .map_err(|e| PaymentError::Generic {
+                err: format!("Failed to sign transaction: {e:?}"),
+            })?;
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -209,8 +215,13 @@ impl OnchainWallet for LiquidOnchainWallet {
     }
 
     /// Get the public key of the wallet
-    fn pubkey(&self) -> String {
-        self.lwk_signer.xpub().public_key.to_string()
+    fn pubkey(&self) -> Result<String> {
+        Ok(self.signer.xpub()?.public_key.to_string())
+    }
+
+    /// Get the fingerprint of the wallet
+    fn fingerprint(&self) -> Result<String> {
+        Ok(self.signer.fingerprint()?.to_hex())
     }
 
     /// Perform a full scan of the wallet
@@ -225,46 +236,20 @@ impl OnchainWallet for LiquidOnchainWallet {
         Ok(())
     }
 
-    fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError> {
-        let seed = self.lwk_signer.seed().ok_or(PaymentError::SignerError {
-            err: "Could not get signer seed".to_string(),
-        })?;
-
-        let bip32_xpriv = ExtendedPrivKey::new_master(self.config.network.into(), &seed)?
-            .derive_priv(&Secp256k1::new(), &path)?;
-        Ok(bip32_xpriv)
-    }
-
     fn sign_message(&self, message: &str) -> Result<String> {
-        let seed = self
-            .lwk_signer
-            .seed()
-            .ok_or(anyhow!("Could not get signer seed"))?;
-        let secp = Secp256k1::new();
-        let keypair = ExtendedPrivKey::new_master(self.config.network.into(), &seed)
-            .map_err(|e| anyhow!("Could not get signer keypair: {e}"))?
-            .to_keypair(&secp);
         // Prefix and double hash message
         let mut engine = sha256::HashEngine::default();
         engine.write_all(LN_MESSAGE_PREFIX)?;
         engine.write_all(message.as_bytes())?;
         let hashed_msg = sha256::Hash::from_engine(engine);
-        let double_hashed_msg = Message::from(sha256::Hash::hash(&hashed_msg));
+        let double_hashed_msg = Message::from_digest(hashed_msg.into_inner());
         // Get message signature and encode to zbase32
-        let recoverable_sig =
-            secp.sign_ecdsa_recoverable(&double_hashed_msg, &keypair.secret_key());
-        let (recovery_id, sig) = recoverable_sig.serialize_compact();
-        let mut complete_signature = vec![31 + recovery_id.to_i32() as u8];
-        complete_signature.extend_from_slice(&sig);
-        Ok(zbase32::encode_full_bytes(&complete_signature))
+        let recoverable_sig = self.signer.sign_ecdsa_recoverable(&double_hashed_msg)?;
+        Ok(zbase32::encode_full_bytes(recoverable_sig.as_slice()))
     }
 
     fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool> {
         let pk = PublicKey::from_str(pubkey)?;
         Ok(verify(message.as_bytes(), signature, &pk))
-    }
-
-    fn fingerprint(&self) -> String {
-        self.lwk_signer.fingerprint().to_hex()
     }
 }

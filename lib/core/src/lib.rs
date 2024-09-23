@@ -171,6 +171,7 @@ pub mod error;
 pub(crate) mod event;
 #[cfg(feature = "frb")]
 pub(crate) mod frb_generated;
+pub(crate) mod lnurl;
 pub mod logger;
 pub mod model;
 pub mod persist;
@@ -179,6 +180,7 @@ pub(crate) mod receive_swap;
 mod restore;
 pub mod sdk;
 pub(crate) mod send_swap;
+pub(crate) mod signer;
 pub(crate) mod swapper;
 pub(crate) mod test_utils;
 pub(crate) mod utils;
@@ -192,4 +194,5 @@ pub mod prelude {
     pub use crate::*;
     pub use crate::model::*;
     pub use crate::sdk::*;
+    pub use crate::signer::SdkSigner;
 }
