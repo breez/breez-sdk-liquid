@@ -55,8 +55,8 @@ pub struct Config {
 impl Config {
     pub fn mainnet() -> Self {
         Config {
-            liquid_electrum_url: "blockstream.info:995".to_string(),
-            bitcoin_electrum_url: "blockstream.info:700".to_string(),
+            liquid_electrum_url: "elements-mainnet.blockstream.info:50002".to_string(),
+            bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Mainnet,
@@ -69,8 +69,8 @@ impl Config {
 
     pub fn testnet() -> Self {
         Config {
-            liquid_electrum_url: "blockstream.info:465".to_string(),
-            bitcoin_electrum_url: "blockstream.info:993".to_string(),
+            liquid_electrum_url: "elements-testnet.blockstream.info:50002".to_string(),
+            bitcoin_electrum_url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
             working_dir: ".".to_string(),
             network: LiquidNetwork::Testnet,
