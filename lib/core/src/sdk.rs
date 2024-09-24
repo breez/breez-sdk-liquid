@@ -902,6 +902,9 @@ impl LiquidSdk {
             receiver_amount_sat,
             &address_data.address,
             fees_sat,
+            self.config
+                .lowball_fee_rate_msat_per_vbyte()
+                .map(|v| v as f32),
         )
         .await?;
         let tx = self

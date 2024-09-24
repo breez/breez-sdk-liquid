@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{PaymentError, SdkResult};
-use crate::prelude::STANDARD_FEE_RATE_SAT_PER_VBYTE;
+use crate::prelude::LOWBALL_FEE_RATE_SAT_PER_VBYTE;
 use crate::wallet::OnchainWallet;
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -59,9 +59,10 @@ pub(crate) async fn derive_fee_rate_msat_per_vb(
     amount_sat: u64,
     recipient_address: &str,
     absolute_fees_sat: u64,
+    fee_rate: Option<f32>,
 ) -> Result<f32> {
-    let standard_fees_sat = wallet
-        .build_tx(None, recipient_address, amount_sat)
+    let lowball_fees_sat = wallet
+        .build_tx(fee_rate, recipient_address, amount_sat)
         .await?
         .all_fees()
         .values()
@@ -70,7 +71,7 @@ pub(crate) async fn derive_fee_rate_msat_per_vb(
     // Multiply sats/vb value by 1000 i.e. 1.0 sat/byte = 1000.0 sat/kvb = 1000.0 millisat/vb
     // We calculate using f64 and convert to f32 in the last step, so we keep the maximum precision possible
     let result_sat_per_vb =
-        STANDARD_FEE_RATE_SAT_PER_VBYTE * absolute_fees_sat as f64 / standard_fees_sat;
+        LOWBALL_FEE_RATE_SAT_PER_VBYTE * absolute_fees_sat as f64 / lowball_fees_sat;
     let result_msat_per_vb = result_sat_per_vb * 1000.0;
     let result_msat_per_vb_f32 = result_msat_per_vb as f32;
     debug!("derive_fee_rate_msat_per_vb: result_msat_per_vb_f32 {} from inputs: absolute_fees_sat {}, result_msat_per_vb: {}",
