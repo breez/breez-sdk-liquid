@@ -3331,10 +3331,10 @@ impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_amount = <crate::model::PayOnchainAmount>::sse_decode(deserializer);
-        let mut var_feeRateMsatPerVbyte = <Option<u32>>::sse_decode(deserializer);
+        let mut var_feeRateSatPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
             amount: var_amount,
-            fee_rate_msat_per_vbyte: var_feeRateMsatPerVbyte,
+            fee_rate_sat_per_vbyte: var_feeRateSatPerVbyte,
         };
     }
 }
@@ -3384,11 +3384,11 @@ impl SseDecode for crate::model::PrepareRefundRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_swapAddress = <String>::sse_decode(deserializer);
         let mut var_refundAddress = <String>::sse_decode(deserializer);
-        let mut var_feeRateMsatPerVbyte = <u32>::sse_decode(deserializer);
+        let mut var_feeRateSatPerVbyte = <u32>::sse_decode(deserializer);
         return crate::model::PrepareRefundRequest {
             swap_address: var_swapAddress,
             refund_address: var_refundAddress,
-            fee_rate_msat_per_vbyte: var_feeRateMsatPerVbyte,
+            fee_rate_sat_per_vbyte: var_feeRateSatPerVbyte,
         };
     }
 }
@@ -3491,11 +3491,11 @@ impl SseDecode for crate::model::RefundRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_swapAddress = <String>::sse_decode(deserializer);
         let mut var_refundAddress = <String>::sse_decode(deserializer);
-        let mut var_feeRateMsatPerVbyte = <u32>::sse_decode(deserializer);
+        let mut var_feeRateSatPerVbyte = <u32>::sse_decode(deserializer);
         return crate::model::RefundRequest {
             swap_address: var_swapAddress,
             refund_address: var_refundAddress,
-            fee_rate_msat_per_vbyte: var_feeRateMsatPerVbyte,
+            fee_rate_sat_per_vbyte: var_feeRateSatPerVbyte,
         };
     }
 }
@@ -5140,7 +5140,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PreparePayOnchainRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.amount.into_into_dart().into_dart(),
-            self.fee_rate_msat_per_vbyte.into_into_dart().into_dart(),
+            self.fee_rate_sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5227,7 +5227,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareRefundRequest {
         [
             self.swap_address.into_into_dart().into_dart(),
             self.refund_address.into_into_dart().into_dart(),
-            self.fee_rate_msat_per_vbyte.into_into_dart().into_dart(),
+            self.fee_rate_sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5394,7 +5394,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::RefundRequest {
         [
             self.swap_address.into_into_dart().into_dart(),
             self.refund_address.into_into_dart().into_dart(),
-            self.fee_rate_msat_per_vbyte.into_into_dart().into_dart(),
+            self.fee_rate_sat_per_vbyte.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6829,7 +6829,7 @@ impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PayOnchainAmount>::sse_encode(self.amount, serializer);
-        <Option<u32>>::sse_encode(self.fee_rate_msat_per_vbyte, serializer);
+        <Option<u32>>::sse_encode(self.fee_rate_sat_per_vbyte, serializer);
     }
 }
 
@@ -6864,7 +6864,7 @@ impl SseEncode for crate::model::PrepareRefundRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.swap_address, serializer);
         <String>::sse_encode(self.refund_address, serializer);
-        <u32>::sse_encode(self.fee_rate_msat_per_vbyte, serializer);
+        <u32>::sse_encode(self.fee_rate_sat_per_vbyte, serializer);
     }
 }
 
@@ -6933,7 +6933,7 @@ impl SseEncode for crate::model::RefundRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.swap_address, serializer);
         <String>::sse_encode(self.refund_address, serializer);
-        <u32>::sse_encode(self.fee_rate_msat_per_vbyte, serializer);
+        <u32>::sse_encode(self.fee_rate_sat_per_vbyte, serializer);
     }
 }
 
@@ -8474,7 +8474,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PreparePayOnchainRequest {
             crate::model::PreparePayOnchainRequest {
                 amount: self.amount.cst_decode(),
-                fee_rate_msat_per_vbyte: self.fee_rate_msat_per_vbyte.cst_decode(),
+                fee_rate_sat_per_vbyte: self.fee_rate_sat_per_vbyte.cst_decode(),
             }
         }
     }
@@ -8513,7 +8513,7 @@ mod io {
             crate::model::PrepareRefundRequest {
                 swap_address: self.swap_address.cst_decode(),
                 refund_address: self.refund_address.cst_decode(),
-                fee_rate_msat_per_vbyte: self.fee_rate_msat_per_vbyte.cst_decode(),
+                fee_rate_sat_per_vbyte: self.fee_rate_sat_per_vbyte.cst_decode(),
             }
         }
     }
@@ -8590,7 +8590,7 @@ mod io {
             crate::model::RefundRequest {
                 swap_address: self.swap_address.cst_decode(),
                 refund_address: self.refund_address.cst_decode(),
-                fee_rate_msat_per_vbyte: self.fee_rate_msat_per_vbyte.cst_decode(),
+                fee_rate_sat_per_vbyte: self.fee_rate_sat_per_vbyte.cst_decode(),
             }
         }
     }
@@ -9464,7 +9464,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 amount: Default::default(),
-                fee_rate_msat_per_vbyte: core::ptr::null_mut(),
+                fee_rate_sat_per_vbyte: core::ptr::null_mut(),
             }
         }
     }
@@ -9519,7 +9519,7 @@ mod io {
             Self {
                 swap_address: core::ptr::null_mut(),
                 refund_address: core::ptr::null_mut(),
-                fee_rate_msat_per_vbyte: Default::default(),
+                fee_rate_sat_per_vbyte: Default::default(),
             }
         }
     }
@@ -9628,7 +9628,7 @@ mod io {
             Self {
                 swap_address: core::ptr::null_mut(),
                 refund_address: core::ptr::null_mut(),
-                fee_rate_msat_per_vbyte: Default::default(),
+                fee_rate_sat_per_vbyte: Default::default(),
             }
         }
     }
@@ -11382,7 +11382,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
         amount: wire_cst_pay_onchain_amount,
-        fee_rate_msat_per_vbyte: *mut u32,
+        fee_rate_sat_per_vbyte: *mut u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11409,7 +11409,7 @@ mod io {
     pub struct wire_cst_prepare_refund_request {
         swap_address: *mut wire_cst_list_prim_u_8_strict,
         refund_address: *mut wire_cst_list_prim_u_8_strict,
-        fee_rate_msat_per_vbyte: u32,
+        fee_rate_sat_per_vbyte: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11462,7 +11462,7 @@ mod io {
     pub struct wire_cst_refund_request {
         swap_address: *mut wire_cst_list_prim_u_8_strict,
         refund_address: *mut wire_cst_list_prim_u_8_strict,
-        fee_rate_msat_per_vbyte: u32,
+        fee_rate_sat_per_vbyte: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

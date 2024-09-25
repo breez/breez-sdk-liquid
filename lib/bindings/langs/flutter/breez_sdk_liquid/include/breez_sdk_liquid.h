@@ -148,7 +148,7 @@ typedef struct wire_cst_pay_onchain_amount {
 
 typedef struct wire_cst_prepare_pay_onchain_request {
   struct wire_cst_pay_onchain_amount amount;
-  uint32_t *fee_rate_msat_per_vbyte;
+  uint32_t *fee_rate_sat_per_vbyte;
 } wire_cst_prepare_pay_onchain_request;
 
 typedef struct wire_cst_prepare_receive_request {
@@ -159,7 +159,7 @@ typedef struct wire_cst_prepare_receive_request {
 typedef struct wire_cst_prepare_refund_request {
   struct wire_cst_list_prim_u_8_strict *swap_address;
   struct wire_cst_list_prim_u_8_strict *refund_address;
-  uint32_t fee_rate_msat_per_vbyte;
+  uint32_t fee_rate_sat_per_vbyte;
 } wire_cst_prepare_refund_request;
 
 typedef struct wire_cst_prepare_send_request {
@@ -182,7 +182,7 @@ typedef struct wire_cst_receive_payment_request {
 typedef struct wire_cst_refund_request {
   struct wire_cst_list_prim_u_8_strict *swap_address;
   struct wire_cst_list_prim_u_8_strict *refund_address;
-  uint32_t fee_rate_msat_per_vbyte;
+  uint32_t fee_rate_sat_per_vbyte;
 } wire_cst_refund_request;
 
 typedef struct wire_cst_restore_request {
