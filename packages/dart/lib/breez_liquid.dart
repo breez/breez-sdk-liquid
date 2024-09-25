@@ -15,7 +15,7 @@ typedef BreezLiquid = RustLibApi;
 typedef BreezLiquidImpl = RustLibApiImpl;
 
 const libName = 'libbreez_sdk_liquid_bindings.so';
-const iosLibName = "breez_sdk_liquid";
+const iosLibName = "breez_sdk_liquidFFI";
 
 class UnsupportedPlatform implements Exception {
   UnsupportedPlatform(String s);
