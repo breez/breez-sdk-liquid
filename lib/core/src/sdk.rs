@@ -1102,7 +1102,7 @@ impl LiquidSdk {
     /// * `req` - the [PreparePayOnchainRequest] containing:
     ///     * `amount` - which can be of two types: [PayOnchainAmount::Drain], which uses all funds,
     ///        and [PayOnchainAmount::Receiver], which sets the amount the receiver should receive
-    ///     * `sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
+    ///     * `fee_rate_sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
         req: &PreparePayOnchainRequest,
@@ -1111,7 +1111,7 @@ impl LiquidSdk {
 
         let balance_sat = self.get_info().await?.balance_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
-        let claim_fees_sat = match req.fee_rate_msat_per_vbyte {
+        let claim_fees_sat = match req.fee_rate_sat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
             None => pair.clone().fees.claim_estimate(),
         };
@@ -1755,7 +1755,7 @@ impl LiquidSdk {
     /// * `req` - the [PrepareRefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
     ///     * `refund_address` - the Bitcoin address to refund to
-    ///     * `fee_rate_msat_per_vbyte` - the fee rate at which to broadcast the refund transaction
+    ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn prepare_refund(
         &self,
         req: &PrepareRefundRequest,
@@ -1765,7 +1765,7 @@ impl LiquidSdk {
             .prepare_refund(
                 &req.swap_address,
                 &req.refund_address,
-                req.fee_rate_msat_per_vbyte,
+                req.fee_rate_sat_per_vbyte,
             )
             .await?;
         Ok(PrepareRefundResponse {
@@ -1782,21 +1782,21 @@ impl LiquidSdk {
     /// * `req` - the [RefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
     ///     * `refund_address` - the Bitcoin address to refund to
-    ///     * `fee_rate_msat_per_vbyte` - the fee rate at which to broadcast the refund transaction
+    ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
         let refund_tx_id = self
             .chain_swap_handler
             .refund_incoming_swap(
                 &req.swap_address,
                 &req.refund_address,
-                req.fee_rate_msat_per_vbyte,
+                req.fee_rate_sat_per_vbyte,
                 true,
             )
             .or_else(|_| {
                 self.chain_swap_handler.refund_incoming_swap(
                     &req.swap_address,
                     &req.refund_address,
-                    req.fee_rate_msat_per_vbyte,
+                    req.fee_rate_sat_per_vbyte,
                     false,
                 )
             })

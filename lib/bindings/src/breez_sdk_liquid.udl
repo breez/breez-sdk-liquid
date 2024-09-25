@@ -419,7 +419,7 @@ interface PayOnchainAmount {
 
 dictionary PreparePayOnchainRequest {
     PayOnchainAmount amount;
-    u32? fee_rate_msat_per_vbyte = null;
+    u32? fee_rate_sat_per_vbyte = null;
 };
 
 dictionary PreparePayOnchainResponse {
@@ -519,7 +519,7 @@ dictionary RecommendedFees {
 dictionary PrepareRefundRequest {
     string swap_address;
     string refund_address;
-    u32 fee_rate_msat_per_vbyte;
+    u32 fee_rate_sat_per_vbyte;
 };
 
 dictionary PrepareRefundResponse {
@@ -531,7 +531,7 @@ dictionary PrepareRefundResponse {
 dictionary RefundRequest {
     string swap_address;
     string refund_address;
-    u32 fee_rate_msat_per_vbyte;
+    u32 fee_rate_sat_per_vbyte;
 };
 
 dictionary RefundResponse {
