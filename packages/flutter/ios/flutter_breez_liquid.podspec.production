@@ -21,13 +21,12 @@ Pod::Spec.new do |spec|
     ]
   }
 
-  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
+  spec.vendored_frameworks = "#{frameworks_dir}/#{framework}"
   spec.static_framework = true
 
   spec.ios.deployment_target = '13.0'
   spec.osx.deployment_target = '15.0'
 
-  spec.dependency 'breez_sdk_liquidFFI'
   spec.dependency 'Flutter'
   # Flutter.framework does not contain a i386 slice.
   spec.pod_target_xcconfig = {
