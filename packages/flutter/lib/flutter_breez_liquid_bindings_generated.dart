@@ -1594,7 +1594,7 @@ final class wire_cst_pay_onchain_amount extends ffi.Struct {
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
   external wire_cst_pay_onchain_amount amount;
 
-  external ffi.Pointer<ffi.Uint32> fee_rate_msat_per_vbyte;
+  external ffi.Pointer<ffi.Uint32> fee_rate_sat_per_vbyte;
 }
 
 final class wire_cst_prepare_receive_request extends ffi.Struct {
@@ -1610,7 +1610,7 @@ final class wire_cst_prepare_refund_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
 
   @ffi.Uint32()
-  external int fee_rate_msat_per_vbyte;
+  external int fee_rate_sat_per_vbyte;
 }
 
 final class wire_cst_prepare_send_request extends ffi.Struct {
@@ -1643,7 +1643,7 @@ final class wire_cst_refund_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
 
   @ffi.Uint32()
-  external int fee_rate_msat_per_vbyte;
+  external int fee_rate_sat_per_vbyte;
 }
 
 final class wire_cst_restore_request extends ffi.Struct {
