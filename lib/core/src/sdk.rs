@@ -906,9 +906,11 @@ impl LiquidSdk {
                 receiver_amount_sat,
             )
             .await?;
+        let tx_fees_sat = tx.all_fees().values().sum::<u64>();
+        ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
 
         let tx_id = tx.txid().to_string();
-        let payer_amount_sat = receiver_amount_sat + fees_sat;
+        let payer_amount_sat = receiver_amount_sat + tx_fees_sat;
         info!(
             "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
