@@ -896,18 +896,12 @@ impl LiquidSdk {
             });
         }
 
-        // Ensure we use the same fee-rate from the `PrepareSendResponse`
-        let fee_rate_msat_per_vb = utils::derive_fee_rate_msat_per_vb(
-            self.onchain_wallet.clone(),
-            receiver_amount_sat,
-            &address_data.address,
-            fees_sat,
-        )
-        .await?;
         let tx = self
             .onchain_wallet
             .build_tx(
-                Some(fee_rate_msat_per_vb),
+                self.config
+                    .lowball_fee_rate_msat_per_vbyte()
+                    .map(|v| v as f32),
                 &address_data.address,
                 receiver_amount_sat,
             )
