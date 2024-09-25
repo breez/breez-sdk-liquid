@@ -36,7 +36,7 @@ It’s a nodeless Lightning integration that offers a self-custodial, end-to-end
 
 Head over to the [Breez SDK - Nodeless *(Liquid Implementation)* documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
 
-You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To get the API key is easy — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
+You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
 
 ## **API**
 
