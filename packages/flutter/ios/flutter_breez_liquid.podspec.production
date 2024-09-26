@@ -1,19 +1,10 @@
 version = '0.2.1' # generated; do not edit
-framework = 'breez_sdk_liquidFFI.xcframework'
-lib_name = "breez-sdk-liquidFFI.#{version}"
-url = "https://github.com/breez/breez-sdk-liquid-swift/releases/download/#{version}/#{framework}.zip"
-frameworks_dir = 'Frameworks'
 
-`
-if [ ! -d #{frameworks_dir}/#{framework} ]; then
-    mkdir -p #{frameworks_dir}
-    curl -L #{url} -o #{frameworks_dir}/#{lib_name}.zip
-    cd #{frameworks_dir}
-    unzip #{lib_name}.zip
-    rm -rf __MACOSX
-    rm #{lib_name}.zip
-fi
-`
+# We cannot distribute the XCFramework alongside the library directly,
+# so we have to fetch the correct version here.
+framework_name = 'breez_sdk_liquidFFI.xcframework'
+zip_name = "#{framework_name}.zip"
+url = "https://github.com/breez/breez-sdk-liquid-swift/releases/download/#{version}/#{zip_name}"
 
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint flutter_breez_liquid.podspec` to validate before publishing.
@@ -36,7 +27,20 @@ Pod::Spec.new do |spec|
     ]
   }
 
-  spec.vendored_frameworks = "#{frameworks_dir}/#{framework}"
+  spec.vendored_frameworks = "Frameworks/#{framework_name}"
+
+  spec.prepare_command = <<-CMD
+    cd Frameworks
+    rm -rf #{framework_name}
+
+    if [ ! -f #{zip_name} ]
+    then
+      wget #{url} -O #{zip_name} || curl -L #{url} -o #{zip_name}
+    fi
+
+    unzip #{zip_name}
+    cd -
+  CMD
 
   spec.ios.deployment_target = '13.0'
   spec.osx.deployment_target = '15.0'
