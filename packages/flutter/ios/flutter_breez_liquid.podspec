@@ -33,8 +33,6 @@ Pod::Spec.new do |spec|
     'STRIP_STYLE' => 'non-global',
     'DEFINES_MODULE' => 'YES',
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
-    'OTHER_LDFLAGS[arch=x86_64]' => "-force_load $(PODS_TARGET_SRCROOT)/Frameworks/breez_sdk_liquidFFI.xcframework/ios-x86_64-simulator/breez_sdk_liquidFFI",
-    'OTHER_LDFLAGS[arch=arm64]' => "-force_load $(PODS_TARGET_SRCROOT)/Frameworks/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI",
   }
   spec.swift_version = '5.0'
 end
