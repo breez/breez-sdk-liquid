@@ -15,7 +15,6 @@ use lwk_wollet::{
     elements::{Address, Transaction},
     Tip, WalletTx,
 };
-use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
 
 pub(crate) struct MockWallet {}
 
@@ -92,15 +91,15 @@ impl Signer for MockSigner {
         todo!()
     }
 
-    fn derive_xpub(&self, derivation_path: String) -> Result<Vec<u8>, SignerError> {
+    fn derive_xpub(&self, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
         todo!()
     }
 
-    fn sign_ecdsa(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError> {
+    fn sign_ecdsa(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
         todo!()
     }
 
-    fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+    fn sign_ecdsa_recoverable(&self, _msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
         todo!()
     }
 
@@ -108,7 +107,7 @@ impl Signer for MockSigner {
         todo!()
     }
 
-    fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError> {
+    fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
         todo!()
     }
 }
