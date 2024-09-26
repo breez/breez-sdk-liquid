@@ -12,8 +12,9 @@ bootstrap frb='true' build='false':
 	@if {{frb}} == true; then just frb; fi
 	just init
 	just init-sdk
-	just gen
-	@if {{build}} == true; then just build-uniffi; fi	
+	just codegen
+	@if {{build}} == true; then just build-uniffi; fi
+	just ffigen
 	just check
 
 # Install flutter_rust_bridge_codegen dependencies
@@ -61,6 +62,7 @@ build-uniffi-android:
 
 build-uniffi-swift:
 	bash scripts/build_uniffi_swift.sh
+	just link-uniffi
 
 # (melos) Run tests on packages in workspace
 test build='false':
@@ -93,6 +95,10 @@ link-android:
 link-other:
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
 	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
+
+link-uniffi:
+	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
+	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
 
 # Copies library archives from platform-build to their expected locations
 copy:
