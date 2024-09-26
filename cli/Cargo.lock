@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "breez-liquid-cli"
-version = "0.2.1"
+version = "0.3.3"
 dependencies = [
  "anyhow",
  "bip39",
@@ -536,7 +536,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.2.1"
+version = "0.3.4"
 dependencies = [
  "anyhow",
  "async-trait",

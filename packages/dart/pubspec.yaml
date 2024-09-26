@@ -1,6 +1,6 @@
 name: breez_liquid
 description: Dart bindings for the Breez Liquid SDK
-version: 0.2.1
+version: 0.3.4
 homepage: https://breez.technology
 repository: https://github.com/breez/breez-sdk-liquid-dart
 publish_to: 'none'
