@@ -81,6 +81,12 @@ jobs:
           name: bindings-swift
           path: dist/ios/Sources/BreezSDKLiquid/
 
+      - name: Move Source header files
+        working-directory: dist/ios/Sources/BreezSDKLiquid/
+        run: |
+          mv breez_sdk_liquidFFI.h ../../Classes
+          rm breez_sdk_liquidFFI.modulemap
+
       - name: Set package version
         working-directory: dist
         run: |
