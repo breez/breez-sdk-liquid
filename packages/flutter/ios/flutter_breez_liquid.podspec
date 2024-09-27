@@ -22,7 +22,6 @@ Pod::Spec.new do |spec|
   }
 
   spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
-  spec.static_framework = true
 
   spec.ios.deployment_target = '13.0'
   spec.osx.deployment_target = '15.0'
