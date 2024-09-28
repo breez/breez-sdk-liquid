@@ -53,6 +53,41 @@ jobs:
           cd ../cli
           cargo clippy -- -D warnings
 
+  build:
+    name: Cargo Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+          cache-on-failure: "true"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: cargo build
+        working-directory: lib
+
+      - name: Check git status
+        env:
+          GIT_PAGER: cat
+        run: |
+          status=$(git status --porcelain)
+          if [[ -n "$status" ]]; then
+            echo "Git status has changes"
+            echo "$status"
+            git diff
+            exit 1
+          else
+            echo "No changes in git status"
+          fi
+
   tests:
     name: Test sdk-core
     runs-on: ubuntu-latest
