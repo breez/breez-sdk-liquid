@@ -569,7 +569,7 @@ impl SwapScriptV2 {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     Incoming = 0,
     Outgoing = 1,
