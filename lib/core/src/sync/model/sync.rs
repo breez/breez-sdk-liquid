@@ -71,10 +71,10 @@ pub mod syncer_client {
         dead_code,
         missing_docs,
         clippy::wildcard_imports,
-        clippy::let_unit_value,
+        clippy::let_unit_value
     )]
-    use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    use tonic::codegen::*;
     #[derive(Debug, Clone)]
     pub struct SyncerClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -118,9 +118,8 @@ pub mod syncer_client {
                     <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
                 >,
             >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
+                Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             SyncerClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -159,39 +158,28 @@ pub mod syncer_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SetRecordRequest>,
         ) -> std::result::Result<tonic::Response<super::SetRecordReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/sync.Syncer/SetRecord");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("sync.Syncer", "SetRecord"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sync.Syncer", "SetRecord"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn list_changes(
             &mut self,
             request: impl tonic::IntoRequest<super::ListChangesRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::ListChangesReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::ListChangesReply>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/sync.Syncer/ListChanges");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("sync.Syncer", "ListChanges"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sync.Syncer", "ListChanges"));
             self.inner.unary(req, path, codec).await
         }
     }
