@@ -2,7 +2,6 @@ name: breez_sdk_liquid
 repository: https://github.com/breez/breez-sdk-liquid
 packages:
   - ../../../../packages/**
-  - scripts
 ignore:
   # e.g. ignore example apps of dependencies
   - ../../../../packages/**/example/**
@@ -21,21 +20,6 @@ commands:
       preCommit: bash scripts/version.sh
 
 scripts:
-  # only MacOS machines (CI or otherwise) can realistically invoke this.
-  build:
-    melos run build-apple &&
-    melos run build-android &&
-    melos run build-other
-
-  # the only time 'melos run build-*' is called is to prepare
-  # for distribution, so use the 'frb-min' profile.
-  build-apple: dart scripts/build_apple.dart --profile frb-min
-  build-android: bash scripts/build-android.sh --profile frb-min
-
-  # Platform-specific builds, mainly for testing
-  build-ios: dart scripts/build_apple.dart --ios
-  build-macos: dart scripts/build_apple.dart --local
-
   test:
     cargo build --package breez-sdk-liquid --profile=frb &&
     melos run test-dart &&

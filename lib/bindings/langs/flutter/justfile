@@ -40,17 +40,6 @@ codegen:
 ffigen:
 	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
-# Builds the local library for testing
-build *args:
-	cargo build --package breez-sdk-liquid --manifest-path ../../../core/Cargo.toml --features frb {{args}}
-
-build-apple profile='frb-min':
-	dart scripts/build_apple.dart --profile {{profile}}
-
-build-android profile='frb-min':
-	bash scripts/build-android.sh --profile {{profile}}
-
-
 build-uniffi:
 	just build-uniffi-android
 	just build-uniffi-swift
@@ -69,7 +58,7 @@ test build='false':
 
 # (melos) Run tests on Dart packages in workspace
 test-dart build='true': 
-	@if {{build}} == true; then just build; fi
+	@if {{build}} == true; then just build-uniffi; fi
 	melos test-dart
 
 # (melos) Run integration tests on Flutter packages in workspace
