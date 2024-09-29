@@ -1,5 +1,11 @@
 version = '0.2.1' # generated; do not edit
 
+# We cannot distribute the XCFramework alongside the library directly,
+# so we have to fetch the correct version here.
+framework_name = 'breez_sdk_liquidFFI.xcframework'
+zip_name = "#{framework_name}.zip"
+url = "https://github.com/breez/breez-sdk-liquid-swift/releases/download/#{version}/#{zip_name}"
+
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint flutter_breez_liquid.podspec` to validate before publishing.
 Pod::Spec.new do |spec|
@@ -21,7 +27,20 @@ Pod::Spec.new do |spec|
     ]
   }
 
-  spec.vendored_frameworks = "Frameworks/breez_sdk_liquidFFI.xcframework"
+  spec.vendored_frameworks = "Frameworks/#{framework_name}"
+
+  spec.prepare_command = <<-CMD
+    cd Frameworks
+    rm -rf #{framework_name}
+
+    if [ ! -f #{zip_name} ]
+    then
+      wget #{url} -O #{zip_name} || curl -L #{url} -o #{zip_name}
+    fi
+
+    unzip #{zip_name}
+    cd -
+  CMD
 
   spec.ios.deployment_target = '13.0'
   spec.osx.deployment_target = '15.0'
@@ -31,7 +50,7 @@ Pod::Spec.new do |spec|
   spec.pod_target_xcconfig = {
     'STRIP_STYLE' => 'non-global',
     'DEFINES_MODULE' => 'YES',
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386'
   }
   spec.swift_version = '5.0'
 end
