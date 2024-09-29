@@ -40,16 +40,18 @@ codegen:
 ffigen:
 	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
+# Builds the uniFFI library
 build-uniffi:
 	just build-uniffi-android
 	just build-uniffi-swift
 
+# Builds the uniFFI library for Android
 build-uniffi-android:
 	bash scripts/build_uniffi_android.sh
 
+# Builds the uniFFI library for Swift
 build-uniffi-swift:
 	bash scripts/build_uniffi_swift.sh
-	just link-uniffi
 
 # (melos) Run tests on packages in workspace
 test build='false':
@@ -66,35 +68,9 @@ test-dart build='true':
 #	@if {{build}} == true; then build; fi
 #	melos test-flutter
 
-# Softlinks library archives from platform-build to their expected locations
-link:
-	just link-apple
-	just link-android
-
-link-apple:
-	-ln -sf $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
-	-ln -sf $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
-
-link-android:
-	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
-
-
 link-uniffi:
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
-
-# Copies library archives from platform-build to their expected locations
-copy:
-	just copy-apple
-	just copy-android
-
-copy-apple:
-	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
-	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
-
-copy-android:
-	cp $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
-
 
 # (melos) use instead of flutter pub get
 init *args:
