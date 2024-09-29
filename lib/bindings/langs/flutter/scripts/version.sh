@@ -9,6 +9,7 @@ sed -i.bak "1 s/.*/$APPLE_HEADER/" $ROOT/packages/flutter/ios/breez_sdk_liquid.p
 sed -i.bak "1 s/.*/$APPLE_HEADER/" $ROOT/packages/flutter/ios/flutter_breez_liquid.podspec
 sed -i.bak "1 s/.*/$APPLE_HEADER/" $ROOT/packages/flutter/ios/flutter_breez_liquid.podspec.production
 sed -i.bak "1 s/.*/$APPLE_HEADER/" $ROOT/packages/flutter/macos/flutter_breez_liquid.podspec
+sed -i.bak "1 s/.*/$APPLE_HEADER/" $ROOT/packages/flutter/macos/flutter_breez_liquid.podspec.production
 rm $ROOT/packages/flutter/macos/*.bak $ROOT/packages/flutter/ios/*.bak
 
 # CMake platforms (Linux, Windows, and Android)
