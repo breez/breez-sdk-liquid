@@ -100,12 +100,11 @@ jobs:
           rm pubspec.yaml.bak
           rm pubspec_overrides.yaml.bak
           rm android/build.gradle.bak
-          rm android/CMakeLists.txt.bak
           rm ios/flutter_breez_liquid.podspec.bak
           rm macos/flutter_breez_liquid.podspec.bak
           rm macos/flutter_breez_liquid.podspec.production.bak
       
-      - name: Update version number on podspec files & CMake scripts
+      - name: Update version number on podspec & gradle files
         working-directory: build/lib/bindings/langs/flutter/
         run: bash scripts/version.sh
 

@@ -50,8 +50,6 @@ build-apple profile='frb-min':
 build-android profile='frb-min':
 	bash scripts/build-android.sh --profile {{profile}}
 
-build-other profile='frb-min':
-	dart scripts/build_other.dart --profile {{profile}}
 
 build-uniffi:
 	just build-uniffi-android
@@ -83,7 +81,6 @@ test-dart build='true':
 link:
 	just link-apple
 	just link-android
-	just link-other
 
 link-apple:
 	-ln -sf $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
@@ -92,9 +89,6 @@ link-apple:
 link-android:
 	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
 
-link-other:
-	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
-	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
 
 link-uniffi:
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
@@ -104,7 +98,6 @@ link-uniffi:
 copy:
 	just copy-apple
 	just copy-android
-	just copy-other
 
 copy-apple:
 	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
@@ -113,9 +106,6 @@ copy-apple:
 copy-android:
 	cp $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
 
-copy-other:
-	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
-	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
 
 # (melos) use instead of flutter pub get
 init *args:

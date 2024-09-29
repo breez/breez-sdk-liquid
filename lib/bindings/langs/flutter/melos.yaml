@@ -31,12 +31,10 @@ scripts:
   # for distribution, so use the 'frb-min' profile.
   build-apple: dart scripts/build_apple.dart --profile frb-min
   build-android: bash scripts/build-android.sh --profile frb-min
-  build-other: dart scripts/build_other.dart --profile frb-min
 
   # Platform-specific builds, mainly for testing
   build-ios: dart scripts/build_apple.dart --ios
   build-macos: dart scripts/build_apple.dart --local
-  build-other-local: dart scripts/build_other.dart --local
 
   test:
     cargo build --package breez-sdk-liquid --profile=frb &&

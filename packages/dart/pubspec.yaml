@@ -6,11 +6,9 @@ repository: https://github.com/breez/breez-sdk-liquid-dart
 publish_to: 'none'
 
 platforms:
-  macos:
-  linux:
-  windows:
   android:
   ios:
+  macos:
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
