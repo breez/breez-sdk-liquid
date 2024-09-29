@@ -3,6 +3,7 @@ frb_bin := "flutter_rust_bridge_codegen generate"
 
 export CARGO_TERM_COLOR := "always"
 
+# Lists available recipes
 default:
   just --list --unsorted
 
@@ -14,6 +15,7 @@ bootstrap frb='true' build='false':
 	just init-sdk
 	just codegen
 	@if {{build}} == true; then just build-uniffi; fi
+	just link-headers
 	just ffigen
 	just check
 
@@ -25,16 +27,11 @@ frb:
 	dart pub global activate ffi
 	cargo install cargo-xcode
 
-# Generate bindings
-gen: codegen && ffigen
-
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	mkdir -p ../../../../packages/dart/lib/src
 	{{frb_bin}}
 	cd ../../../../packages/dart/lib/src && dart format -l 110 .
-	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquid.h
-	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquid.h
 
 # Generate FFI bindings
 ffigen:
@@ -68,7 +65,10 @@ test-dart build='true':
 #	@if {{build}} == true; then build; fi
 #	melos test-flutter
 
-link-uniffi:
+# Softlinks library headers to ther expected locations
+link-headers:
+	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquid.h
+	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquid.h
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
 
