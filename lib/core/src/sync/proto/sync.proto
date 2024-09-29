@@ -9,14 +9,14 @@ service Syncer {
 }
 
 message Record {
-  uint64 index = 1;
+  int64 id = 1;
   float version = 2;
   bytes data = 3;
 }
 
 message SetRecordRequest {
   Record record = 1;
-  int64 request_time = 2;
+  uint32 request_time = 2;
   string signature = 3;
 }
 enum SetRecordStatus {
@@ -25,12 +25,12 @@ enum SetRecordStatus {
 }
 message SetRecordReply {
   SetRecordStatus status = 1;
-  int64 new_version = 2;
+  int64 new_id = 2;
 }
 
 message ListChangesRequest {
-  int64 since_version = 1;
-  int64 request_time = 2;
+  int64 from_id = 1;
+  uint32 request_time = 2;
   string signature = 3;
 }
 message ListChangesReply { repeated Record changes = 1; }
