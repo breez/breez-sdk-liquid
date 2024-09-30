@@ -57,15 +57,21 @@ jobs:
         run: |
           rm -rf android
           rm -rf ios
+          rm -rf macos
           rm -rf lib
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
+          cp -r ../build/packages/flutter/macos .
           cp -r ../build/lib/bindings/langs/swift/Sources ios/
+          cp -r ../build/lib/bindings/langs/swift/Sources macos/          
           mv android/build.gradle.production android/build.gradle
           mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
+          mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
           cp -r ../build/packages/flutter/lib .
           cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquid/include/breez_sdk_liquid.h ios/Classes
+          cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquid/include/breez_sdk_liquid.h macos/Classes
           cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ios/Classes
+          cp -r ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h macos/Classes
           cp ../build/packages/flutter/analysis_options.yaml .
           cp ../build/packages/flutter/pubspec.yaml .
           cp ../build/packages/flutter/pubspec_overrides.yaml .
