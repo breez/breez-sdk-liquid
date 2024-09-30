@@ -1,7 +1,9 @@
 use boltz_client::boltz::SwapTree;
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::Direction;
+use crate::{prelude::Direction, utils};
+
+use self::sync::Record;
 
 pub(crate) mod sync;
 
@@ -65,4 +67,28 @@ pub(crate) enum SyncData {
     Chain(ChainSyncData),
     Send(SendSyncData),
     Receive(ReceiveSyncData),
+}
+
+impl SyncData {
+    pub(crate) fn to_bytes(&self) -> serde_json::Result<Vec<u8>> {
+        serde_json::to_vec(self)
+    }
+}
+
+pub(crate) struct DecryptedRecord {
+    id: i64,
+    version: f32,
+    data: SyncData,
+}
+
+impl DecryptedRecord {
+    pub(crate) fn try_from_record(private_key: &[u8], record: &Record) -> anyhow::Result<Self> {
+        let dec_data = utils::decrypt(private_key, record.data.as_slice())?;
+        let data = serde_json::from_slice(&dec_data)?;
+        Ok(Self {
+            id: record.id,
+            version: record.version,
+            data,
+        })
+    }
 }

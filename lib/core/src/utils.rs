@@ -9,6 +9,7 @@ use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
 };
+use serde::{Deserialize, Serialize};
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -48,4 +49,12 @@ pub(crate) fn deserialize_tx_hex(tx_hex: &str) -> Result<Transaction> {
     Ok(deserialize(&Vec::<u8>::from_hex(tx_hex).map_err(
         |err| anyhow!("Could not deserialize transaction: {err:?}"),
     )?)?)
+}
+
+pub(crate) fn encrypt(rc_pub: &[u8], data: &[u8]) -> Result<Vec<u8>> {
+    ecies::encrypt(rc_pub, data).map_err(|err| anyhow!("Could not encrypt data: {err}"))
+}
+
+pub(crate) fn decrypt(rc_prv: &[u8], data: &[u8]) -> Result<Vec<u8>> {
+    ecies::decrypt(rc_prv, data).map_err(|err| anyhow!("Could not decrypt data: {err}"))
 }

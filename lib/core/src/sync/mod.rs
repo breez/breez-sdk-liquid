@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use log::warn;
 use rusqlite::params;
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
@@ -13,7 +14,7 @@ use self::model::{
         syncer_client::SyncerClient, ListChangesReply, ListChangesRequest, Record, SetRecordReply,
         SetRecordRequest, SetRecordStatus,
     },
-    SyncData,
+    DecryptedRecord, SyncData,
 };
 use crate::{persist::Persister, utils};
 
@@ -28,7 +29,7 @@ pub trait SyncModule {
     async fn apply_changes(&self, changes: &[Record]) -> Result<()>;
 
     /// Retrieves the changes since a specified [id](Record::id)
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>>;
+    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<DecryptedRecord>>;
 
     /// Adds a record to the remote
     async fn set_record(&self, data: SyncData) -> Result<()>;
@@ -70,6 +71,20 @@ impl BreezSyncModule {
 
         Ok(())
     }
+
+    fn decrypt_records(&self, records: Vec<Record>) -> Vec<DecryptedRecord> {
+        let decrypted_records = vec![];
+        for record in records {
+            match DecryptedRecord::try_from_record(todo!(), &record) {
+                Ok(dec_record) => decrypted_records.push(dec_record),
+                Err(err) => {
+                    warn!("Could not decrypt record: {err}");
+                    continue;
+                }
+            }
+        }
+        decrypted_records
+    }
 }
 
 #[async_trait]
@@ -84,23 +99,24 @@ impl SyncModule for BreezSyncModule {
         unimplemented!()
     }
 
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>> {
+    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<DecryptedRecord>> {
         let Some(ref mut client) = *self.client.lock().await else {
             return Err(anyhow!(
                 "Cannot run `get_changes_since`: client not connected"
             ));
         };
 
-        let ListChangesReply { changes } = client
+        let records = client
             .list_changes(ListChangesRequest {
                 from_id: from_id as i64,
                 request_time: utils::now(),
                 signature: todo!(),
             })
             .await?
-            .into_inner();
+            .into_inner()
+            .changes;
 
-        todo!()
+        Ok(self.decrypt_records(records))
     }
 
     async fn set_record(&self, data: SyncData) -> Result<()> {
@@ -109,7 +125,7 @@ impl SyncModule for BreezSyncModule {
         };
 
         let id = self.get_latest_record_id()? + 1;
-        let data = todo!();
+        let data = utils::encrypt(todo!(), &data.to_bytes()?)?;
         let record = Some(Record {
             id,
             version: CURRENT_SCHEMA_VERSION,
