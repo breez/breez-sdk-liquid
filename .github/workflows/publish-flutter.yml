@@ -62,8 +62,6 @@ jobs:
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/macos .
-          cp -r ../build/lib/bindings/langs/swift/Sources ios/
-          cp -r ../build/lib/bindings/langs/swift/Sources macos/          
           mv android/build.gradle.production android/build.gradle
           mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
           mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
@@ -93,6 +91,11 @@ jobs:
         run: |
           mv breez_sdk_liquidFFI.h ../../Classes
           rm breez_sdk_liquidFFI.modulemap
+
+      - name: Copy iOS sources to macOS sources
+        working-directory: dist
+        run: |
+          cp -r ios/Sources/ macos/Sources/
 
       - name: Set package version
         working-directory: dist
