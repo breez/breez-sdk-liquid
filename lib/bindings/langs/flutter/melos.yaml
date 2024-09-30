@@ -5,8 +5,6 @@ packages:
 ignore:
   # e.g. ignore example apps of dependencies
   - ../../../../packages/**/example/**
-  # e.g. ignore Flutter example app
-  - '../../../../packages/**/example'
 
 commands:
   bootstrap:
