@@ -86,10 +86,10 @@ jobs:
           name: bindings-swift
           path: dist/ios/Sources/BreezSDKLiquid/
 
-      - name: Move Source header files
+      - name: Cleanup header file artifacts 
         working-directory: dist/ios/Sources/BreezSDKLiquid/
         run: |
-          mv breez_sdk_liquidFFI.h ../../Classes
+          rm breez_sdk_liquidFFI.h
           rm breez_sdk_liquidFFI.modulemap
 
       - name: Copy iOS sources to macOS sources
