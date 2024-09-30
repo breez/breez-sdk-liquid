@@ -94,5 +94,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         
         DROP TABLE payment_details_old;            
         ",
+        "CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER NOT NULL PRIMARY KEY,
+            latestRecordId INTEGER,   
+        ) STRICT;",
     ]
 }
