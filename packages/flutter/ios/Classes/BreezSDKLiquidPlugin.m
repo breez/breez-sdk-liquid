@@ -1,5 +1,6 @@
 #import "BreezSDKLiquidPlugin.h"
 #import "breez_sdk_liquid.h"
+#import "breez_sdk_liquidFFI.h"
 #if __has_include(<flutter_breez_liquid/flutter_breez_liquid-Swift.h>)
 #import <flutter_breez_liquid/flutter_breez_liquid-Swift.h>
 #else
