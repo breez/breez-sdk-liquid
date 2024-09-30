@@ -2,8 +2,10 @@ pub(crate) mod model;
 
 use anyhow::Result;
 use async_trait::async_trait;
+use tokio::sync::Mutex;
+use tonic::transport::Channel;
 
-use self::model::{sync::Record, SyncData};
+use self::model::{sync::syncer_client::SyncerClient, sync::Record, SyncData};
 
 #[async_trait]
 pub trait SyncModule {
@@ -21,14 +23,21 @@ pub trait SyncModule {
 
     /// Attemps to clean up local changes by applying them
     async fn cleanup(&self) -> Result<()>;
+    /// Disconnects from the gRPC stream
+    async fn disconnect(&self) -> Result<()>;
 }
 
-pub(crate) struct BreezSyncModule {}
+pub(crate) struct BreezSyncModule {
+    connect_url: String,
+    client: Mutex<Option<SyncerClient<Channel>>>,
+}
 
 #[async_trait]
 impl SyncModule for BreezSyncModule {
     async fn connect(&self) -> Result<()> {
-        unimplemented!()
+        let mut client = self.client.lock().await;
+        *client = Some(SyncerClient::connect(self.connect_url.clone()).await?);
+        Ok(())
     }
 
     async fn apply_changes(&self, changes: &[Record]) -> Result<()> {
@@ -45,5 +54,11 @@ impl SyncModule for BreezSyncModule {
 
     async fn cleanup(&self) -> Result<()> {
         unimplemented!()
+    }
+
+    async fn disconnect(&self) -> Result<()> {
+        let mut client = self.client.lock().await;
+        *client = None;
+        Ok(())
     }
 }
