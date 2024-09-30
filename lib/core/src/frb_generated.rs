@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.4.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 264388282;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1147354100;
 
 // Section: executor
 
@@ -481,6 +481,55 @@ fn wire__crate__bindings__BindingLiquidSdk_get_info_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_get_payment_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    query: impl CstDecode<crate::model::PaymentQuery>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_get_payment",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_query = query.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::get_payment(
+                            &*api_that_guard,
+                            api_query,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -805,55 +854,6 @@ fn wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(
                         let output_ok = crate::bindings::BindingLiquidSdk::pay_onchain(
                             &*api_that_guard,
                             api_req,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__bindings__BindingLiquidSdk_payment_by_destination_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
-    >,
-    destination: impl CstDecode<crate::model::PaymentDestination>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "BindingLiquidSdk_payment_by_destination",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_destination = destination.cst_decode();
-            move |context| async move {
-                transform_result_dco::<_, _, crate::error::PaymentError>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_that_guard =
-                                        Some(api_that.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::bindings::BindingLiquidSdk::payment_by_destination(
-                            &*api_that_guard,
-                            api_destination,
                         )
                         .await?;
                         Ok(output_ok)
@@ -3184,34 +3184,6 @@ impl SseDecode for crate::model::Payment {
     }
 }
 
-impl SseDecode for crate::model::PaymentDestination {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_bolt11 = <String>::sse_decode(deserializer);
-                return crate::model::PaymentDestination::Lightning { bolt11: var_bolt11 };
-            }
-            1 => {
-                let mut var_destination = <String>::sse_decode(deserializer);
-                return crate::model::PaymentDestination::Liquid {
-                    destination: var_destination,
-                };
-            }
-            2 => {
-                let mut var_address = <String>::sse_decode(deserializer);
-                return crate::model::PaymentDestination::Bitcoin {
-                    address: var_address,
-                };
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
 impl SseDecode for crate::model::PaymentDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3222,6 +3194,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
+                let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Lightning {
@@ -3229,6 +3202,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     description: var_description,
                     preimage: var_preimage,
                     bolt11: var_bolt11,
+                    payment_hash: var_paymentHash,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -3359,6 +3333,38 @@ impl SseDecode for crate::model::PaymentMethod {
             2 => crate::model::PaymentMethod::LiquidAddress,
             _ => unreachable!("Invalid variant for PaymentMethod: {}", inner),
         };
+    }
+}
+
+impl SseDecode for crate::model::PaymentQuery {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_invoice = <Option<String>>::sse_decode(deserializer);
+                let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
+                return crate::model::PaymentQuery::Lightning {
+                    invoice: var_invoice,
+                    payment_hash: var_paymentHash,
+                };
+            }
+            1 => {
+                let mut var_destination = <String>::sse_decode(deserializer);
+                return crate::model::PaymentQuery::Liquid {
+                    destination: var_destination,
+                };
+            }
+            2 => {
+                let mut var_address = <String>::sse_decode(deserializer);
+                return crate::model::PaymentQuery::Bitcoin {
+                    address: var_address,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -5010,36 +5016,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::Payment> for crate::model::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PaymentDestination {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            crate::model::PaymentDestination::Lightning { bolt11 } => {
-                [0.into_dart(), bolt11.into_into_dart().into_dart()].into_dart()
-            }
-            crate::model::PaymentDestination::Liquid { destination } => {
-                [1.into_dart(), destination.into_into_dart().into_dart()].into_dart()
-            }
-            crate::model::PaymentDestination::Bitcoin { address } => {
-                [2.into_dart(), address.into_into_dart().into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::PaymentDestination
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentDestination>
-    for crate::model::PaymentDestination
-{
-    fn into_into_dart(self) -> crate::model::PaymentDestination {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -5048,6 +5024,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
@@ -5056,6 +5033,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description.into_into_dart().into_dart(),
                 preimage.into_into_dart().into_dart(),
                 bolt11.into_into_dart().into_dart(),
+                payment_hash.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -5172,6 +5150,37 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentMethod>
     for crate::model::PaymentMethod
 {
     fn into_into_dart(self) -> crate::model::PaymentMethod {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PaymentQuery {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::PaymentQuery::Lightning {
+                invoice,
+                payment_hash,
+            } => [
+                0.into_dart(),
+                invoice.into_into_dart().into_dart(),
+                payment_hash.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::PaymentQuery::Liquid { destination } => {
+                [1.into_dart(), destination.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::PaymentQuery::Bitcoin { address } => {
+                [2.into_dart(), address.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PaymentQuery {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentQuery> for crate::model::PaymentQuery {
+    fn into_into_dart(self) -> crate::model::PaymentQuery {
         self
     }
 }
@@ -6752,29 +6761,6 @@ impl SseEncode for crate::model::Payment {
     }
 }
 
-impl SseEncode for crate::model::PaymentDestination {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crate::model::PaymentDestination::Lightning { bolt11 } => {
-                <i32>::sse_encode(0, serializer);
-                <String>::sse_encode(bolt11, serializer);
-            }
-            crate::model::PaymentDestination::Liquid { destination } => {
-                <i32>::sse_encode(1, serializer);
-                <String>::sse_encode(destination, serializer);
-            }
-            crate::model::PaymentDestination::Bitcoin { address } => {
-                <i32>::sse_encode(2, serializer);
-                <String>::sse_encode(address, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
 impl SseEncode for crate::model::PaymentDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6784,6 +6770,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
@@ -6792,6 +6779,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <String>::sse_encode(description, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
                 <Option<String>>::sse_encode(bolt11, serializer);
+                <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -6921,6 +6909,33 @@ impl SseEncode for crate::model::PaymentMethod {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for crate::model::PaymentQuery {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::PaymentQuery::Lightning {
+                invoice,
+                payment_hash,
+            } => {
+                <i32>::sse_encode(0, serializer);
+                <Option<String>>::sse_encode(invoice, serializer);
+                <Option<String>>::sse_encode(payment_hash, serializer);
+            }
+            crate::model::PaymentQuery::Liquid { destination } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(destination, serializer);
+            }
+            crate::model::PaymentQuery::Bitcoin { address } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(address, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -7661,11 +7676,11 @@ mod io {
             CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
         }
     }
-    impl CstDecode<crate::model::PaymentDestination> for *mut wire_cst_payment_destination {
+    impl CstDecode<crate::model::PaymentQuery> for *mut wire_cst_payment_query {
         // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::PaymentDestination {
+        fn cst_decode(self) -> crate::model::PaymentQuery {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::model::PaymentDestination>::cst_decode(*wrap).into()
+            CstDecode::<crate::model::PaymentQuery>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
@@ -8495,32 +8510,6 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::model::PaymentDestination> for wire_cst_payment_destination {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::PaymentDestination {
-            match self.tag {
-                0 => {
-                    let ans = unsafe { self.kind.Lightning };
-                    crate::model::PaymentDestination::Lightning {
-                        bolt11: ans.bolt11.cst_decode(),
-                    }
-                }
-                1 => {
-                    let ans = unsafe { self.kind.Liquid };
-                    crate::model::PaymentDestination::Liquid {
-                        destination: ans.destination.cst_decode(),
-                    }
-                }
-                2 => {
-                    let ans = unsafe { self.kind.Bitcoin };
-                    crate::model::PaymentDestination::Bitcoin {
-                        address: ans.address.cst_decode(),
-                    }
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
     impl CstDecode<crate::model::PaymentDetails> for wire_cst_payment_details {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PaymentDetails {
@@ -8532,6 +8521,7 @@ mod io {
                         description: ans.description.cst_decode(),
                         preimage: ans.preimage.cst_decode(),
                         bolt11: ans.bolt11.cst_decode(),
+                        payment_hash: ans.payment_hash.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -8630,6 +8620,33 @@ mod io {
                     let ans = unsafe { self.kind.SignerError };
                     crate::error::PaymentError::SignerError {
                         err: ans.err.cst_decode(),
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::PaymentQuery> for wire_cst_payment_query {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PaymentQuery {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Lightning };
+                    crate::model::PaymentQuery::Lightning {
+                        invoice: ans.invoice.cst_decode(),
+                        payment_hash: ans.payment_hash.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.Liquid };
+                    crate::model::PaymentQuery::Liquid {
+                        destination: ans.destination.cst_decode(),
+                    }
+                }
+                2 => {
+                    let ans = unsafe { self.kind.Bitcoin };
+                    crate::model::PaymentQuery::Bitcoin {
+                        address: ans.address.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -9593,19 +9610,6 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
-    impl NewWithNullPtr for wire_cst_payment_destination {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                tag: -1,
-                kind: PaymentDestinationKind { nil__: () },
-            }
-        }
-    }
-    impl Default for wire_cst_payment_destination {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
     impl NewWithNullPtr for wire_cst_payment_details {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -9628,6 +9632,19 @@ mod io {
         }
     }
     impl Default for wire_cst_payment_error {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_payment_query {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: PaymentQueryKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_payment_query {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -10116,6 +10133,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment(
+        port_: i64,
+        that: usize,
+        query: *mut wire_cst_payment_query,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_get_payment_impl(port_, that, query)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
         port_: i64,
         that: usize,
@@ -10174,19 +10200,6 @@ mod io {
         req: *mut wire_cst_pay_onchain_request,
     ) {
         wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(port_, that, req)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_payment_by_destination(
-        port_: i64,
-        that: usize,
-        destination: *mut wire_cst_payment_destination,
-    ) {
-        wire__crate__bindings__BindingLiquidSdk_payment_by_destination_impl(
-            port_,
-            that,
-            destination,
-        )
     }
 
     #[no_mangle]
@@ -10576,10 +10589,10 @@ mod io {
     }
 
     #[no_mangle]
-    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment_destination(
-    ) -> *mut wire_cst_payment_destination {
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment_query(
+    ) -> *mut wire_cst_payment_query {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_payment_destination::new_with_null_ptr(),
+            wire_cst_payment_query::new_with_null_ptr(),
         )
     }
 
@@ -11478,35 +11491,6 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_payment_destination {
-        tag: i32,
-        kind: PaymentDestinationKind,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub union PaymentDestinationKind {
-        Lightning: wire_cst_PaymentDestination_Lightning,
-        Liquid: wire_cst_PaymentDestination_Liquid,
-        Bitcoin: wire_cst_PaymentDestination_Bitcoin,
-        nil__: (),
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_PaymentDestination_Lightning {
-        bolt11: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_PaymentDestination_Liquid {
-        destination: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_PaymentDestination_Bitcoin {
-        address: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
     pub struct wire_cst_payment_details {
         tag: i32,
         kind: PaymentDetailsKind,
@@ -11526,6 +11510,7 @@ mod io {
         description: *mut wire_cst_list_prim_u_8_strict,
         preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt11: *mut wire_cst_list_prim_u_8_strict,
+        payment_hash: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }
@@ -11614,6 +11599,36 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_PaymentError_SignerError {
         err: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_payment_query {
+        tag: i32,
+        kind: PaymentQueryKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union PaymentQueryKind {
+        Lightning: wire_cst_PaymentQuery_Lightning,
+        Liquid: wire_cst_PaymentQuery_Liquid,
+        Bitcoin: wire_cst_PaymentQuery_Bitcoin,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentQuery_Lightning {
+        invoice: *mut wire_cst_list_prim_u_8_strict,
+        payment_hash: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentQuery_Liquid {
+        destination: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentQuery_Bitcoin {
+        address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

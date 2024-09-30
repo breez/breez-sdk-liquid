@@ -534,26 +534,6 @@ class Payment {
 }
 
 @freezed
-sealed class PaymentDestination with _$PaymentDestination {
-  const PaymentDestination._();
-
-  /// The bolt11 Lightning invoice of the payment
-  const factory PaymentDestination.lightning({
-    required String bolt11,
-  }) = PaymentDestination_Lightning;
-
-  /// The Liquid BIP21 URI or address of the payment
-  const factory PaymentDestination.liquid({
-    required String destination,
-  }) = PaymentDestination_Liquid;
-
-  /// The Bitcoin address of the payment
-  const factory PaymentDestination.bitcoin({
-    required String address,
-  }) = PaymentDestination_Bitcoin;
-}
-
-@freezed
 sealed class PaymentDetails with _$PaymentDetails {
   const PaymentDetails._();
 
@@ -571,6 +551,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// In the case of a Send payment, this is the invoice paid by the swapper
     /// In the case of a Receive payment, this is the invoice paid by the user
     String? bolt11,
+
+    /// The payment hash of the invoice
+    String? paymentHash,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
@@ -609,6 +592,27 @@ enum PaymentMethod {
   bitcoinAddress,
   liquidAddress,
   ;
+}
+
+@freezed
+sealed class PaymentQuery with _$PaymentQuery {
+  const PaymentQuery._();
+
+  /// The bolt11 Lightning invoice of the payment
+  const factory PaymentQuery.lightning({
+    String? invoice,
+    String? paymentHash,
+  }) = PaymentQuery_Lightning;
+
+  /// The Liquid BIP21 URI or address of the payment
+  const factory PaymentQuery.liquid({
+    required String destination,
+  }) = PaymentQuery_Liquid;
+
+  /// The Bitcoin address of the payment
+  const factory PaymentQuery.bitcoin({
+    required String address,
+  }) = PaymentQuery_Bitcoin;
 }
 
 /// The payment state of an individual payment.

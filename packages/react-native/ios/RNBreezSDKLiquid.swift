@@ -306,11 +306,11 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
-    @objc(paymentByDestination:resolve:reject:)
-    func paymentByDestination(_ destination: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(getPayment:resolve:reject:)
+    func getPayment(_ query: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let destinationTmp = try BreezSDKLiquidMapper.asPaymentDestination(paymentDestination: destination)
-            var res = try getBindingLiquidSdk().paymentByDestination(destination: destinationTmp)
+            let queryTmp = try BreezSDKLiquidMapper.asPaymentQuery(paymentQuery: query)
+            var res = try getBindingLiquidSdk().getPayment(query: queryTmp)
             if res != nil {
                 resolve(BreezSDKLiquidMapper.dictionaryOf(payment: res!))
             } else {

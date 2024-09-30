@@ -502,23 +502,6 @@ export type PayOnchainAmount = {
     type: PayOnchainAmountVariant.DRAIN
 }
 
-export enum PaymentDestinationVariant {
-    LIGHTNING = "lightning",
-    LIQUID = "liquid",
-    BITCOIN = "bitcoin"
-}
-
-export type PaymentDestination = {
-    type: PaymentDestinationVariant.LIGHTNING,
-    bolt11: string
-} | {
-    type: PaymentDestinationVariant.LIQUID,
-    destination: string
-} | {
-    type: PaymentDestinationVariant.BITCOIN,
-    address: string
-}
-
 export enum PaymentDetailsVariant {
     LIGHTNING = "lightning",
     LIQUID = "liquid",
@@ -531,6 +514,7 @@ export type PaymentDetails = {
     description: string
     preimage?: string
     bolt11?: string
+    paymentHash?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
@@ -549,6 +533,24 @@ export enum PaymentMethod {
     LIGHTNING = "lightning",
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress"
+}
+
+export enum PaymentQueryVariant {
+    LIGHTNING = "lightning",
+    LIQUID = "liquid",
+    BITCOIN = "bitcoin"
+}
+
+export type PaymentQuery = {
+    type: PaymentQueryVariant.LIGHTNING,
+    invoice?: string
+    paymentHash?: string
+} | {
+    type: PaymentQueryVariant.LIQUID,
+    destination: string
+} | {
+    type: PaymentQueryVariant.BITCOIN,
+    address: string
 }
 
 export enum PaymentState {
@@ -744,8 +746,8 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
     return response
 }
 
-export const paymentByDestination = async (destination: PaymentDestination): Promise<Payment | null> => {
-    const response = await BreezSDKLiquid.paymentByDestination(destination)
+export const getPayment = async (query: PaymentQuery): Promise<Payment | null> => {
+    const response = await BreezSDKLiquid.getPayment(query)
     return response
 }
 

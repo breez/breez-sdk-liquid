@@ -534,10 +534,8 @@ impl SendSwapHandler {
     fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
         let preimage = Preimage::from_str(preimage)?;
         let preimage_hash = preimage.sha256.to_string();
-        let invoice =
-            Bolt11Invoice::from_str(invoice).map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?;
+        let invoice = Bolt11Invoice::from_str(invoice)
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
         let invoice_payment_hash = invoice.payment_hash();
 
         (invoice_payment_hash.to_string() == preimage_hash)

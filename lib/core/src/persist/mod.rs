@@ -173,6 +173,7 @@ impl Persister {
                 rs.id,
                 rs.created_at,
                 rs.invoice,
+                rs.payment_hash,
                 rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -180,6 +181,7 @@ impl Persister {
                 ss.id,
                 ss.created_at,
                 ss.invoice,
+                ss.payment_hash,
                 ss.description,
                 ss.preimage,
                 ss.refund_tx_id,
@@ -246,36 +248,38 @@ impl Persister {
         let maybe_receive_swap_id: Option<String> = row.get(6)?;
         let maybe_receive_swap_created_at: Option<u32> = row.get(7)?;
         let maybe_receive_swap_invoice: Option<String> = row.get(8)?;
-        let maybe_receive_swap_description: Option<String> = row.get(9)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(10)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(11)?;
-        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(12)?;
+        let maybe_receive_swap_payment_hash: Option<String> = row.get(9)?;
+        let maybe_receive_swap_description: Option<String> = row.get(10)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(11)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(12)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(13)?;
 
-        let maybe_send_swap_id: Option<String> = row.get(13)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(14)?;
-        let maybe_send_swap_invoice: Option<String> = row.get(15)?;
-        let maybe_send_swap_description: Option<String> = row.get(16)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(17)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(18)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(19)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(20)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(21)?;
+        let maybe_send_swap_id: Option<String> = row.get(14)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(15)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(16)?;
+        let maybe_send_swap_payment_hash: Option<String> = row.get(17)?;
+        let maybe_send_swap_description: Option<String> = row.get(18)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(19)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(20)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(21)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(22)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(23)?;
 
-        let maybe_chain_swap_id: Option<String> = row.get(22)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(23)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(24)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(25)?;
-        let maybe_chain_swap_description: Option<String> = row.get(26)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(27)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(28)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(29)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(30)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(31)?;
+        let maybe_chain_swap_id: Option<String> = row.get(24)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(25)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(26)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(27)?;
+        let maybe_chain_swap_description: Option<String> = row.get(28)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(29)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(30)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(31)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(32)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(33)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(32)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(34)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(33)?;
-        let maybe_payment_details_description: Option<String> = row.get(34)?;
+        let maybe_payment_details_destination: Option<String> = row.get(35)?;
+        let maybe_payment_details_description: Option<String> = row.get(36)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
@@ -285,6 +289,7 @@ impl Persister {
                     created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                     preimage: None,
                     bolt11: maybe_receive_swap_invoice.clone(),
+                    payment_hash: maybe_receive_swap_payment_hash,
                     description: maybe_receive_swap_description.unwrap_or_else(|| {
                         maybe_receive_swap_invoice
                             .and_then(|bolt11| get_invoice_description!(bolt11))
@@ -307,6 +312,7 @@ impl Persister {
                         created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                         preimage: maybe_send_swap_preimage,
                         bolt11: maybe_send_swap_invoice.clone(),
+                        payment_hash: maybe_send_swap_payment_hash,
                         description: maybe_send_swap_description.unwrap_or_else(|| {
                             maybe_send_swap_invoice
                                 .and_then(|bolt11| get_invoice_description!(bolt11))
@@ -329,6 +335,7 @@ impl Persister {
                             created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
                             preimage: maybe_chain_swap_preimage,
                             bolt11: None,
+                            payment_hash: None,
                             description: maybe_chain_swap_description
                                 .unwrap_or("Bitcoin transfer".to_string()),
                             payer_amount_sat: maybe_chain_swap_payer_amount_sat.unwrap_or(0),
@@ -354,6 +361,7 @@ impl Persister {
                     swap_type: PaymentSwapType::Receive,
                     swap_id,
                     bolt11,
+                    payment_hash,
                     refund_tx_id,
                     preimage,
                     refund_tx_amount_sat,
@@ -363,6 +371,7 @@ impl Persister {
                     swap_type: PaymentSwapType::Send,
                     swap_id,
                     bolt11,
+                    payment_hash,
                     preimage,
                     refund_tx_id,
                     refund_tx_amount_sat,
@@ -372,6 +381,7 @@ impl Persister {
                 swap_id,
                 preimage,
                 bolt11,
+                payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Liquid transfer".to_string()),
@@ -415,17 +425,22 @@ impl Persister {
             .optional()?)
     }
 
-    pub fn get_payment_by_destination(
-        &self,
-        destination: &PaymentDestination,
-    ) -> Result<Option<Payment>> {
-        let (where_clause, param) = match destination {
-            PaymentDestination::Lightning { bolt11 } => {
-                ("(rs.invoice = ?1 OR ss.invoice = ?1)", bolt11)
-            }
-            PaymentDestination::Liquid { destination } => ("pd.destination = ?1", destination),
-            PaymentDestination::Bitcoin { address } => ("cs.claim_Address = ?1", address),
-        };
+    pub fn get_payment_by_query(&self, query: &PaymentQuery) -> Result<Option<Payment>> {
+        let (where_clause, param) = match query {
+            PaymentQuery::Lightning {
+                invoice,
+                payment_hash,
+            } => match (invoice, payment_hash) {
+                (Some(invoice), _) => Ok(("(rs.invoice = ?1 OR ss.invoice = ?1)", invoice)),
+                (_, Some(payment_hash)) => Ok((
+                    "(rs.payment_hash = ?1 OR ss.payment_hash = ?1)",
+                    payment_hash,
+                )),
+                _ => Err(anyhow!("Must contain at least one query param")),
+            },
+            PaymentQuery::Liquid { destination } => Ok(("pd.destination = ?1", destination)),
+            PaymentQuery::Bitcoin { address } => Ok(("cs.claim_Address = ?1", address)),
+        }?;
         Ok(self
             .get_connection()?
             .query_row(

@@ -19,11 +19,11 @@ use serde_json::to_string_pretty;
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
-    /// Send lbtc and receive btc lightning through a swap
+    /// Send a payment directly or via a swap
     SendPayment {
         /// Invoice which has to be paid
         #[arg(long)]
-        bolt11: Option<String>,
+        invoice: Option<String>,
 
         /// Either BIP21 URI or Liquid address we intend to pay to
         #[arg(long)]
@@ -42,9 +42,9 @@ pub(crate) enum Command {
     FetchLightningLimits,
     /// Fetch the current limits for Onchain Send and Receive payments
     FetchOnchainLimits,
-    /// Send lbtc and receive btc onchain through a swap
+    /// Send to a Bitcoin onchain address via a swap
     SendOnchainPayment {
-        /// Btc onchain address to send to
+        /// Bitcoin onchain address to send to
         address: String,
 
         /// Amount that will be received, in satoshi. Must be set if `drain` is false or unset.
@@ -58,7 +58,7 @@ pub(crate) enum Command {
         #[clap(short = 'f', long = "fee_rate")]
         fee_rate_sat_per_vbyte: Option<u32>,
     },
-    /// Receive lbtc and send btc through a swap
+    /// Receive a payment directly or via a swap
     ReceivePayment {
         /// The method to use when receiving. Either "lightning", "bitcoin" or "liquid"
         #[arg(short = 'm', long = "method")]
@@ -102,19 +102,23 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
     },
-    /// Retrieve a payment by its destination
-    PaymentByDestination {
-        /// Optional bolt11 Lightning invoice
-        #[clap(name = "bolt11", long = "lightning")]
-        lightning: Option<String>,
+    /// Retrieve a payment
+    GetPayment {
+        /// Optional Lightning invoice
+        #[clap(short = 'i', long = "invoice")]
+        invoice: Option<String>,
+
+        /// Optional Lightning payment hash
+        #[clap(short = 'p', long = "hash")]
+        payment_hash: Option<String>,
 
         /// Optional Liquid BIP21 URI / address destination
-        #[clap(name = "destination", long = "liquid")]
-        liquid: Option<String>,
+        #[clap(short = 'd', long = "destination")]
+        liquid_destination: Option<String>,
 
         /// Optional Bitcoin address
-        #[clap(name = "address", long = "bitcoin")]
-        bitcoin: Option<String>,
+        #[clap(short = 'a', long = "address")]
+        bitcoin_address: Option<String>,
     },
     /// List refundable chain swaps
     ListRefundables,
@@ -122,7 +126,7 @@ pub(crate) enum Command {
     PrepareRefund {
         // Swap address of the lockup
         swap_address: String,
-        // Btc onchain address to send the refund to
+        // Bitcoin onchain address to send the refund to
         refund_address: String,
         // Fee rate to use, in sat/vbyte
         fee_rate_sat_per_vbyte: u32,
@@ -131,7 +135,7 @@ pub(crate) enum Command {
     Refund {
         // Swap address of the lockup
         swap_address: String,
-        // Btc onchain address to send the refund to
+        // Bitcoin onchain address to send the refund to
         refund_address: String,
         // Fee rate to use, in sat/vbyte
         fee_rate_sat_per_vbyte: u32,
@@ -153,7 +157,7 @@ pub(crate) enum Command {
     },
     /// Sync local data with mempool and onchain data
     Sync,
-    /// Get the recommended BTC fees based on the configured mempool.space instance
+    /// Get the recommended Bitcoin fees based on the configured mempool.space instance
     RecommendedFees,
     /// Empties the encrypted transaction cache
     EmptyCache,
@@ -171,7 +175,7 @@ pub(crate) enum Command {
     Disconnect,
     /// Parse a generic string to get its type and relevant metadata
     Parse {
-        /// Generic input (URL, LNURL, BIP-21 BTC Address, LN invoice, etc)
+        /// Generic input (URL, LNURL, BIP-21 Bitcoin Address, LN invoice, etc)
         input: String,
     },
     /// Pay using LNURL
@@ -304,22 +308,22 @@ pub(crate) async fn handle_command(
             command_result!(limits)
         }
         Command::SendPayment {
-            bolt11,
+            invoice,
             address,
             amount_sat,
             delay,
         } => {
-            let destination = match (bolt11, address) {
+            let destination = match (invoice, address) {
                 (None, None) => {
                     return Err(anyhow::anyhow!(
-                        "Must specify either a `bolt11` invoice or a direct/BIP21 `address`."
+                        "Must specify either an invoice or a direct/BIP21 address."
                     ))
                 }
-                (Some(bolt11), None) => bolt11,
+                (Some(invoice), None) => invoice,
                 (None, Some(address)) => address,
                 (Some(_), Some(_)) => {
                     return Err(anyhow::anyhow!(
-                        "Cannot specify both `bolt11` and `address` at the same time."
+                        "Cannot specify both invoice and address at the same time."
                     ))
                 }
             };
@@ -462,23 +466,32 @@ pub(crate) async fn handle_command(
                 .await?;
             command_result!(payments)
         }
-        Command::PaymentByDestination {
-            lightning,
-            liquid,
-            bitcoin,
+        Command::GetPayment {
+            invoice,
+            payment_hash,
+            liquid_destination,
+            bitcoin_address,
         } => {
-            let destination = match (lightning, liquid, bitcoin) {
-                (Some(bolt11), None, None) => PaymentDestination::Lightning { bolt11 },
-                (None, Some(destination), None) => PaymentDestination::Liquid { destination },
-                (None, None, Some(address)) => PaymentDestination::Bitcoin { address },
-                _ => {
-                    return Err(anyhow::anyhow!(
-                        "Must specify only one of `lightning`, `liquid` or `bitcoin`."
-                    ))
-                }
+            let query = match (
+                invoice.clone(),
+                payment_hash.clone(),
+                liquid_destination,
+                bitcoin_address,
+            ) {
+                (Some(_), None, None, None) => PaymentQuery::Lightning {
+                    invoice,
+                    payment_hash: None,
+                },
+                (None, Some(_), None, None) => PaymentQuery::Lightning {
+                    invoice: None,
+                    payment_hash,
+                },
+                (None, None, Some(destination), None) => PaymentQuery::Liquid { destination },
+                (None, None, None, Some(address)) => PaymentQuery::Bitcoin { address },
+                _ => return Err(anyhow::anyhow!("Must specify only one payment query")),
             };
 
-            let payment = sdk.payment_by_destination(&destination).await?;
+            let payment = sdk.get_payment(&query).await?;
             command_result!(payment)
         }
         Command::ListRefundables => {

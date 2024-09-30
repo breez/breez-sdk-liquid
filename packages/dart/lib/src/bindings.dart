@@ -51,6 +51,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<GetInfoResponse> getInfo();
 
+  Future<Payment?> getPayment({required PaymentQuery query});
+
   Future<List<FiatCurrency>> listFiatCurrencies();
 
   Future<List<Payment>> listPayments({required ListPaymentsRequest req});
@@ -64,8 +66,6 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req});
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
-
-  Future<Payment?> paymentByDestination({required PaymentDestination destination});
 
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
 

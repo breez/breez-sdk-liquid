@@ -656,6 +656,7 @@ impl ChainSwap {
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     pub(crate) invoice: String,
+    pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
@@ -741,6 +742,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) create_response_json: String,
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
+    pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
@@ -1015,9 +1017,8 @@ pub struct PaymentSwapData {
     pub created_at: u32,
 
     pub preimage: Option<String>,
-
     pub bolt11: Option<String>,
-
+    pub payment_hash: Option<String>,
     pub description: String,
 
     /// Amount sent by the swap payer
@@ -1055,6 +1056,9 @@ pub enum PaymentDetails {
         /// In the case of a Send payment, this is the invoice paid by the swapper
         /// In the case of a Receive payment, this is the invoice paid by the user
         bolt11: Option<String>,
+
+        /// The payment hash of the invoice
+        payment_hash: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1181,6 +1185,7 @@ impl Payment {
                 swap_id: swap.swap_id,
                 preimage: swap.preimage,
                 bolt11: swap.bolt11,
+                payment_hash: swap.payment_hash,
                 description: swap.description,
                 refund_tx_id: swap.refund_tx_id,
                 refund_tx_amount_sat: swap.refund_tx_amount_sat,
@@ -1255,11 +1260,14 @@ impl Payment {
     }
 }
 
-/// An argument when calling [crate::sdk::LiquidSdk::payment_by_destination].
+/// An argument when calling [crate::sdk::LiquidSdk::get_payment].
 #[derive(Debug, Clone, EnumString, PartialEq, Serialize)]
-pub enum PaymentDestination {
+pub enum PaymentQuery {
     /// The bolt11 Lightning invoice of the payment
-    Lightning { bolt11: String },
+    Lightning {
+        invoice: Option<String>,
+        payment_hash: Option<String>,
+    },
 
     /// The Liquid BIP21 URI or address of the payment
     Liquid { destination: String },
