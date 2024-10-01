@@ -124,6 +124,7 @@ bindings-swift: ios-universal darwin-universal
 	cp ../target/aarch64-apple-ios/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
 	cp ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
+	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 

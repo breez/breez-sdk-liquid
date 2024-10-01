@@ -200,6 +200,11 @@ jobs:
         working-directory: lib/bindings/langs/flutter/
         run: just codegen
 
+      - name: Link C Headers
+        working-directory: lib/bindings/langs/flutter/
+        if: ${{ success() || failure() }}
+        run: just link-headers
+
       - name: Generate FFI bindings
         working-directory: lib/bindings/langs/flutter/
         if: ${{ success() || failure() }}

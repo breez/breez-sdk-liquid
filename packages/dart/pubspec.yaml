@@ -6,11 +6,9 @@ repository: https://github.com/breez/breez-sdk-liquid-dart
 publish_to: 'none'
 
 platforms:
-  macos:
-  linux:
-  windows:
   android:
   ios:
+  macos:
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -26,4 +24,5 @@ dependencies:
   ffi: ^2.1.2
   flutter_rust_bridge: 2.3.0
   freezed_annotation: ^2.4.1
+  logging: ^1.2.0
   meta: ^1.12.0 # meta is pinned to version 1.12.0 by integration_test from the flutter SDK.

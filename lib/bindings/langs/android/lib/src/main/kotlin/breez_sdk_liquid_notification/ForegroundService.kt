@@ -187,7 +187,7 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
     }
 
     @Suppress("unused")
-    fun setLogger(logger: Logger) {
+    fun setServiceLogger(logger: Logger) {
         this.logger = ServiceLogger(logger)
     }
 }

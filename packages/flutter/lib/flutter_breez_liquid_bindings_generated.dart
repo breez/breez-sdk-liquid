@@ -1405,6 +1405,2101 @@ class FlutterBreezLiquidBindings {
       _lookup<ffi.NativeFunction<ffi.Int64 Function()>>('dummy_method_to_enforce_bundling');
   late final _dummy_method_to_enforce_bundling =
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
+
+  /// Scaffolding functions
+  void uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdkPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk =
+      _uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdkPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener(
+    ffi.Pointer<ffi.Void> ptr,
+    int listener,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener(
+      ptr,
+      listener,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listenerPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listenerPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, int, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backupPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backupPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoin(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoin(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoinPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoin');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoin =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoinPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_message(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_message(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_messagePtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_message');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_message =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_messagePtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnect(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnect(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnectPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnect');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnect =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnectPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_rates(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_rates(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_rates');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_rates =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_ratesPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limitsPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limitsPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limitsPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_infoPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_infoPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currenciesPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_payments(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_payments(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_paymentsPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_payments');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_payments =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_paymentsPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundables(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundables(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundablesPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundables');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundables =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundablesPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_auth(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req_data,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_auth(
+      ptr,
+      req_data,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_authPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_auth');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_auth =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_authPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_payPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_payPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdrawPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdrawPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchainPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchainPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoinPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoinPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchainPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchainPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_paymentPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_paymentPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refund(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refund(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refundPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refund');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refund =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refundPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_payment(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_payment(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_paymentPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_payment =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_paymentPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_payment(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_payment(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_paymentPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_payment =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_paymentPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_fees(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_fees(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_feesPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_fees =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_feesPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refund(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refund(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refundPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refund');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refund =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refundPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhook(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer webhook_url,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhook(
+      ptr,
+      webhook_url,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhookPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhook');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhook =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhookPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listener(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer id,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listener(
+      ptr,
+      id,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listenerPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listener');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listener =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listenerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swaps(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swaps(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swapsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swaps');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swaps =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swapsPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restore(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restore(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restorePtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restore');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restore =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restorePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_payment(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_payment(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_paymentPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_payment =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_paymentPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_message(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_message(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_messagePtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_message');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_message =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_messagePtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_syncPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_syncPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhookPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhookPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener(
+    ForeignCallback callback_stub,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener(
+      callback_stub,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistenerPtr
+          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(
+    ForeignCallback callback_stub,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(
+      callback_stub,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_loggerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_loggerPtr
+          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+
+  ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect(
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_connect(
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_func_connect');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
+    RustBuffer network,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
+      network,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_func_default_config');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_config =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr
+          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(
+    RustBuffer input,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_parse(
+      input,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parsePtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_func_parse');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parse =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_parsePtr
+          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice(
+    RustBuffer input,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice(
+      input,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoicePtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoicePtr
+          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_func_set_logger(
+    int logger,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_set_logger(
+      logger,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_set_loggerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_func_set_logger');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_set_logger =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_set_loggerPtr
+          .asFunction<void Function(int, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_alloc(
+    int size,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rustbuffer_alloc(
+      size,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_allocPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Int32, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rustbuffer_alloc');
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_alloc =
+      _ffi_breez_sdk_liquid_bindings_rustbuffer_allocPtr
+          .asFunction<RustBuffer Function(int, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytes(
+    ForeignBytes bytes,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytes(
+      bytes,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytesPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ForeignBytes, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytes');
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytes =
+      _ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytesPtr
+          .asFunction<RustBuffer Function(ForeignBytes, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rustbuffer_free(
+    RustBuffer buf,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rustbuffer_free(
+      buf,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_freePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rustbuffer_free');
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_free =
+      _ffi_breez_sdk_liquid_bindings_rustbuffer_freePtr
+          .asFunction<void Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_reserve(
+    RustBuffer buf,
+    int additional,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rustbuffer_reserve(
+      buf,
+      additional,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_reservePtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Int32, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rustbuffer_reserve');
+  late final _ffi_breez_sdk_liquid_bindings_rustbuffer_reserve =
+      _ffi_breez_sdk_liquid_bindings_rustbuffer_reservePtr
+          .asFunction<RustBuffer Function(RustBuffer, int, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set(
+    UniFfiRustFutureContinuation callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set(
+      callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_setPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(UniFfiRustFutureContinuation)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set =
+      _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_setPtr
+          .asFunction<void Function(UniFfiRustFutureContinuation)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_u8(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_u8(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_u8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Uint8 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_u8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_i8(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_i8(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_i8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i8Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_i8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_u16(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_u16(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_u16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_u16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_i16(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_i16(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_i16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i16Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Int16 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_i16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_u32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_u32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_u32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_u32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_i32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_i32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_i32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_i32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_u64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_u64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_u64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Uint64 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_u64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_i64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_i64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_i64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_i64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64Ptr
+          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_f32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_f32(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_f32(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_f32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_f32Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  double ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_f32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32Ptr
+          .asFunction<double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_f64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_f64(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_f64(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_f64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_f64Ptr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  double ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_f64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64 =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64Ptr
+          .asFunction<double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_pointerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_pointer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_pointerPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Void> ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointerPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<RustCallStatus>)>>('ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointerPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_bufferPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_bufferPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_bufferPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_bufferPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_bufferPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_bufferPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  RustBuffer ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_bufferPtr =
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_bufferPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_poll_void(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<ffi.Void> uniffi_callback,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_poll_void(
+      handle,
+      uniffi_callback,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_voidPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_poll_void');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_void =
+      _ffi_breez_sdk_liquid_bindings_rust_future_poll_voidPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_voidPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_cancel_void');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_void =
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_voidPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_free_void(
+    ffi.Pointer<ffi.Void> handle,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_free_void(
+      handle,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_voidPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_free_void');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_free_void =
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_voidPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void ffi_breez_sdk_liquid_bindings_rust_future_complete_void(
+    ffi.Pointer<ffi.Void> handle,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _ffi_breez_sdk_liquid_bindings_rust_future_complete_void(
+      handle,
+      out_status,
+    );
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_voidPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_void');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_void =
+      _ffi_breez_sdk_liquid_bindings_rust_future_complete_voidPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_connect() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_connect();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_connectPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_connect');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_connect =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_connectPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_default_config() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_default_config();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_default_configPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_default_config');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_default_config =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_default_configPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_parse() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_parse();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parsePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_parse');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parse =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_parsePtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoicePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoicePtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_set_loggerPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_set_loggerPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listenerPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backup() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backup();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backupPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backup');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backup =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backupPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoin() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoin();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoinPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoin');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoin =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoinPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_message() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_message();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_messagePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_message');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_message =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_messagePtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnect() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnect();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnectPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnect');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnect =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnectPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_rates() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_rates();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_ratesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_rates');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_rates =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_ratesPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limits() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limits();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limits');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limits =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limitsPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limitsPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limitsPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_infoPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currenciesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currenciesPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_payments() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_payments();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_paymentsPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_payments');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_payments =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_paymentsPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundables() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundables();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundablesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundables');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundables =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundablesPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_auth() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_auth();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_authPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_auth');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_auth =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_authPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_pay() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_pay();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_payPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_pay');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_pay =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_payPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdrawPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdrawPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchainPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchainPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoinPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoinPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchainPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchainPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_payment() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_payment();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_paymentPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_payment =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_paymentPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refund() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refund();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refundPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refund');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refund =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refundPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_payment() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_payment();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_paymentPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_payment =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_paymentPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_payment() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_payment();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_paymentPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_payment =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_paymentPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_fees() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_fees();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_fees =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_feesPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refund() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refund();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refundPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refund');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refund =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refundPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhook() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhook();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhookPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhook');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhook =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhookPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listener() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listener();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listener');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listener =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listenerPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swaps() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swaps();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swapsPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swaps');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swaps =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swapsPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restore() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restore();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restorePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restore');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restore =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restorePtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_payment() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_payment();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_paymentPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_payment =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_paymentPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_message() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_message();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_messagePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_message');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_message =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_messagePtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sync() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sync();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_syncPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sync');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sync =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_syncPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhook() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhook();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhookPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhook');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhook =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhookPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_eventPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_eventPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_logPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_logPtr.asFunction<int Function()>();
+
+  int ffi_breez_sdk_liquid_bindings_uniffi_contract_version() {
+    return _ffi_breez_sdk_liquid_bindings_uniffi_contract_version();
+  }
+
+  late final _ffi_breez_sdk_liquid_bindings_uniffi_contract_versionPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function()>>(
+          'ffi_breez_sdk_liquid_bindings_uniffi_contract_version');
+  late final _ffi_breez_sdk_liquid_bindings_uniffi_contract_version =
+      _ffi_breez_sdk_liquid_bindings_uniffi_contract_versionPtr.asFunction<int Function()>();
 }
 
 final class DartCObject extends ffi.Opaque {}
@@ -2583,6 +4678,44 @@ final class wire_cst_sign_message_response extends ffi.Struct {
 
 /// EXTRA BEGIN
 typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
+
+/// ⚠️ Attention: If you change this #else block (ending in `#endif // def UNIFFI_SHARED_H`) you *must* ⚠️
+/// ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
+final class RustBuffer extends ffi.Struct {
+  @ffi.Int32()
+  external int capacity;
+
+  @ffi.Int32()
+  external int len;
+
+  external ffi.Pointer<ffi.Uint8> data;
+}
+
+final class ForeignBytes extends ffi.Struct {
+  @ffi.Int32()
+  external int len;
+
+  external ffi.Pointer<ffi.Uint8> data;
+}
+
+/// Error definitions
+final class RustCallStatus extends ffi.Struct {
+  @ffi.Int8()
+  external int code;
+
+  external RustBuffer errorBuf;
+}
+
+typedef ForeignCallback = ffi.Pointer<ffi.NativeFunction<ForeignCallbackFunction>>;
+typedef ForeignCallbackFunction = ffi.Int32 Function(
+    ffi.Uint64, ffi.Int32, ffi.Pointer<ffi.Uint8>, ffi.Int32, ffi.Pointer<RustBuffer>);
+typedef DartForeignCallbackFunction = int Function(
+    int, int, ffi.Pointer<ffi.Uint8>, int, ffi.Pointer<RustBuffer>);
+
+/// Continuation callback for UniFFI Futures
+typedef UniFfiRustFutureContinuation = ffi.Pointer<ffi.NativeFunction<UniFfiRustFutureContinuationFunction>>;
+typedef UniFfiRustFutureContinuationFunction = ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int8);
+typedef DartUniFfiRustFutureContinuationFunction = void Function(ffi.Pointer<ffi.Void>, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
