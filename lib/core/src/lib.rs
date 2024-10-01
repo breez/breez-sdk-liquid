@@ -180,6 +180,7 @@ mod restore;
 pub mod sdk;
 pub(crate) mod send_swap;
 pub(crate) mod swapper;
+pub(crate) mod sync;
 pub(crate) mod test_utils;
 pub(crate) mod utils;
 pub(crate) mod wallet;
