@@ -20,6 +20,7 @@ mod primitives;
 mod record;
 
 /// A trait tor the implementation.
+#[allow(dead_code)]
 trait CodeType: Debug {
     /// The language specific label used to reference this type. This will be used in
     /// method signatures and property declarations.
@@ -128,6 +129,7 @@ impl<'a> ModuleGenerator<'a> {
 #[derive(Clone)]
 pub struct SwiftCodeOracle;
 
+#[allow(dead_code)]
 impl SwiftCodeOracle {
     // Map `Type` instances to a `Box<dyn CodeType>` for that type.
     //
@@ -306,7 +308,10 @@ pub mod filters {
         res
     }
 
-    pub fn rn_convert_type(type_: &impl AsType, converted_var_name: &str) -> Result<String, askama::Error> {
+    pub fn rn_convert_type(
+        type_: &impl AsType,
+        converted_var_name: &str,
+    ) -> Result<String, askama::Error> {
         match type_.as_type() {
             Type::Optional { inner_type } => {
                 let unboxed = inner_type.as_ref();
@@ -341,7 +346,11 @@ pub mod filters {
         }
     }
 
-    pub fn rn_return_type(type_: &impl AsType, name: &str, optional: bool) -> Result<String, askama::Error> {
+    pub fn rn_return_type(
+        type_: &impl AsType,
+        name: &str,
+        optional: bool,
+    ) -> Result<String, askama::Error> {
         let mut optional_suffix = "";
         if optional {
             optional_suffix = "!";
@@ -398,7 +407,10 @@ pub mod filters {
         }
     }
 
-    pub fn extern_type_name(type_: &impl AsType, ci: &ComponentInterface) -> Result<String, askama::Error> {
+    pub fn extern_type_name(
+        type_: &impl AsType,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
         match type_.as_type() {
             Type::Boolean => Ok("BOOL".to_string()),
             Type::Int8 | Type::Int16 | Type::Int32 | Type::Int64 => Ok("NSInteger*".to_string()),
@@ -424,7 +436,10 @@ pub mod filters {
         }
     }
 
-    pub fn inline_optional_field(type_: &impl AsType, ci: &ComponentInterface) -> Result<bool, askama::Error> {
+    pub fn inline_optional_field(
+        type_: &impl AsType,
+        ci: &ComponentInterface,
+    ) -> Result<bool, askama::Error> {
         match type_.as_type() {
             Type::Optional { inner_type } => {
                 let unboxed = inner_type.as_ref();

@@ -9,6 +9,7 @@ use uniffi_bindgen::{
     ComponentInterface,
 };
 
+#[allow(dead_code)]
 fn render_literal(literal: &Literal, inner: &Type, ci: &ComponentInterface) -> String {
     match literal {
         Literal::Null => "null".into(),

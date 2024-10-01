@@ -232,30 +232,30 @@ pub mod filters {
         let re = Regex::new(r"\[([a-zA-Z0-9_:]+)\]").unwrap();
         let replacement = |caps: &Captures| -> Result<String, askama::Error> {
             let split: Vec<&str> = caps[1].split("::").collect();
-            if let Some(enum_def) = ci.get_enum_definition(&split[0]) {
+            if let Some(enum_def) = ci.get_enum_definition(split[0]) {
                 let name = type_name(enum_def)?;
                 if split.len() == 2 {
-                    let v_name = enum_variant(&split[1])?;
+                    let v_name = enum_variant(split[1])?;
                     return Ok(format!("{{@link {}.{}}}", name, v_name));
                 }
                 return Ok(format!("{{@link {}}}", name));
-            } else if let Some(fn_def) = ci.get_function_definition(&split[0]) {
+            } else if let Some(fn_def) = ci.get_function_definition(split[0]) {
                 let name = fn_name(fn_def.name())?;
                 return Ok(format!("{{@link {}}}", name));
-            } else if let Some(obj_def) = ci.get_object_definition(&split[0]) {
+            } else if let Some(obj_def) = ci.get_object_definition(split[0]) {
                 let mut name = type_name(obj_def)?;
                 if split.len() == 2 {
-                    name = fn_name(&split[1])?;
+                    name = fn_name(split[1])?;
                 }
                 return Ok(format!("{{@link {}}}", name));
-            } else if let Some(rec_def) = ci.get_record_definition(&split[0]) {
+            } else if let Some(rec_def) = ci.get_record_definition(split[0]) {
                 let name = type_name(rec_def)?;
                 if split.len() == 2 {
-                    let v_name = var_name(&split[1])?;
+                    let v_name = var_name(split[1])?;
                     return Ok(format!("{{@link {}.{}}}", name, v_name));
                 }
                 return Ok(format!("{{@link {}}}", name));
-            } else if let Some(cb_def) = ci.get_callback_interface_definition(&split[0]) {
+            } else if let Some(cb_def) = ci.get_callback_interface_definition(split[0]) {
                 let name = type_name(cb_def)?;
                 return Ok(format!("{{@link {}}}", name));
             }

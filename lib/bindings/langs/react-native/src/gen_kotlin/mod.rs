@@ -20,6 +20,7 @@ mod object;
 mod primitives;
 mod record;
 
+#[allow(dead_code)]
 trait CodeType: Debug {
     /// The language specific label used to reference this type. This will be used in
     /// method signatures and property declarations.
@@ -121,6 +122,7 @@ impl<'a> ModuleGenerator<'a> {
 #[derive(Clone)]
 pub struct KotlinCodeOracle;
 
+#[allow(dead_code)]
 impl KotlinCodeOracle {
     // Map `Type` instances to a `Box<dyn CodeType>` for that type.
     //
@@ -409,7 +411,10 @@ pub mod filters {
         Ok(IGNORED_FUNCTIONS.contains(nm))
     }
 
-    pub fn rn_convert_type(type_: &impl AsType, _ci: &ComponentInterface) -> Result<String, askama::Error> {
+    pub fn rn_convert_type(
+        type_: &impl AsType,
+        _ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
         match type_.as_type() {
             Type::UInt8 | Type::UInt16 | Type::UInt32 => Ok(".toUInt()".to_string()),
             Type::Int64 => Ok(".toLong()".to_string()),
@@ -437,7 +442,10 @@ pub mod filters {
         }
     }
 
-    pub fn rn_type_name(type_: &impl AsType, ci: &ComponentInterface) -> Result<String, askama::Error> {
+    pub fn rn_type_name(
+        type_: &impl AsType,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
         match type_.as_type() {
             Type::Boolean => Ok("Boolean".to_string()),
             Type::Int8 | Type::UInt8 | Type::Int16 | Type::UInt16 | Type::Int32 | Type::UInt32 => {

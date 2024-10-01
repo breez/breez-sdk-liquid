@@ -10,6 +10,7 @@ use uniffi_bindgen::{
     ComponentInterface,
 };
 
+#[allow(dead_code)]
 fn render_literal(literal: &Literal, _ci: &ComponentInterface) -> String {
     fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {

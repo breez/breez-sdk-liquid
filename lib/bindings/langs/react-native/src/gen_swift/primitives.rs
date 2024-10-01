@@ -4,8 +4,12 @@
 
 use super::CodeType;
 use paste::paste;
-use uniffi_bindgen::{backend::{Literal, Type}, interface::Radix};
+use uniffi_bindgen::{
+    backend::{Literal, Type},
+    interface::Radix,
+};
 
+#[allow(dead_code)]
 fn render_literal(literal: &Literal) -> String {
     fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {
