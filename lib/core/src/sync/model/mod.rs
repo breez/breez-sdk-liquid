@@ -1,9 +1,10 @@
-use boltz_client::boltz::SwapTree;
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::Direction, utils};
-
 use self::sync::Record;
+use crate::{
+    model::{Direction, InternalSwapTree},
+    utils,
+};
 
 pub(crate) mod sync;
 
@@ -13,12 +14,12 @@ pub(crate) struct ChainSyncData {
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
     pub(crate) direction: Direction,
-    pub(crate) claim_swap_tree: SwapTree,
+    pub(crate) claim_swap_tree: InternalSwapTree,
     pub(crate) claim_fees_sat: u64,
     pub(crate) claim_address: String,
     pub(crate) claim_private_key: String,
     pub(crate) claim_timeout_block_height: u32,
-    pub(crate) lockup_swap_tree: SwapTree,
+    pub(crate) lockup_swap_tree: InternalSwapTree,
     pub(crate) lockup_address: String,
     pub(crate) refund_private_key: String,
     pub(crate) lockup_timeout_block_height: u32,
@@ -33,7 +34,7 @@ pub(crate) struct SendSyncData {
     pub(crate) preimage: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) refund_private_key: String,
-    pub(crate) swap_tree: SwapTree,
+    pub(crate) swap_tree: InternalSwapTree,
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -45,7 +46,7 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
     pub(crate) claim_private_key: String,
-    pub(crate) swap_tree: SwapTree,
+    pub(crate) swap_tree: InternalSwapTree,
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
