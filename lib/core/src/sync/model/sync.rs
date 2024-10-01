@@ -208,14 +208,20 @@ pub mod syncer_client {
             tonic::Response<tonic::codec::Streaming<super::Record>>,
             tonic::Status,
         > {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
-            })?;
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/sync.Syncer/ListenChanges");
+            let path = http::uri::PathAndQuery::from_static(
+                "/sync.Syncer/ListenChanges",
+            );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("sync.Syncer", "ListenChanges"));
+            req.extensions_mut().insert(GrpcMethod::new("sync.Syncer", "ListenChanges"));
             self.inner.server_streaming(req, path, codec).await
         }
     }
