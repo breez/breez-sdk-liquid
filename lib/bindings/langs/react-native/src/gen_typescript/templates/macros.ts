@@ -14,6 +14,7 @@
 
 {%- macro field_list_decl(rec) %}
     {%- for f in rec.fields() %}
+    {%- call docstring(f, 1, ci) %}
     {%- match f.as_type() %}
     {%- when Type::Optional { inner_type } %}
     {%- let unboxed = inner_type.as_ref() %}
@@ -29,4 +30,12 @@
         {{ arg.name()|var_name }}: {{ arg|absolute_type_name }}{{- arg|default_value -}}
         {%- if !loop.last %}, {% endif -%}
     {%- endfor %}
+{%- endmacro %}
+
+{%- macro docstring(defn, indent_tabs, ci) %}
+{%- match defn.docstring() %}
+{%- when Some(docstring) %}
+{{ docstring|docstring(indent_tabs, ci) }}
+{%- else -%}
+{%- endmatch %}
 {%- endmacro %}
