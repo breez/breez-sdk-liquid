@@ -88,7 +88,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.currentTask?.onShutdown()
     }
     
-    public func setLogger(logger: Logger) {
+    public func setServiceLogger(logger: Logger) {
         self.logger = ServiceLogger(logStream: logger)
     }
 }

@@ -749,7 +749,7 @@ impl ChainSwapHandler {
         &self,
         lockup_address: &str,
         refund_address: &str,
-        fee_rate_msat_per_vb: u32,
+        fee_rate_sat_per_vb: u32,
     ) -> SdkResult<(u32, u64, Option<String>)> {
         let swap = self
             .persister
@@ -769,7 +769,7 @@ impl ChainSwapHandler {
         let (refund_tx_size, refund_tx_fees_sat) = self.swapper.estimate_refund_broadcast(
             Swap::Chain(swap),
             refund_address,
-            Some(fee_rate_msat_per_vb as f64 / 1000.0),
+            Some(fee_rate_sat_per_vb as f64),
         )?;
 
         Ok((refund_tx_size, refund_tx_fees_sat, refund_tx_id))
@@ -779,7 +779,7 @@ impl ChainSwapHandler {
         &self,
         lockup_address: &str,
         refund_address: &str,
-        broadcast_fee_rate_msat_per_vb: u32,
+        broadcast_fee_rate_sat_per_vb: u32,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
         let swap = self
@@ -828,7 +828,7 @@ impl ChainSwapHandler {
             Swap::Chain(swap.clone()),
             refund_address,
             utxos,
-            Some(broadcast_fee_rate_msat_per_vb as f64 / 1000.0),
+            Some(broadcast_fee_rate_sat_per_vb as f64),
             is_cooperative,
         )?
         else {

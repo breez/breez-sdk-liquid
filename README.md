@@ -1,19 +1,19 @@
-# Breez SDK - *Liquid*
+# Breez SDK - Nodeless *(Liquid Implementation)*
 
 ## **Overview**
 
-The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning payments into their apps and services. It eliminates the need for third-parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer payments.
+The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning payments into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer payments.
 
 To provide the best experience for their end-users, developers can choose between the following implementations:
 
-- [Breez SDK - *Liquid*](https://sdk-doc-liquid.breez.technology/)
-- [Breez SDK - *Greenlight*](https://sdk-doc.breez.technology/)
+- [Breez SDK -  Nodeless *(Liquid Implementation)*](https://sdk-doc-liquid.breez.technology/)
+- [Breez SDK - Native *(Greenlight Implementation)*](https://sdk-doc.breez.technology/)
 
 **The Breez SDK is free for developers.**
 
-## **What Is the *Liquid* Implementation?**
+## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
 
-The *Liquid* implementation is a nodeless Lightning integration. It offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps.
+It’s a nodeless Lightning integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps.
 
 **Core Functions**
 
@@ -34,7 +34,9 @@ The *Liquid* implementation is a nodeless Lightning integration. It offers a s
 
 ## Getting Started 
 
-Head over to the [Breez SDK - Liquid documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
+Head over to the [Breez SDK - Nodeless *(Liquid Implementation)* documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
+
+You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
 
 ## **API**
 
@@ -42,15 +44,15 @@ API documentation is [here](https://breez.github.io/breez-sdk-liquid/breez_sdk_
 
 ## **Command Line**
 
-The [Breez SDK - *Liquid* cli](https://github.com/breez/breez-sdk-liquid/tree/main/cli) is a command line client that allows you to interact with and test the functionality of the SDK.
+The [Breez SDK - Nodeless *(Liquid Implementation)* cli](https://github.com/breez/breez-sdk-liquid/tree/main/cli) is a command line client that allows you to interact with and test the functionality of the SDK.
 
 ## **Support**
 
 Have a question for the team? Join our [Telegram channel](https://t.me/breezsdk) or email us at [contact@breez.technology](mailto:contact@breez.technology) 
 
-## How Does the *Liquid* Implementation Work?
+## How Does Nodeless *(Liquid Implementation)* Work?
 
-The *Liquid* implementation uses submarine swaps and reverse submarine swaps to send and receive payments, enabling funds to move frictionlessly between the Lightning Network and the Liquid sidechain.
+The Breez SDK - Nodeless *(Liquid Implementation)* uses submarine swaps and reverse submarine swaps to send and receive payments, enabling funds to move frictionlessly between the Lightning Network and the Liquid sidechain.
 
 ![Breez SDK - Liquid](https://github.com/breez/breez-sdk-liquid-docs/raw/main/src/images/BreezSDK_Liquid.png)
 

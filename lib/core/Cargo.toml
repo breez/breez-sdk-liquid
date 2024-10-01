@@ -17,7 +17,7 @@ bip39 = "2.0.0"
 boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-chain-swap-refund-check-all-utoxs" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.3.0", features = [
+flutter_rust_bridge = { version = "=2.4.0", features = [
   "chrono",
 ], optional = true }
 log = { workspace = true }

@@ -28,7 +28,7 @@ impl BoltzSwapper {
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,
-                        &self.liquid_electrum_config,
+                        &self.bitcoin_electrum_config,
                         self.boltz_url.clone(),
                         swap.id.clone(),
                     )

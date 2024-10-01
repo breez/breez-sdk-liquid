@@ -3,6 +3,7 @@ frb_bin := "flutter_rust_bridge_codegen generate"
 
 export CARGO_TERM_COLOR := "always"
 
+# Lists available recipes
 default:
   just --list --unsorted
 
@@ -12,56 +13,40 @@ bootstrap frb='true' build='false':
 	@if {{frb}} == true; then just frb; fi
 	just init
 	just init-sdk
-	just gen
-	@if {{build}} == true; then just build; fi
-	@if {{build}} == true; then melos build; fi
-	@if {{build}} == true; then just link; fi
-	@if {{build}} == true; then just build-uniffi; fi	
+	just codegen
+	@if {{build}} == true; then just build-uniffi; fi
+	just link-headers
+	just ffigen
 	just check
 
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
-	cargo install flutter_rust_bridge_codegen --version 2.3.0
+	cargo install flutter_rust_bridge_codegen --version 2.4.0
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
-
-# Generate bindings
-gen: codegen && ffigen
 
 # Generate Dart/Flutter bindings && softlink C headers
 codegen:
 	mkdir -p ../../../../packages/dart/lib/src
 	{{frb_bin}}
 	cd ../../../../packages/dart/lib/src && dart format -l 110 .
-	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquid.h
-	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquid.h
 
 # Generate FFI bindings
 ffigen:
 	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
-# Builds the local library for testing
-build *args:
-	cargo build --package breez-sdk-liquid --manifest-path ../../../core/Cargo.toml --features frb {{args}}
-
-build-apple profile='frb-min':
-	dart scripts/build_apple.dart --profile {{profile}}
-
-build-android profile='frb-min':
-	bash scripts/build-android.sh --profile {{profile}}
-
-build-other profile='frb-min':
-	dart scripts/build_other.dart --profile {{profile}}
-
+# Builds the uniFFI library
 build-uniffi:
 	just build-uniffi-android
 	just build-uniffi-swift
 
+# Builds the uniFFI library for Android
 build-uniffi-android:
 	bash scripts/build_uniffi_android.sh
 
+# Builds the uniFFI library for Swift
 build-uniffi-swift:
 	bash scripts/build_uniffi_swift.sh
 
@@ -72,7 +57,7 @@ test build='false':
 
 # (melos) Run tests on Dart packages in workspace
 test-dart build='true': 
-	@if {{build}} == true; then just build; fi
+	@if {{build}} == true; then just build-uniffi; fi
 	melos test-dart
 
 # (melos) Run integration tests on Flutter packages in workspace
@@ -80,39 +65,12 @@ test-dart build='true':
 #	@if {{build}} == true; then build; fi
 #	melos test-flutter
 
-# Softlinks library archives from platform-build to their expected locations
-link:
-	just link-apple
-	just link-android
-	just link-other
-
-link-apple:
-	-ln -sf $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
-	-ln -sf $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
-
-link-android:
-	-ln -sf $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
-
-link-other:
-	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
-	-ln -sf $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
-
-# Copies library archives from platform-build to their expected locations
-copy:
-	just copy-apple
-	just copy-android
-	just copy-other
-
-copy-apple:
-	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/macos/Frameworks/{{curr_version}}.zip
-	cp $(pwd)/platform-build/breez_sdk_liquid.xcframework.zip ../../../../packages/flutter/ios/Frameworks/{{curr_version}}.zip
-
-copy-android:
-	cp $(pwd)/platform-build/android.tar.gz ../../../../packages/flutter/android/{{curr_version}}.tar.gz
-
-copy-other:
-	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/linux/{{curr_version}}.tar.gz
-	cp $(pwd)/platform-build/other.tar.gz ../../../../packages/flutter/windows/{{curr_version}}.tar.gz
+# Softlinks library headers to ther expected locations
+link-headers:
+	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquid.h
+	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquid.h
+	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
+	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
 
 # (melos) use instead of flutter pub get
 init *args:
