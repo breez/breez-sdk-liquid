@@ -62,6 +62,8 @@ jobs:
           cp -r ../build/packages/flutter/android .
           cp -r ../build/packages/flutter/ios .
           cp -r ../build/packages/flutter/macos .
+          rm ios/.gitignore
+          rm macos/.gitignore
           mv android/build.gradle.production android/build.gradle
           mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
           mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
