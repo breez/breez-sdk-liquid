@@ -27,7 +27,13 @@ frb:
 	dart pub global activate ffi
 	cargo install cargo-xcode
 
-# Generate Dart/Flutter bindings && softlink C headers
+# Generate bindings and softlink C headers
+gen:
+	just codegen
+	just link-headers
+	just ffigen
+
+# Generate Dart/Flutter bindings
 codegen:
 	mkdir -p ../../../../packages/dart/lib/src
 	{{frb_bin}}
