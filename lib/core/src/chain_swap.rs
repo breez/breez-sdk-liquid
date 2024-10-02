@@ -955,7 +955,10 @@ impl ChainSwapHandler {
                         RefundPending => match has_swap_expired {
                             true => {
                                 self.refund_outgoing_swap(&swap, true)
-                                    .or_else(|_| self.refund_outgoing_swap(&swap, false))
+                                    .or_else(|e| {
+                                        warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
+                                        self.refund_outgoing_swap(&swap, false)
+                                    })
                                     .await
                             }
                             false => self.refund_outgoing_swap(&swap, true).await,
