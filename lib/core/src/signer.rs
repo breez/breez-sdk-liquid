@@ -233,11 +233,10 @@ impl Signer for SdkSigner {
             .to_keypair(&secp);
         let s = msg.as_slice();
 
-        let double_hashed_msg: Message = Message::from_digest_slice(s)
+        let msg: Message = Message::from_digest_slice(s)
             .map_err(|e| SignerError::Generic { err: e.to_string() })?;
         // Get message signature and encode to zbase32
-        let recoverable_sig =
-            secp.sign_ecdsa_recoverable(&double_hashed_msg, &keypair.secret_key());
+        let recoverable_sig = secp.sign_ecdsa_recoverable(&msg, &keypair.secret_key());
         let (recovery_id, sig) = recoverable_sig.serialize_compact();
         let mut complete_signature = vec![31 + recovery_id.to_i32() as u8];
         complete_signature.extend_from_slice(&sig);
