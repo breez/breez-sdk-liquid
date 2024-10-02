@@ -242,7 +242,7 @@ impl OnchainWallet for LiquidOnchainWallet {
         engine.write_all(LN_MESSAGE_PREFIX)?;
         engine.write_all(message.as_bytes())?;
         let hashed_msg = sha256::Hash::from_engine(engine);
-        let double_hashed_msg = Message::from_digest(hashed_msg.into_inner());
+        let double_hashed_msg = Message::from_digest(sha256::Hash::hash(&hashed_msg).into_inner());
         // Get message signature and encode to zbase32
         let recoverable_sig = self.signer.sign_ecdsa_recoverable(&double_hashed_msg)?;
         Ok(zbase32::encode_full_bytes(recoverable_sig.as_slice()))
@@ -251,5 +251,75 @@ impl OnchainWallet for LiquidOnchainWallet {
     fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool> {
         let pk = PublicKey::from_str(pubkey)?;
         Ok(verify(message.as_bytes(), signature, &pk))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::Config;
+    use crate::signer::SdkSigner;
+    use crate::wallet::LiquidOnchainWallet;
+    use tempfile::TempDir;
+
+    #[tokio::test]
+    async fn test_sign_and_check_message() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer = Arc::new(sdk_signer);
+
+        let config = Config::testnet();
+
+        // Create a temporary directory for working_dir
+        let temp_dir = TempDir::new().unwrap();
+        let working_dir = temp_dir.path().to_str().unwrap().to_string();
+
+        let wallet: Arc<dyn OnchainWallet> =
+            Arc::new(LiquidOnchainWallet::new(sdk_signer.clone(), config, &working_dir).unwrap());
+
+        // Test message
+        let message = "Hello, Liquid!";
+
+        // Sign the message
+        let signature = wallet.sign_message(message).unwrap();
+
+        // Get the public key
+        let pubkey = wallet.pubkey().unwrap();
+
+        // Check the message
+        let is_valid = wallet.check_message(message, &pubkey, &signature).unwrap();
+        assert!(is_valid, "Message signature should be valid");
+
+        // Check with an incorrect message
+        let incorrect_message = "Wrong message";
+        let is_invalid = wallet
+            .check_message(incorrect_message, &pubkey, &signature)
+            .unwrap();
+        assert!(
+            !is_invalid,
+            "Message signature should be invalid for incorrect message"
+        );
+
+        // Check with an incorrect public key
+        let incorrect_pubkey = "02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc";
+        let is_invalid = wallet
+            .check_message(message, incorrect_pubkey, &signature)
+            .unwrap();
+        assert!(
+            !is_invalid,
+            "Message signature should be invalid for incorrect public key"
+        );
+
+        // Check with an incorrect signature
+        let incorrect_signature = zbase32::encode_full_bytes(&[0; 65]);
+        let is_invalid = wallet
+            .check_message(message, &pubkey, &incorrect_signature)
+            .unwrap();
+        assert!(
+            !is_invalid,
+            "Message signature should be invalid for incorrect signature"
+        );
+
+        // The temporary directory will be automatically deleted when temp_dir goes out of scope
     }
 }
