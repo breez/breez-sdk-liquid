@@ -11,8 +11,8 @@ use tonic::transport::Channel;
 
 use self::model::{
     sync::{
-        syncer_client::SyncerClient, ListChangesReply, ListChangesRequest, Record, SetRecordReply,
-        SetRecordRequest, SetRecordStatus,
+        syncer_client::SyncerClient, ListChangesReply, ListChangesRequest, ListenChangesRequest,
+        Record, SetRecordReply, SetRecordRequest, SetRecordStatus,
     },
     DecryptedRecord, SyncData,
 };
@@ -22,8 +22,11 @@ const CURRENT_SCHEMA_VERSION: f32 = 0.1;
 
 #[async_trait]
 pub trait SyncModule {
-    /// Connects to a gRPC stream
+    /// Connects to a gRPC endpoint
     async fn connect(&self) -> Result<()>;
+
+    /// Listens to the incoming changes stream
+    async fn listen(self: Arc<Self>) -> Result<()>;
 
     /// Applies the changes received from the stream to the local database
     async fn apply_changes(&self, changes: &[Record]) -> Result<()>;
@@ -92,6 +95,37 @@ impl SyncModule for BreezSyncModule {
     async fn connect(&self) -> Result<()> {
         let mut client = self.client.lock().await;
         *client = Some(SyncerClient::connect(self.connect_url.clone()).await?);
+        Ok(())
+    }
+
+    async fn listen(self: Arc<Self>) -> Result<()> {
+        let Some(ref mut client) = *self.client.lock().await else {
+            return Err(anyhow!(
+                "Cannot run `get_changes_since`: client not connected"
+            ));
+        };
+
+        let mut stream = client
+            .listen_changes(ListenChangesRequest {
+                request_time: utils::now(),
+                signature: todo!(),
+            })
+            .await?
+            .into_inner();
+
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            match stream.message().await {
+                Ok(Some(record)) => {
+                    if let Err(err) = cloned.apply_changes(&[record]).await {
+                        warn!("Could not apply incoming changes: {err:?}")
+                    };
+                }
+                Ok(_) => warn!("No message received from stream"),
+                Err(err) => warn!("Could not retrieve next message from stream: {err:?}"),
+            }
+        });
+
         Ok(())
     }
 

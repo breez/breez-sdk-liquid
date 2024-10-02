@@ -38,6 +38,13 @@ pub struct ListChangesReply {
     #[prost(message, repeated, tag = "1")]
     pub changes: ::prost::alloc::vec::Vec<Record>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListenChangesRequest {
+    #[prost(uint32, tag = "1")]
+    pub request_time: u32,
+    #[prost(string, tag = "2")]
+    pub signature: ::prost::alloc::string::String,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum SetRecordStatus {
@@ -193,6 +200,23 @@ pub mod syncer_client {
             let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new("sync.Syncer", "ListChanges"));
             self.inner.unary(req, path, codec).await
+        }
+        pub async fn listen_changes(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ListenChangesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<tonic::codec::Streaming<super::Record>>,
+            tonic::Status,
+        > {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/sync.Syncer/ListenChanges");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sync.Syncer", "ListenChanges"));
+            self.inner.server_streaming(req, path, codec).await
         }
     }
 }
