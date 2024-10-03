@@ -12,12 +12,12 @@ bootstrap frb='true' build='false':
 	just clean
 	@if {{frb}} == true; then just frb; fi
 	just init
-	just init-sdk
-	just codegen
-	@if {{build}} == true; then just build-uniffi; fi
-	just link-headers
-	just ffigen
+	@if {{build}} == true; then just build; fi
 	just check
+
+# (melos) Cleans the current workspace and all its packages of temporary pub & generated Melos IDE files.
+clean:
+	melos clean
 
 # Install flutter_rust_bridge_codegen dependencies
 frb:
@@ -27,21 +27,21 @@ frb:
 	dart pub global activate ffi
 	cargo install cargo-xcode
 
-# Generate bindings and softlink C headers
-gen:
-	just codegen
-	just link-headers
-	just ffigen
+# (melos) use instead of flutter pub get
+init *args:
+	dart pub global activate melos
+	melos bootstrap {{args}}
+	melos pub-upgrade
+	just init-sdk
 
-# Generate Dart/Flutter bindings
-codegen:
-	mkdir -p ../../../../packages/dart/lib/src
-	{{frb_bin}}
-	cd ../../../../packages/dart/lib/src && dart format -l 110 .
+# Install Breez Liquid SDK dependencies
+init-sdk:
+	brew install protobuf
 
-# Generate FFI bindings
-ffigen:
-	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
+# Builds the uniFFI library & Generates Dart/Flutter bindings
+build:
+	just build-uniffi
+	just gen
 
 # Builds the uniFFI library
 build-uniffi:
@@ -56,54 +56,51 @@ build-uniffi-android:
 build-uniffi-swift:
 	bash scripts/build_uniffi_swift.sh
 
-# (melos) Run tests on packages in workspace
-test build='false':
-	just test-dart {{build}}
-# test-flutter {{build}}
+# Generate Dart/Flutter bindings & Softlinks C headers
+gen ios='true':
+	just codegen
+	@if {{ios}} == true; then just build-ios-framework; fi
+	just ffigen
 
-# (melos) Run tests on Dart packages in workspace
-test-dart build='true': 
-	@if {{build}} == true; then just build-uniffi; fi
-	melos test-dart
-
-# (melos) Run integration tests on Flutter packages in workspace
-#test-flutter build='true':
-#	@if {{build}} == true; then build; fi
-#	melos test-flutter
-
-# Softlinks library headers to ther expected locations
-link-headers:
+# Generate Dart/Flutter bindings & softlinks C headers
+codegen:
+	mkdir -p ../../../../packages/dart/lib/src
+	{{frb_bin}}
+	cd ../../../../packages/dart/lib/src && dart format -l 110 .
 	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquid.h
 	-ln -sf $(pwd)/breez_sdk_liquid/include/breez_sdk_liquid.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquid.h
+
+# Builds the uniFFI framework & softlinks C headers
+build-ios-framework:
+	bash scripts/build_ios_framework.sh
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
 	-ln -sf $(pwd)/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ../../../../packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
 
-# (melos) use instead of flutter pub get
-init *args:
-	dart pub global activate melos
-	melos bootstrap {{args}}
-	melos pub-upgrade
-
-# Install Breez Liquid SDK dependencies
-init-sdk:
-	brew install protobuf
-
-# Update version number on podspec files & CMake scripts
-version:
-	bash scripts/version.sh
-
-# (melos) Generate docs for packages in workspace
-docs:
-	melos docs
-
-# (melos) Cleans the current workspace and all its packages of temporary pub & generated Melos IDE files.
-clean:
-	melos clean
+# Generate FFI bindings
+ffigen:
+	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
 # (melos) Analyze & check the format of packages in workspace
 check:
 	melos analyze
 	melos check-format
+
+# Update version number on podspec files & CMake scripts
+version:
+	bash scripts/version.sh
+
+# (melos) Run tests on packages in workspace
+test build='false':
+	just test-dart {{build}}
+
+# (melos) Run tests on Dart packages in workspace
+test-dart build='true': 
+	@if {{build}} == true; then just build; fi
+	melos test-dart
+
+# (melos) Generate docs for packages in workspace
+docs:
+	melos docs
 
 # Open melos.yaml
 melos:
