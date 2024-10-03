@@ -196,14 +196,14 @@ jobs:
         working-directory: lib/bindings/langs/flutter/
         run: just frb
 
-      - name: Generate Dart/Flutter bindings
+      - name: Generate Dart/Flutter bindings & Softlink C Headers
         working-directory: lib/bindings/langs/flutter/
         run: just codegen
 
-      - name: Link C Headers
+      - name: Build iOS Framework & Softlink C Headers
         working-directory: lib/bindings/langs/flutter/
         if: ${{ success() || failure() }}
-        run: just link-headers
+        run: just build-ios-framework
 
       - name: Generate FFI bindings
         working-directory: lib/bindings/langs/flutter/
