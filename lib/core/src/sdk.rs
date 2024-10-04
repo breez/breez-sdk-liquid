@@ -1792,7 +1792,8 @@ impl LiquidSdk {
                 req.fee_rate_sat_per_vbyte,
                 true,
             )
-            .or_else(|_| {
+            .or_else(|e| {
+                warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
                 self.chain_swap_handler.refund_incoming_swap(
                     &req.swap_address,
                     &req.refund_address,

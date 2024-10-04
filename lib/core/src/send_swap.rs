@@ -456,7 +456,10 @@ impl SendSwapHandler {
                 RefundPending => match has_swap_expired {
                     true => {
                         self.refund(swap, true)
-                            .or_else(|_| self.refund(swap, false))
+                            .or_else(|e| {
+                                warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
+                                self.refund(swap, false)
+                            })
                             .await
                     }
                     false => self.refund(swap, true).await,
