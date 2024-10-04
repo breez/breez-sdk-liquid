@@ -76,9 +76,9 @@ impl SyncData {
 }
 
 pub(crate) struct DecryptedRecord {
-    id: i64,
-    version: f32,
-    data: SyncData,
+    pub(crate) id: i64,
+    pub(crate) version: f32,
+    pub(crate) data: SyncData,
 }
 
 impl DecryptedRecord {

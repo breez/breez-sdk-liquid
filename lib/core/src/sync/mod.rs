@@ -5,20 +5,19 @@ use std::sync::Arc;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use log::warn;
-use rusqlite::params;
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
 
 use self::model::{
     sync::{
-        syncer_client::SyncerClient, ListChangesReply, ListChangesRequest, ListenChangesRequest,
-        Record, SetRecordReply, SetRecordRequest, SetRecordStatus,
+        syncer_client::SyncerClient, ListChangesRequest, ListenChangesRequest, Record,
+        SetRecordReply, SetRecordRequest, SetRecordStatus,
     },
     DecryptedRecord, SyncData,
 };
 use crate::{persist::Persister, utils};
 
-const CURRENT_SCHEMA_VERSION: f32 = 0.1;
+const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
 #[async_trait]
 pub trait SyncModule {
@@ -51,30 +50,6 @@ pub(crate) struct BreezSyncModule {
 }
 
 impl BreezSyncModule {
-    fn get_latest_record_id(&self) -> Result<i64> {
-        let con = self.persister.get_connection()?;
-
-        let latest_record_id: i64 = con.query_row(
-            "SELECT latestRecordId FROM settings WHERE id = 1",
-            [],
-            |row| row.get(0),
-        )?;
-
-        Ok(latest_record_id)
-    }
-
-    fn set_latest_record_id(&self, new_latest_id: i64) -> Result<()> {
-        let con = self.persister.get_connection()?;
-
-        con.execute(
-            "INSERT OR REPLACE INTO settings(id, latestRecordId) VALUES(1, ?)",
-            params![new_latest_id],
-        )
-        .map_err(|err| anyhow!("Could not write latest record id to database: {err}"))?;
-
-        Ok(())
-    }
-
     fn decrypt_records(&self, records: Vec<Record>) -> Vec<DecryptedRecord> {
         let decrypted_records = vec![];
         for record in records {
@@ -129,8 +104,30 @@ impl SyncModule for BreezSyncModule {
         Ok(())
     }
 
-    async fn apply_changes(&self, changes: &[Record]) -> Result<()> {
-        unimplemented!()
+    async fn apply_changes(&self, records: &[Record]) -> Result<()> {
+        for record in records {
+            // Check if it's a major or minor version ahead
+            match record.version.floor() > CURRENT_SCHEMA_VERSION.floor() {
+                true => {
+                    self.persister.insert_record(record)?;
+                }
+                false => {
+                    let decrypted_record = match DecryptedRecord::try_from_record(todo!(), record) {
+                        Ok(record) => record,
+                        Err(err) => {
+                            warn!("Could not decrypt record: {err:?}");
+                            continue;
+                        }
+                    };
+
+                    if let Err(err) = self.persister.apply_record(&decrypted_record) {
+                        warn!("Could not apply record changes: {err:?}");
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     async fn get_changes_since(&self, from_id: u64) -> Result<Vec<DecryptedRecord>> {
@@ -158,7 +155,7 @@ impl SyncModule for BreezSyncModule {
             return Err(anyhow!("Cannot run `set_record`: client not connected"));
         };
 
-        let id = self.get_latest_record_id()? + 1;
+        let id = self.persister.get_latest_record_id()? + 1;
         let data = utils::encrypt(todo!(), &data.to_bytes()?)?;
         let record = Some(Record {
             id,
@@ -178,7 +175,7 @@ impl SyncModule for BreezSyncModule {
             return Err(anyhow!("Cannot set record: Local head is behind remote"));
         }
 
-        self.set_latest_record_id(new_id)?;
+        self.persister.set_latest_record_id(new_id)?;
         Ok(())
     }
 
