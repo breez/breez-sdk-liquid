@@ -102,5 +102,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             id INTEGER NOT NULL PRIMARY KEY,
             latestRecordId INTEGER,   
         ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS pending_sync_records (
+            id INTEGER NOT NULL PRIMARY KEY,
+            version REAL NOT NULL,
+            data BLOB NOT NULL
+        ) STRICT;",
     ]
 }
