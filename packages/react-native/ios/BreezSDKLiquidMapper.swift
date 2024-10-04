@@ -268,6 +268,9 @@ enum BreezSDKLiquidMapper {
         guard let zeroConfMinFeeRateMsat = config["zeroConfMinFeeRateMsat"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRateMsat", typeName: "Config"))
         }
+        guard let breezApiKey = config["breezApiKey"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "breezApiKey", typeName: "Config"))
+        }
         var zeroConfMaxAmountSat: UInt64?
         if hasNonNilKey(data: config, key: "zeroConfMaxAmountSat") {
             guard let zeroConfMaxAmountSatTmp = config["zeroConfMaxAmountSat"] as? UInt64 else {
@@ -275,15 +278,8 @@ enum BreezSDKLiquidMapper {
             }
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
-        var breezApiKey: String?
-        if hasNonNilKey(data: config, key: "breezApiKey") {
-            guard let breezApiKeyTmp = config["breezApiKey"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "breezApiKey"))
-            }
-            breezApiKey = breezApiKeyTmp
-        }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, zeroConfMaxAmountSat: zeroConfMaxAmountSat, breezApiKey: breezApiKey)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -295,8 +291,8 @@ enum BreezSDKLiquidMapper {
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
+            "breezApiKey": config.breezApiKey,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
-            "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
         ]
     }
 

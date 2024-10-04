@@ -166,7 +166,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req});
 
-  Config crateBindingsDefaultConfig({required LiquidNetwork network});
+  Config crateBindingsDefaultConfig({required LiquidNetwork network, required String breezApiKey});
 
   Future<InputType> crateBindingsParse({required String input});
 
@@ -1070,25 +1070,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Config crateBindingsDefaultConfig({required LiquidNetwork network}) {
+  Config crateBindingsDefaultConfig({required LiquidNetwork network, required String breezApiKey}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         var arg0 = cst_encode_liquid_network(network);
-        return wire.wire__crate__bindings__default_config(arg0);
+        var arg1 = cst_encode_String(breezApiKey);
+        return wire.wire__crate__bindings__default_config(arg0, arg1);
       },
       codec: DcoCodec(
         decodeSuccessData: dco_decode_config,
         decodeErrorData: null,
       ),
       constMeta: kCrateBindingsDefaultConfigConstMeta,
-      argValues: [network],
+      argValues: [network, breezApiKey],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta get kCrateBindingsDefaultConfigConstMeta => const TaskConstMeta(
         debugName: "default_config",
-        argNames: ["network"],
+        argNames: ["network", "breezApiKey"],
       );
 
   @override
@@ -1555,7 +1556,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       paymentTimeoutSec: dco_decode_u_64(arr[5]),
       zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
-      breezApiKey: dco_decode_opt_String(arr[8]),
+      breezApiKey: dco_decode_String(arr[8]),
     );
   }
 
@@ -3193,7 +3194,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-    var var_breezApiKey = sse_decode_opt_String(deserializer);
+    var var_breezApiKey = sse_decode_String(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -4947,7 +4948,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
-    sse_encode_opt_String(self.breezApiKey, serializer);
+    sse_encode_String(self.breezApiKey, serializer);
   }
 
   @protected

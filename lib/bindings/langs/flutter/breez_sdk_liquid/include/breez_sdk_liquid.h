@@ -1022,7 +1022,8 @@ void frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(int64_t port_,
 void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
                                                         struct wire_cst_connect_request *req);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network,
+                                                                               struct wire_cst_list_prim_u_8_strict *breez_api_key);
 
 void frbgen_breez_liquid_wire__crate__bindings__parse(int64_t port_,
                                                       struct wire_cst_list_prim_u_8_strict *input);

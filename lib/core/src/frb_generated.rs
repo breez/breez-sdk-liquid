@@ -1582,6 +1582,7 @@ fn wire__crate__bindings__connect_impl(
 }
 fn wire__crate__bindings__default_config_impl(
     network: impl CstDecode<crate::model::LiquidNetwork>,
+    breez_api_key: impl CstDecode<String>,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1591,8 +1592,12 @@ fn wire__crate__bindings__default_config_impl(
         },
         move || {
             let api_network = network.cst_decode();
+            let api_breez_api_key = breez_api_key.cst_decode();
             transform_result_dco::<_, _, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok(crate::bindings::default_config(api_network))?;
+                let output_ok = Result::<_, ()>::Ok(crate::bindings::default_config(
+                    api_network,
+                    api_breez_api_key,
+                ))?;
                 Ok(output_ok)
             })())
         },
@@ -2164,7 +2169,7 @@ impl SseDecode for crate::model::Config {
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
-        let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
+        let mut var_breezApiKey = <String>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -5886,7 +5891,7 @@ impl SseEncode for crate::model::Config {
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
-        <Option<String>>::sse_encode(self.breez_api_key, serializer);
+        <String>::sse_encode(self.breez_api_key, serializer);
     }
 }
 
@@ -10134,8 +10139,9 @@ mod io {
     #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__default_config(
         network: i32,
+        breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__bindings__default_config_impl(network)
+        wire__crate__bindings__default_config_impl(network, breez_api_key)
     }
 
     #[no_mangle]

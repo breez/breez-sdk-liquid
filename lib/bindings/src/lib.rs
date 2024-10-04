@@ -57,8 +57,8 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     })
 }
 
-pub fn default_config(network: LiquidNetwork) -> Config {
-    LiquidSdk::default_config(network)
+pub fn default_config(network: LiquidNetwork, breez_api_key: String) -> Config {
+    LiquidSdk::default_config(network, breez_api_key)
 }
 
 pub fn parse(input: String) -> Result<InputType, PaymentError> {

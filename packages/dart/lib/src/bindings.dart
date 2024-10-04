@@ -21,8 +21,8 @@ Future<BindingLiquidSdk> connect({required ConnectRequest req}) =>
 /// If used, this must be called before `connect`. It can only be called once.
 Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogStream();
 
-Config defaultConfig({required LiquidNetwork network}) =>
-    RustLib.instance.api.crateBindingsDefaultConfig(network: network);
+Config defaultConfig({required LiquidNetwork network, required String breezApiKey}) =>
+    RustLib.instance.api.crateBindingsDefaultConfig(network: network, breezApiKey: breezApiKey);
 
 Future<InputType> parse({required String input}) => RustLib.instance.api.crateBindingsParse(input: input);
 
