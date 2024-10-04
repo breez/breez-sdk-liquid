@@ -1047,6 +1047,8 @@ class RefundResponse {
 class RefundableSwap {
   final String swapAddress;
   final int timestamp;
+
+  /// Amount that is refundable, which is different than the swap amount
   final BigInt amountSat;
 
   const RefundableSwap({
