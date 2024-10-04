@@ -609,7 +609,8 @@ impl ChainSwap {
         Ok(swap_script)
     }
 
-    pub(crate) fn get_lockup_swap_script_pubkey(
+    /// Returns the lockup script pubkey for Receive Chain Swaps
+    pub(crate) fn get_receive_lockup_swap_script_pubkey(
         &self,
         network: LiquidNetwork,
     ) -> SdkResult<ScriptBuf> {

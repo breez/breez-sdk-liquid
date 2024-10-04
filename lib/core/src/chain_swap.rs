@@ -142,7 +142,7 @@ impl ChainSwapHandler {
         let is_monitoring_expired = current_height > monitoring_block_height;
 
         if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
-            let script_pubkey = swap.get_lockup_swap_script_pubkey(self.config.network)?;
+            let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
             let script_balance = self
                 .bitcoin_chain_service
                 .lock()

@@ -1744,7 +1744,8 @@ impl LiquidSdk {
 
         let mut refundables = vec![];
         for chain_swap in chain_swaps {
-            let script_pubkey = chain_swap.get_lockup_swap_script_pubkey(self.config.network)?;
+            let script_pubkey =
+                chain_swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
             let script_balance = self
                 .bitcoin_chain_service
                 .lock()
