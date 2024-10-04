@@ -114,7 +114,9 @@ swift-darwin: darwin-universal
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/swift-darwin
 	cd ffi/swift-darwin && "swiftc" "-emit-module" "-module-name" "breez_sdk_liquid_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-darwin/breez_sdk_liquidFFI.modulemap" "-I" "."  "-L" "." "-lbreez_sdk_liquid_bindings" breez_sdk_liquid.swift
 
-bindings-swift: ios-universal darwin-universal
+bindings-swift: ios-universal darwin-universal build-ios-framework
+
+build-ios-framework:
 	mkdir -p langs/swift/Sources/BreezSDKLiquid
 	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
 	mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
