@@ -1742,22 +1742,29 @@ impl LiquidSdk {
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
         let chain_swaps = self.persister.list_refundable_chain_swaps()?;
 
+        let mut lockup_script_pubkeys = vec![];
+        for swap in &chain_swaps {
+            let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
+            lockup_script_pubkeys.push(script_pubkey);
+        }
+        let lockup_scripts: Vec<&boltz_client::bitcoin::Script> = lockup_script_pubkeys
+            .iter()
+            .map(|s| s.as_script())
+            .collect();
+        let scripts_balance = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .scripts_get_balance(&lockup_scripts)?;
+
         let mut refundables = vec![];
-        for chain_swap in chain_swaps {
-            let script_pubkey =
-                chain_swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
-            let script_balance = self
-                .bitcoin_chain_service
-                .lock()
-                .await
-                .script_get_balance(script_pubkey.as_script())?;
-            info!(
-                "Incoming Chain Swap {} is refundable with {} confirmed sats",
-                chain_swap.id, script_balance.confirmed
-            );
+        for (chain_swap, script_balance) in chain_swaps.into_iter().zip(scripts_balance) {
+            let swap_id = &chain_swap.id;
+            let refundable_confirmed_sat = script_balance.confirmed;
+            info!("Incoming Chain Swap {swap_id} is refundable with {refundable_confirmed_sat} confirmed sats");
 
             let mut refundable: RefundableSwap = chain_swap.into();
-            refundable.amount_sat = script_balance.confirmed;
+            refundable.amount_sat = refundable_confirmed_sat;
             refundables.push(refundable);
         }
 
