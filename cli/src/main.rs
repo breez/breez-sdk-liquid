@@ -49,6 +49,10 @@ impl EventListener for CliEventListener {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let breez_api_key = std::env::var_os("BREEZ_API_KEY")
+        .and_then(|var| var.into_string().ok())
+        .expect("The `BREEZ_API_KEY` environment variable must be set in order for the application to run. You can request an API key here: https://breez.technology/request-api-key/#contact-us-form-sdk.");
+
     let args = Args::parse();
 
     let data_dir_str = args.data_dir.unwrap_or(DEFAULT_DATA_DIR.to_string());
@@ -71,10 +75,8 @@ async fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
-    let mut config = LiquidSdk::default_config(network);
+    let mut config = LiquidSdk::default_config(network, breez_api_key);
     config.working_dir = data_dir_str;
-    config.breez_api_key = std::env::var_os("BREEZ_API_KEY")
-        .map(|var| var.into_string().expect("Invalid API key provided"));
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         config,
