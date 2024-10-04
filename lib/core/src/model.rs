@@ -622,6 +622,14 @@ impl ChainSwap {
         Ok(script_pubkey)
     }
 
+    pub(crate) fn to_refundable(&self, refundable_amount_sat: u64) -> RefundableSwap {
+        RefundableSwap {
+            swap_address: self.lockup_address.clone(),
+            timestamp: self.created_at,
+            amount_sat: refundable_amount_sat,
+        }
+    }
+
     pub(crate) fn from_boltz_struct_to_json(
         create_response: &CreateChainResponse,
         expected_swap_id: &str,
@@ -820,16 +828,8 @@ impl ReceiveSwap {
 pub struct RefundableSwap {
     pub swap_address: String,
     pub timestamp: u32,
+    /// Amount that is refundable, which is different than the swap amount
     pub amount_sat: u64,
-}
-impl From<ChainSwap> for RefundableSwap {
-    fn from(swap: ChainSwap) -> Self {
-        Self {
-            swap_address: swap.lockup_address,
-            timestamp: swap.created_at,
-            amount_sat: swap.payer_amount_sat,
-        }
-    }
 }
 
 /// The payment state of an individual payment.

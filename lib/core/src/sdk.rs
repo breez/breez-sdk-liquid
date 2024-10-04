@@ -1763,8 +1763,7 @@ impl LiquidSdk {
             let refundable_confirmed_sat = script_balance.confirmed;
             info!("Incoming Chain Swap {swap_id} is refundable with {refundable_confirmed_sat} confirmed sats");
 
-            let mut refundable: RefundableSwap = chain_swap.into();
-            refundable.amount_sat = refundable_confirmed_sat;
+            let refundable: RefundableSwap = chain_swap.to_refundable(refundable_confirmed_sat);
             refundables.push(refundable);
         }
 
