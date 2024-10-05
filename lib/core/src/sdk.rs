@@ -3,6 +3,7 @@ use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Result};
+use base64::Engine as _;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -25,7 +26,7 @@ use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
-use x509_parser::pem::parse_x509_pem;
+use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
@@ -102,17 +103,11 @@ impl LiquidSdk {
     }
 
     fn validate_api_key(api_key: &str) -> Result<()> {
-        let pem = [
-            "-----BEGIN CERTIFICATE-----",
-            api_key,
-            "-----END CERTIFICATE-----",
-        ]
-        .join("\n");
-        let (_rem, pem) = parse_x509_pem(pem.as_bytes())
-            .map_err(|err| anyhow!("Invaid PEM format for Breez API key: {err:?}"))?;
-        let cert = pem
-            .parse_x509()
-            .map_err(|err| anyhow!("Invaid X509 certificate for Breez API key: {err:?}"))?;
+        let api_key_decoded = base64::engine::general_purpose::STANDARD
+            .decode(api_key.as_bytes())
+            .map_err(|err| anyhow!("Could not base64 decode the Breez API key: {err:?}"))?;
+        let (_rem, cert) = parse_x509_certificate(&api_key_decoded)
+            .map_err(|err| anyhow!("Invaid certificate for Breez API key: {err:?}"))?;
 
         match cert.public_key().parsed() {
             Ok(pk) => ensure_sdk!(
