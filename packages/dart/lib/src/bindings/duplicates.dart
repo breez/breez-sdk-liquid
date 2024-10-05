@@ -112,7 +112,9 @@ sealed class LnUrlPayError with _$LnUrlPayError implements FrbException {
 }
 
 @freezed
-sealed class LnUrlWithdrawError with _$LnUrlWithdrawError implements FrbException {
+sealed class LnUrlWithdrawError
+    with _$LnUrlWithdrawError
+    implements FrbException {
   const LnUrlWithdrawError._();
 
   /// This error is raised when a general error occurs not specific to other error variants
@@ -177,5 +179,7 @@ class LnUrlWithdrawSuccessData {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is LnUrlWithdrawSuccessData && runtimeType == other.runtimeType && invoice == other.invoice;
+      other is LnUrlWithdrawSuccessData &&
+          runtimeType == other.runtimeType &&
+          invoice == other.invoice;
 }

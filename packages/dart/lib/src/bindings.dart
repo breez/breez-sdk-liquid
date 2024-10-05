@@ -19,12 +19,16 @@ Future<BindingLiquidSdk> connect({required ConnectRequest req}) =>
     RustLib.instance.api.crateBindingsConnect(req: req);
 
 /// If used, this must be called before `connect`. It can only be called once.
-Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogStream();
+Stream<LogEntry> breezLogStream() =>
+    RustLib.instance.api.crateBindingsBreezLogStream();
 
-Config defaultConfig({required LiquidNetwork network, required String breezApiKey}) =>
-    RustLib.instance.api.crateBindingsDefaultConfig(network: network, breezApiKey: breezApiKey);
+Config defaultConfig(
+        {required LiquidNetwork network, required String breezApiKey}) =>
+    RustLib.instance.api
+        .crateBindingsDefaultConfig(network: network, breezApiKey: breezApiKey);
 
-Future<InputType> parse({required String input}) => RustLib.instance.api.crateBindingsParse(input: input);
+Future<InputType> parse({required String input}) =>
+    RustLib.instance.api.crateBindingsParse(input: input);
 
 LNInvoice parseInvoice({required String input}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input);
@@ -57,25 +61,33 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<RefundableSwap>> listRefundables();
 
-  Future<LnUrlCallbackStatus> lnurlAuth({required LnUrlAuthRequestData reqData});
+  Future<LnUrlCallbackStatus> lnurlAuth(
+      {required LnUrlAuthRequestData reqData});
 
   Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req});
 
-  Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req});
+  Future<LnUrlWithdrawResult> lnurlWithdraw(
+      {required LnUrlWithdrawRequest req});
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 
-  Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
+  Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin(
+      {required PrepareBuyBitcoinRequest req});
 
-  Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req});
+  Future<PreparePayOnchainResponse> preparePayOnchain(
+      {required PreparePayOnchainRequest req});
 
-  Future<PrepareReceiveResponse> prepareReceivePayment({required PrepareReceiveRequest req});
+  Future<PrepareReceiveResponse> prepareReceivePayment(
+      {required PrepareReceiveRequest req});
 
-  Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req});
+  Future<PrepareRefundResponse> prepareRefund(
+      {required PrepareRefundRequest req});
 
-  Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req});
+  Future<PrepareSendResponse> prepareSendPayment(
+      {required PrepareSendRequest req});
 
-  Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req});
+  Future<ReceivePaymentResponse> receivePayment(
+      {required ReceivePaymentRequest req});
 
   Future<RecommendedFees> recommendedFees();
 
@@ -136,8 +148,8 @@ class BindingEventListener {
     required this.stream,
   });
 
-  Future<void> onEvent({required SdkEvent e}) =>
-      RustLib.instance.api.crateBindingsBindingEventListenerOnEvent(that: this, e: e);
+  Future<void> onEvent({required SdkEvent e}) => RustLib.instance.api
+      .crateBindingsBindingEventListenerOnEvent(that: this, e: e);
 
   @override
   int get hashCode => stream.hashCode;
@@ -145,7 +157,9 @@ class BindingEventListener {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is BindingEventListener && runtimeType == other.runtimeType && stream == other.stream;
+      other is BindingEventListener &&
+          runtimeType == other.runtimeType &&
+          stream == other.stream;
 }
 
 class BitcoinAddressData {
@@ -165,7 +179,11 @@ class BitcoinAddressData {
 
   @override
   int get hashCode =>
-      address.hashCode ^ network.hashCode ^ amountSat.hashCode ^ label.hashCode ^ message.hashCode;
+      address.hashCode ^
+      network.hashCode ^
+      amountSat.hashCode ^
+      label.hashCode ^
+      message.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -237,7 +255,10 @@ class FiatCurrency {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is FiatCurrency && runtimeType == other.runtimeType && id == other.id && info == other.info;
+      other is FiatCurrency &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          info == other.info;
 }
 
 @freezed
@@ -389,7 +410,8 @@ class LnUrlAuthRequestData {
   });
 
   @override
-  int get hashCode => k1.hashCode ^ action.hashCode ^ domain.hashCode ^ url.hashCode;
+  int get hashCode =>
+      k1.hashCode ^ action.hashCode ^ domain.hashCode ^ url.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -415,7 +437,9 @@ class LnUrlErrorData {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is LnUrlErrorData && runtimeType == other.runtimeType && reason == other.reason;
+      other is LnUrlErrorData &&
+          runtimeType == other.runtimeType &&
+          reason == other.reason;
 }
 
 class LnUrlPayErrorData {
@@ -537,7 +561,8 @@ class LnUrlWithdrawRequest {
   });
 
   @override
-  int get hashCode => data.hashCode ^ amountMsat.hashCode ^ description.hashCode;
+  int get hashCode =>
+      data.hashCode ^ amountMsat.hashCode ^ description.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -642,7 +667,9 @@ class MessageSuccessActionData {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is MessageSuccessActionData && runtimeType == other.runtimeType && message == other.message;
+      other is MessageSuccessActionData &&
+          runtimeType == other.runtimeType &&
+          message == other.message;
 }
 
 enum Network {
@@ -668,7 +695,10 @@ class Rate {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Rate && runtimeType == other.runtimeType && coin == other.coin && value == other.value;
+      other is Rate &&
+          runtimeType == other.runtimeType &&
+          coin == other.coin &&
+          value == other.value;
 }
 
 class RouteHint {
@@ -683,7 +713,10 @@ class RouteHint {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is RouteHint && runtimeType == other.runtimeType && hops == other.hops;
+      identical(this, other) ||
+      other is RouteHint &&
+          runtimeType == other.runtimeType &&
+          hops == other.hops;
 }
 
 class RouteHintHop {
@@ -758,7 +791,8 @@ class Symbol {
   });
 
   @override
-  int get hashCode => grapheme.hashCode ^ template.hashCode ^ rtl.hashCode ^ position.hashCode;
+  int get hashCode =>
+      grapheme.hashCode ^ template.hashCode ^ rtl.hashCode ^ position.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -783,7 +817,8 @@ class UrlSuccessActionData {
   });
 
   @override
-  int get hashCode => description.hashCode ^ url.hashCode ^ matchesCallbackDomain.hashCode;
+  int get hashCode =>
+      description.hashCode ^ url.hashCode ^ matchesCallbackDomain.hashCode;
 
   @override
   bool operator ==(Object other) =>

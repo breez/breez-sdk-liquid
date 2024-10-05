@@ -27,7 +27,9 @@ class BackupRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
+      other is BackupRequest &&
+          runtimeType == other.runtimeType &&
+          backupPath == other.backupPath;
 }
 
 /// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
@@ -108,7 +110,9 @@ class CheckMessageResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CheckMessageResponse && runtimeType == other.runtimeType && isValid == other.isValid;
+      other is CheckMessageResponse &&
+          runtimeType == other.runtimeType &&
+          isValid == other.isValid;
 }
 
 /// Configuration for the Liquid SDK
@@ -221,7 +225,10 @@ class GetInfoResponse {
 
   @override
   int get hashCode =>
-      balanceSat.hashCode ^ pendingSendSat.hashCode ^ pendingReceiveSat.hashCode ^ pubkey.hashCode;
+      balanceSat.hashCode ^
+      pendingSendSat.hashCode ^
+      pendingReceiveSat.hashCode ^
+      pubkey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -272,7 +279,8 @@ class Limits {
   });
 
   @override
-  int get hashCode => minSat.hashCode ^ maxSat.hashCode ^ maxZeroConfSat.hashCode;
+  int get hashCode =>
+      minSat.hashCode ^ maxSat.hashCode ^ maxZeroConfSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -317,7 +325,11 @@ class ListPaymentsRequest {
 
   @override
   int get hashCode =>
-      filters.hashCode ^ fromTimestamp.hashCode ^ toTimestamp.hashCode ^ offset.hashCode ^ limit.hashCode;
+      filters.hashCode ^
+      fromTimestamp.hashCode ^
+      toTimestamp.hashCode ^
+      offset.hashCode ^
+      limit.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -383,7 +395,10 @@ class LogEntry {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
+      other is LogEntry &&
+          runtimeType == other.runtimeType &&
+          line == other.line &&
+          level == other.level;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
@@ -749,7 +764,10 @@ class PreparePayOnchainResponse {
   });
 
   @override
-  int get hashCode => receiverAmountSat.hashCode ^ claimFeesSat.hashCode ^ totalFeesSat.hashCode;
+  int get hashCode =>
+      receiverAmountSat.hashCode ^
+      claimFeesSat.hashCode ^
+      totalFeesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -796,7 +814,8 @@ class PrepareReceiveResponse {
   });
 
   @override
-  int get hashCode => paymentMethod.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      paymentMethod.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -826,7 +845,10 @@ class PrepareRefundRequest {
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ feeRateSatPerVbyte.hashCode;
+  int get hashCode =>
+      swapAddress.hashCode ^
+      refundAddress.hashCode ^
+      feeRateSatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -851,7 +873,8 @@ class PrepareRefundResponse {
   });
 
   @override
-  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ refundTxId.hashCode;
+  int get hashCode =>
+      txVsize.hashCode ^ txFeeSat.hashCode ^ refundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -929,7 +952,10 @@ class ReceivePaymentRequest {
   });
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode;
+  int get hashCode =>
+      prepareResponse.hashCode ^
+      description.hashCode ^
+      useDescriptionHash.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -957,7 +983,9 @@ class ReceivePaymentResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ReceivePaymentResponse && runtimeType == other.runtimeType && destination == other.destination;
+      other is ReceivePaymentResponse &&
+          runtimeType == other.runtimeType &&
+          destination == other.destination;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].
@@ -1014,7 +1042,10 @@ class RefundRequest {
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ refundAddress.hashCode ^ feeRateSatPerVbyte.hashCode;
+  int get hashCode =>
+      swapAddress.hashCode ^
+      refundAddress.hashCode ^
+      feeRateSatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1040,7 +1071,9 @@ class RefundResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RefundResponse && runtimeType == other.runtimeType && refundTxId == other.refundTxId;
+      other is RefundResponse &&
+          runtimeType == other.runtimeType &&
+          refundTxId == other.refundTxId;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::list_refundables].
@@ -1056,7 +1089,8 @@ class RefundableSwap {
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode;
+  int get hashCode =>
+      swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1082,7 +1116,9 @@ class RestoreRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is RestoreRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
+      other is RestoreRequest &&
+          runtimeType == other.runtimeType &&
+          backupPath == other.backupPath;
 }
 
 @freezed
@@ -1155,7 +1191,9 @@ class SendPaymentResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SendPaymentResponse && runtimeType == other.runtimeType && payment == other.payment;
+      other is SendPaymentResponse &&
+          runtimeType == other.runtimeType &&
+          payment == other.payment;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::sign_message].
@@ -1172,7 +1210,9 @@ class SignMessageRequest {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SignMessageRequest && runtimeType == other.runtimeType && message == other.message;
+      other is SignMessageRequest &&
+          runtimeType == other.runtimeType &&
+          message == other.message;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::sign_message].
@@ -1189,5 +1229,7 @@ class SignMessageResponse {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
+      other is SignMessageResponse &&
+          runtimeType == other.runtimeType &&
+          signature == other.signature;
 }
