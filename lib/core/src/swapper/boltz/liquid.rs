@@ -11,7 +11,10 @@ use log::info;
 use crate::{
     ensure_sdk,
     error::{PaymentError, SdkError},
-    prelude::{ChainSwap, Direction, ReceiveSwap, Swap, Utxo, LOWBALL_FEE_RATE_SAT_PER_VBYTE},
+    prelude::{
+        ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
+        LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
+    },
 };
 
 use super::BoltzSwapper;
@@ -93,8 +96,10 @@ impl BoltzSwapper {
     }
 
     fn calculate_refund_fees(&self, refund_tx_size: usize) -> u64 {
-        // Testnet not supports lowball as well, see https://blog.blockstream.com/elements-23-2-3-discounted-fees-for-confidential-transactions/
-        let fee_rate = LOWBALL_FEE_RATE_SAT_PER_VBYTE;
+        let fee_rate = match self.config.network {
+            LiquidNetwork::Mainnet => LOWBALL_FEE_RATE_SAT_PER_VBYTE,
+            LiquidNetwork::Testnet => STANDARD_FEE_RATE_SAT_PER_VBYTE,
+        };
         (refund_tx_size as f64 * fee_rate).ceil() as u64
     }
 

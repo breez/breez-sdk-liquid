@@ -129,12 +129,17 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
-        let url = format!("{}/tx/{}/hex", LIQUID_ESPLORA_URL, txid.to_hex());
-        let response = get_with_retry(&url, 3).await?;
-        Ok(match response.status() {
-            StatusCode::OK => Some(utils::deserialize_tx_hex(&response.text().await?)?),
-            _ => None,
-        })
+        match self.network {
+            LiquidNetwork::Mainnet => {
+                let url = format!("{}/tx/{}/hex", LIQUID_ESPLORA_URL, txid.to_hex());
+                let response = get_with_retry(&url, 3).await?;
+                Ok(match response.status() {
+                    StatusCode::OK => Some(utils::deserialize_tx_hex(&response.text().await?)?),
+                    _ => None,
+                })
+            }
+            LiquidNetwork::Testnet => Ok(self.get_transactions(&[*txid]).await?.first().cloned()),
+        }
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
