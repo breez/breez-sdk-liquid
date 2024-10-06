@@ -19,14 +19,12 @@ mixin _$PaymentError {}
 
 /// @nodoc
 abstract class $PaymentErrorCopyWith<$Res> {
-  factory $PaymentErrorCopyWith(
-          PaymentError value, $Res Function(PaymentError) then) =
+  factory $PaymentErrorCopyWith(PaymentError value, $Res Function(PaymentError) then) =
       _$PaymentErrorCopyWithImpl<$Res, PaymentError>;
 }
 
 /// @nodoc
-class _$PaymentErrorCopyWithImpl<$Res, $Val extends PaymentError>
-    implements $PaymentErrorCopyWith<$Res> {
+class _$PaymentErrorCopyWithImpl<$Res, $Val extends PaymentError> implements $PaymentErrorCopyWith<$Res> {
   _$PaymentErrorCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -41,8 +39,7 @@ class _$PaymentErrorCopyWithImpl<$Res, $Val extends PaymentError>
 /// @nodoc
 abstract class _$$PaymentError_AlreadyClaimedImplCopyWith<$Res> {
   factory _$$PaymentError_AlreadyClaimedImplCopyWith(
-          _$PaymentError_AlreadyClaimedImpl value,
-          $Res Function(_$PaymentError_AlreadyClaimedImpl) then) =
+          _$PaymentError_AlreadyClaimedImpl value, $Res Function(_$PaymentError_AlreadyClaimedImpl) then) =
       __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>;
 }
 
@@ -51,8 +48,7 @@ class __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AlreadyClaimedImpl>
     implements _$$PaymentError_AlreadyClaimedImplCopyWith<$Res> {
   __$$PaymentError_AlreadyClaimedImplCopyWithImpl(
-      _$PaymentError_AlreadyClaimedImpl _value,
-      $Res Function(_$PaymentError_AlreadyClaimedImpl) _then)
+      _$PaymentError_AlreadyClaimedImpl _value, $Res Function(_$PaymentError_AlreadyClaimedImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -72,8 +68,7 @@ class _$PaymentError_AlreadyClaimedImpl extends PaymentError_AlreadyClaimed {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_AlreadyClaimedImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_AlreadyClaimedImpl);
   }
 
   @override
@@ -81,16 +76,14 @@ class _$PaymentError_AlreadyClaimedImpl extends PaymentError_AlreadyClaimed {
 }
 
 abstract class PaymentError_AlreadyClaimed extends PaymentError {
-  const factory PaymentError_AlreadyClaimed() =
-      _$PaymentError_AlreadyClaimedImpl;
+  const factory PaymentError_AlreadyClaimed() = _$PaymentError_AlreadyClaimedImpl;
   const PaymentError_AlreadyClaimed._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
   factory _$$PaymentError_AlreadyPaidImplCopyWith(
-          _$PaymentError_AlreadyPaidImpl value,
-          $Res Function(_$PaymentError_AlreadyPaidImpl) then) =
+          _$PaymentError_AlreadyPaidImpl value, $Res Function(_$PaymentError_AlreadyPaidImpl) then) =
       __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>;
 }
 
@@ -99,8 +92,7 @@ class __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AlreadyPaidImpl>
     implements _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
   __$$PaymentError_AlreadyPaidImplCopyWithImpl(
-      _$PaymentError_AlreadyPaidImpl _value,
-      $Res Function(_$PaymentError_AlreadyPaidImpl) _then)
+      _$PaymentError_AlreadyPaidImpl _value, $Res Function(_$PaymentError_AlreadyPaidImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -120,8 +112,7 @@ class _$PaymentError_AlreadyPaidImpl extends PaymentError_AlreadyPaid {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_AlreadyPaidImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_AlreadyPaidImpl);
   }
 
   @override
@@ -135,20 +126,17 @@ abstract class PaymentError_AlreadyPaid extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
-  factory _$$PaymentError_PaymentInProgressImplCopyWith(
-          _$PaymentError_PaymentInProgressImpl value,
+  factory _$$PaymentError_PaymentInProgressImplCopyWith(_$PaymentError_PaymentInProgressImpl value,
           $Res Function(_$PaymentError_PaymentInProgressImpl) then) =
       __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
 class __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_PaymentInProgressImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentInProgressImpl>
     implements _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
   __$$PaymentError_PaymentInProgressImplCopyWithImpl(
-      _$PaymentError_PaymentInProgressImpl _value,
-      $Res Function(_$PaymentError_PaymentInProgressImpl) _then)
+      _$PaymentError_PaymentInProgressImpl _value, $Res Function(_$PaymentError_PaymentInProgressImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -157,8 +145,7 @@ class __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_PaymentInProgressImpl
-    extends PaymentError_PaymentInProgress {
+class _$PaymentError_PaymentInProgressImpl extends PaymentError_PaymentInProgress {
   const _$PaymentError_PaymentInProgressImpl() : super._();
 
   @override
@@ -169,8 +156,7 @@ class _$PaymentError_PaymentInProgressImpl
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_PaymentInProgressImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_PaymentInProgressImpl);
   }
 
   @override
@@ -178,27 +164,23 @@ class _$PaymentError_PaymentInProgressImpl
 }
 
 abstract class PaymentError_PaymentInProgress extends PaymentError {
-  const factory PaymentError_PaymentInProgress() =
-      _$PaymentError_PaymentInProgressImpl;
+  const factory PaymentError_PaymentInProgress() = _$PaymentError_PaymentInProgressImpl;
   const PaymentError_PaymentInProgress._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_AmountOutOfRangeImplCopyWith<$Res> {
-  factory _$$PaymentError_AmountOutOfRangeImplCopyWith(
-          _$PaymentError_AmountOutOfRangeImpl value,
+  factory _$$PaymentError_AmountOutOfRangeImplCopyWith(_$PaymentError_AmountOutOfRangeImpl value,
           $Res Function(_$PaymentError_AmountOutOfRangeImpl) then) =
       __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
 class __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_AmountOutOfRangeImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AmountOutOfRangeImpl>
     implements _$$PaymentError_AmountOutOfRangeImplCopyWith<$Res> {
   __$$PaymentError_AmountOutOfRangeImplCopyWithImpl(
-      _$PaymentError_AmountOutOfRangeImpl _value,
-      $Res Function(_$PaymentError_AmountOutOfRangeImpl) _then)
+      _$PaymentError_AmountOutOfRangeImpl _value, $Res Function(_$PaymentError_AmountOutOfRangeImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -207,8 +189,7 @@ class __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_AmountOutOfRangeImpl
-    extends PaymentError_AmountOutOfRange {
+class _$PaymentError_AmountOutOfRangeImpl extends PaymentError_AmountOutOfRange {
   const _$PaymentError_AmountOutOfRangeImpl() : super._();
 
   @override
@@ -219,8 +200,7 @@ class _$PaymentError_AmountOutOfRangeImpl
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_AmountOutOfRangeImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_AmountOutOfRangeImpl);
   }
 
   @override
@@ -228,16 +208,14 @@ class _$PaymentError_AmountOutOfRangeImpl
 }
 
 abstract class PaymentError_AmountOutOfRange extends PaymentError {
-  const factory PaymentError_AmountOutOfRange() =
-      _$PaymentError_AmountOutOfRangeImpl;
+  const factory PaymentError_AmountOutOfRange() = _$PaymentError_AmountOutOfRangeImpl;
   const PaymentError_AmountOutOfRange._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_AmountMissingImplCopyWith<$Res> {
   factory _$$PaymentError_AmountMissingImplCopyWith(
-          _$PaymentError_AmountMissingImpl value,
-          $Res Function(_$PaymentError_AmountMissingImpl) then) =
+          _$PaymentError_AmountMissingImpl value, $Res Function(_$PaymentError_AmountMissingImpl) then) =
       __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -248,8 +226,7 @@ class __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AmountMissingImpl>
     implements _$$PaymentError_AmountMissingImplCopyWith<$Res> {
   __$$PaymentError_AmountMissingImplCopyWithImpl(
-      _$PaymentError_AmountMissingImpl _value,
-      $Res Function(_$PaymentError_AmountMissingImpl) _then)
+      _$PaymentError_AmountMissingImpl _value, $Res Function(_$PaymentError_AmountMissingImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -297,14 +274,12 @@ class _$PaymentError_AmountMissingImpl extends PaymentError_AmountMissing {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl>
-      get copyWith => __$$PaymentError_AmountMissingImplCopyWithImpl<
-          _$PaymentError_AmountMissingImpl>(this, _$identity);
+  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl> get copyWith =>
+      __$$PaymentError_AmountMissingImplCopyWithImpl<_$PaymentError_AmountMissingImpl>(this, _$identity);
 }
 
 abstract class PaymentError_AmountMissing extends PaymentError {
-  const factory PaymentError_AmountMissing({required final String err}) =
-      _$PaymentError_AmountMissingImpl;
+  const factory PaymentError_AmountMissing({required final String err}) = _$PaymentError_AmountMissingImpl;
   const PaymentError_AmountMissing._() : super._();
 
   String get err;
@@ -312,15 +287,14 @@ abstract class PaymentError_AmountMissing extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_AmountMissingImplCopyWith<_$PaymentError_AmountMissingImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidNetworkImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidNetworkImplCopyWith(
-          _$PaymentError_InvalidNetworkImpl value,
-          $Res Function(_$PaymentError_InvalidNetworkImpl) then) =
+          _$PaymentError_InvalidNetworkImpl value, $Res Function(_$PaymentError_InvalidNetworkImpl) then) =
       __$$PaymentError_InvalidNetworkImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -331,8 +305,7 @@ class __$$PaymentError_InvalidNetworkImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidNetworkImpl>
     implements _$$PaymentError_InvalidNetworkImplCopyWith<$Res> {
   __$$PaymentError_InvalidNetworkImplCopyWithImpl(
-      _$PaymentError_InvalidNetworkImpl _value,
-      $Res Function(_$PaymentError_InvalidNetworkImpl) _then)
+      _$PaymentError_InvalidNetworkImpl _value, $Res Function(_$PaymentError_InvalidNetworkImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -380,14 +353,12 @@ class _$PaymentError_InvalidNetworkImpl extends PaymentError_InvalidNetwork {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_InvalidNetworkImplCopyWith<_$PaymentError_InvalidNetworkImpl>
-      get copyWith => __$$PaymentError_InvalidNetworkImplCopyWithImpl<
-          _$PaymentError_InvalidNetworkImpl>(this, _$identity);
+  _$$PaymentError_InvalidNetworkImplCopyWith<_$PaymentError_InvalidNetworkImpl> get copyWith =>
+      __$$PaymentError_InvalidNetworkImplCopyWithImpl<_$PaymentError_InvalidNetworkImpl>(this, _$identity);
 }
 
 abstract class PaymentError_InvalidNetwork extends PaymentError {
-  const factory PaymentError_InvalidNetwork({required final String err}) =
-      _$PaymentError_InvalidNetworkImpl;
+  const factory PaymentError_InvalidNetwork({required final String err}) = _$PaymentError_InvalidNetworkImpl;
   const PaymentError_InvalidNetwork._() : super._();
 
   String get err;
@@ -395,14 +366,14 @@ abstract class PaymentError_InvalidNetwork extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_InvalidNetworkImplCopyWith<_$PaymentError_InvalidNetworkImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_InvalidNetworkImplCopyWith<_$PaymentError_InvalidNetworkImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_GenericImplCopyWith<$Res> {
-  factory _$$PaymentError_GenericImplCopyWith(_$PaymentError_GenericImpl value,
-          $Res Function(_$PaymentError_GenericImpl) then) =
+  factory _$$PaymentError_GenericImplCopyWith(
+          _$PaymentError_GenericImpl value, $Res Function(_$PaymentError_GenericImpl) then) =
       __$$PaymentError_GenericImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -412,8 +383,8 @@ abstract class _$$PaymentError_GenericImplCopyWith<$Res> {
 class __$$PaymentError_GenericImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_GenericImpl>
     implements _$$PaymentError_GenericImplCopyWith<$Res> {
-  __$$PaymentError_GenericImplCopyWithImpl(_$PaymentError_GenericImpl _value,
-      $Res Function(_$PaymentError_GenericImpl) _then)
+  __$$PaymentError_GenericImplCopyWithImpl(
+      _$PaymentError_GenericImpl _value, $Res Function(_$PaymentError_GenericImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -461,15 +432,12 @@ class _$PaymentError_GenericImpl extends PaymentError_Generic {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl>
-      get copyWith =>
-          __$$PaymentError_GenericImplCopyWithImpl<_$PaymentError_GenericImpl>(
-              this, _$identity);
+  _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl> get copyWith =>
+      __$$PaymentError_GenericImplCopyWithImpl<_$PaymentError_GenericImpl>(this, _$identity);
 }
 
 abstract class PaymentError_Generic extends PaymentError {
-  const factory PaymentError_Generic({required final String err}) =
-      _$PaymentError_GenericImpl;
+  const factory PaymentError_Generic({required final String err}) = _$PaymentError_GenericImpl;
   const PaymentError_Generic._() : super._();
 
   String get err;
@@ -477,25 +445,22 @@ abstract class PaymentError_Generic extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_GenericImplCopyWith<_$PaymentError_GenericImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
-  factory _$$PaymentError_InvalidOrExpiredFeesImplCopyWith(
-          _$PaymentError_InvalidOrExpiredFeesImpl value,
+  factory _$$PaymentError_InvalidOrExpiredFeesImplCopyWith(_$PaymentError_InvalidOrExpiredFeesImpl value,
           $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) then) =
       __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
 class __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_InvalidOrExpiredFeesImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidOrExpiredFeesImpl>
     implements _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
-  __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(
-      _$PaymentError_InvalidOrExpiredFeesImpl _value,
+  __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(_$PaymentError_InvalidOrExpiredFeesImpl _value,
       $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) _then)
       : super(_value, _then);
 
@@ -505,8 +470,7 @@ class __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_InvalidOrExpiredFeesImpl
-    extends PaymentError_InvalidOrExpiredFees {
+class _$PaymentError_InvalidOrExpiredFeesImpl extends PaymentError_InvalidOrExpiredFees {
   const _$PaymentError_InvalidOrExpiredFeesImpl() : super._();
 
   @override
@@ -517,8 +481,7 @@ class _$PaymentError_InvalidOrExpiredFeesImpl
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_InvalidOrExpiredFeesImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_InvalidOrExpiredFeesImpl);
   }
 
   @override
@@ -526,27 +489,23 @@ class _$PaymentError_InvalidOrExpiredFeesImpl
 }
 
 abstract class PaymentError_InvalidOrExpiredFees extends PaymentError {
-  const factory PaymentError_InvalidOrExpiredFees() =
-      _$PaymentError_InvalidOrExpiredFeesImpl;
+  const factory PaymentError_InvalidOrExpiredFees() = _$PaymentError_InvalidOrExpiredFeesImpl;
   const PaymentError_InvalidOrExpiredFees._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
-  factory _$$PaymentError_InsufficientFundsImplCopyWith(
-          _$PaymentError_InsufficientFundsImpl value,
+  factory _$$PaymentError_InsufficientFundsImplCopyWith(_$PaymentError_InsufficientFundsImpl value,
           $Res Function(_$PaymentError_InsufficientFundsImpl) then) =
       __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
 class __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_InsufficientFundsImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InsufficientFundsImpl>
     implements _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
   __$$PaymentError_InsufficientFundsImplCopyWithImpl(
-      _$PaymentError_InsufficientFundsImpl _value,
-      $Res Function(_$PaymentError_InsufficientFundsImpl) _then)
+      _$PaymentError_InsufficientFundsImpl _value, $Res Function(_$PaymentError_InsufficientFundsImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -555,8 +514,7 @@ class __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_InsufficientFundsImpl
-    extends PaymentError_InsufficientFunds {
+class _$PaymentError_InsufficientFundsImpl extends PaymentError_InsufficientFunds {
   const _$PaymentError_InsufficientFundsImpl() : super._();
 
   @override
@@ -567,8 +525,7 @@ class _$PaymentError_InsufficientFundsImpl
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_InsufficientFundsImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_InsufficientFundsImpl);
   }
 
   @override
@@ -576,15 +533,13 @@ class _$PaymentError_InsufficientFundsImpl
 }
 
 abstract class PaymentError_InsufficientFunds extends PaymentError {
-  const factory PaymentError_InsufficientFunds() =
-      _$PaymentError_InsufficientFundsImpl;
+  const factory PaymentError_InsufficientFunds() = _$PaymentError_InsufficientFundsImpl;
   const PaymentError_InsufficientFunds._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
-  factory _$$PaymentError_InvalidDescriptionImplCopyWith(
-          _$PaymentError_InvalidDescriptionImpl value,
+  factory _$$PaymentError_InvalidDescriptionImplCopyWith(_$PaymentError_InvalidDescriptionImpl value,
           $Res Function(_$PaymentError_InvalidDescriptionImpl) then) =
       __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>;
   @useResult
@@ -593,11 +548,9 @@ abstract class _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
 
 /// @nodoc
 class __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_InvalidDescriptionImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidDescriptionImpl>
     implements _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
-  __$$PaymentError_InvalidDescriptionImplCopyWithImpl(
-      _$PaymentError_InvalidDescriptionImpl _value,
+  __$$PaymentError_InvalidDescriptionImplCopyWithImpl(_$PaymentError_InvalidDescriptionImpl _value,
       $Res Function(_$PaymentError_InvalidDescriptionImpl) _then)
       : super(_value, _then);
 
@@ -619,8 +572,7 @@ class __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_InvalidDescriptionImpl
-    extends PaymentError_InvalidDescription {
+class _$PaymentError_InvalidDescriptionImpl extends PaymentError_InvalidDescription {
   const _$PaymentError_InvalidDescriptionImpl({required this.err}) : super._();
 
   @override
@@ -647,10 +599,9 @@ class _$PaymentError_InvalidDescriptionImpl
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_InvalidDescriptionImplCopyWith<
-          _$PaymentError_InvalidDescriptionImpl>
-      get copyWith => __$$PaymentError_InvalidDescriptionImplCopyWithImpl<
-          _$PaymentError_InvalidDescriptionImpl>(this, _$identity);
+  _$$PaymentError_InvalidDescriptionImplCopyWith<_$PaymentError_InvalidDescriptionImpl> get copyWith =>
+      __$$PaymentError_InvalidDescriptionImplCopyWithImpl<_$PaymentError_InvalidDescriptionImpl>(
+          this, _$identity);
 }
 
 abstract class PaymentError_InvalidDescription extends PaymentError {
@@ -663,16 +614,14 @@ abstract class PaymentError_InvalidDescription extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_InvalidDescriptionImplCopyWith<
-          _$PaymentError_InvalidDescriptionImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_InvalidDescriptionImplCopyWith<_$PaymentError_InvalidDescriptionImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidInvoiceImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidInvoiceImplCopyWith(
-          _$PaymentError_InvalidInvoiceImpl value,
-          $Res Function(_$PaymentError_InvalidInvoiceImpl) then) =
+          _$PaymentError_InvalidInvoiceImpl value, $Res Function(_$PaymentError_InvalidInvoiceImpl) then) =
       __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -683,8 +632,7 @@ class __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidInvoiceImpl>
     implements _$$PaymentError_InvalidInvoiceImplCopyWith<$Res> {
   __$$PaymentError_InvalidInvoiceImplCopyWithImpl(
-      _$PaymentError_InvalidInvoiceImpl _value,
-      $Res Function(_$PaymentError_InvalidInvoiceImpl) _then)
+      _$PaymentError_InvalidInvoiceImpl _value, $Res Function(_$PaymentError_InvalidInvoiceImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -732,14 +680,12 @@ class _$PaymentError_InvalidInvoiceImpl extends PaymentError_InvalidInvoice {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl>
-      get copyWith => __$$PaymentError_InvalidInvoiceImplCopyWithImpl<
-          _$PaymentError_InvalidInvoiceImpl>(this, _$identity);
+  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
+      __$$PaymentError_InvalidInvoiceImplCopyWithImpl<_$PaymentError_InvalidInvoiceImpl>(this, _$identity);
 }
 
 abstract class PaymentError_InvalidInvoice extends PaymentError {
-  const factory PaymentError_InvalidInvoice({required final String err}) =
-      _$PaymentError_InvalidInvoiceImpl;
+  const factory PaymentError_InvalidInvoice({required final String err}) = _$PaymentError_InvalidInvoiceImpl;
   const PaymentError_InvalidInvoice._() : super._();
 
   String get err;
@@ -747,15 +693,14 @@ abstract class PaymentError_InvalidInvoice extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_InvalidInvoiceImplCopyWith<_$PaymentError_InvalidInvoiceImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidPreimageImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidPreimageImplCopyWith(
-          _$PaymentError_InvalidPreimageImpl value,
-          $Res Function(_$PaymentError_InvalidPreimageImpl) then) =
+          _$PaymentError_InvalidPreimageImpl value, $Res Function(_$PaymentError_InvalidPreimageImpl) then) =
       __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>;
 }
 
@@ -764,8 +709,7 @@ class __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidPreimageImpl>
     implements _$$PaymentError_InvalidPreimageImplCopyWith<$Res> {
   __$$PaymentError_InvalidPreimageImplCopyWithImpl(
-      _$PaymentError_InvalidPreimageImpl _value,
-      $Res Function(_$PaymentError_InvalidPreimageImpl) _then)
+      _$PaymentError_InvalidPreimageImpl _value, $Res Function(_$PaymentError_InvalidPreimageImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -785,8 +729,7 @@ class _$PaymentError_InvalidPreimageImpl extends PaymentError_InvalidPreimage {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_InvalidPreimageImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_InvalidPreimageImpl);
   }
 
   @override
@@ -794,16 +737,14 @@ class _$PaymentError_InvalidPreimageImpl extends PaymentError_InvalidPreimage {
 }
 
 abstract class PaymentError_InvalidPreimage extends PaymentError {
-  const factory PaymentError_InvalidPreimage() =
-      _$PaymentError_InvalidPreimageImpl;
+  const factory PaymentError_InvalidPreimage() = _$PaymentError_InvalidPreimageImpl;
   const PaymentError_InvalidPreimage._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_LwkErrorImplCopyWith<$Res> {
   factory _$$PaymentError_LwkErrorImplCopyWith(
-          _$PaymentError_LwkErrorImpl value,
-          $Res Function(_$PaymentError_LwkErrorImpl) then) =
+          _$PaymentError_LwkErrorImpl value, $Res Function(_$PaymentError_LwkErrorImpl) then) =
       __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -813,8 +754,8 @@ abstract class _$$PaymentError_LwkErrorImplCopyWith<$Res> {
 class __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_LwkErrorImpl>
     implements _$$PaymentError_LwkErrorImplCopyWith<$Res> {
-  __$$PaymentError_LwkErrorImplCopyWithImpl(_$PaymentError_LwkErrorImpl _value,
-      $Res Function(_$PaymentError_LwkErrorImpl) _then)
+  __$$PaymentError_LwkErrorImplCopyWithImpl(
+      _$PaymentError_LwkErrorImpl _value, $Res Function(_$PaymentError_LwkErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -862,14 +803,12 @@ class _$PaymentError_LwkErrorImpl extends PaymentError_LwkError {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl>
-      get copyWith => __$$PaymentError_LwkErrorImplCopyWithImpl<
-          _$PaymentError_LwkErrorImpl>(this, _$identity);
+  _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl> get copyWith =>
+      __$$PaymentError_LwkErrorImplCopyWithImpl<_$PaymentError_LwkErrorImpl>(this, _$identity);
 }
 
 abstract class PaymentError_LwkError extends PaymentError {
-  const factory PaymentError_LwkError({required final String err}) =
-      _$PaymentError_LwkErrorImpl;
+  const factory PaymentError_LwkError({required final String err}) = _$PaymentError_LwkErrorImpl;
   const PaymentError_LwkError._() : super._();
 
   String get err;
@@ -877,15 +816,14 @@ abstract class PaymentError_LwkError extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_LwkErrorImplCopyWith<_$PaymentError_LwkErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_PairsNotFoundImplCopyWith<$Res> {
   factory _$$PaymentError_PairsNotFoundImplCopyWith(
-          _$PaymentError_PairsNotFoundImpl value,
-          $Res Function(_$PaymentError_PairsNotFoundImpl) then) =
+          _$PaymentError_PairsNotFoundImpl value, $Res Function(_$PaymentError_PairsNotFoundImpl) then) =
       __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>;
 }
 
@@ -894,8 +832,7 @@ class __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PairsNotFoundImpl>
     implements _$$PaymentError_PairsNotFoundImplCopyWith<$Res> {
   __$$PaymentError_PairsNotFoundImplCopyWithImpl(
-      _$PaymentError_PairsNotFoundImpl _value,
-      $Res Function(_$PaymentError_PairsNotFoundImpl) _then)
+      _$PaymentError_PairsNotFoundImpl _value, $Res Function(_$PaymentError_PairsNotFoundImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -915,8 +852,7 @@ class _$PaymentError_PairsNotFoundImpl extends PaymentError_PairsNotFound {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_PairsNotFoundImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_PairsNotFoundImpl);
   }
 
   @override
@@ -931,8 +867,7 @@ abstract class PaymentError_PairsNotFound extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
   factory _$$PaymentError_PaymentTimeoutImplCopyWith(
-          _$PaymentError_PaymentTimeoutImpl value,
-          $Res Function(_$PaymentError_PaymentTimeoutImpl) then) =
+          _$PaymentError_PaymentTimeoutImpl value, $Res Function(_$PaymentError_PaymentTimeoutImpl) then) =
       __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>;
 }
 
@@ -941,8 +876,7 @@ class __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentTimeoutImpl>
     implements _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
   __$$PaymentError_PaymentTimeoutImplCopyWithImpl(
-      _$PaymentError_PaymentTimeoutImpl _value,
-      $Res Function(_$PaymentError_PaymentTimeoutImpl) _then)
+      _$PaymentError_PaymentTimeoutImpl _value, $Res Function(_$PaymentError_PaymentTimeoutImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -962,8 +896,7 @@ class _$PaymentError_PaymentTimeoutImpl extends PaymentError_PaymentTimeout {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_PaymentTimeoutImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_PaymentTimeoutImpl);
   }
 
   @override
@@ -971,16 +904,14 @@ class _$PaymentError_PaymentTimeoutImpl extends PaymentError_PaymentTimeout {
 }
 
 abstract class PaymentError_PaymentTimeout extends PaymentError {
-  const factory PaymentError_PaymentTimeout() =
-      _$PaymentError_PaymentTimeoutImpl;
+  const factory PaymentError_PaymentTimeout() = _$PaymentError_PaymentTimeoutImpl;
   const PaymentError_PaymentTimeout._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_PersistErrorImplCopyWith<$Res> {
   factory _$$PaymentError_PersistErrorImplCopyWith(
-          _$PaymentError_PersistErrorImpl value,
-          $Res Function(_$PaymentError_PersistErrorImpl) then) =
+          _$PaymentError_PersistErrorImpl value, $Res Function(_$PaymentError_PersistErrorImpl) then) =
       __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>;
 }
 
@@ -989,8 +920,7 @@ class __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PersistErrorImpl>
     implements _$$PaymentError_PersistErrorImplCopyWith<$Res> {
   __$$PaymentError_PersistErrorImplCopyWithImpl(
-      _$PaymentError_PersistErrorImpl _value,
-      $Res Function(_$PaymentError_PersistErrorImpl) _then)
+      _$PaymentError_PersistErrorImpl _value, $Res Function(_$PaymentError_PersistErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -1010,8 +940,7 @@ class _$PaymentError_PersistErrorImpl extends PaymentError_PersistError {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_PersistErrorImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_PersistErrorImpl);
   }
 
   @override
@@ -1026,8 +955,7 @@ abstract class PaymentError_PersistError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
   factory _$$PaymentError_ReceiveErrorImplCopyWith(
-          _$PaymentError_ReceiveErrorImpl value,
-          $Res Function(_$PaymentError_ReceiveErrorImpl) then) =
+          _$PaymentError_ReceiveErrorImpl value, $Res Function(_$PaymentError_ReceiveErrorImpl) then) =
       __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -1038,8 +966,7 @@ class __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_ReceiveErrorImpl>
     implements _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
   __$$PaymentError_ReceiveErrorImplCopyWithImpl(
-      _$PaymentError_ReceiveErrorImpl _value,
-      $Res Function(_$PaymentError_ReceiveErrorImpl) _then)
+      _$PaymentError_ReceiveErrorImpl _value, $Res Function(_$PaymentError_ReceiveErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -1087,14 +1014,12 @@ class _$PaymentError_ReceiveErrorImpl extends PaymentError_ReceiveError {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl>
-      get copyWith => __$$PaymentError_ReceiveErrorImplCopyWithImpl<
-          _$PaymentError_ReceiveErrorImpl>(this, _$identity);
+  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
+      __$$PaymentError_ReceiveErrorImplCopyWithImpl<_$PaymentError_ReceiveErrorImpl>(this, _$identity);
 }
 
 abstract class PaymentError_ReceiveError extends PaymentError {
-  const factory PaymentError_ReceiveError({required final String err}) =
-      _$PaymentError_ReceiveErrorImpl;
+  const factory PaymentError_ReceiveError({required final String err}) = _$PaymentError_ReceiveErrorImpl;
   const PaymentError_ReceiveError._() : super._();
 
   String get err;
@@ -1102,15 +1027,14 @@ abstract class PaymentError_ReceiveError extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_ReceiveErrorImplCopyWith<_$PaymentError_ReceiveErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
   factory _$$PaymentError_RefundedImplCopyWith(
-          _$PaymentError_RefundedImpl value,
-          $Res Function(_$PaymentError_RefundedImpl) then) =
+          _$PaymentError_RefundedImpl value, $Res Function(_$PaymentError_RefundedImpl) then) =
       __$$PaymentError_RefundedImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err, String refundTxId});
@@ -1120,8 +1044,8 @@ abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
 class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_RefundedImpl>
     implements _$$PaymentError_RefundedImplCopyWith<$Res> {
-  __$$PaymentError_RefundedImplCopyWithImpl(_$PaymentError_RefundedImpl _value,
-      $Res Function(_$PaymentError_RefundedImpl) _then)
+  __$$PaymentError_RefundedImplCopyWithImpl(
+      _$PaymentError_RefundedImpl _value, $Res Function(_$PaymentError_RefundedImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -1148,9 +1072,7 @@ class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
-  const _$PaymentError_RefundedImpl(
-      {required this.err, required this.refundTxId})
-      : super._();
+  const _$PaymentError_RefundedImpl({required this.err, required this.refundTxId}) : super._();
 
   @override
   final String err;
@@ -1168,8 +1090,7 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
         (other.runtimeType == runtimeType &&
             other is _$PaymentError_RefundedImpl &&
             (identical(other.err, err) || other.err == err) &&
-            (identical(other.refundTxId, refundTxId) ||
-                other.refundTxId == refundTxId));
+            (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId));
   }
 
   @override
@@ -1180,15 +1101,13 @@ class _$PaymentError_RefundedImpl extends PaymentError_Refunded {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl>
-      get copyWith => __$$PaymentError_RefundedImplCopyWithImpl<
-          _$PaymentError_RefundedImpl>(this, _$identity);
+  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
+      __$$PaymentError_RefundedImplCopyWithImpl<_$PaymentError_RefundedImpl>(this, _$identity);
 }
 
 abstract class PaymentError_Refunded extends PaymentError {
-  const factory PaymentError_Refunded(
-      {required final String err,
-      required final String refundTxId}) = _$PaymentError_RefundedImpl;
+  const factory PaymentError_Refunded({required final String err, required final String refundTxId}) =
+      _$PaymentError_RefundedImpl;
   const PaymentError_Refunded._() : super._();
 
   String get err;
@@ -1197,8 +1116,8 @@ abstract class PaymentError_Refunded extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_RefundedImplCopyWith<_$PaymentError_RefundedImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -1211,8 +1130,7 @@ abstract class _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
 
 /// @nodoc
 class __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>
-    extends _$PaymentErrorCopyWithImpl<$Res,
-        _$PaymentError_SelfTransferNotSupportedImpl>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SelfTransferNotSupportedImpl>
     implements _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
   __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl(
       _$PaymentError_SelfTransferNotSupportedImpl _value,
@@ -1225,8 +1143,7 @@ class __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PaymentError_SelfTransferNotSupportedImpl
-    extends PaymentError_SelfTransferNotSupported {
+class _$PaymentError_SelfTransferNotSupportedImpl extends PaymentError_SelfTransferNotSupported {
   const _$PaymentError_SelfTransferNotSupportedImpl() : super._();
 
   @override
@@ -1237,8 +1154,7 @@ class _$PaymentError_SelfTransferNotSupportedImpl
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PaymentError_SelfTransferNotSupportedImpl);
+        (other.runtimeType == runtimeType && other is _$PaymentError_SelfTransferNotSupportedImpl);
   }
 
   @override
@@ -1246,16 +1162,14 @@ class _$PaymentError_SelfTransferNotSupportedImpl
 }
 
 abstract class PaymentError_SelfTransferNotSupported extends PaymentError {
-  const factory PaymentError_SelfTransferNotSupported() =
-      _$PaymentError_SelfTransferNotSupportedImpl;
+  const factory PaymentError_SelfTransferNotSupported() = _$PaymentError_SelfTransferNotSupportedImpl;
   const PaymentError_SelfTransferNotSupported._() : super._();
 }
 
 /// @nodoc
 abstract class _$$PaymentError_SendErrorImplCopyWith<$Res> {
   factory _$$PaymentError_SendErrorImplCopyWith(
-          _$PaymentError_SendErrorImpl value,
-          $Res Function(_$PaymentError_SendErrorImpl) then) =
+          _$PaymentError_SendErrorImpl value, $Res Function(_$PaymentError_SendErrorImpl) then) =
       __$$PaymentError_SendErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -1266,8 +1180,7 @@ class __$$PaymentError_SendErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SendErrorImpl>
     implements _$$PaymentError_SendErrorImplCopyWith<$Res> {
   __$$PaymentError_SendErrorImplCopyWithImpl(
-      _$PaymentError_SendErrorImpl _value,
-      $Res Function(_$PaymentError_SendErrorImpl) _then)
+      _$PaymentError_SendErrorImpl _value, $Res Function(_$PaymentError_SendErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -1315,14 +1228,12 @@ class _$PaymentError_SendErrorImpl extends PaymentError_SendError {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl>
-      get copyWith => __$$PaymentError_SendErrorImplCopyWithImpl<
-          _$PaymentError_SendErrorImpl>(this, _$identity);
+  _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl> get copyWith =>
+      __$$PaymentError_SendErrorImplCopyWithImpl<_$PaymentError_SendErrorImpl>(this, _$identity);
 }
 
 abstract class PaymentError_SendError extends PaymentError {
-  const factory PaymentError_SendError({required final String err}) =
-      _$PaymentError_SendErrorImpl;
+  const factory PaymentError_SendError({required final String err}) = _$PaymentError_SendErrorImpl;
   const PaymentError_SendError._() : super._();
 
   String get err;
@@ -1330,15 +1241,14 @@ abstract class PaymentError_SendError extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_SendErrorImplCopyWith<_$PaymentError_SendErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$PaymentError_SignerErrorImplCopyWith<$Res> {
   factory _$$PaymentError_SignerErrorImplCopyWith(
-          _$PaymentError_SignerErrorImpl value,
-          $Res Function(_$PaymentError_SignerErrorImpl) then) =
+          _$PaymentError_SignerErrorImpl value, $Res Function(_$PaymentError_SignerErrorImpl) then) =
       __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -1349,8 +1259,7 @@ class __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SignerErrorImpl>
     implements _$$PaymentError_SignerErrorImplCopyWith<$Res> {
   __$$PaymentError_SignerErrorImplCopyWithImpl(
-      _$PaymentError_SignerErrorImpl _value,
-      $Res Function(_$PaymentError_SignerErrorImpl) _then)
+      _$PaymentError_SignerErrorImpl _value, $Res Function(_$PaymentError_SignerErrorImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of PaymentError
@@ -1398,14 +1307,12 @@ class _$PaymentError_SignerErrorImpl extends PaymentError_SignerError {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl>
-      get copyWith => __$$PaymentError_SignerErrorImplCopyWithImpl<
-          _$PaymentError_SignerErrorImpl>(this, _$identity);
+  _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl> get copyWith =>
+      __$$PaymentError_SignerErrorImplCopyWithImpl<_$PaymentError_SignerErrorImpl>(this, _$identity);
 }
 
 abstract class PaymentError_SignerError extends PaymentError {
-  const factory PaymentError_SignerError({required final String err}) =
-      _$PaymentError_SignerErrorImpl;
+  const factory PaymentError_SignerError({required final String err}) = _$PaymentError_SignerErrorImpl;
   const PaymentError_SignerError._() : super._();
 
   String get err;
@@ -1413,8 +1320,8 @@ abstract class PaymentError_SignerError extends PaymentError {
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$PaymentError_SignerErrorImplCopyWith<_$PaymentError_SignerErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -1427,8 +1334,7 @@ abstract class $SdkErrorCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$SdkErrorCopyWithImpl<$Res, $Val extends SdkError>
-    implements $SdkErrorCopyWith<$Res> {
+class _$SdkErrorCopyWithImpl<$Res, $Val extends SdkError> implements $SdkErrorCopyWith<$Res> {
   _$SdkErrorCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -1443,8 +1349,7 @@ class _$SdkErrorCopyWithImpl<$Res, $Val extends SdkError>
 /// @nodoc
 abstract class _$$SdkError_AlreadyStartedImplCopyWith<$Res> {
   factory _$$SdkError_AlreadyStartedImplCopyWith(
-          _$SdkError_AlreadyStartedImpl value,
-          $Res Function(_$SdkError_AlreadyStartedImpl) then) =
+          _$SdkError_AlreadyStartedImpl value, $Res Function(_$SdkError_AlreadyStartedImpl) then) =
       __$$SdkError_AlreadyStartedImplCopyWithImpl<$Res>;
 }
 
@@ -1453,8 +1358,7 @@ class __$$SdkError_AlreadyStartedImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_AlreadyStartedImpl>
     implements _$$SdkError_AlreadyStartedImplCopyWith<$Res> {
   __$$SdkError_AlreadyStartedImplCopyWithImpl(
-      _$SdkError_AlreadyStartedImpl _value,
-      $Res Function(_$SdkError_AlreadyStartedImpl) _then)
+      _$SdkError_AlreadyStartedImpl _value, $Res Function(_$SdkError_AlreadyStartedImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of SdkError
@@ -1474,8 +1378,7 @@ class _$SdkError_AlreadyStartedImpl extends SdkError_AlreadyStarted {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SdkError_AlreadyStartedImpl);
+        (other.runtimeType == runtimeType && other is _$SdkError_AlreadyStartedImpl);
   }
 
   @override
@@ -1489,19 +1392,18 @@ abstract class SdkError_AlreadyStarted extends SdkError {
 
 /// @nodoc
 abstract class _$$SdkError_GenericImplCopyWith<$Res> {
-  factory _$$SdkError_GenericImplCopyWith(_$SdkError_GenericImpl value,
-          $Res Function(_$SdkError_GenericImpl) then) =
+  factory _$$SdkError_GenericImplCopyWith(
+          _$SdkError_GenericImpl value, $Res Function(_$SdkError_GenericImpl) then) =
       __$$SdkError_GenericImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
 
 /// @nodoc
-class __$$SdkError_GenericImplCopyWithImpl<$Res>
-    extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_GenericImpl>
+class __$$SdkError_GenericImplCopyWithImpl<$Res> extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_GenericImpl>
     implements _$$SdkError_GenericImplCopyWith<$Res> {
-  __$$SdkError_GenericImplCopyWithImpl(_$SdkError_GenericImpl _value,
-      $Res Function(_$SdkError_GenericImpl) _then)
+  __$$SdkError_GenericImplCopyWithImpl(
+      _$SdkError_GenericImpl _value, $Res Function(_$SdkError_GenericImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of SdkError
@@ -1550,13 +1452,11 @@ class _$SdkError_GenericImpl extends SdkError_Generic {
   @override
   @pragma('vm:prefer-inline')
   _$$SdkError_GenericImplCopyWith<_$SdkError_GenericImpl> get copyWith =>
-      __$$SdkError_GenericImplCopyWithImpl<_$SdkError_GenericImpl>(
-          this, _$identity);
+      __$$SdkError_GenericImplCopyWithImpl<_$SdkError_GenericImpl>(this, _$identity);
 }
 
 abstract class SdkError_Generic extends SdkError {
-  const factory SdkError_Generic({required final String err}) =
-      _$SdkError_GenericImpl;
+  const factory SdkError_Generic({required final String err}) = _$SdkError_GenericImpl;
   const SdkError_Generic._() : super._();
 
   String get err;
@@ -1564,14 +1464,13 @@ abstract class SdkError_Generic extends SdkError {
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SdkError_GenericImplCopyWith<_$SdkError_GenericImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  _$$SdkError_GenericImplCopyWith<_$SdkError_GenericImpl> get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$SdkError_NotStartedImplCopyWith<$Res> {
-  factory _$$SdkError_NotStartedImplCopyWith(_$SdkError_NotStartedImpl value,
-          $Res Function(_$SdkError_NotStartedImpl) then) =
+  factory _$$SdkError_NotStartedImplCopyWith(
+          _$SdkError_NotStartedImpl value, $Res Function(_$SdkError_NotStartedImpl) then) =
       __$$SdkError_NotStartedImplCopyWithImpl<$Res>;
 }
 
@@ -1579,8 +1478,8 @@ abstract class _$$SdkError_NotStartedImplCopyWith<$Res> {
 class __$$SdkError_NotStartedImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_NotStartedImpl>
     implements _$$SdkError_NotStartedImplCopyWith<$Res> {
-  __$$SdkError_NotStartedImplCopyWithImpl(_$SdkError_NotStartedImpl _value,
-      $Res Function(_$SdkError_NotStartedImpl) _then)
+  __$$SdkError_NotStartedImplCopyWithImpl(
+      _$SdkError_NotStartedImpl _value, $Res Function(_$SdkError_NotStartedImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of SdkError
@@ -1599,9 +1498,7 @@ class _$SdkError_NotStartedImpl extends SdkError_NotStarted {
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SdkError_NotStartedImpl);
+    return identical(this, other) || (other.runtimeType == runtimeType && other is _$SdkError_NotStartedImpl);
   }
 
   @override
@@ -1616,8 +1513,7 @@ abstract class SdkError_NotStarted extends SdkError {
 /// @nodoc
 abstract class _$$SdkError_ServiceConnectivityImplCopyWith<$Res> {
   factory _$$SdkError_ServiceConnectivityImplCopyWith(
-          _$SdkError_ServiceConnectivityImpl value,
-          $Res Function(_$SdkError_ServiceConnectivityImpl) then) =
+          _$SdkError_ServiceConnectivityImpl value, $Res Function(_$SdkError_ServiceConnectivityImpl) then) =
       __$$SdkError_ServiceConnectivityImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
@@ -1628,8 +1524,7 @@ class __$$SdkError_ServiceConnectivityImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_ServiceConnectivityImpl>
     implements _$$SdkError_ServiceConnectivityImplCopyWith<$Res> {
   __$$SdkError_ServiceConnectivityImplCopyWithImpl(
-      _$SdkError_ServiceConnectivityImpl _value,
-      $Res Function(_$SdkError_ServiceConnectivityImpl) _then)
+      _$SdkError_ServiceConnectivityImpl _value, $Res Function(_$SdkError_ServiceConnectivityImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of SdkError
@@ -1677,10 +1572,8 @@ class _$SdkError_ServiceConnectivityImpl extends SdkError_ServiceConnectivity {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$SdkError_ServiceConnectivityImplCopyWith<
-          _$SdkError_ServiceConnectivityImpl>
-      get copyWith => __$$SdkError_ServiceConnectivityImplCopyWithImpl<
-          _$SdkError_ServiceConnectivityImpl>(this, _$identity);
+  _$$SdkError_ServiceConnectivityImplCopyWith<_$SdkError_ServiceConnectivityImpl> get copyWith =>
+      __$$SdkError_ServiceConnectivityImplCopyWithImpl<_$SdkError_ServiceConnectivityImpl>(this, _$identity);
 }
 
 abstract class SdkError_ServiceConnectivity extends SdkError {
@@ -1693,7 +1586,6 @@ abstract class SdkError_ServiceConnectivity extends SdkError {
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SdkError_ServiceConnectivityImplCopyWith<
-          _$SdkError_ServiceConnectivityImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$SdkError_ServiceConnectivityImplCopyWith<_$SdkError_ServiceConnectivityImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

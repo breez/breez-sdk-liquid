@@ -47,8 +47,7 @@ Future<ExternalLibrary?> _loadPlatformSpecificLibrary() async {
       return _loadIOSMacOSLibrary();
     default:
       _log.severe('${Platform.operatingSystem} is not yet supported!');
-      throw UnsupportedPlatform(
-          '${Platform.operatingSystem} is not supported!');
+      throw UnsupportedPlatform('${Platform.operatingSystem} is not supported!');
   }
 }
 
@@ -67,13 +66,11 @@ Future<ExternalLibrary?> _loadIOSMacOSLibrary() async {
     _log.info('Attempting to use iOS/MacOS framework');
     return ExternalLibrary.open("$iosLibName.framework/$iosLibName");
   } catch (e) {
-    _log.warning(
-        'iOS/MacOS framework not found, attempting fallback to ExternalLibrary.process: $e');
+    _log.warning('iOS/MacOS framework not found, attempting fallback to ExternalLibrary.process: $e');
     try {
       return ExternalLibrary.process(iKnowHowToUseIt: true);
     } catch (e) {
-      _log.warning(
-          'Failed to initialize ExternalLibrary.process for iOS/MacOS: $e');
+      _log.warning('Failed to initialize ExternalLibrary.process for iOS/MacOS: $e');
       return null;
     }
   }

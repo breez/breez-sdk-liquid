@@ -11,14 +11,11 @@ void main() {
       await initApi();
       ConnectRequest connectRequest = ConnectRequest(
           mnemonic: "",
-          config: defaultConfig(
-              network: LiquidNetwork.testnet, breezApiKey: "<breez-api-key>"));
+          config: defaultConfig(network: LiquidNetwork.testnet, breezApiKey: "<breez-api-key>"));
       sdk = await connect(req: connectRequest);
     });
 
-    test(
-        "after setting up, getInfo should throw exception with 'Not initialized' message",
-        () async {
+    test("after setting up, getInfo should throw exception with 'Not initialized' message", () async {
       try {
         await sdk.getInfo();
       } catch (e) {

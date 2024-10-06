@@ -14,8 +14,7 @@ sealed class PaymentError with _$PaymentError implements FrbException {
 
   const factory PaymentError.alreadyClaimed() = PaymentError_AlreadyClaimed;
   const factory PaymentError.alreadyPaid() = PaymentError_AlreadyPaid;
-  const factory PaymentError.paymentInProgress() =
-      PaymentError_PaymentInProgress;
+  const factory PaymentError.paymentInProgress() = PaymentError_PaymentInProgress;
   const factory PaymentError.amountOutOfRange() = PaymentError_AmountOutOfRange;
   const factory PaymentError.amountMissing({
     required String err,
@@ -26,10 +25,8 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.generic({
     required String err,
   }) = PaymentError_Generic;
-  const factory PaymentError.invalidOrExpiredFees() =
-      PaymentError_InvalidOrExpiredFees;
-  const factory PaymentError.insufficientFunds() =
-      PaymentError_InsufficientFunds;
+  const factory PaymentError.invalidOrExpiredFees() = PaymentError_InvalidOrExpiredFees;
+  const factory PaymentError.insufficientFunds() = PaymentError_InsufficientFunds;
   const factory PaymentError.invalidDescription({
     required String err,
   }) = PaymentError_InvalidDescription;
@@ -50,8 +47,7 @@ sealed class PaymentError with _$PaymentError implements FrbException {
     required String err,
     required String refundTxId,
   }) = PaymentError_Refunded;
-  const factory PaymentError.selfTransferNotSupported() =
-      PaymentError_SelfTransferNotSupported;
+  const factory PaymentError.selfTransferNotSupported() = PaymentError_SelfTransferNotSupported;
   const factory PaymentError.sendError({
     required String err,
   }) = PaymentError_SendError;
