@@ -49,11 +49,6 @@ use crate::{
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
-pub const BREEZ_CA_PUBLIC_KEY: x509_parser::public_key::PublicKey =
-    x509_parser::public_key::PublicKey::Unknown(&[
-        208, 131, 245, 203, 223, 32, 60, 28, 162, 32, 202, 41, 135, 83, 244, 27, 167, 28, 180, 182,
-        252, 235, 138, 205, 95, 13, 75, 68, 179, 169, 93, 119,
-    ]);
 
 pub struct LiquidSdk {
     pub(crate) config: Config,
@@ -109,15 +104,20 @@ impl LiquidSdk {
         let (_rem, cert) = parse_x509_certificate(&api_key_decoded)
             .map_err(|err| anyhow!("Invaid certificate for Breez API key: {err:?}"))?;
 
-        match cert.public_key().parsed() {
-            Ok(pk) => ensure_sdk!(
-                pk == BREEZ_CA_PUBLIC_KEY,
-                anyhow!("Invalid certificate found for Breez API key: pubkey mismatch. Please confirm that the certificate's origin is trusted")
+        let issuer = cert
+            .issuer()
+            .iter_common_name()
+            .next()
+            .and_then(|cn| cn.as_str().ok());
+        match issuer {
+            Some(common_name) => ensure_sdk!(
+                common_name.starts_with("Breez"),
+                anyhow!("Invalid certificate found for Breez API key: issuer mismatch. Please confirm that the certificate's origin is trusted")
             ),
-            Err(err) => {
-                return Err(anyhow!("Could not parse Breez API key certificate: {err:?}"))
+            _ => {
+                return Err(anyhow!("Could not parse Breez API key certificate: issuer is invalid or not found."))
             }
-        };
+        }
 
         Ok(())
     }
