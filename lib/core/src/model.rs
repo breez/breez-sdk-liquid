@@ -617,7 +617,7 @@ impl ChainSwap {
         let swap_script = self.get_lockup_swap_script()?.as_bitcoin_script()?;
         let script_pubkey = swap_script
             .to_address(network.as_bitcoin_chain())
-            .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+            .map_err(|e| SdkError::generic(format!("Error getting script address: {e:?}")))?
             .script_pubkey();
         Ok(script_pubkey)
     }
