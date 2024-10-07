@@ -4,13 +4,17 @@ use boltz_client::{
     boltz::SwapTxKind,
     elements::Transaction,
     util::{liquid_genesis_hash, secrets::Preimage},
-    Amount, Bolt11Invoice, ElementsAddress as Address, Keypair, LBtcSwapScript, LBtcSwapTx,
+    Amount, Bolt11Invoice, ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
 use crate::{
+    ensure_sdk,
     error::{PaymentError, SdkError},
-    prelude::{ChainSwap, Direction, ReceiveSwap, Swap, Utxo, LOWBALL_FEE_RATE_SAT_PER_VBYTE},
+    prelude::{
+        ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
+        LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
+    },
 };
 
 use super::BoltzSwapper;
@@ -92,8 +96,10 @@ impl BoltzSwapper {
     }
 
     fn calculate_refund_fees(&self, refund_tx_size: usize) -> u64 {
-        // Testnet not supports lowball as well, see https://blog.blockstream.com/elements-23-2-3-discounted-fees-for-confidential-transactions/
-        let fee_rate = LOWBALL_FEE_RATE_SAT_PER_VBYTE;
+        let fee_rate = match self.config.network {
+            LiquidNetwork::Mainnet => LOWBALL_FEE_RATE_SAT_PER_VBYTE,
+            LiquidNetwork::Testnet => STANDARD_FEE_RATE_SAT_PER_VBYTE,
+        };
         (refund_tx_size as f64 * fee_rate).ceil() as u64
     }
 
@@ -147,13 +153,39 @@ impl BoltzSwapper {
 
     pub(crate) fn new_lbtc_refund_tx(
         &self,
-        swap_id: String,
-        swap_script: LBtcSwapScript,
+        swap: &Swap,
         refund_address: &str,
-        refund_keypair: &Keypair,
         utxos: Vec<Utxo>,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
+        let (swap_script, refund_keypair, preimage) = match swap {
+            Swap::Chain(swap) => {
+                ensure_sdk!(
+                    swap.direction == Direction::Outgoing,
+                    SdkError::Generic {
+                        err: "Cannot create LBTC refund tx for incoming Chain swaps".to_string()
+                    }
+                );
+
+                (
+                    swap.get_lockup_swap_script()?.as_liquid_script()?,
+                    swap.get_refund_keypair()?,
+                    Preimage::from_str(&swap.preimage)?,
+                )
+            }
+            Swap::Send(swap) => (
+                swap.get_swap_script()?,
+                swap.get_refund_keypair()?,
+                Preimage::new(),
+            ),
+            Swap::Receive(_) => {
+                return Err(SdkError::Generic {
+                    err: "Cannot create LBTC refund tx for Receive swaps.".to_string(),
+                });
+            }
+        };
+        let swap_id = swap.id();
+
         let address = Address::from_str(refund_address).map_err(|err| SdkError::Generic {
             err: format!("Could not parse address: {err:?}"),
         })?;
@@ -176,16 +208,16 @@ impl BoltzSwapper {
             genesis_hash,
         };
 
-        let refund_tx_size = refund_tx.size(refund_keypair, &Preimage::new())?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap_id, None, None),
+            true => self.get_cooperative_details(swap_id.clone(), None, None),
             false => None,
         };
 
         let signed_tx = refund_tx.sign_refund(
-            refund_keypair,
+            &refund_keypair,
             Amount::from_sat(broadcast_fees_sat),
             cooperative,
         )?;

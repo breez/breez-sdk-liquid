@@ -179,7 +179,6 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let script_pubkey = script.to_p2sh();
         let utxos = self
             .client
             .script_list_unspent(script)?
@@ -195,7 +194,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         OutPoint::new(*tx_hash, *tx_pos as u32),
                         TxOut {
                             value: Amount::from_sat(*value),
-                            script_pubkey: script_pubkey.clone(),
+                            script_pubkey: script.into(),
                         },
                     ))
                 },
