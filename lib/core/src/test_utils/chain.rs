@@ -10,6 +10,7 @@ use boltz_client::{
     Amount,
 };
 use electrum_client::bitcoin::{consensus::deserialize, OutPoint, Script, TxOut};
+use electrum_client::GetBalanceRes;
 use lwk_wollet::{
     elements::{BlockHash, Txid as ElementsTxid},
     History,
@@ -185,6 +186,10 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<electrum_client::GetBalanceRes> {
+        unimplemented!()
+    }
+
+    fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
         unimplemented!()
     }
 

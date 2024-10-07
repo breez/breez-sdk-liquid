@@ -53,6 +53,9 @@ pub trait BitcoinChainService: Send + Sync {
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
 
+    /// Return the confirmed and unconfirmed balances of a list of script hashes
+    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>>;
+
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
         &self,
@@ -205,6 +208,10 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
         Ok(self.client.script_get_balance(script)?)
+    }
+
+    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+        Ok(self.client.batch_script_get_balance(scripts)?)
     }
 
     async fn verify_tx(

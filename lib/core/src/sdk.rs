@@ -246,9 +246,7 @@ impl LiquidSdk {
         let mut is_started = self.is_started.write().await;
         self.shutdown_sender
             .send(())
-            .map_err(|e| SdkError::Generic {
-                err: format!("Shutdown failed: {e}"),
-            })?;
+            .map_err(|e| SdkError::generic(format!("Shutdown failed: {e}")))?;
         *is_started = false;
         Ok(())
     }
@@ -1740,12 +1738,34 @@ impl LiquidSdk {
     /// List all failed chain swaps that need to be refunded.
     /// They can be refunded by calling [LiquidSdk::prepare_refund] then [LiquidSdk::refund].
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
-        Ok(self
-            .persister
-            .list_refundable_chain_swaps()?
-            .into_iter()
-            .map(Into::into)
-            .collect())
+        let chain_swaps = self.persister.list_refundable_chain_swaps()?;
+
+        let mut lockup_script_pubkeys = vec![];
+        for swap in &chain_swaps {
+            let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
+            lockup_script_pubkeys.push(script_pubkey);
+        }
+        let lockup_scripts: Vec<&boltz_client::bitcoin::Script> = lockup_script_pubkeys
+            .iter()
+            .map(|s| s.as_script())
+            .collect();
+        let scripts_balance = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .scripts_get_balance(&lockup_scripts)?;
+
+        let mut refundables = vec![];
+        for (chain_swap, script_balance) in chain_swaps.into_iter().zip(scripts_balance) {
+            let swap_id = &chain_swap.id;
+            let refundable_confirmed_sat = script_balance.confirmed;
+            info!("Incoming Chain Swap {swap_id} is refundable with {refundable_confirmed_sat} confirmed sats");
+
+            let refundable: RefundableSwap = chain_swap.to_refundable(refundable_confirmed_sat);
+            refundables.push(refundable);
+        }
+
+        Ok(refundables)
     }
 
     /// Prepares to refund a failed chain swap by calculating the refund transaction size and absolute fee.
@@ -2069,10 +2089,7 @@ impl LiquidSdk {
             .unwrap_or(self.persister.get_default_backup_path());
         ensure_sdk!(
             backup_path.exists(),
-            SdkError::Generic {
-                err: "Backup file does not exist".to_string()
-            }
-            .into()
+            SdkError::generic("Backup file does not exist").into()
         );
         self.persister.restore_from_backup(backup_path)
     }
@@ -2121,12 +2138,10 @@ impl LiquidSdk {
                                     });
                                 };
 
-                                let preimage_str = preimage
-                                    .clone()
-                                    .ok_or(SdkError::Generic {
+                                let preimage_str =
+                                    preimage.clone().ok_or(LnUrlPayError::Generic {
                                         err: "Payment successful but no preimage found".to_string(),
-                                    })
-                                    .unwrap();
+                                    })?;
                                 let preimage =
                                     sha256::Hash::from_str(&preimage_str).map_err(|_| {
                                         LnUrlPayError::Generic {
