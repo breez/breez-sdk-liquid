@@ -804,8 +804,8 @@ impl ChainSwapHandler {
 
         let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
         let script_pk = swap_script
-            .to_address(self.config.network.into())
-            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .to_address(self.config.network.as_bitcoin_chain())
+            .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .script_pubkey();
         let utxos = bitcoin_chain_service.get_script_utxos(&script_pk).await?;
 
@@ -951,7 +951,10 @@ impl ChainSwapHandler {
                         RefundPending => match has_swap_expired {
                             true => {
                                 self.refund_outgoing_swap(&swap, true)
-                                    .or_else(|_| self.refund_outgoing_swap(&swap, false))
+                                    .or_else(|e| {
+                                        warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
+                                        self.refund_outgoing_swap(&swap, false)
+                                    })
                                     .await
                             }
                             false => self.refund_outgoing_swap(&swap, true).await,
