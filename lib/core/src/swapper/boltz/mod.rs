@@ -297,12 +297,10 @@ impl Swapper for BoltzSwapper {
             ),
             Swap::Send(swap) => (swap.get_refund_keypair()?, Preimage::new()),
             Swap::Receive(swap) => {
-                return Err(SdkError::Generic {
-                    err: format!(
-                        "Failed to retrieve refund keypair and preimage for Receive swap {}: invalid swap type",
-                        swap.id
-                    ),
-                });
+                return Err(SdkError::generic(format!(
+                    "Failed to retrieve refund keypair and preimage for Receive swap {}: invalid swap type",
+                    swap.id
+                )));
             }
         };
 

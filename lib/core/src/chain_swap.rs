@@ -739,9 +739,9 @@ impl ChainSwapHandler {
         let swap = self
             .persister
             .fetch_chain_swap_by_lockup_address(lockup_address)?
-            .ok_or(SdkError::Generic {
-                err: format!("Swap {} not found", lockup_address),
-            })?;
+            .ok_or(SdkError::generic(format!(
+                "Chain Swap with lockup address {lockup_address} not found"
+            )))?;
 
         let refund_tx_id = swap.refund_tx_id.clone();
         if let Some(refund_tx_id) = &refund_tx_id {

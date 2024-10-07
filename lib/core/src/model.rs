@@ -703,11 +703,11 @@ impl SendSwap {
             &self.get_boltz_create_response()?,
             self.get_refund_keypair()?.public_key().into(),
         )
-        .map_err(|e| SdkError::Generic {
-            err: format!(
+        .map_err(|e| {
+            SdkError::generic(format!(
                 "Failed to create swap script for Send Swap {}: {e:?}",
                 self.id
-            ),
+            ))
         })
     }
 

@@ -34,21 +34,17 @@ impl BoltzSwapper {
                     )
                 }
                 Direction::Outgoing => {
-                    return Err(SdkError::Generic {
-                        err: format!(
-                            "Cannot create Bitcoin refund wrapper for outgoing Chain swap {}",
-                            swap.id
-                        ),
-                    });
+                    return Err(SdkError::generic(format!(
+                        "Cannot create Bitcoin refund wrapper for outgoing Chain swap {}",
+                        swap.id
+                    )));
                 }
             },
             _ => {
-                return Err(SdkError::Generic {
-                    err: format!(
-                        "Cannot create Bitcoin refund wrapper for swap {}",
-                        swap.id()
-                    ),
-                });
+                return Err(SdkError::generic(format!(
+                    "Cannot create Bitcoin refund wrapper for swap {}",
+                    swap.id()
+                )));
             }
         }?;
         Ok(refund_wrapper)
@@ -65,23 +61,18 @@ impl BoltzSwapper {
         broadcast_fee_rate_sat_per_vb: f64,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let address = Address::from_str(refund_address).map_err(|err| SdkError::Generic {
-            err: format!("Could not parse address: {err:?}"),
-        })?;
+        let address = Address::from_str(refund_address)
+            .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
         ensure_sdk!(
             address.is_valid_for_network(self.config.network.into()),
-            SdkError::Generic {
-                err: "Address network validation failed".to_string()
-            }
+            SdkError::generic("Address network validation failed")
         );
 
         let utxo = utxos
             .first()
             .and_then(|utxo| utxo.as_bitcoin().cloned())
-            .ok_or(SdkError::Generic {
-                err: "No UTXO found".to_string(),
-            })?;
+            .ok_or(SdkError::generic("No UTXO found"))?;
 
         let refund_tx = BtcSwapTx {
             kind: SwapTxKind::Refund,

@@ -246,9 +246,7 @@ impl LiquidSdk {
         let mut is_started = self.is_started.write().await;
         self.shutdown_sender
             .send(())
-            .map_err(|e| SdkError::Generic {
-                err: format!("Shutdown failed: {e}"),
-            })?;
+            .map_err(|e| SdkError::generic(format!("Shutdown failed: {e}")))?;
         *is_started = false;
         Ok(())
     }
@@ -2090,10 +2088,7 @@ impl LiquidSdk {
             .unwrap_or(self.persister.get_default_backup_path());
         ensure_sdk!(
             backup_path.exists(),
-            SdkError::Generic {
-                err: "Backup file does not exist".to_string()
-            }
-            .into()
+            SdkError::generic("Backup file does not exist").into()
         );
         self.persister.restore_from_backup(backup_path)
     }
@@ -2142,12 +2137,10 @@ impl LiquidSdk {
                                     });
                                 };
 
-                                let preimage_str = preimage
-                                    .clone()
-                                    .ok_or(SdkError::Generic {
+                                let preimage_str =
+                                    preimage.clone().ok_or(LnUrlPayError::Generic {
                                         err: "Payment successful but no preimage found".to_string(),
-                                    })
-                                    .unwrap();
+                                    })?;
                                 let preimage =
                                     sha256::Hash::from_str(&preimage_str).map_err(|_| {
                                         LnUrlPayError::Generic {

@@ -28,31 +28,34 @@ pub enum SdkError {
     #[error("Service connectivity: {err}")]
     ServiceConnectivity { err: String },
 }
+impl SdkError {
+    pub fn generic<T: AsRef<str>>(err: T) -> Self {
+        Self::Generic {
+            err: err.as_ref().to_string(),
+        }
+    }
+}
 
 impl From<anyhow::Error> for SdkError {
     fn from(e: Error) -> Self {
-        SdkError::Generic { err: e.to_string() }
+        SdkError::generic(e.to_string())
     }
 }
 
 impl From<boltz_client::error::Error> for SdkError {
     fn from(err: boltz_client::error::Error) -> Self {
         match err {
-            boltz_client::error::Error::HTTP(e) => SdkError::Generic {
-                err: format!("Could not contact servers: {e:?}"),
-            },
-            _ => SdkError::Generic {
-                err: format!("{err:?}"),
-            },
+            boltz_client::error::Error::HTTP(e) => {
+                SdkError::generic(format!("Could not contact servers: {e:?}"))
+            }
+            _ => SdkError::generic(format!("{err:?}")),
         }
     }
 }
 
 impl From<secp256k1::Error> for SdkError {
     fn from(err: secp256k1::Error) -> Self {
-        SdkError::Generic {
-            err: format!("{err:?}"),
-        }
+        SdkError::generic(format!("{err:?}"))
     }
 }
 

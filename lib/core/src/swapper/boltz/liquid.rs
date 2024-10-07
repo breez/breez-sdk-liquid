@@ -105,12 +105,10 @@ impl BoltzSwapper {
         let refund_wrapper = match swap {
             Swap::Chain(swap) => match swap.direction {
                 Direction::Incoming => {
-                    return Err(SdkError::Generic {
-                        err: format!(
-                            "Cannot create Liquid refund wrapper for incoming Chain swap {}",
-                            swap.id
-                        ),
-                    });
+                    return Err(SdkError::generic(format!(
+                        "Cannot create Liquid refund wrapper for incoming Chain swap {}",
+                        swap.id
+                    )));
                 }
                 Direction::Outgoing => {
                     let swap_script = swap.get_lockup_swap_script()?;
@@ -134,12 +132,10 @@ impl BoltzSwapper {
                 )
             }
             Swap::Receive(swap) => {
-                return Err(SdkError::Generic {
-                    err: format!(
-                        "Cannot create Liquid refund wrapper for Receive swap {}",
-                        swap.id
-                    ),
-                });
+                return Err(SdkError::generic(format!(
+                    "Cannot create Liquid refund wrapper for Receive swap {}",
+                    swap.id
+                )));
             }
         }?;
         Ok(refund_wrapper)
@@ -154,18 +150,16 @@ impl BoltzSwapper {
         utxos: Vec<Utxo>,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let address = Address::from_str(refund_address).map_err(|err| SdkError::Generic {
-            err: format!("Could not parse address: {err:?}"),
-        })?;
+        let address = Address::from_str(refund_address)
+            .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
         let genesis_hash = liquid_genesis_hash(&self.liquid_electrum_config)?;
 
-        let (funding_outpoint, funding_tx_out) = *utxos
-            .first()
-            .and_then(|utxo| utxo.as_liquid())
-            .ok_or(SdkError::Generic {
-            err: "No refundable UTXOs found".to_string(),
-        })?;
+        let (funding_outpoint, funding_tx_out) =
+            *utxos
+                .first()
+                .and_then(|utxo| utxo.as_liquid())
+                .ok_or(SdkError::generic("No refundable UTXOs found"))?;
 
         let refund_tx = LBtcSwapTx {
             kind: SwapTxKind::Refund,
