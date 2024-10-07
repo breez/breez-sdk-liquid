@@ -248,7 +248,7 @@ pub struct ReceivePaymentRequest {
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
-    /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+    /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     pub destination: String,
 }
 

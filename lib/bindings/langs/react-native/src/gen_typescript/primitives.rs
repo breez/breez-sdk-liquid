@@ -1,8 +1,8 @@
 use paste::paste;
-use uniffi_bindgen::backend::{CodeOracle, CodeType, Literal};
-use uniffi_bindgen::interface::{types::Type, Radix};
+use uniffi_bindgen::backend::{CodeType, Literal};
+use uniffi_bindgen::interface::{Radix, Type};
 
-fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
+fn render_literal(literal: &Literal) -> String {
     fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {
             // Bytes, Shorts and Ints can all be inferred from the type.
@@ -46,15 +46,16 @@ fn render_literal(_oracle: &dyn CodeOracle, literal: &Literal) -> String {
 macro_rules! impl_code_type_for_primitive {
     ($T:ty, $class_name:literal) => {
         paste! {
+            #[derive(Debug)]
             pub struct $T;
 
             impl CodeType for $T  {
-                fn type_label(&self, _oracle: &dyn CodeOracle) -> String {
+                fn type_label(&self) -> String {
                     $class_name.into()
                 }
 
-                fn literal(&self, oracle: &dyn CodeOracle, literal: &Literal) -> String {
-                    render_literal(oracle, &literal)
+                fn literal(&self, literal: &Literal) -> String {
+                    render_literal(literal)
                 }
             }
         }
@@ -63,6 +64,7 @@ macro_rules! impl_code_type_for_primitive {
 
 impl_code_type_for_primitive!(BooleanCodeType, "boolean");
 impl_code_type_for_primitive!(StringCodeType, "string");
+impl_code_type_for_primitive!(BytesCodeType, "[]");
 impl_code_type_for_primitive!(Int8CodeType, "number");
 impl_code_type_for_primitive!(Int16CodeType, "number");
 impl_code_type_for_primitive!(Int32CodeType, "number");
