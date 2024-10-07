@@ -1048,7 +1048,7 @@ class RefundableSwap {
   final String swapAddress;
   final int timestamp;
 
-  /// Amount that is refundable, which is different than the swap amount
+  /// Amount that is refundable, from all UTXOs
   final BigInt amountSat;
 
   const RefundableSwap({
