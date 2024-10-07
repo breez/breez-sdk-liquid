@@ -828,7 +828,7 @@ impl ReceiveSwap {
 pub struct RefundableSwap {
     pub swap_address: String,
     pub timestamp: u32,
-    /// Amount that is refundable, which is different than the swap amount
+    /// Amount that is refundable, from all UTXOs
     pub amount_sat: u64,
 }
 
