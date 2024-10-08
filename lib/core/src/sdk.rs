@@ -3,7 +3,6 @@ use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Result};
-use base64::Engine as _;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -13,6 +12,7 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
+use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -98,7 +98,7 @@ impl LiquidSdk {
     }
 
     fn validate_api_key(api_key: &str) -> Result<()> {
-        let api_key_decoded = base64::engine::general_purpose::STANDARD
+        let api_key_decoded = lwk_wollet::bitcoin::base64::engine::general_purpose::STANDARD
             .decode(api_key.as_bytes())
             .map_err(|err| anyhow!("Could not base64 decode the Breez API key: {err:?}"))?;
         let (_rem, cert) = parse_x509_certificate(&api_key_decoded)

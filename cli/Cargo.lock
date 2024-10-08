@@ -579,7 +579,6 @@ version = "0.3.4"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.22.1",
  "bip39",
  "boltz-client",
  "chrono",
@@ -4171,7 +4170,6 @@ dependencies = [
  "lazy_static",
  "nom",
  "oid-registry",
- "ring 0.17.8",
  "rusticata-macros",
  "thiserror",
  "time",
