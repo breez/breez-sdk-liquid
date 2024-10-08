@@ -127,7 +127,9 @@ impl LiquidSdk {
         swapper_proxy_url: Option<String>,
         mnemonic: String,
     ) -> Result<Arc<Self>> {
-        Self::validate_api_key(&config.breez_api_key)?;
+        if config.network == LiquidNetwork::Mainnet {
+            Self::validate_api_key(&config.breez_api_key)?;
+        }
 
         fs::create_dir_all(&config.working_dir)?;
 
