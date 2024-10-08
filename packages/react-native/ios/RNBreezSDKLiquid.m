@@ -5,6 +5,7 @@
 
 RCT_EXTERN_METHOD(
     defaultConfig: (NSString*)network
+    breezApiKey: (NSString*)breezApiKey
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )

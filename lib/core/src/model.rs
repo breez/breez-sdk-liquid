@@ -54,7 +54,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn mainnet() -> Self {
+    pub fn mainnet(breez_api_key: String) -> Self {
         Config {
             liquid_electrum_url: "elements-mainnet.blockstream.info:50002".to_string(),
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
@@ -64,11 +64,11 @@ impl Config {
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
-            breez_api_key: None,
+            breez_api_key: Some(breez_api_key),
         }
     }
 
-    pub fn testnet() -> Self {
+    pub fn testnet(breez_api_key: Option<String>) -> Self {
         Config {
             liquid_electrum_url: "elements-testnet.blockstream.info:50002".to_string(),
             bitcoin_electrum_url: "bitcoin-testnet.blockstream.info:50002".to_string(),
@@ -78,7 +78,7 @@ impl Config {
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
-            breez_api_key: None,
+            breez_api_key,
         }
     }
 

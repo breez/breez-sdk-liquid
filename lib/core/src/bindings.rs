@@ -59,8 +59,11 @@ pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
 }
 
 #[frb(sync)]
-pub fn default_config(network: LiquidNetwork) -> Config {
-    LiquidSdk::default_config(network)
+pub fn default_config(
+    network: LiquidNetwork,
+    breez_api_key: Option<String>,
+) -> Result<Config, SdkError> {
+    LiquidSdk::default_config(network, breez_api_key)
 }
 
 pub async fn parse(input: String) -> Result<InputType, PaymentError> {

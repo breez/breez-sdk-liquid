@@ -27,7 +27,7 @@ lazy_static! {
 }
 
 pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainSwapHandler> {
-    let config = Config::testnet();
+    let config = Config::testnet(None);
     let onchain_wallet = Arc::new(MockWallet::new());
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));

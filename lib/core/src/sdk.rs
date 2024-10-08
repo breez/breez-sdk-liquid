@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -12,6 +12,7 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
+use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -25,6 +26,7 @@ use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
+use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
@@ -95,11 +97,44 @@ impl LiquidSdk {
         Ok(sdk)
     }
 
+    fn validate_api_key(api_key: &str) -> Result<()> {
+        let api_key_decoded = lwk_wollet::bitcoin::base64::engine::general_purpose::STANDARD
+            .decode(api_key.as_bytes())
+            .map_err(|err| anyhow!("Could not base64 decode the Breez API key: {err:?}"))?;
+        let (_rem, cert) = parse_x509_certificate(&api_key_decoded)
+            .map_err(|err| anyhow!("Invaid certificate for Breez API key: {err:?}"))?;
+
+        let issuer = cert
+            .issuer()
+            .iter_common_name()
+            .next()
+            .and_then(|cn| cn.as_str().ok());
+        match issuer {
+            Some(common_name) => ensure_sdk!(
+                common_name.starts_with("Breez"),
+                anyhow!("Invalid certificate found for Breez API key: issuer mismatch. Please confirm that the certificate's origin is trusted")
+            ),
+            _ => {
+                return Err(anyhow!("Could not parse Breez API key certificate: issuer is invalid or not found."))
+            }
+        }
+
+        Ok(())
+    }
+
     fn new(
         config: Config,
         swapper_proxy_url: Option<String>,
         mnemonic: String,
     ) -> Result<Arc<Self>> {
+        match (config.network, &config.breez_api_key) {
+            (_, Some(api_key)) => Self::validate_api_key(api_key)?,
+            (LiquidNetwork::Mainnet, None) => {
+                return Err(anyhow!("Breez API key must be provided on mainnet."));
+            }
+            (LiquidNetwork::Testnet, None) => {}
+        };
+
         fs::create_dir_all(&config.working_dir)?;
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
@@ -683,12 +718,6 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
-                if self.config.breez_api_key.is_none() {
-                    return Err(PaymentError::Generic {
-                        err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-                    });
-                }
-
                 let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
@@ -737,12 +766,6 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
-                        if self.config.breez_api_key.is_none() {
-                            return Err(PaymentError::Generic {
-                                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-                            });
-                        }
-
                         self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
@@ -888,12 +911,6 @@ impl LiquidSdk {
         receiver_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        if self.config.breez_api_key.is_none() {
-            return Err(PaymentError::Generic {
-                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-            });
-        }
-
         let tx = self
             .onchain_wallet
             .build_tx(
@@ -2288,11 +2305,22 @@ impl LiquidSdk {
     }
 
     /// Get the full default [Config] for specific [LiquidNetwork].
-    pub fn default_config(network: LiquidNetwork) -> Config {
-        match network {
-            LiquidNetwork::Mainnet => Config::mainnet(),
-            LiquidNetwork::Testnet => Config::testnet(),
-        }
+    pub fn default_config(
+        network: LiquidNetwork,
+        breez_api_key: Option<String>,
+    ) -> Result<Config, SdkError> {
+        let config = match network {
+            LiquidNetwork::Mainnet => {
+                let Some(breez_api_key) = breez_api_key else {
+                    return Err(SdkError::Generic {
+                        err: "Breez API key must be provided on mainnet.".to_string(),
+                    });
+                };
+                Config::mainnet(breez_api_key)
+            }
+            LiquidNetwork::Testnet => Config::testnet(breez_api_key),
+        };
+        Ok(config)
     }
 
     /// Parses a string into an [InputType]. See [input_parser::parse].

@@ -1582,6 +1582,7 @@ fn wire__crate__bindings__connect_impl(
 }
 fn wire__crate__bindings__default_config_impl(
     network: impl CstDecode<crate::model::LiquidNetwork>,
+    breez_api_key: impl CstDecode<Option<String>>,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1591,8 +1592,9 @@ fn wire__crate__bindings__default_config_impl(
         },
         move || {
             let api_network = network.cst_decode();
-            transform_result_dco::<_, _, ()>((move || {
-                let output_ok = Result::<_, ()>::Ok(crate::bindings::default_config(api_network))?;
+            let api_breez_api_key = breez_api_key.cst_decode();
+            transform_result_dco::<_, _, crate::error::SdkError>((move || {
+                let output_ok = crate::bindings::default_config(api_network, api_breez_api_key)?;
                 Ok(output_ok)
             })())
         },
@@ -10134,8 +10136,9 @@ mod io {
     #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__default_config(
         network: i32,
+        breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__bindings__default_config_impl(network)
+        wire__crate__bindings__default_config_impl(network, breez_api_key)
     }
 
     #[no_mangle]

@@ -43,7 +43,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     liquid_chain_service: Arc<Mutex<MockLiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<MockBitcoinChainService>>,
 ) -> Result<LiquidSdk> {
-    let mut config = Config::testnet();
+    let mut config = Config::testnet(None);
     config.working_dir = persister
         .get_database_dir()
         .to_str()

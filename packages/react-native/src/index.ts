@@ -59,8 +59,8 @@ export interface Config {
     network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
-    zeroConfMaxAmountSat?: number
     breezApiKey?: string
+    zeroConfMaxAmountSat?: number
 }
 
 export interface ConnectRequest {
@@ -637,8 +637,8 @@ export const setLogger = async (logger: Logger): Promise<EmitterSubscription> =>
     return subscription
 }
 
-export const defaultConfig = async (network: LiquidNetwork): Promise<Config> => {
-    const response = await BreezSDKLiquid.defaultConfig(network)
+export const defaultConfig = async (network: LiquidNetwork, breezApiKey: string = ""): Promise<Config> => {
+    const response = await BreezSDKLiquid.defaultConfig(network, breezApiKey)
     return response
 }
 

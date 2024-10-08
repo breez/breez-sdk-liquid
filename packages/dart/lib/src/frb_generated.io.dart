@@ -3943,17 +3943,20 @@ class RustLibWire implements BaseWire {
 
   WireSyncRust2DartDco wire__crate__bindings__default_config(
     int network,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key,
   ) {
     return _wire__crate__bindings__default_config(
       network,
+      breez_api_key,
     );
   }
 
-  late final _wire__crate__bindings__default_configPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__default_config');
-  late final _wire__crate__bindings__default_config =
-      _wire__crate__bindings__default_configPtr.asFunction<WireSyncRust2DartDco Function(int)>();
+  late final _wire__crate__bindings__default_configPtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.Int32, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__default_config');
+  late final _wire__crate__bindings__default_config = _wire__crate__bindings__default_configPtr
+      .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void wire__crate__bindings__parse(
     int port_,

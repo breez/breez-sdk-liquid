@@ -57,12 +57,14 @@ class BreezSDKLiquidModule(
     @ReactMethod
     fun defaultConfig(
         network: String,
+        breezApiKey: String,
         promise: Promise,
     ) {
         executor.execute {
             try {
                 val networkTmp = asLiquidNetwork(network)
-                val res = defaultConfig(networkTmp)
+                val breezApiKeyTmp = breezApiKey.takeUnless { it.isEmpty() }
+                val res = defaultConfig(networkTmp, breezApiKeyTmp)
                 val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezSdkLiquid")
 
                 res.workingDir = workingDir.absolutePath

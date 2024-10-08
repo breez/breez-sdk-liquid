@@ -108,19 +108,17 @@ impl LiquidChainService for HybridLiquidChainService {
             LiquidNetwork::Mainnet => {
                 let tx_bytes = tx.serialize();
                 info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
-                let authorization = self
-                    .api_key
-                    .clone()
-                    .map(|key| format!("Bearer {key}"))
-                    .unwrap_or_default();
                 let client = reqwest::Client::new();
-                let response = client
+                let mut req = client
                     .post(format!("{LIQUID_ESPLORA_URL}/tx"))
                     .header("Swap-ID", swap_id.unwrap_or_default())
-                    .header("Authorization", authorization)
-                    .body(tx_bytes.to_hex())
-                    .send()
-                    .await?;
+                    .body(tx_bytes.to_hex());
+
+                if let Some(api_key) = &self.api_key {
+                    req = req.header("Authorization", format!("Bearer {}", api_key));
+                };
+
+                let response = req.send().await?;
                 let txid = Txid::from_str(&response.text().await?)?;
                 Ok(txid)
             }
