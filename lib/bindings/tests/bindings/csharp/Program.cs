@@ -4,7 +4,7 @@ using Breez.Sdk.Liquid;
 try
 {
     var mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-    var config = BreezSdkLiquidMethods.DefaultConfig(LiquidNetwork.Testnet, "<breez-api-key>");
+    var config = BreezSdkLiquidMethods.DefaultConfig(LiquidNetwork.Testnet);
 
     var connectReq = new ConnectRequest(config, mnemonic);
     BindingLiquidSdk sdk = BreezSdkLiquidMethods.Connect(connectReq);

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	mnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	config := breez_sdk_liquid.DefaultConfig(breez_sdk_liquid.LiquidNetworkTestnet, "<breez-api-key>")
+	config := breez_sdk_liquid.DefaultConfig(breez_sdk_liquid.LiquidNetworkTestnet, nil)
 
 	sdk, err := breez_sdk_liquid.Connect(breez_sdk_liquid.ConnectRequest{
 		Config:   config,

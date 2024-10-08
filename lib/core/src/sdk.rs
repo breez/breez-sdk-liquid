@@ -127,9 +127,13 @@ impl LiquidSdk {
         swapper_proxy_url: Option<String>,
         mnemonic: String,
     ) -> Result<Arc<Self>> {
-        if config.network == LiquidNetwork::Mainnet {
-            Self::validate_api_key(&config.breez_api_key)?;
-        }
+        match (config.network, &config.breez_api_key) {
+            (_, Some(api_key)) => Self::validate_api_key(api_key)?,
+            (LiquidNetwork::Mainnet, None) => {
+                return Err(anyhow!("Breez API key must be provided on mainnet."));
+            }
+            (LiquidNetwork::Testnet, None) => {}
+        };
 
         fs::create_dir_all(&config.working_dir)?;
 
@@ -2286,11 +2290,22 @@ impl LiquidSdk {
     }
 
     /// Get the full default [Config] for specific [LiquidNetwork].
-    pub fn default_config(network: LiquidNetwork, breez_api_key: String) -> Config {
-        match network {
-            LiquidNetwork::Mainnet => Config::mainnet(breez_api_key),
+    pub fn default_config(
+        network: LiquidNetwork,
+        breez_api_key: Option<String>,
+    ) -> Result<Config, SdkError> {
+        let config = match network {
+            LiquidNetwork::Mainnet => {
+                let Some(breez_api_key) = breez_api_key else {
+                    return Err(SdkError::Generic {
+                        err: "Breez API key must be provided on mainnet.".to_string(),
+                    });
+                };
+                Config::mainnet(breez_api_key)
+            }
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
-        }
+        };
+        Ok(config)
     }
 
     /// Parses a string into an [InputType]. See [input_parser::parse].

@@ -268,8 +268,12 @@ enum BreezSDKLiquidMapper {
         guard let zeroConfMinFeeRateMsat = config["zeroConfMinFeeRateMsat"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRateMsat", typeName: "Config"))
         }
-        guard let breezApiKey = config["breezApiKey"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "breezApiKey", typeName: "Config"))
+        var breezApiKey: String?
+        if hasNonNilKey(data: config, key: "breezApiKey") {
+            guard let breezApiKeyTmp = config["breezApiKey"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "breezApiKey"))
+            }
+            breezApiKey = breezApiKeyTmp
         }
         var zeroConfMaxAmountSat: UInt64?
         if hasNonNilKey(data: config, key: "zeroConfMaxAmountSat") {
@@ -291,7 +295,7 @@ enum BreezSDKLiquidMapper {
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
-            "breezApiKey": config.breezApiKey,
+            "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
         ]
     }

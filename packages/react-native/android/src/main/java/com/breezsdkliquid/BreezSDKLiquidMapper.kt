@@ -212,7 +212,6 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "zeroConfMinFeeRateMsat",
-                "breezApiKey",
             ),
         )
     ) {
@@ -225,7 +224,7 @@ fun asConfig(config: ReadableMap): Config? {
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
-    val breezApiKey = config.getString("breezApiKey")!!
+    val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,

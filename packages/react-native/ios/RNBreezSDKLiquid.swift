@@ -75,7 +75,8 @@ class RNBreezSDKLiquid: RCTEventEmitter {
     func defaultConfig(_ network: String, breezApiKey: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
             let networkTmp = try BreezSDKLiquidMapper.asLiquidNetwork(liquidNetwork: network)
-            var res = BreezSDKLiquid.defaultConfig(network: networkTmp, breezApiKey: breezApiKey)
+            let breezApiKeyTmp = breezApiKey.isEmpty ? nil : breezApiKey
+            var res = try BreezSDKLiquid.defaultConfig(network: networkTmp, breezApiKey: breezApiKeyTmp)
             res.workingDir = RNBreezSDKLiquid.breezSdkLiquidDirectory.path
             resolve(BreezSDKLiquidMapper.dictionaryOf(config: res))
         } catch let err {

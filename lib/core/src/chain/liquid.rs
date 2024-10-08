@@ -81,7 +81,7 @@ struct Status {
 
 pub(crate) struct HybridLiquidChainService {
     network: LiquidNetwork,
-    api_key: String,
+    api_key: Option<String>,
     electrum_client: ElectrumClient,
 }
 
@@ -109,13 +109,16 @@ impl LiquidChainService for HybridLiquidChainService {
                 let tx_bytes = tx.serialize();
                 info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
                 let client = reqwest::Client::new();
-                let response = client
+                let mut req = client
                     .post(format!("{LIQUID_ESPLORA_URL}/tx"))
                     .header("Swap-ID", swap_id.unwrap_or_default())
-                    .header("Authorization", format!("Bearer {}", self.api_key))
-                    .body(tx_bytes.to_hex())
-                    .send()
-                    .await?;
+                    .body(tx_bytes.to_hex());
+
+                if let Some(api_key) = &self.api_key {
+                    req = req.header("Authorization", format!("Bearer {}", api_key));
+                };
+
+                let response = req.send().await?;
                 let txid = Txid::from_str(&response.text().await?)?;
                 Ok(txid)
             }

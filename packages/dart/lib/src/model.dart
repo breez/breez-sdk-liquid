@@ -136,7 +136,7 @@ class Config {
   final BigInt? zeroConfMaxAmountSat;
 
   /// The Breez API key used for making requests to their mempool service
-  final String breezApiKey;
+  final String? breezApiKey;
 
   const Config({
     required this.liquidElectrumUrl,
@@ -147,7 +147,7 @@ class Config {
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
     this.zeroConfMaxAmountSat,
-    required this.breezApiKey,
+    this.breezApiKey,
   });
 
   @override

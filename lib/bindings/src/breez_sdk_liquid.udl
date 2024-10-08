@@ -305,7 +305,7 @@ dictionary Config {
     LiquidNetwork network;
     u64 payment_timeout_sec;
     u32 zero_conf_min_fee_rate_msat;
-    string breez_api_key;
+    string? breez_api_key;
     u64? zero_conf_max_amount_sat;
 };
 
@@ -569,7 +569,8 @@ namespace breez_sdk_liquid {
     [Throws=SdkError]
     void set_logger(Logger logger);
     
-    Config default_config(LiquidNetwork network, string breez_api_key);
+    [Throws=SdkError]
+    Config default_config(LiquidNetwork network, string? breez_api_key);
 
     [Throws=PaymentError]
     InputType parse(string input);

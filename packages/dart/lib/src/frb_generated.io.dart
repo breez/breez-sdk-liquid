@@ -1813,7 +1813,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.zero_conf_min_fee_rate_msat = cst_encode_u_32(apiObj.zeroConfMinFeeRateMsat);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
-    wireObj.breez_api_key = cst_encode_String(apiObj.breezApiKey);
+    wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
   }
 
   @protected
