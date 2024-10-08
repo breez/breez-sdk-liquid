@@ -609,16 +609,25 @@ impl ChainSwap {
         Ok(swap_script)
     }
 
-    pub(crate) fn get_lockup_swap_script_pubkey(
+    /// Returns the lockup script pubkey for Receive Chain Swaps
+    pub(crate) fn get_receive_lockup_swap_script_pubkey(
         &self,
         network: LiquidNetwork,
     ) -> SdkResult<ScriptBuf> {
         let swap_script = self.get_lockup_swap_script()?.as_bitcoin_script()?;
         let script_pubkey = swap_script
             .to_address(network.as_bitcoin_chain())
-            .map_err(|e| anyhow!("Error getting script address: {e:?}"))?
+            .map_err(|e| SdkError::generic(format!("Error getting script address: {e:?}")))?
             .script_pubkey();
         Ok(script_pubkey)
+    }
+
+    pub(crate) fn to_refundable(&self, refundable_amount_sat: u64) -> RefundableSwap {
+        RefundableSwap {
+            swap_address: self.lockup_address.clone(),
+            timestamp: self.created_at,
+            amount_sat: refundable_amount_sat,
+        }
     }
 
     pub(crate) fn from_boltz_struct_to_json(
@@ -694,11 +703,11 @@ impl SendSwap {
             &self.get_boltz_create_response()?,
             self.get_refund_keypair()?.public_key().into(),
         )
-        .map_err(|e| SdkError::Generic {
-            err: format!(
+        .map_err(|e| {
+            SdkError::generic(format!(
                 "Failed to create swap script for Send Swap {}: {e:?}",
                 self.id
-            ),
+            ))
         })
     }
 
@@ -819,16 +828,8 @@ impl ReceiveSwap {
 pub struct RefundableSwap {
     pub swap_address: String,
     pub timestamp: u32,
+    /// Amount that is refundable, from all UTXOs
     pub amount_sat: u64,
-}
-impl From<ChainSwap> for RefundableSwap {
-    fn from(swap: ChainSwap) -> Self {
-        Self {
-            swap_address: swap.lockup_address,
-            timestamp: swap.created_at,
-            amount_sat: swap.payer_amount_sat,
-        }
-    }
 }
 
 /// The payment state of an individual payment.

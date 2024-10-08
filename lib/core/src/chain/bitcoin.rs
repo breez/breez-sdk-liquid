@@ -53,6 +53,9 @@ pub trait BitcoinChainService: Send + Sync {
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
 
+    /// Return the confirmed and unconfirmed balances of a list of script hashes
+    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>>;
+
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
         &self,
@@ -179,7 +182,6 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let script_pubkey = script.to_p2sh();
         let utxos = self
             .client
             .script_list_unspent(script)?
@@ -195,7 +197,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         OutPoint::new(*tx_hash, *tx_pos as u32),
                         TxOut {
                             value: Amount::from_sat(*value),
-                            script_pubkey: script_pubkey.clone(),
+                            script_pubkey: script.into(),
                         },
                     ))
                 },
@@ -206,6 +208,10 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
         Ok(self.client.script_get_balance(script)?)
+    }
+
+    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+        Ok(self.client.batch_script_get_balance(scripts)?)
     }
 
     async fn verify_tx(

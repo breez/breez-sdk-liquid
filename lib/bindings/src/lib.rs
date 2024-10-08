@@ -44,10 +44,7 @@ impl log::Log for UniffiBindingLogger {
 
 /// If used, this must be called before `connect`
 pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
-    UniffiBindingLogger::init(logger).map_err(|_| SdkError::Generic {
-        err: "Logger already created".into(),
-    })?;
-    Ok(())
+    UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
 pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {

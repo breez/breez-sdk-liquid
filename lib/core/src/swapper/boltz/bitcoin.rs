@@ -4,7 +4,7 @@ use boltz_client::{
     bitcoin::{address::Address, Transaction},
     boltz::SwapTxKind,
     util::secrets::Preimage,
-    BtcSwapScript, BtcSwapTx, Keypair,
+    BtcSwapTx,
 };
 
 use crate::{
@@ -34,46 +34,41 @@ impl BoltzSwapper {
                     )
                 }
                 Direction::Outgoing => {
-                    return Err(SdkError::Generic {
-                        err: format!(
-                            "Cannot create Bitcoin refund wrapper for outgoing Chain swap {}",
-                            swap.id
-                        ),
-                    });
+                    return Err(SdkError::generic(format!(
+                        "Cannot create Bitcoin refund wrapper for outgoing Chain swap {}",
+                        swap.id
+                    )));
                 }
             },
             _ => {
-                return Err(SdkError::Generic {
-                    err: format!(
-                        "Cannot create Bitcoin refund wrapper for swap {}",
-                        swap.id()
-                    ),
-                });
+                return Err(SdkError::generic(format!(
+                    "Cannot create Bitcoin refund wrapper for swap {}",
+                    swap.id()
+                )));
             }
         }?;
         Ok(refund_wrapper)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new_btc_refund_tx(
         &self,
-        swap_id: String,
-        swap_script: BtcSwapScript,
+        swap: &ChainSwap,
         refund_address: &str,
-        refund_keypair: &Keypair,
         utxos: Vec<Utxo>,
         broadcast_fee_rate_sat_per_vb: f64,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let address = Address::from_str(refund_address).map_err(|err| SdkError::Generic {
-            err: format!("Could not parse address: {err:?}"),
-        })?;
+        ensure_sdk!(
+            swap.direction == Direction::Incoming,
+            SdkError::generic("Cannot create BTC refund tx for outgoing Chain swaps.")
+        );
+
+        let address = Address::from_str(refund_address)
+            .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
         ensure_sdk!(
             address.is_valid_for_network(self.config.network.into()),
-            SdkError::Generic {
-                err: "Address network validation failed".to_string()
-            }
+            SdkError::generic("Address network validation failed")
         );
 
         let utxos = utxos
@@ -81,6 +76,7 @@ impl BoltzSwapper {
             .filter_map(|utxo| utxo.as_bitcoin().cloned())
             .collect();
 
+        let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
         let refund_tx = BtcSwapTx {
             kind: SwapTxKind::Refund,
             swap_script,
@@ -88,15 +84,17 @@ impl BoltzSwapper {
             utxos,
         };
 
-        let refund_tx_size = refund_tx.size(refund_keypair, &Preimage::new())?;
+        let refund_keypair = swap.get_refund_keypair()?;
+        let preimage = Preimage::from_str(&swap.preimage)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
         let broadcast_fees_sat = (refund_tx_size as f64 * broadcast_fee_rate_sat_per_vb) as u64;
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap_id, None, None),
+            true => self.get_cooperative_details(swap.id.clone(), None, None),
             false => None,
         };
 
-        let signed_tx = refund_tx.sign_refund(refund_keypair, broadcast_fees_sat, cooperative)?;
+        let signed_tx = refund_tx.sign_refund(&refund_keypair, broadcast_fees_sat, cooperative)?;
         Ok(signed_tx)
     }
 

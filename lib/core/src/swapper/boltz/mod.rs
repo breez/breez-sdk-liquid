@@ -297,12 +297,10 @@ impl Swapper for BoltzSwapper {
             ),
             Swap::Send(swap) => (swap.get_refund_keypair()?, Preimage::new()),
             Swap::Receive(swap) => {
-                return Err(SdkError::Generic {
-                    err: format!(
-                        "Failed to retrieve refund keypair and preimage for Receive swap {}: invalid swap type",
-                        swap.id
-                    ),
-                });
+                return Err(SdkError::generic(format!(
+                    "Failed to retrieve refund keypair and preimage for Receive swap {}: invalid swap type",
+                    swap.id
+                )));
             }
         };
 
@@ -329,60 +327,43 @@ impl Swapper for BoltzSwapper {
         broadcast_fee_rate_sat_per_vb: Option<f64>,
         is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
+        let swap_id = swap.id();
         let refund_address = &refund_address.to_string();
-        let tx = match &swap {
-            Swap::Chain(swap) => {
-                let swap_id = swap.id.clone();
-                let swap_script = swap.get_lockup_swap_script()?;
-                let refund_keypair = swap.get_refund_keypair()?;
 
-                match swap.direction {
-                    Direction::Incoming => {
-                        let Some(broadcast_fee_rate_sat_per_vb) = broadcast_fee_rate_sat_per_vb
-                        else {
-                            return Err(PaymentError::Generic {
+        let tx = match &swap {
+            Swap::Chain(chain_swap) => match chain_swap.direction {
+                Direction::Incoming => {
+                    let Some(broadcast_fee_rate_sat_per_vb) = broadcast_fee_rate_sat_per_vb else {
+                        return Err(PaymentError::Generic {
                                 err: format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")
                             });
-                        };
+                    };
 
-                        Transaction::Bitcoin(self.new_btc_refund_tx(
-                            swap_id,
-                            swap_script.as_bitcoin_script()?,
-                            refund_address,
-                            &refund_keypair,
-                            utxos,
-                            broadcast_fee_rate_sat_per_vb,
-                            is_cooperative,
-                        )?)
-                    }
-                    Direction::Outgoing => Transaction::Liquid(self.new_lbtc_refund_tx(
-                        swap_id,
-                        swap_script.as_liquid_script()?,
+                    Transaction::Bitcoin(self.new_btc_refund_tx(
+                        chain_swap,
                         refund_address,
-                        &refund_keypair,
                         utxos,
+                        broadcast_fee_rate_sat_per_vb,
                         is_cooperative,
-                    )?),
+                    )?)
                 }
-            }
-            Swap::Send(swap) => {
-                let swap_script = swap.get_swap_script()?;
-                let refund_keypair = swap.get_refund_keypair()?;
-
-                Transaction::Liquid(self.new_lbtc_refund_tx(
-                    swap.id.clone(),
-                    swap_script,
+                Direction::Outgoing => Transaction::Liquid(self.new_lbtc_refund_tx(
+                    &swap,
                     refund_address,
-                    &refund_keypair,
                     utxos,
                     is_cooperative,
-                )?)
-            }
-            Swap::Receive(swap) => {
+                )?),
+            },
+            Swap::Send(_) => Transaction::Liquid(self.new_lbtc_refund_tx(
+                &swap,
+                refund_address,
+                utxos,
+                is_cooperative,
+            )?),
+            Swap::Receive(_) => {
                 return Err(PaymentError::Generic {
                     err: format!(
-                        "Failed to create refund tx for Receive swap {}: invalid swap type",
-                        swap.id
+                        "Failed to create refund tx for Receive swap {swap_id}: invalid swap type",
                     ),
                 });
             }

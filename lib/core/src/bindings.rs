@@ -54,9 +54,7 @@ pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, SdkError> 
 
 /// If used, this must be called before `connect`. It can only be called once.
 pub fn breez_log_stream(s: StreamSink<LogEntry>) -> Result<()> {
-    DartBindingLogger::init(s).map_err(|_| SdkError::Generic {
-        err: "Log stream already created".into(),
-    })?;
+    DartBindingLogger::init(s).map_err(|_| SdkError::generic("Log stream already created"))?;
     Ok(())
 }
 
