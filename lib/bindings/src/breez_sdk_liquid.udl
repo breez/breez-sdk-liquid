@@ -467,6 +467,18 @@ dictionary ListPaymentsRequest {
     i64? to_timestamp = null;
     u32? offset = null;
     u32? limit = null;
+    ListPaymentDetails? details = null;
+};
+
+[Enum]
+interface ListPaymentDetails {
+    Liquid(string destination);
+    Bitcoin(string address);
+};
+
+[Enum]
+interface GetPaymentRequest {
+    Lightning(string payment_hash);
 };
 
 [Enum]
@@ -485,13 +497,6 @@ dictionary Payment {
     PaymentDetails details;
     string? destination = null;
     string? tx_id = null;
-};
-
-[Enum]
-interface PaymentQuery {
-    Lightning(string? invoice, string? payment_hash);
-    Liquid(string destination);
-    Bitcoin(string address);
 };
 
 enum PaymentType {
@@ -636,7 +641,7 @@ interface BindingLiquidSdk {
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
     [Throws=PaymentError]
-    Payment? get_payment(PaymentQuery query);
+    Payment? get_payment(GetPaymentRequest req);
 
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();

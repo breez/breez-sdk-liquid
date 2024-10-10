@@ -101,16 +101,6 @@ pub(crate) enum Command {
         /// Optional offset in payments
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
-    },
-    /// Retrieve a payment
-    GetPayment {
-        /// Optional Lightning invoice
-        #[clap(short = 'i', long = "invoice")]
-        invoice: Option<String>,
-
-        /// Optional Lightning payment hash
-        #[clap(short = 'p', long = "hash")]
-        payment_hash: Option<String>,
 
         /// Optional Liquid BIP21 URI / address destination
         #[clap(short = 'd', long = "destination")]
@@ -119,6 +109,11 @@ pub(crate) enum Command {
         /// Optional Bitcoin address
         #[clap(short = 'a', long = "address")]
         bitcoin_address: Option<String>,
+    },
+    /// Retrieve a payment
+    GetPayment {
+        /// Lightning payment hash
+        payment_hash: String,
     },
     /// List refundable chain swaps
     ListRefundables,
@@ -454,7 +449,15 @@ pub(crate) async fn handle_command(
             to_timestamp,
             limit,
             offset,
+            liquid_destination,
+            bitcoin_address,
         } => {
+            let details = match (liquid_destination, bitcoin_address) {
+                (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
+                (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
+                _ => None,
+            };
+
             let payments = sdk
                 .list_payments(&ListPaymentsRequest {
                     filters: None,
@@ -462,36 +465,15 @@ pub(crate) async fn handle_command(
                     to_timestamp,
                     limit,
                     offset,
+                    details,
                 })
                 .await?;
             command_result!(payments)
         }
-        Command::GetPayment {
-            invoice,
-            payment_hash,
-            liquid_destination,
-            bitcoin_address,
-        } => {
-            let query = match (
-                invoice.clone(),
-                payment_hash.clone(),
-                liquid_destination,
-                bitcoin_address,
-            ) {
-                (Some(_), None, None, None) => PaymentQuery::Lightning {
-                    invoice,
-                    payment_hash: None,
-                },
-                (None, Some(_), None, None) => PaymentQuery::Lightning {
-                    invoice: None,
-                    payment_hash,
-                },
-                (None, None, Some(destination), None) => PaymentQuery::Liquid { destination },
-                (None, None, None, Some(address)) => PaymentQuery::Bitcoin { address },
-                _ => return Err(anyhow::anyhow!("Must specify only one payment query")),
-            };
-
-            let payment = sdk.get_payment(&query).await?;
+        Command::GetPayment { payment_hash } => {
+            let payment = sdk
+                .get_payment(&GetPaymentRequest::Lightning { payment_hash })
+                .await?;
             command_result!(payment)
         }
         Command::ListRefundables => {

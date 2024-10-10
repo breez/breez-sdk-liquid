@@ -234,6 +234,16 @@ class GetInfoResponse {
           pubkey == other.pubkey;
 }
 
+@freezed
+sealed class GetPaymentRequest with _$GetPaymentRequest {
+  const GetPaymentRequest._();
+
+  /// The Lightning payment hash of the payment
+  const factory GetPaymentRequest.lightning({
+    required String paymentHash,
+  }) = GetPaymentRequest_Lightning;
+}
+
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
 class LightningPaymentLimitsResponse {
   /// Amount limits for a Send Payment to be valid
@@ -295,6 +305,21 @@ enum LiquidNetwork {
   ;
 }
 
+@freezed
+sealed class ListPaymentDetails with _$ListPaymentDetails {
+  const ListPaymentDetails._();
+
+  /// The Liquid BIP21 URI or address of the payment
+  const factory ListPaymentDetails.liquid({
+    required String destination,
+  }) = ListPaymentDetails_Liquid;
+
+  /// The Bitcoin address of the payment
+  const factory ListPaymentDetails.bitcoin({
+    required String address,
+  }) = ListPaymentDetails_Bitcoin;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 class ListPaymentsRequest {
   final List<PaymentType>? filters;
@@ -306,6 +331,7 @@ class ListPaymentsRequest {
   final PlatformInt64? toTimestamp;
   final int? offset;
   final int? limit;
+  final ListPaymentDetails? details;
 
   const ListPaymentsRequest({
     this.filters,
@@ -313,11 +339,17 @@ class ListPaymentsRequest {
     this.toTimestamp,
     this.offset,
     this.limit,
+    this.details,
   });
 
   @override
   int get hashCode =>
-      filters.hashCode ^ fromTimestamp.hashCode ^ toTimestamp.hashCode ^ offset.hashCode ^ limit.hashCode;
+      filters.hashCode ^
+      fromTimestamp.hashCode ^
+      toTimestamp.hashCode ^
+      offset.hashCode ^
+      limit.hashCode ^
+      details.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -328,7 +360,8 @@ class ListPaymentsRequest {
           fromTimestamp == other.fromTimestamp &&
           toTimestamp == other.toTimestamp &&
           offset == other.offset &&
-          limit == other.limit;
+          limit == other.limit &&
+          details == other.details;
 }
 
 @freezed
@@ -592,27 +625,6 @@ enum PaymentMethod {
   bitcoinAddress,
   liquidAddress,
   ;
-}
-
-@freezed
-sealed class PaymentQuery with _$PaymentQuery {
-  const PaymentQuery._();
-
-  /// The bolt11 Lightning invoice of the payment
-  const factory PaymentQuery.lightning({
-    String? invoice,
-    String? paymentHash,
-  }) = PaymentQuery_Lightning;
-
-  /// The Liquid BIP21 URI or address of the payment
-  const factory PaymentQuery.liquid({
-    required String destination,
-  }) = PaymentQuery_Liquid;
-
-  /// The Bitcoin address of the payment
-  const factory PaymentQuery.bitcoin({
-    required String address,
-  }) = PaymentQuery_Bitcoin;
 }
 
 /// The payment state of an individual payment.

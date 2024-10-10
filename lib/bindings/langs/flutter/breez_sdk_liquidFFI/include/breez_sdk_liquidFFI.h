@@ -83,7 +83,7 @@ RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onc
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
-RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment(void*_Nonnull ptr, RustBuffer query, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );

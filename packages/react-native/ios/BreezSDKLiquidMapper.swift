@@ -770,8 +770,12 @@ enum BreezSDKLiquidMapper {
             }
             limit = limitTmp
         }
+        var details: ListPaymentDetails?
+        if let detailsTmp = listPaymentsRequest["details"] as? [String: Any?] {
+            details = try asListPaymentDetails(listPaymentDetails: detailsTmp)
+        }
 
-        return ListPaymentsRequest(filters: filters, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit)
+        return ListPaymentsRequest(filters: filters, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
     }
 
     static func dictionaryOf(listPaymentsRequest: ListPaymentsRequest) -> [String: Any?] {
@@ -781,6 +785,7 @@ enum BreezSDKLiquidMapper {
             "toTimestamp": listPaymentsRequest.toTimestamp == nil ? nil : listPaymentsRequest.toTimestamp,
             "offset": listPaymentsRequest.offset == nil ? nil : listPaymentsRequest.offset,
             "limit": listPaymentsRequest.limit == nil ? nil : listPaymentsRequest.limit,
+            "details": listPaymentsRequest.details == nil ? nil : dictionaryOf(listPaymentDetails: listPaymentsRequest.details!),
         ]
     }
 
@@ -2617,6 +2622,47 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asGetPaymentRequest(getPaymentRequest: [String: Any?]) throws -> GetPaymentRequest {
+        let type = getPaymentRequest["type"] as! String
+        if type == "lightning" {
+            guard let _paymentHash = getPaymentRequest["paymentHash"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentHash", typeName: "GetPaymentRequest"))
+            }
+            return GetPaymentRequest.lightning(paymentHash: _paymentHash)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum GetPaymentRequest")
+    }
+
+    static func dictionaryOf(getPaymentRequest: GetPaymentRequest) -> [String: Any?] {
+        switch getPaymentRequest {
+        case let .lightning(
+            paymentHash
+        ):
+            return [
+                "type": "lightning",
+                "paymentHash": paymentHash,
+            ]
+        }
+    }
+
+    static func arrayOf(getPaymentRequestList: [GetPaymentRequest]) -> [Any] {
+        return getPaymentRequestList.map { v -> [String: Any?] in return dictionaryOf(getPaymentRequest: v) }
+    }
+
+    static func asGetPaymentRequestList(arr: [Any]) throws -> [GetPaymentRequest] {
+        var list = [GetPaymentRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var getPaymentRequest = try asGetPaymentRequest(getPaymentRequest: val)
+                list.append(getPaymentRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "GetPaymentRequest"))
+            }
+        }
+        return list
+    }
+
     static func asInputType(inputType: [String: Any?]) throws -> InputType {
         let type = inputType["type"] as! String
         if type == "bitcoinAddress" {
@@ -2818,6 +2864,61 @@ enum BreezSDKLiquidMapper {
                 list.append(liquidNetwork)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "LiquidNetwork"))
+            }
+        }
+        return list
+    }
+
+    static func asListPaymentDetails(listPaymentDetails: [String: Any?]) throws -> ListPaymentDetails {
+        let type = listPaymentDetails["type"] as! String
+        if type == "liquid" {
+            guard let _destination = listPaymentDetails["destination"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "ListPaymentDetails"))
+            }
+            return ListPaymentDetails.liquid(destination: _destination)
+        }
+        if type == "bitcoin" {
+            guard let _address = listPaymentDetails["address"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "ListPaymentDetails"))
+            }
+            return ListPaymentDetails.bitcoin(address: _address)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum ListPaymentDetails")
+    }
+
+    static func dictionaryOf(listPaymentDetails: ListPaymentDetails) -> [String: Any?] {
+        switch listPaymentDetails {
+        case let .liquid(
+            destination
+        ):
+            return [
+                "type": "liquid",
+                "destination": destination,
+            ]
+
+        case let .bitcoin(
+            address
+        ):
+            return [
+                "type": "bitcoin",
+                "address": address,
+            ]
+        }
+    }
+
+    static func arrayOf(listPaymentDetailsList: [ListPaymentDetails]) -> [Any] {
+        return listPaymentDetailsList.map { v -> [String: Any?] in return dictionaryOf(listPaymentDetails: v) }
+    }
+
+    static func asListPaymentDetailsList(arr: [Any]) throws -> [ListPaymentDetails] {
+        var list = [ListPaymentDetails]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var listPaymentDetails = try asListPaymentDetails(listPaymentDetails: val)
+                list.append(listPaymentDetails)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "ListPaymentDetails"))
             }
         }
         return list
@@ -3266,77 +3367,6 @@ enum BreezSDKLiquidMapper {
                 list.append(paymentMethod)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "PaymentMethod"))
-            }
-        }
-        return list
-    }
-
-    static func asPaymentQuery(paymentQuery: [String: Any?]) throws -> PaymentQuery {
-        let type = paymentQuery["type"] as! String
-        if type == "lightning" {
-            let _invoice = paymentQuery["invoice"] as? String
-
-            let _paymentHash = paymentQuery["paymentHash"] as? String
-
-            return PaymentQuery.lightning(invoice: _invoice, paymentHash: _paymentHash)
-        }
-        if type == "liquid" {
-            guard let _destination = paymentQuery["destination"] as? String else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "PaymentQuery"))
-            }
-            return PaymentQuery.liquid(destination: _destination)
-        }
-        if type == "bitcoin" {
-            guard let _address = paymentQuery["address"] as? String else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "address", typeName: "PaymentQuery"))
-            }
-            return PaymentQuery.bitcoin(address: _address)
-        }
-
-        throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentQuery")
-    }
-
-    static func dictionaryOf(paymentQuery: PaymentQuery) -> [String: Any?] {
-        switch paymentQuery {
-        case let .lightning(
-            invoice, paymentHash
-        ):
-            return [
-                "type": "lightning",
-                "invoice": invoice == nil ? nil : invoice,
-                "paymentHash": paymentHash == nil ? nil : paymentHash,
-            ]
-
-        case let .liquid(
-            destination
-        ):
-            return [
-                "type": "liquid",
-                "destination": destination,
-            ]
-
-        case let .bitcoin(
-            address
-        ):
-            return [
-                "type": "bitcoin",
-                "address": address,
-            ]
-        }
-    }
-
-    static func arrayOf(paymentQueryList: [PaymentQuery]) -> [Any] {
-        return paymentQueryList.map { v -> [String: Any?] in return dictionaryOf(paymentQuery: v) }
-    }
-
-    static func asPaymentQueryList(arr: [Any]) throws -> [PaymentQuery] {
-        var list = [PaymentQuery]()
-        for value in arr {
-            if let val = value as? [String: Any?] {
-                var paymentQuery = try asPaymentQuery(paymentQuery: val)
-                list.append(paymentQuery)
-            } else {
-                throw SdkError.Generic(message: errUnexpectedType(typeName: "PaymentQuery"))
             }
         }
         return list

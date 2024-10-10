@@ -405,14 +405,14 @@ class BreezSDKLiquidModule(
 
     @ReactMethod
     fun getPayment(
-        query: ReadableMap,
+        req: ReadableMap,
         promise: Promise,
     ) {
         executor.execute {
             try {
-                val queryTmp =
-                    asPaymentQuery(query) ?: run { throw SdkException.Generic(errMissingMandatoryField("query", "PaymentQuery")) }
-                val res = getBindingLiquidSdk().getPayment(queryTmp)
+                val reqTmp =
+                    asGetPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "GetPaymentRequest")) }
+                val res = getBindingLiquidSdk().getPayment(reqTmp)
                 promise.resolve(res?.let { readableMapOf(res) })
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

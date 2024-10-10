@@ -457,6 +457,24 @@ pub struct ListPaymentsRequest {
     pub to_timestamp: Option<i64>,
     pub offset: Option<u32>,
     pub limit: Option<u32>,
+    pub details: Option<ListPaymentDetails>,
+}
+
+/// An argument of [ListPaymentsRequest] when calling [crate::sdk::LiquidSdk::list_payments].
+#[derive(Debug, Serialize)]
+pub enum ListPaymentDetails {
+    /// The Liquid BIP21 URI or address of the payment
+    Liquid { destination: String },
+
+    /// The Bitcoin address of the payment
+    Bitcoin { address: String },
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::get_payment].
+#[derive(Debug, Serialize)]
+pub enum GetPaymentRequest {
+    /// The Lightning payment hash of the payment
+    Lightning { payment_hash: String },
 }
 
 // A swap enum variant
@@ -1258,22 +1276,6 @@ impl Payment {
         }
         .flatten()
     }
-}
-
-/// An argument when calling [crate::sdk::LiquidSdk::get_payment].
-#[derive(Debug, Clone, EnumString, PartialEq, Serialize)]
-pub enum PaymentQuery {
-    /// The bolt11 Lightning invoice of the payment
-    Lightning {
-        invoice: Option<String>,
-        payment_hash: Option<String>,
-    },
-
-    /// The Liquid BIP21 URI or address of the payment
-    Liquid { destination: String },
-
-    /// The Bitcoin address of the payment
-    Bitcoin { address: String },
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].

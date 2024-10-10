@@ -131,6 +131,7 @@ export interface ListPaymentsRequest {
     toTimestamp?: number
     offset?: number
     limit?: number
+    details?: ListPaymentDetails
 }
 
 export interface LnUrlAuthRequestData {
@@ -391,6 +392,15 @@ export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
 
+export enum GetPaymentRequestVariant {
+    LIGHTNING = "lightning"
+}
+
+export interface GetPaymentRequest {
+    type: GetPaymentRequestVariant.LIGHTNING,
+    paymentHash: string
+}
+
 export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
@@ -435,6 +445,19 @@ export type InputType = {
 export enum LiquidNetwork {
     MAINNET = "mainnet",
     TESTNET = "testnet"
+}
+
+export enum ListPaymentDetailsVariant {
+    LIQUID = "liquid",
+    BITCOIN = "bitcoin"
+}
+
+export type ListPaymentDetails = {
+    type: ListPaymentDetailsVariant.LIQUID,
+    destination: string
+} | {
+    type: ListPaymentDetailsVariant.BITCOIN,
+    address: string
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -533,24 +556,6 @@ export enum PaymentMethod {
     LIGHTNING = "lightning",
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress"
-}
-
-export enum PaymentQueryVariant {
-    LIGHTNING = "lightning",
-    LIQUID = "liquid",
-    BITCOIN = "bitcoin"
-}
-
-export type PaymentQuery = {
-    type: PaymentQueryVariant.LIGHTNING,
-    invoice?: string
-    paymentHash?: string
-} | {
-    type: PaymentQueryVariant.LIQUID,
-    destination: string
-} | {
-    type: PaymentQueryVariant.BITCOIN,
-    address: string
 }
 
 export enum PaymentState {
@@ -746,8 +751,8 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
     return response
 }
 
-export const getPayment = async (query: PaymentQuery): Promise<Payment | null> => {
-    const response = await BreezSDKLiquid.getPayment(query)
+export const getPayment = async (req: GetPaymentRequest): Promise<Payment | null> => {
+    const response = await BreezSDKLiquid.getPayment(req)
     return response
 }
 

@@ -2048,19 +2048,23 @@ impl LiquidSdk {
         Ok(self.persister.get_payments(req)?)
     }
 
-    /// Retrieves a payment by the query request.
+    /// Retrieves a payment.
     ///
     /// # Arguments
     ///
-    /// * `query` - The query for the payment to retrieve.
+    /// * `req` - the [GetPaymentRequest] containing:
+    ///     * [GetPaymentRequest::Lightning] - the `payment_hash` of the lightning invoice
     ///
     /// # Returns
     ///
-    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given query.
-    pub async fn get_payment(&self, query: &PaymentQuery) -> Result<Option<Payment>, PaymentError> {
+    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given request.
+    pub async fn get_payment(
+        &self,
+        req: &GetPaymentRequest,
+    ) -> Result<Option<Payment>, PaymentError> {
         self.ensure_is_started().await?;
 
-        Ok(self.persister.get_payment_by_query(query)?)
+        Ok(self.persister.get_payment_by_request(req)?)
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].

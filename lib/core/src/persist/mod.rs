@@ -14,7 +14,7 @@ use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use migrations::current_migrations;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
@@ -425,22 +425,13 @@ impl Persister {
             .optional()?)
     }
 
-    pub fn get_payment_by_query(&self, query: &PaymentQuery) -> Result<Option<Payment>> {
-        let (where_clause, param) = match query {
-            PaymentQuery::Lightning {
-                invoice,
+    pub fn get_payment_by_request(&self, req: &GetPaymentRequest) -> Result<Option<Payment>> {
+        let (where_clause, param) = match req {
+            GetPaymentRequest::Lightning { payment_hash } => (
+                "(rs.payment_hash = ?1 OR ss.payment_hash = ?1)",
                 payment_hash,
-            } => match (invoice, payment_hash) {
-                (Some(invoice), _) => Ok(("(rs.invoice = ?1 OR ss.invoice = ?1)", invoice)),
-                (_, Some(payment_hash)) => Ok((
-                    "(rs.payment_hash = ?1 OR ss.payment_hash = ?1)",
-                    payment_hash,
-                )),
-                _ => Err(anyhow!("Must contain at least one query param")),
-            },
-            PaymentQuery::Liquid { destination } => Ok(("pd.destination = ?1", destination)),
-            PaymentQuery::Bitcoin { address } => Ok(("cs.claim_Address = ?1", address)),
-        }?;
+            ),
+        };
         Ok(self
             .get_connection()?
             .query_row(
@@ -452,8 +443,7 @@ impl Persister {
     }
 
     pub fn get_payments(&self, req: &ListPaymentsRequest) -> Result<Vec<Payment>> {
-        let where_clause =
-            filter_to_where_clause(req.filters.clone(), req.from_timestamp, req.to_timestamp);
+        let (where_clause, where_params) = filter_to_where_clause(req);
         let maybe_where_clause = match where_clause.is_empty() {
             false => Some(where_clause.as_str()),
             true => None,
@@ -464,28 +454,29 @@ impl Persister {
         let mut stmt =
             con.prepare(&self.select_payment_query(maybe_where_clause, req.offset, req.limit))?;
         let payments: Vec<Payment> = stmt
-            .query_map(params![], |row| self.sql_row_to_payment(row))?
+            .query_map(params_from_iter(where_params), |row| {
+                self.sql_row_to_payment(row)
+            })?
             .map(|i| i.unwrap())
             .collect();
         Ok(payments)
     }
 }
 
-fn filter_to_where_clause(
-    type_filters: Option<Vec<PaymentType>>,
-    from_timestamp: Option<i64>,
-    to_timestamp: Option<i64>,
-) -> String {
+fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToSql + '_>>) {
     let mut where_clause: Vec<String> = Vec::new();
+    let mut where_params: Vec<Box<dyn ToSql>> = Vec::new();
 
-    if let Some(t) = from_timestamp {
-        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) >= {t}"));
+    if let Some(t) = req.from_timestamp {
+        where_clause.push("coalesce(ptx.timestamp, rs.created_at) >= ?".to_string());
+        where_params.push(Box::new(t));
     };
-    if let Some(t) = to_timestamp {
-        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) <= {t}"));
+    if let Some(t) = req.to_timestamp {
+        where_clause.push("coalesce(ptx.timestamp, rs.created_at) <= ?".to_string());
+        where_params.push(Box::new(t));
     };
 
-    if let Some(filters) = type_filters {
+    if let Some(filters) = &req.filters {
         if !filters.is_empty() {
             let mut type_filter_clause: HashSet<PaymentType> = HashSet::new();
             for type_filter in filters {
@@ -510,7 +501,20 @@ fn filter_to_where_clause(
         }
     }
 
-    where_clause.join(" and ")
+    if let Some(details) = &req.details {
+        match details {
+            ListPaymentDetails::Bitcoin { address } => {
+                where_clause.push("cs.claim_address = ?".to_string());
+                where_params.push(Box::new(address));
+            }
+            ListPaymentDetails::Liquid { destination } => {
+                where_clause.push("pd.destination = ?".to_string());
+                where_params.push(Box::new(destination));
+            }
+        }
+    }
+
+    (where_clause.join(" and "), where_params)
 }
 
 #[cfg(test)]
