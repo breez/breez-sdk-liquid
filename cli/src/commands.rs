@@ -471,10 +471,15 @@ pub(crate) async fn handle_command(
             command_result!(payments)
         }
         Command::GetPayment { payment_hash } => {
-            let payment = sdk
+            let maybe_payment = sdk
                 .get_payment(&GetPaymentRequest::Lightning { payment_hash })
                 .await?;
-            command_result!(payment)
+            match maybe_payment {
+                Some(payment) => command_result!(payment),
+                None => {
+                    return Err(anyhow::anyhow!("Payment not found."));
+                }
+            }
         }
         Command::ListRefundables => {
             let refundables = sdk.list_refundables().await?;
