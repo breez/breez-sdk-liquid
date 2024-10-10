@@ -63,10 +63,41 @@ typedef struct wire_cst_check_message_request {
   struct wire_cst_list_prim_u_8_strict *signature;
 } wire_cst_check_message_request;
 
+typedef struct wire_cst_GetPaymentRequest_Lightning {
+  struct wire_cst_list_prim_u_8_strict *payment_hash;
+} wire_cst_GetPaymentRequest_Lightning;
+
+typedef union GetPaymentRequestKind {
+  struct wire_cst_GetPaymentRequest_Lightning Lightning;
+} GetPaymentRequestKind;
+
+typedef struct wire_cst_get_payment_request {
+  int32_t tag;
+  union GetPaymentRequestKind kind;
+} wire_cst_get_payment_request;
+
 typedef struct wire_cst_list_payment_type {
   int32_t *ptr;
   int32_t len;
 } wire_cst_list_payment_type;
+
+typedef struct wire_cst_ListPaymentDetails_Liquid {
+  struct wire_cst_list_prim_u_8_strict *destination;
+} wire_cst_ListPaymentDetails_Liquid;
+
+typedef struct wire_cst_ListPaymentDetails_Bitcoin {
+  struct wire_cst_list_prim_u_8_strict *address;
+} wire_cst_ListPaymentDetails_Bitcoin;
+
+typedef union ListPaymentDetailsKind {
+  struct wire_cst_ListPaymentDetails_Liquid Liquid;
+  struct wire_cst_ListPaymentDetails_Bitcoin Bitcoin;
+} ListPaymentDetailsKind;
+
+typedef struct wire_cst_list_payment_details {
+  int32_t tag;
+  union ListPaymentDetailsKind kind;
+} wire_cst_list_payment_details;
 
 typedef struct wire_cst_list_payments_request {
   struct wire_cst_list_payment_type *filters;
@@ -74,6 +105,7 @@ typedef struct wire_cst_list_payments_request {
   int64_t *to_timestamp;
   uint32_t *offset;
   uint32_t *limit;
+  struct wire_cst_list_payment_details *details;
 } wire_cst_list_payments_request;
 
 typedef struct wire_cst_ln_url_auth_request_data {
@@ -277,6 +309,7 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *bolt11;
+  struct wire_cst_list_prim_u_8_strict *payment_hash;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Lightning;
@@ -932,6 +965,10 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_l
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment(int64_t port_,
+                                                                             uintptr_t that,
+                                                                             struct wire_cst_get_payment_request *req);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(int64_t port_,
                                                                                       uintptr_t that);
 
@@ -1052,9 +1089,13 @@ struct wire_cst_check_message_request *frbgen_breez_liquid_cst_new_box_autoadd_c
 
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
+struct wire_cst_get_payment_request *frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request(void);
+
 int64_t *frbgen_breez_liquid_cst_new_box_autoadd_i_64(int64_t value);
 
 struct wire_cst_liquid_address_data *frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data(void);
+
+struct wire_cst_list_payment_details *frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details(void);
 
 struct wire_cst_list_payments_request *frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(void);
 
@@ -1146,8 +1187,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_check_message_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
@@ -1200,6 +1243,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_refundables);

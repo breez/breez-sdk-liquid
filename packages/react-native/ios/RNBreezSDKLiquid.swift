@@ -306,6 +306,21 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(getPayment:resolve:reject:)
+    func getPayment(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let reqTmp = try BreezSDKLiquidMapper.asGetPaymentRequest(getPaymentRequest: req)
+            var res = try getBindingLiquidSdk().getPayment(req: reqTmp)
+            if res != nil {
+                resolve(BreezSDKLiquidMapper.dictionaryOf(payment: res!))
+            } else {
+                resolve(nil)
+            }
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(listRefundables:reject:)
     func listRefundables(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

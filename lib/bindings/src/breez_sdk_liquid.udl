@@ -467,11 +467,23 @@ dictionary ListPaymentsRequest {
     i64? to_timestamp = null;
     u32? offset = null;
     u32? limit = null;
+    ListPaymentDetails? details = null;
+};
+
+[Enum]
+interface ListPaymentDetails {
+    Liquid(string destination);
+    Bitcoin(string address);
+};
+
+[Enum]
+interface GetPaymentRequest {
+    Lightning(string payment_hash);
 };
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string destination, string description);
     Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
@@ -627,6 +639,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);
+
+    [Throws=PaymentError]
+    Payment? get_payment(GetPaymentRequest req);
 
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();

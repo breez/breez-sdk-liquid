@@ -634,7 +634,15 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
     val toTimestamp = if (hasNonNullKey(listPaymentsRequest, "toTimestamp")) listPaymentsRequest.getDouble("toTimestamp").toLong() else null
     val offset = if (hasNonNullKey(listPaymentsRequest, "offset")) listPaymentsRequest.getInt("offset").toUInt() else null
     val limit = if (hasNonNullKey(listPaymentsRequest, "limit")) listPaymentsRequest.getInt("limit").toUInt() else null
-    return ListPaymentsRequest(filters, fromTimestamp, toTimestamp, offset, limit)
+    val details =
+        if (hasNonNullKey(listPaymentsRequest, "details")) {
+            listPaymentsRequest.getMap("details")?.let {
+                asListPaymentDetails(it)
+            }
+        } else {
+            null
+        }
+    return ListPaymentsRequest(filters, fromTimestamp, toTimestamp, offset, limit, details)
 }
 
 fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
@@ -644,6 +652,7 @@ fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
         "toTimestamp" to listPaymentsRequest.toTimestamp,
         "offset" to listPaymentsRequest.offset,
         "limit" to listPaymentsRequest.limit,
+        "details" to listPaymentsRequest.details?.let { readableMapOf(it) },
     )
 
 fun asListPaymentsRequestList(arr: ReadableArray): List<ListPaymentsRequest> {
@@ -2232,6 +2241,38 @@ fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
     return list
 }
 
+fun asGetPaymentRequest(getPaymentRequest: ReadableMap): GetPaymentRequest? {
+    val type = getPaymentRequest.getString("type")
+
+    if (type == "lightning") {
+        val paymentHash = getPaymentRequest.getString("paymentHash")!!
+        return GetPaymentRequest.Lightning(paymentHash)
+    }
+    return null
+}
+
+fun readableMapOf(getPaymentRequest: GetPaymentRequest): ReadableMap? {
+    val map = Arguments.createMap()
+    when (getPaymentRequest) {
+        is GetPaymentRequest.Lightning -> {
+            pushToMap(map, "type", "lightning")
+            pushToMap(map, "paymentHash", getPaymentRequest.paymentHash)
+        }
+    }
+    return map
+}
+
+fun asGetPaymentRequestList(arr: ReadableArray): List<GetPaymentRequest> {
+    val list = ArrayList<GetPaymentRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asGetPaymentRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asInputType(inputType: ReadableMap): InputType? {
     val type = inputType.getString("type")
 
@@ -2335,6 +2376,46 @@ fun asLiquidNetworkList(arr: ReadableArray): List<LiquidNetwork> {
     for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asLiquidNetwork(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asListPaymentDetails(listPaymentDetails: ReadableMap): ListPaymentDetails? {
+    val type = listPaymentDetails.getString("type")
+
+    if (type == "liquid") {
+        val destination = listPaymentDetails.getString("destination")!!
+        return ListPaymentDetails.Liquid(destination)
+    }
+    if (type == "bitcoin") {
+        val address = listPaymentDetails.getString("address")!!
+        return ListPaymentDetails.Bitcoin(address)
+    }
+    return null
+}
+
+fun readableMapOf(listPaymentDetails: ListPaymentDetails): ReadableMap? {
+    val map = Arguments.createMap()
+    when (listPaymentDetails) {
+        is ListPaymentDetails.Liquid -> {
+            pushToMap(map, "type", "liquid")
+            pushToMap(map, "destination", listPaymentDetails.destination)
+        }
+        is ListPaymentDetails.Bitcoin -> {
+            pushToMap(map, "type", "bitcoin")
+            pushToMap(map, "address", listPaymentDetails.address)
+        }
+    }
+    return map
+}
+
+fun asListPaymentDetailsList(arr: ReadableArray): List<ListPaymentDetails> {
+    val list = ArrayList<ListPaymentDetails>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asListPaymentDetails(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -2534,6 +2615,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val description = paymentDetails.getString("description")!!
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
+        val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
             if (hasNonNullKey(
@@ -2545,7 +2627,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat)
     }
     if (type == "liquid") {
         val destination = paymentDetails.getString("destination")!!
@@ -2580,6 +2662,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "bolt11", paymentDetails.bolt11)
+            pushToMap(map, "paymentHash", paymentDetails.paymentHash)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
         }

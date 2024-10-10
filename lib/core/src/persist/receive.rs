@@ -24,6 +24,7 @@ impl Persister {
                 create_response_json,
                 claim_private_key,
                 invoice,
+                payment_hash,
                 description,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -32,7 +33,7 @@ impl Persister {
                 claim_tx_id,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
@@ -42,6 +43,7 @@ impl Persister {
             &receive_swap.create_response_json,
             &receive_swap.claim_private_key,
             &receive_swap.invoice,
+            &receive_swap.payment_hash,
             &receive_swap.description,
             &receive_swap.payer_amount_sat,
             &receive_swap.receiver_amount_sat,
@@ -69,6 +71,7 @@ impl Persister {
                 rs.create_response_json,
                 rs.claim_private_key,
                 rs.invoice,
+                rs.payment_hash,
                 rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -109,13 +112,14 @@ impl Persister {
             create_response_json: row.get(2)?,
             claim_private_key: row.get(3)?,
             invoice: row.get(4)?,
-            description: row.get(5)?,
-            payer_amount_sat: row.get(6)?,
-            receiver_amount_sat: row.get(7)?,
-            claim_fees_sat: row.get(8)?,
-            claim_tx_id: row.get(9)?,
-            created_at: row.get(10)?,
-            state: row.get(11)?,
+            payment_hash: row.get(5)?,
+            description: row.get(6)?,
+            payer_amount_sat: row.get(7)?,
+            receiver_amount_sat: row.get(8)?,
+            claim_fees_sat: row.get(9)?,
+            claim_tx_id: row.get(10)?,
+            created_at: row.get(11)?,
+            state: row.get(12)?,
         })
     }
 

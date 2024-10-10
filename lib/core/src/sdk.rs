@@ -396,7 +396,7 @@ impl LiquidSdk {
 
     async fn emit_payment_updated(&self, payment_id: Option<String>) -> Result<()> {
         if let Some(id) = payment_id {
-            match self.persister.get_payment(id.clone())? {
+            match self.persister.get_payment(&id)? {
                 Some(payment) => {
                     match payment.status {
                         Complete => {
@@ -546,11 +546,10 @@ impl LiquidSdk {
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
-        let invoice = invoice.trim().parse::<Bolt11Invoice>().map_err(|err| {
-            PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            }
-        })?;
+        let invoice = invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", LiquidNetwork::Mainnet) => {}
@@ -564,9 +563,7 @@ impl LiquidSdk {
 
         ensure_sdk!(
             !invoice.is_expired(),
-            PaymentError::InvalidInvoice {
-                err: "Invoice has expired".to_string()
-            }
+            PaymentError::invalid_invoice("Invoice has expired")
         );
 
         Ok(invoice)
@@ -970,9 +967,19 @@ impl LiquidSdk {
         invoice: &str,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let receiver_amount_sat = get_invoice_amount!(invoice);
-        let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
+        let bolt11_invoice = invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
+        let receiver_amount_sat =
+            bolt11_invoice
+                .amount_milli_satoshis()
+                .ok_or(PaymentError::invalid_invoice(
+                    "Invoice does not contain an amount",
+                ))?
+                / 1000;
 
+        let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
         let lockup_tx_fees_sat = self
             .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
@@ -987,10 +994,9 @@ impl LiquidSdk {
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
                 RefundPending | Failed => {
-                    return Err(PaymentError::InvalidInvoice {
-                        err: "Payment has already failed. Please try with another invoice."
-                            .to_string(),
-                    })
+                    return Err(PaymentError::invalid_invoice(
+                        "Payment has already failed. Please try with another invoice",
+                    ))
                 }
                 _ => swap,
             },
@@ -1023,12 +1029,17 @@ impl LiquidSdk {
                 let swap_id = &create_response.id;
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
-                let description = get_invoice_description!(invoice);
+                let payment_hash = bolt11_invoice.payment_hash().to_string();
+                let description = match bolt11_invoice.description() {
+                    Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+                    Bolt11InvoiceDescription::Hash(_) => None,
+                };
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: invoice.to_string(),
+                    payment_hash: Some(payment_hash),
                     description,
                     preimage: None,
                     payer_amount_sat,
@@ -1593,26 +1604,22 @@ impl LiquidSdk {
         );
 
         let swap_id = create_response.id.clone();
-        let invoice = Bolt11Invoice::from_str(&create_response.invoice).map_err(|err| {
-            PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            }
-        })?;
+        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
         let payer_amount_sat =
             invoice
                 .amount_milli_satoshis()
-                .ok_or(PaymentError::InvalidInvoice {
-                    err: "Invoice does not contain an amount".to_string(),
-                })?
+                .ok_or(PaymentError::invalid_invoice(
+                    "Invoice does not contain an amount",
+                ))?
                 / 1000;
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
-        if invoice.payment_hash().to_string() != preimage_hash {
-            return Err(PaymentError::InvalidInvoice {
-                err: "Invalid preimage returned by swapper".to_string(),
-            });
-        };
+        ensure_sdk!(
+            invoice.payment_hash().to_string() == preimage_hash,
+            PaymentError::invalid_invoice("Invalid preimage returned by swapper")
+        );
 
         let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
             &create_response,
@@ -1630,6 +1637,7 @@ impl LiquidSdk {
                 create_response_json,
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
+                payment_hash: Some(preimage_hash),
                 description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -2040,6 +2048,25 @@ impl LiquidSdk {
         Ok(self.persister.get_payments(req)?)
     }
 
+    /// Retrieves a payment.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [GetPaymentRequest] containing:
+    ///     * [GetPaymentRequest::Lightning] - the `payment_hash` of the lightning invoice
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given request.
+    pub async fn get_payment(
+        &self,
+        req: &GetPaymentRequest,
+    ) -> Result<Option<Payment>, PaymentError> {
+        self.ensure_is_started().await?;
+
+        Ok(self.persister.get_payment_by_request(req)?)
+    }
+
     /// Empties the Liquid Wallet cache for the [Config::network].
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
@@ -2332,7 +2359,7 @@ impl LiquidSdk {
 
     /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
-        parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
+        parse_invoice(input).map_err(|e| PaymentError::invalid_invoice(&e.to_string()))
     }
 
     /// Configures a global SDK logger that will log to file and will forward log events to

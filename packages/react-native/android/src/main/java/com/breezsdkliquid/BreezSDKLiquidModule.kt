@@ -404,6 +404,23 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun getPayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val reqTmp =
+                    asGetPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "GetPaymentRequest")) }
+                val res = getBindingLiquidSdk().getPayment(reqTmp)
+                promise.resolve(res?.let { readableMapOf(res) })
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listRefundables(promise: Promise) {
         executor.execute {
             try {

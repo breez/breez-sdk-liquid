@@ -131,6 +131,7 @@ export interface ListPaymentsRequest {
     toTimestamp?: number
     offset?: number
     limit?: number
+    details?: ListPaymentDetails
 }
 
 export interface LnUrlAuthRequestData {
@@ -391,6 +392,15 @@ export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
 
+export enum GetPaymentRequestVariant {
+    LIGHTNING = "lightning"
+}
+
+export interface GetPaymentRequest {
+    type: GetPaymentRequestVariant.LIGHTNING,
+    paymentHash: string
+}
+
 export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
@@ -435,6 +445,19 @@ export type InputType = {
 export enum LiquidNetwork {
     MAINNET = "mainnet",
     TESTNET = "testnet"
+}
+
+export enum ListPaymentDetailsVariant {
+    LIQUID = "liquid",
+    BITCOIN = "bitcoin"
+}
+
+export type ListPaymentDetails = {
+    type: ListPaymentDetailsVariant.LIQUID,
+    destination: string
+} | {
+    type: ListPaymentDetailsVariant.BITCOIN,
+    address: string
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -514,6 +537,7 @@ export type PaymentDetails = {
     description: string
     preimage?: string
     bolt11?: string
+    paymentHash?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
@@ -724,6 +748,11 @@ export const buyBitcoin = async (req: BuyBitcoinRequest): Promise<string> => {
 
 export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]> => {
     const response = await BreezSDKLiquid.listPayments(req)
+    return response
+}
+
+export const getPayment = async (req: GetPaymentRequest): Promise<Payment | null> => {
+    const response = await BreezSDKLiquid.getPayment(req)
     return response
 }
 

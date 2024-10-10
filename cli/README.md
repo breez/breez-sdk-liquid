@@ -32,13 +32,14 @@ You'll need a Testnet LN node to test the sending and receiving operations. A si
 
 To get a full list of commands run `-h` or `<command> -h` to get more information about a command.
 
-- **send-payment** - Send lbtc and receive btc lightning through a swap
+- **send-payment** - Send a payment directly or via a swap
 - **fetch-lightning-limits** - Fetch the current limits for Send and Receive payments
 - **fetch-onchain-limits** - Fetch the current limits for Onchain Send and Receive payments
-- **send-onchain-payment** - Send lbtc and receive btc onchain through a swap
-- **receive-payment** - Receive lbtc and send btc through a swap
+- **send-onchain-payment** - Send to a Bitcoin onchain address via a swap
+- **receive-payment** - Receive a payment directly or via a swap
 - **buy-bitcoin** - Generates an URL to buy bitcoin from a 3rd party provider
 - **list-payments** - List incoming and outgoing payments
+- **get-payment** - Retrieve a payment
 - **list-refundables** - List refundable chain swaps
 - **prepare-refund** - Prepare a refund transaction for an incomplete swap
 - **refund** - Broadcast a refund transaction for an incomplete swap
@@ -47,7 +48,7 @@ To get a full list of commands run `-h` or `<command> -h` to get more informatio
 - **sign-message** - Sign a message using the wallet private key
 - **check-message** - Verify a message with a public key
 - **sync** - Sync local data with mempool and onchain data
-- **recommended-fees** - Get the recommended BTC fees based on the configured mempool.space instance
+- **recommended-fees** - Get the recommended Bitcoin fees based on the configured mempool.space instance
 - **empty-cache** - Empties the encrypted transaction cache
 - **backup** - Backs up the current pending swaps
 - **restore** - Retrieve a list of backups
