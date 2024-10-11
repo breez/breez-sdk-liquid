@@ -56,7 +56,7 @@ pub struct Config {
 impl Config {
     pub fn mainnet(breez_api_key: String) -> Self {
         Config {
-            liquid_electrum_url: "elements-mainnet.blockstream.info:50002".to_string(),
+            liquid_electrum_url: "elements-mainnet.breez.technology:50002".to_string(),
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
