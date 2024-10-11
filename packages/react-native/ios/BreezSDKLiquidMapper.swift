@@ -2,6 +2,45 @@ import BreezSDKLiquid
 import Foundation
 
 enum BreezSDKLiquidMapper {
+    static func asAesSuccessActionData(aesSuccessActionData: [String: Any?]) throws -> AesSuccessActionData {
+        guard let description = aesSuccessActionData["description"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "AesSuccessActionData"))
+        }
+        guard let ciphertext = aesSuccessActionData["ciphertext"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "ciphertext", typeName: "AesSuccessActionData"))
+        }
+        guard let iv = aesSuccessActionData["iv"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "iv", typeName: "AesSuccessActionData"))
+        }
+
+        return AesSuccessActionData(description: description, ciphertext: ciphertext, iv: iv)
+    }
+
+    static func dictionaryOf(aesSuccessActionData: AesSuccessActionData) -> [String: Any?] {
+        return [
+            "description": aesSuccessActionData.description,
+            "ciphertext": aesSuccessActionData.ciphertext,
+            "iv": aesSuccessActionData.iv,
+        ]
+    }
+
+    static func asAesSuccessActionDataList(arr: [Any]) throws -> [AesSuccessActionData] {
+        var list = [AesSuccessActionData]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var aesSuccessActionData = try asAesSuccessActionData(aesSuccessActionData: val)
+                list.append(aesSuccessActionData)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "AesSuccessActionData"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(aesSuccessActionDataList: [AesSuccessActionData]) -> [Any] {
+        return aesSuccessActionDataList.map { v -> [String: Any?] in return dictionaryOf(aesSuccessActionData: v) }
+    }
+
     static func asAesSuccessActionDataDecrypted(aesSuccessActionDataDecrypted: [String: Any?]) throws -> AesSuccessActionDataDecrypted {
         guard let description = aesSuccessActionDataDecrypted["description"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "AesSuccessActionDataDecrypted"))
@@ -920,46 +959,17 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asLnUrlPayRequest(lnUrlPayRequest: [String: Any?]) throws -> LnUrlPayRequest {
-        guard let dataTmp = lnUrlPayRequest["data"] as? [String: Any?] else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "LnUrlPayRequest"))
+        guard let prepareResponseTmp = lnUrlPayRequest["prepareResponse"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareResponse", typeName: "LnUrlPayRequest"))
         }
-        let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
+        let prepareResponse = try asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: prepareResponseTmp)
 
-        guard let amountMsat = lnUrlPayRequest["amountMsat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "LnUrlPayRequest"))
-        }
-        var comment: String?
-        if hasNonNilKey(data: lnUrlPayRequest, key: "comment") {
-            guard let commentTmp = lnUrlPayRequest["comment"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
-            }
-            comment = commentTmp
-        }
-        var paymentLabel: String?
-        if hasNonNilKey(data: lnUrlPayRequest, key: "paymentLabel") {
-            guard let paymentLabelTmp = lnUrlPayRequest["paymentLabel"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "paymentLabel"))
-            }
-            paymentLabel = paymentLabelTmp
-        }
-        var validateSuccessActionUrl: Bool?
-        if hasNonNilKey(data: lnUrlPayRequest, key: "validateSuccessActionUrl") {
-            guard let validateSuccessActionUrlTmp = lnUrlPayRequest["validateSuccessActionUrl"] as? Bool else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "validateSuccessActionUrl"))
-            }
-            validateSuccessActionUrl = validateSuccessActionUrlTmp
-        }
-
-        return LnUrlPayRequest(data: data, amountMsat: amountMsat, comment: comment, paymentLabel: paymentLabel, validateSuccessActionUrl: validateSuccessActionUrl)
+        return LnUrlPayRequest(prepareResponse: prepareResponse)
     }
 
     static func dictionaryOf(lnUrlPayRequest: LnUrlPayRequest) -> [String: Any?] {
         return [
-            "data": dictionaryOf(lnUrlPayRequestData: lnUrlPayRequest.data),
-            "amountMsat": lnUrlPayRequest.amountMsat,
-            "comment": lnUrlPayRequest.comment == nil ? nil : lnUrlPayRequest.comment,
-            "paymentLabel": lnUrlPayRequest.paymentLabel == nil ? nil : lnUrlPayRequest.paymentLabel,
-            "validateSuccessActionUrl": lnUrlPayRequest.validateSuccessActionUrl == nil ? nil : lnUrlPayRequest.validateSuccessActionUrl,
+            "prepareResponse": dictionaryOf(prepareLnUrlPayResponse: lnUrlPayRequest.prepareResponse),
         ]
     }
 
@@ -1581,6 +1591,97 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(prepareBuyBitcoinResponseList: [PrepareBuyBitcoinResponse]) -> [Any] {
         return prepareBuyBitcoinResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareBuyBitcoinResponse: v) }
+    }
+
+    static func asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: [String: Any?]) throws -> PrepareLnUrlPayRequest {
+        guard let dataTmp = prepareLnUrlPayRequest["data"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "PrepareLnUrlPayRequest"))
+        }
+        let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
+
+        guard let amountMsat = prepareLnUrlPayRequest["amountMsat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "PrepareLnUrlPayRequest"))
+        }
+        var comment: String?
+        if hasNonNilKey(data: prepareLnUrlPayRequest, key: "comment") {
+            guard let commentTmp = prepareLnUrlPayRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
+        var validateSuccessActionUrl: Bool?
+        if hasNonNilKey(data: prepareLnUrlPayRequest, key: "validateSuccessActionUrl") {
+            guard let validateSuccessActionUrlTmp = prepareLnUrlPayRequest["validateSuccessActionUrl"] as? Bool else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "validateSuccessActionUrl"))
+            }
+            validateSuccessActionUrl = validateSuccessActionUrlTmp
+        }
+
+        return PrepareLnUrlPayRequest(data: data, amountMsat: amountMsat, comment: comment, validateSuccessActionUrl: validateSuccessActionUrl)
+    }
+
+    static func dictionaryOf(prepareLnUrlPayRequest: PrepareLnUrlPayRequest) -> [String: Any?] {
+        return [
+            "data": dictionaryOf(lnUrlPayRequestData: prepareLnUrlPayRequest.data),
+            "amountMsat": prepareLnUrlPayRequest.amountMsat,
+            "comment": prepareLnUrlPayRequest.comment == nil ? nil : prepareLnUrlPayRequest.comment,
+            "validateSuccessActionUrl": prepareLnUrlPayRequest.validateSuccessActionUrl == nil ? nil : prepareLnUrlPayRequest.validateSuccessActionUrl,
+        ]
+    }
+
+    static func asPrepareLnUrlPayRequestList(arr: [Any]) throws -> [PrepareLnUrlPayRequest] {
+        var list = [PrepareLnUrlPayRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareLnUrlPayRequest = try asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: val)
+                list.append(prepareLnUrlPayRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareLnUrlPayRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareLnUrlPayRequestList: [PrepareLnUrlPayRequest]) -> [Any] {
+        return prepareLnUrlPayRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareLnUrlPayRequest: v) }
+    }
+
+    static func asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: [String: Any?]) throws -> PrepareLnUrlPayResponse {
+        guard let prepareSendResponseTmp = prepareLnUrlPayResponse["prepareSendResponse"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareSendResponse", typeName: "PrepareLnUrlPayResponse"))
+        }
+        let prepareSendResponse = try asPrepareSendResponse(prepareSendResponse: prepareSendResponseTmp)
+
+        var successAction: SuccessAction?
+        if let successActionTmp = prepareLnUrlPayResponse["successAction"] as? [String: Any?] {
+            successAction = try asSuccessAction(successAction: successActionTmp)
+        }
+
+        return PrepareLnUrlPayResponse(prepareSendResponse: prepareSendResponse, successAction: successAction)
+    }
+
+    static func dictionaryOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse) -> [String: Any?] {
+        return [
+            "prepareSendResponse": dictionaryOf(prepareSendResponse: prepareLnUrlPayResponse.prepareSendResponse),
+            "successAction": prepareLnUrlPayResponse.successAction == nil ? nil : dictionaryOf(successAction: prepareLnUrlPayResponse.successAction!),
+        ]
+    }
+
+    static func asPrepareLnUrlPayResponseList(arr: [Any]) throws -> [PrepareLnUrlPayResponse] {
+        var list = [PrepareLnUrlPayResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareLnUrlPayResponse = try asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: val)
+                list.append(prepareLnUrlPayResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareLnUrlPayResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareLnUrlPayResponseList: [PrepareLnUrlPayResponse]) -> [Any] {
+        return prepareLnUrlPayResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareLnUrlPayResponse: v) }
     }
 
     static func asPreparePayOnchainRequest(preparePayOnchainRequest: [String: Any?]) throws -> PreparePayOnchainRequest {
@@ -3665,6 +3766,81 @@ enum BreezSDKLiquidMapper {
                 list.append(sendDestination)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "SendDestination"))
+            }
+        }
+        return list
+    }
+
+    static func asSuccessAction(successAction: [String: Any?]) throws -> SuccessAction {
+        let type = successAction["type"] as! String
+        if type == "aes" {
+            guard let dataTmp = successAction["data"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "SuccessAction"))
+            }
+            let _data = try asAesSuccessActionData(aesSuccessActionData: dataTmp)
+
+            return SuccessAction.aes(data: _data)
+        }
+        if type == "message" {
+            guard let dataTmp = successAction["data"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "SuccessAction"))
+            }
+            let _data = try asMessageSuccessActionData(messageSuccessActionData: dataTmp)
+
+            return SuccessAction.message(data: _data)
+        }
+        if type == "url" {
+            guard let dataTmp = successAction["data"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "SuccessAction"))
+            }
+            let _data = try asUrlSuccessActionData(urlSuccessActionData: dataTmp)
+
+            return SuccessAction.url(data: _data)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum SuccessAction")
+    }
+
+    static func dictionaryOf(successAction: SuccessAction) -> [String: Any?] {
+        switch successAction {
+        case let .aes(
+            data
+        ):
+            return [
+                "type": "aes",
+                "data": dictionaryOf(aesSuccessActionData: data),
+            ]
+
+        case let .message(
+            data
+        ):
+            return [
+                "type": "message",
+                "data": dictionaryOf(messageSuccessActionData: data),
+            ]
+
+        case let .url(
+            data
+        ):
+            return [
+                "type": "url",
+                "data": dictionaryOf(urlSuccessActionData: data),
+            ]
+        }
+    }
+
+    static func arrayOf(successActionList: [SuccessAction]) -> [Any] {
+        return successActionList.map { v -> [String: Any?] in return dictionaryOf(successAction: v) }
+    }
+
+    static func asSuccessActionList(arr: [Any]) throws -> [SuccessAction] {
+        var list = [SuccessAction]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var successAction = try asSuccessAction(successAction: val)
+                list.append(successAction)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "SuccessAction"))
             }
         }
         return list

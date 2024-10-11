@@ -101,6 +101,8 @@ RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_oncha
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
+);
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
@@ -326,6 +328,9 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_o
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin(void
+    
+);
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay(void
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain(void

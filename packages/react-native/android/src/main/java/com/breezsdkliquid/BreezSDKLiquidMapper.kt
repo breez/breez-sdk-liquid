@@ -3,6 +3,42 @@ import breez_sdk_liquid.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asAesSuccessActionData(aesSuccessActionData: ReadableMap): AesSuccessActionData? {
+    if (!validateMandatoryFields(
+            aesSuccessActionData,
+            arrayOf(
+                "description",
+                "ciphertext",
+                "iv",
+            ),
+        )
+    ) {
+        return null
+    }
+    val description = aesSuccessActionData.getString("description")!!
+    val ciphertext = aesSuccessActionData.getString("ciphertext")!!
+    val iv = aesSuccessActionData.getString("iv")!!
+    return AesSuccessActionData(description, ciphertext, iv)
+}
+
+fun readableMapOf(aesSuccessActionData: AesSuccessActionData): ReadableMap =
+    readableMapOf(
+        "description" to aesSuccessActionData.description,
+        "ciphertext" to aesSuccessActionData.ciphertext,
+        "iv" to aesSuccessActionData.iv,
+    )
+
+fun asAesSuccessActionDataList(arr: ReadableArray): List<AesSuccessActionData> {
+    val list = ArrayList<AesSuccessActionData>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAesSuccessActionData(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asAesSuccessActionDataDecrypted(aesSuccessActionDataDecrypted: ReadableMap): AesSuccessActionDataDecrypted? {
     if (!validateMandatoryFields(
             aesSuccessActionDataDecrypted,
@@ -771,37 +807,19 @@ fun asLnUrlPayRequest(lnUrlPayRequest: ReadableMap): LnUrlPayRequest? {
     if (!validateMandatoryFields(
             lnUrlPayRequest,
             arrayOf(
-                "data",
-                "amountMsat",
+                "prepareResponse",
             ),
         )
     ) {
         return null
     }
-    val data = lnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
-    val amountMsat = lnUrlPayRequest.getDouble("amountMsat").toULong()
-    val comment = if (hasNonNullKey(lnUrlPayRequest, "comment")) lnUrlPayRequest.getString("comment") else null
-    val paymentLabel = if (hasNonNullKey(lnUrlPayRequest, "paymentLabel")) lnUrlPayRequest.getString("paymentLabel") else null
-    val validateSuccessActionUrl =
-        if (hasNonNullKey(
-                lnUrlPayRequest,
-                "validateSuccessActionUrl",
-            )
-        ) {
-            lnUrlPayRequest.getBoolean("validateSuccessActionUrl")
-        } else {
-            null
-        }
-    return LnUrlPayRequest(data, amountMsat, comment, paymentLabel, validateSuccessActionUrl)
+    val prepareResponse = lnUrlPayRequest.getMap("prepareResponse")?.let { asPrepareLnUrlPayResponse(it) }!!
+    return LnUrlPayRequest(prepareResponse)
 }
 
 fun readableMapOf(lnUrlPayRequest: LnUrlPayRequest): ReadableMap =
     readableMapOf(
-        "data" to readableMapOf(lnUrlPayRequest.data),
-        "amountMsat" to lnUrlPayRequest.amountMsat,
-        "comment" to lnUrlPayRequest.comment,
-        "paymentLabel" to lnUrlPayRequest.paymentLabel,
-        "validateSuccessActionUrl" to lnUrlPayRequest.validateSuccessActionUrl,
+        "prepareResponse" to readableMapOf(lnUrlPayRequest.prepareResponse),
     )
 
 fun asLnUrlPayRequestList(arr: ReadableArray): List<LnUrlPayRequest> {
@@ -1332,6 +1350,91 @@ fun asPrepareBuyBitcoinResponseList(arr: ReadableArray): List<PrepareBuyBitcoinR
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asPrepareBuyBitcoinResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: ReadableMap): PrepareLnUrlPayRequest? {
+    if (!validateMandatoryFields(
+            prepareLnUrlPayRequest,
+            arrayOf(
+                "data",
+                "amountMsat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val data = prepareLnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
+    val amountMsat = prepareLnUrlPayRequest.getDouble("amountMsat").toULong()
+    val comment = if (hasNonNullKey(prepareLnUrlPayRequest, "comment")) prepareLnUrlPayRequest.getString("comment") else null
+    val validateSuccessActionUrl =
+        if (hasNonNullKey(
+                prepareLnUrlPayRequest,
+                "validateSuccessActionUrl",
+            )
+        ) {
+            prepareLnUrlPayRequest.getBoolean("validateSuccessActionUrl")
+        } else {
+            null
+        }
+    return PrepareLnUrlPayRequest(data, amountMsat, comment, validateSuccessActionUrl)
+}
+
+fun readableMapOf(prepareLnUrlPayRequest: PrepareLnUrlPayRequest): ReadableMap =
+    readableMapOf(
+        "data" to readableMapOf(prepareLnUrlPayRequest.data),
+        "amountMsat" to prepareLnUrlPayRequest.amountMsat,
+        "comment" to prepareLnUrlPayRequest.comment,
+        "validateSuccessActionUrl" to prepareLnUrlPayRequest.validateSuccessActionUrl,
+    )
+
+fun asPrepareLnUrlPayRequestList(arr: ReadableArray): List<PrepareLnUrlPayRequest> {
+    val list = ArrayList<PrepareLnUrlPayRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareLnUrlPayRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUrlPayResponse? {
+    if (!validateMandatoryFields(
+            prepareLnUrlPayResponse,
+            arrayOf(
+                "prepareSendResponse",
+            ),
+        )
+    ) {
+        return null
+    }
+    val prepareSendResponse = prepareLnUrlPayResponse.getMap("prepareSendResponse")?.let { asPrepareSendResponse(it) }!!
+    val successAction =
+        if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
+            prepareLnUrlPayResponse.getMap("successAction")?.let {
+                asSuccessAction(it)
+            }
+        } else {
+            null
+        }
+    return PrepareLnUrlPayResponse(prepareSendResponse, successAction)
+}
+
+fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
+    readableMapOf(
+        "prepareSendResponse" to readableMapOf(prepareLnUrlPayResponse.prepareSendResponse),
+        "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
+    )
+
+fun asPrepareLnUrlPayResponseList(arr: ReadableArray): List<PrepareLnUrlPayResponse> {
+    val list = ArrayList<PrepareLnUrlPayResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareLnUrlPayResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -2844,6 +2947,54 @@ fun asSendDestinationList(arr: ReadableArray): List<SendDestination> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSendDestination(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asSuccessAction(successAction: ReadableMap): SuccessAction? {
+    val type = successAction.getString("type")
+
+    if (type == "aes") {
+        val data = successAction.getMap("data")?.let { asAesSuccessActionData(it) }!!
+        return SuccessAction.Aes(data)
+    }
+    if (type == "message") {
+        val data = successAction.getMap("data")?.let { asMessageSuccessActionData(it) }!!
+        return SuccessAction.Message(data)
+    }
+    if (type == "url") {
+        val data = successAction.getMap("data")?.let { asUrlSuccessActionData(it) }!!
+        return SuccessAction.Url(data)
+    }
+    return null
+}
+
+fun readableMapOf(successAction: SuccessAction): ReadableMap? {
+    val map = Arguments.createMap()
+    when (successAction) {
+        is SuccessAction.Aes -> {
+            pushToMap(map, "type", "aes")
+            pushToMap(map, "data", readableMapOf(successAction.data))
+        }
+        is SuccessAction.Message -> {
+            pushToMap(map, "type", "message")
+            pushToMap(map, "data", readableMapOf(successAction.data))
+        }
+        is SuccessAction.Url -> {
+            pushToMap(map, "type", "url")
+            pushToMap(map, "data", readableMapOf(successAction.data))
+        }
+    }
+    return map
+}
+
+fun asSuccessActionList(arr: ReadableArray): List<SuccessAction> {
+    val list = ArrayList<SuccessAction>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSuccessAction(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }

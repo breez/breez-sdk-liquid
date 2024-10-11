@@ -558,14 +558,25 @@ pub(crate) async fn handle_command(
                     );
 
                     let amount_msat = rl.readline(&prompt)?;
-                    let pay_res = sdk
-                        .lnurl_pay(LnUrlPayRequest {
+                    let prepare_response = sdk
+                        .prepare_lnurl_pay(PrepareLnUrlPayRequest {
                             data: pd,
                             amount_msat: amount_msat.parse::<u64>()?,
                             comment: None,
-                            payment_label: None,
                             validate_success_action_url: validate_success_url,
                         })
+                        .await?;
+
+                    wait_confirmation!(
+                        format!(
+                            "Fees: {} sat. Are the fees acceptable? (y/N) ",
+                            prepare_response.prepare_send_response.fees_sat
+                        ),
+                        "LNURL pay halted"
+                    );
+
+                    let pay_res = sdk
+                        .lnurl_pay(model::LnUrlPayRequest { prepare_response })
                         .await?;
                     Ok(pay_res)
                 }

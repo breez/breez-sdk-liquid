@@ -100,6 +100,13 @@ dictionary LnUrlErrorData {
 };
 
 [Enum]
+interface SuccessAction {
+    Aes(AesSuccessActionData data);
+    Message(MessageSuccessActionData data);
+    Url(UrlSuccessActionData data);
+};
+
+[Enum]
 interface SuccessActionProcessed {
     Aes(AesSuccessActionDataResult result);
     Message(MessageSuccessActionData data);
@@ -110,6 +117,12 @@ interface SuccessActionProcessed {
 interface AesSuccessActionDataResult {
     Decrypted(AesSuccessActionDataDecrypted data);
     ErrorStatus(string reason);
+};
+
+dictionary AesSuccessActionData {
+    string description;
+    string ciphertext;
+    string iv;
 };
 
 dictionary AesSuccessActionDataDecrypted {
@@ -130,14 +143,6 @@ dictionary UrlSuccessActionData {
 dictionary LnUrlPayErrorData {
     string payment_hash;
     string reason;
-};
-
-dictionary LnUrlPayRequest {
-    LnUrlPayRequestData data;
-    u64 amount_msat;
-    string? comment = null;
-    string? payment_label = null;
-    boolean? validate_success_action_url = null;
 };
 
 [Error]
@@ -342,6 +347,22 @@ dictionary CheckMessageRequest {
 
 dictionary CheckMessageResponse {
     boolean is_valid;
+};
+
+dictionary PrepareLnUrlPayRequest {
+    LnUrlPayRequestData data;
+    u64 amount_msat;
+    string? comment = null;
+    boolean? validate_success_action_url = null;
+};
+
+dictionary PrepareLnUrlPayResponse {
+    PrepareSendResponse prepare_send_response;
+    SuccessAction? success_action = null;
+};
+
+dictionary LnUrlPayRequest {
+    PrepareLnUrlPayResponse prepare_response;
 };
 
 dictionary PrepareSendRequest {
@@ -669,6 +690,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     void disconnect();
+
+    [Throws=LnUrlPayError]
+    PrepareLnUrlPayResponse prepare_lnurl_pay(PrepareLnUrlPayRequest req);
 
     [Throws=LnUrlPayError]
     LnUrlPayResult lnurl_pay(LnUrlPayRequest req);

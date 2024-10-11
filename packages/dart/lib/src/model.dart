@@ -364,6 +364,26 @@ class ListPaymentsRequest {
           details == other.details;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
+class LnUrlPayRequest {
+  /// The response from calling [crate::sdk::LiquidSdk::prepare_lnurl_pay]
+  final PrepareLnUrlPayResponse prepareResponse;
+
+  const LnUrlPayRequest({
+    required this.prepareResponse,
+  });
+
+  @override
+  int get hashCode => prepareResponse.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LnUrlPayRequest &&
+          runtimeType == other.runtimeType &&
+          prepareResponse == other.prepareResponse;
+}
+
 @freezed
 sealed class LnUrlPayResult with _$LnUrlPayResult {
   const LnUrlPayResult._();
@@ -746,6 +766,69 @@ class PrepareBuyBitcoinResponse {
           provider == other.provider &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+class PrepareLnUrlPayRequest {
+  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  final LnUrlPayRequestData data;
+
+  /// The amount in millisatoshis for this payment
+  final BigInt amountMsat;
+
+  /// An optional comment for this payment
+  final String? comment;
+
+  /// Validates that, if there is a URL success action, the URL domain matches
+  /// the LNURL callback domain. Defaults to `true`
+  final bool? validateSuccessActionUrl;
+
+  const PrepareLnUrlPayRequest({
+    required this.data,
+    required this.amountMsat,
+    this.comment,
+    this.validateSuccessActionUrl,
+  });
+
+  @override
+  int get hashCode =>
+      data.hashCode ^ amountMsat.hashCode ^ comment.hashCode ^ validateSuccessActionUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareLnUrlPayRequest &&
+          runtimeType == other.runtimeType &&
+          data == other.data &&
+          amountMsat == other.amountMsat &&
+          comment == other.comment &&
+          validateSuccessActionUrl == other.validateSuccessActionUrl;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+class PrepareLnUrlPayResponse {
+  /// The response from preparing the payment which includes `fees_sat`
+  final PrepareSendResponse prepareSendResponse;
+
+  /// The unprocessed LUD-09 success action. This will be processed and decrypted if
+  /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
+  final SuccessAction? successAction;
+
+  const PrepareLnUrlPayResponse({
+    required this.prepareSendResponse,
+    this.successAction,
+  });
+
+  @override
+  int get hashCode => prepareSendResponse.hashCode ^ successAction.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareLnUrlPayResponse &&
+          runtimeType == other.runtimeType &&
+          prepareSendResponse == other.prepareSendResponse &&
+          successAction == other.successAction;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
