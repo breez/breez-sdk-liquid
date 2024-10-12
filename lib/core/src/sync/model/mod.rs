@@ -1,3 +1,4 @@
+use boltz_client::boltz::ChainSwapDetails;
 use serde::{Deserialize, Serialize};
 
 use self::sync::Record;
@@ -8,7 +9,7 @@ use crate::{
 
 pub(crate) mod sync;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -26,9 +27,10 @@ pub(crate) struct ChainSyncData {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) accept_zero_conf: bool,
+    pub(crate) created_at: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: Option<String>,
@@ -38,9 +40,10 @@ pub(crate) struct SendSyncData {
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    pub(crate) created_at: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -50,9 +53,10 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    pub(crate) created_at: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),
@@ -66,6 +70,7 @@ impl SyncData {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct DecryptedRecord {
     pub(crate) id: i64,
     pub(crate) version: f32,
