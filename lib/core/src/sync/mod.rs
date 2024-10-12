@@ -1,11 +1,12 @@
 pub(crate) mod model;
 
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use log::warn;
 use tokio::sync::Mutex;
+use tokio_stream::StreamExt as _;
 use tonic::transport::Channel;
 
 use self::model::{
@@ -31,7 +32,7 @@ pub trait SyncModule {
     async fn apply_changes(&self, changes: &[Record]) -> Result<()>;
 
     /// Retrieves the changes since a specified [id](Record::id)
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<DecryptedRecord>>;
+    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>>;
 
     /// Adds a record to the remote
     async fn set_record(&self, data: SyncData) -> Result<()>;
@@ -50,18 +51,32 @@ pub(crate) struct BreezSyncModule {
 }
 
 impl BreezSyncModule {
-    fn decrypt_records(&self, records: Vec<Record>) -> Vec<DecryptedRecord> {
-        let decrypted_records = vec![];
+    fn collect_records<'a>(
+        &self,
+        records: &'a [Record],
+    ) -> (Vec<DecryptedRecord>, Vec<&'a Record>) {
+        let mut failed_records = vec![];
+        let mut updatable_records = vec![];
+
         for record in records {
-            match DecryptedRecord::try_from_record(todo!(), &record) {
-                Ok(dec_record) => decrypted_records.push(dec_record),
+            // If it's a major version ahead, we skip
+            if record.version.floor() > CURRENT_SCHEMA_VERSION.floor() {
+                failed_records.push(record);
+                continue;
+            }
+
+            let decrypted_record = match DecryptedRecord::try_from_record(todo!(), record) {
+                Ok(record) => record,
                 Err(err) => {
-                    warn!("Could not decrypt record: {err}");
+                    warn!("Could not decrypt record: {err:?}");
                     continue;
                 }
-            }
+            };
+
+            updatable_records.push(decrypted_record)
         }
-        decrypted_records
+
+        (updatable_records, failed_records)
     }
 }
 
@@ -90,14 +105,15 @@ impl SyncModule for BreezSyncModule {
 
         let cloned = self.clone();
         tokio::spawn(async move {
-            match stream.message().await {
-                Ok(Some(record)) => {
-                    if let Err(err) = cloned.apply_changes(&[record]).await {
-                        warn!("Could not apply incoming changes: {err:?}")
-                    };
+            while let Some(message) = stream.next().await {
+                match message {
+                    Ok(record) => {
+                        if let Err(err) = cloned.apply_changes(&[record]).await {
+                            warn!("Could not apply incoming changes: {err:?}")
+                        };
+                    }
+                    Err(err) => warn!("An error occured while listening for records: {err:?}"),
                 }
-                Ok(_) => warn!("No message received from stream"),
-                Err(err) => warn!("Could not retrieve next message from stream: {err:?}"),
             }
         });
 
@@ -105,32 +121,24 @@ impl SyncModule for BreezSyncModule {
     }
 
     async fn apply_changes(&self, records: &[Record]) -> Result<()> {
-        for record in records {
-            // Check if it's a major or minor version ahead
-            match record.version.floor() > CURRENT_SCHEMA_VERSION.floor() {
-                true => {
-                    self.persister.insert_record(record)?;
-                }
-                false => {
-                    let decrypted_record = match DecryptedRecord::try_from_record(todo!(), record) {
-                        Ok(record) => record,
-                        Err(err) => {
-                            warn!("Could not decrypt record: {err:?}");
-                            continue;
-                        }
-                    };
+        let (updatable_records, failed_records) = self.collect_records(records);
 
-                    if let Err(err) = self.persister.apply_record(&decrypted_record) {
-                        warn!("Could not apply record changes: {err:?}");
-                    }
-                }
+        // We persist records which we cannot update (> CURRENT_SCHEMA_VERSION)
+        for record in failed_records {
+            self.persister.insert_record(record)?;
+        }
+
+        // We apply records which we can update (<= CURRENT_SCHEMA_VERSION)
+        for record in updatable_records {
+            if let Err(err) = self.persister.apply_record(&record) {
+                warn!("Could not apply record changes: {err:?}");
             }
         }
 
         Ok(())
     }
 
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<DecryptedRecord>> {
+    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>> {
         let Some(ref mut client) = *self.client.lock().await else {
             return Err(anyhow!(
                 "Cannot run `get_changes_since`: client not connected"
@@ -147,7 +155,7 @@ impl SyncModule for BreezSyncModule {
             .into_inner()
             .changes;
 
-        Ok(self.decrypt_records(records))
+        Ok(records)
     }
 
     async fn set_record(&self, data: SyncData) -> Result<()> {
