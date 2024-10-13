@@ -11,7 +11,7 @@ use crate::{
 
 pub(crate) mod sync;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -58,7 +58,7 @@ impl ChainSyncData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -92,7 +92,7 @@ impl SendSyncData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -127,7 +127,7 @@ impl ReceiveSyncData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),
@@ -141,7 +141,6 @@ impl SyncData {
     }
 }
 
-#[derive(Clone)]
 pub(crate) struct DecryptedRecord {
     pub(crate) id: i64,
     pub(crate) version: f32,
