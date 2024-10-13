@@ -622,6 +622,7 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
+    pub(crate) is_local: bool,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -742,6 +743,7 @@ pub(crate) struct SendSwap {
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
+    pub(crate) is_local: bool,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -826,6 +828,7 @@ pub(crate) struct ReceiveSwap {
     /// Afterwards, it shows the lockup tx creation time.    
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
+    pub(crate) is_local: bool,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {

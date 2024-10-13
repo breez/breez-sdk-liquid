@@ -107,5 +107,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             version REAL NOT NULL,
             data BLOB NOT NULL
         ) STRICT;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ALTER TABLE send_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ALTER TABLE chain_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ",
     ]
 }

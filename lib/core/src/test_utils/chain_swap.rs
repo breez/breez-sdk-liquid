@@ -112,6 +112,7 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
+            is_local: true,
         },
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
@@ -175,6 +176,7 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
+            is_local: true,
         }
     }
 }

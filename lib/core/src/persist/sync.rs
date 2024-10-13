@@ -3,7 +3,6 @@ use rusqlite::params;
 
 use crate::{
     sync::model::{sync::Record, DecryptedRecord, SyncData},
-    utils,
 };
 
 use super::Persister;
@@ -65,14 +64,11 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn apply_record(&self, record: &DecryptedRecord) -> Result<()> {
-        let con = self.get_connection()?;
-
-        match &record.data {
-            SyncData::Chain(chain_data) => {}
-            SyncData::Send(send_data) => {}
-            SyncData::Receive(receive_data) => {}
+    pub(crate) fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
+        match record.data {
+            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.to_swap()),
+            SyncData::Send(send_data) => self.insert_send_swap(&send_data.to_swap()),
+            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.to_swap()),
         }
-        Ok(())
     }
 }

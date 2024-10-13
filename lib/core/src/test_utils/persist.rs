@@ -71,6 +71,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
         refund_private_key: "945affeef55f12227f1d4a3f80a17062a05b229ddc5a01591eb5ddf882df92e3".to_string(),
+        is_local: true,
     }
 }
 
@@ -105,6 +106,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         claim_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
+        is_local: true,
     }
 }
 
