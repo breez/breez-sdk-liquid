@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use rusqlite::params;
+use rusqlite::{params, Row};
 
 use crate::sync::model::{sync::Record, DecryptedRecord, SyncData};
 
@@ -30,6 +30,34 @@ impl Persister {
         Ok(())
     }
 
+    fn sql_row_to_record(&self, row: &Row) -> rusqlite::Result<Record> {
+        Ok(Record {
+            id: row.get(0)?,
+            version: row.get(1)?,
+            data: row.get(2)?,
+        })
+    }
+
+    pub(crate) fn get_records(&self) -> Result<Vec<Record>> {
+        let con = self.get_connection()?;
+
+        let records: Vec<Record> = con
+            .prepare(
+                "
+            SELECT 
+                id,
+                version,
+                data
+            FROM pending_sync_records
+        ",
+            )?
+            .query_map([], |row| self.sql_row_to_record(row))?
+            .map(|i| i.unwrap())
+            .collect();
+
+        Ok(records)
+    }
+
     pub(crate) fn insert_record(&self, record: &Record) -> Result<()> {
         let con = self.get_connection()?;
 
@@ -48,7 +76,7 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn delete_record(&self, record: &Record) -> Result<()> {
+    pub(crate) fn delete_record(&self, id: i64) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
@@ -56,7 +84,7 @@ impl Persister {
             DELETE FROM pending_sync_records
             WHERE id = ?
         ",
-            params![record.id],
+            params![id],
         )?;
 
         Ok(())
