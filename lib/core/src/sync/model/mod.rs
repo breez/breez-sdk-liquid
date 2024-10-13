@@ -31,7 +31,7 @@ pub(crate) struct ChainSyncData {
 }
 
 impl ChainSyncData {
-    pub(crate) fn to_swap(self) -> ChainSwap {
+    pub(crate) fn into_swap(self) -> ChainSwap {
         ChainSwap {
             id: self.swap_id,
             direction: self.direction,
@@ -73,7 +73,7 @@ pub(crate) struct SendSyncData {
 }
 
 impl SendSyncData {
-    pub(crate) fn to_swap(self) -> SendSwap {
+    pub(crate) fn into_swap(self) -> SendSwap {
         SendSwap {
             id: self.swap_id,
             invoice: self.invoice,
@@ -108,7 +108,7 @@ pub(crate) struct ReceiveSyncData {
 }
 
 impl ReceiveSyncData {
-    pub(crate) fn to_swap(self) -> ReceiveSwap {
+    pub(crate) fn into_swap(self) -> ReceiveSwap {
         ReceiveSwap {
             id: self.swap_id,
             preimage: self.preimage,

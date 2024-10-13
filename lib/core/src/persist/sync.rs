@@ -64,9 +64,9 @@ impl Persister {
 
     pub(crate) fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
         match record.data {
-            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.to_swap()),
-            SyncData::Send(send_data) => self.insert_send_swap(&send_data.to_swap()),
-            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.to_swap()),
+            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.into_swap()),
+            SyncData::Send(send_data) => self.insert_send_swap(&send_data.into_swap()),
+            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.into_swap()),
         }
     }
 }
