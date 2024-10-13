@@ -305,6 +305,7 @@ dictionary Config {
     LiquidNetwork network;
     u64 payment_timeout_sec;
     u32 zero_conf_min_fee_rate_msat;
+    string sync_service_url;
     u64? zero_conf_max_amount_sat;
     string? breez_api_key;
 };

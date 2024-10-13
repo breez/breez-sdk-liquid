@@ -16,12 +16,12 @@ use self::model::{
     },
     DecryptedRecord, SyncData,
 };
-use crate::{persist::Persister, signer::SdkSigner, utils};
+use crate::{model::Signer, persist::Persister, utils};
 
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
 #[async_trait]
-pub trait SyncService {
+pub trait SyncService: Send + Sync {
     /// Connects to a gRPC endpoint
     async fn connect(&self) -> Result<()>;
 
@@ -47,11 +47,24 @@ pub trait SyncService {
 pub(crate) struct BreezSyncService {
     connect_url: String,
     persister: Arc<Persister>,
-    signer: Arc<SdkSigner>,
+    signer: Arc<Box<dyn Signer>>,
     client: Mutex<Option<SyncerClient<Channel>>>,
 }
 
 impl BreezSyncService {
+    pub(crate) fn new(
+        connect_url: String,
+        persister: Arc<Persister>,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Self {
+        Self {
+            connect_url,
+            persister,
+            signer,
+            client: Default::default(),
+        }
+    }
+
     fn collect_records<'a>(
         &self,
         records: &'a [Record],
@@ -67,7 +80,7 @@ impl BreezSyncService {
             }
 
             let decrypted_record =
-                match DecryptedRecord::try_from_record(&self.signer.seed(), record) {
+                match DecryptedRecord::try_from_record(self.signer.clone(), record) {
                     Ok(record) => record,
                     Err(err) => {
                         warn!("Could not decrypt record: {err:?}");
@@ -156,12 +169,8 @@ impl SyncService for BreezSyncService {
         };
 
         let id = self.persister.get_latest_record_id()? + 1;
-        let data = utils::encrypt(&self.signer.seed(), &data.to_bytes()?)?;
-        let record = Record {
-            id,
-            version: CURRENT_SCHEMA_VERSION,
-            data,
-        };
+        let record = Record::new(id, data, self.signer.clone())
+            .map_err(|err| anyhow!("Could not create record: {err:?}"))?;
         let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 

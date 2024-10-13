@@ -4,10 +4,11 @@ use lwk_wollet::hashes::hex::DisplayHex as _;
 use serde::{Deserialize, Serialize};
 
 use self::sync::{ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest};
-use crate::{
-    model::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Signer, SignerError},
-    utils,
+use crate::model::{
+    ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Signer, SignerError,
 };
+
+use super::CURRENT_SCHEMA_VERSION;
 
 pub(crate) mod sync;
 
@@ -148,8 +149,11 @@ pub(crate) struct DecryptedRecord {
 }
 
 impl DecryptedRecord {
-    pub(crate) fn try_from_record(private_key: &[u8], record: &Record) -> anyhow::Result<Self> {
-        let dec_data = utils::decrypt(private_key, record.data.as_slice())?;
+    pub(crate) fn try_from_record(
+        signer: Arc<Box<dyn Signer>>,
+        record: &Record,
+    ) -> anyhow::Result<Self> {
+        let dec_data = signer.ecies_decrypt(record.data.as_slice())?;
         let data = serde_json::from_slice(&dec_data)?;
         Ok(Self {
             id: record.id,
@@ -159,11 +163,29 @@ impl DecryptedRecord {
     }
 }
 
+impl Record {
+    pub(crate) fn new(
+        id: i64,
+        data: SyncData,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> anyhow::Result<Self> {
+        let bytes = data.to_bytes()?;
+        let data = signer
+            .ecies_encrypt(&bytes)
+            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
+        Ok(Record {
+            id,
+            version: CURRENT_SCHEMA_VERSION,
+            data,
+        })
+    }
+}
+
 impl SetRecordRequest {
     pub(crate) fn new(
         record: Record,
         request_time: u32,
-        signer: Arc<dyn Signer>,
+        signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
         let msg = format!(
             "{}-{}-{}-{}",
@@ -188,7 +210,7 @@ impl ListChangesRequest {
     pub(crate) fn new(
         from_id: i64,
         request_time: u32,
-        signer: Arc<dyn Signer>,
+        signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
         let msg = format!("{}-{}", from_id, request_time);
         let signature = signer
@@ -204,7 +226,10 @@ impl ListChangesRequest {
 }
 
 impl ListenChangesRequest {
-    pub(crate) fn new(request_time: u32, signer: Arc<dyn Signer>) -> Result<Self, SignerError> {
+    pub(crate) fn new(
+        request_time: u32,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Result<Self, SignerError> {
         let msg = format!("{}", request_time);
         let signature = signer
             .sign_ecdsa_recoverable(msg.as_bytes().into())
