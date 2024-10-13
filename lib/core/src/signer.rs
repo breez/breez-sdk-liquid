@@ -253,6 +253,18 @@ impl Signer for SdkSigner {
             .as_byte_array()
             .to_vec())
     }
+
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let rc_pub = self.xpub()?;
+        Ok(ecies::encrypt(&rc_pub, msg)
+            .map_err(|err| anyhow::anyhow!("Could not encrypt data: {err}"))?)
+    }
+
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let rc_prv = self.xprv.private_key.secret_bytes();
+        Ok(ecies::decrypt(&rc_prv, msg)
+            .map_err(|err| anyhow::anyhow!("Could not decrypt data: {err}"))?)
+    }
 }
 
 #[cfg(test)]

@@ -21,6 +21,7 @@ use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     status_stream::MockStatusStream,
     swapper::MockSwapper,
+    sync::MockSyncService,
     wallet::{MockSigner, MockWallet},
 };
 
@@ -91,6 +92,8 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     let buy_bitcoin_service =
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+    let sync_service = Arc::new(MockSyncService::new());
+
     Ok(LiquidSdk {
         config,
         onchain_wallet,
@@ -109,5 +112,6 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         receive_swap_handler,
         chain_swap_handler,
         buy_bitcoin_service,
+        sync_service,
     })
 }
