@@ -9,7 +9,6 @@ use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
 };
-use serde::{Deserialize, Serialize};
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()

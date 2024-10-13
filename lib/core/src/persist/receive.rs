@@ -30,9 +30,10 @@ impl Persister {
                 created_at,
                 claim_fees_sat,
                 claim_tx_id,
-                state
+                state,
+                is_local
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
@@ -49,6 +50,7 @@ impl Persister {
             &receive_swap.claim_fees_sat,
             &receive_swap.claim_tx_id,
             &receive_swap.state,
+            &receive_swap.is_local,
         ))?;
 
         Ok(())
@@ -75,7 +77,8 @@ impl Persister {
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
                 rs.created_at,
-                rs.state
+                rs.state,
+                rs.is_local
             FROM receive_swaps AS rs
             {where_clause_str}
             ORDER BY rs.created_at
@@ -116,6 +119,7 @@ impl Persister {
             claim_tx_id: row.get(9)?,
             created_at: row.get(10)?,
             state: row.get(11)?,
+            is_local: row.get(12)?,
         })
     }
 

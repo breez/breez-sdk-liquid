@@ -1,6 +1,6 @@
 pub(crate) mod model;
 
-use std::{collections::HashMap, sync::Arc};
+use std::{sync::Arc};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -56,7 +56,7 @@ impl BreezSyncModule {
         records: &'a [Record],
     ) -> (Vec<DecryptedRecord>, Vec<&'a Record>) {
         let mut failed_records = vec![];
-        let mut updatable_records = vec![];
+        let updatable_records = vec![];
 
         for record in records {
             // If it's a major version ahead, we skip
@@ -130,7 +130,7 @@ impl SyncModule for BreezSyncModule {
 
         // We apply records which we can update (<= CURRENT_SCHEMA_VERSION)
         for record in updatable_records {
-            if let Err(err) = self.persister.apply_record(&record) {
+            if let Err(err) = self.persister.apply_record(record) {
                 warn!("Could not apply record changes: {err:?}");
             }
         }

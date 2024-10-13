@@ -67,6 +67,7 @@ impl Persister {
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_tx_id = :claim_tx_id,
                 refund_tx_id = :refund_tx_id
+                is_local = :is_local
             WHERE
                 id = :id",
             named_params! {
@@ -76,6 +77,7 @@ impl Persister {
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
+                ":is_local": &chain_swap.is_local,
             },
         )?;
 
@@ -111,7 +113,8 @@ impl Persister {
                 claim_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                is_local
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -160,6 +163,7 @@ impl Persister {
             refund_tx_id: row.get(17)?,
             created_at: row.get(18)?,
             state: row.get(19)?,
+            is_local: row.get(20)?,
         })
     }
 

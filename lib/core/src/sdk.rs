@@ -1037,6 +1037,7 @@ impl LiquidSdk {
                     created_at: utils::now(),
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
+                    is_local: true,
                 };
                 self.persister.insert_send_swap(&swap)?;
                 swap
@@ -1311,6 +1312,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            is_local: true,
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
@@ -1635,6 +1637,7 @@ impl LiquidSdk {
                 claim_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
+                is_local: true,
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
@@ -1722,6 +1725,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            is_local: true,
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;

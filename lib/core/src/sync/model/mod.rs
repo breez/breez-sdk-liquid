@@ -1,9 +1,8 @@
-use boltz_client::boltz::ChainSwapDetails;
 use serde::{Deserialize, Serialize};
 
 use self::sync::Record;
 use crate::{
-    model::{Direction, InternalSwapTree},
+    model::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap},
     utils,
 };
 
@@ -13,47 +12,116 @@ pub(crate) mod sync;
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
-    pub(crate) description: Option<String>,
+    pub(crate) create_response_json: String,
     pub(crate) direction: Direction,
-    pub(crate) claim_swap_tree: InternalSwapTree,
-    pub(crate) claim_fees_sat: u64,
-    pub(crate) claim_address: String,
-    pub(crate) claim_private_key: String,
-    pub(crate) claim_timeout_block_height: u32,
-    pub(crate) lockup_swap_tree: InternalSwapTree,
     pub(crate) lockup_address: String,
+    pub(crate) claim_address: String,
+    pub(crate) claim_fees_sat: u64,
+    pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
-    pub(crate) lockup_timeout_block_height: u32,
+    pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
+    pub(crate) description: Option<String>,
+}
+
+impl ChainSyncData {
+    pub(crate) fn to_swap(self) -> ChainSwap {
+        ChainSwap {
+            id: self.swap_id,
+            direction: self.direction,
+            timeout_block_height: self.timeout_block_height,
+            preimage: self.preimage,
+            description: self.description,
+            payer_amount_sat: self.payer_amount_sat,
+            receiver_amount_sat: self.receiver_amount_sat,
+            accept_zero_conf: self.accept_zero_conf,
+            created_at: self.created_at,
+            lockup_address: self.lockup_address,
+            claim_address: self.claim_address,
+            claim_fees_sat: self.claim_fees_sat,
+            claim_private_key: self.claim_private_key,
+            refund_private_key: self.refund_private_key,
+            create_response_json: self.create_response_json,
+            server_lockup_tx_id: None,
+            user_lockup_tx_id: None,
+            claim_tx_id: None,
+            refund_tx_id: None,
+            state: PaymentState::Created,
+            is_local: false,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
-    pub(crate) preimage: Option<String>,
-    pub(crate) description: Option<String>,
+    pub(crate) invoice: String,
+    pub(crate) create_response_json: String,
     pub(crate) refund_private_key: String,
-    pub(crate) swap_tree: InternalSwapTree,
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
+    pub(crate) preimage: Option<String>,
+    pub(crate) description: Option<String>,
+}
+
+impl SendSyncData {
+    pub(crate) fn to_swap(self) -> SendSwap {
+        SendSwap {
+            id: self.swap_id,
+            invoice: self.invoice,
+            description: self.description,
+            preimage: self.preimage,
+            payer_amount_sat: self.payer_amount_sat,
+            receiver_amount_sat: self.receiver_amount_sat,
+            create_response_json: self.create_response_json,
+            refund_private_key: self.refund_private_key,
+            created_at: self.created_at,
+            lockup_tx_id: None,
+            refund_tx_id: None,
+            state: PaymentState::Created,
+            is_local: false,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
+    pub(crate) invoice: String,
     pub(crate) preimage: String,
-    pub(crate) description: Option<String>,
+    pub(crate) create_response_json: String,
+    pub(crate) claim_fees_sat: u64,
     pub(crate) claim_private_key: String,
-    pub(crate) swap_tree: InternalSwapTree,
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
+    pub(crate) description: Option<String>,
+}
+
+impl ReceiveSyncData {
+    pub(crate) fn to_swap(self) -> ReceiveSwap {
+        ReceiveSwap {
+            id: self.swap_id,
+            preimage: self.preimage,
+            create_response_json: self.create_response_json,
+            claim_private_key: self.claim_private_key,
+            invoice: self.invoice,
+            description: self.description,
+            payer_amount_sat: self.payer_amount_sat,
+            receiver_amount_sat: self.receiver_amount_sat,
+            claim_fees_sat: self.claim_fees_sat,
+            created_at: self.created_at,
+            claim_tx_id: None,
+            state: PaymentState::Created,
+            is_local: false,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
