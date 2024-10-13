@@ -29,7 +29,7 @@ pub trait SyncModule {
     async fn listen(self: Arc<Self>) -> Result<()>;
 
     /// Applies the changes received from the stream to the local database
-    async fn apply_changes(&self, changes: &[Record]) -> Result<()>;
+    fn apply_changes(&self, changes: &[Record]) -> Result<()>;
 
     /// Retrieves the changes since a specified [id](Record::id)
     async fn get_changes_since(&self, from_id: i64) -> Result<Vec<Record>>;
@@ -38,7 +38,7 @@ pub trait SyncModule {
     async fn set_record(&self, data: SyncData) -> Result<()>;
 
     /// Attemps to clean up local changes by applying them
-    async fn cleanup(&self) -> Result<()>;
+    fn cleanup(&self) -> Result<()>;
 
     /// Disconnects from the gRPC stream
     async fn disconnect(&self) -> Result<()>;
@@ -106,7 +106,7 @@ impl SyncModule for BreezSyncModule {
             while let Some(message) = stream.next().await {
                 match message {
                     Ok(record) => {
-                        if let Err(err) = cloned.apply_changes(&[record]).await {
+                        if let Err(err) = cloned.apply_changes(&[record]) {
                             warn!("Could not apply incoming changes: {err:?}")
                         };
                     }
@@ -118,7 +118,7 @@ impl SyncModule for BreezSyncModule {
         Ok(())
     }
 
-    async fn apply_changes(&self, records: &[Record]) -> Result<()> {
+    fn apply_changes(&self, records: &[Record]) -> Result<()> {
         let (updatable_records, failed_records) = self.collect_records(records);
 
         // We persist records which we cannot update (> CURRENT_SCHEMA_VERSION)
@@ -175,8 +175,23 @@ impl SyncModule for BreezSyncModule {
         Ok(())
     }
 
-    async fn cleanup(&self) -> Result<()> {
-        unimplemented!()
+    fn cleanup(&self) -> Result<()> {
+        let pending_records = self
+            .persister
+            .get_records()
+            .map_err(|err| anyhow!("Could not fetch pending records from database: {err:?}"))?;
+
+        let (updatable_records, _) = self.collect_records(&pending_records);
+
+        for record in updatable_records {
+            let record_id = record.id;
+            if self.persister.apply_record(record).is_err() {
+                continue;
+            }
+            self.persister.delete_record(record_id)?;
+        }
+
+        Ok(())
     }
 
     async fn disconnect(&self) -> Result<()> {
