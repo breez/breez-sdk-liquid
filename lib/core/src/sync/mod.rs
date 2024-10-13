@@ -21,7 +21,7 @@ use crate::{persist::Persister, signer::SdkSigner, utils};
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
 #[async_trait]
-pub trait SyncModule {
+pub trait SyncService {
     /// Connects to a gRPC endpoint
     async fn connect(&self) -> Result<()>;
 
@@ -44,14 +44,14 @@ pub trait SyncModule {
     async fn disconnect(&self) -> Result<()>;
 }
 
-pub(crate) struct BreezSyncModule {
+pub(crate) struct BreezSyncService {
     connect_url: String,
     persister: Arc<Persister>,
     signer: Arc<SdkSigner>,
     client: Mutex<Option<SyncerClient<Channel>>>,
 }
 
-impl BreezSyncModule {
+impl BreezSyncService {
     fn collect_records<'a>(
         &self,
         records: &'a [Record],
@@ -83,7 +83,7 @@ impl BreezSyncModule {
 }
 
 #[async_trait]
-impl SyncModule for BreezSyncModule {
+impl SyncService for BreezSyncService {
     async fn connect(&self) -> Result<()> {
         let mut client = self.client.lock().await;
         *client = Some(SyncerClient::connect(self.connect_url.clone()).await?);
