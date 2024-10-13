@@ -1,9 +1,7 @@
 use anyhow::{anyhow, Result};
 use rusqlite::params;
 
-use crate::{
-    sync::model::{sync::Record, DecryptedRecord, SyncData},
-};
+use crate::sync::model::{sync::Record, DecryptedRecord, SyncData};
 
 use super::Persister;
 
