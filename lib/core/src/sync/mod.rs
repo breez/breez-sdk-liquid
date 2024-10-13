@@ -1,6 +1,6 @@
 pub(crate) mod model;
 
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -16,7 +16,7 @@ use self::model::{
     },
     DecryptedRecord, SyncData,
 };
-use crate::{persist::Persister, utils};
+use crate::{persist::Persister, signer::SdkSigner, utils};
 
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
@@ -32,7 +32,7 @@ pub trait SyncModule {
     async fn apply_changes(&self, changes: &[Record]) -> Result<()>;
 
     /// Retrieves the changes since a specified [id](Record::id)
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>>;
+    async fn get_changes_since(&self, from_id: i64) -> Result<Vec<Record>>;
 
     /// Adds a record to the remote
     async fn set_record(&self, data: SyncData) -> Result<()>;
@@ -47,6 +47,7 @@ pub trait SyncModule {
 pub(crate) struct BreezSyncModule {
     connect_url: String,
     persister: Arc<Persister>,
+    signer: Arc<SdkSigner>,
     client: Mutex<Option<SyncerClient<Channel>>>,
 }
 
@@ -56,7 +57,7 @@ impl BreezSyncModule {
         records: &'a [Record],
     ) -> (Vec<DecryptedRecord>, Vec<&'a Record>) {
         let mut failed_records = vec![];
-        let updatable_records = vec![];
+        let mut updatable_records = vec![];
 
         for record in records {
             // If it's a major version ahead, we skip
@@ -65,13 +66,14 @@ impl BreezSyncModule {
                 continue;
             }
 
-            let decrypted_record = match DecryptedRecord::try_from_record(todo!(), record) {
-                Ok(record) => record,
-                Err(err) => {
-                    warn!("Could not decrypt record: {err:?}");
-                    continue;
-                }
-            };
+            let decrypted_record =
+                match DecryptedRecord::try_from_record(&self.signer.seed(), record) {
+                    Ok(record) => record,
+                    Err(err) => {
+                        warn!("Could not decrypt record: {err:?}");
+                        continue;
+                    }
+                };
 
             updatable_records.push(decrypted_record)
         }
@@ -95,13 +97,9 @@ impl SyncModule for BreezSyncModule {
             ));
         };
 
-        let mut stream = client
-            .listen_changes(ListenChangesRequest {
-                request_time: utils::now(),
-                signature: todo!(),
-            })
-            .await?
-            .into_inner();
+        let request = ListenChangesRequest::new(utils::now(), self.signer.clone())
+            .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
+        let mut stream = client.listen_changes(request).await?.into_inner();
 
         let cloned = self.clone();
         tokio::spawn(async move {
@@ -138,22 +136,16 @@ impl SyncModule for BreezSyncModule {
         Ok(())
     }
 
-    async fn get_changes_since(&self, from_id: u64) -> Result<Vec<Record>> {
+    async fn get_changes_since(&self, from_id: i64) -> Result<Vec<Record>> {
         let Some(ref mut client) = *self.client.lock().await else {
             return Err(anyhow!(
                 "Cannot run `get_changes_since`: client not connected"
             ));
         };
 
-        let records = client
-            .list_changes(ListChangesRequest {
-                from_id: from_id as i64,
-                request_time: utils::now(),
-                signature: todo!(),
-            })
-            .await?
-            .into_inner()
-            .changes;
+        let request = ListChangesRequest::new(from_id, utils::now(), self.signer.clone())
+            .map_err(|err| anyhow!("Could not sign ListChangesRequest: {err:?}"))?;
+        let records = client.list_changes(request).await?.into_inner().changes;
 
         Ok(records)
     }
@@ -164,20 +156,16 @@ impl SyncModule for BreezSyncModule {
         };
 
         let id = self.persister.get_latest_record_id()? + 1;
-        let data = utils::encrypt(todo!(), &data.to_bytes()?)?;
-        let record = Some(Record {
+        let data = utils::encrypt(&self.signer.seed(), &data.to_bytes()?)?;
+        let record = Record {
             id,
             version: CURRENT_SCHEMA_VERSION,
             data,
-        });
-        let SetRecordReply { status, new_id } = client
-            .set_record(SetRecordRequest {
-                record,
-                request_time: utils::now(),
-                signature: todo!(),
-            })
-            .await?
-            .into_inner();
+        };
+        let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
+            .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
+
+        let SetRecordReply { status, new_id } = client.set_record(request).await?.into_inner();
 
         if status == SetRecordStatus::Conflict as i32 {
             return Err(anyhow!("Cannot set record: Local head is behind remote"));

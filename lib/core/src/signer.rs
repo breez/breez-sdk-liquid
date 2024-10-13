@@ -190,7 +190,7 @@ impl SdkSigner {
         })
     }
 
-    fn seed(&self) -> [u8; 64] {
+    pub(crate) fn seed(&self) -> [u8; 64] {
         self.mnemonic.to_seed("")
     }
 }

@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
+use lwk_wollet::hashes::hex::DisplayHex as _;
 use serde::{Deserialize, Serialize};
 
-use self::sync::Record;
+use self::sync::{ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest};
 use crate::{
-    model::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap},
+    model::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Signer, SignerError},
     utils,
 };
 
@@ -153,6 +156,64 @@ impl DecryptedRecord {
             id: record.id,
             version: record.version,
             data,
+        })
+    }
+}
+
+impl SetRecordRequest {
+    pub(crate) fn new(
+        record: Record,
+        request_time: u32,
+        signer: Arc<dyn Signer>,
+    ) -> Result<Self, SignerError> {
+        let msg = format!(
+            "{}-{}-{}-{}",
+            record.id,
+            record.version,
+            record.data.to_lower_hex_string(),
+            request_time,
+        );
+        let signature = signer
+            .sign_ecdsa_recoverable(msg.as_bytes().into())
+            .map(|bytes| bytes.to_lower_hex_string())?;
+
+        Ok(Self {
+            record: Some(record),
+            request_time,
+            signature,
+        })
+    }
+}
+
+impl ListChangesRequest {
+    pub(crate) fn new(
+        from_id: i64,
+        request_time: u32,
+        signer: Arc<dyn Signer>,
+    ) -> Result<Self, SignerError> {
+        let msg = format!("{}-{}", from_id, request_time);
+        let signature = signer
+            .sign_ecdsa_recoverable(msg.as_bytes().into())
+            .map(|bytes| bytes.to_lower_hex_string())?;
+
+        Ok(Self {
+            from_id,
+            request_time,
+            signature,
+        })
+    }
+}
+
+impl ListenChangesRequest {
+    pub(crate) fn new(request_time: u32, signer: Arc<dyn Signer>) -> Result<Self, SignerError> {
+        let msg = format!("{}", request_time);
+        let signature = signer
+            .sign_ecdsa_recoverable(msg.as_bytes().into())
+            .map(|bytes| bytes.to_lower_hex_string())?;
+
+        Ok(Self {
+            request_time,
+            signature,
         })
     }
 }
