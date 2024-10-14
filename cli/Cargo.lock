@@ -500,7 +500,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/ok300/boltz-rust?branch=ok300-chain-swap-refund-check-all-utoxs#1917a187998b3f0801532fef350f8530a7544871"
+source = "git+https://github.com/ok300/boltz-rust?branch=ok300-chain-swap-refund-check-all-utoxs#edf97658fe71621fbfef8c7a1def05c411ab2de7"
 dependencies = [
  "bip39",
  "bitcoin 0.31.2",
