@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
           path: build
 
       - name: Checkout breez-sdk-liquid-swift repo
