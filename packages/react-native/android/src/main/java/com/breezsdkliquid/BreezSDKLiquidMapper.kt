@@ -1406,13 +1406,15 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
     if (!validateMandatoryFields(
             prepareLnUrlPayResponse,
             arrayOf(
-                "prepareSendResponse",
+                "destination",
+                "feesSat",
             ),
         )
     ) {
         return null
     }
-    val prepareSendResponse = prepareLnUrlPayResponse.getMap("prepareSendResponse")?.let { asPrepareSendResponse(it) }!!
+    val destination = prepareLnUrlPayResponse.getMap("destination")?.let { asSendDestination(it) }!!
+    val feesSat = prepareLnUrlPayResponse.getDouble("feesSat").toULong()
     val successAction =
         if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
             prepareLnUrlPayResponse.getMap("successAction")?.let {
@@ -1421,12 +1423,13 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
         } else {
             null
         }
-    return PrepareLnUrlPayResponse(prepareSendResponse, successAction)
+    return PrepareLnUrlPayResponse(destination, feesSat, successAction)
 }
 
 fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
     readableMapOf(
-        "prepareSendResponse" to readableMapOf(prepareLnUrlPayResponse.prepareSendResponse),
+        "destination" to readableMapOf(prepareLnUrlPayResponse.destination),
+        "feesSat" to prepareLnUrlPayResponse.feesSat,
         "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
     )
 

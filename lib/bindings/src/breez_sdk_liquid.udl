@@ -357,7 +357,8 @@ dictionary PrepareLnUrlPayRequest {
 };
 
 dictionary PrepareLnUrlPayResponse {
-    PrepareSendResponse prepare_send_response;
+    SendDestination destination;
+    u64 fees_sat;
     SuccessAction? success_action = null;
 };
 

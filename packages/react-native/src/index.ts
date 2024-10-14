@@ -255,7 +255,8 @@ export interface PrepareLnUrlPayRequest {
 }
 
 export interface PrepareLnUrlPayResponse {
-    prepareSendResponse: PrepareSendResponse
+    destination: SendDestination
+    feesSat: number
     successAction?: SuccessAction
 }
 

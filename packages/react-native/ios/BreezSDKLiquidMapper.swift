@@ -1647,22 +1647,26 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: [String: Any?]) throws -> PrepareLnUrlPayResponse {
-        guard let prepareSendResponseTmp = prepareLnUrlPayResponse["prepareSendResponse"] as? [String: Any?] else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareSendResponse", typeName: "PrepareLnUrlPayResponse"))
+        guard let destinationTmp = prepareLnUrlPayResponse["destination"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "PrepareLnUrlPayResponse"))
         }
-        let prepareSendResponse = try asPrepareSendResponse(prepareSendResponse: prepareSendResponseTmp)
+        let destination = try asSendDestination(sendDestination: destinationTmp)
 
+        guard let feesSat = prepareLnUrlPayResponse["feesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareLnUrlPayResponse"))
+        }
         var successAction: SuccessAction?
         if let successActionTmp = prepareLnUrlPayResponse["successAction"] as? [String: Any?] {
             successAction = try asSuccessAction(successAction: successActionTmp)
         }
 
-        return PrepareLnUrlPayResponse(prepareSendResponse: prepareSendResponse, successAction: successAction)
+        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, successAction: successAction)
     }
 
     static func dictionaryOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse) -> [String: Any?] {
         return [
-            "prepareSendResponse": dictionaryOf(prepareSendResponse: prepareLnUrlPayResponse.prepareSendResponse),
+            "destination": dictionaryOf(sendDestination: prepareLnUrlPayResponse.destination),
+            "feesSat": prepareLnUrlPayResponse.feesSat,
             "successAction": prepareLnUrlPayResponse.successAction == nil ? nil : dictionaryOf(successAction: prepareLnUrlPayResponse.successAction!),
         ]
     }

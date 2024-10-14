@@ -807,27 +807,32 @@ class PrepareLnUrlPayRequest {
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 class PrepareLnUrlPayResponse {
-  /// The response from preparing the payment which includes `fees_sat`
-  final PrepareSendResponse prepareSendResponse;
+  /// The destination of the payment
+  final SendDestination destination;
+
+  /// The fees in satoshis to send the payment
+  final BigInt feesSat;
 
   /// The unprocessed LUD-09 success action. This will be processed and decrypted if
   /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
   final SuccessAction? successAction;
 
   const PrepareLnUrlPayResponse({
-    required this.prepareSendResponse,
+    required this.destination,
+    required this.feesSat,
     this.successAction,
   });
 
   @override
-  int get hashCode => prepareSendResponse.hashCode ^ successAction.hashCode;
+  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareLnUrlPayResponse &&
           runtimeType == other.runtimeType &&
-          prepareSendResponse == other.prepareSendResponse &&
+          destination == other.destination &&
+          feesSat == other.feesSat &&
           successAction == other.successAction;
 }
 

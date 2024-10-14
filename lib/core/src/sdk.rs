@@ -2178,7 +2178,7 @@ impl LiquidSdk {
                 Err(LnUrlPayError::Generic { err: data.reason })
             }
             ValidatedCallbackResponse::EndpointSuccess { data } => {
-                let prepare_send_response = self
+                let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount_sat: None,
@@ -2186,8 +2186,9 @@ impl LiquidSdk {
                     .await?;
 
                 Ok(PrepareLnUrlPayResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
                     success_action: data.success_action,
-                    prepare_send_response,
                 })
             }
         }
@@ -2212,7 +2213,10 @@ impl LiquidSdk {
         let prepare_response = req.prepare_response;
         let payment = self
             .send_payment(&SendPaymentRequest {
-                prepare_response: prepare_response.prepare_send_response,
+                prepare_response: PrepareSendResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
+                },
             })
             .await?
             .payment;

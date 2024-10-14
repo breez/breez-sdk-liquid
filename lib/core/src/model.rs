@@ -1390,8 +1390,10 @@ pub struct PrepareLnUrlPayRequest {
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 #[derive(Debug, Serialize)]
 pub struct PrepareLnUrlPayResponse {
-    /// The response from preparing the payment which includes `fees_sat`
-    pub prepare_send_response: PrepareSendResponse,
+    /// The destination of the payment
+    pub destination: SendDestination,
+    /// The fees in satoshis to send the payment
+    pub fees_sat: u64,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if
     /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
     pub success_action: Option<SuccessAction>,

@@ -570,7 +570,7 @@ pub(crate) async fn handle_command(
                     wait_confirmation!(
                         format!(
                             "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                            prepare_response.prepare_send_response.fees_sat
+                            prepare_response.fees_sat
                         ),
                         "LNURL pay halted"
                     );

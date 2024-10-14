@@ -2550,10 +2550,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareLnUrlPayResponse dco_decode_prepare_ln_url_pay_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareLnUrlPayResponse(
-      prepareSendResponse: dco_decode_prepare_send_response(arr[0]),
-      successAction: dco_decode_opt_box_autoadd_success_action(arr[1]),
+      destination: dco_decode_send_destination(arr[0]),
+      feesSat: dco_decode_u_64(arr[1]),
+      successAction: dco_decode_opt_box_autoadd_success_action(arr[2]),
     );
   }
 
@@ -4400,10 +4401,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   PrepareLnUrlPayResponse sse_decode_prepare_ln_url_pay_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_prepareSendResponse = sse_decode_prepare_send_response(deserializer);
+    var var_destination = sse_decode_send_destination(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
     var var_successAction = sse_decode_opt_box_autoadd_success_action(deserializer);
     return PrepareLnUrlPayResponse(
-        prepareSendResponse: var_prepareSendResponse, successAction: var_successAction);
+        destination: var_destination, feesSat: var_feesSat, successAction: var_successAction);
   }
 
   @protected
@@ -6134,7 +6136,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_prepare_ln_url_pay_response(PrepareLnUrlPayResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepare_send_response(self.prepareSendResponse, serializer);
+    sse_encode_send_destination(self.destination, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
     sse_encode_opt_box_autoadd_success_action(self.successAction, serializer);
   }
 

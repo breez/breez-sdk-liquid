@@ -2682,7 +2682,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_ln_url_pay_response(
       PrepareLnUrlPayResponse apiObj, wire_cst_prepare_ln_url_pay_response wireObj) {
-    cst_api_fill_to_wire_prepare_send_response(apiObj.prepareSendResponse, wireObj.prepare_send_response);
+    cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
+    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.success_action = cst_encode_opt_box_autoadd_success_action(apiObj.successAction);
   }
 
@@ -5201,13 +5202,6 @@ final class wire_cst_send_destination extends ffi.Struct {
   external SendDestinationKind kind;
 }
 
-final class wire_cst_prepare_send_response extends ffi.Struct {
-  external wire_cst_send_destination destination;
-
-  @ffi.Uint64()
-  external int fees_sat;
-}
-
 final class wire_cst_aes_success_action_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
@@ -5257,7 +5251,10 @@ final class wire_cst_success_action extends ffi.Struct {
 }
 
 final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
-  external wire_cst_prepare_send_response prepare_send_response;
+  external wire_cst_send_destination destination;
+
+  @ffi.Uint64()
+  external int fees_sat;
 
   external ffi.Pointer<wire_cst_success_action> success_action;
 }
@@ -5422,6 +5419,13 @@ final class wire_cst_refund_request extends ffi.Struct {
 
 final class wire_cst_restore_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
+}
+
+final class wire_cst_prepare_send_response extends ffi.Struct {
+  external wire_cst_send_destination destination;
+
+  @ffi.Uint64()
+  external int fees_sat;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {

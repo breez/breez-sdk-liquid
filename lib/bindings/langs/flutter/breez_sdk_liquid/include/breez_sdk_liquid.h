@@ -181,11 +181,6 @@ typedef struct wire_cst_send_destination {
   union SendDestinationKind kind;
 } wire_cst_send_destination;
 
-typedef struct wire_cst_prepare_send_response {
-  struct wire_cst_send_destination destination;
-  uint64_t fees_sat;
-} wire_cst_prepare_send_response;
-
 typedef struct wire_cst_aes_success_action_data {
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *ciphertext;
@@ -226,7 +221,8 @@ typedef struct wire_cst_success_action {
 } wire_cst_success_action;
 
 typedef struct wire_cst_prepare_ln_url_pay_response {
-  struct wire_cst_prepare_send_response prepare_send_response;
+  struct wire_cst_send_destination destination;
+  uint64_t fees_sat;
   struct wire_cst_success_action *success_action;
 } wire_cst_prepare_ln_url_pay_response;
 
@@ -338,6 +334,11 @@ typedef struct wire_cst_refund_request {
 typedef struct wire_cst_restore_request {
   struct wire_cst_list_prim_u_8_strict *backup_path;
 } wire_cst_restore_request;
+
+typedef struct wire_cst_prepare_send_response {
+  struct wire_cst_send_destination destination;
+  uint64_t fees_sat;
+} wire_cst_prepare_send_response;
 
 typedef struct wire_cst_send_payment_request {
   struct wire_cst_prepare_send_response prepare_response;

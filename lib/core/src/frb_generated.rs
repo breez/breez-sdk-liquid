@@ -3541,12 +3541,13 @@ impl SseDecode for crate::model::PrepareLnUrlPayRequest {
 impl SseDecode for crate::model::PrepareLnUrlPayResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_prepareSendResponse =
-            <crate::model::PrepareSendResponse>::sse_decode(deserializer);
+        let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
         return crate::model::PrepareLnUrlPayResponse {
-            prepare_send_response: var_prepareSendResponse,
+            destination: var_destination,
+            fees_sat: var_feesSat,
             success_action: var_successAction,
         };
     }
@@ -5479,7 +5480,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareLnUrlPayRequest>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.prepare_send_response.into_into_dart().into_dart(),
+            self.destination.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -7301,7 +7303,8 @@ impl SseEncode for crate::model::PrepareLnUrlPayRequest {
 impl SseEncode for crate::model::PrepareLnUrlPayResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::model::PrepareSendResponse>::sse_encode(self.prepare_send_response, serializer);
+        <crate::model::SendDestination>::sse_encode(self.destination, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
 }
@@ -9065,7 +9068,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PrepareLnUrlPayResponse {
             crate::model::PrepareLnUrlPayResponse {
-                prepare_send_response: self.prepare_send_response.cst_decode(),
+                destination: self.destination.cst_decode(),
+                fees_sat: self.fees_sat.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
         }
@@ -10142,7 +10146,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_prepare_ln_url_pay_response {
         fn new_with_null_ptr() -> Self {
             Self {
-                prepare_send_response: Default::default(),
+                destination: Default::default(),
+                fees_sat: Default::default(),
                 success_action: core::ptr::null_mut(),
             }
         }
@@ -12198,7 +12203,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_ln_url_pay_response {
-        prepare_send_response: wire_cst_prepare_send_response,
+        destination: wire_cst_send_destination,
+        fees_sat: u64,
         success_action: *mut wire_cst_success_action,
     }
     #[repr(C)]
