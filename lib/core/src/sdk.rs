@@ -36,6 +36,7 @@ use crate::model::Signer;
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::{boltz::BoltzSwapper, Swapper, SwapperReconnectHandler, SwapperStatusStream};
+use crate::sync::model::SyncData;
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -1088,6 +1089,9 @@ impl LiquidSdk {
                     is_local: true,
                 };
                 self.persister.insert_send_swap(&swap)?;
+                self.sync_service
+                    .set_record(SyncData::Send(swap.clone().into()))
+                    .await?;
                 swap
             }
         };
