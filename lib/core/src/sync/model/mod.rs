@@ -31,24 +31,46 @@ pub(crate) struct ChainSyncData {
     pub(crate) description: Option<String>,
 }
 
-impl ChainSyncData {
-    pub(crate) fn into_swap(self) -> ChainSwap {
+impl From<ChainSwap> for ChainSyncData {
+    fn from(value: ChainSwap) -> Self {
+        Self {
+            swap_id: value.id,
+            preimage: value.preimage,
+            create_response_json: value.create_response_json,
+            direction: value.direction,
+            lockup_address: value.lockup_address,
+            claim_address: value.claim_address,
+            claim_fees_sat: value.claim_fees_sat,
+            claim_private_key: value.claim_private_key,
+            refund_private_key: value.refund_private_key,
+            timeout_block_height: value.timeout_block_height,
+            payer_amount_sat: value.payer_amount_sat,
+            receiver_amount_sat: value.receiver_amount_sat,
+            accept_zero_conf: value.accept_zero_conf,
+            created_at: value.created_at,
+            description: value.description,
+        }
+    }
+}
+
+impl From<ChainSyncData> for ChainSwap {
+    fn from(val: ChainSyncData) -> Self {
         ChainSwap {
-            id: self.swap_id,
-            direction: self.direction,
-            timeout_block_height: self.timeout_block_height,
-            preimage: self.preimage,
-            description: self.description,
-            payer_amount_sat: self.payer_amount_sat,
-            receiver_amount_sat: self.receiver_amount_sat,
-            accept_zero_conf: self.accept_zero_conf,
-            created_at: self.created_at,
-            lockup_address: self.lockup_address,
-            claim_address: self.claim_address,
-            claim_fees_sat: self.claim_fees_sat,
-            claim_private_key: self.claim_private_key,
-            refund_private_key: self.refund_private_key,
-            create_response_json: self.create_response_json,
+            id: val.swap_id,
+            direction: val.direction,
+            timeout_block_height: val.timeout_block_height,
+            preimage: val.preimage,
+            description: val.description,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            accept_zero_conf: val.accept_zero_conf,
+            created_at: val.created_at,
+            lockup_address: val.lockup_address,
+            claim_address: val.claim_address,
+            claim_fees_sat: val.claim_fees_sat,
+            claim_private_key: val.claim_private_key,
+            refund_private_key: val.refund_private_key,
+            create_response_json: val.create_response_json,
             server_lockup_tx_id: None,
             user_lockup_tx_id: None,
             claim_tx_id: None,
@@ -65,7 +87,6 @@ pub(crate) struct SendSyncData {
     pub(crate) invoice: String,
     pub(crate) create_response_json: String,
     pub(crate) refund_private_key: String,
-    pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
@@ -73,18 +94,34 @@ pub(crate) struct SendSyncData {
     pub(crate) description: Option<String>,
 }
 
-impl SendSyncData {
-    pub(crate) fn into_swap(self) -> SendSwap {
+impl From<SendSwap> for SendSyncData {
+    fn from(value: SendSwap) -> Self {
+        Self {
+            swap_id: value.id,
+            invoice: value.invoice,
+            create_response_json: value.create_response_json,
+            refund_private_key: value.refund_private_key,
+            payer_amount_sat: value.payer_amount_sat,
+            receiver_amount_sat: value.receiver_amount_sat,
+            created_at: value.created_at,
+            preimage: value.preimage,
+            description: value.description,
+        }
+    }
+}
+
+impl From<SendSyncData> for SendSwap {
+    fn from(val: SendSyncData) -> Self {
         SendSwap {
-            id: self.swap_id,
-            invoice: self.invoice,
-            description: self.description,
-            preimage: self.preimage,
-            payer_amount_sat: self.payer_amount_sat,
-            receiver_amount_sat: self.receiver_amount_sat,
-            create_response_json: self.create_response_json,
-            refund_private_key: self.refund_private_key,
-            created_at: self.created_at,
+            id: val.swap_id,
+            invoice: val.invoice,
+            description: val.description,
+            preimage: val.preimage,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            create_response_json: val.create_response_json,
+            refund_private_key: val.refund_private_key,
+            created_at: val.created_at,
             lockup_tx_id: None,
             refund_tx_id: None,
             state: PaymentState::Created,
@@ -101,26 +138,42 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) create_response_json: String,
     pub(crate) claim_fees_sat: u64,
     pub(crate) claim_private_key: String,
-    pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
     pub(crate) description: Option<String>,
 }
 
-impl ReceiveSyncData {
-    pub(crate) fn into_swap(self) -> ReceiveSwap {
+impl From<ReceiveSwap> for ReceiveSyncData {
+    fn from(value: ReceiveSwap) -> Self {
+        Self {
+            swap_id: value.id,
+            invoice: value.invoice,
+            preimage: value.preimage,
+            create_response_json: value.create_response_json,
+            claim_fees_sat: value.claim_fees_sat,
+            claim_private_key: value.claim_private_key,
+            payer_amount_sat: value.payer_amount_sat,
+            receiver_amount_sat: value.receiver_amount_sat,
+            created_at: value.created_at,
+            description: value.description,
+        }
+    }
+}
+
+impl From<ReceiveSyncData> for ReceiveSwap {
+    fn from(val: ReceiveSyncData) -> Self {
         ReceiveSwap {
-            id: self.swap_id,
-            preimage: self.preimage,
-            create_response_json: self.create_response_json,
-            claim_private_key: self.claim_private_key,
-            invoice: self.invoice,
-            description: self.description,
-            payer_amount_sat: self.payer_amount_sat,
-            receiver_amount_sat: self.receiver_amount_sat,
-            claim_fees_sat: self.claim_fees_sat,
-            created_at: self.created_at,
+            id: val.swap_id,
+            preimage: val.preimage,
+            create_response_json: val.create_response_json,
+            claim_private_key: val.claim_private_key,
+            invoice: val.invoice,
+            description: val.description,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            claim_fees_sat: val.claim_fees_sat,
+            created_at: val.created_at,
             claim_tx_id: None,
             state: PaymentState::Created,
             is_local: false,

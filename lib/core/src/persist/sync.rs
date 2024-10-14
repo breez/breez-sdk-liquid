@@ -9,13 +9,13 @@ impl Persister {
     pub(crate) fn get_latest_record_id(&self) -> Result<i64> {
         let con = self.get_connection()?;
 
-        let latest_record_id: i64 = con.query_row(
+        let maybe_latest_record_id: Option<i64> = con.query_row(
             "SELECT latestRecordId FROM settings WHERE id = 1",
             [],
             |row| row.get(0),
         )?;
 
-        Ok(latest_record_id)
+        Ok(maybe_latest_record_id.unwrap_or(0))
     }
 
     pub(crate) fn set_latest_record_id(&self, new_latest_id: i64) -> Result<()> {
@@ -92,9 +92,9 @@ impl Persister {
 
     pub(crate) fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
         match record.data {
-            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.into_swap()),
-            SyncData::Send(send_data) => self.insert_send_swap(&send_data.into_swap()),
-            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.into_swap()),
+            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.into()),
+            SyncData::Send(send_data) => self.insert_send_swap(&send_data.into()),
+            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.into()),
         }
     }
 }
