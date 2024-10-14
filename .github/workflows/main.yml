@@ -130,6 +130,62 @@ jobs:
           cd lib/bindings
           cargo test
 
+  notification-plugin:
+    name: Check notification plugin
+    runs-on: macOS-14
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: 17
+
+      - name: Build bindings
+        working-directory: lib/bindings
+        run: cargo build
+
+      - name: Build Android bindings
+        working-directory: lib/bindings       
+        run: |
+          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
+
+      - name: Run Android build
+        working-directory: lib/bindings/langs/android  
+        run: |
+          ./gradlew build
+
+      - name: Build Swift bindings
+        working-directory: lib/bindings       
+        run: |
+          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
+          mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
+          cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
+          cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers
+          cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/Headers
+          cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
+          rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
+          rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
+
+      - name: Run Swift build
+        working-directory: lib/bindings/langs/swift  
+        run: |
+          swift build
+
   react-native:
     name: Check react native bindings
     runs-on: macOS-14
