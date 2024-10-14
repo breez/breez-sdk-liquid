@@ -416,6 +416,17 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(prepareLnurlPay:resolve:reject:)
+    func prepareLnurlPay(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let prepareLnUrlPayRequest = try BreezSDKLiquidMapper.asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: req)
+            var res = try getBindingLiquidSdk().prepareLnurlPay(req: prepareLnUrlPayRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(prepareLnUrlPayResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(lnurlPay:resolve:reject:)
     func lnurlPay(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

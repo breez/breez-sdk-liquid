@@ -183,9 +183,16 @@ impl BindingLiquidSdk {
         self.sdk.get_payment(&req).await
     }
 
+    pub async fn prepare_lnurl_pay(
+        &self,
+        req: PrepareLnUrlPayRequest,
+    ) -> Result<PrepareLnUrlPayResponse, duplicates::LnUrlPayError> {
+        self.sdk.prepare_lnurl_pay(req).await.map_err(Into::into)
+    }
+
     pub async fn lnurl_pay(
         &self,
-        req: LnUrlPayRequest,
+        req: crate::model::LnUrlPayRequest,
     ) -> Result<LnUrlPayResult, duplicates::LnUrlPayError> {
         self.sdk.lnurl_pay(req).await.map_err(Into::into)
     }
@@ -367,13 +374,11 @@ pub struct _LnUrlPayRequestData {
     pub ln_address: Option<String>,
 }
 
-#[frb(mirror(LnUrlPayRequest))]
-pub struct _LnUrlPayRequest {
-    pub data: LnUrlPayRequestData,
-    pub amount_msat: u64,
-    pub comment: Option<String>,
-    pub payment_label: Option<String>,
-    pub validate_success_action_url: Option<bool>,
+#[frb(mirror(SuccessAction))]
+pub enum _SuccessAction {
+    Aes { data: AesSuccessActionData },
+    Message { data: MessageSuccessActionData },
+    Url { data: UrlSuccessActionData },
 }
 
 #[frb(mirror(SuccessActionProcessed))]
@@ -381,6 +386,13 @@ pub enum _SuccessActionProcessed {
     Aes { result: AesSuccessActionDataResult },
     Message { data: MessageSuccessActionData },
     Url { data: UrlSuccessActionData },
+}
+
+#[frb(mirror(AesSuccessActionData))]
+pub struct _AesSuccessActionData {
+    pub description: String,
+    pub ciphertext: String,
+    pub iv: String,
 }
 
 #[frb(mirror(AesSuccessActionDataResult))]

@@ -1373,6 +1373,39 @@ impl From<SwapTree> for InternalSwapTree {
     }
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+#[derive(Debug, Serialize)]
+pub struct PrepareLnUrlPayRequest {
+    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    pub data: LnUrlPayRequestData,
+    /// The amount in millisatoshis for this payment
+    pub amount_msat: u64,
+    /// An optional comment for this payment
+    pub comment: Option<String>,
+    /// Validates that, if there is a URL success action, the URL domain matches
+    /// the LNURL callback domain. Defaults to `true`
+    pub validate_success_action_url: Option<bool>,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+#[derive(Debug, Serialize)]
+pub struct PrepareLnUrlPayResponse {
+    /// The destination of the payment
+    pub destination: SendDestination,
+    /// The fees in satoshis to send the payment
+    pub fees_sat: u64,
+    /// The unprocessed LUD-09 success action. This will be processed and decrypted if
+    /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
+    pub success_action: Option<SuccessAction>,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
+#[derive(Debug, Serialize)]
+pub struct LnUrlPayRequest {
+    /// The response from calling [crate::sdk::LiquidSdk::prepare_lnurl_pay]
+    pub prepare_response: PrepareLnUrlPayResponse,
+}
+
 /// Contains the result of the entire LNURL-pay interaction, as reported by the LNURL endpoint.
 ///
 /// * `EndpointSuccess` indicates the payment is complete. The endpoint may return a `SuccessActionProcessed`,

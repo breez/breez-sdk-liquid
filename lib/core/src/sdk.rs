@@ -2138,13 +2138,33 @@ impl LiquidSdk {
         self.persister.restore_from_backup(backup_path)
     }
 
-    /// Second step of LNURL-pay. The first step is [parse], which also validates the LNURL destination
-    /// and generates the [LnUrlPayRequest] payload needed here.
+    /// Prepares to pay to an LNURL encoded pay request or lightning address.
+    ///
+    /// This is the second step of LNURL-pay flow. The first step is [parse], which also validates the LNURL
+    /// destination and generates the [LnUrlPayRequest] payload needed here.
     ///
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
-    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
-    /// is made.
-    pub async fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
+    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, a [PrepareSendResponse] is
+    /// prepared for the invoice. If the receiver has encoded a Magic Routing Hint in the invoice, the
+    /// [PrepareSendResponse]'s `fees_sat` will reflect this.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareLnUrlPayRequest] containing:
+    ///     * `data` - the [LnUrlPayRequestData] returned by [parse]
+    ///     * `amount_msat` - the amount in millisatoshis for this payment
+    ///     * `comment` - an optional comment for this payment
+    ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
+    ///       the LNURL callback domain. Defaults to 'true'
+    ///
+    /// # Returns
+    /// Returns a [PrepareLnUrlPayResponse] containing:
+    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retreived invoice
+    ///     * `success_action` - the optional unprocessed LUD-09 success action
+    pub async fn prepare_lnurl_pay(
+        &self,
+        req: PrepareLnUrlPayRequest,
+    ) -> Result<PrepareLnUrlPayResponse, LnUrlPayError> {
         match validate_lnurl_pay(
             req.amount_msat,
             &req.comment,
@@ -2154,71 +2174,97 @@ impl LiquidSdk {
         )
         .await?
         {
-            ValidatedCallbackResponse::EndpointError { data: e } => {
-                Ok(LnUrlPayResult::EndpointError { data: e })
+            ValidatedCallbackResponse::EndpointError { data } => {
+                Err(LnUrlPayError::Generic { err: data.reason })
             }
-            ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
+            ValidatedCallbackResponse::EndpointSuccess { data } => {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
-                        destination: cb.pr.clone(),
+                        destination: data.pr.clone(),
                         amount_sat: None,
                     })
                     .await?;
 
-                let payment = self
-                    .send_payment(&SendPaymentRequest { prepare_response })
-                    .await?
-                    .payment;
-
-                let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
-                    Some(sa) => {
-                        let processed_sa = match sa {
-                            // For AES, we decrypt the contents on the fly
-                            SuccessAction::Aes(data) => {
-                                let PaymentDetails::Lightning { preimage, .. } = &payment.details
-                                else {
-                                    return Err(LnUrlPayError::Generic {
-                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
-                                    });
-                                };
-
-                                let preimage_str =
-                                    preimage.clone().ok_or(LnUrlPayError::Generic {
-                                        err: "Payment successful but no preimage found".to_string(),
-                                    })?;
-                                let preimage =
-                                    sha256::Hash::from_str(&preimage_str).map_err(|_| {
-                                        LnUrlPayError::Generic {
-                                            err: "Invalid preimage".to_string(),
-                                        }
-                                    })?;
-                                let preimage_arr: [u8; 32] = preimage.into_32();
-                                let result = match (data, &preimage_arr).try_into() {
-                                    Ok(data) => AesSuccessActionDataResult::Decrypted { data },
-                                    Err(e) => AesSuccessActionDataResult::ErrorStatus {
-                                        reason: e.to_string(),
-                                    },
-                                };
-                                SuccessActionProcessed::Aes { result }
-                            }
-                            SuccessAction::Message(data) => {
-                                SuccessActionProcessed::Message { data }
-                            }
-                            SuccessAction::Url(data) => SuccessActionProcessed::Url { data },
-                        };
-                        Some(processed_sa)
-                    }
-                    None => None,
-                };
-
-                Ok(LnUrlPayResult::EndpointSuccess {
-                    data: model::LnUrlPaySuccessData {
-                        payment,
-                        success_action: maybe_sa_processed,
-                    },
+                Ok(PrepareLnUrlPayResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
+                    success_action: data.success_action,
                 })
             }
         }
+    }
+
+    /// Pay to an LNURL encoded pay request or lightning address.
+    ///
+    /// The final step of LNURL-pay flow, called after preparing the payment with [LiquidSdk::prepare_lnurl_pay].
+    /// This call sends the payment using the [PrepareLnUrlPayResponse]'s `prepare_send_response` either via
+    /// Lightning or directly to a Liquid address if a Magic Routing Hint is included in the invoice.
+    /// Once the payment is made, the [PrepareLnUrlPayResponse]'s `success_action` is processed decrypting
+    /// the AES data if needed.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [LnUrlPayRequest] containing:
+    ///     * `prepare_response` - the [PrepareLnUrlPayResponse] returned by [LiquidSdk::prepare_lnurl_pay]
+    pub async fn lnurl_pay(
+        &self,
+        req: model::LnUrlPayRequest,
+    ) -> Result<LnUrlPayResult, LnUrlPayError> {
+        let prepare_response = req.prepare_response;
+        let payment = self
+            .send_payment(&SendPaymentRequest {
+                prepare_response: PrepareSendResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
+                },
+            })
+            .await?
+            .payment;
+
+        let maybe_sa_processed: Option<SuccessActionProcessed> = match prepare_response
+            .success_action
+        {
+            Some(sa) => {
+                let processed_sa = match sa {
+                    // For AES, we decrypt the contents on the fly
+                    SuccessAction::Aes { data } => {
+                        let PaymentDetails::Lightning { preimage, .. } = &payment.details else {
+                            return Err(LnUrlPayError::Generic {
+                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
+                                    });
+                        };
+
+                        let preimage_str = preimage.clone().ok_or(LnUrlPayError::Generic {
+                            err: "Payment successful but no preimage found".to_string(),
+                        })?;
+                        let preimage = sha256::Hash::from_str(&preimage_str).map_err(|_| {
+                            LnUrlPayError::Generic {
+                                err: "Invalid preimage".to_string(),
+                            }
+                        })?;
+                        let preimage_arr: [u8; 32] = preimage.into_32();
+                        let result = match (data, &preimage_arr).try_into() {
+                            Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                            Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                                reason: e.to_string(),
+                            },
+                        };
+                        SuccessActionProcessed::Aes { result }
+                    }
+                    SuccessAction::Message { data } => SuccessActionProcessed::Message { data },
+                    SuccessAction::Url { data } => SuccessActionProcessed::Url { data },
+                };
+                Some(processed_sa)
+            }
+            None => None,
+        };
+
+        Ok(LnUrlPayResult::EndpointSuccess {
+            data: model::LnUrlPaySuccessData {
+                payment,
+                success_action: maybe_sa_processed,
+            },
+        })
     }
 
     /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination

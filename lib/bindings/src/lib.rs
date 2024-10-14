@@ -159,7 +159,15 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.get_payment(&req))
     }
 
-    pub fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
+    pub fn prepare_lnurl_pay(
+        &self,
+        req: PrepareLnUrlPayRequest,
+    ) -> Result<PrepareLnUrlPayResponse, LnUrlPayError> {
+        rt().block_on(self.sdk.prepare_lnurl_pay(req))
+            .map_err(Into::into)
+    }
+
+    pub fn lnurl_pay(&self, req: model::LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
         rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
     }
 
