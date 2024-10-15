@@ -478,23 +478,17 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
 
     if let Some(filters) = &req.filters {
         if !filters.is_empty() {
-            let mut type_filter_clause: HashSet<PaymentType> = HashSet::new();
+            let mut type_filter_clause: HashSet<i8> = HashSet::new();
+
             for type_filter in filters {
-                match type_filter {
-                    PaymentType::Send => {
-                        type_filter_clause.insert(PaymentType::Send);
-                    }
-                    PaymentType::Receive => {
-                        type_filter_clause.insert(PaymentType::Receive);
-                    }
-                }
+                type_filter_clause.insert(*type_filter as i8);
             }
 
             where_clause.push(format!(
                 "ptx.payment_type in ({})",
                 type_filter_clause
                     .iter()
-                    .map(|t| format!("'{}'", t))
+                    .map(|t| format!("{}", t))
                     .collect::<Vec<_>>()
                     .join(", ")
             ));

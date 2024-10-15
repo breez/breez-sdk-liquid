@@ -943,6 +943,7 @@ impl FromSql for PaymentState {
 }
 
 #[derive(Debug, Copy, Clone, Eq, EnumString, Display, Hash, PartialEq, Serialize)]
+#[strum(serialize_all = "lowercase")]
 pub enum PaymentType {
     Receive = 0,
     Send = 1,
