@@ -86,6 +86,10 @@ pub(crate) enum Command {
     },
     /// List incoming and outgoing payments
     ListPayments {
+        /// The optional payment type filter. Either "send" or "receive"
+        #[clap(name = "filter", short = 'r', long = "filter")]
+        filters: Option<Vec<PaymentType>>,
+
         /// The optional from unix timestamp
         #[clap(name = "from_timestamp", short = 'f', long = "from")]
         from_timestamp: Option<i64>,
@@ -445,6 +449,7 @@ pub(crate) async fn handle_command(
             command_result!(format!("Message was signed by pubkey: {}", res.is_valid))
         }
         Command::ListPayments {
+            filters,
             from_timestamp,
             to_timestamp,
             limit,
@@ -460,7 +465,7 @@ pub(crate) async fn handle_command(
 
             let payments = sdk
                 .list_payments(&ListPaymentsRequest {
-                    filters: None,
+                    filters,
                     from_timestamp,
                     to_timestamp,
                     limit,
