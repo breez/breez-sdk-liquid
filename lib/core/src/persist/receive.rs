@@ -25,12 +25,12 @@ impl Persister {
                 claim_private_key,
                 invoice,
                 payment_hash,
-                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 created_at,
                 claim_fees_sat,
-                claim_tx_id,
+                mrh_address,
+                mrh_script_pubkey,
                 state
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -44,14 +44,30 @@ impl Persister {
             &receive_swap.claim_private_key,
             &receive_swap.invoice,
             &receive_swap.payment_hash,
-            &receive_swap.description,
             &receive_swap.payer_amount_sat,
             &receive_swap.receiver_amount_sat,
             &receive_swap.created_at,
             &receive_swap.claim_fees_sat,
-            &receive_swap.claim_tx_id,
+            &receive_swap.mrh_address,
+            &receive_swap.mrh_script_pubkey,
             &receive_swap.state,
         ))?;
+
+        con.execute(
+            "UPDATE receive_swaps
+            SET
+                description = :description,
+                claim_tx_id = :claim_tx_id,
+                mrh_tx_id = :mrh_tx_id
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": &receive_swap.id,
+                ":description": &receive_swap.description,
+                ":claim_tx_id": &receive_swap.claim_tx_id,
+                ":mrh_tx_id": &receive_swap.mrh_tx_id,
+            },
+        )?;
 
         Ok(())
     }
@@ -77,6 +93,9 @@ impl Persister {
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
+                rs.mrh_address,
+                rs.mrh_script_pubkey,
+                rs.mrh_tx_id,
                 rs.created_at,
                 rs.state
             FROM receive_swaps AS rs
@@ -118,8 +137,11 @@ impl Persister {
             receiver_amount_sat: row.get(8)?,
             claim_fees_sat: row.get(9)?,
             claim_tx_id: row.get(10)?,
-            created_at: row.get(11)?,
-            state: row.get(12)?,
+            mrh_address: row.get(11)?,
+            mrh_script_pubkey: row.get(12)?,
+            mrh_tx_id: row.get(13)?,
+            created_at: row.get(14)?,
+            state: row.get(15)?,
         })
     }
 
@@ -182,12 +204,31 @@ impl Persister {
         Ok(res)
     }
 
+    /// Ongoing Receive Swaps, indexed by mrh_script_pubkey
+    pub(crate) fn list_ongoing_receive_swaps_by_mrh_script_pubkey(
+        &self,
+    ) -> Result<HashMap<String, ReceiveSwap>> {
+        let con: Connection = self.get_connection()?;
+        let res = self
+            .list_ongoing_receive_swaps(&con)?
+            .iter()
+            .filter_map(
+                |receive_swap| match receive_swap.mrh_script_pubkey.is_empty() {
+                    false => Some((receive_swap.mrh_script_pubkey.clone(), receive_swap.clone())),
+                    true => None,
+                },
+            )
+            .collect();
+        Ok(res)
+    }
+
     pub(crate) fn try_handle_receive_swap_update(
         &self,
         swap_id: &str,
         to_state: PaymentState,
         claim_tx_id: Option<&str>,
         lockup_tx_id: Option<&str>,
+        mrh_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite claim_tx_id or lockup_tx_id
         let con: Connection = self.get_connection()?;
@@ -204,6 +245,11 @@ impl Persister {
                         WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
                         ELSE lockup_tx_id
                     END,
+                mrh_tx_id = 
+                    CASE
+                        WHEN mrh_tx_id IS NULL THEN :mrh_tx_id
+                        ELSE mrh_tx_id
+                    END,
                 state = :state
             WHERE
                 id = :id",
@@ -211,6 +257,7 @@ impl Persister {
                 ":id": swap_id,
                 ":lockup_tx_id": lockup_tx_id,
                 ":claim_tx_id": claim_tx_id,
+                ":mrh_tx_id": mrh_tx_id,
                 ":state": to_state,
             },
         )
@@ -320,7 +367,13 @@ mod tests {
         let new_state = PaymentState::Pending;
         let claim_tx_id = Some("claim_tx_id");
 
-        storage.try_handle_receive_swap_update(&receive_swap.id, new_state, claim_tx_id, None)?;
+        storage.try_handle_receive_swap_update(
+            &receive_swap.id,
+            new_state,
+            claim_tx_id,
+            None,
+            None,
+        )?;
 
         let updated_receive_swap = storage
             .fetch_receive_swap_by_id(&receive_swap.id)?
