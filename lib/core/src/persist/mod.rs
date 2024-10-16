@@ -1,3 +1,4 @@
+mod address;
 mod backup;
 mod cache;
 pub(crate) mod chain;
@@ -202,9 +203,9 @@ impl Persister {
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
-                WHERE claim_tx_id IS NOT NULL OR lockup_tx_id IS NOT NULL
+                WHERE COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
             ) rs                                 -- Receive Swap data (by claim)
-                ON ptx.tx_id = rs.claim_tx_id
+                ON ptx.tx_id in (rs.claim_tx_id, rs.mrh_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
             LEFT JOIN chain_swaps AS cs          -- Chain Swap data
