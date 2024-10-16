@@ -388,7 +388,7 @@ impl SendSwapHandler {
         let liquid_chain_service = self.chain_service.lock().await;
         let script_pk = swap_script
             .to_address(self.config.network.into())
-            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .to_unconfidential()
             .script_pubkey();
         let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
