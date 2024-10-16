@@ -1822,6 +1822,28 @@ impl LiquidSdk {
                 )
             })
             .await?;
+
+        let swap = self
+            .persister
+            .fetch_chain_swap_by_lockup_address(&req.swap_address)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Swap for lockup address {} not found", &req.swap_address),
+            })?;
+
+        // Set the payment state to `RefundPending`. This ensures:
+        // - the swap is not shown in `list-refundables` anymore
+        // - the background thread will move it to Failed once the refund tx confirms
+        self.chain_swap_handler
+            .update_swap_info(
+                &swap.id,
+                RefundPending,
+                None,
+                None,
+                None,
+                Some(&refund_tx_id),
+            )
+            .await?;
+
         Ok(RefundResponse { refund_tx_id })
     }
 
