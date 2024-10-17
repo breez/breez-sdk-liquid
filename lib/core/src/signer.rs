@@ -19,6 +19,7 @@ use lwk_wollet::elements_miniscript::{
     elementssig_to_rawsig,
     psbt::PsbtExt,
     slip77::MasterBlindingKey,
+    ToPublicKey as _,
 };
 use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
@@ -255,13 +256,14 @@ impl Signer for SdkSigner {
     }
 
     fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
-        let rc_pub = self.xpub()?;
+        let keypair = self.xprv.to_keypair(&self.secp);
+        let rc_pub = keypair.public_key().to_public_key().to_bytes();
         Ok(ecies::encrypt(&rc_pub, msg)
             .map_err(|err| anyhow::anyhow!("Could not encrypt data: {err}"))?)
     }
 
     fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
-        let rc_prv = self.xprv.private_key.secret_bytes();
+        let rc_prv = self.xprv.to_priv().to_bytes();
         Ok(ecies::decrypt(&rc_prv, msg)
             .map_err(|err| anyhow::anyhow!("Could not decrypt data: {err}"))?)
     }
