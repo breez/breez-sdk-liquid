@@ -526,6 +526,7 @@ impl LiquidSdk {
             balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
             pending_send_sat,
             pending_receive_sat,
+            fingerprint: self.onchain_wallet.fingerprint(),
             pubkey: self.onchain_wallet.pubkey(),
         })
     }

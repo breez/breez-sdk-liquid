@@ -4480,6 +4480,8 @@ final class wire_cst_get_info_response extends ffi.Struct {
   @ffi.Uint64()
   external int pending_receive_sat;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }
 

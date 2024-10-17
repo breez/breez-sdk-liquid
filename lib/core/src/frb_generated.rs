@@ -2362,11 +2362,13 @@ impl SseDecode for crate::model::GetInfoResponse {
         let mut var_balanceSat = <u64>::sse_decode(deserializer);
         let mut var_pendingSendSat = <u64>::sse_decode(deserializer);
         let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
+        let mut var_fingerprint = <String>::sse_decode(deserializer);
         let mut var_pubkey = <String>::sse_decode(deserializer);
         return crate::model::GetInfoResponse {
             balance_sat: var_balanceSat,
             pending_send_sat: var_pendingSendSat,
             pending_receive_sat: var_pendingReceiveSat,
+            fingerprint: var_fingerprint,
             pubkey: var_pubkey,
         };
     }
@@ -4400,6 +4402,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::GetInfoResponse {
             self.balance_sat.into_into_dart().into_dart(),
             self.pending_send_sat.into_into_dart().into_dart(),
             self.pending_receive_sat.into_into_dart().into_dart(),
+            self.fingerprint.into_into_dart().into_dart(),
             self.pubkey.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -6334,6 +6337,7 @@ impl SseEncode for crate::model::GetInfoResponse {
         <u64>::sse_encode(self.balance_sat, serializer);
         <u64>::sse_encode(self.pending_send_sat, serializer);
         <u64>::sse_encode(self.pending_receive_sat, serializer);
+        <String>::sse_encode(self.fingerprint, serializer);
         <String>::sse_encode(self.pubkey, serializer);
     }
 }
@@ -8256,6 +8260,7 @@ mod io {
                 balance_sat: self.balance_sat.cst_decode(),
                 pending_send_sat: self.pending_send_sat.cst_decode(),
                 pending_receive_sat: self.pending_receive_sat.cst_decode(),
+                fingerprint: self.fingerprint.cst_decode(),
                 pubkey: self.pubkey.cst_decode(),
             }
         }
@@ -9628,6 +9633,7 @@ mod io {
                 balance_sat: Default::default(),
                 pending_send_sat: Default::default(),
                 pending_receive_sat: Default::default(),
+                fingerprint: core::ptr::null_mut(),
                 pubkey: core::ptr::null_mut(),
             }
         }
@@ -11495,6 +11501,7 @@ mod io {
         balance_sat: u64,
         pending_send_sat: u64,
         pending_receive_sat: u64,
+        fingerprint: *mut wire_cst_list_prim_u_8_strict,
         pubkey: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]

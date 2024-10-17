@@ -505,11 +505,14 @@ enum BreezSDKLiquidMapper {
         guard let pendingReceiveSat = getInfoResponse["pendingReceiveSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pendingReceiveSat", typeName: "GetInfoResponse"))
         }
+        guard let fingerprint = getInfoResponse["fingerprint"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "fingerprint", typeName: "GetInfoResponse"))
+        }
         guard let pubkey = getInfoResponse["pubkey"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
         }
 
-        return GetInfoResponse(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, pubkey: pubkey)
+        return GetInfoResponse(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, fingerprint: fingerprint, pubkey: pubkey)
     }
 
     static func dictionaryOf(getInfoResponse: GetInfoResponse) -> [String: Any?] {
@@ -517,6 +520,7 @@ enum BreezSDKLiquidMapper {
             "balanceSat": getInfoResponse.balanceSat,
             "pendingSendSat": getInfoResponse.pendingSendSat,
             "pendingReceiveSat": getInfoResponse.pendingReceiveSat,
+            "fingerprint": getInfoResponse.fingerprint,
             "pubkey": getInfoResponse.pubkey,
         ]
     }
