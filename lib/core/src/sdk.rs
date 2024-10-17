@@ -2024,7 +2024,7 @@ impl LiquidSdk {
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.receive_swap_handler
-                        .update_swap_info(&swap.id, Complete, None, None, None)
+                        .update_swap_info(&swap.id, Complete, None, None, None, None)
                         .await?;
                 }
             } else if let Some(swap) =
@@ -2036,7 +2036,14 @@ impl LiquidSdk {
                     false => Pending,
                 };
                 self.receive_swap_handler
-                    .update_swap_info(&swap.id, to_state, None, None, Some(&tx_id))
+                    .update_swap_info(
+                        &swap.id,
+                        to_state,
+                        None,
+                        None,
+                        Some(&tx_id),
+                        Some(amount_sat.unsigned_abs()),
+                    )
                     .await?;
                 // Remove the used MRH address from the reserved addresses
                 self.persister.delete_reserved_address(&swap.mrh_address)?;

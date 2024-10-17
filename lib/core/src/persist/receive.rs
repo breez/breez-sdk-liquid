@@ -229,6 +229,7 @@ impl Persister {
         claim_tx_id: Option<&str>,
         lockup_tx_id: Option<&str>,
         mrh_tx_id: Option<&str>,
+        mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite claim_tx_id or lockup_tx_id
         let con: Connection = self.get_connection()?;
@@ -250,6 +251,8 @@ impl Persister {
                         WHEN mrh_tx_id IS NULL THEN :mrh_tx_id
                         ELSE mrh_tx_id
                     END,
+                payer_amount_sat = COALESCE(:mrh_amount_sat, payer_amount_sat),
+                receiver_amount_sat = COALESCE(:mrh_amount_sat, receiver_amount_sat),
                 state = :state
             WHERE
                 id = :id",
@@ -258,6 +261,7 @@ impl Persister {
                 ":lockup_tx_id": lockup_tx_id,
                 ":claim_tx_id": claim_tx_id,
                 ":mrh_tx_id": mrh_tx_id,
+                ":mrh_amount_sat": mrh_amount_sat,
                 ":state": to_state,
             },
         )
@@ -371,6 +375,7 @@ mod tests {
             &receive_swap.id,
             new_state,
             claim_tx_id,
+            None,
             None,
             None,
         )?;
