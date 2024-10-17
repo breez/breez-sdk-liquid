@@ -218,7 +218,8 @@ impl OnchainWallet for LiquidOnchainWallet {
                     "Got reserved address {} that expired on block height {}",
                     reserved_address.address, reserved_address.expiry_block_height
                 );
-                self.persister.delete_reserved_address(&reserved_address.address)?;
+                self.persister
+                    .delete_reserved_address(&reserved_address.address)?;
                 ElementsAddress::from_str(&reserved_address.address)
                     .map_err(|e| PaymentError::Generic { err: e.to_string() })?
             }
@@ -265,7 +266,15 @@ impl OnchainWallet for LiquidOnchainWallet {
             true,
             true,
         ))?;
-        lwk_wollet::full_scan_with_electrum_client(&mut wallet, &mut electrum_client)?;
+        let index = self
+            .persister
+            .get_last_derivation_index()?
+            .unwrap_or_default();
+        lwk_wollet::full_scan_to_index_with_electrum_client(
+            &mut wallet,
+            index,
+            &mut electrum_client,
+        )?;
         Ok(())
     }
 
