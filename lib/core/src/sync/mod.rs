@@ -166,6 +166,10 @@ impl SyncService for BreezSyncService {
             .map_err(|err| anyhow!("Could not sign ListChangesRequest: {err:?}"))?;
         let records = client.list_changes(request).await?.into_inner().changes;
 
+        if let Some(last_record) = records.last() {
+            self.persister.set_latest_record_id(last_record.id)?;
+        }
+
         Ok(records)
     }
 
