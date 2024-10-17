@@ -397,6 +397,9 @@ pub struct GetInfoResponse {
     pub pending_send_sat: u64,
     /// Incoming amount that is pending from ongoing Receive swaps
     pub pending_receive_sat: u64,
+    /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+    pub fingerprint: String,
+    /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
 }
 

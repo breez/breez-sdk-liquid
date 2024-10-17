@@ -8,7 +8,7 @@ use lwk_common::Signer;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_signer::{AnySigner, SwSigner};
 use lwk_wollet::{
-    elements::{Address, Transaction},
+    elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
@@ -61,6 +61,7 @@ pub trait OnchainWallet: Send + Sync {
 
     /// Get the public key of the wallet
     fn pubkey(&self) -> String;
+    fn fingerprint(&self) -> String;
 
     fn derive_bip32_key(&self, path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError>;
 
@@ -261,5 +262,9 @@ impl OnchainWallet for LiquidOnchainWallet {
     fn check_message(&self, message: &str, pubkey: &str, signature: &str) -> Result<bool> {
         let pk = PublicKey::from_str(pubkey)?;
         Ok(verify(message.as_bytes(), signature, &pk))
+    }
+
+    fn fingerprint(&self) -> String {
+        self.lwk_signer.fingerprint().to_hex()
     }
 }

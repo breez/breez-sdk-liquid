@@ -210,18 +210,28 @@ class GetInfoResponse {
 
   /// Incoming amount that is pending from ongoing Receive swaps
   final BigInt pendingReceiveSat;
+
+  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+  final String fingerprint;
+
+  /// The wallet's pubkey. Used to verify signed messages.
   final String pubkey;
 
   const GetInfoResponse({
     required this.balanceSat,
     required this.pendingSendSat,
     required this.pendingReceiveSat,
+    required this.fingerprint,
     required this.pubkey,
   });
 
   @override
   int get hashCode =>
-      balanceSat.hashCode ^ pendingSendSat.hashCode ^ pendingReceiveSat.hashCode ^ pubkey.hashCode;
+      balanceSat.hashCode ^
+      pendingSendSat.hashCode ^
+      pendingReceiveSat.hashCode ^
+      fingerprint.hashCode ^
+      pubkey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -231,6 +241,7 @@ class GetInfoResponse {
           balanceSat == other.balanceSat &&
           pendingSendSat == other.pendingSendSat &&
           pendingReceiveSat == other.pendingReceiveSat &&
+          fingerprint == other.fingerprint &&
           pubkey == other.pubkey;
 }
 

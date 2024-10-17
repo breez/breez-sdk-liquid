@@ -328,6 +328,7 @@ dictionary GetInfoResponse {
     u64 balance_sat;
     u64 pending_send_sat;
     u64 pending_receive_sat;
+    string fingerprint;
     string pubkey;
 };
 

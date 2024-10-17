@@ -93,6 +93,7 @@ export interface GetInfoResponse {
     balanceSat: number
     pendingSendSat: number
     pendingReceiveSat: number
+    fingerprint: string
     pubkey: string
 }
 
