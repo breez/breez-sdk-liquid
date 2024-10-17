@@ -45,13 +45,6 @@ pub struct ListenChangesRequest {
     #[prost(string, tag = "2")]
     pub signature: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Change {
-    #[prost(enumeration = "ChangeType", tag = "1")]
-    pub r#type: i32,
-    #[prost(message, optional, tag = "2")]
-    pub record: ::core::option::Option<Record>,
-}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum SetRecordStatus {
@@ -74,35 +67,6 @@ impl SetRecordStatus {
         match value {
             "SUCCESS" => Some(Self::Success),
             "CONFLICT" => Some(Self::Conflict),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum ChangeType {
-    Ack = 0,
-    Record = 1,
-    Disconnect = 2,
-}
-impl ChangeType {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Ack => "ACK",
-            Self::Record => "RECORD",
-            Self::Disconnect => "DISCONNECT",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "ACK" => Some(Self::Ack),
-            "RECORD" => Some(Self::Record),
-            "DISCONNECT" => Some(Self::Disconnect),
             _ => None,
         }
     }
@@ -241,7 +205,7 @@ pub mod syncer_client {
             &mut self,
             request: impl tonic::IntoRequest<super::ListenChangesRequest>,
         ) -> std::result::Result<
-            tonic::Response<tonic::codec::Streaming<super::Change>>,
+            tonic::Response<tonic::codec::Streaming<super::Record>>,
             tonic::Status,
         > {
             self.inner

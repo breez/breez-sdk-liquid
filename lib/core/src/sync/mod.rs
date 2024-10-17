@@ -11,7 +11,7 @@ use tonic::transport::Channel;
 
 use self::model::{
     sync::{
-        syncer_client::SyncerClient, ChangeType, ListChangesRequest, ListenChangesRequest, Record,
+        syncer_client::SyncerClient, ListChangesRequest, ListenChangesRequest, Record,
         SetRecordReply, SetRecordRequest, SetRecordStatus,
     },
     DecryptedRecord, SyncData,
@@ -125,30 +125,20 @@ impl SyncService for BreezSyncService {
             debug!("Sync service: Started listening to changes");
             while let Some(message) = stream.next().await {
                 match message {
-                    Ok(change) => match change.r#type() {
-                        ChangeType::Ack => debug!("Received ACK message from sync server"),
-                        ChangeType::Record => {
-                            let Some(record) = change.record else {
-                                return debug!(
-                                    "Unexpected payload received from server: no record found"
-                                );
-                            };
+                    Ok(record) => {
+                        debug!(
+                            "Sync service: Received new record - record_id {} record_version {}",
+                            record.id, record.version
+                        );
 
-                            debug!(
-                                "Sync service: Received new record - record_id {} record_version {}",
-                                record.id, record.version
-                            );
-
-                            let record_id = record.id;
-                            if let Err(err) = cloned.apply_changes(&[record]) {
-                                warn!("Could not apply incoming changes: {err:?}")
-                            };
-                            if let Err(err) = cloned.persister.set_latest_record_id(record_id) {
-                                warn!("Could not update latest record id from stream: {err:?}")
-                            };
-                        }
-                        ChangeType::Disconnect => debug!("Received DISCONNECT message from server"),
-                    },
+                        let record_id = record.id;
+                        if let Err(err) = cloned.apply_changes(&[record]) {
+                            warn!("Could not apply incoming changes: {err:?}")
+                        };
+                        if let Err(err) = cloned.persister.set_latest_record_id(record_id) {
+                            warn!("Could not update latest record id from stream: {err:?}")
+                        };
+                    }
                     Err(err) => warn!("An error occured while listening for records: {err:?}"),
                 }
             }
