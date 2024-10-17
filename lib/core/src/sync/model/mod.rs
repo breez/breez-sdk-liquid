@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use lwk_wollet::hashes::hex::DisplayHex as _;
+use lwk_wollet::hashes::hex::DisplayHex;
+use openssl::sha::sha256;
 use serde::{Deserialize, Serialize};
 
 use self::sync::{ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest};
@@ -11,6 +12,8 @@ use crate::model::{
 use super::CURRENT_SCHEMA_VERSION;
 
 pub(crate) mod sync;
+
+const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct ChainSyncData {
@@ -247,10 +250,7 @@ impl SetRecordRequest {
             record.data.to_lower_hex_string(),
             request_time,
         );
-        let signature = signer
-            .sign_ecdsa_recoverable(msg.as_bytes().into())
-            .map(|bytes| bytes.to_lower_hex_string())?;
-
+        let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
             record: Some(record),
             request_time,
@@ -266,10 +266,7 @@ impl ListChangesRequest {
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
         let msg = format!("{}-{}", from_id, request_time);
-        let signature = signer
-            .sign_ecdsa_recoverable(msg.as_bytes().into())
-            .map(|bytes| bytes.to_lower_hex_string())?;
-
+        let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
             from_id,
             request_time,
@@ -284,13 +281,18 @@ impl ListenChangesRequest {
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
         let msg = format!("{}", request_time);
-        let signature = signer
-            .sign_ecdsa_recoverable(msg.as_bytes().into())
-            .map(|bytes| bytes.to_lower_hex_string())?;
-
+        let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
             request_time,
             signature,
         })
     }
+}
+
+fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
+    let msg = [MESSAGE_PREFIX, msg].concat();
+    let digest = sha256(&sha256(&msg));
+    signer
+        .sign_ecdsa_recoverable(digest.into())
+        .map(|bytes| zbase32::encode_full_bytes(&bytes))
 }
