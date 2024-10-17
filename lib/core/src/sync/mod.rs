@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use log::warn;
+use log::{debug, warn};
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt as _;
 use tonic::transport::Channel;
@@ -100,6 +100,10 @@ impl SyncService for BreezSyncService {
     async fn connect(&self) -> Result<()> {
         let mut client = self.client.lock().await;
         *client = Some(SyncerClient::connect(self.connect_url.clone()).await?);
+        debug!(
+            "Sync service: Successfully connected to {}",
+            self.connect_url
+        );
         Ok(())
     }
 
@@ -116,6 +120,7 @@ impl SyncService for BreezSyncService {
 
         let cloned = self.clone();
         tokio::spawn(async move {
+            debug!("Sync service: Started listening to changes");
             while let Some(message) = stream.next().await {
                 match message {
                     Ok(record) => {
