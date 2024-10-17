@@ -9,13 +9,15 @@ impl Persister {
     pub(crate) fn get_latest_record_id(&self) -> Result<i64> {
         let con = self.get_connection()?;
 
-        let maybe_latest_record_id: Option<i64> = con.query_row(
-            "SELECT latestRecordId FROM settings WHERE id = 1",
-            [],
-            |row| row.get(0),
-        )?;
+        let latest_record_id: i64 = con
+            .query_row(
+                "SELECT latestRecordId FROM settings WHERE id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
 
-        Ok(maybe_latest_record_id.unwrap_or(0))
+        Ok(latest_record_id)
     }
 
     pub(crate) fn set_latest_record_id(&self, new_latest_id: i64) -> Result<()> {
