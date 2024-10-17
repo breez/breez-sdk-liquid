@@ -215,6 +215,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                     "Got reserved address {} that expired on block height {}",
                     reserved_address.address, reserved_address.expiry_block_height
                 );
+                self.persister.delete_reserved_address(&reserved_address.address)?;
                 ElementsAddress::from_str(&reserved_address.address)
                     .map_err(|e| PaymentError::Generic { err: e.to_string() })?
             }

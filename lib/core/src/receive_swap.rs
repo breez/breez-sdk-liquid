@@ -82,7 +82,8 @@ impl ReceiveSwapHandler {
                     }
                     None => {
                         error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                        self.update_swap_info(id, Failed, None, None, None).await?;
+                        self.update_swap_info(id, Failed, None, None, None, None)
+                            .await?;
                     }
                 }
                 Ok(())
@@ -114,7 +115,7 @@ impl ReceiveSwapHandler {
                 info!("swapper lockup was verified");
 
                 let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None)
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)
                     .await?;
 
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
@@ -188,7 +189,7 @@ impl ReceiveSwapHandler {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => {
-                        self.update_swap_info(&receive_swap.id, Pending, None, None, None)
+                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)
                             .await?;
                         match self.claim(&receive_swap).await {
                             Ok(_) => {}
@@ -223,6 +224,7 @@ impl ReceiveSwapHandler {
         claim_tx_id: Option<&str>,
         lockup_tx_id: Option<&str>,
         mrh_tx_id: Option<&str>,
+        mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         info!(
             "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
@@ -249,6 +251,7 @@ impl ReceiveSwapHandler {
             claim_tx_id,
             lockup_tx_id,
             mrh_tx_id,
+            mrh_amount_sat,
         )?;
 
         if let Some(payment_id) = payment_id {
@@ -308,7 +311,7 @@ impl ReceiveSwapHandler {
 
         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
 
-        self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None, None)
+        self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None, None, None)
             .await?;
 
         Ok(())
@@ -425,7 +428,7 @@ mod tests {
                 storage.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
-                    .update_swap_info(&receive_swap.id, *allowed_state, None, None, None)
+                    .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
                     .await
                     .is_ok());
             }
@@ -449,7 +452,7 @@ mod tests {
                 storage.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
-                    .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None)
+                    .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)
                     .await
                     .is_err());
             }
