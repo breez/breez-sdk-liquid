@@ -94,5 +94,15 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         
         DROP TABLE payment_details_old;            
         ",
+        "
+        CREATE TABLE IF NOT EXISTS reserved_addresses (
+            address TEXT NOT NULL PRIMARY KEY,
+            expiry_block_height INTEGER NOT NULL
+        ) STRICT;
+
+        ALTER TABLE receive_swaps ADD COLUMN mrh_address TEXT NOT NULL DEFAULT '';
+        ALTER TABLE receive_swaps ADD COLUMN mrh_script_pubkey TEXT NOT NULL DEFAULT '';
+        ALTER TABLE receive_swaps ADD COLUMN mrh_tx_id TEXT;
+        ",
     ]
 }

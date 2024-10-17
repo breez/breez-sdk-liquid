@@ -259,6 +259,16 @@ pub struct ConnectWithSignerRequest {
     pub config: Config,
 }
 
+/// A reserved address. Once an address is reserved, it can only be
+/// reallocated to another payment after the block height expiration.
+#[derive(Clone, Debug)]
+pub(crate) struct ReservedAddress {
+    /// The address that is reserved
+    pub(crate) address: String,
+    /// The block height that the address is reserved until
+    pub(crate) expiry_block_height: u32,
+}
+
 /// The send/receive methods supported by the SDK
 #[derive(Clone, Debug, EnumString, Serialize, Eq, PartialEq)]
 pub enum PaymentMethod {
@@ -777,8 +787,14 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// The address reserved for a magic routing hint payment
+    pub(crate) mrh_address: String,
+    /// The script pubkey for a magic routing hint payment
+    pub(crate) mrh_script_pubkey: String,
+    /// Persisted only if a transaction is sent to the `mrh_address`
+    pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
-    /// Afterwards, it shows the lockup tx creation time.    
+    /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }

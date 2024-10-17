@@ -858,7 +858,6 @@ impl ChainSwapHandler {
             swap.id
         );
 
-        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SwapScriptV2::Liquid(swap_script) = swap.get_lockup_swap_script()? else {
             return Err(PaymentError::Generic {
                 err: "Unexpected swap script type found".to_string(),
@@ -873,6 +872,7 @@ impl ChainSwapHandler {
             .script_pubkey();
         let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
 
+        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
             Swap::Chain(swap.clone()),
             &refund_address,
