@@ -34,6 +34,7 @@ use crate::model::Signer;
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::{boltz::BoltzSwapper, Swapper, SwapperReconnectHandler, SwapperStatusStream};
+use crate::sync::model::SyncData;
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -42,6 +43,8 @@ use crate::{
     persist::Persister,
     utils, *,
 };
+
+use self::sync::{BreezSyncService, SyncService};
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
@@ -67,6 +70,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
+    pub(crate) sync_service: Arc<dyn SyncService>,
 }
 
 impl LiquidSdk {
@@ -167,6 +171,12 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+        let sync_service = Arc::new(BreezSyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            signer.clone(),
+        ));
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
@@ -185,6 +195,7 @@ impl LiquidSdk {
             receive_swap_handler,
             chain_swap_handler,
             buy_bitcoin_service,
+            sync_service,
         });
         Ok(sdk)
     }
@@ -227,6 +238,16 @@ impl LiquidSdk {
                 }
             }
         });
+
+        let sync_service = self.sync_service.clone();
+        if let Err(err) = sync_service
+            .clone()
+            .connect()
+            .and_then(|_| sync_service.listen())
+            .await
+        {
+            warn!("Could not start background real-time sync stream: {err:?}");
+        };
 
         let reconnect_handler = Box::new(SwapperReconnectHandler::new(
             self.persister.clone(),
@@ -1037,8 +1058,12 @@ impl LiquidSdk {
                     created_at: utils::now(),
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
+                    is_local: true,
                 };
                 self.persister.insert_send_swap(&swap)?;
+                self.sync_service
+                    .set_record(SyncData::Send(swap.clone().into()))
+                    .await?;
                 swap
             }
         };
@@ -1311,6 +1336,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            is_local: true,
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
@@ -1635,6 +1661,7 @@ impl LiquidSdk {
                 claim_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
+                is_local: true,
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
@@ -1722,6 +1749,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            is_local: true,
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;

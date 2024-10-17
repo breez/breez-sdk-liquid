@@ -4,6 +4,7 @@ pub(crate) mod chain;
 mod migrations;
 pub(crate) mod receive;
 pub(crate) mod send;
+pub(crate) mod sync;
 
 use std::collections::HashSet;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};

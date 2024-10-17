@@ -29,9 +29,10 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                is_local
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
@@ -47,6 +48,7 @@ impl Persister {
             &send_swap.refund_tx_id,
             &send_swap.created_at,
             &send_swap.state,
+            &send_swap.is_local,
         ))?;
 
         Ok(())
@@ -96,7 +98,8 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                is_local
             FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -134,6 +137,7 @@ impl Persister {
             refund_tx_id: row.get(9)?,
             created_at: row.get(10)?,
             state: row.get(11)?,
+            is_local: row.get(12)?,
         })
     }
 
