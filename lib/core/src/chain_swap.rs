@@ -76,7 +76,7 @@ impl ChainSwapHandler {
             loop {
                 tokio::select! {
                     _ = rescan_interval.tick() => {
-                        if let Err(e) = cloned.rescan_incoming_chain_swaps().await {
+                        if let Err(e) = cloned.rescan_incoming_chain_swaps(false).await {
                             error!("Error checking incoming chain swaps: {e:?}");
                         }
                         if let Err(e) = cloned.rescan_outgoing_chain_swaps().await {
@@ -110,7 +110,10 @@ impl ChainSwapHandler {
         }
     }
 
-    pub(crate) async fn rescan_incoming_chain_swaps(&self) -> Result<()> {
+    pub(crate) async fn rescan_incoming_chain_swaps(
+        &self,
+        ignore_monitoring_block_height: bool,
+    ) -> Result<()> {
         let current_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
         let chain_swaps: Vec<ChainSwap> = self
             .persister
@@ -124,22 +127,34 @@ impl ChainSwapHandler {
             current_height
         );
         for swap in chain_swaps {
-            if let Err(e) = self.rescan_incoming_chain_swap(&swap, current_height).await {
+            if let Err(e) = self
+                .rescan_incoming_chain_swap(&swap, current_height, ignore_monitoring_block_height)
+                .await
+            {
                 error!("Error rescanning incoming Chain Swap {}: {e:?}", swap.id);
             }
         }
         Ok(())
     }
 
+    /// ### Arguments
+    /// - `swap`: the swap being rescanned
+    /// - `current_height`: the tip
+    /// - `ignore_monitoring_block_height`: if true, it rescans an expired swap even after the
+    ///   cutoff monitoring block height
     async fn rescan_incoming_chain_swap(
         &self,
         swap: &ChainSwap,
         current_height: u32,
+        ignore_monitoring_block_height: bool,
     ) -> Result<()> {
         let monitoring_block_height =
             swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
         let is_swap_expired = current_height > swap.timeout_block_height;
-        let is_monitoring_expired = current_height > monitoring_block_height;
+        let is_monitoring_expired = match ignore_monitoring_block_height {
+            true => false,
+            false => current_height > monitoring_block_height,
+        };
 
         if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
             let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
@@ -730,7 +745,7 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    pub async fn prepare_refund(
+    pub(crate) async fn prepare_refund(
         &self,
         lockup_address: &str,
         refund_address: &str,
@@ -771,30 +786,25 @@ impl ChainSwapHandler {
             .persister
             .fetch_chain_swap_by_lockup_address(lockup_address)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap {} not found", lockup_address),
+                err: format!("Swap for lockup address {} not found", lockup_address),
             })?;
+        let id = &swap.id;
 
         ensure_sdk!(
             swap.state == Refundable,
             PaymentError::Generic {
-                err: format!("Chain Swap {} was not marked as `Refundable`", swap.id)
+                err: format!("Chain Swap {id} was not marked as `Refundable`")
             }
         );
 
         ensure_sdk!(
             swap.refund_tx_id.is_none(),
             PaymentError::Generic {
-                err: format!(
-                    "A refund tx for incoming Chain Swap {} was already broadcast",
-                    swap.id
-                )
+                err: format!("A refund tx for incoming Chain Swap {id} was already broadcast",)
             }
         );
 
-        info!(
-            "Initiating refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
-            swap.id
-        );
+        info!("Initiating refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}",);
 
         let SwapScriptV2::Bitcoin(swap_script) = swap.get_lockup_swap_script()? else {
             return Err(PaymentError::Generic {
@@ -818,18 +828,25 @@ impl ChainSwapHandler {
         )?
         else {
             return Err(PaymentError::Generic {
-                err: format!(
-                    "Unexpected refund tx type returned for incoming Chain swap {}",
-                    swap.id
-                ),
+                err: format!("Unexpected refund tx type returned for incoming Chain swap {id}",),
             });
         };
         let refund_tx_id = bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
 
-        info!(
-            "Successfully broadcast refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
-            swap.id
-        );
+        info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
+
+        // After refund tx is broadcasted, set the payment state to `RefundPending`. This ensures:
+        // - the swap is not shown in `list-refundables` anymore
+        // - the background thread will move it to Failed once the refund tx confirms
+        self.update_swap_info(
+            &swap.id,
+            RefundPending,
+            None,
+            None,
+            None,
+            Some(&refund_tx_id),
+        )
+        .await?;
 
         Ok(refund_tx_id)
     }
