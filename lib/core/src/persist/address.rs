@@ -30,6 +30,7 @@ impl Persister {
             FROM reserved_addresses
             {where_clause_str}
             ORDER BY expiry_block_height ASC
+            LIMIT 1
         "
         )
     }

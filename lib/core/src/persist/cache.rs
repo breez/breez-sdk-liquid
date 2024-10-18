@@ -6,6 +6,7 @@ use super::Persister;
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
+// TODO: The `last_derivation_index` needs to be synced
 const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
 
 impl Persister {
