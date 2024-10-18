@@ -788,28 +788,23 @@ impl ChainSwapHandler {
             .ok_or(PaymentError::Generic {
                 err: format!("Swap for lockup address {} not found", lockup_address),
             })?;
+        let id = &swap.id;
 
         ensure_sdk!(
             swap.state == Refundable,
             PaymentError::Generic {
-                err: format!("Chain Swap {} was not marked as `Refundable`", swap.id)
+                err: format!("Chain Swap {id} was not marked as `Refundable`")
             }
         );
 
         ensure_sdk!(
             swap.refund_tx_id.is_none(),
             PaymentError::Generic {
-                err: format!(
-                    "A refund tx for incoming Chain Swap {} was already broadcast",
-                    swap.id
-                )
+                err: format!("A refund tx for incoming Chain Swap {id} was already broadcast",)
             }
         );
 
-        info!(
-            "Initiating refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
-            swap.id
-        );
+        info!("Initiating refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}",);
 
         let SwapScriptV2::Bitcoin(swap_script) = swap.get_lockup_swap_script()? else {
             return Err(PaymentError::Generic {
@@ -833,18 +828,25 @@ impl ChainSwapHandler {
         )?
         else {
             return Err(PaymentError::Generic {
-                err: format!(
-                    "Unexpected refund tx type returned for incoming Chain swap {}",
-                    swap.id
-                ),
+                err: format!("Unexpected refund tx type returned for incoming Chain swap {id}",),
             });
         };
         let refund_tx_id = bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
 
-        info!(
-            "Successfully broadcast refund for incoming Chain Swap {}, is_cooperative: {is_cooperative}",
-            swap.id
-        );
+        info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
+
+        // After refund tx is broadcasted, set the payment state to `RefundPending`. This ensures:
+        // - the swap is not shown in `list-refundables` anymore
+        // - the background thread will move it to Failed once the refund tx confirms
+        self.update_swap_info(
+            &swap.id,
+            RefundPending,
+            None,
+            None,
+            None,
+            Some(&refund_tx_id),
+        )
+        .await?;
 
         Ok(refund_tx_id)
     }
