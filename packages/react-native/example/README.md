@@ -1,5 +1,12 @@
 # Breez Liquid SDK React Native Example
 
+## Prerequisites
+You need to set your Breez API key in the relevant places before running the example.
+Either Find and Replace `INSERT_YOUR_BREEZ_API_KEY` with your Breez API key, 
+or replace `INSERT_YOUR_BREEZ_API_KEY` in the following files:
+* `android/app/gradle.properties`
+* `ios/Secrets.xconfig`
+
 ## Build
 
 Run the npm/yarn install to download dependences:

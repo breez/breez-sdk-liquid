@@ -22,6 +22,7 @@ import {
     sendPayment,
     PaymentMethod
 } from "@breeztech/react-native-breez-sdk-liquid"
+import BuildConfig from "react-native-build-config"
 import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 
@@ -65,7 +66,7 @@ const App = () => {
                 }
 
                 // Connect using the config
-                const config = await defaultConfig(LiquidNetwork.MAINNET)
+                const config = await defaultConfig(LiquidNetwork.MAINNET, BuildConfig.BREEZ_API_KEY)
                 addLine("defaultConfig", JSON.stringify(config))
 
                 await connect({ config, mnemonic })
