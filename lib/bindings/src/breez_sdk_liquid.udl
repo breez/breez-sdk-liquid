@@ -320,8 +320,12 @@ enum LiquidNetwork {
 };
 
 dictionary ConnectRequest {
-    Config config;
+    Config config;    
     string mnemonic;
+};
+
+dictionary ConnectWithSignerRequest {
+  Config config;  
 };
 
 dictionary GetInfoResponse {
@@ -602,6 +606,9 @@ namespace breez_sdk_liquid {
     BindingLiquidSdk connect(ConnectRequest req);
 
     [Throws=SdkError]
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
+
+    [Throws=SdkError]
     void set_logger(Logger logger);
     
     [Throws=SdkError]
@@ -612,6 +619,31 @@ namespace breez_sdk_liquid {
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string input);
+};
+
+[Error]
+interface SignerError { 
+    Generic(string err);
+};
+
+callback interface Signer {
+    [Throws=SignerError]
+    sequence<u8> xpub();
+
+    [Throws=SignerError]
+    sequence<u8> derive_xpub(string derivation_path);
+
+    [Throws=SignerError]
+    sequence<u8> sign_ecdsa(sequence<u8> msg, string derivation_path);
+
+    [Throws=SignerError]
+    sequence<u8> sign_ecdsa_recoverable(sequence<u8> msg);
+
+    [Throws=SignerError]
+    sequence<u8> slip77_master_blinding_key();
+
+    [Throws=SignerError]
+    sequence<u8> hmac_sha256(sequence<u8> msg, string derivation_path);
 };
 
 interface BindingLiquidSdk {

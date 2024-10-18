@@ -2003,8 +2003,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
-    wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
     cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
+    wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
   }
 
   @protected
@@ -5580,9 +5580,9 @@ final class wire_cst_config extends ffi.Struct {
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
-
   external wire_cst_config config;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
 }
 
 final class wire_cst_aes_success_action_data_decrypted extends ffi.Struct {
