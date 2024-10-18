@@ -268,7 +268,7 @@ mod tests {
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
 
-        let config = Config::testnet();
+        let config = Config::testnet(None);
 
         // Create a temporary directory for working_dir
         let temp_dir = TempDir::new().unwrap();
