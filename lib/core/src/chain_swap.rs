@@ -71,7 +71,7 @@ impl ChainSwapHandler {
         let cloned = self.clone();
         tokio::spawn(async move {
             let mut rescan_interval = tokio::time::interval(Duration::from_secs(60 * 10));
-            rescan_interval.set_missed_tick_behavior(MissedTickBehavior::Burst);
+            rescan_interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
             loop {
                 tokio::select! {
