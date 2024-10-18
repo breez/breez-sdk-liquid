@@ -407,11 +407,18 @@ mod tests {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
 
-        let sw_fingerprint = sw_signer.xpub().fingerprint();
+        let sw_fingerprint = sw_signer.fingerprint();
         let sdk_fingerprint = sdk_signer.fingerprint().unwrap();
-
+        let manual_finger_print = sdk_signer.xpub().unwrap().identifier()[0..4]
+            .try_into()
+            .unwrap();
         assert_eq!(
             sw_fingerprint, sdk_fingerprint,
+            "Fingerprints should be identical"
+        );
+
+        assert_eq!(
+            sw_fingerprint, manual_finger_print,
             "Fingerprints should be identical"
         );
     }

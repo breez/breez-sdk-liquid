@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-
 use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -14,6 +10,7 @@ use lnurl::auth::SdkLnurlAuthSigner;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{ElementsNetwork, WalletTx};
@@ -21,6 +18,9 @@ use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -146,7 +146,8 @@ impl LiquidSdk {
         };
 
         fs::create_dir_all(&config.working_dir)?;
-        let fingerprint_hex: String = signer.xpub()?[0..4].to_hex();
+        let fingerprint_hex: String =
+            Xpub::decode(signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
         let working_dir = config.get_wallet_working_dir(fingerprint_hex)?;
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             signer.clone(),
