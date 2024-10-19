@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -12,6 +12,7 @@ use futures_util::stream::select_all;
 use futures_util::StreamExt;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
+use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -25,6 +26,7 @@ use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use url::Url;
+use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
@@ -95,11 +97,44 @@ impl LiquidSdk {
         Ok(sdk)
     }
 
+    fn validate_api_key(api_key: &str) -> Result<()> {
+        let api_key_decoded = lwk_wollet::bitcoin::base64::engine::general_purpose::STANDARD
+            .decode(api_key.as_bytes())
+            .map_err(|err| anyhow!("Could not base64 decode the Breez API key: {err:?}"))?;
+        let (_rem, cert) = parse_x509_certificate(&api_key_decoded)
+            .map_err(|err| anyhow!("Invaid certificate for Breez API key: {err:?}"))?;
+
+        let issuer = cert
+            .issuer()
+            .iter_common_name()
+            .next()
+            .and_then(|cn| cn.as_str().ok());
+        match issuer {
+            Some(common_name) => ensure_sdk!(
+                common_name.starts_with("Breez"),
+                anyhow!("Invalid certificate found for Breez API key: issuer mismatch. Please confirm that the certificate's origin is trusted")
+            ),
+            _ => {
+                return Err(anyhow!("Could not parse Breez API key certificate: issuer is invalid or not found."))
+            }
+        }
+
+        Ok(())
+    }
+
     fn new(
         config: Config,
         swapper_proxy_url: Option<String>,
         mnemonic: String,
     ) -> Result<Arc<Self>> {
+        match (config.network, &config.breez_api_key) {
+            (_, Some(api_key)) => Self::validate_api_key(api_key)?,
+            (LiquidNetwork::Mainnet, None) => {
+                return Err(anyhow!("Breez API key must be provided on mainnet."));
+            }
+            (LiquidNetwork::Testnet, None) => {}
+        };
+
         fs::create_dir_all(&config.working_dir)?;
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(mnemonic, config.clone())?);
@@ -361,7 +396,7 @@ impl LiquidSdk {
 
     async fn emit_payment_updated(&self, payment_id: Option<String>) -> Result<()> {
         if let Some(id) = payment_id {
-            match self.persister.get_payment(id.clone())? {
+            match self.persister.get_payment(&id)? {
                 Some(payment) => {
                     match payment.status {
                         Complete => {
@@ -491,6 +526,7 @@ impl LiquidSdk {
             balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
             pending_send_sat,
             pending_receive_sat,
+            fingerprint: self.onchain_wallet.fingerprint(),
             pubkey: self.onchain_wallet.pubkey(),
         })
     }
@@ -511,11 +547,10 @@ impl LiquidSdk {
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
-        let invoice = invoice.trim().parse::<Bolt11Invoice>().map_err(|err| {
-            PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            }
-        })?;
+        let invoice = invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", LiquidNetwork::Mainnet) => {}
@@ -529,9 +564,7 @@ impl LiquidSdk {
 
         ensure_sdk!(
             !invoice.is_expired(),
-            PaymentError::InvalidInvoice {
-                err: "Invoice has expired".to_string()
-            }
+            PaymentError::invalid_invoice("Invoice has expired")
         );
 
         Ok(invoice)
@@ -683,12 +716,6 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
-                if self.config.breez_api_key.is_none() {
-                    return Err(PaymentError::Generic {
-                        err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-                    });
-                }
-
                 let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
@@ -737,12 +764,6 @@ impl LiquidSdk {
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
                     Some((lbtc_address, _)) => {
-                        if self.config.breez_api_key.is_none() {
-                            return Err(PaymentError::Generic {
-                                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-                            });
-                        }
-
                         self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
                             .await?
                     }
@@ -888,12 +909,6 @@ impl LiquidSdk {
         receiver_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        if self.config.breez_api_key.is_none() {
-            return Err(PaymentError::Generic {
-                err: "Cannot execute direct payments without `breez_api_key` specified in the SDK configuration. To receive one, please fill out the form at https://breez.technology/request-api-key/#contact-us-form-sdk".to_string()
-            });
-        }
-
         let tx = self
             .onchain_wallet
             .build_tx(
@@ -953,9 +968,19 @@ impl LiquidSdk {
         invoice: &str,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let receiver_amount_sat = get_invoice_amount!(invoice);
-        let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
+        let bolt11_invoice = invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
+        let receiver_amount_sat =
+            bolt11_invoice
+                .amount_milli_satoshis()
+                .ok_or(PaymentError::invalid_invoice(
+                    "Invoice does not contain an amount",
+                ))?
+                / 1000;
 
+        let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
         let lockup_tx_fees_sat = self
             .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
@@ -970,10 +995,9 @@ impl LiquidSdk {
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
                 RefundPending | Failed => {
-                    return Err(PaymentError::InvalidInvoice {
-                        err: "Payment has already failed. Please try with another invoice."
-                            .to_string(),
-                    })
+                    return Err(PaymentError::invalid_invoice(
+                        "Payment has already failed. Please try with another invoice",
+                    ))
                 }
                 _ => swap,
             },
@@ -1006,12 +1030,17 @@ impl LiquidSdk {
                 let swap_id = &create_response.id;
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
-                let description = get_invoice_description!(invoice);
+                let payment_hash = bolt11_invoice.payment_hash().to_string();
+                let description = match bolt11_invoice.description() {
+                    Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+                    Bolt11InvoiceDescription::Hash(_) => None,
+                };
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: invoice.to_string(),
+                    payment_hash: Some(payment_hash),
                     description,
                     preimage: None,
                     payer_amount_sat,
@@ -1576,26 +1605,22 @@ impl LiquidSdk {
         );
 
         let swap_id = create_response.id.clone();
-        let invoice = Bolt11Invoice::from_str(&create_response.invoice).map_err(|err| {
-            PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            }
-        })?;
+        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
         let payer_amount_sat =
             invoice
                 .amount_milli_satoshis()
-                .ok_or(PaymentError::InvalidInvoice {
-                    err: "Invoice does not contain an amount".to_string(),
-                })?
+                .ok_or(PaymentError::invalid_invoice(
+                    "Invoice does not contain an amount",
+                ))?
                 / 1000;
 
         // Double check that the generated invoice includes our data
         // https://docs.boltz.exchange/v/api/dont-trust-verify#lightning-invoice-verification
-        if invoice.payment_hash().to_string() != preimage_hash {
-            return Err(PaymentError::InvalidInvoice {
-                err: "Invalid preimage returned by swapper".to_string(),
-            });
-        };
+        ensure_sdk!(
+            invoice.payment_hash().to_string() == preimage_hash,
+            PaymentError::invalid_invoice("Invalid preimage returned by swapper")
+        );
 
         let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
             &create_response,
@@ -1613,6 +1638,7 @@ impl LiquidSdk {
                 create_response_json,
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
+                payment_hash: Some(preimage_hash),
                 description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -2029,6 +2055,25 @@ impl LiquidSdk {
         Ok(self.persister.get_payments(req)?)
     }
 
+    /// Retrieves a payment.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [GetPaymentRequest] containing:
+    ///     * [GetPaymentRequest::Lightning] - the `payment_hash` of the lightning invoice
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given request.
+    pub async fn get_payment(
+        &self,
+        req: &GetPaymentRequest,
+    ) -> Result<Option<Payment>, PaymentError> {
+        self.ensure_is_started().await?;
+
+        Ok(self.persister.get_payment_by_request(req)?)
+    }
+
     /// Empties the Liquid Wallet cache for the [Config::network].
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
@@ -2100,13 +2145,33 @@ impl LiquidSdk {
         self.persister.restore_from_backup(backup_path)
     }
 
-    /// Second step of LNURL-pay. The first step is [parse], which also validates the LNURL destination
-    /// and generates the [LnUrlPayRequest] payload needed here.
+    /// Prepares to pay to an LNURL encoded pay request or lightning address.
+    ///
+    /// This is the second step of LNURL-pay flow. The first step is [parse], which also validates the LNURL
+    /// destination and generates the [LnUrlPayRequest] payload needed here.
     ///
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
-    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, the LNURL payment
-    /// is made.
-    pub async fn lnurl_pay(&self, req: LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
+    /// of the LNURL endpoint (`req_data`). If they match the endpoint requirements, a [PrepareSendResponse] is
+    /// prepared for the invoice. If the receiver has encoded a Magic Routing Hint in the invoice, the
+    /// [PrepareSendResponse]'s `fees_sat` will reflect this.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareLnUrlPayRequest] containing:
+    ///     * `data` - the [LnUrlPayRequestData] returned by [parse]
+    ///     * `amount_msat` - the amount in millisatoshis for this payment
+    ///     * `comment` - an optional comment for this payment
+    ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
+    ///       the LNURL callback domain. Defaults to 'true'
+    ///
+    /// # Returns
+    /// Returns a [PrepareLnUrlPayResponse] containing:
+    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retreived invoice
+    ///     * `success_action` - the optional unprocessed LUD-09 success action
+    pub async fn prepare_lnurl_pay(
+        &self,
+        req: PrepareLnUrlPayRequest,
+    ) -> Result<PrepareLnUrlPayResponse, LnUrlPayError> {
         match validate_lnurl_pay(
             req.amount_msat,
             &req.comment,
@@ -2116,71 +2181,97 @@ impl LiquidSdk {
         )
         .await?
         {
-            ValidatedCallbackResponse::EndpointError { data: e } => {
-                Ok(LnUrlPayResult::EndpointError { data: e })
+            ValidatedCallbackResponse::EndpointError { data } => {
+                Err(LnUrlPayError::Generic { err: data.reason })
             }
-            ValidatedCallbackResponse::EndpointSuccess { data: cb } => {
+            ValidatedCallbackResponse::EndpointSuccess { data } => {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
-                        destination: cb.pr.clone(),
+                        destination: data.pr.clone(),
                         amount_sat: None,
                     })
                     .await?;
 
-                let payment = self
-                    .send_payment(&SendPaymentRequest { prepare_response })
-                    .await?
-                    .payment;
-
-                let maybe_sa_processed: Option<SuccessActionProcessed> = match cb.success_action {
-                    Some(sa) => {
-                        let processed_sa = match sa {
-                            // For AES, we decrypt the contents on the fly
-                            SuccessAction::Aes(data) => {
-                                let PaymentDetails::Lightning { preimage, .. } = &payment.details
-                                else {
-                                    return Err(LnUrlPayError::Generic {
-                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
-                                    });
-                                };
-
-                                let preimage_str =
-                                    preimage.clone().ok_or(LnUrlPayError::Generic {
-                                        err: "Payment successful but no preimage found".to_string(),
-                                    })?;
-                                let preimage =
-                                    sha256::Hash::from_str(&preimage_str).map_err(|_| {
-                                        LnUrlPayError::Generic {
-                                            err: "Invalid preimage".to_string(),
-                                        }
-                                    })?;
-                                let preimage_arr: [u8; 32] = preimage.into_32();
-                                let result = match (data, &preimage_arr).try_into() {
-                                    Ok(data) => AesSuccessActionDataResult::Decrypted { data },
-                                    Err(e) => AesSuccessActionDataResult::ErrorStatus {
-                                        reason: e.to_string(),
-                                    },
-                                };
-                                SuccessActionProcessed::Aes { result }
-                            }
-                            SuccessAction::Message(data) => {
-                                SuccessActionProcessed::Message { data }
-                            }
-                            SuccessAction::Url(data) => SuccessActionProcessed::Url { data },
-                        };
-                        Some(processed_sa)
-                    }
-                    None => None,
-                };
-
-                Ok(LnUrlPayResult::EndpointSuccess {
-                    data: model::LnUrlPaySuccessData {
-                        payment,
-                        success_action: maybe_sa_processed,
-                    },
+                Ok(PrepareLnUrlPayResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
+                    success_action: data.success_action,
                 })
             }
         }
+    }
+
+    /// Pay to an LNURL encoded pay request or lightning address.
+    ///
+    /// The final step of LNURL-pay flow, called after preparing the payment with [LiquidSdk::prepare_lnurl_pay].
+    /// This call sends the payment using the [PrepareLnUrlPayResponse]'s `prepare_send_response` either via
+    /// Lightning or directly to a Liquid address if a Magic Routing Hint is included in the invoice.
+    /// Once the payment is made, the [PrepareLnUrlPayResponse]'s `success_action` is processed decrypting
+    /// the AES data if needed.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [LnUrlPayRequest] containing:
+    ///     * `prepare_response` - the [PrepareLnUrlPayResponse] returned by [LiquidSdk::prepare_lnurl_pay]
+    pub async fn lnurl_pay(
+        &self,
+        req: model::LnUrlPayRequest,
+    ) -> Result<LnUrlPayResult, LnUrlPayError> {
+        let prepare_response = req.prepare_response;
+        let payment = self
+            .send_payment(&SendPaymentRequest {
+                prepare_response: PrepareSendResponse {
+                    destination: prepare_response.destination,
+                    fees_sat: prepare_response.fees_sat,
+                },
+            })
+            .await?
+            .payment;
+
+        let maybe_sa_processed: Option<SuccessActionProcessed> = match prepare_response
+            .success_action
+        {
+            Some(sa) => {
+                let processed_sa = match sa {
+                    // For AES, we decrypt the contents on the fly
+                    SuccessAction::Aes { data } => {
+                        let PaymentDetails::Lightning { preimage, .. } = &payment.details else {
+                            return Err(LnUrlPayError::Generic {
+                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
+                                    });
+                        };
+
+                        let preimage_str = preimage.clone().ok_or(LnUrlPayError::Generic {
+                            err: "Payment successful but no preimage found".to_string(),
+                        })?;
+                        let preimage = sha256::Hash::from_str(&preimage_str).map_err(|_| {
+                            LnUrlPayError::Generic {
+                                err: "Invalid preimage".to_string(),
+                            }
+                        })?;
+                        let preimage_arr: [u8; 32] = preimage.into_32();
+                        let result = match (data, &preimage_arr).try_into() {
+                            Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                            Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                                reason: e.to_string(),
+                            },
+                        };
+                        SuccessActionProcessed::Aes { result }
+                    }
+                    SuccessAction::Message { data } => SuccessActionProcessed::Message { data },
+                    SuccessAction::Url { data } => SuccessActionProcessed::Url { data },
+                };
+                Some(processed_sa)
+            }
+            None => None,
+        };
+
+        Ok(LnUrlPayResult::EndpointSuccess {
+            data: model::LnUrlPaySuccessData {
+                payment,
+                success_action: maybe_sa_processed,
+            },
+        })
     }
 
     /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination
@@ -2294,11 +2385,22 @@ impl LiquidSdk {
     }
 
     /// Get the full default [Config] for specific [LiquidNetwork].
-    pub fn default_config(network: LiquidNetwork) -> Config {
-        match network {
-            LiquidNetwork::Mainnet => Config::mainnet(),
-            LiquidNetwork::Testnet => Config::testnet(),
-        }
+    pub fn default_config(
+        network: LiquidNetwork,
+        breez_api_key: Option<String>,
+    ) -> Result<Config, SdkError> {
+        let config = match network {
+            LiquidNetwork::Mainnet => {
+                let Some(breez_api_key) = breez_api_key else {
+                    return Err(SdkError::Generic {
+                        err: "Breez API key must be provided on mainnet.".to_string(),
+                    });
+                };
+                Config::mainnet(breez_api_key)
+            }
+            LiquidNetwork::Testnet => Config::testnet(breez_api_key),
+        };
+        Ok(config)
     }
 
     /// Parses a string into an [InputType]. See [input_parser::parse].
@@ -2310,7 +2412,7 @@ impl LiquidSdk {
 
     /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
-        parse_invoice(input).map_err(|e| PaymentError::InvalidInvoice { err: e.to_string() })
+        parse_invoice(input).map_err(|e| PaymentError::invalid_invoice(&e.to_string()))
     }
 
     /// Configures a global SDK logger that will log to file and will forward log events to

@@ -388,7 +388,7 @@ impl SendSwapHandler {
         let liquid_chain_service = self.chain_service.lock().await;
         let script_pk = swap_script
             .to_address(self.config.network.into())
-            .map_err(|_| anyhow!("Could not retrieve address from swap script"))?
+            .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .to_unconfidential()
             .script_pubkey();
         let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
@@ -534,10 +534,8 @@ impl SendSwapHandler {
     fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
         let preimage = Preimage::from_str(preimage)?;
         let preimage_hash = preimage.sha256.to_string();
-        let invoice =
-            Bolt11Invoice::from_str(invoice).map_err(|err| PaymentError::InvalidInvoice {
-                err: err.to_string(),
-            })?;
+        let invoice = Bolt11Invoice::from_str(invoice)
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
         let invoice_payment_hash = invoice.payment_hash();
 
         (invoice_payment_hash.to_string() == preimage_hash)

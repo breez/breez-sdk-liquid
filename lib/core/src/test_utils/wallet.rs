@@ -57,6 +57,10 @@ impl OnchainWallet for MockWallet {
         unimplemented!()
     }
 
+    fn fingerprint(&self) -> String {
+        unimplemented!()
+    }
+
     fn pubkey(&self) -> String {
         unimplemented!()
     }

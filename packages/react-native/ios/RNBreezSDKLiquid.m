@@ -5,6 +5,7 @@
 
 RCT_EXTERN_METHOD(
     defaultConfig: (NSString*)network
+    breezApiKey: (NSString*)breezApiKey
     resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -125,6 +126,12 @@ RCT_EXTERN_METHOD(
 )
 
 RCT_EXTERN_METHOD(
+    getPayment: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
     listRefundables: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
@@ -170,6 +177,12 @@ RCT_EXTERN_METHOD(
 
 RCT_EXTERN_METHOD(
     disconnect: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
+RCT_EXTERN_METHOD(
+    prepareLnurlPay: (NSDictionary*)req
+    resolve: (RCTPromiseResolveBlock)resolve
     reject: (RCTPromiseRejectBlock)reject
 )
 

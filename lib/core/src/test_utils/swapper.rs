@@ -78,13 +78,12 @@ impl Swapper for MockSwapper {
         &self,
         req: boltz_client::swaps::boltz::CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
-        let invoice = parse_invoice(&req.invoice).map_err(|err| PaymentError::InvalidInvoice {
-            err: err.to_string(),
-        })?;
+        let invoice = parse_invoice(&req.invoice)
+            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
         let Some(amount_msat) = invoice.amount_msat else {
-            return Err(PaymentError::InvalidInvoice {
-                err: "Invoice must contain an amount".to_string(),
-            });
+            return Err(PaymentError::invalid_invoice(
+                "Invoice does not contain an amount",
+            ));
         };
 
         Ok(CreateSubmarineResponse {

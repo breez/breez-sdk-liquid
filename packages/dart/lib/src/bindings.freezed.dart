@@ -932,6 +932,271 @@ abstract class InputType_LnUrlError extends InputType {
 }
 
 /// @nodoc
+mixin _$SuccessAction {
+  Object get data => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $SuccessActionCopyWith<$Res> {
+  factory $SuccessActionCopyWith(SuccessAction value, $Res Function(SuccessAction) then) =
+      _$SuccessActionCopyWithImpl<$Res, SuccessAction>;
+}
+
+/// @nodoc
+class _$SuccessActionCopyWithImpl<$Res, $Val extends SuccessAction> implements $SuccessActionCopyWith<$Res> {
+  _$SuccessActionCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+abstract class _$$SuccessAction_AesImplCopyWith<$Res> {
+  factory _$$SuccessAction_AesImplCopyWith(
+          _$SuccessAction_AesImpl value, $Res Function(_$SuccessAction_AesImpl) then) =
+      __$$SuccessAction_AesImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({AesSuccessActionData data});
+}
+
+/// @nodoc
+class __$$SuccessAction_AesImplCopyWithImpl<$Res>
+    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_AesImpl>
+    implements _$$SuccessAction_AesImplCopyWith<$Res> {
+  __$$SuccessAction_AesImplCopyWithImpl(
+      _$SuccessAction_AesImpl _value, $Res Function(_$SuccessAction_AesImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$SuccessAction_AesImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as AesSuccessActionData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SuccessAction_AesImpl extends SuccessAction_Aes {
+  const _$SuccessAction_AesImpl({required this.data}) : super._();
+
+  @override
+  final AesSuccessActionData data;
+
+  @override
+  String toString() {
+    return 'SuccessAction.aes(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SuccessAction_AesImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SuccessAction_AesImplCopyWith<_$SuccessAction_AesImpl> get copyWith =>
+      __$$SuccessAction_AesImplCopyWithImpl<_$SuccessAction_AesImpl>(this, _$identity);
+}
+
+abstract class SuccessAction_Aes extends SuccessAction {
+  const factory SuccessAction_Aes({required final AesSuccessActionData data}) = _$SuccessAction_AesImpl;
+  const SuccessAction_Aes._() : super._();
+
+  @override
+  AesSuccessActionData get data;
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SuccessAction_AesImplCopyWith<_$SuccessAction_AesImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SuccessAction_MessageImplCopyWith<$Res> {
+  factory _$$SuccessAction_MessageImplCopyWith(
+          _$SuccessAction_MessageImpl value, $Res Function(_$SuccessAction_MessageImpl) then) =
+      __$$SuccessAction_MessageImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({MessageSuccessActionData data});
+}
+
+/// @nodoc
+class __$$SuccessAction_MessageImplCopyWithImpl<$Res>
+    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_MessageImpl>
+    implements _$$SuccessAction_MessageImplCopyWith<$Res> {
+  __$$SuccessAction_MessageImplCopyWithImpl(
+      _$SuccessAction_MessageImpl _value, $Res Function(_$SuccessAction_MessageImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$SuccessAction_MessageImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as MessageSuccessActionData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SuccessAction_MessageImpl extends SuccessAction_Message {
+  const _$SuccessAction_MessageImpl({required this.data}) : super._();
+
+  @override
+  final MessageSuccessActionData data;
+
+  @override
+  String toString() {
+    return 'SuccessAction.message(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SuccessAction_MessageImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SuccessAction_MessageImplCopyWith<_$SuccessAction_MessageImpl> get copyWith =>
+      __$$SuccessAction_MessageImplCopyWithImpl<_$SuccessAction_MessageImpl>(this, _$identity);
+}
+
+abstract class SuccessAction_Message extends SuccessAction {
+  const factory SuccessAction_Message({required final MessageSuccessActionData data}) =
+      _$SuccessAction_MessageImpl;
+  const SuccessAction_Message._() : super._();
+
+  @override
+  MessageSuccessActionData get data;
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SuccessAction_MessageImplCopyWith<_$SuccessAction_MessageImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SuccessAction_UrlImplCopyWith<$Res> {
+  factory _$$SuccessAction_UrlImplCopyWith(
+          _$SuccessAction_UrlImpl value, $Res Function(_$SuccessAction_UrlImpl) then) =
+      __$$SuccessAction_UrlImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({UrlSuccessActionData data});
+}
+
+/// @nodoc
+class __$$SuccessAction_UrlImplCopyWithImpl<$Res>
+    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_UrlImpl>
+    implements _$$SuccessAction_UrlImplCopyWith<$Res> {
+  __$$SuccessAction_UrlImplCopyWithImpl(
+      _$SuccessAction_UrlImpl _value, $Res Function(_$SuccessAction_UrlImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? data = null,
+  }) {
+    return _then(_$SuccessAction_UrlImpl(
+      data: null == data
+          ? _value.data
+          : data // ignore: cast_nullable_to_non_nullable
+              as UrlSuccessActionData,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SuccessAction_UrlImpl extends SuccessAction_Url {
+  const _$SuccessAction_UrlImpl({required this.data}) : super._();
+
+  @override
+  final UrlSuccessActionData data;
+
+  @override
+  String toString() {
+    return 'SuccessAction.url(data: $data)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SuccessAction_UrlImpl &&
+            (identical(other.data, data) || other.data == data));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, data);
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SuccessAction_UrlImplCopyWith<_$SuccessAction_UrlImpl> get copyWith =>
+      __$$SuccessAction_UrlImplCopyWithImpl<_$SuccessAction_UrlImpl>(this, _$identity);
+}
+
+abstract class SuccessAction_Url extends SuccessAction {
+  const factory SuccessAction_Url({required final UrlSuccessActionData data}) = _$SuccessAction_UrlImpl;
+  const SuccessAction_Url._() : super._();
+
+  @override
+  UrlSuccessActionData get data;
+
+  /// Create a copy of SuccessAction
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SuccessAction_UrlImplCopyWith<_$SuccessAction_UrlImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$SuccessActionProcessed {}
 
 /// @nodoc

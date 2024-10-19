@@ -100,6 +100,13 @@ dictionary LnUrlErrorData {
 };
 
 [Enum]
+interface SuccessAction {
+    Aes(AesSuccessActionData data);
+    Message(MessageSuccessActionData data);
+    Url(UrlSuccessActionData data);
+};
+
+[Enum]
 interface SuccessActionProcessed {
     Aes(AesSuccessActionDataResult result);
     Message(MessageSuccessActionData data);
@@ -110,6 +117,12 @@ interface SuccessActionProcessed {
 interface AesSuccessActionDataResult {
     Decrypted(AesSuccessActionDataDecrypted data);
     ErrorStatus(string reason);
+};
+
+dictionary AesSuccessActionData {
+    string description;
+    string ciphertext;
+    string iv;
 };
 
 dictionary AesSuccessActionDataDecrypted {
@@ -130,14 +143,6 @@ dictionary UrlSuccessActionData {
 dictionary LnUrlPayErrorData {
     string payment_hash;
     string reason;
-};
-
-dictionary LnUrlPayRequest {
-    LnUrlPayRequestData data;
-    u64 amount_msat;
-    string? comment = null;
-    string? payment_label = null;
-    boolean? validate_success_action_url = null;
 };
 
 [Error]
@@ -305,8 +310,8 @@ dictionary Config {
     LiquidNetwork network;
     u64 payment_timeout_sec;
     u32 zero_conf_min_fee_rate_msat;
-    u64? zero_conf_max_amount_sat;
     string? breez_api_key;
+    u64? zero_conf_max_amount_sat;
 };
 
 enum LiquidNetwork {
@@ -323,6 +328,7 @@ dictionary GetInfoResponse {
     u64 balance_sat;
     u64 pending_send_sat;
     u64 pending_receive_sat;
+    string fingerprint;
     string pubkey;
 };
 
@@ -342,6 +348,23 @@ dictionary CheckMessageRequest {
 
 dictionary CheckMessageResponse {
     boolean is_valid;
+};
+
+dictionary PrepareLnUrlPayRequest {
+    LnUrlPayRequestData data;
+    u64 amount_msat;
+    string? comment = null;
+    boolean? validate_success_action_url = null;
+};
+
+dictionary PrepareLnUrlPayResponse {
+    SendDestination destination;
+    u64 fees_sat;
+    SuccessAction? success_action = null;
+};
+
+dictionary LnUrlPayRequest {
+    PrepareLnUrlPayResponse prepare_response;
 };
 
 dictionary PrepareSendRequest {
@@ -467,11 +490,23 @@ dictionary ListPaymentsRequest {
     i64? to_timestamp = null;
     u32? offset = null;
     u32? limit = null;
+    ListPaymentDetails? details = null;
+};
+
+[Enum]
+interface ListPaymentDetails {
+    Liquid(string destination);
+    Bitcoin(string address);
+};
+
+[Enum]
+interface GetPaymentRequest {
+    Lightning(string payment_hash);
 };
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string destination, string description);
     Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
@@ -569,7 +604,8 @@ namespace breez_sdk_liquid {
     [Throws=SdkError]
     void set_logger(Logger logger);
     
-    Config default_config(LiquidNetwork network);
+    [Throws=SdkError]
+    Config default_config(LiquidNetwork network, string? breez_api_key);
 
     [Throws=PaymentError]
     InputType parse(string input);
@@ -627,6 +663,9 @@ interface BindingLiquidSdk {
     [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
+    [Throws=PaymentError]
+    Payment? get_payment(GetPaymentRequest req);
+
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();
 
@@ -653,6 +692,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     void disconnect();
+
+    [Throws=LnUrlPayError]
+    PrepareLnUrlPayResponse prepare_lnurl_pay(PrepareLnUrlPayRequest req);
 
     [Throws=LnUrlPayError]
     LnUrlPayResult lnurl_pay(LnUrlPayRequest req);

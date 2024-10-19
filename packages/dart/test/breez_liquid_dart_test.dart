@@ -9,8 +9,9 @@ void main() {
   group('main', () {
     setUpAll(() async {
       await initApi();
-      ConnectRequest connectRequest =
-          ConnectRequest(mnemonic: "", config: defaultConfig(network: LiquidNetwork.testnet));
+      ConnectRequest connectRequest = ConnectRequest(
+          mnemonic: "",
+          config: defaultConfig(network: LiquidNetwork.testnet, breezApiKey: "<breez-api-key>"));
       sdk = await connect(req: connectRequest);
     });
 

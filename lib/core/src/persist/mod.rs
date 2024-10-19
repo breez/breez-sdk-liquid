@@ -14,7 +14,7 @@ use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use migrations::current_migrations;
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
@@ -173,6 +173,7 @@ impl Persister {
                 rs.id,
                 rs.created_at,
                 rs.invoice,
+                rs.payment_hash,
                 rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -180,6 +181,7 @@ impl Persister {
                 ss.id,
                 ss.created_at,
                 ss.invoice,
+                ss.payment_hash,
                 ss.description,
                 ss.preimage,
                 ss.refund_tx_id,
@@ -246,36 +248,38 @@ impl Persister {
         let maybe_receive_swap_id: Option<String> = row.get(6)?;
         let maybe_receive_swap_created_at: Option<u32> = row.get(7)?;
         let maybe_receive_swap_invoice: Option<String> = row.get(8)?;
-        let maybe_receive_swap_description: Option<String> = row.get(9)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(10)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(11)?;
-        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(12)?;
+        let maybe_receive_swap_payment_hash: Option<String> = row.get(9)?;
+        let maybe_receive_swap_description: Option<String> = row.get(10)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(11)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(12)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(13)?;
 
-        let maybe_send_swap_id: Option<String> = row.get(13)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(14)?;
-        let maybe_send_swap_invoice: Option<String> = row.get(15)?;
-        let maybe_send_swap_description: Option<String> = row.get(16)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(17)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(18)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(19)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(20)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(21)?;
+        let maybe_send_swap_id: Option<String> = row.get(14)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(15)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(16)?;
+        let maybe_send_swap_payment_hash: Option<String> = row.get(17)?;
+        let maybe_send_swap_description: Option<String> = row.get(18)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(19)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(20)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(21)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(22)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(23)?;
 
-        let maybe_chain_swap_id: Option<String> = row.get(22)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(23)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(24)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(25)?;
-        let maybe_chain_swap_description: Option<String> = row.get(26)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(27)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(28)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(29)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(30)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(31)?;
+        let maybe_chain_swap_id: Option<String> = row.get(24)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(25)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(26)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(27)?;
+        let maybe_chain_swap_description: Option<String> = row.get(28)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(29)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(30)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(31)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(32)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(33)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(32)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(34)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(33)?;
-        let maybe_payment_details_description: Option<String> = row.get(34)?;
+        let maybe_payment_details_destination: Option<String> = row.get(35)?;
+        let maybe_payment_details_description: Option<String> = row.get(36)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
@@ -285,6 +289,7 @@ impl Persister {
                     created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                     preimage: None,
                     bolt11: maybe_receive_swap_invoice.clone(),
+                    payment_hash: maybe_receive_swap_payment_hash,
                     description: maybe_receive_swap_description.unwrap_or_else(|| {
                         maybe_receive_swap_invoice
                             .and_then(|bolt11| get_invoice_description!(bolt11))
@@ -307,6 +312,7 @@ impl Persister {
                         created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                         preimage: maybe_send_swap_preimage,
                         bolt11: maybe_send_swap_invoice.clone(),
+                        payment_hash: maybe_send_swap_payment_hash,
                         description: maybe_send_swap_description.unwrap_or_else(|| {
                             maybe_send_swap_invoice
                                 .and_then(|bolt11| get_invoice_description!(bolt11))
@@ -329,6 +335,7 @@ impl Persister {
                             created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
                             preimage: maybe_chain_swap_preimage,
                             bolt11: None,
+                            payment_hash: None,
                             description: maybe_chain_swap_description
                                 .unwrap_or("Bitcoin transfer".to_string()),
                             payer_amount_sat: maybe_chain_swap_payer_amount_sat.unwrap_or(0),
@@ -354,6 +361,7 @@ impl Persister {
                     swap_type: PaymentSwapType::Receive,
                     swap_id,
                     bolt11,
+                    payment_hash,
                     refund_tx_id,
                     preimage,
                     refund_tx_amount_sat,
@@ -363,6 +371,7 @@ impl Persister {
                     swap_type: PaymentSwapType::Send,
                     swap_id,
                     bolt11,
+                    payment_hash,
                     preimage,
                     refund_tx_id,
                     refund_tx_amount_sat,
@@ -372,6 +381,7 @@ impl Persister {
                 swap_id,
                 preimage,
                 bolt11,
+                payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Liquid transfer".to_string()),
@@ -404,7 +414,7 @@ impl Persister {
         }
     }
 
-    pub fn get_payment(&self, id: String) -> Result<Option<Payment>> {
+    pub fn get_payment(&self, id: &str) -> Result<Option<Payment>> {
         Ok(self
             .get_connection()?
             .query_row(
@@ -415,9 +425,25 @@ impl Persister {
             .optional()?)
     }
 
+    pub fn get_payment_by_request(&self, req: &GetPaymentRequest) -> Result<Option<Payment>> {
+        let (where_clause, param) = match req {
+            GetPaymentRequest::Lightning { payment_hash } => (
+                "(rs.payment_hash = ?1 OR ss.payment_hash = ?1)",
+                payment_hash,
+            ),
+        };
+        Ok(self
+            .get_connection()?
+            .query_row(
+                &self.select_payment_query(Some(where_clause), None, None),
+                params![param],
+                |row| self.sql_row_to_payment(row),
+            )
+            .optional()?)
+    }
+
     pub fn get_payments(&self, req: &ListPaymentsRequest) -> Result<Vec<Payment>> {
-        let where_clause =
-            filter_to_where_clause(req.filters.clone(), req.from_timestamp, req.to_timestamp);
+        let (where_clause, where_params) = filter_to_where_clause(req);
         let maybe_where_clause = match where_clause.is_empty() {
             false => Some(where_clause.as_str()),
             true => None,
@@ -428,53 +454,61 @@ impl Persister {
         let mut stmt =
             con.prepare(&self.select_payment_query(maybe_where_clause, req.offset, req.limit))?;
         let payments: Vec<Payment> = stmt
-            .query_map(params![], |row| self.sql_row_to_payment(row))?
+            .query_map(params_from_iter(where_params), |row| {
+                self.sql_row_to_payment(row)
+            })?
             .map(|i| i.unwrap())
             .collect();
         Ok(payments)
     }
 }
 
-fn filter_to_where_clause(
-    type_filters: Option<Vec<PaymentType>>,
-    from_timestamp: Option<i64>,
-    to_timestamp: Option<i64>,
-) -> String {
+fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToSql + '_>>) {
     let mut where_clause: Vec<String> = Vec::new();
+    let mut where_params: Vec<Box<dyn ToSql>> = Vec::new();
 
-    if let Some(t) = from_timestamp {
-        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) >= {t}"));
+    if let Some(t) = req.from_timestamp {
+        where_clause.push("coalesce(ptx.timestamp, rs.created_at) >= ?".to_string());
+        where_params.push(Box::new(t));
     };
-    if let Some(t) = to_timestamp {
-        where_clause.push(format!("coalesce(ptx.timestamp, rs.created_at) <= {t}"));
+    if let Some(t) = req.to_timestamp {
+        where_clause.push("coalesce(ptx.timestamp, rs.created_at) <= ?".to_string());
+        where_params.push(Box::new(t));
     };
 
-    if let Some(filters) = type_filters {
+    if let Some(filters) = &req.filters {
         if !filters.is_empty() {
-            let mut type_filter_clause: HashSet<PaymentType> = HashSet::new();
+            let mut type_filter_clause: HashSet<i8> = HashSet::new();
+
             for type_filter in filters {
-                match type_filter {
-                    PaymentType::Send => {
-                        type_filter_clause.insert(PaymentType::Send);
-                    }
-                    PaymentType::Receive => {
-                        type_filter_clause.insert(PaymentType::Receive);
-                    }
-                }
+                type_filter_clause.insert(*type_filter as i8);
             }
 
             where_clause.push(format!(
                 "ptx.payment_type in ({})",
                 type_filter_clause
                     .iter()
-                    .map(|t| format!("'{}'", t))
+                    .map(|t| format!("{}", t))
                     .collect::<Vec<_>>()
                     .join(", ")
             ));
         }
     }
 
-    where_clause.join(" and ")
+    if let Some(details) = &req.details {
+        match details {
+            ListPaymentDetails::Bitcoin { address } => {
+                where_clause.push("cs.claim_address = ?".to_string());
+                where_params.push(Box::new(address));
+            }
+            ListPaymentDetails::Liquid { destination } => {
+                where_clause.push("pd.destination = ?".to_string());
+                where_params.push(Box::new(destination));
+            }
+        }
+    }
+
+    (where_clause.join(" and "), where_params)
 }
 
 #[cfg(test)]
@@ -507,7 +541,7 @@ mod tests {
             })?
             .first()
             .is_some());
-        assert!(storage.get_payment(payment_tx_data.tx_id)?.is_some());
+        assert!(storage.get_payment(&payment_tx_data.tx_id)?.is_some());
 
         Ok(())
     }

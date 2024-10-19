@@ -94,5 +94,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         
         DROP TABLE payment_details_old;            
         ",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN payment_hash TEXT;
+        ALTER TABLE send_swaps ADD COLUMN payment_hash TEXT;
+        ",
     ]
 }

@@ -213,6 +213,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_infoPtr
           .asFunction<void Function(int, int)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_get_payment_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_paymentPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_get_payment_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_paymentPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_get_payment_request>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies(
     int port_,
     int that,
@@ -366,6 +386,26 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoinPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_buy_bitcoin_request>)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_pay(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_prepare_ln_url_pay_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_pay(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_payPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_ln_url_pay_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_pay');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_pay =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_payPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_ln_url_pay_request>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_pay_onchain(
     int port_,
@@ -690,18 +730,21 @@ class FlutterBreezLiquidBindings {
 
   WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(
     int network,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key,
   ) {
     return _frbgen_breez_liquid_wire__crate__bindings__default_config(
       network,
+      breez_api_key,
     );
   }
 
-  late final _frbgen_breez_liquid_wire__crate__bindings__default_configPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__default_config');
+  late final _frbgen_breez_liquid_wire__crate__bindings__default_configPtr = _lookup<
+          ffi.NativeFunction<
+              WireSyncRust2DartDco Function(ffi.Int32, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__default_config');
   late final _frbgen_breez_liquid_wire__crate__bindings__default_config =
       _frbgen_breez_liquid_wire__crate__bindings__default_configPtr
-          .asFunction<WireSyncRust2DartDco Function(int)>();
+          .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__parse(
     int port_,
@@ -766,6 +809,18 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk =
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<wire_cst_aes_success_action_data>
+      frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_dataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_aes_success_action_data> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data =
+      _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_dataPtr
+          .asFunction<ffi.Pointer<wire_cst_aes_success_action_data> Function()>();
 
   ffi.Pointer<wire_cst_aes_success_action_data_decrypted>
       frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted() {
@@ -873,6 +928,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
+  ffi.Pointer<wire_cst_get_payment_request> frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_payment_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_get_payment_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_get_payment_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_get_payment_request> Function()>();
+
   ffi.Pointer<ffi.Int64> frbgen_breez_liquid_cst_new_box_autoadd_i_64(
     int value,
   ) {
@@ -897,6 +963,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data =
       _frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_dataPtr
           .asFunction<ffi.Pointer<wire_cst_liquid_address_data> Function()>();
+
+  ffi.Pointer<wire_cst_list_payment_details> frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_list_payment_detailsPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_details> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details =
+      _frbgen_breez_liquid_cst_new_box_autoadd_list_payment_detailsPtr
+          .asFunction<ffi.Pointer<wire_cst_list_payment_details> Function()>();
 
   ffi.Pointer<wire_cst_list_payments_request>
       frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request() {
@@ -1073,6 +1150,18 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_buy_bitcoin_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_buy_bitcoin_request> Function()>();
 
+  ffi.Pointer<wire_cst_prepare_ln_url_pay_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_ln_url_pay_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_ln_url_pay_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_ln_url_pay_request> Function()>();
+
   ffi.Pointer<wire_cst_prepare_pay_onchain_request>
       frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_pay_onchain_request();
@@ -1186,6 +1275,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_request =
       _frbgen_breez_liquid_cst_new_box_autoadd_sign_message_requestPtr
           .asFunction<ffi.Pointer<wire_cst_sign_message_request> Function()>();
+
+  ffi.Pointer<wire_cst_success_action> frbgen_breez_liquid_cst_new_box_autoadd_success_action() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_success_action();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_success_actionPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_success_action> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_success_action');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_success_action =
+      _frbgen_breez_liquid_cst_new_box_autoadd_success_actionPtr
+          .asFunction<ffi.Pointer<wire_cst_success_action> Function()>();
 
   ffi.Pointer<wire_cst_success_action_processed>
       frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed() {
@@ -1589,6 +1689,26 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_infoPtr
           .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
 
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_paymentPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_paymentPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<RustCallStatus> out_status,
@@ -1741,6 +1861,26 @@ class FlutterBreezLiquidBindings {
       'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin');
   late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin =
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoinPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_payPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_payPtr
           .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(
@@ -2085,20 +2225,22 @@ class FlutterBreezLiquidBindings {
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
     RustBuffer network,
+    RustBuffer breez_api_key,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
       network,
+      breez_api_key,
       out_status,
     );
   }
 
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
           'uniffi_breez_sdk_liquid_bindings_fn_func_default_config');
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_config =
       _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr
-          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<RustBuffer Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(
     RustBuffer input,
@@ -3218,6 +3360,17 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_infoPtr
           .asFunction<int Function()>();
 
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_payment() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_payment();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_paymentPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_payment');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_payment =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_paymentPtr
+          .asFunction<int Function()>();
+
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies();
   }
@@ -3304,6 +3457,17 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoinPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_payPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_payPtr
           .asFunction<int Function()>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain() {
@@ -3556,11 +3720,47 @@ final class wire_cst_check_message_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
+final class wire_cst_GetPaymentRequest_Lightning extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+}
+
+final class GetPaymentRequestKind extends ffi.Union {
+  external wire_cst_GetPaymentRequest_Lightning Lightning;
+}
+
+final class wire_cst_get_payment_request extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external GetPaymentRequestKind kind;
+}
+
 final class wire_cst_list_payment_type extends ffi.Struct {
   external ffi.Pointer<ffi.Int32> ptr;
 
   @ffi.Int32()
   external int len;
+}
+
+final class wire_cst_ListPaymentDetails_Liquid extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+}
+
+final class wire_cst_ListPaymentDetails_Bitcoin extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+}
+
+final class ListPaymentDetailsKind extends ffi.Union {
+  external wire_cst_ListPaymentDetails_Liquid Liquid;
+
+  external wire_cst_ListPaymentDetails_Bitcoin Bitcoin;
+}
+
+final class wire_cst_list_payment_details extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external ListPaymentDetailsKind kind;
 }
 
 final class wire_cst_list_payments_request extends ffi.Struct {
@@ -3573,6 +3773,8 @@ final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> offset;
 
   external ffi.Pointer<ffi.Uint32> limit;
+
+  external ffi.Pointer<wire_cst_list_payment_details> details;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
@@ -3583,166 +3785,6 @@ final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-}
-
-final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
-
-  @ffi.Uint64()
-  external int min_sendable;
-
-  @ffi.Uint64()
-  external int max_sendable;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> metadata_str;
-
-  @ffi.Uint16()
-  external int comment_allowed;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
-
-  @ffi.Bool()
-  external bool allows_nostr;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
-}
-
-final class wire_cst_ln_url_pay_request extends ffi.Struct {
-  external wire_cst_ln_url_pay_request_data data;
-
-  @ffi.Uint64()
-  external int amount_msat;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_label;
-
-  external ffi.Pointer<ffi.Bool> validate_success_action_url;
-}
-
-final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> default_description;
-
-  @ffi.Uint64()
-  external int min_withdrawable;
-
-  @ffi.Uint64()
-  external int max_withdrawable;
-}
-
-final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
-  external wire_cst_ln_url_withdraw_request_data data;
-
-  @ffi.Uint64()
-  external int amount_msat;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-}
-
-final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
-  @ffi.Uint64()
-  external int receiver_amount_sat;
-
-  @ffi.Uint64()
-  external int claim_fees_sat;
-
-  @ffi.Uint64()
-  external int total_fees_sat;
-}
-
-final class wire_cst_pay_onchain_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
-
-  external wire_cst_prepare_pay_onchain_response prepare_response;
-}
-
-final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
-  @ffi.Int32()
-  external int provider;
-
-  @ffi.Uint64()
-  external int amount_sat;
-}
-
-final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
-  @ffi.Uint64()
-  external int amount_sat;
-}
-
-final class PayOnchainAmountKind extends ffi.Union {
-  external wire_cst_PayOnchainAmount_Receiver Receiver;
-}
-
-final class wire_cst_pay_onchain_amount extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external PayOnchainAmountKind kind;
-}
-
-final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
-  external wire_cst_pay_onchain_amount amount;
-
-  external ffi.Pointer<ffi.Uint32> fee_rate_sat_per_vbyte;
-}
-
-final class wire_cst_prepare_receive_request extends ffi.Struct {
-  external ffi.Pointer<ffi.Uint64> payer_amount_sat;
-
-  @ffi.Int32()
-  external int payment_method;
-}
-
-final class wire_cst_prepare_refund_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
-
-  @ffi.Uint32()
-  external int fee_rate_sat_per_vbyte;
-}
-
-final class wire_cst_prepare_send_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
-
-  external ffi.Pointer<ffi.Uint64> amount_sat;
-}
-
-final class wire_cst_prepare_receive_response extends ffi.Struct {
-  @ffi.Int32()
-  external int payment_method;
-
-  external ffi.Pointer<ffi.Uint64> payer_amount_sat;
-
-  @ffi.Uint64()
-  external int fees_sat;
-}
-
-final class wire_cst_receive_payment_request extends ffi.Struct {
-  external wire_cst_prepare_receive_response prepare_response;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<ffi.Bool> use_description_hash;
-}
-
-final class wire_cst_refund_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
-
-  @ffi.Uint32()
-  external int fee_rate_sat_per_vbyte;
-}
-
-final class wire_cst_restore_request extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
 
 final class wire_cst_liquid_address_data extends ffi.Struct {
@@ -3848,6 +3890,225 @@ final class wire_cst_send_destination extends ffi.Struct {
   external SendDestinationKind kind;
 }
 
+final class wire_cst_aes_success_action_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ciphertext;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iv;
+}
+
+final class wire_cst_SuccessAction_Aes extends ffi.Struct {
+  external ffi.Pointer<wire_cst_aes_success_action_data> data;
+}
+
+final class wire_cst_message_success_action_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_SuccessAction_Message extends ffi.Struct {
+  external ffi.Pointer<wire_cst_message_success_action_data> data;
+}
+
+final class wire_cst_url_success_action_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  @ffi.Bool()
+  external bool matches_callback_domain;
+}
+
+final class wire_cst_SuccessAction_Url extends ffi.Struct {
+  external ffi.Pointer<wire_cst_url_success_action_data> data;
+}
+
+final class SuccessActionKind extends ffi.Union {
+  external wire_cst_SuccessAction_Aes Aes;
+
+  external wire_cst_SuccessAction_Message Message;
+
+  external wire_cst_SuccessAction_Url Url;
+}
+
+final class wire_cst_success_action extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external SuccessActionKind kind;
+}
+
+final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
+  external wire_cst_send_destination destination;
+
+  @ffi.Uint64()
+  external int fees_sat;
+
+  external ffi.Pointer<wire_cst_success_action> success_action;
+}
+
+final class wire_cst_ln_url_pay_request extends ffi.Struct {
+  external wire_cst_prepare_ln_url_pay_response prepare_response;
+}
+
+final class wire_cst_ln_url_withdraw_request_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> k1;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> default_description;
+
+  @ffi.Uint64()
+  external int min_withdrawable;
+
+  @ffi.Uint64()
+  external int max_withdrawable;
+}
+
+final class wire_cst_ln_url_withdraw_request extends ffi.Struct {
+  external wire_cst_ln_url_withdraw_request_data data;
+
+  @ffi.Uint64()
+  external int amount_msat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+}
+
+final class wire_cst_prepare_pay_onchain_response extends ffi.Struct {
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+
+  @ffi.Uint64()
+  external int claim_fees_sat;
+
+  @ffi.Uint64()
+  external int total_fees_sat;
+}
+
+final class wire_cst_pay_onchain_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
+
+  external wire_cst_prepare_pay_onchain_response prepare_response;
+}
+
+final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
+  @ffi.Int32()
+  external int provider;
+
+  @ffi.Uint64()
+  external int amount_sat;
+}
+
+final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> callback;
+
+  @ffi.Uint64()
+  external int min_sendable;
+
+  @ffi.Uint64()
+  external int max_sendable;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> metadata_str;
+
+  @ffi.Uint16()
+  external int comment_allowed;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
+
+  @ffi.Bool()
+  external bool allows_nostr;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
+}
+
+final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
+  external wire_cst_ln_url_pay_request_data data;
+
+  @ffi.Uint64()
+  external int amount_msat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
+
+  external ffi.Pointer<ffi.Bool> validate_success_action_url;
+}
+
+final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
+  @ffi.Uint64()
+  external int amount_sat;
+}
+
+final class PayOnchainAmountKind extends ffi.Union {
+  external wire_cst_PayOnchainAmount_Receiver Receiver;
+}
+
+final class wire_cst_pay_onchain_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PayOnchainAmountKind kind;
+}
+
+final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
+  external wire_cst_pay_onchain_amount amount;
+
+  external ffi.Pointer<ffi.Uint32> fee_rate_sat_per_vbyte;
+}
+
+final class wire_cst_prepare_receive_request extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint64> payer_amount_sat;
+
+  @ffi.Int32()
+  external int payment_method;
+}
+
+final class wire_cst_prepare_refund_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
+
+  @ffi.Uint32()
+  external int fee_rate_sat_per_vbyte;
+}
+
+final class wire_cst_prepare_send_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+
+  external ffi.Pointer<ffi.Uint64> amount_sat;
+}
+
+final class wire_cst_prepare_receive_response extends ffi.Struct {
+  @ffi.Int32()
+  external int payment_method;
+
+  external ffi.Pointer<ffi.Uint64> payer_amount_sat;
+
+  @ffi.Uint64()
+  external int fees_sat;
+}
+
+final class wire_cst_receive_payment_request extends ffi.Struct {
+  external wire_cst_prepare_receive_response prepare_response;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Bool> use_description_hash;
+}
+
+final class wire_cst_refund_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_address;
+
+  @ffi.Uint32()
+  external int fee_rate_sat_per_vbyte;
+}
+
+final class wire_cst_restore_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
+}
+
 final class wire_cst_prepare_send_response extends ffi.Struct {
   external wire_cst_send_destination destination;
 
@@ -3875,6 +4136,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
@@ -4063,21 +4326,8 @@ final class wire_cst_SuccessActionProcessed_Aes extends ffi.Struct {
   external ffi.Pointer<wire_cst_aes_success_action_data_result> result;
 }
 
-final class wire_cst_message_success_action_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
-}
-
 final class wire_cst_SuccessActionProcessed_Message extends ffi.Struct {
   external ffi.Pointer<wire_cst_message_success_action_data> data;
-}
-
-final class wire_cst_url_success_action_data extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-
-  @ffi.Bool()
-  external bool matches_callback_domain;
 }
 
 final class wire_cst_SuccessActionProcessed_Url extends ffi.Struct {
@@ -4229,6 +4479,8 @@ final class wire_cst_get_info_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int pending_receive_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 }

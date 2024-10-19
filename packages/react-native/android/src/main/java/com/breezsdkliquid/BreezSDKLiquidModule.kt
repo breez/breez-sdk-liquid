@@ -57,12 +57,14 @@ class BreezSDKLiquidModule(
     @ReactMethod
     fun defaultConfig(
         network: String,
+        breezApiKey: String,
         promise: Promise,
     ) {
         executor.execute {
             try {
                 val networkTmp = asLiquidNetwork(network)
-                val res = defaultConfig(networkTmp)
+                val breezApiKeyTmp = breezApiKey.takeUnless { it.isEmpty() }
+                val res = defaultConfig(networkTmp, breezApiKeyTmp)
                 val workingDir = File(reactApplicationContext.filesDir.toString() + "/breezSdkLiquid")
 
                 res.workingDir = workingDir.absolutePath
@@ -402,6 +404,23 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun getPayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val reqTmp =
+                    asGetPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "GetPaymentRequest")) }
+                val res = getBindingLiquidSdk().getPayment(reqTmp)
+                promise.resolve(res?.let { readableMapOf(res) })
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listRefundables(promise: Promise) {
         executor.execute {
             try {
@@ -525,6 +544,24 @@ class BreezSDKLiquidModule(
                 getBindingLiquidSdk().disconnect()
                 bindingLiquidSdk = null
                 promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun prepareLnurlPay(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareLnUrlPayRequest =
+                    asPrepareLnUrlPayRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareLnUrlPayRequest")) }
+                val res = getBindingLiquidSdk().prepareLnurlPay(prepareLnUrlPayRequest)
+                promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }

@@ -19,6 +19,12 @@ const BreezSDKLiquid = NativeModules.RNBreezSDKLiquid
 
 const BreezSDKLiquidEmitter = new NativeEventEmitter(BreezSDKLiquid)
 
+export interface AesSuccessActionData {
+    description: string
+    ciphertext: string
+    iv: string
+}
+
 export interface AesSuccessActionDataDecrypted {
     description: string
     plaintext: string
@@ -59,8 +65,8 @@ export interface Config {
     network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
-    zeroConfMaxAmountSat?: number
     breezApiKey?: string
+    zeroConfMaxAmountSat?: number
 }
 
 export interface ConnectRequest {
@@ -87,6 +93,7 @@ export interface GetInfoResponse {
     balanceSat: number
     pendingSendSat: number
     pendingReceiveSat: number
+    fingerprint: string
     pubkey: string
 }
 
@@ -131,6 +138,7 @@ export interface ListPaymentsRequest {
     toTimestamp?: number
     offset?: number
     limit?: number
+    details?: ListPaymentDetails
 }
 
 export interface LnUrlAuthRequestData {
@@ -150,11 +158,7 @@ export interface LnUrlPayErrorData {
 }
 
 export interface LnUrlPayRequest {
-    data: LnUrlPayRequestData
-    amountMsat: number
-    comment?: string
-    paymentLabel?: string
-    validateSuccessActionUrl?: boolean
+    prepareResponse: PrepareLnUrlPayResponse
 }
 
 export interface LnUrlPayRequestData {
@@ -242,6 +246,19 @@ export interface PrepareBuyBitcoinResponse {
     provider: BuyBitcoinProvider
     amountSat: number
     feesSat: number
+}
+
+export interface PrepareLnUrlPayRequest {
+    data: LnUrlPayRequestData
+    amountMsat: number
+    comment?: string
+    validateSuccessActionUrl?: boolean
+}
+
+export interface PrepareLnUrlPayResponse {
+    destination: SendDestination
+    feesSat: number
+    successAction?: SuccessAction
 }
 
 export interface PreparePayOnchainRequest {
@@ -391,6 +408,15 @@ export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
 
+export enum GetPaymentRequestVariant {
+    LIGHTNING = "lightning"
+}
+
+export interface GetPaymentRequest {
+    type: GetPaymentRequestVariant.LIGHTNING,
+    paymentHash: string
+}
+
 export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
@@ -435,6 +461,19 @@ export type InputType = {
 export enum LiquidNetwork {
     MAINNET = "mainnet",
     TESTNET = "testnet"
+}
+
+export enum ListPaymentDetailsVariant {
+    LIQUID = "liquid",
+    BITCOIN = "bitcoin"
+}
+
+export type ListPaymentDetails = {
+    type: ListPaymentDetailsVariant.LIQUID,
+    destination: string
+} | {
+    type: ListPaymentDetailsVariant.BITCOIN,
+    address: string
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -514,6 +553,7 @@ export type PaymentDetails = {
     description: string
     preimage?: string
     bolt11?: string
+    paymentHash?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
@@ -594,6 +634,23 @@ export type SendDestination = {
     invoice: LnInvoice
 }
 
+export enum SuccessActionVariant {
+    AES = "aes",
+    MESSAGE = "message",
+    URL = "url"
+}
+
+export type SuccessAction = {
+    type: SuccessActionVariant.AES,
+    data: AesSuccessActionData
+} | {
+    type: SuccessActionVariant.MESSAGE,
+    data: MessageSuccessActionData
+} | {
+    type: SuccessActionVariant.URL,
+    data: UrlSuccessActionData
+}
+
 export enum SuccessActionProcessedVariant {
     AES = "aes",
     MESSAGE = "message",
@@ -637,8 +694,8 @@ export const setLogger = async (logger: Logger): Promise<EmitterSubscription> =>
     return subscription
 }
 
-export const defaultConfig = async (network: LiquidNetwork): Promise<Config> => {
-    const response = await BreezSDKLiquid.defaultConfig(network)
+export const defaultConfig = async (network: LiquidNetwork, breezApiKey: string = ""): Promise<Config> => {
+    const response = await BreezSDKLiquid.defaultConfig(network, breezApiKey)
     return response
 }
 
@@ -727,6 +784,11 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
     return response
 }
 
+export const getPayment = async (req: GetPaymentRequest): Promise<Payment | null> => {
+    const response = await BreezSDKLiquid.getPayment(req)
+    return response
+}
+
 export const listRefundables = async (): Promise<RefundableSwap[]> => {
     const response = await BreezSDKLiquid.listRefundables()
     return response
@@ -765,6 +827,11 @@ export const restore = async (req: RestoreRequest): Promise<void> => {
 
 export const disconnect = async (): Promise<void> => {
     await BreezSDKLiquid.disconnect()
+}
+
+export const prepareLnurlPay = async (req: PrepareLnUrlPayRequest): Promise<PrepareLnUrlPayResponse> => {
+    const response = await BreezSDKLiquid.prepareLnurlPay(req)
+    return response
 }
 
 export const lnurlPay = async (req: LnUrlPayRequest): Promise<LnUrlPayResult> => {

@@ -21,8 +21,8 @@ Future<BindingLiquidSdk> connect({required ConnectRequest req}) =>
 /// If used, this must be called before `connect`. It can only be called once.
 Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogStream();
 
-Config defaultConfig({required LiquidNetwork network}) =>
-    RustLib.instance.api.crateBindingsDefaultConfig(network: network);
+Config defaultConfig({required LiquidNetwork network, String? breezApiKey}) =>
+    RustLib.instance.api.crateBindingsDefaultConfig(network: network, breezApiKey: breezApiKey);
 
 Future<InputType> parse({required String input}) => RustLib.instance.api.crateBindingsParse(input: input);
 
@@ -51,6 +51,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<GetInfoResponse> getInfo();
 
+  Future<Payment?> getPayment({required GetPaymentRequest req});
+
   Future<List<FiatCurrency>> listFiatCurrencies();
 
   Future<List<Payment>> listPayments({required ListPaymentsRequest req});
@@ -66,6 +68,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
+
+  Future<PrepareLnUrlPayResponse> prepareLnurlPay({required PrepareLnUrlPayRequest req});
 
   Future<PreparePayOnchainResponse> preparePayOnchain({required PreparePayOnchainRequest req});
 
@@ -94,6 +98,30 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<void> sync();
 
   Future<void> unregisterWebhook();
+}
+
+class AesSuccessActionData {
+  final String description;
+  final String ciphertext;
+  final String iv;
+
+  const AesSuccessActionData({
+    required this.description,
+    required this.ciphertext,
+    required this.iv,
+  });
+
+  @override
+  int get hashCode => description.hashCode ^ ciphertext.hashCode ^ iv.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AesSuccessActionData &&
+          runtimeType == other.runtimeType &&
+          description == other.description &&
+          ciphertext == other.ciphertext &&
+          iv == other.iv;
 }
 
 class AesSuccessActionDataDecrypted {
@@ -439,41 +467,6 @@ class LnUrlPayErrorData {
           reason == other.reason;
 }
 
-class LnUrlPayRequest {
-  final LnUrlPayRequestData data;
-  final BigInt amountMsat;
-  final String? comment;
-  final String? paymentLabel;
-  final bool? validateSuccessActionUrl;
-
-  const LnUrlPayRequest({
-    required this.data,
-    required this.amountMsat,
-    this.comment,
-    this.paymentLabel,
-    this.validateSuccessActionUrl,
-  });
-
-  @override
-  int get hashCode =>
-      data.hashCode ^
-      amountMsat.hashCode ^
-      comment.hashCode ^
-      paymentLabel.hashCode ^
-      validateSuccessActionUrl.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LnUrlPayRequest &&
-          runtimeType == other.runtimeType &&
-          data == other.data &&
-          amountMsat == other.amountMsat &&
-          comment == other.comment &&
-          paymentLabel == other.paymentLabel &&
-          validateSuccessActionUrl == other.validateSuccessActionUrl;
-}
-
 class LnUrlPayRequestData {
   final String callback;
   final BigInt minSendable;
@@ -727,6 +720,21 @@ class RouteHintHop {
           cltvExpiryDelta == other.cltvExpiryDelta &&
           htlcMinimumMsat == other.htlcMinimumMsat &&
           htlcMaximumMsat == other.htlcMaximumMsat;
+}
+
+@freezed
+sealed class SuccessAction with _$SuccessAction {
+  const SuccessAction._();
+
+  const factory SuccessAction.aes({
+    required AesSuccessActionData data,
+  }) = SuccessAction_Aes;
+  const factory SuccessAction.message({
+    required MessageSuccessActionData data,
+  }) = SuccessAction_Message;
+  const factory SuccessAction.url({
+    required UrlSuccessActionData data,
+  }) = SuccessAction_Url;
 }
 
 @freezed

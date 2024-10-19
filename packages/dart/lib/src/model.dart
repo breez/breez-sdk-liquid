@@ -210,18 +210,28 @@ class GetInfoResponse {
 
   /// Incoming amount that is pending from ongoing Receive swaps
   final BigInt pendingReceiveSat;
+
+  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+  final String fingerprint;
+
+  /// The wallet's pubkey. Used to verify signed messages.
   final String pubkey;
 
   const GetInfoResponse({
     required this.balanceSat,
     required this.pendingSendSat,
     required this.pendingReceiveSat,
+    required this.fingerprint,
     required this.pubkey,
   });
 
   @override
   int get hashCode =>
-      balanceSat.hashCode ^ pendingSendSat.hashCode ^ pendingReceiveSat.hashCode ^ pubkey.hashCode;
+      balanceSat.hashCode ^
+      pendingSendSat.hashCode ^
+      pendingReceiveSat.hashCode ^
+      fingerprint.hashCode ^
+      pubkey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -231,7 +241,18 @@ class GetInfoResponse {
           balanceSat == other.balanceSat &&
           pendingSendSat == other.pendingSendSat &&
           pendingReceiveSat == other.pendingReceiveSat &&
+          fingerprint == other.fingerprint &&
           pubkey == other.pubkey;
+}
+
+@freezed
+sealed class GetPaymentRequest with _$GetPaymentRequest {
+  const GetPaymentRequest._();
+
+  /// The Lightning payment hash of the payment
+  const factory GetPaymentRequest.lightning({
+    required String paymentHash,
+  }) = GetPaymentRequest_Lightning;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
@@ -295,6 +316,21 @@ enum LiquidNetwork {
   ;
 }
 
+@freezed
+sealed class ListPaymentDetails with _$ListPaymentDetails {
+  const ListPaymentDetails._();
+
+  /// The Liquid BIP21 URI or address of the payment
+  const factory ListPaymentDetails.liquid({
+    required String destination,
+  }) = ListPaymentDetails_Liquid;
+
+  /// The Bitcoin address of the payment
+  const factory ListPaymentDetails.bitcoin({
+    required String address,
+  }) = ListPaymentDetails_Bitcoin;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 class ListPaymentsRequest {
   final List<PaymentType>? filters;
@@ -306,6 +342,7 @@ class ListPaymentsRequest {
   final PlatformInt64? toTimestamp;
   final int? offset;
   final int? limit;
+  final ListPaymentDetails? details;
 
   const ListPaymentsRequest({
     this.filters,
@@ -313,11 +350,17 @@ class ListPaymentsRequest {
     this.toTimestamp,
     this.offset,
     this.limit,
+    this.details,
   });
 
   @override
   int get hashCode =>
-      filters.hashCode ^ fromTimestamp.hashCode ^ toTimestamp.hashCode ^ offset.hashCode ^ limit.hashCode;
+      filters.hashCode ^
+      fromTimestamp.hashCode ^
+      toTimestamp.hashCode ^
+      offset.hashCode ^
+      limit.hashCode ^
+      details.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -328,7 +371,28 @@ class ListPaymentsRequest {
           fromTimestamp == other.fromTimestamp &&
           toTimestamp == other.toTimestamp &&
           offset == other.offset &&
-          limit == other.limit;
+          limit == other.limit &&
+          details == other.details;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
+class LnUrlPayRequest {
+  /// The response from calling [crate::sdk::LiquidSdk::prepare_lnurl_pay]
+  final PrepareLnUrlPayResponse prepareResponse;
+
+  const LnUrlPayRequest({
+    required this.prepareResponse,
+  });
+
+  @override
+  int get hashCode => prepareResponse.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LnUrlPayRequest &&
+          runtimeType == other.runtimeType &&
+          prepareResponse == other.prepareResponse;
 }
 
 @freezed
@@ -552,6 +616,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// In the case of a Receive payment, this is the invoice paid by the user
     String? bolt11,
 
+    /// The payment hash of the invoice
+    String? paymentHash,
+
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
 
@@ -710,6 +777,74 @@ class PrepareBuyBitcoinResponse {
           provider == other.provider &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+class PrepareLnUrlPayRequest {
+  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  final LnUrlPayRequestData data;
+
+  /// The amount in millisatoshis for this payment
+  final BigInt amountMsat;
+
+  /// An optional comment for this payment
+  final String? comment;
+
+  /// Validates that, if there is a URL success action, the URL domain matches
+  /// the LNURL callback domain. Defaults to `true`
+  final bool? validateSuccessActionUrl;
+
+  const PrepareLnUrlPayRequest({
+    required this.data,
+    required this.amountMsat,
+    this.comment,
+    this.validateSuccessActionUrl,
+  });
+
+  @override
+  int get hashCode =>
+      data.hashCode ^ amountMsat.hashCode ^ comment.hashCode ^ validateSuccessActionUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareLnUrlPayRequest &&
+          runtimeType == other.runtimeType &&
+          data == other.data &&
+          amountMsat == other.amountMsat &&
+          comment == other.comment &&
+          validateSuccessActionUrl == other.validateSuccessActionUrl;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
+class PrepareLnUrlPayResponse {
+  /// The destination of the payment
+  final SendDestination destination;
+
+  /// The fees in satoshis to send the payment
+  final BigInt feesSat;
+
+  /// The unprocessed LUD-09 success action. This will be processed and decrypted if
+  /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
+  final SuccessAction? successAction;
+
+  const PrepareLnUrlPayResponse({
+    required this.destination,
+    required this.feesSat,
+    this.successAction,
+  });
+
+  @override
+  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ successAction.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareLnUrlPayResponse &&
+          runtimeType == other.runtimeType &&
+          destination == other.destination &&
+          feesSat == other.feesSat &&
+          successAction == other.successAction;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
