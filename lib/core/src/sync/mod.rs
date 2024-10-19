@@ -5,6 +5,7 @@ use std::sync::Arc;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use log::{debug, warn};
+use std::collections::HashSet;
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt as _;
 use tonic::transport::Channel;
@@ -49,6 +50,7 @@ pub(crate) struct BreezSyncService {
     persister: Arc<Persister>,
     signer: Arc<Box<dyn Signer>>,
     client: Mutex<Option<SyncerClient<Channel>>>,
+    sent: Mutex<HashSet<i64>>,
 }
 
 impl BreezSyncService {
@@ -62,6 +64,7 @@ impl BreezSyncService {
             persister,
             signer,
             client: Default::default(),
+            sent: Default::default(),
         }
     }
 
@@ -126,6 +129,12 @@ impl SyncService for BreezSyncService {
             while let Some(message) = stream.next().await {
                 match message {
                     Ok(record) => {
+                        let mut sent = cloned.sent.lock().await;
+                        if sent.get(&record.id).is_some() {
+                            sent.remove(&record.id);
+                            continue;
+                        }
+
                         debug!(
                             "Sync service: Received new record - record_id {} record_version {}",
                             record.id, record.version
@@ -200,6 +209,7 @@ impl SyncService for BreezSyncService {
             return Err(anyhow!("Cannot set record: Local head is behind remote"));
         }
 
+        self.sent.lock().await.insert(new_id);
         self.persister.set_latest_record_id(new_id)?;
         Ok(())
     }
