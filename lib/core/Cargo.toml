@@ -27,9 +27,7 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-try-he
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "main", features = [
-  "liquid",
-] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "387e37f8ce48ee841762b945137e2c6b4b4b5cfa", features = ["liquid"]}
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -50,6 +48,7 @@ reqwest = { version = "=0.11.20", features = ["json"] }
 electrum-client = { version = "0.19.0" }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
+tempfile = "3"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
