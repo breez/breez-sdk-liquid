@@ -210,24 +210,26 @@ impl ChainSwapHandler {
     }
 
     async fn rescan_outgoing_chain_swap(&self, swap: &ChainSwap) -> Result<()> {
-        let address = Address::from_str(&swap.claim_address)?;
-        let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
-        let script_pubkey = address.assume_checked().script_pubkey();
-        let script_history = self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .get_script_history(script_pubkey.as_script())?;
-        let claim_tx_history = script_history
-            .iter()
-            .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
-        if claim_tx_history.is_some() {
-            info!(
-                "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
-                swap.id
-            );
-            self.update_swap_info(&swap.id, Complete, None, None, None, None)
-                .await?;
+        if let Some(claim_address) = &swap.claim_address {
+            let address = Address::from_str(claim_address)?;
+            let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
+            let script_pubkey = address.assume_checked().script_pubkey();
+            let script_history = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .get_script_history(script_pubkey.as_script())?;
+            let claim_tx_history = script_history
+                .iter()
+                .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
+            if claim_tx_history.is_some() {
+                info!(
+                    "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
+                    swap.id
+                );
+                self.update_swap_info(&swap.id, Complete, None, None, None, None)
+                    .await?;
+            }
         }
         Ok(())
     }
@@ -682,9 +684,16 @@ impl ChainSwapHandler {
 
         debug!("Initiating claim for Chain Swap {swap_id}");
 
+        // Derive a new Liquid address for an incoming swap, or use the set Bitcoin address for an outgoing swap
+        let claim_address = match swap.direction {
+            Direction::Incoming => {
+                Some(self.onchain_wallet.next_unused_address().await?.to_string())
+            }
+            Direction::Outgoing => swap.claim_address.clone(),
+        };
         let claim_tx = self
             .swapper
-            .create_claim_tx(Swap::Chain(swap.clone()), None)?;
+            .create_claim_tx(Swap::Chain(swap.clone()), claim_address)?;
         let claim_tx_id = match claim_tx {
             // We attempt broadcasting via chain service, then fallback to Boltz
             SdkTransaction::Liquid(tx) => {

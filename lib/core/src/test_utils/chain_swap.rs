@@ -53,7 +53,7 @@ pub(crate) fn new_chain_swap(
         Direction::Incoming => ChainSwap {
             id: generate_random_string(4),
             direction,
-            claim_address: "tlq1qq0nn497zr4l6nfq84pxzqwme87n7kz09lvnx94t7ecw045dvjr09s9s6ens46nt7qcrmx673vq6gkss50qhpcxywt3r5a44j2".to_string(),
+            claim_address: None,
             lockup_address: "tb1p7cftn5u3ndt8ln0m6hruwyhsz8kc5sxt557ua03qcew0z29u5paqh8f7uu".to_string(),
             timeout_block_height: 2868778,
             preimage: "bbce422d96c0386c3a6c1b1fe11fc7be3fdd871c6855db6ab2e319e96ec19c78".to_string(),
@@ -116,7 +116,7 @@ pub(crate) fn new_chain_swap(
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
             direction,
-            claim_address: "14DeLtifrayJXAWft3qhPbdY4HVJUgMyx1".to_string(),
+            claim_address: Some("14DeLtifrayJXAWft3qhPbdY4HVJUgMyx1".to_string()),
             lockup_address: "tlq1pqg4e5r5a59gdl26ud6s7gna3mchqs20ycwl2lp67ejzy69fl7dwccwx9nqtr6ef848k7vpmvmdhsyeq2wp3vtn3gnlenhd0wrasv4qvr2dk0nz5tu0rw".to_string(),
             timeout_block_height: 1481523,
             preimage: "a95a028483df6112c15fdef513d9d8255ff0951d5c0856f85cf9c98352a0f71a".to_string(),

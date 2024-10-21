@@ -1313,12 +1313,11 @@ impl LiquidSdk {
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
-        let claim_address = req.address.clone();
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Outgoing,
-            claim_address,
+            claim_address: Some(req.address.clone()),
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
@@ -1730,18 +1729,11 @@ impl LiquidSdk {
 
         let accept_zero_conf = user_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let receiver_amount_sat = user_lockup_amount_sat - fees_sat;
-        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
-
-        // Reserve this address until the timeout block height
-        self.persister.insert_or_update_reserved_address(
-            &claim_address,
-            create_response.claim_details.timeout_block_height,
-        )?;
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Incoming,
-            claim_address: claim_address.to_string(),
+            claim_address: None,
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
@@ -2058,9 +2050,6 @@ impl LiquidSdk {
                     self.chain_swap_handler
                         .update_swap_info(&swap.id, Complete, None, None, None, None)
                         .await?;
-                    // Remove the used claim address from the reserved addresses
-                    self.persister
-                        .delete_reserved_address(&swap.claim_address)?;
                 }
             } else if let Some(swap) = pending_chain_swaps_by_refund_tx_id.get(&tx_id) {
                 if is_tx_confirmed {

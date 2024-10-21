@@ -609,7 +609,7 @@ impl FromSql for Direction {
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
-    pub(crate) claim_address: String,
+    pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
