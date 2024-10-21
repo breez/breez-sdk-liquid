@@ -1862,14 +1862,20 @@ impl LiquidSdk {
                 )
             })
             .await?;
+
         Ok(RefundResponse { refund_tx_id })
     }
 
-    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] within
-    /// the monitoring period to check if there are any confirmed funds available to refund.
+    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] to check
+    /// if there are any confirmed funds available to refund.
+    ///
+    /// Since it bypasses the monitoring period, this should be called rarely or when the caller
+    /// expects there is a very old refundable chain swap. Otherwise, for relatively recent swaps
+    /// (within last [CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS] blocks = ~30 days), calling this
+    /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
         self.chain_swap_handler
-            .rescan_incoming_chain_swaps()
+            .rescan_incoming_chain_swaps(true)
             .await?;
         Ok(())
     }
