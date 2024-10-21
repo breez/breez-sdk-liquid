@@ -13,7 +13,7 @@ use tonic::transport::Channel;
 use self::model::{
     sync::{
         syncer_client::SyncerClient, ListChangesRequest, ListenChangesRequest, Record,
-        SetRecordReply, SetRecordRequest, SetRecordStatus,
+        SetRecordReply, SetRecordRequest,
     },
     DecryptedRecord, SyncData,
 };
@@ -197,17 +197,10 @@ impl SyncService for BreezSyncService {
             return Err(anyhow!("Cannot run `set_record`: client not connected"));
         };
 
-        let id = self.persister.get_latest_record_id()? + 1;
-        let record = Record::new(id, data, self.signer.clone())
-            .map_err(|err| anyhow!("Could not create record: {err:?}"))?;
-        let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
+        let request = SetRecordRequest::new(&data.to_bytes()?, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 
-        let SetRecordReply { status, new_id } = client.set_record(request).await?.into_inner();
-
-        if status == SetRecordStatus::Conflict as i32 {
-            return Err(anyhow!("Cannot set record: Local head is behind remote"));
-        }
+        let SetRecordReply { new_id } = client.set_record(request).await?.into_inner();
 
         self.sent.lock().await.insert(new_id);
         self.persister.set_latest_record_id(new_id)?;

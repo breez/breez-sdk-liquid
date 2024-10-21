@@ -10,18 +10,18 @@ pub struct Record {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SetRecordRequest {
-    #[prost(message, optional, tag = "1")]
-    pub record: ::core::option::Option<Record>,
-    #[prost(uint32, tag = "2")]
+    #[prost(bytes = "vec", tag = "1")]
+    pub record_data: ::prost::alloc::vec::Vec<u8>,
+    #[prost(float, tag = "2")]
+    pub record_version: f32,
+    #[prost(uint32, tag = "3")]
     pub request_time: u32,
-    #[prost(string, tag = "3")]
+    #[prost(string, tag = "4")]
     pub signature: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct SetRecordReply {
-    #[prost(enumeration = "SetRecordStatus", tag = "1")]
-    pub status: i32,
-    #[prost(int64, tag = "2")]
+    #[prost(int64, tag = "1")]
     pub new_id: i64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -44,32 +44,6 @@ pub struct ListenChangesRequest {
     pub request_time: u32,
     #[prost(string, tag = "2")]
     pub signature: ::prost::alloc::string::String,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum SetRecordStatus {
-    Success = 0,
-    Conflict = 1,
-}
-impl SetRecordStatus {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Success => "SUCCESS",
-            Self::Conflict => "CONFLICT",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "SUCCESS" => Some(Self::Success),
-            "CONFLICT" => Some(Self::Conflict),
-            _ => None,
-        }
-    }
 }
 /// Generated client implementations.
 pub mod syncer_client {

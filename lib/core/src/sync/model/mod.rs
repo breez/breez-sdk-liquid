@@ -225,40 +225,26 @@ impl DecryptedRecord {
     }
 }
 
-impl Record {
-    pub(crate) fn new(
-        id: i64,
-        data: SyncData,
-        signer: Arc<Box<dyn Signer>>,
-    ) -> anyhow::Result<Self> {
-        let bytes = data.to_bytes()?;
-        let data = signer
-            .ecies_encrypt(&bytes)
-            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
-        Ok(Record {
-            id,
-            version: CURRENT_SCHEMA_VERSION,
-            data,
-        })
-    }
-}
-
 impl SetRecordRequest {
     pub(crate) fn new(
-        record: Record,
+        data: &[u8],
         request_time: u32,
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
+        let record_data = signer
+            .ecies_encrypt(data)
+            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
+        let record_version = CURRENT_SCHEMA_VERSION;
         let msg = format!(
-            "{}-{}-{}-{}",
-            record.id,
-            record.version,
-            record.data.to_lower_hex_string(),
+            "{}-{}-{}",
+            record_data.to_lower_hex_string(),
+            record_version,
             request_time,
         );
         let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
-            record: Some(record),
+            record_data,
+            record_version,
             request_time,
             signature,
         })
