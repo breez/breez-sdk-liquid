@@ -98,5 +98,90 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE receive_swaps ADD COLUMN payment_hash TEXT;
         ALTER TABLE send_swaps ADD COLUMN payment_hash TEXT;
         ",
+        "
+        CREATE TABLE IF NOT EXISTS reserved_addresses (
+            address TEXT NOT NULL PRIMARY KEY,
+            expiry_block_height INTEGER NOT NULL
+        ) STRICT;
+
+        ALTER TABLE receive_swaps ADD COLUMN mrh_address TEXT NOT NULL DEFAULT '';
+        ALTER TABLE receive_swaps ADD COLUMN mrh_script_pubkey TEXT NOT NULL DEFAULT '';
+        ALTER TABLE receive_swaps ADD COLUMN mrh_tx_id TEXT;
+        ",
+        "
+        ALTER TABLE chain_swaps RENAME TO old_chain_swaps;
+
+        CREATE TABLE IF NOT EXISTS chain_swaps (
+            id TEXT NOT NULL PRIMARY KEY,
+            direction INTEGER NOT NULL,
+            claim_address TEXT,
+            lockup_address TEXT NOT NULL,
+            timeout_block_height INTEGER NOT NULL,
+            preimage TEXT NOT NULL,
+            payer_amount_sat INTEGER NOT NULL,
+            receiver_amount_sat INTEGER NOT NULL,
+            accept_zero_conf INTEGER NOT NULL,
+            create_response_json TEXT NOT NULL,
+            claim_private_key TEXT NOT NULL,
+            refund_private_key TEXT NOT NULL,
+            server_lockup_tx_id TEXT,
+            user_lockup_tx_id TEXT,
+            claim_fees_sat INTEGER NOT NULL,
+            claim_tx_id TEXT,
+            refund_tx_id TEXT,
+            created_at INTEGER NOT NULL,
+            state INTEGER NOT NULL,
+            description TEXT,
+            id_hash TEXT
+        ) STRICT;
+
+        INSERT INTO chain_swaps (
+            id, 
+            direction,
+            claim_address,
+            lockup_address,
+            timeout_block_height,
+            preimage,
+            payer_amount_sat,
+            receiver_amount_sat,
+            accept_zero_conf,
+            create_response_json,
+            claim_private_key,
+            refund_private_key,
+            server_lockup_tx_id,
+            user_lockup_tx_id,
+            claim_fees_sat,
+            claim_tx_id,
+            refund_tx_id,
+            created_at,
+            state,
+            description,
+            id_hash
+        ) SELECT 
+            id, 
+            direction,
+            claim_address,
+            lockup_address,
+            timeout_block_height,
+            preimage,
+            payer_amount_sat,
+            receiver_amount_sat,
+            accept_zero_conf,
+            create_response_json,
+            claim_private_key,
+            refund_private_key,
+            server_lockup_tx_id,
+            user_lockup_tx_id,
+            claim_fees_sat,
+            claim_tx_id,
+            refund_tx_id,
+            created_at,
+            state,
+            description,
+            id_hash
+        FROM old_chain_swaps;
+
+        DROP TABLE old_chain_swaps;
+        ",
     ]
 }
