@@ -94,6 +94,7 @@ pub(crate) struct SendSyncData {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
     pub(crate) preimage: Option<String>,
+    pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
 }
 
@@ -101,6 +102,7 @@ impl From<SendSwap> for SendSyncData {
     fn from(value: SendSwap) -> Self {
         Self {
             swap_id: value.id,
+            payment_hash: value.payment_hash,
             invoice: value.invoice,
             create_response_json: value.create_response_json,
             refund_private_key: value.refund_private_key,
@@ -117,6 +119,7 @@ impl From<SendSyncData> for SendSwap {
     fn from(val: SendSyncData) -> Self {
         SendSwap {
             id: val.swap_id,
+            payment_hash: val.payment_hash,
             invoice: val.invoice,
             description: val.description,
             preimage: val.preimage,
@@ -144,6 +147,7 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
+    pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
 }
 
@@ -151,6 +155,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
     fn from(value: ReceiveSwap) -> Self {
         Self {
             swap_id: value.id,
+            payment_hash: value.payment_hash,
             invoice: value.invoice,
             preimage: value.preimage,
             create_response_json: value.create_response_json,
@@ -168,6 +173,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
     fn from(val: ReceiveSyncData) -> Self {
         ReceiveSwap {
             id: val.swap_id,
+            payment_hash: val.payment_hash,
             preimage: val.preimage,
             create_response_json: val.create_response_json,
             claim_private_key: val.claim_private_key,
