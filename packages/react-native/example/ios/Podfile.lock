@@ -1,11 +1,11 @@
 PODS:
   - boost (1.76.0)
-  - breez_sdk_liquid (0.4.0-rc3):
-    - BreezSDKLiquid (= 0.4.0-rc3)
+  - breez_sdk_liquid (0.5.0-rc1):
+    - BreezSDKLiquid (= 0.5.0-rc1)
     - React-Core
-  - breez_sdk_liquidFFI (0.4.0-rc3)
-  - BreezSDKLiquid (0.4.0-rc3):
-    - breez_sdk_liquidFFI (= 0.4.0-rc3)
+  - breez_sdk_liquidFFI (0.5.0-rc1)
+  - BreezSDKLiquid (0.5.0-rc1):
+    - breez_sdk_liquidFFI (= 0.5.0-rc1)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.70.15)
