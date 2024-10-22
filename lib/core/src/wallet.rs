@@ -212,22 +212,17 @@ impl OnchainWallet for LiquidOnchainWallet {
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
         let tip = self.tip().await.height();
-        let address = match self.persister.get_expired_reserved_address(tip)? {
+        let address = match self.persister.next_expired_reserved_address(tip)? {
             Some(reserved_address) => {
                 debug!(
                     "Got reserved address {} that expired on block height {}",
                     reserved_address.address, reserved_address.expiry_block_height
                 );
-                self.persister
-                    .delete_reserved_address(&reserved_address.address)?;
                 ElementsAddress::from_str(&reserved_address.address)
                     .map_err(|e| PaymentError::Generic { err: e.to_string() })?
             }
             None => {
-                let next_index = self
-                    .persister
-                    .get_last_derivation_index()?
-                    .map(|index| index + 1);
+                let next_index = self.persister.next_derivation_index()?;
                 let address_result = self.wallet.lock().await.address(next_index)?;
                 let address = address_result.address().clone();
                 let index = address_result.index();

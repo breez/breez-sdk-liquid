@@ -264,8 +264,7 @@ impl Persister {
                 ":mrh_amount_sat": mrh_amount_sat,
                 ":state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }

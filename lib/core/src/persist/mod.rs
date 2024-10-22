@@ -111,8 +111,7 @@ impl Persister {
                 ptx.payment_type,
                 ptx.is_confirmed,
             ),
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         if let Some(destination) = destination {
             con.execute(
@@ -124,8 +123,7 @@ impl Persister {
                 VALUES (?, ?, ?)
             ",
                 (ptx.tx_id, destination, description),
-            )
-            .map_err(|_| PaymentError::PersistError)?;
+            )?;
         }
 
         Ok(())
