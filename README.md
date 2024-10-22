@@ -82,7 +82,10 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  LNURL-Withdraw
 - [x]  Send to a Lightning address
 - [x]  Receive via Lightning address
-- [ ]  Real-time sync
 - [x]  Webhook for receiving payments
 - [x]  Offline receive via notifications
 - [x]  Offline swaps via notifications
+- [ ]  Real-time sync
+- [ ]  Bolt12
+- [ ]  TLV support
+- [ ]  WebAssembly 
