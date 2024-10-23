@@ -609,6 +609,7 @@ impl FromSql for Direction {
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
+    /// The Bitcoin claim address is only set for Outgoing Chain Swaps
     pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
     pub(crate) timeout_block_height: u32,
