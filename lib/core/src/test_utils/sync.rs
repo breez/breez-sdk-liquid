@@ -1,45 +1,38 @@
-use anyhow::Result;
-use std::sync::Arc;
-
+use anyhow::{Result};
 use async_trait::async_trait;
 
-use crate::sync::{
-    model::{sync::Record, SyncData},
-    SyncService,
+use crate::sync::client::SyncerClient;
+use crate::sync::model::sync::{
+    ListChangesReply, ListChangesRequest, ListenChangesRequest, Record, SetRecordReply,
+    SetRecordRequest,
 };
 
-pub(crate) struct MockSyncService {}
+pub(crate) struct MockSyncerClient {}
 
-impl MockSyncService {
+impl MockSyncerClient {
     pub(crate) fn new() -> Self {
         Self {}
     }
 }
 
 #[async_trait]
-impl SyncService for MockSyncService {
-    async fn connect(&self) -> Result<()> {
+impl SyncerClient for MockSyncerClient {
+    async fn connect(&self, _connect_url: String) -> Result<()> {
         Ok(())
     }
 
-    async fn listen(self: Arc<Self>) -> Result<()> {
-        Ok(())
+    async fn set_record(&self, _req: SetRecordRequest) -> Result<SetRecordReply> {
+        unimplemented!()
     }
-
-    fn apply_changes(&self, _changes: &[Record]) -> Result<()> {
-        Ok(())
-    }
-
-    async fn get_changes_since(&self, _from_id: i64) -> Result<Vec<Record>> {
+    async fn list_changes(&self, _req: ListChangesRequest) -> Result<ListChangesReply> {
         unimplemented!()
     }
 
-    async fn set_record(&self, _data: SyncData) -> Result<()> {
-        Ok(())
-    }
-
-    fn cleanup(&self) -> Result<()> {
-        Ok(())
+    async fn listen_changes(
+        &self,
+        _req: ListenChangesRequest,
+    ) -> Result<tonic::codec::Streaming<Record>> {
+        unimplemented!()
     }
 
     async fn disconnect(&self) -> Result<()> {

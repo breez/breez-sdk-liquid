@@ -10,23 +10,28 @@ service Syncer {
 }
 
 message Record {
-  int64 id = 1;
-  float version = 2;
-  bytes data = 3;
+  string id = 1;
+  int64 revision = 2;
+  float schema_version = 3;
+  bytes data = 4;
 }
 
 message SetRecordRequest {
-  bytes record_data = 1;
-  float record_version = 2;
-  uint32 request_time = 3;
-  string signature = 4;
+  Record record = 1;
+  uint32 request_time = 2;
+  string signature = 3;
+}
+enum SetRecordStatus {
+  SUCCESS = 0;
+  CONFLICT = 1;
 }
 message SetRecordReply {
-  int64 new_id = 1;
+  SetRecordStatus status = 1;
+  int64 new_revision = 2;
 }
 
 message ListChangesRequest {
-  int64 from_id = 1;
+  int64 since_revision = 1;
   uint32 request_time = 2;
   string signature = 3;
 }

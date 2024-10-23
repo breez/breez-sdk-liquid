@@ -19,7 +19,7 @@ impl Persister {
         // so we split up the insert into two statements.
         let mut stmt = con.prepare(
             "
-            INSERT INTO chain_swaps (
+            INSERT OR UPDATE INTO chain_swaps (
                 id,
                 id_hash,
                 direction,

@@ -17,7 +17,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            INSERT INTO send_swaps (
+            INSERT OR UPDATE INTO send_swaps (
                 id,
                 id_hash,
                 invoice,

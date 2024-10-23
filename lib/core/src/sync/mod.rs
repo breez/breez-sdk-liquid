@@ -1,69 +1,46 @@
+pub(crate) mod client;
 pub(crate) mod model;
 
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use log::{debug, warn};
 use std::collections::HashSet;
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt as _;
-use tonic::transport::Channel;
 
+use self::client::SyncerClient;
 use self::model::{
     sync::{
-        syncer_client::SyncerClient, ListChangesRequest, ListenChangesRequest, Record,
-        SetRecordReply, SetRecordRequest,
+        ListChangesRequest, ListenChangesRequest, Record, SetRecordReply, SetRecordRequest,
+        SetRecordStatus,
     },
     DecryptedRecord, SyncData,
 };
-use crate::{model::Signer, persist::Persister, utils};
+use crate::{model::Signer, persist::Persister, prelude::Direction, utils};
 
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
-#[async_trait]
-pub trait SyncService: Send + Sync {
-    /// Connects to a gRPC endpoint
-    async fn connect(&self) -> Result<()>;
-
-    /// Listens to the incoming changes stream
-    async fn listen(self: Arc<Self>) -> Result<()>;
-
-    /// Applies the changes received from the stream to the local database
-    fn apply_changes(&self, changes: &[Record]) -> Result<()>;
-
-    /// Retrieves the changes since a specified [id](Record::id)
-    async fn get_changes_since(&self, from_id: i64) -> Result<Vec<Record>>;
-
-    /// Adds a record to the remote
-    async fn set_record(&self, data: SyncData) -> Result<()>;
-
-    /// Attemps to clean up local changes by applying them
-    fn cleanup(&self) -> Result<()>;
-
-    /// Disconnects from the gRPC stream
-    async fn disconnect(&self) -> Result<()>;
-}
-
-pub(crate) struct BreezSyncService {
+pub(crate) struct SyncService {
     connect_url: String,
     persister: Arc<Persister>,
-    signer: Arc<Box<dyn Signer>>,
-    client: Mutex<Option<SyncerClient<Channel>>>,
     sent: Mutex<HashSet<i64>>,
+    signer: Arc<Box<dyn Signer>>,
+    client: Box<dyn SyncerClient>,
 }
 
-impl BreezSyncService {
+impl SyncService {
     pub(crate) fn new(
         connect_url: String,
         persister: Arc<Persister>,
         signer: Arc<Box<dyn Signer>>,
+        client: Box<dyn SyncerClient>,
     ) -> Self {
         Self {
             connect_url,
             persister,
             signer,
-            client: Default::default(),
+            client,
             sent: Default::default(),
         }
     }
@@ -77,7 +54,7 @@ impl BreezSyncService {
 
         for record in records {
             // If it's a major version ahead, we skip
-            if record.version.floor() > CURRENT_SCHEMA_VERSION.floor() {
+            if record.schema_version.floor() > CURRENT_SCHEMA_VERSION.floor() {
                 failed_records.push(record);
                 continue;
             }
@@ -98,30 +75,19 @@ impl BreezSyncService {
     }
 }
 
-#[async_trait]
-impl SyncService for BreezSyncService {
-    async fn connect(&self) -> Result<()> {
-        let mut client = self.client.lock().await;
-        *client = Some(SyncerClient::connect(self.connect_url.clone()).await?);
-        debug!(
-            "Sync service: Successfully connected to {}",
-            self.connect_url
-        );
-        Ok(())
+impl SyncService {
+    pub(crate) async fn connect(&self) -> Result<()> {
+        self.client.connect(self.connect_url.clone()).await
     }
 
-    async fn listen(self: Arc<Self>) -> Result<()> {
-        let Some(mut client) = self.client.lock().await.clone() else {
-            return Err(anyhow!("Cannot listen to changes: client not connected"));
-        };
-
+    pub(crate) async fn listen(self: Arc<Self>) -> Result<()> {
         let request = ListenChangesRequest::new(utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
 
         let cloned = self.clone();
         tokio::spawn(async move {
-            let mut stream = match client.listen_changes(request).await {
-                Ok(res) => res.into_inner(),
+            let mut stream = match cloned.client.listen_changes(request).await {
+                Ok(stream) => stream,
                 Err(err) => return warn!("Could not listen to changes: {err:?}"),
             };
 
@@ -130,22 +96,22 @@ impl SyncService for BreezSyncService {
                 match message {
                     Ok(record) => {
                         let mut sent = cloned.sent.lock().await;
-                        if sent.get(&record.id).is_some() {
-                            sent.remove(&record.id);
+                        if sent.get(&record.revision).is_some() {
+                            sent.remove(&record.revision);
                             continue;
                         }
 
                         debug!(
-                            "Sync service: Received new record - record_id {} record_version {}",
-                            record.id, record.version
+                            "Sync service: Received new record - record_id {} record_revision {} record_schema_version {}",
+                            record.id, record.revision, record.schema_version
                         );
 
-                        let record_id = record.id;
+                        let record_revision = record.revision;
                         if let Err(err) = cloned.apply_changes(&[record]) {
                             warn!("Could not apply incoming changes: {err:?}")
                         };
-                        if let Err(err) = cloned.persister.set_latest_record_id(record_id) {
-                            warn!("Could not update latest record id from stream: {err:?}")
+                        if let Err(err) = cloned.persister.set_latest_revision(record_revision) {
+                            warn!("Could not update latest record revision from stream: {err:?}")
                         };
                     }
                     Err(err) => warn!("An error occured while listening for records: {err:?}"),
@@ -156,17 +122,27 @@ impl SyncService for BreezSyncService {
         Ok(())
     }
 
-    fn apply_changes(&self, records: &[Record]) -> Result<()> {
+    fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
+        match record.data {
+            SyncData::Chain(chain_data) => self.persister.insert_chain_swap(&chain_data.into()),
+            SyncData::Send(send_data) => self.persister.insert_send_swap(&send_data.into()),
+            SyncData::Receive(receive_data) => {
+                self.persister.insert_receive_swap(&receive_data.into())
+            }
+        }
+    }
+
+    pub(crate) fn apply_changes(&self, records: &[Record]) -> Result<()> {
         let (updatable_records, failed_records) = self.collect_records(records);
 
         // We persist records which we cannot update (> CURRENT_SCHEMA_VERSION)
         for record in failed_records {
-            self.persister.insert_record(record)?;
+            self.persister.insert_record(record, Direction::Incoming)?;
         }
 
         // We apply records which we can update (<= CURRENT_SCHEMA_VERSION)
         for record in updatable_records {
-            if let Err(err) = self.persister.apply_record(record) {
+            if let Err(err) = self.apply_record(record) {
                 warn!("Could not apply record changes: {err:?}");
             }
         }
@@ -175,49 +151,55 @@ impl SyncService for BreezSyncService {
     }
 
     async fn get_changes_since(&self, from_id: i64) -> Result<Vec<Record>> {
-        let Some(mut client) = self.client.lock().await.clone() else {
-            return Err(anyhow!(
-                "Cannot run `get_changes_since`: client not connected"
-            ));
-        };
-
         let request = ListChangesRequest::new(from_id, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListChangesRequest: {err:?}"))?;
-        let records = client.list_changes(request).await?.into_inner().changes;
+        let records = self.client.list_changes(request).await?.changes;
+
+        Ok(records)
+    }
+
+    pub(crate) async fn get_latest_changes(&self) -> Result<Vec<Record>> {
+        let latest_revision = self.persister.get_latest_revision()?;
+
+        let records = self.get_changes_since(latest_revision).await?;
 
         if let Some(last_record) = records.last() {
-            self.persister.set_latest_record_id(last_record.id)?;
+            self.persister.set_latest_revision(last_record.revision)?;
         }
 
         Ok(records)
     }
 
-    async fn set_record(&self, data: SyncData) -> Result<()> {
-        let Some(mut client) = self.client.lock().await.clone() else {
-            return Err(anyhow!("Cannot run `set_record`: client not connected"));
-        };
-
-        let request = SetRecordRequest::new(&data.to_bytes()?, utils::now(), self.signer.clone())
+    pub(crate) async fn set_record(&self, data: SyncData) -> Result<()> {
+        let record = Record::new(data, None, self.signer.clone())?;
+        let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 
-        let SetRecordReply { new_id } = client.set_record(request).await?.into_inner();
+        let SetRecordReply {
+            status,
+            new_revision,
+        } = self.client.set_record(request).await?;
 
-        self.sent.lock().await.insert(new_id);
-        self.persister.set_latest_record_id(new_id)?;
+        if SetRecordStatus::try_from(status)? == SetRecordStatus::Conflict {
+            return Err(anyhow!("Could not set record: revision conflict."));
+        }
+
+        self.sent.lock().await.insert(new_revision);
+        self.persister.set_latest_revision(new_revision)?;
         Ok(())
     }
 
-    fn cleanup(&self) -> Result<()> {
+    pub(crate) fn cleanup(&self) -> Result<()> {
         let pending_records = self
             .persister
-            .get_records()
+            .get_records(Some(Direction::Incoming))
             .map_err(|err| anyhow!("Could not fetch pending records from database: {err:?}"))?;
 
         let (updatable_records, _) = self.collect_records(&pending_records);
 
         for record in updatable_records {
-            let record_id = record.id;
-            if self.persister.apply_record(record).is_err() {
+            let record_id = record.id.clone();
+            if self.apply_record(record).is_err() {
                 continue;
             }
             self.persister.delete_record(record_id)?;
@@ -226,9 +208,7 @@ impl SyncService for BreezSyncService {
         Ok(())
     }
 
-    async fn disconnect(&self) -> Result<()> {
-        let mut client = self.client.lock().await;
-        *client = None;
-        Ok(())
+    pub(crate) async fn disconnect(&self) -> Result<()> {
+        self.client.disconnect().await
     }
 }

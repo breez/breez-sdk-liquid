@@ -52,6 +52,7 @@ tempfile = "3"
 tonic = { version = "0.12.3", features = ["tls"] }
 prost = "0.13.3"
 ecies = "0.2.7"
+uuid = { version = "1.8.0", features = ["v4"] }
 
 [dev-dependencies]
 lazy_static = "1.5.0"

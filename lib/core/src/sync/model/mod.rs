@@ -4,7 +4,10 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use openssl::sha::sha256;
 use serde::{Deserialize, Serialize};
 
-use self::sync::{ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest};
+use self::sync::{
+    ListChangesRequest,
+    ListenChangesRequest, Record, SetRecordRequest,
+};
 use crate::model::{
     ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Signer, SignerError,
 };
@@ -205,8 +208,9 @@ impl SyncData {
 }
 
 pub(crate) struct DecryptedRecord {
-    pub(crate) id: i64,
-    pub(crate) version: f32,
+    pub(crate) id: String,
+    pub(crate) revision: i64,
+    pub(crate) schema_version: f32,
     pub(crate) data: SyncData,
 }
 
@@ -218,8 +222,29 @@ impl DecryptedRecord {
         let dec_data = signer.ecies_decrypt(record.data.as_slice())?;
         let data = serde_json::from_slice(&dec_data)?;
         Ok(Self {
-            id: record.id,
-            version: record.version,
+            id: record.id.clone(),
+            revision: record.revision,
+            schema_version: record.schema_version,
+            data,
+        })
+    }
+}
+
+impl Record {
+    pub(crate) fn new(
+        data: SyncData,
+        revision: Option<i64>,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Result<Self, anyhow::Error> {
+        let id = uuid::Uuid::new_v4().to_string();
+        let data = data.to_bytes()?;
+        let data = signer
+            .ecies_encrypt(&data)
+            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
+        Ok(Self {
+            id,
+            revision: revision.unwrap_or(0),
+            schema_version: CURRENT_SCHEMA_VERSION,
             data,
         })
     }
@@ -227,24 +252,21 @@ impl DecryptedRecord {
 
 impl SetRecordRequest {
     pub(crate) fn new(
-        data: &[u8],
+        record: Record,
         request_time: u32,
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
-        let record_data = signer
-            .ecies_encrypt(data)
-            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
-        let record_version = CURRENT_SCHEMA_VERSION;
         let msg = format!(
-            "{}-{}-{}",
-            record_data.to_lower_hex_string(),
-            record_version,
+            "{}-{}-{}-{}-{}",
+            record.id,
+            record.revision,
+            CURRENT_SCHEMA_VERSION,
+            record.data.to_lower_hex_string(),
             request_time,
         );
         let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
-            record_data,
-            record_version,
+            record: Some(record),
             request_time,
             signature,
         })
@@ -253,14 +275,14 @@ impl SetRecordRequest {
 
 impl ListChangesRequest {
     pub(crate) fn new(
-        from_id: i64,
+        since_revision: i64,
         request_time: u32,
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
-        let msg = format!("{}-{}", from_id, request_time);
+        let msg = format!("{}-{}", since_revision, request_time);
         let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
-            from_id,
+            since_revision,
             request_time,
             signature,
         })

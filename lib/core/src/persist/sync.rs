@@ -1,31 +1,31 @@
 use anyhow::{anyhow, Result};
 use rusqlite::{params, Row};
 
-use crate::sync::model::{sync::Record, DecryptedRecord, SyncData};
+use crate::sync::model::{sync::Record};
 
-use super::Persister;
+use super::{Direction, Persister};
 
 impl Persister {
-    pub(crate) fn get_latest_record_id(&self) -> Result<i64> {
+    pub(crate) fn get_latest_revision(&self) -> Result<i64> {
         let con = self.get_connection()?;
 
-        let latest_record_id: i64 = con
+        let latest_revision: i64 = con
             .query_row(
-                "SELECT latestRecordId FROM settings WHERE id = 1",
+                "SELECT syncLatestRevision FROM settings WHERE id = 1",
                 [],
                 |row| row.get(0),
             )
             .unwrap_or(0);
 
-        Ok(latest_record_id)
+        Ok(latest_revision)
     }
 
-    pub(crate) fn set_latest_record_id(&self, new_latest_id: i64) -> Result<()> {
+    pub(crate) fn set_latest_revision(&self, new_latest_revision: i64) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
-            "INSERT OR REPLACE INTO settings(id, latestRecordId) VALUES(1, ?)",
-            params![new_latest_id],
+            "INSERT OR REPLACE INTO settings(id, syncLatestRevision) VALUES(1, ?)",
+            params![new_latest_revision],
         )
         .map_err(|err| anyhow!("Could not write latest record id to database: {err}"))?;
 
@@ -35,68 +35,88 @@ impl Persister {
     fn sql_row_to_record(&self, row: &Row) -> rusqlite::Result<Record> {
         Ok(Record {
             id: row.get(0)?,
-            version: row.get(1)?,
+            schema_version: row.get(1)?,
             data: row.get(2)?,
+            revision: row.get(3)?,
         })
     }
 
-    pub(crate) fn get_records(&self) -> Result<Vec<Record>> {
+    fn get_records_query(where_clauses: Vec<String>) -> String {
+        let mut where_clause_str = String::new();
+        if !where_clauses.is_empty() {
+            where_clause_str = String::from("WHERE ");
+            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
+        }
+
+        format!(
+            "
+                SELECT 
+                    id,
+                    schema_version,
+                    data,
+                    revision
+                FROM sync_records
+                {where_clause_str}
+                ORDER BY revision
+            "
+        )
+    }
+
+    pub(crate) fn get_records(&self, direction: Option<Direction>) -> Result<Vec<Record>> {
         let con = self.get_connection()?;
 
+        let mut where_clauses = vec![];
+        if let Some(direction) = direction {
+            where_clauses.push("direction = ?1".to_string())
+        }
+        let query = Self::get_records_query(where_clauses);
+
         let records: Vec<Record> = con
-            .prepare(
-                "
-            SELECT 
-                id,
-                version,
-                data
-            FROM pending_sync_records
-        ",
-            )?
-            .query_map([], |row| self.sql_row_to_record(row))?
+            .prepare(&query)?
+            .query_map([direction], |row| self.sql_row_to_record(row))?
             .map(|i| i.unwrap())
             .collect();
 
         Ok(records)
     }
 
-    pub(crate) fn insert_record(&self, record: &Record) -> Result<()> {
+    pub(crate) fn insert_record(&self, record: &Record, direction: Direction) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
             "
-            INSERT INTO pending_sync_records(
+            INSERT INTO sync_records(
                 id,
-                version,
-                data
+                schema_version,
+                data,
+                revision,
+                direction
             )
-            VALUES (?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
         ",
-            (record.id, record.version, &record.data),
+            (
+                &record.id,
+                &record.schema_version,
+                &record.data,
+                &record.revision,
+                direction,
+            ),
         )?;
 
         Ok(())
     }
 
-    pub(crate) fn delete_record(&self, id: i64) -> Result<()> {
+    pub(crate) fn delete_record(&self, id: String) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
             "
-            DELETE FROM pending_sync_records
+            DELETE FROM sync_records
             WHERE id = ?
         ",
             params![id],
         )?;
 
         Ok(())
-    }
-
-    pub(crate) fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
-        match record.data {
-            SyncData::Chain(chain_data) => self.insert_chain_swap(&chain_data.into()),
-            SyncData::Send(send_data) => self.insert_send_swap(&send_data.into()),
-            SyncData::Receive(receive_data) => self.insert_receive_swap(&receive_data.into()),
-        }
     }
 }

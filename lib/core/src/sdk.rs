@@ -46,7 +46,7 @@ use crate::{
     utils, *,
 };
 
-use self::sync::{BreezSyncService, SyncService};
+use self::sync::{client::BreezSyncerClient, SyncService};
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
@@ -72,7 +72,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
-    pub(crate) sync_service: Arc<dyn SyncService>,
+    pub(crate) sync_service: Arc<SyncService>,
 }
 
 impl LiquidSdk {
@@ -207,10 +207,12 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
-        let sync_service = Arc::new(BreezSyncService::new(
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
             config.sync_service_url.clone(),
             persister.clone(),
             signer.clone(),
+            syncer_client,
         ));
 
         let sdk = Arc::new(LiquidSdk {
