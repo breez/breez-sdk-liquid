@@ -86,6 +86,7 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  Offline receive via notifications
 - [x]  Offline swaps via notifications
 - [ ]  Real-time sync
+- [ ]  External input parsers
 - [ ]  Bolt12
 - [ ]  TLV support
 - [ ]  WebAssembly 
