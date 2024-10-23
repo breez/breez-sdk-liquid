@@ -98,5 +98,21 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE receive_swaps ADD COLUMN payment_hash TEXT;
         ALTER TABLE send_swaps ADD COLUMN payment_hash TEXT;
         ",
+        "CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER NOT NULL PRIMARY KEY,
+            syncLatestRevision INTEGER
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS sync_records (
+            id TEXT NOT NULL UNIQUE,
+            schema_version REAL NOT NULL,
+            data BLOB NOT NULL,
+            revision INTEGER NOT NULL PRIMARY KEY,
+            direction INTEGER NOT NULL
+        ) STRICT;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ALTER TABLE send_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ALTER TABLE chain_swaps ADD COLUMN is_local INTEGER DEFAULT 1;
+        ",
     ]
 }

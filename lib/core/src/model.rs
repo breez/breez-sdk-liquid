@@ -27,6 +27,7 @@ use crate::utils;
 // Both use f64 for the maximum precision when converting between units
 pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+pub const BREEZ_SYNC_SERVICE_URL: &str = "TODO";
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -44,6 +45,8 @@ pub struct Config {
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
+    /// The URL of the service used to synchronize data across devices
+    pub sync_service_url: String,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
@@ -63,6 +66,7 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
         }
     }
 
@@ -77,6 +81,7 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
             breez_api_key,
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
         }
     }
 
@@ -248,6 +253,12 @@ pub trait Signer: Send + Sync {
     /// HMAC-SHA256 using the private key derived from the given derivation path
     /// This is used to calculate the linking key of lnurl-auth specification: https://github.com/lnurl/luds/blob/luds/05.md
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+
+    /// Encrypts a message using (ECIES)[ecies::encrypt]
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
+
+    /// Decrypts a message using (ECIES)[ecies::decrypt]
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -569,7 +580,7 @@ impl SwapScriptV2 {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     Incoming = 0,
     Outgoing = 1,
@@ -622,6 +633,7 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
+    pub(crate) is_local: bool,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -742,6 +754,7 @@ pub(crate) struct SendSwap {
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
+    pub(crate) is_local: bool,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -826,6 +839,7 @@ pub(crate) struct ReceiveSwap {
     /// Afterwards, it shows the lockup tx creation time.    
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
+    pub(crate) is_local: bool,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {

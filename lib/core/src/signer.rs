@@ -19,6 +19,7 @@ use lwk_wollet::elements_miniscript::{
     elementssig_to_rawsig,
     psbt::PsbtExt,
     slip77::MasterBlindingKey,
+    ToPublicKey as _,
 };
 use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
@@ -190,7 +191,7 @@ impl SdkSigner {
         })
     }
 
-    fn seed(&self) -> [u8; 64] {
+    pub(crate) fn seed(&self) -> [u8; 64] {
         self.mnemonic.to_seed("")
     }
 }
@@ -252,6 +253,19 @@ impl Signer for SdkSigner {
         Ok(Hmac::<sha256::Hash>::from_engine(engine)
             .as_byte_array()
             .to_vec())
+    }
+
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let keypair = self.xprv.to_keypair(&self.secp);
+        let rc_pub = keypair.public_key().to_public_key().to_bytes();
+        Ok(ecies::encrypt(&rc_pub, msg)
+            .map_err(|err| anyhow::anyhow!("Could not encrypt data: {err}"))?)
+    }
+
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let rc_prv = self.xprv.to_priv().to_bytes();
+        Ok(ecies::decrypt(&rc_prv, msg)
+            .map_err(|err| anyhow::anyhow!("Could not decrypt data: {err}"))?)
     }
 }
 

@@ -75,6 +75,11 @@ async fn main() -> Result<()> {
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
+    if let Some(sync_service_url) = std::env::var_os("SYNC_SERVICE_URL") {
+        config.sync_service_url = sync_service_url
+            .into_string()
+            .expect("Expected a valid SYNC_SERIVCE_URL");
+    }
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         config,

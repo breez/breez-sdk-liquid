@@ -73,6 +73,10 @@ impl SendSwapHandler {
         match SubSwapStates::from_str(swap_state) {
             // Boltz has locked the HTLC, we proceed with locking up the funds
             Ok(SubSwapStates::InvoiceSet) => {
+                if !swap.is_local {
+                    return Ok(());
+                }
+
                 match (swap.state, swap.lockup_tx_id.clone()) {
                     (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
                         let create_response = swap.get_boltz_create_response()?;
@@ -111,6 +115,10 @@ impl SendSwapHandler {
             // Boltz has detected the lockup in the mempool, we can speed up
             // the claim by doing so cooperatively
             Ok(SubSwapStates::TransactionClaimPending) => {
+                if !swap.is_local {
+                    return Ok(());
+                }
+
                 self.cooperate_claim(&swap).await.map_err(|e| {
                     error!("Could not cooperate Send Swap {id} claim: {e}");
                     anyhow!("Could not post claim details. Err: {e:?}")
@@ -121,6 +129,10 @@ impl SendSwapHandler {
 
             // Boltz announced they successfully broadcast the (cooperative or non-cooperative) claim tx
             Ok(SubSwapStates::TransactionClaimed) => {
+                if !swap.is_local {
+                    return Ok(());
+                }
+
                 debug!("Send Swap {id} has been claimed");
 
                 match swap.preimage {

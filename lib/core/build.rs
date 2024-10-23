@@ -32,7 +32,16 @@ fn setup_x86_64_android_workaround() {
     }
 }
 
+fn compile_protos() -> Result<()> {
+    tonic_build::configure()
+        .build_server(false)
+        .out_dir("./src/sync/model")
+        .compile_protos(&["src/sync/proto/sync.proto"], &["src/sync/proto"])?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     setup_x86_64_android_workaround();
+    compile_protos()?;
     Ok(())
 }
