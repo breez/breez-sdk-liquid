@@ -93,6 +93,7 @@ impl Persister {
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
+                rs.lockup_tx_id,
                 rs.mrh_address,
                 rs.mrh_script_pubkey,
                 rs.mrh_tx_id,
@@ -137,11 +138,12 @@ impl Persister {
             receiver_amount_sat: row.get(8)?,
             claim_fees_sat: row.get(9)?,
             claim_tx_id: row.get(10)?,
-            mrh_address: row.get(11)?,
-            mrh_script_pubkey: row.get(12)?,
-            mrh_tx_id: row.get(13)?,
-            created_at: row.get(14)?,
-            state: row.get(15)?,
+            lockup_tx_id: row.get(11)?,
+            mrh_address: row.get(12)?,
+            mrh_script_pubkey: row.get(13)?,
+            mrh_tx_id: row.get(14)?,
+            created_at: row.get(15)?,
+            state: row.get(16)?,
         })
     }
 
@@ -204,7 +206,7 @@ impl Persister {
         Ok(res)
     }
 
-    /// Ongoing Receive Swaps, indexed by mrh_script_pubkey
+    /// Ongoing Receive Swaps with no claim or lockup transactions, indexed by mrh_script_pubkey
     pub(crate) fn list_ongoing_receive_swaps_by_mrh_script_pubkey(
         &self,
     ) -> Result<HashMap<String, ReceiveSwap>> {
@@ -212,12 +214,16 @@ impl Persister {
         let res = self
             .list_ongoing_receive_swaps(&con)?
             .iter()
-            .filter_map(
-                |receive_swap| match receive_swap.mrh_script_pubkey.is_empty() {
-                    false => Some((receive_swap.mrh_script_pubkey.clone(), receive_swap.clone())),
-                    true => None,
-                },
-            )
+            .filter_map(|swap| {
+                match (
+                    swap.lockup_tx_id.clone(),
+                    swap.claim_tx_id.clone(),
+                    swap.mrh_script_pubkey.is_empty(),
+                ) {
+                    (None, None, false) => Some((swap.mrh_script_pubkey.clone(), swap.clone())),
+                    _ => None,
+                }
+            })
             .collect();
         Ok(res)
     }

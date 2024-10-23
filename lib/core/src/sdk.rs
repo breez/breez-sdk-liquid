@@ -1660,6 +1660,7 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
+                lockup_tx_id: None,
                 mrh_address: mrh_addr_str,
                 mrh_script_pubkey: mrh_addr.to_unconfidential().script_pubkey().to_hex(),
                 mrh_tx_id: None,
