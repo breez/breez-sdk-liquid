@@ -230,7 +230,9 @@ impl OnchainWallet for LiquidOnchainWallet {
                     "Got unused address {} with derivation index {}",
                     address, index
                 );
-                self.persister.set_last_derivation_index(index)?;
+                if next_index.is_none() {
+                    self.persister.set_last_derivation_index(index)?;
+                }
                 address
             }
         };
