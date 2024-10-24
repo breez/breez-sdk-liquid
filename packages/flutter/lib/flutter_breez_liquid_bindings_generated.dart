@@ -2206,6 +2206,23 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_init_callback_loggerPtr
           .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
 
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer(
+    ForeignCallback callback_stub,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer(
+      callback_stub,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signerPtr
+          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+
   ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect(
     RustBuffer req,
     ffi.Pointer<RustCallStatus> out_status,
@@ -2222,6 +2239,26 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect =
       _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr
           .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(
+    RustBuffer req,
+    int signer,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(
+      req,
+      signer,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signerPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Uint64,
+              ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer =
+      _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signerPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, int, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
     RustBuffer network,
@@ -3221,6 +3258,16 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_checksum_func_connect =
       _uniffi_breez_sdk_liquid_bindings_checksum_func_connectPtr.asFunction<int Function()>();
 
+  int uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signerPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer =
+      _uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signerPtr.asFunction<int Function()>();
+
   int uniffi_breez_sdk_liquid_bindings_checksum_func_default_config() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_func_default_config();
   }
@@ -3654,6 +3701,68 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_logPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpubPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpubPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpub() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpub();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpubPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpub');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpub =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpubPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsaPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsaPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverable() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverable();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverablePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverable');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverable =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverablePtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_key() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_key();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_keyPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_key');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_key =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_keyPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256Ptr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256 =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256Ptr.asFunction<int Function()>();
 
   int ffi_breez_sdk_liquid_bindings_uniffi_contract_version() {
     return _ffi_breez_sdk_liquid_bindings_uniffi_contract_version();
