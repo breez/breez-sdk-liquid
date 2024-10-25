@@ -602,7 +602,7 @@ impl ChainSwapHandler {
                     .lowball_fee_rate_msat_per_vbyte()
                     .map(|v| v as f32),
                 &lockup_details.lockup_address,
-                lockup_details.amount as u64,
+                lockup_details.amount,
             )
             .await
         {
@@ -612,7 +612,7 @@ impl ChainSwapHandler {
                     .build_drain_tx(
                         None,
                         &lockup_details.lockup_address,
-                        Some(lockup_details.amount as u64),
+                        Some(lockup_details.amount),
                     )
                     .await
             }
@@ -1114,7 +1114,7 @@ impl ChainSwapHandler {
                 .unblind(&secp, liquid_swap_script.blinding_key.secret_key())?
                 .value;
         }
-        if value < claim_details.amount as u64 {
+        if value < claim_details.amount {
             return Err(anyhow!(
                 "Transaction value {value} sats is less than {} sats",
                 claim_details.amount
@@ -1159,7 +1159,7 @@ impl ChainSwapHandler {
             .filter(|tx_out| tx_out.script_pubkey == address.script_pubkey())
             .map(|tx_out| tx_out.value.to_sat())
             .sum();
-        if value < claim_details.amount as u64 {
+        if value < claim_details.amount {
             return Err(anyhow!(
                 "Transaction value {value} sats is less than {} sats",
                 claim_details.amount

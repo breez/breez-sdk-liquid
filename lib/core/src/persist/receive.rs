@@ -226,7 +226,7 @@ pub(crate) struct InternalCreateReverseResponse {
     pub lockup_address: String,
     pub refund_public_key: String,
     pub timeout_block_height: u32,
-    pub onchain_amount: u32,
+    pub onchain_amount: u64,
     pub blinding_key: Option<String>,
 }
 impl InternalCreateReverseResponse {
