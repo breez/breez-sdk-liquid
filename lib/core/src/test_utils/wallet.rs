@@ -2,7 +2,12 @@
 
 use std::str::FromStr;
 
-use crate::{error::PaymentError, utils, wallet::OnchainWallet};
+use crate::{
+    error::PaymentError,
+    model::{Signer, SignerError},
+    utils,
+    wallet::OnchainWallet,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
@@ -10,7 +15,6 @@ use lwk_wollet::{
     elements::{Address, Transaction},
     Tip, WalletTx,
 };
-use sdk_common::bitcoin::util::bip32::{ChildNumber, ExtendedPrivKey};
 
 pub(crate) struct MockWallet {}
 
@@ -57,15 +61,11 @@ impl OnchainWallet for MockWallet {
         unimplemented!()
     }
 
-    fn fingerprint(&self) -> String {
+    fn pubkey(&self) -> Result<String> {
         unimplemented!()
     }
 
-    fn pubkey(&self) -> String {
-        unimplemented!()
-    }
-
-    fn derive_bip32_key(&self, _path: Vec<ChildNumber>) -> Result<ExtendedPrivKey, PaymentError> {
+    fn fingerprint(&self) -> Result<String> {
         unimplemented!()
     }
 
@@ -79,5 +79,39 @@ impl OnchainWallet for MockWallet {
 
     async fn full_scan(&self) -> Result<(), PaymentError> {
         Ok(())
+    }
+}
+
+pub(crate) struct MockSigner {}
+
+impl MockSigner {
+    pub(crate) fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Signer for MockSigner {
+    fn xpub(&self) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn derive_xpub(&self, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn sign_ecdsa(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn sign_ecdsa_recoverable(&self, _msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
+        todo!()
     }
 }

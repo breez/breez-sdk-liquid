@@ -479,7 +479,7 @@ dependencies = [
 
 [[package]]
 name = "bindings-react-native"
-version = "0.3.4"
+version = "0.4.0-rc3"
 dependencies = [
  "anyhow",
  "askama 0.11.1",
@@ -673,7 +673,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.3.4"
+version = "0.4.0-rc3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -704,6 +704,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "tempdir",
+ "tempfile",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -716,7 +717,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-bindings"
-version = "0.3.4"
+version = "0.4.0-rc3"
 dependencies = [
  "anyhow",
  "breez-sdk-liquid",
@@ -3180,7 +3181,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.5.2"
-source = "git+https://github.com/breez/breez-sdk?branch=main#25cff346b7fa74298eef5ae04c361bd3b75d6ad5"
+source = "git+https://github.com/breez/breez-sdk?rev=387e37f8ce48ee841762b945137e2c6b4b4b5cfa#387e37f8ce48ee841762b945137e2c6b4b4b5cfa"
 dependencies = [
  "aes 0.8.4",
  "anyhow",

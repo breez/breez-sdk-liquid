@@ -81,8 +81,12 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  LNURL-Pay
 - [x]  LNURL-Withdraw
 - [x]  Send to a Lightning address
-- [ ]  Receive via Lightning address
+- [x]  Receive via Lightning address
+- [x]  Webhook for receiving payments
+- [x]  Offline receive via notifications
+- [x]  Offline swaps via notifications
 - [ ]  Real-time sync
-- [ ]  Webhook for receiving payments
-- [ ]  Offline receive via notifications
-- [ ]  Offline swaps via notifications
+- [ ]  External input parsers
+- [ ]  Bolt12
+- [ ]  TLV support
+- [ ]  WebAssembly 

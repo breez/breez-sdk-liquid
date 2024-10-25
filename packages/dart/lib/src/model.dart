@@ -180,24 +180,24 @@ class Config {
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 class ConnectRequest {
-  final String mnemonic;
   final Config config;
+  final String mnemonic;
 
   const ConnectRequest({
-    required this.mnemonic,
     required this.config,
+    required this.mnemonic,
   });
 
   @override
-  int get hashCode => mnemonic.hashCode ^ config.hashCode;
+  int get hashCode => config.hashCode ^ mnemonic.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ConnectRequest &&
           runtimeType == other.runtimeType &&
-          mnemonic == other.mnemonic &&
-          config == other.config;
+          config == other.config &&
+          mnemonic == other.mnemonic;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].

@@ -1,6 +1,5 @@
-version '0.3.4' // generated; do not edit
+version '0.4.0-rc3' // generated; do not edit
 group 'com.example.flutter_breez_liquid'
-version '0.3.4'
 
 buildscript {
     ext.kotlin_version = '1.8.20'

@@ -74,6 +74,10 @@ export interface ConnectRequest {
     mnemonic: string
 }
 
+export interface ConnectWithSignerRequest {
+    config: Config
+}
+
 export interface CurrencyInfo {
     name: string
     fractionSize: number
