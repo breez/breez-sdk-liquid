@@ -74,7 +74,10 @@ impl SendSwapHandler {
             // Boltz has locked the HTLC, we proceed with locking up the funds
             Ok(SubSwapStates::InvoiceSet) => {
                 match (swap.state, swap.lockup_tx_id.clone()) {
-                    (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
+                    (TimedOut, _) => {
+                        warn!("Send Swap {id} timed out, do not broadcast a lockup tx")
+                    }
+                    (PaymentState::Created, None) => {
                         let create_response = swap.get_boltz_create_response()?;
                         let lockup_tx = self.lockup_funds(id, &create_response).await?;
                         let lockup_tx_id = lockup_tx.txid().to_string();

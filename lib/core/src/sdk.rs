@@ -1006,14 +1006,20 @@ impl LiquidSdk {
 
         let swap = match self.persister.fetch_send_swap_by_invoice(invoice)? {
             Some(swap) => match swap.state {
+                Created => swap,
+                TimedOut => {
+                    self.send_swap_handler
+                        .update_swap_info(&swap.id, PaymentState::Created, None, None, None)
+                        .await?;
+                    swap
+                }
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                RefundPending | Failed => {
+                RefundPending | Refundable | Failed => {
                     return Err(PaymentError::invalid_invoice(
                         "Payment has already failed. Please try with another invoice",
                     ))
                 }
-                _ => swap,
             },
             None => {
                 let keypair = utils::generate_keypair();
