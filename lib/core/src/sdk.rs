@@ -2675,7 +2675,7 @@ mod tests {
             // assigns the `lockup_tx_id` to the payment
             let persisted_swap = trigger_swap_update!(
                 "send",
-                NewSwapArgs::default(),
+                NewSwapArgs::default().set_initial_payment_state(PaymentState::Created),
                 persister,
                 status_stream,
                 SubSwapStates::InvoiceSet,
@@ -2684,6 +2684,29 @@ mod tests {
             );
             assert_eq!(persisted_swap.state, PaymentState::Pending);
             assert!(persisted_swap.lockup_tx_id.is_some());
+
+            // Verify that, when `InvoiceSet` is received and the payment state is not `Created`,
+            // the payment state remains unchanged, and no lockup is broadcast
+            for payment_state in [
+                PaymentState::Pending,
+                PaymentState::TimedOut,
+                PaymentState::Complete,
+                PaymentState::Failed,
+                PaymentState::Refundable,
+                PaymentState::RefundPending,
+            ] {
+                let persisted_swap = trigger_swap_update!(
+                    "send",
+                    NewSwapArgs::default().set_initial_payment_state(payment_state),
+                    persister,
+                    status_stream,
+                    SubSwapStates::InvoiceSet,
+                    None,
+                    None
+                );
+                assert_eq!(persisted_swap.state, payment_state);
+                assert!(persisted_swap.lockup_tx_id.is_none());
+            }
 
             // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
             // and stores the preimage
