@@ -54,7 +54,7 @@ impl BuyBitcoinApi for BuyBitcoinService {
                 self.moonpay_provider
                     .buy_bitcoin(
                         create_response.lockup_details.lockup_address,
-                        Some(create_response.lockup_details.amount as u64),
+                        Some(create_response.lockup_details.amount),
                         None,
                         redirect_url,
                     )
