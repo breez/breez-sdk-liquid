@@ -1305,7 +1305,7 @@ impl LiquidSdk {
             claim_public_key: Some(claim_public_key),
             refund_public_key: Some(refund_public_key),
             user_lock_amount: None,
-            server_lock_amount: Some(server_lockup_amount_sat as u32), // TODO update our model
+            server_lock_amount: Some(server_lockup_amount_sat),
             pair_hash: Some(pair.hash),
             referral_id: None,
             webhook,
@@ -1594,7 +1594,7 @@ impl LiquidSdk {
         });
 
         let v2_req = CreateReverseRequest {
-            invoice_amount: payer_amount_sat as u32, // TODO update our model
+            invoice_amount: payer_amount_sat,
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
             preimage_hash: preimage.sha256,
@@ -1711,7 +1711,7 @@ impl LiquidSdk {
             preimage_hash: preimage.sha256,
             claim_public_key: Some(claim_public_key),
             refund_public_key: Some(refund_public_key),
-            user_lock_amount: Some(user_lockup_amount_sat as u32), // TODO update our model
+            user_lock_amount: Some(user_lockup_amount_sat),
             server_lock_amount: None,
             pair_hash: Some(pair.hash),
             referral_id: None,
