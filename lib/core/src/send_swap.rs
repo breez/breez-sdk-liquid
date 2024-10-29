@@ -21,7 +21,7 @@ use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError,
-    model::{PaymentState, PaymentTxData, PaymentType, Transaction as SdkTransaction},
+    model::{PaymentState, Transaction as SdkTransaction},
     persist::Persister,
 };
 
@@ -71,43 +71,9 @@ impl SendSwapHandler {
 
         // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
         match SubSwapStates::from_str(swap_state) {
-            // Boltz has locked the HTLC, we proceed with locking up the funds
+            // Boltz has locked the HTLC
             Ok(SubSwapStates::InvoiceSet) => {
-                match (swap.state, swap.lockup_tx_id.clone()) {
-                    (TimedOut, _) => {
-                        warn!("Send Swap {id} timed out, do not broadcast a lockup tx")
-                    }
-                    (PaymentState::Created, None) => {
-                        let create_response = swap.get_boltz_create_response()?;
-                        let lockup_tx = self.lockup_funds(id, &create_response).await?;
-                        let lockup_tx_id = lockup_tx.txid().to_string();
-                        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
-
-                        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
-                        // This makes the tx known to the SDK (get_info, list_payments) instantly
-                        self.persister.insert_or_update_payment(
-                            PaymentTxData {
-                                tx_id: lockup_tx_id.clone(),
-                                timestamp: Some(utils::now()),
-                                amount_sat: swap.payer_amount_sat,
-                                fees_sat: lockup_tx_fees_sat,
-                                payment_type: PaymentType::Send,
-                                is_confirmed: false,
-                            },
-                            None,
-                            None,
-                        )?;
-
-                        self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None)
-                            .await?;
-                    }
-                    (_, Some(lockup_tx_id)) => {
-                        warn!("Lockup tx for Send Swap {id} was already broadcast: txid {lockup_tx_id}")
-                    }
-                    (state, _) => {
-                        debug!("Send Swap {id} is in an invalid state for {swap_state}: {state:?}")
-                    }
-                }
+                warn!("Received `invoice.set` state for Send Swap {id}");
                 Ok(())
             }
 
@@ -206,7 +172,7 @@ impl SendSwapHandler {
         }
     }
 
-    async fn lockup_funds(
+    pub(crate) async fn lockup_funds(
         &self,
         swap_id: &str,
         create_response: &CreateSubmarineResponse,

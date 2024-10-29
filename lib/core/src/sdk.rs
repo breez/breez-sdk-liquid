@@ -1078,10 +1078,52 @@ impl LiquidSdk {
         };
         self.status_stream.track_swap_id(&swap.id)?;
 
-        let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
+        let create_response = swap.get_boltz_create_response()?;
+        self.try_lockup(&swap, &create_response).await?;
+
+        let accept_zero_conf = create_response.accept_zero_conf;
         self.wait_for_payment(Swap::Send(swap), accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
+    }
+
+    async fn try_lockup(
+        &self,
+        swap: &SendSwap,
+        create_response: &CreateSubmarineResponse,
+    ) -> Result<(), PaymentError> {
+        if swap.lockup_tx_id.is_some() {
+            debug!("Lockup tx was already broadcast for Send Swap {}", swap.id);
+            return Ok(());
+        }
+
+        let lockup_tx = self
+            .send_swap_handler
+            .lockup_funds(&swap.id, create_response)
+            .await?;
+        let lockup_tx_id = lockup_tx.txid().to_string();
+        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
+
+        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        self.persister.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: lockup_tx_id.clone(),
+                timestamp: Some(utils::now()),
+                amount_sat: swap.payer_amount_sat,
+                fees_sat: lockup_tx_fees_sat,
+                payment_type: PaymentType::Send,
+                is_confirmed: false,
+            },
+            None,
+            None,
+        )?;
+
+        self.send_swap_handler
+            .update_swap_info(&swap.id, Pending, None, Some(&lockup_tx_id), None)
+            .await?;
+
+        Ok(())
     }
 
     /// Fetch the current payment limits for [LiquidSdk::send_payment] and [LiquidSdk::receive_payment].
@@ -1317,8 +1359,9 @@ impl LiquidSdk {
             webhook,
         })?;
 
-        let swap_id = &create_response.id;
-        let create_response_json = ChainSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+        let create_response_json =
+            ChainSwap::from_boltz_struct_to_json(&create_response, &create_response.id)?;
+        let swap_id = create_response.id;
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
@@ -1347,7 +1390,7 @@ impl LiquidSdk {
             state: PaymentState::Created,
         };
         self.persister.insert_chain_swap(&swap)?;
-        self.status_stream.track_swap_id(&swap.id)?;
+        self.status_stream.track_swap_id(&swap_id)?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
             .await
