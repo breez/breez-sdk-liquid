@@ -1832,22 +1832,29 @@ static func asPrepareReceiveResponse(prepareReceiveResponse: [String: Any?]) thr
             }
             payerAmountSat = payerAmountSatTmp
         }
-        var minPayerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "minPayerAmountSat") {
-            guard let minPayerAmountSatTmp = prepareReceiveResponse["minPayerAmountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "minPayerAmountSat"))
+        var zeroAmountMinPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountMinPayerAmountSat") {
+            guard let zeroAmountMinPayerAmountSatTmp = prepareReceiveResponse["zeroAmountMinPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountMinPayerAmountSat"))
             }
-            minPayerAmountSat = minPayerAmountSatTmp
+            zeroAmountMinPayerAmountSat = zeroAmountMinPayerAmountSatTmp
         }
-        var maxPayerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "maxPayerAmountSat") {
-            guard let maxPayerAmountSatTmp = prepareReceiveResponse["maxPayerAmountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "maxPayerAmountSat"))
+        var zeroAmountMaxPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountMaxPayerAmountSat") {
+            guard let zeroAmountMaxPayerAmountSatTmp = prepareReceiveResponse["zeroAmountMaxPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountMaxPayerAmountSat"))
             }
-            maxPayerAmountSat = maxPayerAmountSatTmp
+            zeroAmountMaxPayerAmountSat = zeroAmountMaxPayerAmountSatTmp
+        }
+        var zeroAmountServiceFeerate: Double?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountServiceFeerate") {
+            guard let zeroAmountServiceFeerateTmp = prepareReceiveResponse["zeroAmountServiceFeerate"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountServiceFeerate"))
+            }
+            zeroAmountServiceFeerate = zeroAmountServiceFeerateTmp
         }
     
-    return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat)    
+    return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, zeroAmountMinPayerAmountSat: zeroAmountMinPayerAmountSat, zeroAmountMaxPayerAmountSat: zeroAmountMaxPayerAmountSat, zeroAmountServiceFeerate: zeroAmountServiceFeerate)    
 }
 
 static func  dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [String: Any?] {
@@ -1855,8 +1862,9 @@ static func  dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [St
             "paymentMethod": valueOf( paymentMethod: prepareReceiveResponse.paymentMethod),
             "feesSat": prepareReceiveResponse.feesSat,
             "payerAmountSat": prepareReceiveResponse.payerAmountSat == nil ? nil : prepareReceiveResponse.payerAmountSat,
-            "minPayerAmountSat": prepareReceiveResponse.minPayerAmountSat == nil ? nil : prepareReceiveResponse.minPayerAmountSat,
-            "maxPayerAmountSat": prepareReceiveResponse.maxPayerAmountSat == nil ? nil : prepareReceiveResponse.maxPayerAmountSat,       
+            "zeroAmountMinPayerAmountSat": prepareReceiveResponse.zeroAmountMinPayerAmountSat == nil ? nil : prepareReceiveResponse.zeroAmountMinPayerAmountSat,
+            "zeroAmountMaxPayerAmountSat": prepareReceiveResponse.zeroAmountMaxPayerAmountSat == nil ? nil : prepareReceiveResponse.zeroAmountMaxPayerAmountSat,
+            "zeroAmountServiceFeerate": prepareReceiveResponse.zeroAmountServiceFeerate == nil ? nil : prepareReceiveResponse.zeroAmountServiceFeerate,       
     ]
 }
 

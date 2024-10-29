@@ -284,14 +284,21 @@ pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
     pub payer_amount_sat: Option<u64>,
     pub fees_sat: u64,
+
     /// The minimum amount the payer can send for this swap to succeed.
     ///
     /// Only applicable to Zero-Amount Receive Chain Swaps.
-    pub min_payer_amount_sat: Option<u64>,
+    pub zero_amount_min_payer_amount_sat: Option<u64>,
+
     /// The maximum amount the payer can send for this swap to succeed.
     ///
     /// Only applicable to Zero-Amount Receive Chain Swaps.
-    pub max_payer_amount_sat: Option<u64>,
+    pub zero_amount_max_payer_amount_sat: Option<u64>,
+
+    /// The percentage of the sent amount that will count towards the service fee.
+    ///
+    /// Only applicable to Zero-Amount Receive Chain Swaps.
+    pub zero_amount_service_feerate: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].

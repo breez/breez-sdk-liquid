@@ -285,8 +285,9 @@ export type PrepareReceiveResponse = {
     paymentMethod: PaymentMethod
     feesSat: number
     payerAmountSat?: number
-    minPayerAmountSat?: number
-    maxPayerAmountSat?: number
+    zeroAmountMinPayerAmountSat?: number
+    zeroAmountMaxPayerAmountSat?: number
+    zeroAmountServiceFeerate?: number
 }
 
 export type PrepareRefundRequest = {

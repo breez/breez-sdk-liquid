@@ -267,9 +267,14 @@ pub(crate) async fn handle_command(
             let confirmation_msg = match payer_amount_sat {
                 Some(_) => format!("Fees: {fees} sat. Are the fees acceptable? (y/N)"),
                 None => {
-                    let min = prepare_response.min_payer_amount_sat.unwrap();
-                    let max = prepare_response.max_payer_amount_sat.unwrap();
-                    format!("Fees: {fees} sat. Sender should send between {min} sat - {max} sat. Are the fees acceptable? (y/N)")
+                    let min = prepare_response.zero_amount_min_payer_amount_sat.unwrap();
+                    let max = prepare_response.zero_amount_max_payer_amount_sat.unwrap();
+                    let service_feerate = prepare_response.zero_amount_service_feerate.unwrap();
+                    format!(
+                        "Fees: {fees} sat + {service_feerate}% of the sent amount. \
+                        Sender should send between {min} sat and {max} sat. \
+                        Are the fees acceptable? (y/N)"
+                    )
                 }
             };
             wait_confirmation!(confirmation_msg, "Payment receive halted");

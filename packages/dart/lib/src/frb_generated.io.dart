@@ -102,6 +102,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
 
   @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
   GetPaymentRequest dco_decode_box_autoadd_get_payment_request(dynamic raw);
 
   @protected
@@ -372,6 +375,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
   @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
@@ -617,6 +623,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   GetPaymentRequest sse_decode_box_autoadd_get_payment_request(SseDeserializer deserializer);
@@ -887,6 +896,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
@@ -1173,6 +1185,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_connect_request();
     cst_api_fill_to_wire_connect_request(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Double> cst_encode_box_autoadd_f_64(double raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_f_64(cst_encode_f_64(raw));
   }
 
   @protected
@@ -1595,6 +1613,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Bool> cst_encode_opt_box_autoadd_bool(bool? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Double> cst_encode_opt_box_autoadd_f_64(double? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_f_64(raw);
   }
 
   @protected
@@ -2716,8 +2740,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
     wireObj.payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.payerAmountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
-    wireObj.min_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.minPayerAmountSat);
-    wireObj.max_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.maxPayerAmountSat);
+    wireObj.zero_amount_min_payer_amount_sat =
+        cst_encode_opt_box_autoadd_u_64(apiObj.zeroAmountMinPayerAmountSat);
+    wireObj.zero_amount_max_payer_amount_sat =
+        cst_encode_opt_box_autoadd_u_64(apiObj.zeroAmountMaxPayerAmountSat);
+    wireObj.zero_amount_service_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.zeroAmountServiceFeerate);
   }
 
   @protected
@@ -3118,6 +3145,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_get_payment_request(GetPaymentRequest self, SseSerializer serializer);
 
   @protected
@@ -3394,6 +3424,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer);
@@ -4464,6 +4497,20 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_connect_request =
       _cst_new_box_autoadd_connect_requestPtr.asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
+  ffi.Pointer<ffi.Double> cst_new_box_autoadd_f_64(
+    double value,
+  ) {
+    return _cst_new_box_autoadd_f_64(
+      value,
+    );
+  }
+
+  late final _cst_new_box_autoadd_f_64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Double> Function(ffi.Double)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_f_64');
+  late final _cst_new_box_autoadd_f_64 =
+      _cst_new_box_autoadd_f_64Ptr.asFunction<ffi.Pointer<ffi.Double> Function(double)>();
+
   ffi.Pointer<wire_cst_get_payment_request> cst_new_box_autoadd_get_payment_request() {
     return _cst_new_box_autoadd_get_payment_request();
   }
@@ -5402,9 +5449,11 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Uint64()
   external int fees_sat;
 
-  external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> zero_amount_min_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> zero_amount_max_payer_amount_sat;
+
+  external ffi.Pointer<ffi.Double> zero_amount_service_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {

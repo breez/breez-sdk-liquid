@@ -3158,6 +3158,17 @@ impl SseDecode for Option<bool> {
     }
 }
 
+impl SseDecode for Option<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<f64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3599,14 +3610,16 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
         let mut var_paymentMethod = <crate::model::PaymentMethod>::sse_decode(deserializer);
         let mut var_payerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
-        let mut var_minPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
-        let mut var_maxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_zeroAmountMinPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_zeroAmountMaxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_zeroAmountServiceFeerate = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
             payment_method: var_paymentMethod,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
-            min_payer_amount_sat: var_minPayerAmountSat,
-            max_payer_amount_sat: var_maxPayerAmountSat,
+            zero_amount_min_payer_amount_sat: var_zeroAmountMinPayerAmountSat,
+            zero_amount_max_payer_amount_sat: var_zeroAmountMaxPayerAmountSat,
+            zero_amount_service_feerate: var_zeroAmountServiceFeerate,
         };
     }
 }
@@ -5576,8 +5589,15 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
             self.payment_method.into_into_dart().into_dart(),
             self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
-            self.min_payer_amount_sat.into_into_dart().into_dart(),
-            self.max_payer_amount_sat.into_into_dart().into_dart(),
+            self.zero_amount_min_payer_amount_sat
+                .into_into_dart()
+                .into_dart(),
+            self.zero_amount_max_payer_amount_sat
+                .into_into_dart()
+                .into_dart(),
+            self.zero_amount_service_feerate
+                .into_into_dart()
+                .into_dart(),
         ]
         .into_dart()
     }
@@ -6965,6 +6985,16 @@ impl SseEncode for Option<bool> {
     }
 }
 
+impl SseEncode for Option<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <f64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7350,8 +7380,9 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
         <crate::model::PaymentMethod>::sse_encode(self.payment_method, serializer);
         <Option<u64>>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
-        <Option<u64>>::sse_encode(self.min_payer_amount_sat, serializer);
-        <Option<u64>>::sse_encode(self.max_payer_amount_sat, serializer);
+        <Option<u64>>::sse_encode(self.zero_amount_min_payer_amount_sat, serializer);
+        <Option<u64>>::sse_encode(self.zero_amount_max_payer_amount_sat, serializer);
+        <Option<f64>>::sse_encode(self.zero_amount_service_feerate, serializer);
     }
 }
 
@@ -7924,6 +7955,12 @@ mod io {
         fn cst_decode(self) -> crate::model::ConnectRequest {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<f64> for *mut f64 {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> f64 {
+            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
         }
     }
     impl CstDecode<crate::model::GetPaymentRequest> for *mut wire_cst_get_payment_request {
@@ -9122,8 +9159,13 @@ mod io {
                 payment_method: self.payment_method.cst_decode(),
                 payer_amount_sat: self.payer_amount_sat.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
-                min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
-                max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
+                zero_amount_min_payer_amount_sat: self
+                    .zero_amount_min_payer_amount_sat
+                    .cst_decode(),
+                zero_amount_max_payer_amount_sat: self
+                    .zero_amount_max_payer_amount_sat
+                    .cst_decode(),
+                zero_amount_service_feerate: self.zero_amount_service_feerate.cst_decode(),
             }
         }
     }
@@ -10219,8 +10261,9 @@ mod io {
                 payment_method: Default::default(),
                 payer_amount_sat: core::ptr::null_mut(),
                 fees_sat: Default::default(),
-                min_payer_amount_sat: core::ptr::null_mut(),
-                max_payer_amount_sat: core::ptr::null_mut(),
+                zero_amount_min_payer_amount_sat: core::ptr::null_mut(),
+                zero_amount_max_payer_amount_sat: core::ptr::null_mut(),
+                zero_amount_service_feerate: core::ptr::null_mut(),
             }
         }
     }
@@ -10993,6 +11036,11 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_connect_request::new_with_null_ptr(),
         )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_f_64(value: f64) -> *mut f64 {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[no_mangle]
@@ -12251,8 +12299,9 @@ mod io {
         payment_method: i32,
         payer_amount_sat: *mut u64,
         fees_sat: u64,
-        min_payer_amount_sat: *mut u64,
-        max_payer_amount_sat: *mut u64,
+        zero_amount_min_payer_amount_sat: *mut u64,
+        zero_amount_max_payer_amount_sat: *mut u64,
+        zero_amount_service_feerate: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
