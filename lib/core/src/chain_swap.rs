@@ -298,7 +298,7 @@ impl ChainSwapHandler {
                             .await?;
 
                         if swap.accept_zero_conf {
-                            self.claim(swap).await.map_err(|e| {
+                            self.claim(id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
@@ -343,7 +343,7 @@ impl ChainSwapHandler {
                         );
                         self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
                             .await?;
-                        self.claim(swap).await.map_err(|e| {
+                        self.claim(id).await.map_err(|e| {
                             error!("Could not cooperate Chain Swap {id} claim: {e}");
                             anyhow!("Could not post claim details. Err: {e:?}")
                         })?;
@@ -481,7 +481,7 @@ impl ChainSwapHandler {
                             .await?;
 
                         if swap.accept_zero_conf {
-                            self.claim(swap).await.map_err(|e| {
+                            self.claim(id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
@@ -526,7 +526,7 @@ impl ChainSwapHandler {
                         );
                         self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
                             .await?;
-                        self.claim(swap).await.map_err(|e| {
+                        self.claim(id).await.map_err(|e| {
                             error!("Could not cooperate Chain Swap {id} claim: {e}");
                             anyhow!("Could not post claim details. Err: {e:?}")
                         })?;
@@ -690,59 +690,98 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn claim(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
+    async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
+        let swap = self
+            .persister
+            .fetch_chain_swap_by_id(swap_id)?
+            .ok_or(anyhow!("No Chain Swap found for ID {swap_id}"))?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
-        let swap_id = &swap.id;
-
         debug!("Initiating claim for Chain Swap {swap_id}");
-
         let claim_tx = self
             .swapper
             .create_claim_tx(Swap::Chain(swap.clone()), None)?;
-        let claim_tx_id = match claim_tx {
-            // We attempt broadcasting via chain service, then fallback to Boltz
-            SdkTransaction::Liquid(tx) => {
-                let liquid_chain_service = self.liquid_chain_service.lock().await;
-                let broadcast_response = liquid_chain_service.broadcast(&tx, Some(swap_id)).await;
-                match broadcast_response {
-                    Ok(tx_id) => tx_id.to_hex(),
+
+        // Set the swap claim_tx_id before broadcasting.
+        // If another claim_tx_id has been set in the meantime, don't broadcast the claim tx
+        let tx_id = claim_tx.txid();
+        match self.persister.set_chain_swap_claim_tx_id(swap_id, &tx_id) {
+            Ok(_) => {
+                let broadcast_res = match claim_tx {
+                    // We attempt broadcasting via chain service, then fallback to Boltz
+                    SdkTransaction::Liquid(tx) => {
+                        let liquid_chain_service = self.liquid_chain_service.lock().await;
+                        liquid_chain_service
+                            .broadcast(&tx, Some(&swap.id))
+                            .await
+                            .map(|tx_id| tx_id.to_hex())
+                            .or_else(|err| {
+                                debug!(
+                                    "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
+                                );
+                                let claim_tx_hex = tx.serialize().to_lower_hex_string();
+                                self.swapper.broadcast_tx(self.config.network.into(), &claim_tx_hex)
+                            })
+                    }
+                    SdkTransaction::Bitcoin(tx) => {
+                        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+                        bitcoin_chain_service
+                            .broadcast(&tx)
+                            .map(|tx_id| tx_id.to_hex())
+                            .map_err(|err| PaymentError::Generic {
+                                err: err.to_string(),
+                            })
+                    }
+                };
+
+                match broadcast_res {
+                    Ok(claim_tx_id) => {
+                        if swap.direction == Direction::Incoming {
+                            // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
+                            // This makes the tx known to the SDK (get_info, list_payments) instantly
+                            self.persister.insert_or_update_payment(
+                                PaymentTxData {
+                                    tx_id: claim_tx_id.clone(),
+                                    timestamp: Some(utils::now()),
+                                    amount_sat: swap.receiver_amount_sat,
+                                    fees_sat: 0,
+                                    payment_type: PaymentType::Receive,
+                                    is_confirmed: false,
+                                },
+                                None,
+                                None,
+                            )?;
+                        }
+
+                        info!("Successfully broadcast claim tx {claim_tx_id} for Chain Swap {swap_id}");
+                        self.update_swap_info(
+                            &swap.id,
+                            Pending,
+                            None,
+                            None,
+                            Some(&claim_tx_id),
+                            None,
+                        )
+                        .await
+                    }
                     Err(err) => {
+                        // Multiple attempts to broadcast have failed. Unset the swap claim_tx_id
                         debug!(
-                            "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
+                            "Could not broadcast claim tx via swapper for Chain swap {swap_id}: {err:?}"
                         );
-                        let claim_tx_hex = tx.serialize().to_lower_hex_string();
-                        self.swapper
-                            .broadcast_tx(self.config.network.into(), &claim_tx_hex)?
+                        self.persister
+                            .unset_chain_swap_claim_tx_id(swap_id, &tx_id)?;
+                        Err(err)
                     }
                 }
             }
-            SdkTransaction::Bitcoin(tx) => {
-                let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
-                bitcoin_chain_service.broadcast(&tx)?.to_hex()
+            Err(err) => {
+                debug!(
+                    "Failed to set claim_tx_id after creating tx for Chain swap {swap_id}: txid {tx_id}"
+                );
+                Err(err)
             }
-        };
-
-        if swap.direction == Direction::Incoming {
-            // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
-            // This makes the tx known to the SDK (get_info, list_payments) instantly
-            self.persister.insert_or_update_payment(
-                PaymentTxData {
-                    tx_id: claim_tx_id.clone(),
-                    timestamp: Some(utils::now()),
-                    amount_sat: swap.receiver_amount_sat,
-                    fees_sat: 0,
-                    payment_type: PaymentType::Receive,
-                    is_confirmed: false,
-                },
-                None,
-                None,
-            )?;
         }
-
-        self.update_swap_info(&swap.id, Pending, None, None, Some(&claim_tx_id), None)
-            .await?;
-        Ok(())
     }
 
     pub(crate) async fn prepare_refund(

@@ -253,9 +253,7 @@ impl ReceiveSwapHandler {
             .ok_or(anyhow!("No Receive Swap found for ID {swap_id}"))?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
-        let swap_id = &swap.id;
         info!("Initiating claim for Receive Swap {swap_id}");
-
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let Transaction::Liquid(claim_tx) = self
             .swapper
@@ -303,7 +301,6 @@ impl ReceiveSwapHandler {
                         )?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
-
                         self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)
                             .await
                     }
