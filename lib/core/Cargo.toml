@@ -23,7 +23,7 @@ flutter_rust_bridge = { version = "=2.4.0", features = [
 log = { workspace = true }
 lwk_common = "0.7.0"
 lwk_signer = "0.7.0"
-lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-try-headers-subscribe" }
+lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-scan-to-index" }
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"

@@ -101,12 +101,13 @@ impl BoltzSwapper {
     pub(crate) fn new_outgoing_chain_claim_tx(
         &self,
         swap: &ChainSwap,
+        claim_address: String,
     ) -> Result<Transaction, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
         let claim_tx_wrapper = BtcSwapTx::new_claim(
             claim_swap_script,
-            swap.claim_address.clone(),
+            claim_address,
             &self.bitcoin_electrum_config,
             self.boltz_url.clone(),
             swap.id.clone(),

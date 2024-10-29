@@ -71,8 +71,7 @@ impl Persister {
                 ":from_state": from_state,
                 ":to_state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }
@@ -236,8 +235,7 @@ impl Persister {
                 ":refund_tx_id": refund_tx_id,
                 ":state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }
