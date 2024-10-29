@@ -71,17 +71,17 @@ impl BoltzSwapper {
             SdkError::generic("Address network validation failed")
         );
 
-        let utxo = utxos
-            .first()
-            .and_then(|utxo| utxo.as_bitcoin().cloned())
-            .ok_or(SdkError::generic("No UTXO found"))?;
+        let utxos = utxos
+            .iter()
+            .filter_map(|utxo| utxo.as_bitcoin().cloned())
+            .collect();
 
         let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
         let refund_tx = BtcSwapTx {
             kind: SwapTxKind::Refund,
             swap_script,
             output_address: address.assume_checked(),
-            utxo,
+            utxos,
         };
 
         let refund_keypair = swap.get_refund_keypair()?;
