@@ -182,6 +182,50 @@ impl Persister {
         Ok(res)
     }
 
+    // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
+    pub(crate) fn set_receive_swap_claim_tx_id(
+        &self,
+        swap_id: &str,
+        claim_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        let row_count = con
+            .execute(
+                "UPDATE receive_swaps 
+            SET claim_tx_id = :claim_tx_id
+            WHERE id = :id AND claim_tx_id IS NULL",
+                named_params! {
+                            ":id": swap_id,
+                            ":claim_tx_id": claim_tx_id,
+                },
+            )
+            .map_err(|_| PaymentError::PersistError)?;
+        match row_count {
+            1 => Ok(()),
+            _ => Err(PaymentError::AlreadyClaimed),
+        }
+    }
+
+    // Only unset the Receive Swap claim_tx_id if set with the same tx id
+    pub(crate) fn unset_receive_swap_claim_tx_id(
+        &self,
+        swap_id: &str,
+        claim_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE receive_swaps 
+            SET claim_tx_id = NULL
+            WHERE id = :id AND claim_tx_id = :claim_tx_id",
+            named_params! {
+                        ":id": swap_id,
+                        ":claim_tx_id": claim_tx_id,
+            },
+        )
+        .map_err(|_| PaymentError::PersistError)?;
+        Ok(())
+    }
+
     pub(crate) fn try_handle_receive_swap_update(
         &self,
         swap_id: &str,
