@@ -2597,11 +2597,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceiveResponse dco_decode_prepare_receive_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return PrepareReceiveResponse(
       paymentMethod: dco_decode_payment_method(arr[0]),
       payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[1]),
       feesSat: dco_decode_u_64(arr[2]),
+      minPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      maxPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
     );
   }
 
@@ -4445,8 +4447,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentMethod = sse_decode_payment_method(deserializer);
     var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
+    var var_minPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     return PrepareReceiveResponse(
-        paymentMethod: var_paymentMethod, payerAmountSat: var_payerAmountSat, feesSat: var_feesSat);
+        paymentMethod: var_paymentMethod,
+        payerAmountSat: var_payerAmountSat,
+        feesSat: var_feesSat,
+        minPayerAmountSat: var_minPayerAmountSat,
+        maxPayerAmountSat: var_maxPayerAmountSat);
   }
 
   @protected
@@ -6173,6 +6181,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_payment_method(self.paymentMethod, serializer);
     sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.minPayerAmountSat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxPayerAmountSat, serializer);
   }
 
   @protected

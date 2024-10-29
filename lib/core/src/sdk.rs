@@ -1419,6 +1419,8 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let mut min_payer_amount_sat = None;
+        let mut max_payer_amount_sat = None;
         let fees_sat;
         match req.payment_method {
             PaymentMethod::Lightning => {
@@ -1453,6 +1455,11 @@ impl LiquidSdk {
                     .map(|user_lockup_amount_sat| pair.fees.boltz(user_lockup_amount_sat))
                     .unwrap_or_default();
 
+                if payer_amount_sat.is_none() {
+                    min_payer_amount_sat = Some(pair.limits.minimal);
+                    max_payer_amount_sat = Some(pair.limits.maximal);
+                }
+
                 fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
@@ -1467,6 +1474,8 @@ impl LiquidSdk {
             payer_amount_sat: req.payer_amount_sat,
             fees_sat,
             payment_method: req.payment_method.clone(),
+            min_payer_amount_sat,
+            max_payer_amount_sat,
         })
     }
 
@@ -1494,6 +1503,7 @@ impl LiquidSdk {
             payment_method,
             payer_amount_sat: amount_sat,
             fees_sat,
+            ..
         } = &req.prepare_response;
 
         match payment_method {

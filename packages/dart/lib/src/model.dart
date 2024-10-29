@@ -924,14 +924,31 @@ class PrepareReceiveResponse {
   final BigInt? payerAmountSat;
   final BigInt feesSat;
 
+  /// The minimum amount the payer can send for this swap to succeed.
+  ///
+  /// Only applicable to Zero-Amount Receive Chain Swaps.
+  final BigInt? minPayerAmountSat;
+
+  /// The maximum amount the payer can send for this swap to succeed.
+  ///
+  /// Only applicable to Zero-Amount Receive Chain Swaps.
+  final BigInt? maxPayerAmountSat;
+
   const PrepareReceiveResponse({
     required this.paymentMethod,
     this.payerAmountSat,
     required this.feesSat,
+    this.minPayerAmountSat,
+    this.maxPayerAmountSat,
   });
 
   @override
-  int get hashCode => paymentMethod.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      paymentMethod.hashCode ^
+      payerAmountSat.hashCode ^
+      feesSat.hashCode ^
+      minPayerAmountSat.hashCode ^
+      maxPayerAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -940,7 +957,9 @@ class PrepareReceiveResponse {
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
           payerAmountSat == other.payerAmountSat &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSat == other.maxPayerAmountSat;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

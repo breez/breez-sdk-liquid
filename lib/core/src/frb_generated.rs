@@ -3599,10 +3599,14 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
         let mut var_paymentMethod = <crate::model::PaymentMethod>::sse_decode(deserializer);
         let mut var_payerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_minPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_maxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
             payment_method: var_paymentMethod,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
+            min_payer_amount_sat: var_minPayerAmountSat,
+            max_payer_amount_sat: var_maxPayerAmountSat,
         };
     }
 }
@@ -5572,6 +5576,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
             self.payment_method.into_into_dart().into_dart(),
             self.payer_amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.min_payer_amount_sat.into_into_dart().into_dart(),
+            self.max_payer_amount_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7344,6 +7350,8 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
         <crate::model::PaymentMethod>::sse_encode(self.payment_method, serializer);
         <Option<u64>>::sse_encode(self.payer_amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <Option<u64>>::sse_encode(self.min_payer_amount_sat, serializer);
+        <Option<u64>>::sse_encode(self.max_payer_amount_sat, serializer);
     }
 }
 
@@ -9114,6 +9122,8 @@ mod io {
                 payment_method: self.payment_method.cst_decode(),
                 payer_amount_sat: self.payer_amount_sat.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
+                min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
+                max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
             }
         }
     }
@@ -10209,6 +10219,8 @@ mod io {
                 payment_method: Default::default(),
                 payer_amount_sat: core::ptr::null_mut(),
                 fees_sat: Default::default(),
+                min_payer_amount_sat: core::ptr::null_mut(),
+                max_payer_amount_sat: core::ptr::null_mut(),
             }
         }
     }
@@ -12239,6 +12251,8 @@ mod io {
         payment_method: i32,
         payer_amount_sat: *mut u64,
         fees_sat: u64,
+        min_payer_amount_sat: *mut u64,
+        max_payer_amount_sat: *mut u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

@@ -317,6 +317,8 @@ typedef struct wire_cst_prepare_receive_response {
   int32_t payment_method;
   uint64_t *payer_amount_sat;
   uint64_t fees_sat;
+  uint64_t *min_payer_amount_sat;
+  uint64_t *max_payer_amount_sat;
 } wire_cst_prepare_receive_response;
 
 typedef struct wire_cst_receive_payment_request {
