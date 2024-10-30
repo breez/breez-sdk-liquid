@@ -4,6 +4,7 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
+use log::debug;
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::{
@@ -17,6 +18,7 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
 use crate::model::Signer;
+use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{
     ensure_sdk,
@@ -79,16 +81,18 @@ pub trait OnchainWallet: Send + Sync {
 }
 
 pub(crate) struct LiquidOnchainWallet {
-    wallet: Arc<Mutex<Wollet>>,
     config: Config,
+    persister: Arc<Persister>,
+    wallet: Arc<Mutex<Wollet>>,
     pub(crate) signer: SdkLwkSigner,
 }
 
 impl LiquidOnchainWallet {
     pub(crate) fn new(
-        user_signer: Arc<Box<dyn Signer>>,
         config: Config,
         working_dir: &String,
+        persister: Arc<Persister>,
+        user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = crate::signer::SdkLwkSigner::new(user_signer)?;
         let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
@@ -97,9 +101,10 @@ impl LiquidOnchainWallet {
         let lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
         let wollet = Wollet::new(elements_network, lwk_persister, descriptor)?;
         Ok(Self {
+            config,
+            persister,
             wallet: Arc::new(Mutex::new(wollet)),
             signer,
-            config,
         })
     }
 
@@ -206,7 +211,33 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
-        Ok(self.wallet.lock().await.address(None)?.address().clone())
+        let tip = self.tip().await.height();
+        let address = match self.persister.next_expired_reserved_address(tip)? {
+            Some(reserved_address) => {
+                debug!(
+                    "Got reserved address {} that expired on block height {}",
+                    reserved_address.address, reserved_address.expiry_block_height
+                );
+                ElementsAddress::from_str(&reserved_address.address)
+                    .map_err(|e| PaymentError::Generic { err: e.to_string() })?
+            }
+            None => {
+                let next_index = self.persister.next_derivation_index()?;
+                let address_result = self.wallet.lock().await.address(next_index)?;
+                let address = address_result.address().clone();
+                let index = address_result.index();
+                debug!(
+                    "Got unused address {} with derivation index {}",
+                    address, index
+                );
+                if next_index.is_none() {
+                    self.persister.set_last_derivation_index(index)?;
+                }
+                address
+            }
+        };
+
+        Ok(address)
     }
 
     /// Get the current tip of the blockchain the wallet is aware of
@@ -232,7 +263,15 @@ impl OnchainWallet for LiquidOnchainWallet {
             true,
             true,
         ))?;
-        lwk_wollet::full_scan_with_electrum_client(&mut wallet, &mut electrum_client)?;
+        let index = self
+            .persister
+            .get_last_derivation_index()?
+            .unwrap_or_default();
+        lwk_wollet::full_scan_to_index_with_electrum_client(
+            &mut wallet,
+            index,
+            &mut electrum_client,
+        )?;
         Ok(())
     }
 
@@ -259,6 +298,7 @@ mod tests {
     use super::*;
     use crate::model::Config;
     use crate::signer::SdkSigner;
+    use crate::test_utils::persist::new_persister;
     use crate::wallet::LiquidOnchainWallet;
     use tempfile::TempDir;
 
@@ -274,8 +314,12 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let working_dir = temp_dir.path().to_str().unwrap().to_string();
 
-        let wallet: Arc<dyn OnchainWallet> =
-            Arc::new(LiquidOnchainWallet::new(sdk_signer.clone(), config, &working_dir).unwrap());
+        let (_temp_dir, storage) = new_persister().unwrap();
+        let storage = Arc::new(storage);
+
+        let wallet: Arc<dyn OnchainWallet> = Arc::new(
+            LiquidOnchainWallet::new(config, &working_dir, storage, sdk_signer.clone()).unwrap(),
+        );
 
         // Test message
         let message = "Hello, Liquid!";

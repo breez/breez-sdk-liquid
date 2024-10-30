@@ -30,7 +30,7 @@ impl UniffiBindingLogger {
 impl log::Log for UniffiBindingLogger {
     fn enabled(&self, m: &Metadata) -> bool {
         // ignore the internal uniffi log to prevent infinite loop.
-        return m.level() <= Level::Trace && *m.target() != *"breez_sdk_liquid_bindings";
+        m.level() <= Level::Trace && *m.target() != *"breez_sdk_liquid_bindings"
     }
 
     fn log(&self, record: &Record) {

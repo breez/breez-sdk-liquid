@@ -225,24 +225,26 @@ impl ChainSwapHandler {
     }
 
     async fn rescan_outgoing_chain_swap(&self, swap: &ChainSwap) -> Result<()> {
-        let address = Address::from_str(&swap.claim_address)?;
-        let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
-        let script_pubkey = address.assume_checked().script_pubkey();
-        let script_history = self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .get_script_history(script_pubkey.as_script())?;
-        let claim_tx_history = script_history
-            .iter()
-            .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
-        if claim_tx_history.is_some() {
-            info!(
-                "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
-                swap.id
-            );
-            self.update_swap_info(&swap.id, Complete, None, None, None, None)
-                .await?;
+        if let Some(claim_address) = &swap.claim_address {
+            let address = Address::from_str(claim_address)?;
+            let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
+            let script_pubkey = address.assume_checked().script_pubkey();
+            let script_history = self
+                .bitcoin_chain_service
+                .lock()
+                .await
+                .get_script_history(script_pubkey.as_script())?;
+            let claim_tx_history = script_history
+                .iter()
+                .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
+            if claim_tx_history.is_some() {
+                info!(
+                    "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
+                    swap.id
+                );
+                self.update_swap_info(&swap.id, Complete, None, None, None, None)
+                    .await?;
+            }
         }
         Ok(())
     }
@@ -698,9 +700,16 @@ impl ChainSwapHandler {
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         debug!("Initiating claim for Chain Swap {swap_id}");
+        // Derive a new Liquid address for an incoming swap, or use the set Bitcoin address for an outgoing swap
+        let claim_address = match swap.direction {
+            Direction::Incoming => {
+                Some(self.onchain_wallet.next_unused_address().await?.to_string())
+            }
+            Direction::Outgoing => swap.claim_address.clone(),
+        };
         let claim_tx = self
             .swapper
-            .create_claim_tx(Swap::Chain(swap.clone()), None)?;
+            .create_claim_tx(Swap::Chain(swap.clone()), claim_address)?;
 
         // Set the swap claim_tx_id before broadcasting.
         // If another claim_tx_id has been set in the meantime, don't broadcast the claim tx
@@ -910,7 +919,6 @@ impl ChainSwapHandler {
             swap.id
         );
 
-        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SwapScriptV2::Liquid(swap_script) = swap.get_lockup_swap_script()? else {
             return Err(PaymentError::Generic {
                 err: "Unexpected swap script type found".to_string(),
@@ -925,6 +933,7 @@ impl ChainSwapHandler {
             .script_pubkey();
         let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
 
+        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
             Swap::Chain(swap.clone()),
             &refund_address,

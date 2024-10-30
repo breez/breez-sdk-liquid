@@ -72,12 +72,13 @@ impl BoltzSwapper {
     pub(crate) fn new_incoming_chain_claim_tx(
         &self,
         swap: &ChainSwap,
+        claim_address: String,
     ) -> Result<Transaction, PaymentError> {
         let claim_keypair = swap.get_claim_keypair()?;
         let swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
-            swap.claim_address.clone(),
+            claim_address,
             &self.liquid_electrum_config,
             self.boltz_url.clone(),
             swap.id.clone(),
