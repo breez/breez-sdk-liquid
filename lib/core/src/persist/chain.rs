@@ -259,8 +259,7 @@ impl Persister {
                 ":id": swap_id,
                 ":accept_zero_conf": accept_zero_conf,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
         Ok(())
     }
 
@@ -357,8 +356,7 @@ impl Persister {
                 ":refund_tx_id": refund_tx_id,
                 ":state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }

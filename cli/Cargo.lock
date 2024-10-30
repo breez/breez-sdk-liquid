@@ -1918,7 +1918,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.7.0"
-source = "git+https://github.com/dangeross/lwk?branch=savage-try-headers-subscribe#452bc5e07ab6b9a5fee8c2dae5c9e24d5e3cc9c5"
+source = "git+https://github.com/dangeross/lwk?branch=savage-full-scan-to-index#ccc2c70404e07e7c79cb28db460b005f13be931c"
 dependencies = [
  "aes-gcm-siv",
  "base64 0.21.7",

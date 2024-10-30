@@ -76,8 +76,16 @@ impl ReceiveSwapHandler {
                 | RevSwapStates::TransactionFailed
                 | RevSwapStates::TransactionRefunded,
             ) => {
-                error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                self.update_swap_info(id, Failed, None, None).await?;
+                match receive_swap.mrh_tx_id {
+                    Some(mrh_tx_id) => {
+                        warn!("Swap {id} is expired but MRH payment was received: txid {mrh_tx_id}")
+                    }
+                    None => {
+                        error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
+                        self.update_swap_info(id, Failed, None, None, None, None)
+                            .await?;
+                    }
+                }
                 Ok(())
             }
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
@@ -90,6 +98,13 @@ impl ReceiveSwapHandler {
                 if let Some(claim_tx_id) = receive_swap.claim_tx_id {
                     return Err(anyhow!(
                         "Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}"
+                    ));
+                }
+
+                // Do not continue or claim the swap if it was already paid via MRH
+                if let Some(mrh_tx_id) = receive_swap.mrh_tx_id {
+                    return Err(anyhow!(
+                        "MRH tx for Receive Swap {id} was already broadcast, ignoring swap: txid {mrh_tx_id}"
                     ));
                 }
 
@@ -107,7 +122,7 @@ impl ReceiveSwapHandler {
                 info!("swapper lockup was verified");
 
                 let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id))
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)
                     .await?;
 
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
@@ -163,6 +178,13 @@ impl ReceiveSwapHandler {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
 
+                // Do not continue or claim the swap if it was already paid via MRH
+                if let Some(mrh_tx_id) = receive_swap.mrh_tx_id {
+                    return Err(anyhow!(
+                        "MRH tx for Receive Swap {id} was already broadcast, ignoring swap: txid {mrh_tx_id}"
+                    ));
+                }
+
                 // looking for lockup script history to verify lockup was broadcasted and confirmed
                 if let Err(e) = self
                     .verify_lockup_tx(&receive_swap, &transaction, true)
@@ -181,7 +203,7 @@ impl ReceiveSwapHandler {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => {
-                        self.update_swap_info(&receive_swap.id, Pending, None, None)
+                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)
                             .await?;
                         match self.claim(id).await {
                             Ok(_) => {}
@@ -215,9 +237,12 @@ impl ReceiveSwapHandler {
         to_state: PaymentState,
         claim_tx_id: Option<&str>,
         lockup_tx_id: Option<&str>,
+        mrh_tx_id: Option<&str>,
+        mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         info!(
-            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?}, lockup_tx_id = {lockup_tx_id:?})"
+            "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
+            swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
         );
 
         let swap = self
@@ -229,6 +254,7 @@ impl ReceiveSwapHandler {
             })?;
         let payment_id = claim_tx_id
             .or(lockup_tx_id)
+            .or(mrh_tx_id)
             .map(|id| id.to_string())
             .or(swap.claim_tx_id);
 
@@ -238,6 +264,8 @@ impl ReceiveSwapHandler {
             to_state,
             claim_tx_id,
             lockup_tx_id,
+            mrh_tx_id,
+            mrh_amount_sat,
         )?;
 
         if let Some(payment_id) = payment_id {
@@ -301,8 +329,15 @@ impl ReceiveSwapHandler {
                         )?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
-                        self.update_swap_info(swap_id, Pending, Some(&claim_tx_id), None)
-                            .await
+                        self.update_swap_info(
+                            swap_id,
+                            Pending,
+                            Some(&claim_tx_id),
+                            None,
+                            None,
+                            None,
+                        )
+                        .await
                     }
                     Err(err) => {
                         // Multiple attempts to broadcast have failed. Unset the swap claim_tx_id
@@ -435,7 +470,7 @@ mod tests {
                 storage.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
-                    .update_swap_info(&receive_swap.id, *allowed_state, None, None)
+                    .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
                     .await
                     .is_ok());
             }
@@ -459,7 +494,7 @@ mod tests {
                 storage.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
-                    .update_swap_info(&receive_swap.id, *disallowed_state, None, None)
+                    .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)
                     .await
                     .is_err());
             }
