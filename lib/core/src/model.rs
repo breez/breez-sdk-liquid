@@ -8,6 +8,7 @@ use boltz_client::{
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
+    ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
@@ -1490,6 +1491,15 @@ pub struct LnUrlPaySuccessData {
 pub enum Transaction {
     Liquid(boltz_client::elements::Transaction),
     Bitcoin(boltz_client::bitcoin::Transaction),
+}
+
+impl Transaction {
+    pub(crate) fn txid(&self) -> String {
+        match self {
+            Transaction::Liquid(tx) => tx.txid().to_hex(),
+            Transaction::Bitcoin(tx) => tx.txid().to_hex(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
