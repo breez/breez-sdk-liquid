@@ -584,7 +584,7 @@ mod tests {
                 Pending,
                 HashSet::from([Pending, RefundPending, Complete, Failed]),
             ),
-            (TimedOut, HashSet::from([TimedOut, Failed])),
+            (TimedOut, HashSet::from([TimedOut, Created, Failed])),
             (Complete, HashSet::from([])),
             (Refundable, HashSet::from([Failed])),
             (Failed, HashSet::from([Failed])),
