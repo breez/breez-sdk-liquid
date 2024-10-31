@@ -502,8 +502,9 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
-                err: "Cannot transition to Created state".to_string(),
+                err: "Cannot transition from {from_state:?} to Created state".to_string(),
             }),
 
             (Created | Pending, Pending) => Ok(()),
