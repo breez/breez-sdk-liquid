@@ -1003,14 +1003,20 @@ impl LiquidSdk {
 
         let swap = match self.persister.fetch_send_swap_by_invoice(invoice)? {
             Some(swap) => match swap.state {
+                Created => swap,
+                TimedOut => {
+                    self.send_swap_handler
+                        .update_swap_info(&swap.id, PaymentState::Created, None, None, None)
+                        .await?;
+                    swap
+                }
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                RefundPending | Failed => {
+                RefundPending | Refundable | Failed => {
                     return Err(PaymentError::invalid_invoice(
                         "Payment has already failed. Please try with another invoice",
                     ))
                 }
-                _ => swap,
             },
             None => {
                 let keypair = utils::generate_keypair();
@@ -1069,8 +1075,12 @@ impl LiquidSdk {
         };
         self.status_stream.track_swap_id(&swap.id)?;
 
-        let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
-        self.wait_for_payment(Swap::Send(swap), accept_zero_conf)
+        let create_response = swap.get_boltz_create_response()?;
+        self.send_swap_handler
+            .try_lockup(&swap, &create_response)
+            .await?;
+
+        self.wait_for_payment(Swap::Send(swap), create_response.accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }
@@ -1308,8 +1318,9 @@ impl LiquidSdk {
             webhook,
         })?;
 
-        let swap_id = &create_response.id;
-        let create_response_json = ChainSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+        let create_response_json =
+            ChainSwap::from_boltz_struct_to_json(&create_response, &create_response.id)?;
+        let swap_id = create_response.id;
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
@@ -1337,7 +1348,7 @@ impl LiquidSdk {
             state: PaymentState::Created,
         };
         self.persister.insert_chain_swap(&swap)?;
-        self.status_stream.track_swap_id(&swap.id)?;
+        self.status_stream.track_swap_id(&swap_id)?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
             .await
@@ -2700,20 +2711,6 @@ mod tests {
                 );
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
             }
-
-            // Verify that `InvoiceSet` correctly sets the state to `Pending` and
-            // assigns the `lockup_tx_id` to the payment
-            let persisted_swap = trigger_swap_update!(
-                "send",
-                NewSwapArgs::default(),
-                persister,
-                status_stream,
-                SubSwapStates::InvoiceSet,
-                None,
-                None
-            );
-            assert_eq!(persisted_swap.state, PaymentState::Pending);
-            assert!(persisted_swap.lockup_tx_id.is_some());
 
             // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
             // and stores the preimage
