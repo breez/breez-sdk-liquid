@@ -15,7 +15,7 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{Config, PaymentState::*, SendSwap};
-use crate::prelude::Swap;
+use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
@@ -172,11 +172,17 @@ impl SendSwapHandler {
         }
     }
 
-    pub(crate) async fn lockup_funds(
+    pub(crate) async fn try_lockup(
         &self,
-        swap_id: &str,
+        swap: &SendSwap,
         create_response: &CreateSubmarineResponse,
     ) -> Result<Transaction, PaymentError> {
+        if swap.lockup_tx_id.is_some() {
+            debug!("Lockup tx was already broadcast for Send Swap {}", swap.id);
+            return Err(PaymentError::PaymentInProgress);
+        }
+
+        let swap_id = &swap.id;
         debug!(
             "Initiated Send Swap: send {} sats to liquid address {}",
             create_response.expected_amount, create_response.address
@@ -198,6 +204,7 @@ impl SendSwapHandler {
             .set_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
 
         info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
+
         let broadcast_result = self
             .chain_service
             .lock()
@@ -205,18 +212,35 @@ impl SendSwapHandler {
             .broadcast(&lockup_tx, Some(swap_id))
             .await;
 
-        match broadcast_result {
-            Ok(_) => {
-                info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
-                Ok(lockup_tx)
-            }
-            Err(err) => {
-                debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
-                self.persister
-                    .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
-                Err(err.into())
-            }
+        if let Err(err) = broadcast_result {
+            debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
+            self.persister
+                .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+            return Err(err.into());
         }
+
+        info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+
+        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
+        self.persister.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: lockup_tx_id.clone(),
+                timestamp: Some(utils::now()),
+                amount_sat: swap.payer_amount_sat,
+                fees_sat: lockup_tx_fees_sat,
+                payment_type: PaymentType::Send,
+                is_confirmed: false,
+            },
+            None,
+            None,
+        )?;
+
+        self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)
+            .await?;
+
+        Ok(lockup_tx)
     }
 
     /// Transitions a Send swap to a new state

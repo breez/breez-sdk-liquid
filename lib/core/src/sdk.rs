@@ -1079,50 +1079,13 @@ impl LiquidSdk {
         self.status_stream.track_swap_id(&swap.id)?;
 
         let create_response = swap.get_boltz_create_response()?;
-        self.try_lockup(&swap, &create_response).await?;
+        self.send_swap_handler
+            .try_lockup(&swap, &create_response)
+            .await?;
 
         self.wait_for_payment(Swap::Send(swap), create_response.accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
-    }
-
-    async fn try_lockup(
-        &self,
-        swap: &SendSwap,
-        create_response: &CreateSubmarineResponse,
-    ) -> Result<(), PaymentError> {
-        if swap.lockup_tx_id.is_some() {
-            debug!("Lockup tx was already broadcast for Send Swap {}", swap.id);
-            return Ok(());
-        }
-
-        let lockup_tx = self
-            .send_swap_handler
-            .lockup_funds(&swap.id, create_response)
-            .await?;
-        let lockup_tx_id = lockup_tx.txid().to_string();
-        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
-
-        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
-        // This makes the tx known to the SDK (get_info, list_payments) instantly
-        self.persister.insert_or_update_payment(
-            PaymentTxData {
-                tx_id: lockup_tx_id.clone(),
-                timestamp: Some(utils::now()),
-                amount_sat: swap.payer_amount_sat,
-                fees_sat: lockup_tx_fees_sat,
-                payment_type: PaymentType::Send,
-                is_confirmed: false,
-            },
-            None,
-            None,
-        )?;
-
-        self.send_swap_handler
-            .update_swap_info(&swap.id, Pending, None, Some(&lockup_tx_id), None)
-            .await?;
-
-        Ok(())
     }
 
     /// Fetch the current payment limits for [LiquidSdk::send_payment] and [LiquidSdk::receive_payment].
