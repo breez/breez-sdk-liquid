@@ -1081,8 +1081,7 @@ impl LiquidSdk {
         let create_response = swap.get_boltz_create_response()?;
         self.try_lockup(&swap, &create_response).await?;
 
-        let accept_zero_conf = create_response.accept_zero_conf;
-        self.wait_for_payment(Swap::Send(swap), accept_zero_conf)
+        self.wait_for_payment(Swap::Send(swap), create_response.accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }

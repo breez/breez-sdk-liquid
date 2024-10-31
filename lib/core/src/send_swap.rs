@@ -192,18 +192,31 @@ impl SendSwapHandler {
                 create_response.expected_amount,
             )
             .await?;
+        let lockup_tx_id = lockup_tx.txid().to_string();
 
-        info!("broadcasting lockup tx {}", lockup_tx.txid());
-        let lockup_tx_id = self
+        self.persister
+            .set_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+
+        info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
+        let broadcast_result = self
             .chain_service
             .lock()
             .await
             .broadcast(&lockup_tx, Some(swap_id))
-            .await?
-            .to_string();
+            .await;
 
-        info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
-        Ok(lockup_tx)
+        match broadcast_result {
+            Ok(_) => {
+                info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+                Ok(lockup_tx)
+            }
+            Err(err) => {
+                debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
+                self.persister
+                    .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+                Err(err.into())
+            }
+        }
     }
 
     /// Transitions a Send swap to a new state
