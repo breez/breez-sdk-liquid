@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use sdk_common::{
     bitcoin::util::bip32::{ChildNumber, DerivationPath},
     prelude::{LnUrlResult, LnurlAuthSigner},
@@ -17,8 +18,9 @@ impl SdkLnurlAuthSigner {
     }
 }
 
+#[async_trait]
 impl LnurlAuthSigner for SdkLnurlAuthSigner {
-    fn derive_bip32_pub_key(&self, derivation_path: &[ChildNumber]) -> LnUrlResult<Vec<u8>> {
+    async fn derive_bip32_pub_key(&self, derivation_path: &[ChildNumber]) -> LnUrlResult<Vec<u8>> {
         let derivation: DerivationPath = derivation_path.to_vec().into();
         self.signer
             .derive_xpub(derivation.to_string())
@@ -26,7 +28,11 @@ impl LnurlAuthSigner for SdkLnurlAuthSigner {
             .map(|xpub| xpub.to_vec())
     }
 
-    fn sign_ecdsa(&self, msg: &[u8], derivation_path: &[ChildNumber]) -> LnUrlResult<Vec<u8>> {
+    async fn sign_ecdsa(
+        &self,
+        msg: &[u8],
+        derivation_path: &[ChildNumber],
+    ) -> LnUrlResult<Vec<u8>> {
         let derivation: DerivationPath = derivation_path.to_vec().into();
         self.signer
             .sign_ecdsa(msg.to_vec(), derivation.to_string())
@@ -34,7 +40,7 @@ impl LnurlAuthSigner for SdkLnurlAuthSigner {
             .map(|s: Vec<u8>| s.to_vec())
     }
 
-    fn hmac_sha256(
+    async fn hmac_sha256(
         &self,
         key_derivation_path: &[ChildNumber],
         input: &[u8],
