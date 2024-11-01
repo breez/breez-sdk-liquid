@@ -10,11 +10,9 @@ use tokio::sync::Mutex;
 use tokio_stream::StreamExt as _;
 
 use self::client::SyncerClient;
+use self::model::sync::TrackChangesRequest;
 use self::model::{
-    sync::{
-        ListChangesRequest, ListenChangesRequest, Record, SetRecordReply, SetRecordRequest,
-        SetRecordStatus,
-    },
+    sync::{ListChangesRequest, Record, SetRecordReply, SetRecordRequest, SetRecordStatus},
     DecryptedRecord, SyncData,
 };
 use crate::{model::Signer, persist::Persister, prelude::Direction, utils};
@@ -81,17 +79,17 @@ impl SyncService {
     }
 
     pub(crate) async fn listen(self: Arc<Self>) -> Result<()> {
-        let request = ListenChangesRequest::new(utils::now(), self.signer.clone())
+        let request = TrackChangesRequest::new(utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
 
         let cloned = self.clone();
         tokio::spawn(async move {
-            let mut stream = match cloned.client.listen_changes(request).await {
+            let mut stream = match cloned.client.track_changes(request).await {
                 Ok(stream) => stream,
                 Err(err) => return warn!("Could not listen to changes: {err:?}"),
             };
 
-            debug!("Sync service: Started listening to changes");
+            debug!("Started listening to changes");
             while let Some(message) = stream.next().await {
                 match message {
                     Ok(record) => {
@@ -102,7 +100,7 @@ impl SyncService {
                         }
 
                         debug!(
-                            "Sync service: Received new record - record_id {} record_revision {} record_schema_version {}",
+                            "Received new record - record_id {} record_revision {} record_schema_version {}",
                             record.id, record.revision, record.schema_version
                         );
 

@@ -1,11 +1,12 @@
 use anyhow::{anyhow, Result};
 
 use async_trait::async_trait;
+use log::debug;
 use tokio::sync::Mutex;
 
 use super::model::sync::{
-    syncer_client::SyncerClient as ProtoSyncerClient, ListChangesReply, ListChangesRequest,
-    ListenChangesRequest, Record, SetRecordReply, SetRecordRequest,
+    syncer_client::SyncerClient as ProtoSyncerClient, ListChangesReply, ListChangesRequest, Record,
+    SetRecordReply, SetRecordRequest, TrackChangesRequest,
 };
 
 #[async_trait]
@@ -13,9 +14,9 @@ pub(crate) trait SyncerClient: Send + Sync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn set_record(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
     async fn list_changes(&self, req: ListChangesRequest) -> Result<ListChangesReply>;
-    async fn listen_changes(
+    async fn track_changes(
         &self,
-        req: ListenChangesRequest,
+        req: TrackChangesRequest,
     ) -> anyhow::Result<tonic::codec::Streaming<Record>>;
     async fn disconnect(&self) -> Result<()>;
 }
@@ -36,7 +37,8 @@ impl BreezSyncerClient {
 impl SyncerClient for BreezSyncerClient {
     async fn connect(&self, connect_url: String) -> Result<()> {
         let mut client = self.inner.lock().await;
-        *client = Some(ProtoSyncerClient::connect(connect_url).await?);
+        *client = Some(ProtoSyncerClient::connect(connect_url.clone()).await?);
+        debug!("Successfully connected to {connect_url}");
         Ok(())
     }
 
@@ -53,14 +55,14 @@ impl SyncerClient for BreezSyncerClient {
         Ok(client.list_changes(req).await?.into_inner())
     }
 
-    async fn listen_changes(
+    async fn track_changes(
         &self,
-        req: ListenChangesRequest,
+        req: TrackChangesRequest,
     ) -> Result<tonic::codec::Streaming<Record>> {
         let Some(mut client) = self.inner.lock().await.clone() else {
             return Err(anyhow!("Cannot run `listen_changes`: client not connected"));
         };
-        Ok(client.listen_changes(req).await?.into_inner())
+        Ok(client.track_changes(req).await?.into_inner())
     }
 
     async fn disconnect(&self) -> Result<()> {

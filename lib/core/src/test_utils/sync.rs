@@ -1,10 +1,10 @@
-use anyhow::{Result};
+use anyhow::Result;
 use async_trait::async_trait;
 
 use crate::sync::client::SyncerClient;
 use crate::sync::model::sync::{
-    ListChangesReply, ListChangesRequest, ListenChangesRequest, Record, SetRecordReply,
-    SetRecordRequest,
+    ListChangesReply, ListChangesRequest, Record, SetRecordReply, SetRecordRequest,
+    TrackChangesRequest,
 };
 
 pub(crate) struct MockSyncerClient {}
@@ -28,9 +28,9 @@ impl SyncerClient for MockSyncerClient {
         unimplemented!()
     }
 
-    async fn listen_changes(
+    async fn track_changes(
         &self,
-        _req: ListenChangesRequest,
+        _req: TrackChangesRequest,
     ) -> Result<tonic::codec::Streaming<Record>> {
         unimplemented!()
     }

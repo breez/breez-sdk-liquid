@@ -463,7 +463,7 @@ pub(crate) async fn handle_command(
                 _ => None,
             };
 
-            let payments = sdk
+            let mut payments = sdk
                 .list_payments(&ListPaymentsRequest {
                     filters,
                     from_timestamp,
@@ -473,6 +473,7 @@ pub(crate) async fn handle_command(
                     details,
                 })
                 .await?;
+            payments.reverse();
             command_result!(payments)
         }
         Command::GetPayment { payment_hash } => {

@@ -4,10 +4,7 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use openssl::sha::sha256;
 use serde::{Deserialize, Serialize};
 
-use self::sync::{
-    ListChangesRequest,
-    ListenChangesRequest, Record, SetRecordRequest,
-};
+use self::sync::{ListChangesRequest, Record, SetRecordRequest, TrackChangesRequest};
 use crate::model::{
     ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Signer, SignerError,
 };
@@ -259,9 +256,9 @@ impl SetRecordRequest {
         let msg = format!(
             "{}-{}-{}-{}-{}",
             record.id,
+            record.data.to_lower_hex_string(),
             record.revision,
             CURRENT_SCHEMA_VERSION,
-            record.data.to_lower_hex_string(),
             request_time,
         );
         let signature = sign_message(msg.as_bytes(), signer)?;
@@ -289,7 +286,7 @@ impl ListChangesRequest {
     }
 }
 
-impl ListenChangesRequest {
+impl TrackChangesRequest {
     pub(crate) fn new(
         request_time: u32,
         signer: Arc<Box<dyn Signer>>,
