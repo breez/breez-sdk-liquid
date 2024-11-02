@@ -17,12 +17,15 @@ use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
-use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::receive_swap::{
     DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
     DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
 };
 use crate::utils;
+use crate::{
+    error::{PaymentError, SdkError, SdkResult},
+    sync::model::SyncDetails,
+};
 
 // Both use f64 for the maximum precision when converting between units
 pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
@@ -633,7 +636,7 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
-    pub(crate) is_local: bool,
+    pub(crate) sync_details: SyncDetails,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -754,7 +757,7 @@ pub(crate) struct SendSwap {
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
-    pub(crate) is_local: bool,
+    pub(crate) sync_details: SyncDetails,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -839,7 +842,7 @@ pub(crate) struct ReceiveSwap {
     /// Afterwards, it shows the lockup tx creation time.    
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
-    pub(crate) is_local: bool,
+    pub(crate) sync_details: SyncDetails,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {

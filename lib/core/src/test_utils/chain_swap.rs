@@ -13,6 +13,7 @@ use crate::{
     model::{ChainSwap, Config, Direction, PaymentState},
     persist::Persister,
     swapper::boltz::BoltzSwapper,
+    sync::model::SyncDetails,
     utils,
 };
 
@@ -112,7 +113,11 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
-            is_local: true,
+            sync_details: SyncDetails {
+                is_local: true,
+                revision: None,
+                record_id: None,
+            }
         },
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
@@ -176,7 +181,11 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
-            is_local: true,
+            sync_details: SyncDetails {
+                is_local: true,
+                revision: None,
+                record_id: None,
+            }
         }
     }
 }

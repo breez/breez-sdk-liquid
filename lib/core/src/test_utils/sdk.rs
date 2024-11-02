@@ -60,12 +60,21 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
     let onchain_wallet = Arc::new(MockWallet::new());
 
+    let syncer_client = Box::new(MockSyncerClient::new());
+    let sync_service = Arc::new(SyncService::new(
+        "".to_string(),
+        persister.clone(),
+        signer.clone(),
+        syncer_client,
+    ));
+
     let send_swap_handler = SendSwapHandler::new(
         config.clone(),
         onchain_wallet.clone(),
         persister.clone(),
         swapper.clone(),
         liquid_chain_service.clone(),
+        sync_service.clone(),
     );
 
     let receive_swap_handler = ReceiveSwapHandler::new(
@@ -92,14 +101,6 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let buy_bitcoin_service =
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
-
-    let syncer_client = Box::new(MockSyncerClient::new());
-    let sync_service = Arc::new(SyncService::new(
-        "".to_string(),
-        persister.clone(),
-        signer.clone(),
-        syncer_client,
-    ));
 
     Ok(LiquidSdk {
         config,

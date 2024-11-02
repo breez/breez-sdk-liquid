@@ -10,6 +10,7 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::SyncDetails;
 
 impl Persister {
     pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
@@ -21,6 +22,7 @@ impl Persister {
                 id,
                 id_hash,
                 invoice,
+                preimage,
                 payment_hash,
                 description,
                 payer_amount_sat,
@@ -30,8 +32,7 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
-                state,
-                is_local
+                state
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
@@ -40,6 +41,7 @@ impl Persister {
             &send_swap.id,
             &id_hash,
             &send_swap.invoice,
+            &send_swap.preimage,
             &send_swap.payment_hash,
             &send_swap.description,
             &send_swap.payer_amount_sat,
@@ -50,8 +52,9 @@ impl Persister {
             &send_swap.refund_tx_id,
             &send_swap.created_at,
             &send_swap.state,
-            &send_swap.is_local,
         ))?;
+
+        self.insert_or_update_sync_details(&send_swap.id, &send_swap.sync_details)?;
 
         Ok(())
     }
@@ -82,28 +85,31 @@ impl Persister {
     fn list_send_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
+            where_clause_str = String::from(" AND ");
             where_clause_str.push_str(where_clauses.join(" AND ").as_str());
         }
 
         format!(
             "
             SELECT
-                id,
-                invoice,
-                payment_hash,
-                description,
-                preimage,
-                payer_amount_sat,
-                receiver_amount_sat,
-                create_response_json,
-                refund_private_key,
-                lockup_tx_id,
-                refund_tx_id,
-                created_at,
-                state,
-                is_local
-            FROM send_swaps
+                ss.id,
+                ss.invoice,
+                ss.payment_hash,
+                ss.description,
+                ss.preimage,
+                ss.payer_amount_sat,
+                ss.receiver_amount_sat,
+                ss.create_response_json,
+                ss.refund_private_key,
+                ss.lockup_tx_id,
+                ss.refund_tx_id,
+                ss.created_at,
+                ss.state,
+                sd.is_local,
+                sd.revision,
+                sd.record_id
+            FROM send_swaps ss, sync_details sd
+            WHERE ss.id = sd.data_identifier
             {where_clause_str}
             ORDER BY created_at
         "
@@ -141,7 +147,11 @@ impl Persister {
             refund_tx_id: row.get(10)?,
             created_at: row.get(11)?,
             state: row.get(12)?,
-            is_local: row.get(13)?,
+            sync_details: SyncDetails {
+                is_local: row.get(13)?,
+                revision: row.get(14)?,
+                record_id: row.get(15)?,
+            },
         })
     }
 

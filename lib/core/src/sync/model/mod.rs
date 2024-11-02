@@ -15,7 +15,16 @@ pub(crate) mod sync;
 
 const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
 
-#[derive(Serialize, Deserialize)]
+/// Denotes the remote details of an object, more specifically whether or not it originates from a
+/// sync and what the remote id of the record is (if any)
+#[derive(Clone, Debug)]
+pub(crate) struct SyncDetails {
+    pub(crate) is_local: bool,
+    pub(crate) revision: Option<i64>,
+    pub(crate) record_id: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -56,8 +65,8 @@ impl From<ChainSwap> for ChainSyncData {
     }
 }
 
-impl From<ChainSyncData> for ChainSwap {
-    fn from(val: ChainSyncData) -> Self {
+impl ChainSwap {
+    pub(crate) fn from_sync_data(val: ChainSyncData, revision: i64, record_id: String) -> Self {
         ChainSwap {
             id: val.swap_id,
             direction: val.direction,
@@ -79,12 +88,16 @@ impl From<ChainSyncData> for ChainSwap {
             claim_tx_id: None,
             refund_tx_id: None,
             state: PaymentState::Created,
-            is_local: false,
+            sync_details: SyncDetails {
+                is_local: false,
+                revision: Some(revision),
+                record_id: Some(record_id),
+            },
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -115,8 +128,8 @@ impl From<SendSwap> for SendSyncData {
     }
 }
 
-impl From<SendSyncData> for SendSwap {
-    fn from(val: SendSyncData) -> Self {
+impl SendSwap {
+    pub(crate) fn from_sync_data(val: SendSyncData, revision: i64, record_id: String) -> Self {
         SendSwap {
             id: val.swap_id,
             payment_hash: val.payment_hash,
@@ -131,12 +144,16 @@ impl From<SendSyncData> for SendSwap {
             lockup_tx_id: None,
             refund_tx_id: None,
             state: PaymentState::Created,
-            is_local: false,
+            sync_details: SyncDetails {
+                is_local: false,
+                revision: Some(revision),
+                record_id: Some(record_id),
+            },
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -169,8 +186,8 @@ impl From<ReceiveSwap> for ReceiveSyncData {
     }
 }
 
-impl From<ReceiveSyncData> for ReceiveSwap {
-    fn from(val: ReceiveSyncData) -> Self {
+impl ReceiveSwap {
+    pub(crate) fn from_sync_data(val: ReceiveSyncData, revision: i64, record_id: String) -> Self {
         ReceiveSwap {
             id: val.swap_id,
             payment_hash: val.payment_hash,
@@ -185,12 +202,16 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             created_at: val.created_at,
             claim_tx_id: None,
             state: PaymentState::Created,
-            is_local: false,
+            sync_details: SyncDetails {
+                is_local: false,
+                revision: Some(revision),
+                record_id: Some(record_id),
+            },
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),
@@ -201,6 +222,14 @@ pub(crate) enum SyncData {
 impl SyncData {
     pub(crate) fn to_bytes(&self) -> serde_json::Result<Vec<u8>> {
         serde_json::to_vec(self)
+    }
+
+    pub(crate) fn id(&self) -> String {
+        match self {
+            SyncData::Receive(receive_sync_data) => receive_sync_data.swap_id.clone(),
+            SyncData::Send(send_sync_data) => send_sync_data.swap_id.clone(),
+            SyncData::Chain(chain_sync_data) => chain_sync_data.swap_id.clone(),
+        }
     }
 }
 
@@ -229,18 +258,18 @@ impl DecryptedRecord {
 
 impl Record {
     pub(crate) fn new(
+        id: String,
         data: SyncData,
-        revision: Option<i64>,
+        revision: i64,
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, anyhow::Error> {
-        let id = uuid::Uuid::new_v4().to_string();
         let data = data.to_bytes()?;
         let data = signer
             .ecies_encrypt(&data)
             .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
         Ok(Self {
             id,
-            revision: revision.unwrap_or(0),
+            revision,
             schema_version: CURRENT_SCHEMA_VERSION,
             data,
         })

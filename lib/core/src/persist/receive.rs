@@ -10,6 +10,7 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::SyncDetails;
 
 impl Persister {
     pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
@@ -31,10 +32,9 @@ impl Persister {
                 created_at,
                 claim_fees_sat,
                 claim_tx_id,
-                state,
-                is_local
+                state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
@@ -52,8 +52,9 @@ impl Persister {
             &receive_swap.claim_fees_sat,
             &receive_swap.claim_tx_id,
             &receive_swap.state,
-            &receive_swap.is_local,
         ))?;
+
+        self.insert_or_update_sync_details(&receive_swap.id, &receive_swap.sync_details)?;
 
         Ok(())
     }
@@ -61,7 +62,7 @@ impl Persister {
     fn list_receive_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
+            where_clause_str = String::from(" AND ");
             where_clause_str.push_str(where_clauses.join(" AND ").as_str());
         }
 
@@ -81,8 +82,11 @@ impl Persister {
                 rs.claim_tx_id,
                 rs.created_at,
                 rs.state,
-                rs.is_local
-            FROM receive_swaps AS rs
+                sd.is_local,
+                sd.revision,
+                sd.record_id
+            FROM receive_swaps AS rs, sync_details sd
+            WHERE rs.id = sd.data_identifier
             {where_clause_str}
             ORDER BY rs.created_at
         "
@@ -123,7 +127,11 @@ impl Persister {
             claim_tx_id: row.get(10)?,
             created_at: row.get(11)?,
             state: row.get(12)?,
-            is_local: row.get(13)?,
+            sync_details: SyncDetails {
+                is_local: row.get(13)?,
+                revision: row.get(14)?,
+                record_id: row.get(15)?,
+            },
         })
     }
 

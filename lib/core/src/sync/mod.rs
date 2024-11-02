@@ -11,18 +11,20 @@ use tokio_stream::StreamExt as _;
 
 use self::client::SyncerClient;
 use self::model::sync::TrackChangesRequest;
+use self::model::SyncDetails;
 use self::model::{
     sync::{ListChangesRequest, Record, SetRecordReply, SetRecordRequest, SetRecordStatus},
     DecryptedRecord, SyncData,
 };
-use crate::{model::Signer, persist::Persister, prelude::Direction, utils};
+use crate::prelude::{ChainSwap, ReceiveSwap, SendSwap};
+use crate::{model::Signer, persist::Persister, utils};
 
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
 
 pub(crate) struct SyncService {
     connect_url: String,
     persister: Arc<Persister>,
-    sent: Mutex<HashSet<i64>>,
+    sent: Mutex<HashSet<String>>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
 }
@@ -74,10 +76,20 @@ impl SyncService {
 }
 
 impl SyncService {
+    /// Connects to the gRPC endpoint specified in [SyncService::connect_url]
+    /// Additionally, this method pulls the latest changes from the remote and applies them
     pub(crate) async fn connect(&self) -> Result<()> {
-        self.client.connect(self.connect_url.clone()).await
+        self.client.connect(self.connect_url.clone()).await?;
+        self.get_latest_changes()
+            .await
+            .and_then(|records| self.apply_changes(&records))?;
+        Ok(())
     }
 
+    /// Listens to updates for new changes.
+    /// This method ignores changes we broadcasted by referring to the `sent` hashset
+    /// Records which are received from an external instance are instantly applied to the local
+    /// database. Errors are skipped.
     pub(crate) async fn listen(self: Arc<Self>) -> Result<()> {
         let request = TrackChangesRequest::new(utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
@@ -94,23 +106,24 @@ impl SyncService {
                 match message {
                     Ok(record) => {
                         let mut sent = cloned.sent.lock().await;
-                        if sent.get(&record.revision).is_some() {
-                            sent.remove(&record.revision);
+                        if sent.get(&record.id).is_some() {
+                            sent.remove(&record.id);
                             continue;
                         }
 
+                        let record_id = record.id.clone();
+                        let record_revision = record.revision;
+                        let record_schema_version = record.schema_version;
+
                         debug!(
-                            "Received new record - record_id {} record_revision {} record_schema_version {}",
-                            record.id, record.revision, record.schema_version
+                            "Received new record - record_id {record_id} record_revision {record_revision} record_schema_version {record_schema_version}"
                         );
 
-                        let record_revision = record.revision;
                         if let Err(err) = cloned.apply_changes(&[record]) {
                             warn!("Could not apply incoming changes: {err:?}")
                         };
-                        if let Err(err) = cloned.persister.set_latest_revision(record_revision) {
-                            warn!("Could not update latest record revision from stream: {err:?}")
-                        };
+
+                        debug!("Successfully applied incoming changes for record {record_id}",)
                     }
                     Err(err) => warn!("An error occured while listening for records: {err:?}"),
                 }
@@ -121,21 +134,40 @@ impl SyncService {
     }
 
     fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
+        debug!(
+            "Applying record - id {} revision {}",
+            &record.id, record.revision
+        );
         match record.data {
-            SyncData::Chain(chain_data) => self.persister.insert_chain_swap(&chain_data.into()),
-            SyncData::Send(send_data) => self.persister.insert_send_swap(&send_data.into()),
+            SyncData::Chain(chain_data) => self.persister.insert_chain_swap(
+                &ChainSwap::from_sync_data(chain_data, record.revision, record.id),
+            ),
+            SyncData::Send(send_data) => self.persister.insert_send_swap(
+                &SendSwap::from_sync_data(send_data, record.revision, record.id),
+            ),
             SyncData::Receive(receive_data) => {
-                self.persister.insert_receive_swap(&receive_data.into())
+                self.persister
+                    .insert_receive_swap(&ReceiveSwap::from_sync_data(
+                        receive_data,
+                        record.revision,
+                        record.id,
+                    ))
             }
         }
     }
 
+    /// Applies a given set of changes into the local database
+    /// For each record, if its (schema_version)[Record::schema_version] is greater than the
+    /// [CURRENT_SCHEMA_VERSION], the record will be persisted into the `pending_sync_records` and
+    /// applied later.
+    /// Instead, if the schema_version is greater than the client's current version, it will try
+    /// and apply the changes, skipping errors if any
     pub(crate) fn apply_changes(&self, records: &[Record]) -> Result<()> {
         let (updatable_records, failed_records) = self.collect_records(records);
 
         // We persist records which we cannot update (> CURRENT_SCHEMA_VERSION)
         for record in failed_records {
-            self.persister.insert_record(record, Direction::Incoming)?;
+            self.persister.insert_pending_record(record)?;
         }
 
         // We apply records which we can update (<= CURRENT_SCHEMA_VERSION)
@@ -152,45 +184,80 @@ impl SyncService {
         let request = ListChangesRequest::new(from_id, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListChangesRequest: {err:?}"))?;
         let records = self.client.list_changes(request).await?.changes;
-
         Ok(records)
     }
 
+    /// Pulls the latest changes from the remote, *without* updating the local database
     pub(crate) async fn get_latest_changes(&self) -> Result<Vec<Record>> {
         let latest_revision = self.persister.get_latest_revision()?;
-
         let records = self.get_changes_since(latest_revision).await?;
-
-        if let Some(last_record) = records.last() {
-            self.persister.set_latest_revision(last_record.revision)?;
-        }
-
         Ok(records)
     }
 
-    pub(crate) async fn set_record(&self, data: SyncData) -> Result<()> {
-        let record = Record::new(data, None, self.signer.clone())?;
+    /// Syncs the given data outwards
+    /// If `is_update` is specified, the method will look into the local `sync_details` cache and
+    /// get the correct revision number and record id
+    pub(crate) async fn set_record(&self, data: SyncData, is_update: bool) -> Result<()> {
+        let data_identifier = data.id();
+        let (record_id, revision) = match is_update {
+            true => {
+                let existing_sync_details = self.persister.get_sync_details(&data_identifier)?;
+                (
+                    existing_sync_details.record_id.expect(
+                        "Expecting valid record_id when calling `set_record` with `is_update` flag",
+                    ),
+                    existing_sync_details.revision.expect(
+                        "Expecting valid revision when calling `set_record` with `is_update` flag",
+                    ),
+                )
+            }
+            false => (uuid::Uuid::new_v4().to_string(), 0),
+        };
+        let record = Record::new(record_id.clone(), data, revision, self.signer.clone())?;
+
+        debug!("Starting outward sync (set_record) for record {record_id} is_update {is_update}");
+
+        self.sent.lock().await.insert(record_id.clone());
         let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 
-        let SetRecordReply {
-            status,
-            new_revision,
-        } = self.client.set_record(request).await?;
+        match self.client.set_record(request).await {
+            Ok(SetRecordReply {
+                status,
+                new_revision,
+            }) => {
+                if SetRecordStatus::try_from(status)? == SetRecordStatus::Conflict {
+                    self.sent.lock().await.remove(&record_id);
+                    return Err(anyhow!("Could not set record: revision conflict."));
+                }
 
-        if SetRecordStatus::try_from(status)? == SetRecordStatus::Conflict {
-            return Err(anyhow!("Could not set record: revision conflict."));
+                self.persister.insert_or_update_sync_details(
+                    &data_identifier,
+                    &SyncDetails {
+                        is_local: true,
+                        revision: Some(new_revision),
+                        record_id: Some(record_id.clone()),
+                    },
+                )?;
+
+                debug!("Successfully synced (set_record) id {record_id} is_update {is_update} revision {new_revision}");
+                Ok(())
+            }
+            Err(err) => {
+                self.sent.lock().await.remove(&record_id);
+                debug!("Could not sync record (set_record) id {record_id} is_update {is_update}: {err:?}");
+                Err(err)
+            }
         }
-
-        self.sent.lock().await.insert(new_revision);
-        self.persister.set_latest_revision(new_revision)?;
-        Ok(())
     }
 
+    /// Cleans up the cached pending records, by trying to apply each one
+    /// This method is especially useful once a client has upgraded, and is now able to
+    /// successfully apply a record with a higher schema_version (see [SyncService::apply_changes])
     pub(crate) fn cleanup(&self) -> Result<()> {
         let pending_records = self
             .persister
-            .get_records(Some(Direction::Incoming))
+            .get_pending_records()
             .map_err(|err| anyhow!("Could not fetch pending records from database: {err:?}"))?;
 
         let (updatable_records, _) = self.collect_records(&pending_records);
@@ -200,12 +267,14 @@ impl SyncService {
             if self.apply_record(record).is_err() {
                 continue;
             }
-            self.persister.delete_record(record_id)?;
+            self.persister.delete_pending_record(record_id)?;
         }
 
         Ok(())
     }
 
+    /// Disconnects from the gRPC endpoint
+    /// TODO: Add shutdown signal for stream
     pub(crate) async fn disconnect(&self) -> Result<()> {
         self.client.disconnect().await
     }

@@ -36,7 +36,7 @@ use crate::model::Signer;
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::{boltz::BoltzSwapper, Swapper, SwapperReconnectHandler, SwapperStatusStream};
-use crate::sync::model::SyncData;
+use crate::sync::model::{SyncData, SyncDetails};
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -177,12 +177,21 @@ impl LiquidSdk {
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            signer.clone(),
+            syncer_client,
+        ));
+
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),
             onchain_wallet.clone(),
             persister.clone(),
             swapper.clone(),
             liquid_chain_service.clone(),
+            sync_service.clone(),
         );
 
         let receive_swap_handler = ReceiveSwapHandler::new(
@@ -206,14 +215,6 @@ impl LiquidSdk {
 
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
-
-        let syncer_client = Box::new(BreezSyncerClient::new());
-        let sync_service = Arc::new(SyncService::new(
-            config.sync_service_url.clone(),
-            persister.clone(),
-            signer.clone(),
-            syncer_client,
-        ));
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -1088,11 +1089,15 @@ impl LiquidSdk {
                     created_at: utils::now(),
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
-                    is_local: true,
+                    sync_details: SyncDetails {
+                        is_local: true,
+                        revision: None,
+                        record_id: None,
+                    },
                 };
                 self.persister.insert_send_swap(&swap)?;
                 self.sync_service
-                    .set_record(SyncData::Send(swap.clone().into()))
+                    .set_record(SyncData::Send(swap.clone().into()), false)
                     .await?;
                 swap
             }
@@ -1366,7 +1371,11 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
-            is_local: true,
+            sync_details: SyncDetails {
+                is_local: true,
+                revision: None,
+                record_id: None,
+            },
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
@@ -1688,7 +1697,11 @@ impl LiquidSdk {
                 claim_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
-                is_local: true,
+                sync_details: SyncDetails {
+                    is_local: true,
+                    revision: None,
+                    record_id: None,
+                },
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
@@ -1776,7 +1789,11 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
-            is_local: true,
+            sync_details: SyncDetails {
+                is_local: true,
+                revision: None,
+                record_id: None,
+            },
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;

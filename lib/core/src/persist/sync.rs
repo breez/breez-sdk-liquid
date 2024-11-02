@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Result};
-use rusqlite::{params, Row};
+use anyhow::Result;
+use rusqlite::{named_params, params, Row};
 
-use crate::sync::model::{sync::Record};
+use crate::sync::model::{sync::Record, SyncDetails};
 
-use super::{Direction, Persister};
+use super::Persister;
 
 impl Persister {
     pub(crate) fn get_latest_revision(&self) -> Result<i64> {
@@ -11,25 +11,18 @@ impl Persister {
 
         let latest_revision: i64 = con
             .query_row(
-                "SELECT syncLatestRevision FROM settings WHERE id = 1",
+                "
+                SELECT revision 
+                FROM sync_details 
+                ORDER BY revision DESC 
+                LIMIT 1
+            ",
                 [],
                 |row| row.get(0),
             )
             .unwrap_or(0);
 
         Ok(latest_revision)
-    }
-
-    pub(crate) fn set_latest_revision(&self, new_latest_revision: i64) -> Result<()> {
-        let con = self.get_connection()?;
-
-        con.execute(
-            "INSERT OR REPLACE INTO settings(id, syncLatestRevision) VALUES(1, ?)",
-            params![new_latest_revision],
-        )
-        .map_err(|err| anyhow!("Could not write latest record id to database: {err}"))?;
-
-        Ok(())
     }
 
     fn sql_row_to_record(&self, row: &Row) -> rusqlite::Result<Record> {
@@ -55,68 +48,116 @@ impl Persister {
                     schema_version,
                     data,
                     revision
-                FROM sync_records
+                FROM pending_sync_records
                 {where_clause_str}
                 ORDER BY revision
             "
         )
     }
 
-    pub(crate) fn get_records(&self, direction: Option<Direction>) -> Result<Vec<Record>> {
+    pub(crate) fn get_pending_records(&self) -> Result<Vec<Record>> {
         let con = self.get_connection()?;
 
-        let mut where_clauses = vec![];
-        if let Some(direction) = direction {
-            where_clauses.push("direction = ?1".to_string())
-        }
+        let where_clauses = vec![];
         let query = Self::get_records_query(where_clauses);
 
         let records: Vec<Record> = con
             .prepare(&query)?
-            .query_map([direction], |row| self.sql_row_to_record(row))?
+            .query_map([], |row| self.sql_row_to_record(row))?
             .map(|i| i.unwrap())
             .collect();
 
         Ok(records)
     }
 
-    pub(crate) fn insert_record(&self, record: &Record, direction: Direction) -> Result<()> {
+    pub(crate) fn insert_pending_record(&self, record: &Record) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
             "
-            INSERT INTO sync_records(
+            INSERT INTO pending_sync_records(
                 id,
                 schema_version,
                 data,
-                revision,
-                direction
+                revision
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?)
         ",
             (
                 &record.id,
                 &record.schema_version,
                 &record.data,
                 &record.revision,
-                direction,
             ),
         )?;
 
         Ok(())
     }
 
-    pub(crate) fn delete_record(&self, id: String) -> Result<()> {
+    pub(crate) fn delete_pending_record(&self, id: String) -> Result<()> {
         let con = self.get_connection()?;
 
         con.execute(
             "
-            DELETE FROM sync_records
+            DELETE FROM pending_sync_records
             WHERE id = ?
         ",
             params![id],
         )?;
 
         Ok(())
+    }
+
+    pub(crate) fn insert_or_update_sync_details(
+        &self,
+        id: &str,
+        sync_details: &SyncDetails,
+    ) -> Result<()> {
+        let con = self.get_connection()?;
+
+        con.execute(
+            "INSERT OR REPLACE INTO sync_details(
+                data_identifier,
+                is_local,
+                revision,
+                record_id
+            )
+            VALUES (:data_identifier, :is_local, :revision, :record_id)",
+            named_params! {
+                ":data_identifier": id,
+                ":is_local": sync_details.is_local,
+                ":revision": sync_details.revision,
+                ":record_id": sync_details.record_id
+            },
+        )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn get_sync_details(&self, data_identifier: &str) -> Result<SyncDetails> {
+        let con = self.get_connection()?;
+
+        let sync_details = con.query_row(
+            "
+                SELECT
+                    is_local,
+                    revision,
+                    record_id
+                FROM sync_details
+                WHERE data_identifier = :data_identifier
+            ",
+            named_params! {
+                ":data_identifier": data_identifier,
+            },
+            |row| {
+                Ok(SyncDetails {
+                    is_local: row.get(0)?,
+                    revision: row.get(1)?,
+                    record_id: row.get(2)?,
+                })
+            },
+        )?;
+
+        Ok(sync_details)
     }
 }

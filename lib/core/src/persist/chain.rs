@@ -10,6 +10,7 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::SyncDetails;
 
 impl Persister {
     pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
@@ -66,7 +67,7 @@ impl Persister {
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_tx_id = :claim_tx_id,
-                refund_tx_id = :refund_tx_id
+                refund_tx_id = :refund_tx_id,
                 is_local = :is_local
             WHERE
                 id = :id",
@@ -77,9 +78,11 @@ impl Persister {
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
-                ":is_local": &chain_swap.is_local,
+                ":is_local": &chain_swap.sync_details.is_local,
             },
         )?;
+
+        self.insert_or_update_sync_details(&chain_swap.id, &chain_swap.sync_details)?;
 
         Ok(())
     }
@@ -87,35 +90,38 @@ impl Persister {
     fn list_chain_swaps_query(where_clauses: Vec<String>) -> String {
         let mut where_clause_str = String::new();
         if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
+            where_clause_str = String::from(" AND ");
             where_clause_str.push_str(where_clauses.join(" AND ").as_str());
         }
 
         format!(
             "
             SELECT
-                id,
-                direction,
-                claim_address,
-                lockup_address,
-                timeout_block_height,
-                preimage,
-                description,
-                payer_amount_sat,
-                receiver_amount_sat,
-                accept_zero_conf,
-                create_response_json,
-                claim_private_key,
-                refund_private_key,
-                server_lockup_tx_id,
-                user_lockup_tx_id,
-                claim_fees_sat,
-                claim_tx_id,
-                refund_tx_id,
-                created_at,
-                state,
-                is_local
-            FROM chain_swaps
+                cs.id,
+                cs.direction,
+                cs.claim_address,
+                cs.lockup_address,
+                cs.timeout_block_height,
+                cs.preimage,
+                cs.description,
+                cs.payer_amount_sat,
+                cs.receiver_amount_sat,
+                cs.accept_zero_conf,
+                cs.create_response_json,
+                cs.claim_private_key,
+                cs.refund_private_key,
+                cs.server_lockup_tx_id,
+                cs.user_lockup_tx_id,
+                cs.claim_fees_sat,
+                cs.claim_tx_id,
+                cs.refund_tx_id,
+                cs.created_at,
+                cs.state,
+                sd.is_local,
+                sd.revision,
+                sd.record_id
+            FROM chain_swaps cs, sync_details sd
+            WHERE cs.id = sd.data_identifier
             {where_clause_str}
             ORDER BY created_at
         "
@@ -163,7 +169,11 @@ impl Persister {
             refund_tx_id: row.get(17)?,
             created_at: row.get(18)?,
             state: row.get(19)?,
-            is_local: row.get(20)?,
+            sync_details: SyncDetails {
+                is_local: row.get(20)?,
+                revision: row.get(21)?,
+                record_id: row.get(22)?,
+            },
         })
     }
 
