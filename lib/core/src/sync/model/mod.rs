@@ -24,7 +24,7 @@ pub(crate) struct SyncDetails {
     pub(crate) record_id: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -97,7 +97,7 @@ impl ChainSwap {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -153,7 +153,7 @@ impl SendSwap {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
     pub(crate) invoice: String,
@@ -211,7 +211,7 @@ impl ReceiveSwap {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),

@@ -4,8 +4,9 @@ pub(crate) mod model;
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
+use futures_util::TryFutureExt;
 use log::{debug, warn};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use tokio::sync::Mutex;
 use tokio_stream::StreamExt as _;
 
@@ -20,13 +21,14 @@ use crate::prelude::{ChainSwap, ReceiveSwap, SendSwap};
 use crate::{model::Signer, persist::Persister, utils};
 
 const CURRENT_SCHEMA_VERSION: f32 = 0.01;
+const MAX_SET_RECORD_REATTEMPTS: u8 = 5;
 
 pub(crate) struct SyncService {
     connect_url: String,
     persister: Arc<Persister>,
-    sent: Mutex<HashSet<String>>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
+    sent_counter: Mutex<HashMap<String, u8>>,
 }
 
 impl SyncService {
@@ -41,7 +43,7 @@ impl SyncService {
             persister,
             signer,
             client,
-            sent: Default::default(),
+            sent_counter: Default::default(),
         }
     }
 
@@ -80,9 +82,7 @@ impl SyncService {
     /// Additionally, this method pulls the latest changes from the remote and applies them
     pub(crate) async fn connect(&self) -> Result<()> {
         self.client.connect(self.connect_url.clone()).await?;
-        self.get_latest_changes()
-            .await
-            .and_then(|records| self.apply_changes(&records))?;
+        self.sync_with_tip().await?;
         Ok(())
     }
 
@@ -105,7 +105,7 @@ impl SyncService {
             while let Some(message) = stream.next().await {
                 match message {
                     Ok(record) => {
-                        let mut sent = cloned.sent.lock().await;
+                        let mut sent = cloned.sent_counter.lock().await;
                         if sent.get(&record.id).is_some() {
                             sent.remove(&record.id);
                             continue;
@@ -194,6 +194,20 @@ impl SyncService {
         Ok(records)
     }
 
+    async fn sync_with_tip(&self) -> Result<()> {
+        self.get_latest_changes()
+            .await
+            .and_then(|records| self.apply_changes(&records))
+    }
+
+    async fn increment_sent_counter(&self, record_id: String) -> u8 {
+        let mut sent_counter = self.sent_counter.lock().await;
+        let mut num_attempts = *sent_counter.get(&record_id).unwrap_or(&0);
+        num_attempts += 1;
+        sent_counter.insert(record_id.to_string(), num_attempts);
+        return num_attempts;
+    }
+
     /// Syncs the given data outwards
     /// If `is_update` is specified, the method will look into the local `sync_details` cache and
     /// get the correct revision number and record id
@@ -213,11 +227,16 @@ impl SyncService {
             }
             false => (uuid::Uuid::new_v4().to_string(), 0),
         };
-        let record = Record::new(record_id.clone(), data, revision, self.signer.clone())?;
+        let record = Record::new(
+            record_id.clone(),
+            data.clone(),
+            revision,
+            self.signer.clone(),
+        )?;
 
         debug!("Starting outward sync (set_record) for record {record_id} is_update {is_update}");
 
-        self.sent.lock().await.insert(record_id.clone());
+        let num_attempts = self.increment_sent_counter(record_id.clone()).await;
         let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 
@@ -227,8 +246,17 @@ impl SyncService {
                 new_revision,
             }) => {
                 if SetRecordStatus::try_from(status)? == SetRecordStatus::Conflict {
-                    self.sent.lock().await.remove(&record_id);
-                    return Err(anyhow!("Could not set record: revision conflict."));
+                    if num_attempts > MAX_SET_RECORD_REATTEMPTS {
+                        return Err(anyhow!(
+                            "Could not set record: revision conflict and max reattempts reached."
+                        ));
+                    }
+
+                    return Box::pin(
+                        self.sync_with_tip()
+                            .and_then(|_| self.set_record(data, is_update)),
+                    )
+                    .await;
                 }
 
                 self.persister.insert_or_update_sync_details(
@@ -244,7 +272,7 @@ impl SyncService {
                 Ok(())
             }
             Err(err) => {
-                self.sent.lock().await.remove(&record_id);
+                self.sent_counter.lock().await.remove(&record_id);
                 debug!("Could not sync record (set_record) id {record_id} is_update {is_update}: {err:?}");
                 Err(err)
             }
