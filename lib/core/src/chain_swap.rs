@@ -238,6 +238,11 @@ impl ChainSwapHandler {
         let swap_state = ChainSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
 
+        if !swap.sync_details.is_local {
+            // TODO: Execute secondary flow
+            return Ok(());
+        }
+
         info!("Handling incoming Chain Swap transition to {status:?} for swap {id}");
         // See https://docs.boltz.exchange/v/api/lifecycle#chain-swaps
         match swap_state {
@@ -385,6 +390,11 @@ impl ChainSwapHandler {
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
+
+        if !swap.sync_details.is_local {
+            // TODO: Execute secondary flow
+            return Ok(());
+        }
 
         info!("Handling outgoing Chain Swap transition to {status:?} for swap {id}");
         // See https://docs.boltz.exchange/v/api/lifecycle#chain-swaps

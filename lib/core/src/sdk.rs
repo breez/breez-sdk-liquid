@@ -1379,6 +1379,9 @@ impl LiquidSdk {
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
+        self.sync_service
+            .set_record(SyncData::Chain(swap.clone().into()), false)
+            .await?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
             .await
@@ -1803,6 +1806,9 @@ impl LiquidSdk {
         };
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
+        self.sync_service
+            .set_record(SyncData::Chain(swap.clone().into()), false)
+            .await?;
         Ok(swap)
     }
 
