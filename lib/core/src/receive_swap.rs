@@ -67,6 +67,11 @@ impl ReceiveSwapHandler {
             .fetch_receive_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
+        if !receive_swap.sync_details.is_local {
+            // TODO: Execute secondary flow
+            return Ok(());
+        }
+
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
         match RevSwapStates::from_str(swap_state) {

@@ -1682,29 +1682,35 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
             Bolt11InvoiceDescription::Hash(_) => None,
         };
+
+        let receive_swap = ReceiveSwap {
+            id: swap_id.clone(),
+            preimage: preimage_str,
+            create_response_json,
+            claim_private_key: keypair.display_secret().to_string(),
+            invoice: invoice.to_string(),
+            payment_hash: Some(preimage_hash),
+            description: invoice_description,
+            payer_amount_sat,
+            receiver_amount_sat,
+            claim_fees_sat: reverse_pair.fees.claim_estimate(),
+            claim_tx_id: None,
+            created_at: utils::now(),
+            state: PaymentState::Created,
+            sync_details: SyncDetails {
+                is_local: true,
+                revision: None,
+                record_id: None,
+            },
+        };
         self.persister
-            .insert_receive_swap(&ReceiveSwap {
-                id: swap_id.clone(),
-                preimage: preimage_str,
-                create_response_json,
-                claim_private_key: keypair.display_secret().to_string(),
-                invoice: invoice.to_string(),
-                payment_hash: Some(preimage_hash),
-                description: invoice_description,
-                payer_amount_sat,
-                receiver_amount_sat,
-                claim_fees_sat: reverse_pair.fees.claim_estimate(),
-                claim_tx_id: None,
-                created_at: utils::now(),
-                state: PaymentState::Created,
-                sync_details: SyncDetails {
-                    is_local: true,
-                    revision: None,
-                    record_id: None,
-                },
-            })
+            .insert_receive_swap(&receive_swap)
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
+
+        self.sync_service
+            .set_record(SyncData::Receive(receive_swap.into()), false)
+            .await?;
 
         Ok(ReceivePaymentResponse {
             destination: invoice.to_string(),
