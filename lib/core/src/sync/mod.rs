@@ -47,37 +47,6 @@ impl SyncService {
         }
     }
 
-    fn collect_records<'a>(
-        &self,
-        records: &'a [Record],
-    ) -> (Vec<DecryptedRecord>, Vec<&'a Record>) {
-        let mut failed_records = vec![];
-        let mut updatable_records = vec![];
-
-        for record in records {
-            // If it's a major version ahead, we skip
-            if record.schema_version.floor() > CURRENT_SCHEMA_VERSION.floor() {
-                failed_records.push(record);
-                continue;
-            }
-
-            let decrypted_record =
-                match DecryptedRecord::try_from_record(self.signer.clone(), record) {
-                    Ok(record) => record,
-                    Err(err) => {
-                        warn!("Could not decrypt record: {err:?}");
-                        continue;
-                    }
-                };
-
-            updatable_records.push(decrypted_record)
-        }
-
-        (updatable_records, failed_records)
-    }
-}
-
-impl SyncService {
     /// Connects to the gRPC endpoint specified in [SyncService::connect_url]
     /// Additionally, this method pulls the latest changes from the remote and applies them
     pub(crate) async fn connect(&self) -> Result<()> {
@@ -154,6 +123,37 @@ impl SyncService {
                     ))
             }
         }
+    }
+
+    /// Collects the given records in two categories: upgradable and non-upgradable, based on their
+    /// schema_version
+    fn collect_records<'a>(
+        &self,
+        records: &'a [Record],
+    ) -> (Vec<DecryptedRecord>, Vec<&'a Record>) {
+        let mut failed_records = vec![];
+        let mut updatable_records = vec![];
+
+        for record in records {
+            // If it's a major version ahead, we skip
+            if record.schema_version.floor() > CURRENT_SCHEMA_VERSION.floor() {
+                failed_records.push(record);
+                continue;
+            }
+
+            let decrypted_record =
+                match DecryptedRecord::try_from_record(self.signer.clone(), record) {
+                    Ok(record) => record,
+                    Err(err) => {
+                        warn!("Could not decrypt record: {err:?}");
+                        continue;
+                    }
+                };
+
+            updatable_records.push(decrypted_record)
+        }
+
+        (updatable_records, failed_records)
     }
 
     /// Applies a given set of changes into the local database
