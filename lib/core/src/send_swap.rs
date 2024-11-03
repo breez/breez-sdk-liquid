@@ -66,23 +66,52 @@ impl SendSwapHandler {
     /// Handles status updates from Boltz for Send swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap_state = &update.status;
+        let swap_state = SubSwapStates::from_str(&update.status)
+            .map_err(|_| anyhow!("Invalid SubSwapState for Send Swap {id}: {}", update.status))?;
         let swap = self
             .persister
             .fetch_send_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
 
+        // The following block deals with non-local (synced) send swaps, which require some
+        // pre-processing steps before continuing with the flow
         if !swap.sync_details.is_local {
-            // TODO: Execute secondary flow
-            return Ok(());
+            match swap_state {
+                // If the state is `InvoiceSet`, we do not lockup twice
+                SubSwapStates::InvoiceSet => {
+                    debug!(
+                        "Received state {swap_state:?} for non-local Send swap {id}. Skipping..."
+                    );
+                    return Ok(());
+                }
+
+                // If the state is `TransactionClaimPending`, we try to cooperate from both
+                // instances
+                SubSwapStates::TransactionClaimPending => {}
+
+                // If the state is `TransactionClaimed`, we recover the preimage from the script claim path
+                // (see below) and resolve the payment as Complete
+                SubSwapStates::TransactionClaimed => {}
+
+                // If the state is failed, we have to recover both lockup and refund tx id, then
+                // continue with the flow below
+                SubSwapStates::TransactionLockupFailed
+                | SubSwapStates::InvoiceFailedToPay
+                | SubSwapStates::SwapExpired => {
+                    // TODO Add lockup_tx_id and refund_tx_id recovery flow
+                }
+
+                // For everything else, simply show the debug message below
+                _ => {}
+            }
         }
 
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
         // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
-        match SubSwapStates::from_str(swap_state) {
+        match swap_state {
             // Boltz has locked the HTLC, we proceed with locking up the funds
-            Ok(SubSwapStates::InvoiceSet) => {
+            SubSwapStates::InvoiceSet => {
                 match (swap.state, swap.lockup_tx_id.clone()) {
                     (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
                         let create_response = swap.get_boltz_create_response()?;
@@ -112,7 +141,9 @@ impl SendSwapHandler {
                         warn!("Lockup tx for Send Swap {id} was already broadcast: txid {lockup_tx_id}")
                     }
                     (state, _) => {
-                        debug!("Send Swap {id} is in an invalid state for {swap_state}: {state:?}")
+                        debug!(
+                            "Send Swap {id} is in an invalid state for {swap_state:?}: {state:?}"
+                        )
                     }
                 }
                 Ok(())
@@ -120,7 +151,7 @@ impl SendSwapHandler {
 
             // Boltz has detected the lockup in the mempool, we can speed up
             // the claim by doing so cooperatively
-            Ok(SubSwapStates::TransactionClaimPending) => {
+            SubSwapStates::TransactionClaimPending => {
                 self.cooperate_claim(&swap).await.map_err(|e| {
                     error!("Could not cooperate Send Swap {id} claim: {e}");
                     anyhow!("Could not post claim details. Err: {e:?}")
@@ -130,7 +161,7 @@ impl SendSwapHandler {
             }
 
             // Boltz announced they successfully broadcast the (cooperative or non-cooperative) claim tx
-            Ok(SubSwapStates::TransactionClaimed) => {
+            SubSwapStates::TransactionClaimed => {
                 debug!("Send Swap {id} has been claimed");
 
                 match swap.preimage {
@@ -159,11 +190,9 @@ impl SendSwapHandler {
             // 2. The swap has expired (>24h)
             // 3. Lockup failed (we sent too little funds)
             // We initiate a cooperative refund, and then fallback to a regular one
-            Ok(
-                SubSwapStates::TransactionLockupFailed
-                | SubSwapStates::InvoiceFailedToPay
-                | SubSwapStates::SwapExpired,
-            ) => {
+            SubSwapStates::TransactionLockupFailed
+            | SubSwapStates::InvoiceFailedToPay
+            | SubSwapStates::SwapExpired => {
                 match swap.lockup_tx_id {
                     Some(_) => match swap.refund_tx_id {
                         Some(refund_tx_id) => warn!(
@@ -202,14 +231,10 @@ impl SendSwapHandler {
                 Ok(())
             }
 
-            Ok(_) => {
-                debug!("Unhandled state for Send Swap {id}: {swap_state}");
+            _ => {
+                debug!("Unhandled state for Send Swap {id}: {swap_state:?}");
                 Ok(())
             }
-
-            _ => Err(anyhow!(
-                "Invalid SubSwapState for Send Swap {id}: {swap_state}"
-            )),
         }
     }
 
