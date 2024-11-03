@@ -178,12 +178,12 @@ impl LiquidSdk {
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let syncer_client = Box::new(BreezSyncerClient::new());
-        let sync_service = Arc::new(SyncService::new(
+        let sync_service = SyncService::new(
             config.sync_service_url.clone(),
             persister.clone(),
             signer.clone(),
             syncer_client,
-        ));
+        );
 
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),
@@ -278,15 +278,7 @@ impl LiquidSdk {
             }
         });
 
-        let sync_service = self.sync_service.clone();
-        if let Err(err) = sync_service
-            .clone()
-            .connect()
-            .and_then(|_| sync_service.listen())
-            .await
-        {
-            warn!("Could not start background real-time sync stream: {err:?}");
-        };
+        self.sync_service.clone().connect().await?;
 
         let reconnect_handler = Box::new(SwapperReconnectHandler::new(
             self.persister.clone(),

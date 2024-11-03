@@ -61,12 +61,12 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     let onchain_wallet = Arc::new(MockWallet::new());
 
     let syncer_client = Box::new(MockSyncerClient::new());
-    let sync_service = Arc::new(SyncService::new(
+    let sync_service = SyncService::new(
         "".to_string(),
         persister.clone(),
         signer.clone(),
         syncer_client,
-    ));
+    );
 
     let send_swap_handler = SendSwapHandler::new(
         config.clone(),

@@ -26,12 +26,12 @@ pub(crate) fn new_send_swap_handler(persister: Arc<Persister>) -> Result<SendSwa
 
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
     let syncer_client = Box::new(MockSyncerClient::new());
-    let sync_service = Arc::new(SyncService::new(
+    let sync_service = SyncService::new(
         "".to_string(),
         persister.clone(),
         signer.clone(),
         syncer_client,
-    ));
+    );
 
     Ok(SendSwapHandler::new(
         config,

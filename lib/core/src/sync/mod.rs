@@ -37,21 +37,23 @@ impl SyncService {
         persister: Arc<Persister>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
-    ) -> Self {
-        Self {
+    ) -> Arc<Self> {
+        Arc::new(Self {
             connect_url,
             persister,
             signer,
             client,
             sent_counter: Default::default(),
-        }
+        })
     }
 
-    /// Connects to the gRPC endpoint specified in [SyncService::connect_url]
+    /// Connects to the gRPC endpoint specified in [SyncService::connect_url] and starts listening
+    /// for changes
     /// Additionally, this method pulls the latest changes from the remote and applies them
-    pub(crate) async fn connect(&self) -> Result<()> {
+    pub(crate) async fn connect(self: Arc<Self>) -> Result<()> {
         self.client.connect(self.connect_url.clone()).await?;
         self.sync_with_tip().await?;
+        self.listen().await?;
         Ok(())
     }
 
@@ -59,7 +61,7 @@ impl SyncService {
     /// This method ignores changes we broadcasted by referring to the `sent_counter` inner hashset
     /// Records which are received from an external instance are instantly applied to the local
     /// database. Errors are skipped.
-    pub(crate) async fn listen(self: Arc<Self>) -> Result<()> {
+    async fn listen(self: Arc<Self>) -> Result<()> {
         let request = TrackChangesRequest::new(utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
 
