@@ -87,7 +87,7 @@ impl SyncService {
     }
 
     /// Listens to updates for new changes.
-    /// This method ignores changes we broadcasted by referring to the `sent` hashset
+    /// This method ignores changes we broadcasted by referring to the `sent_counter` inner hashset
     /// Records which are received from an external instance are instantly applied to the local
     /// database. Errors are skipped.
     pub(crate) async fn listen(self: Arc<Self>) -> Result<()> {
@@ -160,7 +160,7 @@ impl SyncService {
     /// For each record, if its (schema_version)[Record::schema_version] is greater than the
     /// [CURRENT_SCHEMA_VERSION], the record will be persisted into the `pending_sync_records` and
     /// applied later.
-    /// Instead, if the schema_version is greater than the client's current version, it will try
+    /// Instead, if the schema_version is less or equal to the client's current version, it will try
     /// and apply the changes, skipping errors if any
     pub(crate) fn apply_changes(&self, records: &[Record]) -> Result<()> {
         let (updatable_records, failed_records) = self.collect_records(records);
