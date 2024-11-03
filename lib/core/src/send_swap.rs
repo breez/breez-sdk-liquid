@@ -17,7 +17,6 @@ use crate::chain::liquid::LiquidChainService;
 use crate::model::{Config, PaymentState::*, SendSwap};
 use crate::prelude::Swap;
 use crate::swapper::Swapper;
-use crate::sync::model::SyncData;
 use crate::sync::SyncService;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};

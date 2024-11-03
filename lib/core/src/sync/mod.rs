@@ -222,7 +222,7 @@ impl SyncService {
         let mut num_attempts = *sent_counter.get(&record_id).unwrap_or(&0);
         num_attempts += 1;
         sent_counter.insert(record_id.to_string(), num_attempts);
-        return num_attempts;
+        num_attempts
     }
 
     /// Syncs the given data outwards
