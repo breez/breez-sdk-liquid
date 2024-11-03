@@ -103,10 +103,63 @@ impl ChainSwapHandler {
             .persister
             .fetch_chain_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Chain Swap found for ID {id}"))?;
+        let swap_state = ChainSwapStates::from_str(&update.status).map_err(|_| {
+            anyhow!(
+                "Invalid ChainSwapState for Chain Swap {id}: {}",
+                update.status
+            )
+        })?;
+
+        // The following block deals with non-local (synced) outgoing chain swaps, which require
+        // some pre-processing steps before continuing with the flow
+        if !swap.sync_details.is_local {
+            match &swap_state {
+                // If the state is `Created`:
+                // 1. Outgoing case - we do not lockup twice
+                // 2. Incoming case - do nothing
+                ChainSwapStates::Created => {
+                    debug!(
+                        "Received state {swap_state:?} for non-local Chain swap {id}. Skipping..."
+                    );
+                    return Ok(());
+                }
+
+                // If the state is `TransactionMempool` or `TransactionConfirmed` we need to
+                // continue and update the `user_lockup_tx_id` field
+                ChainSwapStates::TransactionMempool | ChainSwapStates::TransactionConfirmed => {}
+
+                // If the state is `TransactionServerMempool`, we need to first try recovering the
+                // claim_tx_id to avoid broadcasting twice. If none is present, we continue below.
+                ChainSwapStates::TransactionServerMempool => {
+                    // TODO Add claim_tx_id recovery logic
+                }
+
+                // If the state is `TransactionServerConfirmed` we need to first try recovering the
+                // claim_tx_id to avoid broadcasting twice. If none is present, we continue below.
+                // By this point, we also need to ensure that `user_lockup_tx_id` is present. This
+                // will usually happen if the `TransactionMempool/TransactionConfirmed` states have
+                // been skipped.
+                ChainSwapStates::TransactionServerConfirmed => {
+                    // TODO Add claim_tx_id and user_lockup_tx_id recovery logic
+                }
+
+                // If the state is failed, we have to recover both user_lockup_tx_id and
+                // refund_tx_id, then continue with the flow below
+                ChainSwapStates::TransactionFailed
+                | ChainSwapStates::TransactionLockupFailed
+                | ChainSwapStates::TransactionRefunded
+                | ChainSwapStates::SwapExpired => {
+                    // TODO Add user_lockup_tx_id and refund_tx_id recovery logic
+                }
+
+                // For everything else, simply show the debug message
+                _ => {}
+            }
+        }
 
         match swap.direction {
-            Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
-            Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
+            Direction::Incoming => self.on_new_incoming_status(&swap, update, swap_state).await,
+            Direction::Outgoing => self.on_new_outgoing_status(&swap, update, swap_state).await,
         }
     }
 
@@ -232,16 +285,14 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn on_new_incoming_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
+    async fn on_new_incoming_status(
+        &self,
+        swap: &ChainSwap,
+        update: &boltz::Update,
+        swap_state: ChainSwapStates,
+    ) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
-        let swap_state = ChainSwapStates::from_str(status)
-            .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
-
-        if !swap.sync_details.is_local {
-            // TODO: Execute secondary flow
-            return Ok(());
-        }
 
         info!("Handling incoming Chain Swap transition to {status:?} for swap {id}");
         // See https://docs.boltz.exchange/v/api/lifecycle#chain-swaps
@@ -385,16 +436,14 @@ impl ChainSwapHandler {
         }
     }
 
-    async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
+    async fn on_new_outgoing_status(
+        &self,
+        swap: &ChainSwap,
+        update: &boltz::Update,
+        swap_state: ChainSwapStates,
+    ) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
-        let swap_state = ChainSwapStates::from_str(status)
-            .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
-
-        if !swap.sync_details.is_local {
-            // TODO: Execute secondary flow
-            return Ok(());
-        }
 
         info!("Handling outgoing Chain Swap transition to {status:?} for swap {id}");
         // See https://docs.boltz.exchange/v/api/lifecycle#chain-swaps
