@@ -278,7 +278,10 @@ impl LiquidSdk {
             }
         });
 
-        self.sync_service.clone().connect().await?;
+        self.sync_service
+            .clone()
+            .connect(self.shutdown_receiver.clone())
+            .await?;
 
         let reconnect_handler = Box::new(SwapperReconnectHandler::new(
             self.persister.clone(),

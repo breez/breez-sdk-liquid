@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
 use log::{debug, warn};
 use std::collections::HashMap;
-use tokio::sync::Mutex;
+use tokio::sync::{watch, Mutex};
 use tokio_stream::StreamExt as _;
 
 use self::client::SyncerClient;
@@ -50,10 +50,13 @@ impl SyncService {
     /// Connects to the gRPC endpoint specified in [SyncService::connect_url] and starts listening
     /// for changes
     /// Additionally, this method pulls the latest changes from the remote and applies them
-    pub(crate) async fn connect(self: Arc<Self>) -> Result<()> {
+    pub(crate) async fn connect(
+        self: Arc<Self>,
+        shutdown_receiver: watch::Receiver<()>,
+    ) -> Result<()> {
         self.client.connect(self.connect_url.clone()).await?;
         self.sync_with_tip().await?;
-        self.listen().await?;
+        self.listen(shutdown_receiver).await?;
         Ok(())
     }
 
@@ -61,7 +64,7 @@ impl SyncService {
     /// This method ignores changes we broadcasted by referring to the `sent_counter` inner hashset
     /// Records which are received from an external instance are instantly applied to the local
     /// database. Errors are skipped.
-    async fn listen(self: Arc<Self>) -> Result<()> {
+    async fn listen(self: Arc<Self>, mut shutdown_receiver: watch::Receiver<()>) -> Result<()> {
         let request = TrackChangesRequest::new(utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign ListenChangesRequest: {err:?}"))?;
 
@@ -73,30 +76,42 @@ impl SyncService {
             };
 
             debug!("Started listening to changes");
-            while let Some(message) = stream.next().await {
-                match message {
-                    Ok(record) => {
-                        let mut sent = cloned.sent_counter.lock().await;
-                        if sent.get(&record.id).is_some() {
-                            sent.remove(&record.id);
-                            continue;
+
+            loop {
+                tokio::select! {
+                    Some(message) = stream.next() => {
+                        match message {
+                            Ok(record) => {
+                                let mut sent = cloned.sent_counter.lock().await;
+                                if sent.get(&record.id).is_some() {
+                                    sent.remove(&record.id);
+                                    continue;
+                                }
+
+                                let record_id = record.id.clone();
+                                let record_revision = record.revision;
+                                let record_schema_version = record.schema_version;
+
+                                debug!(
+                                    "Received new record - record_id {record_id} record_revision {record_revision} record_schema_version {record_schema_version}"
+                                );
+
+                                if let Err(err) = cloned.apply_changes(&[record]) {
+                                    warn!("Could not apply incoming changes: {err:?}")
+                                };
+
+                                debug!("Successfully applied incoming changes for record {record_id}",)
+                            }
+                            Err(err) => warn!("An error occured while listening for records: {err:?}"),
                         }
-
-                        let record_id = record.id.clone();
-                        let record_revision = record.revision;
-                        let record_schema_version = record.schema_version;
-
-                        debug!(
-                            "Received new record - record_id {record_id} record_revision {record_revision} record_schema_version {record_schema_version}"
-                        );
-
-                        if let Err(err) = cloned.apply_changes(&[record]) {
-                            warn!("Could not apply incoming changes: {err:?}")
-                        };
-
-                        debug!("Successfully applied incoming changes for record {record_id}",)
                     }
-                    Err(err) => warn!("An error occured while listening for records: {err:?}"),
+                    _ = shutdown_receiver.changed() => {
+                        debug!("Received shutdown signal, exiting sync loop");
+                        if let Err(err) = cloned.client.disconnect().await {
+                            debug!("Could not disconnect sync client: {err:?}");
+                        }
+                        return;
+                    }
                 }
             }
         });
@@ -301,11 +316,5 @@ impl SyncService {
         }
 
         Ok(())
-    }
-
-    /// Disconnects from the gRPC endpoint
-    /// TODO: Add shutdown signal for stream
-    pub(crate) async fn disconnect(&self) -> Result<()> {
-        self.client.disconnect().await
     }
 }
