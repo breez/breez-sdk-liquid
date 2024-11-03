@@ -61,33 +61,55 @@ impl ReceiveSwapHandler {
     /// Handles status updates from Boltz for Receive swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap_state = &update.status;
+        let swap_state = RevSwapStates::from_str(&update.status).map_err(|_| {
+            anyhow!(
+                "Invalid RevSwapState for Receive Swap {id}: {}",
+                update.status
+            )
+        })?;
         let receive_swap = self
             .persister
             .fetch_receive_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
 
+        // The following block deals with non-local (synced) receive swaps, which require some
+        // pre-processing steps before continuing with the flow
         if !receive_swap.sync_details.is_local {
-            // TODO: Execute secondary flow
+            match swap_state {
+                // If the state is failed, we simply mark the payment as Failed like below
+                RevSwapStates::SwapExpired
+                | RevSwapStates::InvoiceExpired
+                | RevSwapStates::TransactionFailed
+                | RevSwapStates::TransactionRefunded => {}
+
+                // If the state is `TransactionMempool` or `TransactionConfirmed`, we need to first
+                // try recovering the claim_tx_id. If no claim_tx_id is present, we continue below.
+                // Note: The lockup_tx_id (from Boltz's side) is already verified below.
+                RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {
+                    // TODO Add claim_tx_id recovery flow
+                }
+
+                // For everything else, simply show the debug message below
+                _ => {}
+            }
             return Ok(());
         }
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
-        match RevSwapStates::from_str(swap_state) {
-            Ok(
-                RevSwapStates::SwapExpired
-                | RevSwapStates::InvoiceExpired
-                | RevSwapStates::TransactionFailed
-                | RevSwapStates::TransactionRefunded,
-            ) => {
+        match swap_state {
+            RevSwapStates::SwapExpired
+            | RevSwapStates::InvoiceExpired
+            | RevSwapStates::TransactionFailed
+            | RevSwapStates::TransactionRefunded => {
                 error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
                 self.update_swap_info(id, Failed, None, None).await?;
                 Ok(())
             }
+
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // Execute 0-conf preconditions check
-            Ok(RevSwapStates::TransactionMempool) => {
+            RevSwapStates::TransactionMempool => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -163,7 +185,8 @@ impl ReceiveSwapHandler {
 
                 Ok(())
             }
-            Ok(RevSwapStates::TransactionConfirmed) => {
+
+            RevSwapStates::TransactionConfirmed => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -202,14 +225,10 @@ impl ReceiveSwapHandler {
                 Ok(())
             }
 
-            Ok(_) => {
-                debug!("Unhandled state for Receive Swap {id}: {swap_state}");
+            _ => {
+                debug!("Unhandled state for Receive Swap {id}: {swap_state:?}");
                 Ok(())
             }
-
-            _ => Err(anyhow!(
-                "Invalid RevSwapState for Receive Swap {id}: {swap_state}"
-            )),
         }
     }
 
