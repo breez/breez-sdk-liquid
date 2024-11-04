@@ -186,6 +186,12 @@ impl From<anyhow::Error> for PaymentError {
     }
 }
 
+impl From<rusqlite::Error> for PaymentError {
+    fn from(_: rusqlite::Error) -> Self {
+        Self::PersistError
+    }
+}
+
 impl From<SdkError> for PaymentError {
     fn from(err: SdkError) -> Self {
         Self::Generic {

@@ -259,6 +259,49 @@ impl Persister {
                 ":id": swap_id,
                 ":accept_zero_conf": accept_zero_conf,
             },
+        )?;
+        Ok(())
+    }
+
+    // Only set the Chain Swap claim_tx_id if not set, otherwise return an error
+    pub(crate) fn set_chain_swap_claim_tx_id(
+        &self,
+        swap_id: &str,
+        claim_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        let row_count = con
+            .execute(
+                "UPDATE chain_swaps 
+            SET claim_tx_id = :claim_tx_id
+            WHERE id = :id AND claim_tx_id IS NULL",
+                named_params! {
+                            ":id": swap_id,
+                            ":claim_tx_id": claim_tx_id,
+                },
+            )
+            .map_err(|_| PaymentError::PersistError)?;
+        match row_count {
+            1 => Ok(()),
+            _ => Err(PaymentError::AlreadyClaimed),
+        }
+    }
+
+    // Only unset the Chain Swap claim_tx_id if set with the same tx id
+    pub(crate) fn unset_chain_swap_claim_tx_id(
+        &self,
+        swap_id: &str,
+        claim_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE chain_swaps 
+            SET claim_tx_id = NULL
+            WHERE id = :id AND claim_tx_id = :claim_tx_id",
+            named_params! {
+                        ":id": swap_id,
+                        ":claim_tx_id": claim_tx_id,
+            },
         )
         .map_err(|_| PaymentError::PersistError)?;
         Ok(())
@@ -313,8 +356,7 @@ impl Persister {
                 ":refund_tx_id": refund_tx_id,
                 ":state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }

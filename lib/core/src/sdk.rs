@@ -149,14 +149,16 @@ impl LiquidSdk {
         let fingerprint_hex: String =
             Xpub::decode(signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
         let working_dir = config.get_wallet_working_dir(fingerprint_hex)?;
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
-            signer.clone(),
-            config.clone(),
-            &working_dir,
-        )?);
 
         let persister = Arc::new(Persister::new(&working_dir, config.network)?);
         persister.init()?;
+
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
+            config.clone(),
+            &working_dir,
+            persister.clone(),
+            signer.clone(),
+        )?);
 
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
@@ -494,11 +496,6 @@ impl LiquidSdk {
     /// Get the wallet info, calculating the current pending and confirmed balances.
     pub async fn get_info(&self) -> Result<GetInfoResponse> {
         self.ensure_is_started().await?;
-        debug!(
-            "next_unused_address: {}",
-            self.onchain_wallet.next_unused_address().await?
-        );
-
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
         let mut confirmed_sent_sat = 0;
@@ -1008,14 +1005,20 @@ impl LiquidSdk {
 
         let swap = match self.persister.fetch_send_swap_by_invoice(invoice)? {
             Some(swap) => match swap.state {
+                Created => swap,
+                TimedOut => {
+                    self.send_swap_handler
+                        .update_swap_info(&swap.id, PaymentState::Created, None, None, None)
+                        .await?;
+                    swap
+                }
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                RefundPending | Failed => {
+                RefundPending | Refundable | Failed => {
                     return Err(PaymentError::invalid_invoice(
                         "Payment has already failed. Please try with another invoice",
                     ))
                 }
-                _ => swap,
             },
             None => {
                 let keypair = utils::generate_keypair();
@@ -1074,8 +1077,12 @@ impl LiquidSdk {
         };
         self.status_stream.track_swap_id(&swap.id)?;
 
-        let accept_zero_conf = swap.get_boltz_create_response()?.accept_zero_conf;
-        self.wait_for_payment(Swap::Send(swap), accept_zero_conf)
+        let create_response = swap.get_boltz_create_response()?;
+        self.send_swap_handler
+            .try_lockup(&swap, &create_response)
+            .await?;
+
+        self.wait_for_payment(Swap::Send(swap), create_response.accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }
@@ -1313,17 +1320,17 @@ impl LiquidSdk {
             webhook,
         })?;
 
-        let swap_id = &create_response.id;
-        let create_response_json = ChainSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
+        let create_response_json =
+            ChainSwap::from_boltz_struct_to_json(&create_response, &create_response.id)?;
+        let swap_id = create_response.id;
 
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
-        let claim_address = req.address.clone();
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Outgoing,
-            claim_address,
+            claim_address: Some(req.address.clone()),
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
@@ -1343,7 +1350,7 @@ impl LiquidSdk {
             state: PaymentState::Created,
         };
         self.persister.insert_chain_swap(&swap)?;
-        self.status_stream.track_swap_id(&swap.id)?;
+        self.status_stream.track_swap_id(&swap_id)?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
             .await
@@ -1616,6 +1623,12 @@ impl LiquidSdk {
         };
         let create_response = self.swapper.create_receive_swap(v2_req)?;
 
+        // Reserve this address until the timeout block height
+        self.persister.insert_or_update_reserved_address(
+            &mrh_addr_str,
+            create_response.timeout_block_height,
+        )?;
+
         // Check if correct MRH was added to the invoice by Boltz
         let (bip21_lbtc_address, _bip21_amount_btc) = self
             .swapper
@@ -1666,6 +1679,10 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
+                lockup_tx_id: None,
+                mrh_address: mrh_addr_str,
+                mrh_script_pubkey: mrh_addr.to_unconfidential().script_pubkey().to_hex(),
+                mrh_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
             })
@@ -1740,12 +1757,11 @@ impl LiquidSdk {
         let receiver_amount_sat = user_lockup_amount_sat
             .map(|user_lockup_amount_sat| user_lockup_amount_sat - fees_sat)
             .unwrap_or(0);
-        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Incoming,
-            claim_address,
+            claim_address: None,
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
@@ -1881,14 +1897,20 @@ impl LiquidSdk {
                 )
             })
             .await?;
+
         Ok(RefundResponse { refund_tx_id })
     }
 
-    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] within
-    /// the monitoring period to check if there are any confirmed funds available to refund.
+    /// Rescans all expired chain swaps created from calling [LiquidSdk::receive_onchain] to check
+    /// if there are any confirmed funds available to refund.
+    ///
+    /// Since it bypasses the monitoring period, this should be called rarely or when the caller
+    /// expects there is a very old refundable chain swap. Otherwise, for relatively recent swaps
+    /// (within last [CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS] blocks = ~30 days), calling this
+    /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
         self.chain_swap_handler
-            .rescan_incoming_chain_swaps()
+            .rescan_incoming_chain_swaps(true)
             .await?;
         Ok(())
     }
@@ -1983,6 +2005,9 @@ impl LiquidSdk {
 
         let pending_receive_swaps_by_claim_tx_id =
             self.persister.list_pending_receive_swaps_by_claim_tx_id()?;
+        let ongoing_receive_swaps_by_mrh_script_pubkey = self
+            .persister
+            .list_ongoing_receive_swaps_by_mrh_script_pubkey()?;
         let pending_send_swaps_by_refund_tx_id =
             self.persister.list_pending_send_swaps_by_refund_tx_id()?;
         let pending_chain_swaps_by_claim_tx_id =
@@ -2002,6 +2027,12 @@ impl LiquidSdk {
             let tx_id = tx.txid.to_string();
             let is_tx_confirmed = tx.height.is_some();
             let amount_sat = tx.balance.values().sum::<i64>();
+            let maybe_script_pubkey = tx
+                .outputs
+                .iter()
+                .find(|output| output.is_some())
+                .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
+            let mrh_script_pubkey = maybe_script_pubkey.clone().unwrap_or_default();
 
             self.persister.insert_or_update_payment(
                 PaymentTxData {
@@ -2015,19 +2046,36 @@ impl LiquidSdk {
                     },
                     is_confirmed: is_tx_confirmed,
                 },
-                match tx.outputs.iter().find(|output| output.is_some()) {
-                    Some(Some(output)) => Some(output.script_pubkey.to_hex()),
-                    _ => None,
-                },
+                maybe_script_pubkey,
                 None,
             )?;
 
             if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.receive_swap_handler
-                        .update_swap_info(&swap.id, Complete, None, None)
+                        .update_swap_info(&swap.id, Complete, None, None, None, None)
                         .await?;
                 }
+            } else if let Some(swap) =
+                ongoing_receive_swaps_by_mrh_script_pubkey.get(&mrh_script_pubkey)
+            {
+                // Update the swap status according to the MRH tx confirmation state
+                let to_state = match is_tx_confirmed {
+                    true => Complete,
+                    false => Pending,
+                };
+                self.receive_swap_handler
+                    .update_swap_info(
+                        &swap.id,
+                        to_state,
+                        None,
+                        None,
+                        Some(&tx_id),
+                        Some(amount_sat.unsigned_abs()),
+                    )
+                    .await?;
+                // Remove the used MRH address from the reserved addresses
+                self.persister.delete_reserved_address(&swap.mrh_address)?;
             } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
                 if is_tx_confirmed {
                     self.send_swap_handler
@@ -2047,8 +2095,7 @@ impl LiquidSdk {
                         .await?;
                 }
             } else {
-                // Payments that are not directly associated with a swap (e.g. direct onchain payments using MRH)
-
+                // Payments that are not directly associated with a swap
                 match payments_before_sync.get(&tx_id) {
                     None => {
                         // A completely new payment brought in by this sync, in mempool or confirmed
@@ -2683,20 +2730,6 @@ mod tests {
                 );
                 assert_eq!(persisted_swap.state, PaymentState::Failed);
             }
-
-            // Verify that `InvoiceSet` correctly sets the state to `Pending` and
-            // assigns the `lockup_tx_id` to the payment
-            let persisted_swap = trigger_swap_update!(
-                "send",
-                NewSwapArgs::default(),
-                persister,
-                status_stream,
-                SubSwapStates::InvoiceSet,
-                None,
-                None
-            );
-            assert_eq!(persisted_swap.state, PaymentState::Pending);
-            assert!(persisted_swap.lockup_tx_id.is_some());
 
             // Verify that `TransactionClaimPending` correctly sets the state to `Complete`
             // and stores the preimage
