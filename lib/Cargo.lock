@@ -3180,7 +3180,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.5.2"
-source = "git+https://github.com/breez/breez-sdk?rev=387e37f8ce48ee841762b945137e2c6b4b4b5cfa#387e37f8ce48ee841762b945137e2c6b4b4b5cfa"
+source = "git+https://github.com/breez/breez-sdk?rev=441a9fd50c32098b2887e960c8a4bcc5956da1af#441a9fd50c32098b2887e960c8a4bcc5956da1af"
 dependencies = [
  "aes 0.8.4",
  "anyhow",
@@ -3201,6 +3201,7 @@ dependencies = [
  "serde_json",
  "strum_macros",
  "thiserror",
+ "tokio",
  "tonic",
  "tonic-build",
  "url",
