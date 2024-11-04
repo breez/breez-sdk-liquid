@@ -8,6 +8,7 @@ use boltz_client::{
         SubmarineClaimTxResponse, SubmarinePair,
     },
     network::Chain,
+    Amount,
 };
 use tokio::sync::{broadcast, watch};
 
@@ -39,6 +40,19 @@ pub trait Swapper: Send + Sync {
 
     /// Get the current rate, limits and fees for both swap directions
     fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError>;
+
+    /// Get the quote for a Zero-Amount Receive Chain Swap.
+    ///
+    /// If the user locked-up funds in the valid range this will return that amount. In all other
+    /// cases, this will return an error.
+    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError>;
+
+    /// Accept a specific quote for a Zero-Amount Receive Chain Swap
+    fn accept_zero_amount_chain_swap_quote(
+        &self,
+        swap_id: &str,
+        server_lockup_sat: u64,
+    ) -> Result<(), PaymentError>;
 
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;

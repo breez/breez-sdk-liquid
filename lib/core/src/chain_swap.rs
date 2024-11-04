@@ -367,6 +367,28 @@ impl ChainSwapHandler {
             | ChainSwapStates::TransactionLockupFailed
             | ChainSwapStates::TransactionRefunded
             | ChainSwapStates::SwapExpired => {
+                // Zero-amount Receive Chain Swaps also get to TransactionLockupFailed when user locks up funds
+                let is_zero_amount = swap.payer_amount_sat == 0;
+                if matches!(swap_state, ChainSwapStates::TransactionLockupFailed) && is_zero_amount
+                {
+                    if let Err(e) = self
+                        .swapper
+                        .get_zero_amount_chain_swap_quote(&swap.id)
+                        .map(|quote| quote.to_sat())
+                        .and_then(|quote| {
+                            info!("Got quote of {quote} sat for swap {}", &swap.id);
+
+                            self.swapper
+                                .accept_zero_amount_chain_swap_quote(&swap.id, quote)
+                        })
+                    {
+                        warn!("Failed to accept the quote for swap {}: {e:?}", &swap.id);
+                    }
+
+                    // We successfully accepted the quote, the swap should continue as normal
+                    return Ok(()); // Break from TxLockupFailed branch
+                }
+
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
@@ -384,7 +406,7 @@ impl ChainSwapHandler {
                         }
                     }
                     Some(refund_tx_id) => warn!(
-                        "Refund tx for Chain Swap {id} was already broadcast: txid {refund_tx_id}"
+                        "Refund for Chain Swap {id} was already broadcast: txid {refund_tx_id}"
                     ),
                 };
                 Ok(())
