@@ -24,6 +24,11 @@ pub(crate) struct SyncDetails {
     pub(crate) record_id: Option<String>,
 }
 
+pub(crate) trait Merge {
+    fn merge(&mut self, other: &Self, updated_fields: &[&'static str])
+        -> Result<(), anyhow::Error>;
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
@@ -62,6 +67,27 @@ impl From<ChainSwap> for ChainSyncData {
             created_at: value.created_at,
             description: value.description,
         }
+    }
+}
+
+impl Merge for ChainSyncData {
+    fn merge(
+        &mut self,
+        other: &Self,
+        updated_fields: &[&'static str],
+    ) -> Result<(), anyhow::Error> {
+        for field in updated_fields {
+            match *field {
+                "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
+                "preimage" => self.preimage.clone_from(&other.preimage),
+                "description" => self.description.clone_from(&other.description),
+                _ => {
+                    return Err(anyhow::anyhow!("Unsupported merge field"));
+                }
+            };
+        }
+
+        Ok(())
     }
 }
 
@@ -128,6 +154,27 @@ impl From<SendSwap> for SendSyncData {
     }
 }
 
+impl Merge for SendSyncData {
+    fn merge(
+        &mut self,
+        other: &Self,
+        updated_fields: &[&'static str],
+    ) -> Result<(), anyhow::Error> {
+        for field in updated_fields {
+            match *field {
+                "payment_hash" => self.payment_hash.clone_from(&other.payment_hash),
+                "preimage" => self.preimage.clone_from(&other.preimage),
+                "description" => self.description.clone_from(&other.description),
+                _ => {
+                    return Err(anyhow::anyhow!("Unsupported merge field"));
+                }
+            };
+        }
+
+        Ok(())
+    }
+}
+
 impl SendSwap {
     pub(crate) fn from_sync_data(val: SendSyncData, revision: i64, record_id: String) -> Self {
         SendSwap {
@@ -186,6 +233,27 @@ impl From<ReceiveSwap> for ReceiveSyncData {
     }
 }
 
+impl Merge for ReceiveSyncData {
+    fn merge(
+        &mut self,
+        other: &Self,
+        updated_fields: &[&'static str],
+    ) -> Result<(), anyhow::Error> {
+        for field in updated_fields {
+            match *field {
+                "payment_hash" => self.payment_hash.clone_from(&other.payment_hash),
+                "preimage" => self.preimage.clone_from(&other.preimage),
+                "description" => self.description.clone_from(&other.description),
+                _ => {
+                    return Err(anyhow::anyhow!("Unsupported merge field"));
+                }
+            };
+        }
+
+        Ok(())
+    }
+}
+
 impl ReceiveSwap {
     pub(crate) fn from_sync_data(val: ReceiveSyncData, revision: i64, record_id: String) -> Self {
         ReceiveSwap {
@@ -230,6 +298,31 @@ impl SyncData {
             SyncData::Send(send_sync_data) => send_sync_data.swap_id.clone(),
             SyncData::Chain(chain_sync_data) => chain_sync_data.swap_id.clone(),
         }
+    }
+}
+
+impl Merge for SyncData {
+    fn merge(
+        &mut self,
+        other: &Self,
+        updated_fields: &[&'static str],
+    ) -> Result<(), anyhow::Error> {
+        match (self, other) {
+            (SyncData::Receive(receive_data), SyncData::Receive(other)) => {
+                receive_data.merge(other, updated_fields)?
+            }
+            (SyncData::Send(send_data), SyncData::Send(other)) => {
+                send_data.merge(other, updated_fields)?
+            }
+            (SyncData::Chain(chain_data), SyncData::Chain(other)) => {
+                chain_data.merge(other, updated_fields)?
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Cannot merge sync data: type mismatch"));
+            }
+        };
+
+        Ok(())
     }
 }
 
@@ -335,4 +428,24 @@ fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, Sign
     signer
         .sign_ecdsa_recoverable(digest.into())
         .map(|bytes| zbase32::encode_full_bytes(&bytes))
+}
+
+pub(crate) struct OutboundChange {
+    pub(crate) data: SyncData,
+    pub(crate) reattempt_counter: u8,
+    pub(crate) updated_fields: Vec<&'static str>,
+}
+
+impl OutboundChange {
+    pub(crate) fn new(data: SyncData, updated_fields: Vec<&'static str>) -> Self {
+        Self {
+            data,
+            updated_fields,
+            reattempt_counter: 1,
+        }
+    }
+
+    pub(crate) fn increment_counter(&mut self) {
+        self.reattempt_counter += 1;
+    }
 }

@@ -1092,7 +1092,7 @@ impl LiquidSdk {
                 };
                 self.persister.insert_send_swap(&swap)?;
                 self.sync_service
-                    .set_record(SyncData::Send(swap.clone().into()), false)
+                    .set_record(SyncData::Send(swap.clone().into()), None)
                     .await?;
                 swap
             }
@@ -1375,7 +1375,7 @@ impl LiquidSdk {
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
         self.sync_service
-            .set_record(SyncData::Chain(swap.clone().into()), false)
+            .set_record(SyncData::Chain(swap.clone().into()), None)
             .await?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
@@ -1707,7 +1707,7 @@ impl LiquidSdk {
         self.status_stream.track_swap_id(&swap_id)?;
 
         self.sync_service
-            .set_record(SyncData::Receive(receive_swap.into()), false)
+            .set_record(SyncData::Receive(receive_swap.into()), None)
             .await?;
 
         Ok(ReceivePaymentResponse {
@@ -1802,7 +1802,7 @@ impl LiquidSdk {
         self.persister.insert_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
         self.sync_service
-            .set_record(SyncData::Chain(swap.clone().into()), false)
+            .set_record(SyncData::Chain(swap.clone().into()), None)
             .await?;
         Ok(swap)
     }

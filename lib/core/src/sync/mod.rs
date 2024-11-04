@@ -12,11 +12,11 @@ use tokio_stream::StreamExt as _;
 
 use self::client::SyncerClient;
 use self::model::sync::TrackChangesRequest;
-use self::model::SyncDetails;
 use self::model::{
     sync::{ListChangesRequest, Record, SetRecordReply, SetRecordRequest, SetRecordStatus},
     DecryptedRecord, SyncData,
 };
+use self::model::{Merge, OutboundChange, SyncDetails};
 use crate::prelude::{ChainSwap, ReceiveSwap, SendSwap};
 use crate::{model::Signer, persist::Persister, utils};
 
@@ -28,7 +28,7 @@ pub(crate) struct SyncService {
     persister: Arc<Persister>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
-    sent_counter: Mutex<HashMap<String, u8>>,
+    outbound_changes: Mutex<HashMap<String, OutboundChange>>,
 }
 
 impl SyncService {
@@ -43,7 +43,7 @@ impl SyncService {
             persister,
             signer,
             client,
-            sent_counter: Default::default(),
+            outbound_changes: Default::default(),
         })
     }
 
@@ -82,7 +82,7 @@ impl SyncService {
                     Some(message) = stream.next() => {
                         match message {
                             Ok(record) => {
-                                let mut sent = cloned.sent_counter.lock().await;
+                                let mut sent = cloned.outbound_changes.lock().await;
                                 if sent.get(&record.id).is_some() {
                                     sent.remove(&record.id);
                                     continue;
@@ -96,7 +96,7 @@ impl SyncService {
                                     "Received new record - record_id {record_id} record_revision {record_revision} record_schema_version {record_schema_version}"
                                 );
 
-                                if let Err(err) = cloned.apply_changes(&[record]) {
+                                if let Err(err) = cloned.apply_changes(&[record]).await {
                                     warn!("Could not apply incoming changes: {err:?}")
                                 };
 
@@ -119,11 +119,12 @@ impl SyncService {
         Ok(())
     }
 
-    fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
+    async fn apply_record(&self, record: DecryptedRecord) -> Result<()> {
         debug!(
             "Applying record - id {} revision {}",
             &record.id, record.revision
         );
+
         match record.data {
             SyncData::Chain(chain_data) => self.persister.insert_chain_swap(
                 &ChainSwap::from_sync_data(chain_data, record.revision, record.id),
@@ -179,7 +180,7 @@ impl SyncService {
     /// applied later.
     /// Instead, if the schema_version is less or equal to the client's current version, it will try
     /// and apply the changes, skipping errors if any
-    pub(crate) fn apply_changes(&self, records: &[Record]) -> Result<()> {
+    pub(crate) async fn apply_changes(&self, records: &[Record]) -> Result<()> {
         let (updatable_records, failed_records) = self.collect_records(records);
 
         // We persist records which we cannot update (> CURRENT_SCHEMA_VERSION)
@@ -187,9 +188,23 @@ impl SyncService {
             self.persister.insert_pending_record(record)?;
         }
 
+        let changes = self.outbound_changes.lock().await;
+
         // We apply records which we can update (<= CURRENT_SCHEMA_VERSION)
-        for record in updatable_records {
-            if let Err(err) = self.apply_record(record) {
+        // Additionally, if there is a conflict with an outbound record, it will be resolved
+        // before persisting the update
+        for mut record in updatable_records {
+            if let Some(outgoing_record) = changes.get(&record.id) {
+                if let Err(err) = record
+                    .data
+                    .merge(&outgoing_record.data, &outgoing_record.updated_fields)
+                {
+                    warn!("Could not merge inbound record with outbound changes: {err:?}");
+                    continue;
+                }
+            }
+
+            if let Err(err) = self.apply_record(record).await {
                 warn!("Could not apply record changes: {err:?}");
             }
         }
@@ -212,37 +227,48 @@ impl SyncService {
     }
 
     async fn sync_with_tip(&self) -> Result<()> {
-        self.get_latest_changes()
-            .await
-            .and_then(|records| self.apply_changes(&records))
-    }
-
-    async fn increment_sent_counter(&self, record_id: String) -> u8 {
-        let mut sent_counter = self.sent_counter.lock().await;
-        let mut num_attempts = *sent_counter.get(&record_id).unwrap_or(&0);
-        num_attempts += 1;
-        sent_counter.insert(record_id.to_string(), num_attempts);
-        num_attempts
+        let records = self.get_latest_changes().await?;
+        self.apply_changes(&records).await
     }
 
     /// Syncs the given data outwards
-    /// If `is_update` is specified, the method will look into the local `sync_details` cache and
-    /// get the correct revision number and record id
-    pub(crate) async fn set_record(&self, data: SyncData, is_update: bool) -> Result<()> {
+    /// If `updated_fields` is specified, the method will look into the local `sync_details` cache and
+    /// get the correct revision number and record id, as well as calculate the number of
+    /// set_record attempts which have been executed so far
+    pub(crate) async fn set_record(
+        &self,
+        data: SyncData,
+        updated_fields: Option<&[&'static str]>,
+    ) -> Result<()> {
         let data_identifier = data.id();
-        let (record_id, revision) = match is_update {
-            true => {
+        let (record_id, revision, attempts) = match updated_fields {
+            Some(fields) => {
                 let existing_sync_details = self.persister.get_sync_details(&data_identifier)?;
-                (
-                    existing_sync_details.record_id.expect(
-                        "Expecting valid record_id when calling `set_record` with `is_update` flag",
-                    ),
-                    existing_sync_details.revision.expect(
-                        "Expecting valid revision when calling `set_record` with `is_update` flag",
-                    ),
-                )
+
+                let record_id = existing_sync_details.record_id.ok_or(anyhow!(
+                    "Expecting valid record_id when calling `set_record` with updated fields",
+                ))?;
+                let revision = existing_sync_details.revision.ok_or(anyhow!(
+                    "Expecting valid revision when calling `set_record` with updated fields",
+                ))?;
+
+                let mut changes = self.outbound_changes.lock().await;
+                let attempts = match changes.get_mut(&record_id) {
+                    Some(change) => {
+                        change.increment_counter();
+                        change.reattempt_counter
+                    }
+                    None => {
+                        let change = OutboundChange::new(data.clone(), fields.into());
+                        let reattempt_counter = change.reattempt_counter;
+                        changes.insert(record_id.clone(), change);
+                        reattempt_counter
+                    }
+                };
+
+                (record_id, revision, Some(attempts))
             }
-            false => (uuid::Uuid::new_v4().to_string(), 0),
+            None => (uuid::Uuid::new_v4().to_string(), 0, None),
         };
         let record = Record::new(
             record_id.clone(),
@@ -251,9 +277,8 @@ impl SyncService {
             self.signer.clone(),
         )?;
 
-        debug!("Starting outward sync (set_record) for record {record_id} is_update {is_update}");
+        debug!("Starting outward sync (set_record) for record {record_id} updated_fields {updated_fields:?}");
 
-        let num_attempts = self.increment_sent_counter(record_id.clone()).await;
         let request = SetRecordRequest::new(record, utils::now(), self.signer.clone())
             .map_err(|err| anyhow!("Could not sign SetRecordRequest: {err:?}"))?;
 
@@ -263,17 +288,22 @@ impl SyncService {
                 new_revision,
             }) => {
                 if SetRecordStatus::try_from(status)? == SetRecordStatus::Conflict {
-                    if num_attempts > MAX_SET_RECORD_REATTEMPTS {
-                        return Err(anyhow!(
-                            "Could not set record: revision conflict and max reattempts reached."
-                        ));
+                    if let Some(attempts) = attempts {
+                        if attempts > MAX_SET_RECORD_REATTEMPTS {
+                            return Err(anyhow!(
+                                "Could not set record: revision conflict and max reattempts reached."
+                            ));
+                        }
+
+                        return Box::pin(
+                            self.sync_with_tip()
+                                .and_then(|_| self.set_record(data, updated_fields)),
+                        )
+                        .await;
                     }
 
-                    return Box::pin(
-                        self.sync_with_tip()
-                            .and_then(|_| self.set_record(data, is_update)),
-                    )
-                    .await;
+                    // Impossible scenario - we cannot get a conflict on a newly created record
+                    return Err(anyhow!("Could not set record: conflict detected by the server on newly created record."));
                 }
 
                 self.persister.insert_or_update_sync_details(
@@ -285,12 +315,12 @@ impl SyncService {
                     },
                 )?;
 
-                debug!("Successfully synced (set_record) id {record_id} is_update {is_update} revision {new_revision}");
+                debug!("Successfully synced (set_record) id {record_id} updated_fields {updated_fields:?} revision {new_revision}");
                 Ok(())
             }
             Err(err) => {
-                self.sent_counter.lock().await.remove(&record_id);
-                debug!("Could not sync record (set_record) id {record_id} is_update {is_update}: {err:?}");
+                self.outbound_changes.lock().await.remove(&record_id);
+                debug!("Could not sync record (set_record) id {record_id} updated_fields {updated_fields:?}: {err:?}");
                 Err(err)
             }
         }
@@ -299,7 +329,7 @@ impl SyncService {
     /// Cleans up the cached pending records, by trying to apply each one
     /// This method is especially useful once a client has upgraded, and is now able to
     /// successfully apply a record with a higher schema_version (see [SyncService::apply_changes])
-    pub(crate) fn cleanup(&self) -> Result<()> {
+    pub(crate) async fn cleanup(&self) -> Result<()> {
         let pending_records = self
             .persister
             .get_pending_records()
@@ -309,7 +339,7 @@ impl SyncService {
 
         for record in updatable_records {
             let record_id = record.id.clone();
-            if self.apply_record(record).is_err() {
+            if self.apply_record(record).await.is_err() {
                 continue;
             }
             self.persister.delete_pending_record(record_id)?;
