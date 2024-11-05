@@ -71,8 +71,7 @@ impl Persister {
                 ":from_state": from_state,
                 ":to_state": to_state,
             },
-        )
-        .map_err(|_| PaymentError::PersistError)?;
+        )?;
 
         Ok(())
     }
@@ -236,9 +235,51 @@ impl Persister {
                 ":refund_tx_id": refund_tx_id,
                 ":state": to_state,
             },
+        )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn set_send_swap_lockup_tx_id(
+        &self,
+        swap_id: &str,
+        lockup_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+
+        let row_count = con
+            .execute(
+                "UPDATE send_swaps
+                SET lockup_tx_id = :lockup_tx_id
+                WHERE id = :id AND lockup_tx_id IS NULL",
+                named_params! {
+                    ":id": swap_id,
+                    ":lockup_tx_id": lockup_tx_id,
+                },
+            )
+            .map_err(|_| PaymentError::PersistError)?;
+        match row_count {
+            1 => Ok(()),
+            _ => Err(PaymentError::PaymentInProgress),
+        }
+    }
+
+    pub(crate) fn unset_send_swap_lockup_tx_id(
+        &self,
+        swap_id: &str,
+        lockup_tx_id: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE send_swaps
+            SET lockup_tx_id = NULL
+            WHERE id = :id AND lockup_tx_id = :lockup_tx_id",
+            named_params! {
+                ":id": swap_id,
+                ":lockup_tx_id": lockup_tx_id,
+            },
         )
         .map_err(|_| PaymentError::PersistError)?;
-
         Ok(())
     }
 }

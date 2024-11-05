@@ -15,13 +15,13 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{Config, PaymentState::*, SendSwap};
-use crate::prelude::Swap;
+use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
 use crate::{
     error::PaymentError,
-    model::{PaymentState, PaymentTxData, PaymentType, Transaction as SdkTransaction},
+    model::{PaymentState, Transaction as SdkTransaction},
     persist::Persister,
 };
 
@@ -71,40 +71,9 @@ impl SendSwapHandler {
 
         // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
         match SubSwapStates::from_str(swap_state) {
-            // Boltz has locked the HTLC, we proceed with locking up the funds
+            // Boltz has locked the HTLC
             Ok(SubSwapStates::InvoiceSet) => {
-                match (swap.state, swap.lockup_tx_id.clone()) {
-                    (PaymentState::Created, None) | (PaymentState::TimedOut, None) => {
-                        let create_response = swap.get_boltz_create_response()?;
-                        let lockup_tx = self.lockup_funds(id, &create_response).await?;
-                        let lockup_tx_id = lockup_tx.txid().to_string();
-                        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
-
-                        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
-                        // This makes the tx known to the SDK (get_info, list_payments) instantly
-                        self.persister.insert_or_update_payment(
-                            PaymentTxData {
-                                tx_id: lockup_tx_id.clone(),
-                                timestamp: Some(utils::now()),
-                                amount_sat: swap.payer_amount_sat,
-                                fees_sat: lockup_tx_fees_sat,
-                                payment_type: PaymentType::Send,
-                                is_confirmed: false,
-                            },
-                            None,
-                            None,
-                        )?;
-
-                        self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None)
-                            .await?;
-                    }
-                    (_, Some(lockup_tx_id)) => {
-                        warn!("Lockup tx for Send Swap {id} was already broadcast: txid {lockup_tx_id}")
-                    }
-                    (state, _) => {
-                        debug!("Send Swap {id} is in an invalid state for {swap_state}: {state:?}")
-                    }
-                }
+                warn!("Received `invoice.set` state for Send Swap {id}");
                 Ok(())
             }
 
@@ -203,11 +172,17 @@ impl SendSwapHandler {
         }
     }
 
-    async fn lockup_funds(
+    pub(crate) async fn try_lockup(
         &self,
-        swap_id: &str,
+        swap: &SendSwap,
         create_response: &CreateSubmarineResponse,
     ) -> Result<Transaction, PaymentError> {
+        if swap.lockup_tx_id.is_some() {
+            debug!("Lockup tx was already broadcast for Send Swap {}", swap.id);
+            return Err(PaymentError::PaymentInProgress);
+        }
+
+        let swap_id = &swap.id;
         debug!(
             "Initiated Send Swap: send {} sats to liquid address {}",
             create_response.expected_amount, create_response.address
@@ -223,17 +198,48 @@ impl SendSwapHandler {
                 create_response.expected_amount,
             )
             .await?;
+        let lockup_tx_id = lockup_tx.txid().to_string();
 
-        info!("broadcasting lockup tx {}", lockup_tx.txid());
-        let lockup_tx_id = self
+        self.persister
+            .set_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+
+        info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
+
+        let broadcast_result = self
             .chain_service
             .lock()
             .await
             .broadcast(&lockup_tx, Some(swap_id))
-            .await?
-            .to_string();
+            .await;
+
+        if let Err(err) = broadcast_result {
+            debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
+            self.persister
+                .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+            return Err(err.into());
+        }
 
         info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+
+        // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        let lockup_tx_fees_sat: u64 = lockup_tx.all_fees().values().sum();
+        self.persister.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: lockup_tx_id.clone(),
+                timestamp: Some(utils::now()),
+                amount_sat: swap.payer_amount_sat,
+                fees_sat: lockup_tx_fees_sat,
+                payment_type: PaymentType::Send,
+                is_confirmed: false,
+            },
+            None,
+            None,
+        )?;
+
+        self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)
+            .await?;
+
         Ok(lockup_tx)
     }
 
@@ -496,8 +502,9 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
-                err: "Cannot transition to Created state".to_string(),
+                err: "Cannot transition from {from_state:?} to Created state".to_string(),
             }),
 
             (Created | Pending, Pending) => Ok(()),
@@ -577,7 +584,7 @@ mod tests {
                 Pending,
                 HashSet::from([Pending, RefundPending, Complete, Failed]),
             ),
-            (TimedOut, HashSet::from([TimedOut, Failed])),
+            (TimedOut, HashSet::from([TimedOut, Created, Failed])),
             (Complete, HashSet::from([])),
             (Refundable, HashSet::from([Failed])),
             (Failed, HashSet::from([Failed])),

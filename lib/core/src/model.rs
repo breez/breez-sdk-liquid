@@ -8,6 +8,7 @@ use boltz_client::{
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
+    ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
@@ -258,6 +259,16 @@ pub struct ConnectRequest {
 
 pub struct ConnectWithSignerRequest {
     pub config: Config,
+}
+
+/// A reserved address. Once an address is reserved, it can only be
+/// reallocated to another payment after the block height expiration.
+#[derive(Clone, Debug)]
+pub(crate) struct ReservedAddress {
+    /// The address that is reserved
+    pub(crate) address: String,
+    /// The block height that the address is reserved until
+    pub(crate) expiry_block_height: u32,
 }
 
 /// The send/receive methods supported by the SDK
@@ -599,7 +610,8 @@ impl FromSql for Direction {
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
-    pub(crate) claim_address: String,
+    /// The Bitcoin claim address is only set for Outgoing Chain Swaps
+    pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
@@ -822,8 +834,16 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// Persisted only when the lockup tx is broadcast
+    pub(crate) lockup_tx_id: Option<String>,
+    /// The address reserved for a magic routing hint payment
+    pub(crate) mrh_address: String,
+    /// The script pubkey for a magic routing hint payment
+    pub(crate) mrh_script_pubkey: String,
+    /// Persisted only if a transaction is sent to the `mrh_address`
+    pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
-    /// Afterwards, it shows the lockup tx creation time.    
+    /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
     pub(crate) state: PaymentState,
 }
@@ -1490,6 +1510,15 @@ pub struct LnUrlPaySuccessData {
 pub enum Transaction {
     Liquid(boltz_client::elements::Transaction),
     Bitcoin(boltz_client::bitcoin::Transaction),
+}
+
+impl Transaction {
+    pub(crate) fn txid(&self) -> String {
+        match self {
+            Transaction::Liquid(tx) => tx.txid().to_hex(),
+            Transaction::Bitcoin(tx) => tx.txid().to_hex(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

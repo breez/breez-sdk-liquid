@@ -32,7 +32,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
     let payment_hash = sha256::Hash::from_slice(&[0; 32][..]).expect("Expecting valid hash");
     let invoice = InvoiceBuilder::new(Currency::BitcoinTestnet)
         .description("Test invoice".into())
-        .payment_hash(payment_hash.clone())
+        .payment_hash(payment_hash)
         .payment_secret(PaymentSecret([42u8; 32]))
         .current_timestamp()
         .min_final_cltv_expiry_delta(144)
@@ -103,6 +103,10 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         receiver_amount_sat: 587,
         claim_fees_sat: 200,
         claim_tx_id: None,
+        lockup_tx_id: None,
+        mrh_address: "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n".to_string(),
+        mrh_script_pubkey: "tex1qnkznyyxwnxnkk0j94cnvq27h24jk6sqf0te55x".to_string(),
+        mrh_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
     }

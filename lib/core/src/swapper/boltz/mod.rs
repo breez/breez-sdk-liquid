@@ -252,12 +252,24 @@ impl Swapper for BoltzSwapper {
         claim_address: Option<String>,
     ) -> Result<Transaction, PaymentError> {
         let tx = match &swap {
-            Swap::Chain(swap) => match swap.direction {
-                Direction::Incoming => Transaction::Liquid(self.new_incoming_chain_claim_tx(swap)?),
-                Direction::Outgoing => {
-                    Transaction::Bitcoin(self.new_outgoing_chain_claim_tx(swap)?)
+            Swap::Chain(swap) => {
+                let Some(claim_address) = claim_address else {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "No claim address was supplied when claiming for Chain swap {}",
+                            swap.id
+                        ),
+                    });
+                };
+                match swap.direction {
+                    Direction::Incoming => {
+                        Transaction::Liquid(self.new_incoming_chain_claim_tx(swap, claim_address)?)
+                    }
+                    Direction::Outgoing => {
+                        Transaction::Bitcoin(self.new_outgoing_chain_claim_tx(swap, claim_address)?)
+                    }
                 }
-            },
+            }
             Swap::Receive(swap) => {
                 let Some(claim_address) = claim_address else {
                     return Err(PaymentError::Generic {
