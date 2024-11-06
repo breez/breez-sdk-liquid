@@ -700,21 +700,25 @@ impl ChainSwapHandler {
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         debug!("Initiating claim for Chain Swap {swap_id}");
-        // Derive a new Liquid address for an incoming swap, or use the set Bitcoin address for an outgoing swap
-        let claim_address = match swap.direction {
-            Direction::Incoming => {
+        // Derive a new Liquid address if one is not already set for an incoming swap,
+        // or use the set Bitcoin address for an outgoing swap
+        let claim_address = match (swap.direction, swap.claim_address.clone()) {
+            (Direction::Incoming, None) => {
                 Some(self.onchain_wallet.next_unused_address().await?.to_string())
             }
-            Direction::Outgoing => swap.claim_address.clone(),
+            _ => swap.claim_address.clone(),
         };
         let claim_tx = self
             .swapper
-            .create_claim_tx(Swap::Chain(swap.clone()), claim_address)?;
+            .create_claim_tx(Swap::Chain(swap.clone()), claim_address.clone())?;
 
         // Set the swap claim_tx_id before broadcasting.
         // If another claim_tx_id has been set in the meantime, don't broadcast the claim tx
         let tx_id = claim_tx.txid();
-        match self.persister.set_chain_swap_claim_tx_id(swap_id, &tx_id) {
+        match self
+            .persister
+            .set_chain_swap_claim_tx_id(swap_id, claim_address, &tx_id)
+        {
             Ok(_) => {
                 let broadcast_res = match claim_tx {
                     // We attempt broadcasting via chain service, then fallback to Boltz
