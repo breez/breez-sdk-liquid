@@ -106,13 +106,13 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
 
-        /// Optional Liquid BIP21 URI / address destination
+        /// Optional Liquid BIP21 URI/address for Liquid payment method
         #[clap(short = 'd', long = "destination")]
-        liquid_destination: Option<String>,
+        destination: Option<String>,
 
-        /// Optional Bitcoin address
+        /// Optional Liquid/Bitcoin address for Bitcoin payment method
         #[clap(short = 'a', long = "address")]
-        bitcoin_address: Option<String>,
+        address: Option<String>,
     },
     /// Retrieve a payment
     GetPayment {
@@ -454,10 +454,10 @@ pub(crate) async fn handle_command(
             to_timestamp,
             limit,
             offset,
-            liquid_destination,
-            bitcoin_address,
+            destination,
+            address,
         } => {
-            let details = match (liquid_destination, bitcoin_address) {
+            let details = match (destination, address) {
                 (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
                 (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
                 _ => None,
