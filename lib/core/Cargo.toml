@@ -14,12 +14,15 @@ frb = ["dep:flutter_rust_bridge"]
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
+#boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
+boltz-client = { git = "https://github.com/ok300/boltz-rust", branch = "ok300-support-bolt12" }
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.4.0", features = [
   "chrono",
 ], optional = true }
+# We need at least lightning v0.0.125 for the Bolt12 structs. The lightning version from sdk-common is too old (v0.0.118, matching vls-core).
+lightning = "0.0.125"
 log = { workspace = true }
 lwk_common = "0.7.0"
 lwk_signer = "0.7.0"

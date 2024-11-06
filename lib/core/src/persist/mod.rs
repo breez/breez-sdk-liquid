@@ -312,11 +312,14 @@ impl Persister {
                         preimage: maybe_send_swap_preimage,
                         bolt11: maybe_send_swap_invoice.clone(),
                         payment_hash: maybe_send_swap_payment_hash,
-                        description: maybe_send_swap_description.unwrap_or_else(|| {
-                            maybe_send_swap_invoice
-                                .and_then(|bolt11| get_invoice_description!(bolt11))
-                                .unwrap_or("Lightning payment".to_string())
-                        }),
+
+                        description: "Lightning payment".to_string(),
+                        // TODO Should not assume this is bolt11
+                        // description: maybe_send_swap_description.unwrap_or_else(|| {
+                        //     maybe_send_swap_invoice
+                        //         .and_then(|bolt11| get_invoice_description!(bolt11))
+                        //         .unwrap_or("Lightning payment".to_string())
+                        // }),
                         payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                         receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
                         refund_tx_id: maybe_send_swap_refund_tx_id,

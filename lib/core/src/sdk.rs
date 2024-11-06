@@ -706,7 +706,7 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PrepareSendRequest] containing:
-    ///     * `destination` - Either a Liquid BIP21 URI/address or a BOLT11 invoice
+    ///     * `destination` - Either a Liquid BIP21 URI/address. a BOLT11 invoice or a BOLT12 offer
     ///     * `amount_sat` - Should only be specified when paying directly onchain or via amount-less BIP21
     ///
     /// # Returns
@@ -723,10 +723,10 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let payment_destination;
 
-        match sdk_common::input_parser::parse(&req.destination).await? {
-            InputType::LiquidAddress {
+        match sdk_common::input_parser::parse(&req.destination).await {
+            Ok(InputType::LiquidAddress {
                 address: mut liquid_address_data,
-            } => {
+            }) => {
                 let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
                     (None, None) => {
                         return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
@@ -756,7 +756,7 @@ impl LiquidSdk {
                     address_data: liquid_address_data,
                 };
             }
-            InputType::Bolt11 { invoice } => {
+            Ok(InputType::Bolt11 { invoice }) => {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_invoice(&invoice.bolt11)?;
 
@@ -788,10 +788,53 @@ impl LiquidSdk {
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
             }
-            _ => {
+            Ok(_) => {
                 return Err(PaymentError::Generic {
                     err: "Destination is not valid".to_string(),
                 });
+            }
+            Err(_) => {
+                // TODO Workaround to avoid adding an InputType::Bolt12 variant in sdk-common
+
+                // TODO TBD: Should InputType::Bolt12_Offer be added to sdk-common? Or Bolt12_Invoice?
+                //      If yes, with full parsing and mapping to LNInvoice?
+
+                let amount_sat = req
+                    .amount_sat
+                    .ok_or_else(|| anyhow!("Expected amount when processing BOLT12 offer"))?;
+
+                let offer = &req.destination;
+                info!("Got BOLT12 offer, fetching BOLT12 invoice");
+
+                let invoice_str = self.swapper.get_bolt12_invoice(offer, amount_sat)?;
+                let invoice_parsed = utils::parse_bolt12_invoice(&invoice_str)?;
+
+                // TODO If supporting receive: validate it's not a self-transfer
+                // TODO Validate invoice
+
+                receiver_amount_sat = invoice_parsed.amount_msats() / 1_000;
+
+                if let Some(amount_sat) = req.amount_sat {
+                    ensure_sdk!(
+                        receiver_amount_sat == amount_sat,
+                            PaymentError::Generic { err: "Amount in the payment request is not the same as the one in the invoice".to_string() }
+                        );
+                }
+
+                let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
+
+                // TODO Check for MRH for Bolt12
+                // TODO If MRH, fallback to onchain
+
+                let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
+                let lockup_fees_sat = self
+                    .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
+                    .await?;
+                fees_sat = boltz_fees_total + lockup_fees_sat;
+
+                payment_destination = SendDestination::Bolt12 {
+                    offer: req.destination.to_string(),
+                };
             }
         };
 
@@ -832,6 +875,7 @@ impl LiquidSdk {
     pub async fn send_payment(
         &self,
         req: &SendPaymentRequest,
+        // TODO Req must include BOLT12 invoice (which is not available during prepare) and amount
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
@@ -869,18 +913,24 @@ impl LiquidSdk {
                     .await
             }
             SendDestination::Bolt11 { invoice } => {
-                self.pay_invoice(&invoice.bolt11, *fees_sat).await
+                self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await
+            }
+            SendDestination::Bolt12 { offer } => {
+                // TODO Amount hardcoded to 1_000 because we don't yet have it in the request
+                let bolt12_invoice = self.swapper.get_bolt12_invoice(offer, 1_000)?;
+
+                self.pay_bolt12_invoice(&bolt12_invoice, *fees_sat).await
             }
         }
     }
 
-    async fn pay_invoice(
+    async fn pay_bolt11_invoice(
         &self,
         invoice: &str,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_send_is_not_self_transfer(invoice)?;
-        self.validate_invoice(invoice)?;
+        let bolt11_invoice = self.validate_invoice(invoice)?;
 
         let amount_sat = get_invoice_amount!(invoice);
         let payer_amount_sat = amount_sat + fees_sat;
@@ -888,6 +938,11 @@ impl LiquidSdk {
             payer_amount_sat <= self.get_info().await?.balance_sat,
             PaymentError::InsufficientFunds
         );
+
+        let description = match bolt11_invoice.description() {
+            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
+            Bolt11InvoiceDescription::Hash(_) => None,
+        };
 
         match self.swapper.check_for_mrh(invoice)? {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
@@ -909,8 +964,46 @@ impl LiquidSdk {
             }
 
             // If no MRH found, perform usual swap
-            None => self.send_payment_via_swap(invoice, fees_sat).await,
+            None => {
+                self.send_payment_via_swap(
+                    invoice,
+                    &bolt11_invoice.payment_hash().to_string(),
+                    description,
+                    amount_sat,
+                    fees_sat,
+                )
+                .await
+            }
         }
+    }
+
+    async fn pay_bolt12_invoice(
+        &self,
+        invoice: &str,
+        fees_sat: u64,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        // TODO Ensure it's not self-transfer
+        // TODO Validate invoice
+
+        let invoice_parsed = utils::parse_bolt12_invoice(invoice)?;
+
+        let amount_sat = invoice_parsed.amount_msats() / 1_000;
+        let payer_amount_sat = amount_sat + fees_sat;
+        ensure_sdk!(
+            payer_amount_sat <= self.get_info().await?.balance_sat,
+            PaymentError::InsufficientFunds
+        );
+
+        // TODO CHeck for MRH (if present, pay via Liquid)
+
+        self.send_payment_via_swap(
+            invoice,
+            &invoice_parsed.payment_hash().to_string(),
+            invoice_parsed.description().map(|desc| desc.to_string()),
+            amount_sat,
+            fees_sat,
+        )
+        .await
     }
 
     /// Performs a Send Payment by doing an onchain tx to a L-BTC address
@@ -977,20 +1070,11 @@ impl LiquidSdk {
     async fn send_payment_via_swap(
         &self,
         invoice: &str,
+        payment_hash: &str,
+        description: Option<String>,
+        receiver_amount_sat: u64,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let bolt11_invoice = invoice
-            .trim()
-            .parse::<Bolt11Invoice>()
-            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
-        let receiver_amount_sat =
-            bolt11_invoice
-                .amount_milli_satoshis()
-                .ok_or(PaymentError::invalid_invoice(
-                    "Invoice does not contain an amount",
-                ))?
-                / 1000;
-
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
         let lockup_tx_fees_sat = self
@@ -1047,17 +1131,12 @@ impl LiquidSdk {
                 let swap_id = &create_response.id;
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
-                let payment_hash = bolt11_invoice.payment_hash().to_string();
-                let description = match bolt11_invoice.description() {
-                    Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-                    Bolt11InvoiceDescription::Hash(_) => None,
-                };
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: invoice.to_string(),
-                    payment_hash: Some(payment_hash),
+                    payment_hash: Some(payment_hash.to_string()),
                     description,
                     preimage: None,
                     payer_amount_sat,
