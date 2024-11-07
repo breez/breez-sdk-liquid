@@ -697,6 +697,7 @@ impl LiquidSdk {
             .all_fees()
             .values()
             .sum();
+        info!("Estimated drain tx fee: {fee_sat} sat");
 
         Ok(fee_sat)
     }
@@ -1165,6 +1166,7 @@ impl LiquidSdk {
         };
         let server_fees_sat = pair.fees.server();
 
+        info!("Preparing for onchain payment of kind: {:?}", req.amount);
         let (payer_amount_sat, receiver_amount_sat, total_fees_sat) = match req.amount {
             PayOnchainAmount::Receiver { amount_sat } => {
                 let receiver_amount_sat = amount_sat;
@@ -1219,6 +1221,7 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
+        info!("Prepared onchain payment: {res:?}");
         Ok(res)
     }
 
@@ -1243,6 +1246,7 @@ impl LiquidSdk {
         req: &PayOnchainRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
+        info!("Paying onchain, request = {req:?}");
 
         let balance_sat = self.get_info().await?.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
