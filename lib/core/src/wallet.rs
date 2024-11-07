@@ -232,7 +232,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             Ok(tx) => Ok(tx),
             Err(PaymentError::InsufficientFunds) => {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
-                self.build_drain_tx(fee_rate_sats_per_kvb, &recipient_address, Some(amount_sat))
+                self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await
             }
             Err(e) => Err(e),
