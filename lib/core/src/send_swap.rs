@@ -190,10 +190,8 @@ impl SendSwapHandler {
 
         let lockup_tx = self
             .onchain_wallet
-            .build_tx(
-                self.config
-                    .lowball_fee_rate_msat_per_vbyte()
-                    .map(|v| v as f32),
+            .build_tx_or_drain_tx(
+                self.config.lowball_fee_rate_msat_per_vbyte(),
                 &create_response.address,
                 create_response.expected_amount,
             )

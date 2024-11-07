@@ -4,7 +4,7 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
-use log::debug;
+use log::{debug, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::{
@@ -54,6 +54,16 @@ pub trait OnchainWallet: Send + Sync {
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         enforce_amount_sat: Option<u64>,
+    ) -> Result<Transaction, PaymentError>;
+
+    /// Build a transaction to send funds to a recipient. If building a transaction
+    /// results in an InsufficientFunds error, attempt to build a drain transaction
+    /// validating that the `amount_sat` matches the drain output.
+    async fn build_tx_or_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
     /// Get the next unused address in the wallet
@@ -207,6 +217,26 @@ impl OnchainWallet for LiquidOnchainWallet {
                 err: format!("Failed to sign transaction: {e:?}"),
             })?;
         Ok(lwk_wollet.finalize(&mut pset)?)
+    }
+
+    async fn build_tx_or_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        amount_sat: u64,
+    ) -> Result<Transaction, PaymentError> {
+        match self
+            .build_tx(fee_rate_sats_per_kvb, recipient_address, amount_sat)
+            .await
+        {
+            Ok(tx) => Ok(tx),
+            Err(PaymentError::InsufficientFunds) => {
+                warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
+                self.build_drain_tx(fee_rate_sats_per_kvb, &recipient_address, Some(amount_sat))
+                    .await
+            }
+            Err(e) => Err(e),
+        }
     }
 
     /// Get the next unused address in the wallet

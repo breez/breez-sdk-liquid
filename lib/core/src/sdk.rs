@@ -643,10 +643,7 @@ impl LiquidSdk {
         amount_sat: u64,
         address: &str,
     ) -> Result<u64, PaymentError> {
-        let fee_rate_msat_per_vbyte = self
-            .config
-            .lowball_fee_rate_msat_per_vbyte()
-            .map(|v| v as f32);
+        let fee_rate_msat_per_vbyte = self.config.lowball_fee_rate_msat_per_vbyte();
         Ok(self
             .onchain_wallet
             .build_tx(fee_rate_msat_per_vbyte, address, amount_sat)
@@ -665,8 +662,8 @@ impl LiquidSdk {
         }
     }
 
-    /// Estimate the lockup tx fee for Send swaps
-    async fn estimate_lockup_tx_fee_send(
+    /// Estimate the lockup tx fee
+    async fn estimate_lockup_tx_fee(
         &self,
         user_lockup_amount_sat: u64,
     ) -> Result<u64, PaymentError> {
@@ -676,23 +673,15 @@ impl LiquidSdk {
             .await
     }
 
-    /// Estimate the lockup tx fee for Chain Send swaps
-    async fn estimate_lockup_tx_fee_chain_send(
+    async fn estimate_drain_tx_fee(
         &self,
-        user_lockup_amount_sat: u64,
+        enforce_amount_sat: Option<u64>,
     ) -> Result<u64, PaymentError> {
         let temp_p2tr_addr = self.get_temp_p2tr_addr();
-
-        self.estimate_onchain_tx_fee(user_lockup_amount_sat, temp_p2tr_addr)
-            .await
-    }
-
-    async fn estimate_drain_tx_fee(&self) -> Result<u64, PaymentError> {
-        let temp_p2tr_addr = self.get_temp_p2tr_addr();
-
+        let fee_rate_msat_per_vbyte = self.config.lowball_fee_rate_msat_per_vbyte();
         let fee_sat = self
             .onchain_wallet
-            .build_drain_tx(None, temp_p2tr_addr, None)
+            .build_drain_tx(fee_rate_msat_per_vbyte, temp_p2tr_addr, enforce_amount_sat)
             .await?
             .all_fees()
             .values()
@@ -748,9 +737,17 @@ impl LiquidSdk {
                 );
 
                 receiver_amount_sat = amount_sat;
-                fees_sat = self
+                fees_sat = match self
                     .estimate_onchain_tx_fee(receiver_amount_sat, &liquid_address_data.address)
-                    .await?;
+                    .await
+                {
+                    Ok(fees_sat) => Ok(fees_sat),
+                    Err(PaymentError::InsufficientFunds) => self
+                        .estimate_drain_tx_fee(Some(receiver_amount_sat))
+                        .await
+                        .map_err(|_| PaymentError::InsufficientFunds),
+                    Err(e) => Err(e),
+                }?;
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
                 payment_destination = SendDestination::LiquidAddress {
@@ -775,15 +772,30 @@ impl LiquidSdk {
                 let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
                 fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
-                    Some((lbtc_address, _)) => {
-                        self.estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
-                            .await?
-                    }
+                    Some((lbtc_address, _)) => match self
+                        .estimate_onchain_tx_fee(receiver_amount_sat, &lbtc_address)
+                        .await
+                    {
+                        Ok(fees_sat) => Ok(fees_sat),
+                        Err(PaymentError::InsufficientFunds) => self
+                            .estimate_drain_tx_fee(Some(receiver_amount_sat))
+                            .await
+                            .map_err(|_| PaymentError::InsufficientFunds),
+                        Err(e) => Err(e),
+                    }?,
                     None => {
                         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
-                        let lockup_fees_sat = self
-                            .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
-                            .await?;
+                        info!("Boltz fees: {boltz_fees_total}");
+                        let user_lockup_amount_sat = receiver_amount_sat + boltz_fees_total;
+                        let lockup_fees_sat =
+                            match self.estimate_lockup_tx_fee(user_lockup_amount_sat).await {
+                                Ok(fees_sat) => Ok(fees_sat),
+                                Err(PaymentError::InsufficientFunds) => self
+                                    .estimate_drain_tx_fee(Some(user_lockup_amount_sat))
+                                    .await
+                                    .map_err(|_| PaymentError::InsufficientFunds),
+                                Err(e) => Err(e),
+                            }?;
                         boltz_fees_total + lockup_fees_sat
                     }
                 };
@@ -923,10 +935,8 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         let tx = self
             .onchain_wallet
-            .build_tx(
-                self.config
-                    .lowball_fee_rate_msat_per_vbyte()
-                    .map(|v| v as f32),
+            .build_tx_or_drain_tx(
+                self.config.lowball_fee_rate_msat_per_vbyte(),
                 &address_data.address,
                 receiver_amount_sat,
             )
@@ -994,9 +1004,15 @@ impl LiquidSdk {
 
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
-        let lockup_tx_fees_sat = self
-            .estimate_lockup_tx_fee_send(receiver_amount_sat + boltz_fees_total)
-            .await?;
+        let user_lockup_amount_sat = receiver_amount_sat + boltz_fees_total;
+        let lockup_tx_fees_sat = match self.estimate_lockup_tx_fee(user_lockup_amount_sat).await {
+            Ok(fees_sat) => Ok(fees_sat),
+            Err(PaymentError::InsufficientFunds) => self
+                .estimate_drain_tx_fee(Some(user_lockup_amount_sat))
+                .await
+                .map_err(|_| PaymentError::InsufficientFunds),
+            Err(e) => Err(e),
+        }?;
         ensure_sdk!(
             fees_sat == boltz_fees_total + lockup_tx_fees_sat,
             PaymentError::InvalidOrExpiredFees
@@ -1182,9 +1198,7 @@ impl LiquidSdk {
                     .ceil() as u64;
                 self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
 
-                let lockup_fees_sat = self
-                    .estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
-                    .await?;
+                let lockup_fees_sat = self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?;
 
                 let boltz_fees_sat =
                     user_lockup_amount_sat - user_lockup_amount_sat_without_service_fee;
@@ -1196,7 +1210,7 @@ impl LiquidSdk {
             }
             PayOnchainAmount::Drain => {
                 let payer_amount_sat = balance_sat;
-                let lockup_fees_sat = self.estimate_drain_tx_fee().await?;
+                let lockup_fees_sat = self.estimate_drain_tx_fee(None).await?;
 
                 let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
                 self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
@@ -1269,11 +1283,8 @@ impl LiquidSdk {
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
 
         let lockup_fees_sat = match payer_amount_sat == balance_sat {
-            true => self.estimate_drain_tx_fee().await?,
-            false => {
-                self.estimate_lockup_tx_fee_chain_send(user_lockup_amount_sat)
-                    .await?
-            }
+            true => self.estimate_drain_tx_fee(None).await?,
+            false => self.estimate_lockup_tx_fee(user_lockup_amount_sat).await?,
         };
 
         ensure_sdk!(
