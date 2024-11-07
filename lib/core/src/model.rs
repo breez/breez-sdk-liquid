@@ -1319,10 +1319,10 @@ impl Payment {
                     _ => None,
                 },
             },
-            timestamp: match swap {
-                Some(ref swap) => swap.created_at,
-                None => tx.timestamp.unwrap_or(utils::now()),
-            },
+            timestamp: tx
+                .timestamp
+                .or(swap.as_ref().map(|s| s.created_at))
+                .unwrap_or(utils::now()),
             amount_sat: tx.amount_sat,
             fees_sat: match swap.as_ref() {
                 Some(s) => s.payer_amount_sat - s.receiver_amount_sat,
