@@ -740,7 +740,7 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let balance_sat = self.get_info().await?.balance_sat;
+        let get_info_res = self.get_info().await?;
         let fees_sat;
         let receiver_amount_sat;
         let payment_destination;
@@ -774,10 +774,17 @@ impl LiquidSdk {
 
                 (receiver_amount_sat, fees_sat) = match amount {
                     PayOnchainAmount::Drain => {
+                        ensure_sdk!(
+                            get_info_res.pending_receive_sat == 0
+                                && get_info_res.pending_send_sat == 0,
+                            PaymentError::Generic {
+                                err: "Cannot drain while there are pending payments".to_string(),
+                            }
+                        );
                         let drain_fees_sat = self
                             .estimate_drain_tx_fee(None, Some(&liquid_address_data.address))
                             .await?;
-                        let drain_amount_sat = balance_sat - drain_fees_sat;
+                        let drain_amount_sat = get_info_res.balance_sat - drain_fees_sat;
                         info!("Drain amount: {drain_amount_sat} sat");
                         (drain_amount_sat, drain_fees_sat)
                     }
@@ -841,7 +848,7 @@ impl LiquidSdk {
 
         let payer_amount_sat = receiver_amount_sat + fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= balance_sat,
+            payer_amount_sat <= get_info_res.balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1200,7 +1207,7 @@ impl LiquidSdk {
     ) -> Result<PreparePayOnchainResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let balance_sat = self.get_info().await?.balance_sat;
+        let get_info_res = self.get_info().await?;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = match req.fee_rate_sat_per_vbyte {
             Some(sat_per_vbyte) => ESTIMATED_BTC_CLAIM_TX_VSIZE * sat_per_vbyte as u64,
@@ -1235,7 +1242,13 @@ impl LiquidSdk {
                 (payer_amount_sat, receiver_amount_sat, total_fees_sat)
             }
             PayOnchainAmount::Drain => {
-                let payer_amount_sat = balance_sat;
+                ensure_sdk!(
+                    get_info_res.pending_receive_sat == 0 && get_info_res.pending_send_sat == 0,
+                    PaymentError::Generic {
+                        err: "Cannot drain while there are pending payments".to_string(),
+                    }
+                );
+                let payer_amount_sat = get_info_res.balance_sat;
                 let lockup_fees_sat = self.estimate_drain_tx_fee(None, None).await?;
 
                 let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
@@ -1257,7 +1270,7 @@ impl LiquidSdk {
         };
 
         ensure_sdk!(
-            payer_amount_sat <= balance_sat,
+            payer_amount_sat <= get_info_res.balance_sat,
             PaymentError::InsufficientFunds
         );
 
