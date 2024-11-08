@@ -373,7 +373,7 @@ dictionary LnUrlPayRequest {
 
 dictionary PrepareSendRequest {
     string destination;
-    u64? amount_sat = null;
+    PayOnchainAmount? amount = null;
 };
 
 [Enum]

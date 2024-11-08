@@ -725,7 +725,10 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareSendRequest] containing:
     ///     * `destination` - Either a Liquid BIP21 URI/address or a BOLT11 invoice
-    ///     * `amount_sat` - Should only be specified when paying directly onchain or via amount-less BIP21
+    ///     * `amount` - The optional amount of type [PayOnchainAmount]. Should only be specified
+    ///        when paying directly onchain or via amount-less BIP21.
+    ///        - [PayOnchainAmount::Drain] which uses all funds
+    ///        - [PayOnchainAmount::Receiver] which sets the amount the receiver should receive
     ///
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
@@ -737,6 +740,7 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let balance_sat = self.get_info().await?.balance_sat;
         let fees_sat;
         let receiver_amount_sat;
         let payment_destination;
@@ -745,12 +749,16 @@ impl LiquidSdk {
             InputType::LiquidAddress {
                 address: mut liquid_address_data,
             } => {
-                let amount_sat = match (liquid_address_data.amount_sat, req.amount_sat) {
+                let amount = match (liquid_address_data.amount_sat, req.amount.clone()) {
                     (None, None) => {
-                        return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
+                        return Err(PaymentError::AmountMissing {
+                            err: "Amount must be set when paying to a Liquid address".to_string(),
+                        });
                     }
-                    (Some(bip21_amount_sat), None) => bip21_amount_sat,
-                    (_, Some(request_amount_sat)) => request_amount_sat,
+                    (Some(bip21_amount_sat), None) => PayOnchainAmount::Receiver {
+                        amount_sat: bip21_amount_sat,
+                    },
+                    (_, Some(amount)) => amount,
                 };
 
                 ensure_sdk!(
@@ -764,13 +772,25 @@ impl LiquidSdk {
                     }
                 );
 
-                receiver_amount_sat = amount_sat;
-                fees_sat = self
-                    .estimate_onchain_tx_or_drain_tx_fee(
-                        receiver_amount_sat,
-                        &liquid_address_data.address,
-                    )
-                    .await?;
+                (receiver_amount_sat, fees_sat) = match amount {
+                    PayOnchainAmount::Drain => {
+                        let drain_fees_sat = self
+                            .estimate_drain_tx_fee(None, Some(&liquid_address_data.address))
+                            .await?;
+                        let drain_amount_sat = balance_sat - drain_fees_sat;
+                        info!("Drain amount: {drain_amount_sat} sat");
+                        (drain_amount_sat, drain_fees_sat)
+                    }
+                    PayOnchainAmount::Receiver { amount_sat } => {
+                        let fees_sat = self
+                            .estimate_onchain_tx_or_drain_tx_fee(
+                                amount_sat,
+                                &liquid_address_data.address,
+                            )
+                            .await?;
+                        (amount_sat, fees_sat)
+                    }
+                };
 
                 liquid_address_data.amount_sat = Some(receiver_amount_sat);
                 payment_destination = SendDestination::LiquidAddress {
@@ -785,10 +805,12 @@ impl LiquidSdk {
                     err: "Expected invoice with an amount".to_string(),
                 })? / 1000;
 
-                if let Some(amount_sat) = req.amount_sat {
+                if let Some(PayOnchainAmount::Receiver { amount_sat }) = req.amount {
                     ensure_sdk!(
                         receiver_amount_sat == amount_sat,
-                        PaymentError::Generic { err: "Amount in the payment request is not the same as the one in the invoice".to_string() }
+                        PaymentError::Generic {
+                            err: "Receiver amount and invoice amount do not match".to_string()
+                        }
                     );
                 }
 
@@ -801,7 +823,6 @@ impl LiquidSdk {
                     }
                     None => {
                         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
-                        info!("Boltz fees: {boltz_fees_total}");
                         let user_lockup_amount_sat = receiver_amount_sat + boltz_fees_total;
                         let lockup_fees_sat = self
                             .estimate_lockup_tx_or_drain_tx_fee(user_lockup_amount_sat)
@@ -820,7 +841,7 @@ impl LiquidSdk {
 
         let payer_amount_sat = receiver_amount_sat + fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -2263,7 +2284,7 @@ impl LiquidSdk {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
-                        amount_sat: None,
+                        amount: None,
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;

@@ -1721,14 +1721,23 @@ fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
         return null
     }
     val destination = prepareSendRequest.getString("destination")!!
-    val amountSat = if (hasNonNullKey(prepareSendRequest, "amountSat")) prepareSendRequest.getDouble("amountSat").toULong() else null
-    return PrepareSendRequest(destination, amountSat)
+    val amount =
+        if (hasNonNullKey(
+                prepareSendRequest,
+                "amount",
+            )
+        ) {
+            prepareSendRequest.getMap("amount")?.let { asPayOnchainAmount(it) }
+        } else {
+            null
+        }
+    return PrepareSendRequest(destination, amount)
 }
 
 fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
     readableMapOf(
         "destination" to prepareSendRequest.destination,
-        "amountSat" to prepareSendRequest.amountSat,
+        "amount" to prepareSendRequest.amount?.let { readableMapOf(it) },
     )
 
 fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {

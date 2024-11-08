@@ -301,7 +301,7 @@ export interface PrepareRefundResponse {
 
 export interface PrepareSendRequest {
     destination: string
-    amountSat?: number
+    amount?: PayOnchainAmount
 }
 
 export interface PrepareSendResponse {

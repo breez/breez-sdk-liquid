@@ -1006,15 +1006,15 @@ class PrepareSendRequest {
 
   /// Should only be set when paying directly onchain or to a BIP21 URI
   /// where no amount is specified
-  final BigInt? amountSat;
+  final PayOnchainAmount? amount;
 
   const PrepareSendRequest({
     required this.destination,
-    this.amountSat,
+    this.amount,
   });
 
   @override
-  int get hashCode => destination.hashCode ^ amountSat.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1022,7 +1022,7 @@ class PrepareSendRequest {
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
-          amountSat == other.amountSat;
+          amount == other.amount;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].

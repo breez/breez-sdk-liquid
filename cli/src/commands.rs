@@ -34,8 +34,12 @@ pub(crate) enum Command {
         #[arg(short, long)]
         amount_sat: Option<u64>,
 
-        /// Delay for the send, in seconds
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
+        drain: Option<bool>,
+
+        /// Delay for the send, in seconds
+        #[arg(long)]
         delay: Option<u64>,
     },
     /// Fetch the current limits for Send and Receive payments
@@ -310,6 +314,7 @@ pub(crate) async fn handle_command(
             invoice,
             address,
             amount_sat,
+            drain,
             delay,
         } => {
             let destination = match (invoice, address) {
@@ -326,11 +331,16 @@ pub(crate) async fn handle_command(
                     ))
                 }
             };
+            let amount = match (amount_sat, drain.unwrap_or(false)) {
+                (Some(amount_sat), _) => Some(PayOnchainAmount::Receiver { amount_sat }),
+                (_, true) => Some(PayOnchainAmount::Drain),
+                (_, _) => None,
+            };
 
             let prepare_response = sdk
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
-                    amount_sat,
+                    amount,
                 })
                 .await?;
 

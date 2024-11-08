@@ -350,7 +350,7 @@ pub struct PrepareSendRequest {
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified
-    pub amount_sat: Option<u64>,
+    pub amount: Option<PayOnchainAmount>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK

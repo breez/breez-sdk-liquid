@@ -1976,21 +1976,18 @@ enum BreezSDKLiquidMapper {
         guard let destination = prepareSendRequest["destination"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "PrepareSendRequest"))
         }
-        var amountSat: UInt64?
-        if hasNonNilKey(data: prepareSendRequest, key: "amountSat") {
-            guard let amountSatTmp = prepareSendRequest["amountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "amountSat"))
-            }
-            amountSat = amountSatTmp
+        var amount: PayOnchainAmount?
+        if let amountTmp = prepareSendRequest["amount"] as? [String: Any?] {
+            amount = try asPayOnchainAmount(payOnchainAmount: amountTmp)
         }
 
-        return PrepareSendRequest(destination: destination, amountSat: amountSat)
+        return PrepareSendRequest(destination: destination, amount: amount)
     }
 
     static func dictionaryOf(prepareSendRequest: PrepareSendRequest) -> [String: Any?] {
         return [
             "destination": prepareSendRequest.destination,
-            "amountSat": prepareSendRequest.amountSat == nil ? nil : prepareSendRequest.amountSat,
+            "amount": prepareSendRequest.amount == nil ? nil : dictionaryOf(payOnchainAmount: prepareSendRequest.amount!),
         ]
     }
 
