@@ -263,6 +263,43 @@ impl Persister {
         Ok(())
     }
 
+    /// Used for Zero-amount Receive Chain swaps, when we fetched the quote and we know how much
+    /// the sender locked up
+    pub(crate) fn update_swap_payer_amount(
+        &self,
+        swap_id: &str,
+        payer_amount_sat: u64,
+    ) -> Result<(), PaymentError> {
+        let swap = self
+            .fetch_chain_swap_by_id(swap_id)?
+            .ok_or_else(|| PaymentError::Generic {
+                err: format!("Cannot update non-existent chain swap with ID: {swap_id}"),
+            })?;
+        ensure_sdk!(
+            matches!(swap.direction, Direction::Incoming),
+            PaymentError::Generic {
+                err: format!(
+                    "Can only update payer_amount_sat for incoming chain swaps. Swap ID: {swap_id}"
+                )
+            }
+        );
+
+        log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}");
+        let con: Connection = self.get_connection()?;
+        con.execute(
+            "UPDATE chain_swaps
+            SET
+                payer_amount_sat = :payer_amount_sat
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": swap_id,
+                ":payer_amount_sat": payer_amount_sat,
+            },
+        )?;
+        Ok(())
+    }
+
     // Only set the Chain Swap claim_tx_id if not set, otherwise return an error
     pub(crate) fn set_chain_swap_claim_tx_id(
         &self,
