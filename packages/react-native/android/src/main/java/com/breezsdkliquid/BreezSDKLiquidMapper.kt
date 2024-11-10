@@ -2427,6 +2427,10 @@ fun asInputType(inputType: ReadableMap): InputType? {
         val invoice = inputType.getMap("invoice")?.let { asLnInvoice(it) }!!
         return InputType.Bolt11(invoice)
     }
+    if (type == "bolt12") {
+        val offer = inputType.getString("offer")!!
+        return InputType.Bolt12(offer)
+    }
     if (type == "nodeId") {
         val nodeId = inputType.getString("nodeId")!!
         return InputType.NodeId(nodeId)
@@ -2468,6 +2472,10 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
         is InputType.Bolt11 -> {
             pushToMap(map, "type", "bolt11")
             pushToMap(map, "invoice", readableMapOf(inputType.invoice))
+        }
+        is InputType.Bolt12 -> {
+            pushToMap(map, "type", "bolt12")
+            pushToMap(map, "offer", inputType.offer)
         }
         is InputType.NodeId -> {
             pushToMap(map, "type", "nodeId")
@@ -2960,6 +2968,11 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         val invoice = sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!
         return SendDestination.Bolt11(invoice)
     }
+    if (type == "bolt12") {
+        val offer = sendDestination.getString("offer")!!
+        val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
+        return SendDestination.Bolt12(offer, receiverAmountSat)
+    }
     return null
 }
 
@@ -2973,6 +2986,11 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         is SendDestination.Bolt11 -> {
             pushToMap(map, "type", "bolt11")
             pushToMap(map, "invoice", readableMapOf(sendDestination.invoice))
+        }
+        is SendDestination.Bolt12 -> {
+            pushToMap(map, "type", "bolt12")
+            pushToMap(map, "offer", sendDestination.offer)
+            pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
         }
     }
     return map

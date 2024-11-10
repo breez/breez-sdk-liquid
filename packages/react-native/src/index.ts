@@ -425,6 +425,7 @@ export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
     BOLT11 = "bolt11",
+    BOLT12 = "bolt12",
     NODE_ID = "nodeId",
     URL = "url",
     LN_URL_PAY = "lnUrlPay",
@@ -442,6 +443,9 @@ export type InputType = {
 } | {
     type: InputTypeVariant.BOLT11,
     invoice: LnInvoice
+} | {
+    type: InputTypeVariant.BOLT12,
+    offer: string
 } | {
     type: InputTypeVariant.NODE_ID,
     nodeId: string
@@ -627,7 +631,8 @@ export type SdkEvent = {
 
 export enum SendDestinationVariant {
     LIQUID_ADDRESS = "liquidAddress",
-    BOLT11 = "bolt11"
+    BOLT11 = "bolt11",
+    BOLT12 = "bolt12"
 }
 
 export type SendDestination = {
@@ -636,6 +641,10 @@ export type SendDestination = {
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice
+} | {
+    type: SendDestinationVariant.BOLT12,
+    offer: string
+    receiverAmountSat: number
 }
 
 export enum SuccessActionVariant {
