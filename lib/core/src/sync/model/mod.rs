@@ -3,7 +3,10 @@ use rusqlite::{
     ToSql,
 };
 
+pub(crate) mod client;
 pub(crate) mod sync;
+
+const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
 
 #[derive(Copy, Clone)]
 pub(crate) enum RecordType {
