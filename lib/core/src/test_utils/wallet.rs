@@ -123,4 +123,12 @@ impl Signer for MockSigner {
     fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
         todo!()
     }
+
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
+
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        todo!()
+    }
 }
