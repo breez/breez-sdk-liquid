@@ -172,7 +172,7 @@ typedef struct wire_cst_SendDestination_Bolt11 {
 } wire_cst_SendDestination_Bolt11;
 
 typedef struct wire_cst_SendDestination_Bolt12 {
-  struct wire_cst_list_prim_u_8_strict *invoice;
+  struct wire_cst_list_prim_u_8_strict *offer;
 } wire_cst_SendDestination_Bolt12;
 
 typedef union SendDestinationKind {
@@ -626,6 +626,10 @@ typedef struct wire_cst_InputType_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
 } wire_cst_InputType_Bolt11;
 
+typedef struct wire_cst_InputType_Bolt12 {
+  struct wire_cst_list_prim_u_8_strict *offer;
+} wire_cst_InputType_Bolt12;
+
 typedef struct wire_cst_InputType_NodeId {
   struct wire_cst_list_prim_u_8_strict *node_id;
 } wire_cst_InputType_NodeId;
@@ -654,6 +658,7 @@ typedef union InputTypeKind {
   struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
   struct wire_cst_InputType_LiquidAddress LiquidAddress;
   struct wire_cst_InputType_Bolt11 Bolt11;
+  struct wire_cst_InputType_Bolt12 Bolt12;
   struct wire_cst_InputType_NodeId NodeId;
   struct wire_cst_InputType_Url Url;
   struct wire_cst_InputType_LnUrlPay LnUrlPay;
@@ -1113,7 +1118,7 @@ WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(i
 void frbgen_breez_liquid_wire__crate__bindings__parse(int64_t port_,
                                                       struct wire_cst_list_prim_u_8_strict *input);
 
-WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_bolt11_invoice(struct wire_cst_list_prim_u_8_strict *input);
+WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
 
 void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
@@ -1329,7 +1334,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__default_config);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_bolt11_invoice);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;
 }

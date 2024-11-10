@@ -1798,6 +1798,9 @@ const _: fn() = || {
         crate::bindings::InputType::Bolt11 { invoice } => {
             let _: crate::bindings::LNInvoice = invoice;
         }
+        crate::bindings::InputType::Bolt12 { offer } => {
+            let _: String = offer;
+        }
         crate::bindings::InputType::NodeId { node_id } => {
             let _: String = node_id;
         }
@@ -2432,30 +2435,34 @@ impl SseDecode for crate::bindings::InputType {
                 };
             }
             3 => {
+                let mut var_offer = <String>::sse_decode(deserializer);
+                return crate::bindings::InputType::Bolt12 { offer: var_offer };
+            }
+            4 => {
                 let mut var_nodeId = <String>::sse_decode(deserializer);
                 return crate::bindings::InputType::NodeId {
                     node_id: var_nodeId,
                 };
             }
-            4 => {
+            5 => {
                 let mut var_url = <String>::sse_decode(deserializer);
                 return crate::bindings::InputType::Url { url: var_url };
             }
-            5 => {
+            6 => {
                 let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlPay { data: var_data };
             }
-            6 => {
+            7 => {
                 let mut var_data =
                     <crate::bindings::LnUrlWithdrawRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlWithdraw { data: var_data };
             }
-            7 => {
+            8 => {
                 let mut var_data =
                     <crate::bindings::LnUrlAuthRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlAuth { data: var_data };
             }
-            8 => {
+            9 => {
                 let mut var_data = <crate::bindings::LnUrlErrorData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlError { data: var_data };
             }
@@ -3887,6 +3894,10 @@ impl SseDecode for crate::model::SendDestination {
                     invoice: var_invoice,
                 };
             }
+            2 => {
+                let mut var_offer = <String>::sse_decode(deserializer);
+                return crate::model::SendDestination::Bolt12 { offer: var_offer };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -4453,23 +4464,26 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::InputType> {
             crate::bindings::InputType::Bolt11 { invoice } => {
                 [2.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
+            crate::bindings::InputType::Bolt12 { offer } => {
+                [3.into_dart(), offer.into_into_dart().into_dart()].into_dart()
+            }
             crate::bindings::InputType::NodeId { node_id } => {
-                [3.into_dart(), node_id.into_into_dart().into_dart()].into_dart()
+                [4.into_dart(), node_id.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::Url { url } => {
-                [4.into_dart(), url.into_into_dart().into_dart()].into_dart()
+                [5.into_dart(), url.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::LnUrlPay { data } => {
-                [5.into_dart(), data.into_into_dart().into_dart()].into_dart()
-            }
-            crate::bindings::InputType::LnUrlWithdraw { data } => {
                 [6.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::LnUrlAuth { data } => {
+            crate::bindings::InputType::LnUrlWithdraw { data } => {
                 [7.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::LnUrlError { data } => {
+            crate::bindings::InputType::LnUrlAuth { data } => {
                 [8.into_dart(), data.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::InputType::LnUrlError { data } => {
+                [9.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -5935,6 +5949,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
             crate::model::SendDestination::Bolt11 { invoice } => {
                 [1.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
+            crate::model::SendDestination::Bolt12 { offer } => {
+                [2.into_dart(), offer.into_into_dart().into_dart()].into_dart()
+            }
             _ => {
                 unimplemented!("");
             }
@@ -6387,28 +6404,32 @@ impl SseEncode for crate::bindings::InputType {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
-            crate::bindings::InputType::NodeId { node_id } => {
+            crate::bindings::InputType::Bolt12 { offer } => {
                 <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(offer, serializer);
+            }
+            crate::bindings::InputType::NodeId { node_id } => {
+                <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(node_id, serializer);
             }
             crate::bindings::InputType::Url { url } => {
-                <i32>::sse_encode(4, serializer);
+                <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(url, serializer);
             }
             crate::bindings::InputType::LnUrlPay { data } => {
-                <i32>::sse_encode(5, serializer);
+                <i32>::sse_encode(6, serializer);
                 <crate::bindings::LnUrlPayRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlWithdraw { data } => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(7, serializer);
                 <crate::bindings::LnUrlWithdrawRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlAuth { data } => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(8, serializer);
                 <crate::bindings::LnUrlAuthRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlError { data } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(9, serializer);
                 <crate::bindings::LnUrlErrorData>::sse_encode(data, serializer);
             }
             _ => {
@@ -7543,6 +7564,10 @@ impl SseEncode for crate::model::SendDestination {
                 <i32>::sse_encode(1, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
+            crate::model::SendDestination::Bolt12 { offer } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(offer, serializer);
+            }
             _ => {
                 unimplemented!("");
             }
@@ -8302,36 +8327,42 @@ mod io {
                     }
                 }
                 3 => {
+                    let ans = unsafe { self.kind.Bolt12 };
+                    crate::bindings::InputType::Bolt12 {
+                        offer: ans.offer.cst_decode(),
+                    }
+                }
+                4 => {
                     let ans = unsafe { self.kind.NodeId };
                     crate::bindings::InputType::NodeId {
                         node_id: ans.node_id.cst_decode(),
                     }
                 }
-                4 => {
+                5 => {
                     let ans = unsafe { self.kind.Url };
                     crate::bindings::InputType::Url {
                         url: ans.url.cst_decode(),
                     }
                 }
-                5 => {
+                6 => {
                     let ans = unsafe { self.kind.LnUrlPay };
                     crate::bindings::InputType::LnUrlPay {
                         data: ans.data.cst_decode(),
                     }
                 }
-                6 => {
+                7 => {
                     let ans = unsafe { self.kind.LnUrlWithdraw };
                     crate::bindings::InputType::LnUrlWithdraw {
                         data: ans.data.cst_decode(),
                     }
                 }
-                7 => {
+                8 => {
                     let ans = unsafe { self.kind.LnUrlAuth };
                     crate::bindings::InputType::LnUrlAuth {
                         data: ans.data.cst_decode(),
                     }
                 }
-                8 => {
+                9 => {
                     let ans = unsafe { self.kind.LnUrlError };
                     crate::bindings::InputType::LnUrlError {
                         data: ans.data.cst_decode(),
@@ -9333,6 +9364,12 @@ mod io {
                     let ans = unsafe { self.kind.Bolt11 };
                     crate::model::SendDestination::Bolt11 {
                         invoice: ans.invoice.cst_decode(),
+                    }
+                }
+                2 => {
+                    let ans = unsafe { self.kind.Bolt12 };
+                    crate::model::SendDestination::Bolt12 {
+                        offer: ans.offer.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -11533,6 +11570,7 @@ mod io {
         BitcoinAddress: wire_cst_InputType_BitcoinAddress,
         LiquidAddress: wire_cst_InputType_LiquidAddress,
         Bolt11: wire_cst_InputType_Bolt11,
+        Bolt12: wire_cst_InputType_Bolt12,
         NodeId: wire_cst_InputType_NodeId,
         Url: wire_cst_InputType_Url,
         LnUrlPay: wire_cst_InputType_LnUrlPay,
@@ -11555,6 +11593,11 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_InputType_Bolt11 {
         invoice: *mut wire_cst_ln_invoice,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_InputType_Bolt12 {
+        offer: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -12414,6 +12457,7 @@ mod io {
     pub union SendDestinationKind {
         LiquidAddress: wire_cst_SendDestination_LiquidAddress,
         Bolt11: wire_cst_SendDestination_Bolt11,
+        Bolt12: wire_cst_SendDestination_Bolt12,
         nil__: (),
     }
     #[repr(C)]
@@ -12425,6 +12469,11 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_Bolt11 {
         invoice: *mut wire_cst_ln_invoice,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SendDestination_Bolt12 {
+        offer: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

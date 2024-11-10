@@ -463,6 +463,83 @@ abstract class InputType_Bolt11 extends InputType {
 }
 
 /// @nodoc
+abstract class _$$InputType_Bolt12ImplCopyWith<$Res> {
+  factory _$$InputType_Bolt12ImplCopyWith(
+          _$InputType_Bolt12Impl value, $Res Function(_$InputType_Bolt12Impl) then) =
+      __$$InputType_Bolt12ImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String offer});
+}
+
+/// @nodoc
+class __$$InputType_Bolt12ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12Impl>
+    implements _$$InputType_Bolt12ImplCopyWith<$Res> {
+  __$$InputType_Bolt12ImplCopyWithImpl(
+      _$InputType_Bolt12Impl _value, $Res Function(_$InputType_Bolt12Impl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? offer = null,
+  }) {
+    return _then(_$InputType_Bolt12Impl(
+      offer: null == offer
+          ? _value.offer
+          : offer // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$InputType_Bolt12Impl extends InputType_Bolt12 {
+  const _$InputType_Bolt12Impl({required this.offer}) : super._();
+
+  @override
+  final String offer;
+
+  @override
+  String toString() {
+    return 'InputType.bolt12(offer: $offer)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$InputType_Bolt12Impl &&
+            (identical(other.offer, offer) || other.offer == offer));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, offer);
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InputType_Bolt12ImplCopyWith<_$InputType_Bolt12Impl> get copyWith =>
+      __$$InputType_Bolt12ImplCopyWithImpl<_$InputType_Bolt12Impl>(this, _$identity);
+}
+
+abstract class InputType_Bolt12 extends InputType {
+  const factory InputType_Bolt12({required final String offer}) = _$InputType_Bolt12Impl;
+  const InputType_Bolt12._() : super._();
+
+  String get offer;
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$InputType_Bolt12ImplCopyWith<_$InputType_Bolt12Impl> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$InputType_NodeIdImplCopyWith<$Res> {
   factory _$$InputType_NodeIdImplCopyWith(
           _$InputType_NodeIdImpl value, $Res Function(_$InputType_NodeIdImpl) then) =

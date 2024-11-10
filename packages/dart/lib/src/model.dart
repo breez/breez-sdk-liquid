@@ -1001,7 +1001,7 @@ class PrepareRefundResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendRequest {
   /// The destination we intend to pay to.
-  /// Supports BIP21 URIs, BOLT11 invoices and Liquid addresses
+  /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
   final String destination;
 
   /// Should only be set when paying directly onchain or to a BIP21 URI
@@ -1257,6 +1257,9 @@ sealed class SendDestination with _$SendDestination {
   const factory SendDestination.bolt11({
     required LNInvoice invoice,
   }) = SendDestination_Bolt11;
+  const factory SendDestination.bolt12({
+    required String offer,
+  }) = SendDestination_Bolt12;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

@@ -334,6 +334,7 @@ pub enum _InputType {
     BitcoinAddress { address: BitcoinAddressData },
     LiquidAddress { address: LiquidAddressData },
     Bolt11 { invoice: LNInvoice },
+    Bolt12 { offer: String },
     NodeId { node_id: String },
     Url { url: String },
     LnUrlPay { data: LnUrlPayRequestData },

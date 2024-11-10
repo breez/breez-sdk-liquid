@@ -1924,3 +1924,82 @@ abstract class SendDestination_Bolt11 extends SendDestination {
   _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+
+/// @nodoc
+abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  factory _$$SendDestination_Bolt12ImplCopyWith(
+          _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
+      __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String offer});
+}
+
+/// @nodoc
+class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
+    extends _$SendDestinationCopyWithImpl<$Res, _$SendDestination_Bolt12Impl>
+    implements _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  __$$SendDestination_Bolt12ImplCopyWithImpl(
+      _$SendDestination_Bolt12Impl _value, $Res Function(_$SendDestination_Bolt12Impl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? offer = null,
+  }) {
+    return _then(_$SendDestination_Bolt12Impl(
+      offer: null == offer
+          ? _value.offer
+          : offer // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
+  const _$SendDestination_Bolt12Impl({required this.offer}) : super._();
+
+  @override
+  final String offer;
+
+  @override
+  String toString() {
+    return 'SendDestination.bolt12(offer: $offer)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SendDestination_Bolt12Impl &&
+            (identical(other.offer, offer) || other.offer == offer));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, offer);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
+      __$$SendDestination_Bolt12ImplCopyWithImpl<_$SendDestination_Bolt12Impl>(this, _$identity);
+}
+
+abstract class SendDestination_Bolt12 extends SendDestination {
+  const factory SendDestination_Bolt12({required final String offer}) = _$SendDestination_Bolt12Impl;
+  const SendDestination_Bolt12._() : super._();
+
+  String get offer;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
+      throw _privateConstructorUsedError;
+}

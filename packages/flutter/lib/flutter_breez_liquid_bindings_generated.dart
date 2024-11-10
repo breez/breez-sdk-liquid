@@ -3986,10 +3986,16 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+}
+
 final class SendDestinationKind extends ffi.Union {
   external wire_cst_SendDestination_LiquidAddress LiquidAddress;
 
   external wire_cst_SendDestination_Bolt11 Bolt11;
+
+  external wire_cst_SendDestination_Bolt12 Bolt12;
 }
 
 final class wire_cst_send_destination extends ffi.Struct {
@@ -4606,6 +4612,10 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_InputType_Bolt12 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+}
+
 final class wire_cst_InputType_NodeId extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> node_id;
 }
@@ -4636,6 +4646,8 @@ final class InputTypeKind extends ffi.Union {
   external wire_cst_InputType_LiquidAddress LiquidAddress;
 
   external wire_cst_InputType_Bolt11 Bolt11;
+
+  external wire_cst_InputType_Bolt12 Bolt12;
 
   external wire_cst_InputType_NodeId NodeId;
 

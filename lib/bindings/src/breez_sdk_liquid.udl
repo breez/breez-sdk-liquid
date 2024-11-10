@@ -43,6 +43,7 @@ interface InputType {
     BitcoinAddress(BitcoinAddressData address);
     LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
+    Bolt12(string offer);
     NodeId(string node_id);
     Url(string url);
     LnUrlPay(LnUrlPayRequestData data);
@@ -380,7 +381,7 @@ dictionary PrepareSendRequest {
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
     Bolt11(LNInvoice invoice);
-    Bolt12(string invoice);
+    Bolt12(string offer);
 };
 
 dictionary PrepareSendResponse {

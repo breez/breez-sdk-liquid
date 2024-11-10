@@ -281,6 +281,9 @@ sealed class InputType with _$InputType {
   const factory InputType.bolt11({
     required LNInvoice invoice,
   }) = InputType_Bolt11;
+  const factory InputType.bolt12({
+    required String offer,
+  }) = InputType_Bolt12;
   const factory InputType.nodeId({
     required String nodeId,
   }) = InputType_NodeId;

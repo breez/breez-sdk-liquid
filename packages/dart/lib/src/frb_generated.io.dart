@@ -2064,39 +2064,45 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Bolt11.invoice = pre_invoice;
       return;
     }
+    if (apiObj is InputType_Bolt12) {
+      var pre_offer = cst_encode_String(apiObj.offer);
+      wireObj.tag = 3;
+      wireObj.kind.Bolt12.offer = pre_offer;
+      return;
+    }
     if (apiObj is InputType_NodeId) {
       var pre_node_id = cst_encode_String(apiObj.nodeId);
-      wireObj.tag = 3;
+      wireObj.tag = 4;
       wireObj.kind.NodeId.node_id = pre_node_id;
       return;
     }
     if (apiObj is InputType_Url) {
       var pre_url = cst_encode_String(apiObj.url);
-      wireObj.tag = 4;
+      wireObj.tag = 5;
       wireObj.kind.Url.url = pre_url;
       return;
     }
     if (apiObj is InputType_LnUrlPay) {
       var pre_data = cst_encode_box_autoadd_ln_url_pay_request_data(apiObj.data);
-      wireObj.tag = 5;
+      wireObj.tag = 6;
       wireObj.kind.LnUrlPay.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlWithdraw) {
       var pre_data = cst_encode_box_autoadd_ln_url_withdraw_request_data(apiObj.data);
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       wireObj.kind.LnUrlWithdraw.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlAuth) {
       var pre_data = cst_encode_box_autoadd_ln_url_auth_request_data(apiObj.data);
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       wireObj.kind.LnUrlAuth.data = pre_data;
       return;
     }
     if (apiObj is InputType_LnUrlError) {
       var pre_data = cst_encode_box_autoadd_ln_url_error_data(apiObj.data);
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       wireObj.kind.LnUrlError.data = pre_data;
       return;
     }
@@ -2897,6 +2903,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_invoice = cst_encode_box_autoadd_ln_invoice(apiObj.invoice);
       wireObj.tag = 1;
       wireObj.kind.Bolt11.invoice = pre_invoice;
+      return;
+    }
+    if (apiObj is SendDestination_Bolt12) {
+      var pre_offer = cst_encode_String(apiObj.offer);
+      wireObj.tag = 2;
+      wireObj.kind.Bolt12.offer = pre_offer;
       return;
     }
   }
@@ -5190,10 +5202,16 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+}
+
 final class SendDestinationKind extends ffi.Union {
   external wire_cst_SendDestination_LiquidAddress LiquidAddress;
 
   external wire_cst_SendDestination_Bolt11 Bolt11;
+
+  external wire_cst_SendDestination_Bolt12 Bolt12;
 }
 
 final class wire_cst_send_destination extends ffi.Struct {
@@ -5810,6 +5828,10 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_InputType_Bolt12 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+}
+
 final class wire_cst_InputType_NodeId extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> node_id;
 }
@@ -5840,6 +5862,8 @@ final class InputTypeKind extends ffi.Union {
   external wire_cst_InputType_LiquidAddress LiquidAddress;
 
   external wire_cst_InputType_Bolt11 Bolt11;
+
+  external wire_cst_InputType_Bolt12 Bolt12;
 
   external wire_cst_InputType_NodeId NodeId;
 
