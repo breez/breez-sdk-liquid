@@ -1895,7 +1895,7 @@ impl LiquidSdk {
     /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
         self.chain_swap_handler
-            .rescan_incoming_chain_swaps(true)
+            .rescan_incoming_user_lockup_txs(true)
             .await?;
         Ok(())
     }
