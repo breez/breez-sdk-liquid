@@ -662,7 +662,7 @@ impl LiquidSdk {
         }
     }
 
-    /// Estimate the lockup tx fee
+    /// Estimate the lockup tx fee for Send and Chain Send swaps
     async fn estimate_lockup_tx_fee(
         &self,
         user_lockup_amount_sat: u64,

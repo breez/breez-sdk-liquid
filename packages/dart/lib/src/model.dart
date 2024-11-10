@@ -1005,7 +1005,7 @@ class PrepareSendRequest {
   final String destination;
 
   /// Should only be set when paying directly onchain or to a BIP21 URI
-  /// where no amount is specified
+  /// where no amount is specified, or when the caller wishes to drain
   final PayOnchainAmount? amount;
 
   const PrepareSendRequest({

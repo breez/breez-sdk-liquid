@@ -349,7 +349,7 @@ pub struct PrepareSendRequest {
     pub destination: String,
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
-    /// where no amount is specified
+    /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayOnchainAmount>,
 }
 
