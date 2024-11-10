@@ -249,6 +249,12 @@ pub trait Signer: Send + Sync {
     /// HMAC-SHA256 using the private key derived from the given derivation path
     /// This is used to calculate the linking key of lnurl-auth specification: https://github.com/lnurl/luds/blob/luds/05.md
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+
+    /// Encrypts a message using (ECIES)[ecies::encrypt]
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
+
+    /// Decrypts a message using (ECIES)[ecies::decrypt]
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -580,7 +586,7 @@ impl SwapScriptV2 {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     Incoming = 0,
     Outgoing = 1,
