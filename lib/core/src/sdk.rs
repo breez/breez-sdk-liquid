@@ -793,27 +793,9 @@ impl LiquidSdk {
                     .amount_sat
                     .ok_or_else(|| anyhow!("Expected amount when processing BOLT12 offer"))?;
 
-                info!("Got BOLT12 offer, fetching BOLT12 invoice");
-
-                let invoice_str = self.swapper.get_bolt12_invoice(&offer, amount_sat)?;
-                let invoice_parsed = utils::parse_bolt12_invoice(&invoice_str)?;
-
-                // TODO If supporting receive: validate it's not a self-transfer
-                // TODO Validate invoice
-
-                receiver_amount_sat = invoice_parsed.amount_msats() / 1_000;
-
-                if let Some(amount_sat) = req.amount_sat {
-                    ensure_sdk!(
-                        receiver_amount_sat == amount_sat,
-                            PaymentError::Generic { err: "Amount in the payment request is not the same as the one in the invoice".to_string() }
-                        );
-                }
+                receiver_amount_sat = amount_sat;
 
                 let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
-
-                // TODO Check for MRH for Bolt12
-                // TODO If MRH, fallback to onchain
 
                 let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
                 let lockup_fees_sat = self
@@ -822,7 +804,7 @@ impl LiquidSdk {
                 fees_sat = boltz_fees_total + lockup_fees_sat;
 
                 payment_destination = SendDestination::Bolt12 {
-                    offer: req.destination.to_string(),
+                    offer,
                     receiver_amount_sat,
                 };
             }
