@@ -173,6 +173,7 @@ typedef struct wire_cst_SendDestination_Bolt11 {
 
 typedef struct wire_cst_SendDestination_Bolt12 {
   struct wire_cst_list_prim_u_8_strict *offer;
+  uint64_t receiver_amount_sat;
 } wire_cst_SendDestination_Bolt12;
 
 typedef union SendDestinationKind {

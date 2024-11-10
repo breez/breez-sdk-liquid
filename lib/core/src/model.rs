@@ -364,6 +364,7 @@ pub enum SendDestination {
     },
     Bolt12 {
         offer: String,
+        receiver_amount_sat: u64,
     },
 }
 

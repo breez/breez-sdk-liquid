@@ -2843,6 +2843,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return SendDestination_Bolt12(
           offer: dco_decode_String(raw[1]),
+          receiverAmountSat: dco_decode_u_64(raw[2]),
         );
       default:
         throw Exception("unreachable");
@@ -4668,7 +4669,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SendDestination_Bolt11(invoice: var_invoice);
       case 2:
         var var_offer = sse_decode_String(deserializer);
-        return SendDestination_Bolt12(offer: var_offer);
+        var var_receiverAmountSat = sse_decode_u_64(deserializer);
+        return SendDestination_Bolt12(offer: var_offer, receiverAmountSat: var_receiverAmountSat);
       default:
         throw UnimplementedError('');
     }
@@ -6357,9 +6359,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SendDestination_Bolt11(invoice: final invoice):
         sse_encode_i_32(1, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
-      case SendDestination_Bolt12(offer: final offer):
+      case SendDestination_Bolt12(offer: final offer, receiverAmountSat: final receiverAmountSat):
         sse_encode_i_32(2, serializer);
         sse_encode_String(offer, serializer);
+        sse_encode_u_64(receiverAmountSat, serializer);
       default:
         throw UnimplementedError('');
     }

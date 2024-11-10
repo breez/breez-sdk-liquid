@@ -2907,8 +2907,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is SendDestination_Bolt12) {
       var pre_offer = cst_encode_String(apiObj.offer);
+      var pre_receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
       wireObj.tag = 2;
       wireObj.kind.Bolt12.offer = pre_offer;
+      wireObj.kind.Bolt12.receiver_amount_sat = pre_receiver_amount_sat;
       return;
     }
   }
@@ -5204,6 +5206,9 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  @ffi.Uint64()
+  external int receiver_amount_sat;
 }
 
 final class SendDestinationKind extends ffi.Union {

@@ -1931,7 +1931,7 @@ abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
           _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
       __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String offer});
+  $Res call({String offer, BigInt receiverAmountSat});
 }
 
 /// @nodoc
@@ -1948,12 +1948,17 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? offer = null,
+    Object? receiverAmountSat = null,
   }) {
     return _then(_$SendDestination_Bolt12Impl(
       offer: null == offer
           ? _value.offer
           : offer // ignore: cast_nullable_to_non_nullable
               as String,
+      receiverAmountSat: null == receiverAmountSat
+          ? _value.receiverAmountSat
+          : receiverAmountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt,
     ));
   }
 }
@@ -1961,14 +1966,16 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
-  const _$SendDestination_Bolt12Impl({required this.offer}) : super._();
+  const _$SendDestination_Bolt12Impl({required this.offer, required this.receiverAmountSat}) : super._();
 
   @override
   final String offer;
+  @override
+  final BigInt receiverAmountSat;
 
   @override
   String toString() {
-    return 'SendDestination.bolt12(offer: $offer)';
+    return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat)';
   }
 
   @override
@@ -1976,11 +1983,13 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SendDestination_Bolt12Impl &&
-            (identical(other.offer, offer) || other.offer == offer));
+            (identical(other.offer, offer) || other.offer == offer) &&
+            (identical(other.receiverAmountSat, receiverAmountSat) ||
+                other.receiverAmountSat == receiverAmountSat));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, offer);
+  int get hashCode => Object.hash(runtimeType, offer, receiverAmountSat);
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
@@ -1992,10 +2001,12 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
 }
 
 abstract class SendDestination_Bolt12 extends SendDestination {
-  const factory SendDestination_Bolt12({required final String offer}) = _$SendDestination_Bolt12Impl;
+  const factory SendDestination_Bolt12(
+      {required final String offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
   const SendDestination_Bolt12._() : super._();
 
   String get offer;
+  BigInt get receiverAmountSat;
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.

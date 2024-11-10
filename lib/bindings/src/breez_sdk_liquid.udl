@@ -381,7 +381,7 @@ dictionary PrepareSendRequest {
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
     Bolt11(LNInvoice invoice);
-    Bolt12(string offer);
+    Bolt12(string offer, u64 receiver_amount_sat);
 };
 
 dictionary PrepareSendResponse {

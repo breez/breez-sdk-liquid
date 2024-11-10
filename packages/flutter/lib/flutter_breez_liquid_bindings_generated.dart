@@ -3988,6 +3988,9 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  @ffi.Uint64()
+  external int receiver_amount_sat;
 }
 
 final class SendDestinationKind extends ffi.Union {

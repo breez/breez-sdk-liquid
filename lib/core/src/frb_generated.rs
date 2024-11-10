@@ -3896,7 +3896,11 @@ impl SseDecode for crate::model::SendDestination {
             }
             2 => {
                 let mut var_offer = <String>::sse_decode(deserializer);
-                return crate::model::SendDestination::Bolt12 { offer: var_offer };
+                let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+                return crate::model::SendDestination::Bolt12 {
+                    offer: var_offer,
+                    receiver_amount_sat: var_receiverAmountSat,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -5949,9 +5953,15 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
             crate::model::SendDestination::Bolt11 { invoice } => {
                 [1.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SendDestination::Bolt12 { offer } => {
-                [2.into_dart(), offer.into_into_dart().into_dart()].into_dart()
-            }
+            crate::model::SendDestination::Bolt12 {
+                offer,
+                receiver_amount_sat,
+            } => [
+                2.into_dart(),
+                offer.into_into_dart().into_dart(),
+                receiver_amount_sat.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -7564,9 +7574,13 @@ impl SseEncode for crate::model::SendDestination {
                 <i32>::sse_encode(1, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
-            crate::model::SendDestination::Bolt12 { offer } => {
+            crate::model::SendDestination::Bolt12 {
+                offer,
+                receiver_amount_sat,
+            } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(offer, serializer);
+                <u64>::sse_encode(receiver_amount_sat, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9370,6 +9384,7 @@ mod io {
                     let ans = unsafe { self.kind.Bolt12 };
                     crate::model::SendDestination::Bolt12 {
                         offer: ans.offer.cst_decode(),
+                        receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -12474,6 +12489,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_Bolt12 {
         offer: *mut wire_cst_list_prim_u_8_strict,
+        receiver_amount_sat: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

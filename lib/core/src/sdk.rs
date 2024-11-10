@@ -788,25 +788,14 @@ impl LiquidSdk {
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
             }
-            Ok(_) => {
-                return Err(PaymentError::Generic {
-                    err: "Destination is not valid".to_string(),
-                });
-            }
-            Err(_) => {
-                // TODO Workaround to avoid adding an InputType::Bolt12 variant in sdk-common
-
-                // TODO TBD: Should InputType::Bolt12_Offer be added to sdk-common? Or Bolt12_Invoice?
-                //      If yes, with full parsing and mapping to LNInvoice?
-
+            Ok(InputType::Bolt12 { offer }) => {
                 let amount_sat = req
                     .amount_sat
                     .ok_or_else(|| anyhow!("Expected amount when processing BOLT12 offer"))?;
 
-                let offer = &req.destination;
                 info!("Got BOLT12 offer, fetching BOLT12 invoice");
 
-                let invoice_str = self.swapper.get_bolt12_invoice(offer, amount_sat)?;
+                let invoice_str = self.swapper.get_bolt12_invoice(&offer, amount_sat)?;
                 let invoice_parsed = utils::parse_bolt12_invoice(&invoice_str)?;
 
                 // TODO If supporting receive: validate it's not a self-transfer
@@ -834,7 +823,13 @@ impl LiquidSdk {
 
                 payment_destination = SendDestination::Bolt12 {
                     offer: req.destination.to_string(),
+                    receiver_amount_sat,
                 };
+            }
+            _ => {
+                return Err(PaymentError::Generic {
+                    err: "Destination is not valid".to_string(),
+                });
             }
         };
 
@@ -875,7 +870,6 @@ impl LiquidSdk {
     pub async fn send_payment(
         &self,
         req: &SendPaymentRequest,
-        // TODO Req must include BOLT12 invoice (which is not available during prepare) and amount
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
@@ -915,10 +909,13 @@ impl LiquidSdk {
             SendDestination::Bolt11 { invoice } => {
                 self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await
             }
-            SendDestination::Bolt12 { offer } => {
-                // TODO Amount hardcoded to 1_000 because we don't yet have it in the request
-                let bolt12_invoice = self.swapper.get_bolt12_invoice(offer, 1_000)?;
-
+            SendDestination::Bolt12 {
+                offer,
+                receiver_amount_sat,
+            } => {
+                let bolt12_invoice = self
+                    .swapper
+                    .get_bolt12_invoice(offer, *receiver_amount_sat)?;
                 self.pay_bolt12_invoice(&bolt12_invoice, *fees_sat).await
             }
         }
