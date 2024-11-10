@@ -4,6 +4,7 @@ use rusqlite::{
 };
 
 pub(crate) mod client;
+pub(crate) mod data;
 pub(crate) mod sync;
 
 const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
