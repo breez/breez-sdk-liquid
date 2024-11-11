@@ -350,7 +350,7 @@ pub struct PrepareSendRequest {
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
-    pub amount: Option<PayOnchainAmount>,
+    pub amount: Option<PayAmount>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -384,7 +384,7 @@ pub struct SendPaymentResponse {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub enum PayOnchainAmount {
+pub enum PayAmount {
     /// The amount in satoshi that will be received
     Receiver { amount_sat: u64 },
     /// Indicates that all available funds should be sent
@@ -394,7 +394,7 @@ pub enum PayOnchainAmount {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
-    pub amount: PayOnchainAmount,
+    pub amount: PayAmount,
     /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
     pub fee_rate_sat_per_vbyte: Option<u32>,
 }

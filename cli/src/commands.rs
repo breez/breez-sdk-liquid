@@ -332,8 +332,8 @@ pub(crate) async fn handle_command(
                 }
             };
             let amount = match (amount_sat, drain.unwrap_or(false)) {
-                (Some(amount_sat), _) => Some(PayOnchainAmount::Receiver { amount_sat }),
-                (_, true) => Some(PayOnchainAmount::Drain),
+                (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
+                (_, true) => Some(PayAmount::Drain),
                 (_, _) => None,
             };
 
@@ -376,8 +376,8 @@ pub(crate) async fn handle_command(
             fee_rate_sat_per_vbyte,
         } => {
             let amount = match drain.unwrap_or(false) {
-                true => PayOnchainAmount::Drain,
-                false => PayOnchainAmount::Receiver {
+                true => PayAmount::Drain,
+                false => PayAmount::Receiver {
                     amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
                         "Must specify `receiver_amount_sat` if not draining"
                     ))?,

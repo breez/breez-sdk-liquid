@@ -725,10 +725,10 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareSendRequest] containing:
     ///     * `destination` - Either a Liquid BIP21 URI/address or a BOLT11 invoice
-    ///     * `amount` - The optional amount of type [PayOnchainAmount]. Should only be specified
+    ///     * `amount` - The optional amount of type [PayAmount]. Should only be specified
     ///        when paying directly onchain or via amount-less BIP21.
-    ///        - [PayOnchainAmount::Drain] which uses all funds
-    ///        - [PayOnchainAmount::Receiver] which sets the amount the receiver should receive
+    ///        - [PayAmount::Drain] which uses all funds
+    ///        - [PayAmount::Receiver] which sets the amount the receiver should receive
     ///
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
@@ -755,7 +755,7 @@ impl LiquidSdk {
                             err: "Amount must be set when paying to a Liquid address".to_string(),
                         });
                     }
-                    (Some(bip21_amount_sat), None) => PayOnchainAmount::Receiver {
+                    (Some(bip21_amount_sat), None) => PayAmount::Receiver {
                         amount_sat: bip21_amount_sat,
                     },
                     (_, Some(amount)) => amount,
@@ -773,7 +773,7 @@ impl LiquidSdk {
                 );
 
                 (receiver_amount_sat, fees_sat) = match amount {
-                    PayOnchainAmount::Drain => {
+                    PayAmount::Drain => {
                         ensure_sdk!(
                             get_info_res.pending_receive_sat == 0
                                 && get_info_res.pending_send_sat == 0,
@@ -788,7 +788,7 @@ impl LiquidSdk {
                         info!("Drain amount: {drain_amount_sat} sat");
                         (drain_amount_sat, drain_fees_sat)
                     }
-                    PayOnchainAmount::Receiver { amount_sat } => {
+                    PayAmount::Receiver { amount_sat } => {
                         let fees_sat = self
                             .estimate_onchain_tx_or_drain_tx_fee(
                                 amount_sat,
@@ -812,7 +812,7 @@ impl LiquidSdk {
                     err: "Expected invoice with an amount".to_string(),
                 })? / 1000;
 
-                if let Some(PayOnchainAmount::Receiver { amount_sat }) = req.amount {
+                if let Some(PayAmount::Receiver { amount_sat }) = req.amount {
                     ensure_sdk!(
                         receiver_amount_sat == amount_sat,
                         PaymentError::Generic {
@@ -1198,8 +1198,8 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PreparePayOnchainRequest] containing:
-    ///     * `amount` - which can be of two types: [PayOnchainAmount::Drain], which uses all funds,
-    ///        and [PayOnchainAmount::Receiver], which sets the amount the receiver should receive
+    ///     * `amount` - which can be of two types: [PayAmount::Drain], which uses all funds,
+    ///        and [PayAmount::Receiver], which sets the amount the receiver should receive
     ///     * `fee_rate_sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
@@ -1217,7 +1217,7 @@ impl LiquidSdk {
 
         info!("Preparing for onchain payment of kind: {:?}", req.amount);
         let (payer_amount_sat, receiver_amount_sat, total_fees_sat) = match req.amount {
-            PayOnchainAmount::Receiver { amount_sat } => {
+            PayAmount::Receiver { amount_sat } => {
                 let receiver_amount_sat = amount_sat;
 
                 let user_lockup_amount_sat_without_service_fee =
@@ -1241,7 +1241,7 @@ impl LiquidSdk {
 
                 (payer_amount_sat, receiver_amount_sat, total_fees_sat)
             }
-            PayOnchainAmount::Drain => {
+            PayAmount::Drain => {
                 ensure_sdk!(
                     get_info_res.pending_receive_sat == 0 && get_info_res.pending_send_sat == 0,
                     PaymentError::Generic {

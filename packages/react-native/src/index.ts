@@ -266,7 +266,7 @@ export interface PrepareLnUrlPayResponse {
 }
 
 export interface PreparePayOnchainRequest {
-    amount: PayOnchainAmount
+    amount: PayAmount
     feeRateSatPerVbyte?: number
 }
 
@@ -301,7 +301,7 @@ export interface PrepareRefundResponse {
 
 export interface PrepareSendRequest {
     destination: string
-    amount?: PayOnchainAmount
+    amount?: PayAmount
 }
 
 export interface PrepareSendResponse {
@@ -533,16 +533,16 @@ export enum Network {
     REGTEST = "regtest"
 }
 
-export enum PayOnchainAmountVariant {
+export enum PayAmountVariant {
     RECEIVER = "receiver",
     DRAIN = "drain"
 }
 
-export type PayOnchainAmount = {
-    type: PayOnchainAmountVariant.RECEIVER,
+export type PayAmount = {
+    type: PayAmountVariant.RECEIVER,
     amountSat: number
 } | {
-    type: PayOnchainAmountVariant.DRAIN
+    type: PayAmountVariant.DRAIN
 }
 
 export enum PaymentDetailsVariant {

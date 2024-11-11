@@ -150,7 +150,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw);
 
   @protected
-  PayOnchainAmount dco_decode_box_autoadd_pay_onchain_amount(dynamic raw);
+  PayAmount dco_decode_box_autoadd_pay_amount(dynamic raw);
 
   @protected
   PayOnchainRequest dco_decode_box_autoadd_pay_onchain_request(dynamic raw);
@@ -381,7 +381,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ListPaymentDetails? dco_decode_opt_box_autoadd_list_payment_details(dynamic raw);
 
   @protected
-  PayOnchainAmount? dco_decode_opt_box_autoadd_pay_onchain_amount(dynamic raw);
+  PayAmount? dco_decode_opt_box_autoadd_pay_amount(dynamic raw);
 
   @protected
   Payment? dco_decode_opt_box_autoadd_payment(dynamic raw);
@@ -405,7 +405,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw);
 
   @protected
-  PayOnchainAmount dco_decode_pay_onchain_amount(dynamic raw);
+  PayAmount dco_decode_pay_amount(dynamic raw);
 
   @protected
   PayOnchainRequest dco_decode_pay_onchain_request(dynamic raw);
@@ -673,7 +673,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer);
 
   @protected
-  PayOnchainAmount sse_decode_box_autoadd_pay_onchain_amount(SseDeserializer deserializer);
+  PayAmount sse_decode_box_autoadd_pay_amount(SseDeserializer deserializer);
 
   @protected
   PayOnchainRequest sse_decode_box_autoadd_pay_onchain_request(SseDeserializer deserializer);
@@ -904,7 +904,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ListPaymentDetails? sse_decode_opt_box_autoadd_list_payment_details(SseDeserializer deserializer);
 
   @protected
-  PayOnchainAmount? sse_decode_opt_box_autoadd_pay_onchain_amount(SseDeserializer deserializer);
+  PayAmount? sse_decode_opt_box_autoadd_pay_amount(SseDeserializer deserializer);
 
   @protected
   Payment? sse_decode_opt_box_autoadd_payment(SseDeserializer deserializer);
@@ -928,7 +928,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer);
 
   @protected
-  PayOnchainAmount sse_decode_pay_onchain_amount(SseDeserializer deserializer);
+  PayAmount sse_decode_pay_amount(SseDeserializer deserializer);
 
   @protected
   PayOnchainRequest sse_decode_pay_onchain_request(SseDeserializer deserializer);
@@ -1326,10 +1326,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_pay_onchain_amount> cst_encode_box_autoadd_pay_onchain_amount(PayOnchainAmount raw) {
+  ffi.Pointer<wire_cst_pay_amount> cst_encode_box_autoadd_pay_amount(PayAmount raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_pay_onchain_amount();
-    cst_api_fill_to_wire_pay_onchain_amount(raw, ptr.ref);
+    final ptr = wire.cst_new_box_autoadd_pay_amount();
+    cst_api_fill_to_wire_pay_amount(raw, ptr.ref);
     return ptr;
   }
 
@@ -1631,10 +1631,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_pay_onchain_amount> cst_encode_opt_box_autoadd_pay_onchain_amount(
-      PayOnchainAmount? raw) {
+  ffi.Pointer<wire_cst_pay_amount> cst_encode_opt_box_autoadd_pay_amount(PayAmount? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_pay_onchain_amount(raw);
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_pay_amount(raw);
   }
 
   @protected
@@ -1890,9 +1889,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_box_autoadd_pay_onchain_amount(
-      PayOnchainAmount apiObj, ffi.Pointer<wire_cst_pay_onchain_amount> wireObj) {
-    cst_api_fill_to_wire_pay_onchain_amount(apiObj, wireObj.ref);
+  void cst_api_fill_to_wire_box_autoadd_pay_amount(
+      PayAmount apiObj, ffi.Pointer<wire_cst_pay_amount> wireObj) {
+    cst_api_fill_to_wire_pay_amount(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2505,14 +2504,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_pay_onchain_amount(PayOnchainAmount apiObj, wire_cst_pay_onchain_amount wireObj) {
-    if (apiObj is PayOnchainAmount_Receiver) {
+  void cst_api_fill_to_wire_pay_amount(PayAmount apiObj, wire_cst_pay_amount wireObj) {
+    if (apiObj is PayAmount_Receiver) {
       var pre_amount_sat = cst_encode_u_64(apiObj.amountSat);
       wireObj.tag = 0;
       wireObj.kind.Receiver.amount_sat = pre_amount_sat;
       return;
     }
-    if (apiObj is PayOnchainAmount_Drain) {
+    if (apiObj is PayAmount_Drain) {
       wireObj.tag = 1;
       return;
     }
@@ -2724,7 +2723,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_prepare_pay_onchain_request(
       PreparePayOnchainRequest apiObj, wire_cst_prepare_pay_onchain_request wireObj) {
-    cst_api_fill_to_wire_pay_onchain_amount(apiObj.amount, wireObj.amount);
+    cst_api_fill_to_wire_pay_amount(apiObj.amount, wireObj.amount);
     wireObj.fee_rate_sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(apiObj.feeRateSatPerVbyte);
   }
 
@@ -2771,7 +2770,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_prepare_send_request(
       PrepareSendRequest apiObj, wire_cst_prepare_send_request wireObj) {
     wireObj.destination = cst_encode_String(apiObj.destination);
-    wireObj.amount = cst_encode_opt_box_autoadd_pay_onchain_amount(apiObj.amount);
+    wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
   }
 
   @protected
@@ -3200,7 +3199,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       MessageSuccessActionData self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_pay_onchain_amount(PayOnchainAmount self, SseSerializer serializer);
+  void sse_encode_box_autoadd_pay_amount(PayAmount self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer);
@@ -3436,7 +3435,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_list_payment_details(ListPaymentDetails? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_pay_onchain_amount(PayOnchainAmount? self, SseSerializer serializer);
+  void sse_encode_opt_box_autoadd_pay_amount(PayAmount? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_payment(Payment? self, SseSerializer serializer);
@@ -3461,7 +3460,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_pay_onchain_amount(PayOnchainAmount self, SseSerializer serializer);
+  void sse_encode_pay_amount(PayAmount self, SseSerializer serializer);
 
   @protected
   void sse_encode_pay_onchain_request(PayOnchainRequest self, SseSerializer serializer);
@@ -4668,15 +4667,15 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_message_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>();
 
-  ffi.Pointer<wire_cst_pay_onchain_amount> cst_new_box_autoadd_pay_onchain_amount() {
-    return _cst_new_box_autoadd_pay_onchain_amount();
+  ffi.Pointer<wire_cst_pay_amount> cst_new_box_autoadd_pay_amount() {
+    return _cst_new_box_autoadd_pay_amount();
   }
 
-  late final _cst_new_box_autoadd_pay_onchain_amountPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pay_onchain_amount> Function()>>(
-          'frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_amount');
-  late final _cst_new_box_autoadd_pay_onchain_amount = _cst_new_box_autoadd_pay_onchain_amountPtr
-      .asFunction<ffi.Pointer<wire_cst_pay_onchain_amount> Function()>();
+  late final _cst_new_box_autoadd_pay_amountPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pay_amount> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_pay_amount');
+  late final _cst_new_box_autoadd_pay_amount =
+      _cst_new_box_autoadd_pay_amountPtr.asFunction<ffi.Pointer<wire_cst_pay_amount> Function()>();
 
   ffi.Pointer<wire_cst_pay_onchain_request> cst_new_box_autoadd_pay_onchain_request() {
     return _cst_new_box_autoadd_pay_onchain_request();
@@ -5396,24 +5395,24 @@ final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> validate_success_action_url;
 }
 
-final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
+final class wire_cst_PayAmount_Receiver extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 }
 
-final class PayOnchainAmountKind extends ffi.Union {
-  external wire_cst_PayOnchainAmount_Receiver Receiver;
+final class PayAmountKind extends ffi.Union {
+  external wire_cst_PayAmount_Receiver Receiver;
 }
 
-final class wire_cst_pay_onchain_amount extends ffi.Struct {
+final class wire_cst_pay_amount extends ffi.Struct {
   @ffi.Int32()
   external int tag;
 
-  external PayOnchainAmountKind kind;
+  external PayAmountKind kind;
 }
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
-  external wire_cst_pay_onchain_amount amount;
+  external wire_cst_pay_amount amount;
 
   external ffi.Pointer<ffi.Uint32> fee_rate_sat_per_vbyte;
 }
@@ -5437,7 +5436,7 @@ final class wire_cst_prepare_refund_request extends ffi.Struct {
 final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
-  external ffi.Pointer<wire_cst_pay_onchain_amount> amount;
+  external ffi.Pointer<wire_cst_pay_amount> amount;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {

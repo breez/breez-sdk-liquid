@@ -476,16 +476,16 @@ class OnchainPaymentLimitsResponse {
 }
 
 @freezed
-sealed class PayOnchainAmount with _$PayOnchainAmount {
-  const PayOnchainAmount._();
+sealed class PayAmount with _$PayAmount {
+  const PayAmount._();
 
   /// The amount in satoshi that will be received
-  const factory PayOnchainAmount.receiver({
+  const factory PayAmount.receiver({
     required BigInt amountSat,
-  }) = PayOnchainAmount_Receiver;
+  }) = PayAmount_Receiver;
 
   /// Indicates that all available funds should be sent
-  const factory PayOnchainAmount.drain() = PayOnchainAmount_Drain;
+  const factory PayAmount.drain() = PayAmount_Drain;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::pay_onchain].
@@ -849,7 +849,7 @@ class PrepareLnUrlPayResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
-  final PayOnchainAmount amount;
+  final PayAmount amount;
 
   /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
   final int? feeRateSatPerVbyte;
@@ -1006,7 +1006,7 @@ class PrepareSendRequest {
 
   /// Should only be set when paying directly onchain or to a BIP21 URI
   /// where no amount is specified, or when the caller wishes to drain
-  final PayOnchainAmount? amount;
+  final PayAmount? amount;
 
   const PrepareSendRequest({
     required this.destination,
