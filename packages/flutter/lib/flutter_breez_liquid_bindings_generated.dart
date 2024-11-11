@@ -1116,6 +1116,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_message_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>();
 
+  ffi.Pointer<wire_cst_pay_amount> frbgen_breez_liquid_cst_new_box_autoadd_pay_amount() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_pay_amount();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_pay_amountPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pay_amount> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_pay_amount');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_pay_amount =
+      _frbgen_breez_liquid_cst_new_box_autoadd_pay_amountPtr
+          .asFunction<ffi.Pointer<wire_cst_pay_amount> Function()>();
+
   ffi.Pointer<wire_cst_pay_onchain_request> frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_pay_onchain_request();
   }
@@ -4143,24 +4154,24 @@ final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> validate_success_action_url;
 }
 
-final class wire_cst_PayOnchainAmount_Receiver extends ffi.Struct {
+final class wire_cst_PayAmount_Receiver extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 }
 
-final class PayOnchainAmountKind extends ffi.Union {
-  external wire_cst_PayOnchainAmount_Receiver Receiver;
+final class PayAmountKind extends ffi.Union {
+  external wire_cst_PayAmount_Receiver Receiver;
 }
 
-final class wire_cst_pay_onchain_amount extends ffi.Struct {
+final class wire_cst_pay_amount extends ffi.Struct {
   @ffi.Int32()
   external int tag;
 
-  external PayOnchainAmountKind kind;
+  external PayAmountKind kind;
 }
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
-  external wire_cst_pay_onchain_amount amount;
+  external wire_cst_pay_amount amount;
 
   external ffi.Pointer<ffi.Uint32> fee_rate_sat_per_vbyte;
 }
@@ -4184,7 +4195,7 @@ final class wire_cst_prepare_refund_request extends ffi.Struct {
 final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
-  external ffi.Pointer<ffi.Uint64> amount_sat;
+  external ffi.Pointer<wire_cst_pay_amount> amount;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {

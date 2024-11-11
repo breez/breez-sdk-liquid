@@ -681,30 +681,14 @@ impl ChainSwapHandler {
             lockup_details.amount, lockup_details.lockup_address
         );
 
-        let lockup_tx = match self
+        let lockup_tx = self
             .onchain_wallet
-            .build_tx(
-                self.config
-                    .lowball_fee_rate_msat_per_vbyte()
-                    .map(|v| v as f32),
+            .build_tx_or_drain_tx(
+                self.config.lowball_fee_rate_msat_per_vbyte(),
                 &lockup_details.lockup_address,
                 lockup_details.amount,
             )
-            .await
-        {
-            Err(PaymentError::InsufficientFunds) => {
-                warn!("Cannot build normal lockup tx due to insufficient funds, attempting to build drain tx");
-                self.onchain_wallet
-                    .build_drain_tx(
-                        None,
-                        &lockup_details.lockup_address,
-                        Some(lockup_details.amount),
-                    )
-                    .await
-            }
-            Err(e) => Err(e),
-            Ok(lockup_tx) => Ok(lockup_tx),
-        }?;
+            .await?;
 
         let lockup_tx_id = self
             .liquid_chain_service

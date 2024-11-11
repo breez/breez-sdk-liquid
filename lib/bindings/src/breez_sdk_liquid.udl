@@ -373,7 +373,7 @@ dictionary LnUrlPayRequest {
 
 dictionary PrepareSendRequest {
     string destination;
-    u64? amount_sat = null;
+    PayAmount? amount = null;
 };
 
 [Enum]
@@ -439,13 +439,13 @@ dictionary OnchainPaymentLimitsResponse {
 };
 
 [Enum]
-interface PayOnchainAmount {
+interface PayAmount {
     Receiver(u64 amount_sat);
     Drain();
 };
 
 dictionary PreparePayOnchainRequest {
-    PayOnchainAmount amount;
+    PayAmount amount;
     u32? fee_rate_sat_per_vbyte = null;
 };
 

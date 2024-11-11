@@ -3180,6 +3180,17 @@ impl SseDecode for Option<crate::model::ListPaymentDetails> {
     }
 }
 
+impl SseDecode for Option<crate::model::PayAmount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::model::PayAmount>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::model::Payment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3259,19 +3270,19 @@ impl SseDecode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
-impl SseDecode for crate::model::PayOnchainAmount {
+impl SseDecode for crate::model::PayAmount {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
                 let mut var_amountSat = <u64>::sse_decode(deserializer);
-                return crate::model::PayOnchainAmount::Receiver {
+                return crate::model::PayAmount::Receiver {
                     amount_sat: var_amountSat,
                 };
             }
             1 => {
-                return crate::model::PayOnchainAmount::Drain;
+                return crate::model::PayAmount::Drain;
             }
             _ => {
                 unimplemented!("");
@@ -3558,7 +3569,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
 impl SseDecode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_amount = <crate::model::PayOnchainAmount>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayAmount>::sse_decode(deserializer);
         let mut var_feeRateSatPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::PreparePayOnchainRequest {
             amount: var_amount,
@@ -3639,10 +3650,10 @@ impl SseDecode for crate::model::PrepareSendRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
-        let mut var_amountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
             destination: var_destination,
-            amount_sat: var_amountSat,
+            amount: var_amount,
         };
     }
 }
@@ -5169,27 +5180,22 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::OnchainPaymentLimitsRespons
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::model::PayOnchainAmount {
+impl flutter_rust_bridge::IntoDart for crate::model::PayAmount {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+            crate::model::PayAmount::Receiver { amount_sat } => {
                 [0.into_dart(), amount_sat.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::PayOnchainAmount::Drain => [1.into_dart()].into_dart(),
+            crate::model::PayAmount::Drain => [1.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
         }
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::model::PayOnchainAmount
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::model::PayOnchainAmount>
-    for crate::model::PayOnchainAmount
-{
-    fn into_into_dart(self) -> crate::model::PayOnchainAmount {
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::PayAmount {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PayAmount> for crate::model::PayAmount {
+    fn into_into_dart(self) -> crate::model::PayAmount {
         self
     }
 }
@@ -5636,7 +5642,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.destination.into_into_dart().into_dart(),
-            self.amount_sat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6979,6 +6985,16 @@ impl SseEncode for Option<crate::model::ListPaymentDetails> {
     }
 }
 
+impl SseEncode for Option<crate::model::PayAmount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::PayAmount>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::model::Payment> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7049,15 +7065,15 @@ impl SseEncode for Option<Vec<crate::model::PaymentType>> {
     }
 }
 
-impl SseEncode for crate::model::PayOnchainAmount {
+impl SseEncode for crate::model::PayAmount {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::model::PayOnchainAmount::Receiver { amount_sat } => {
+            crate::model::PayAmount::Receiver { amount_sat } => {
                 <i32>::sse_encode(0, serializer);
                 <u64>::sse_encode(amount_sat, serializer);
             }
-            crate::model::PayOnchainAmount::Drain => {
+            crate::model::PayAmount::Drain => {
                 <i32>::sse_encode(1, serializer);
             }
             _ => {
@@ -7316,7 +7332,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
 impl SseEncode for crate::model::PreparePayOnchainRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <crate::model::PayOnchainAmount>::sse_encode(self.amount, serializer);
+        <crate::model::PayAmount>::sse_encode(self.amount, serializer);
         <Option<u32>>::sse_encode(self.fee_rate_sat_per_vbyte, serializer);
     }
 }
@@ -7369,7 +7385,7 @@ impl SseEncode for crate::model::PrepareSendRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
-        <Option<u64>>::sse_encode(self.amount_sat, serializer);
+        <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
     }
 }
 
@@ -8034,6 +8050,13 @@ mod io {
         fn cst_decode(self) -> crate::bindings::MessageSuccessActionData {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::bindings::MessageSuccessActionData>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::model::PayAmount> for *mut wire_cst_pay_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PayAmount {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::PayAmount>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::PayOnchainRequest> for *mut wire_cst_pay_onchain_request {
@@ -8884,17 +8907,17 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::model::PayOnchainAmount> for wire_cst_pay_onchain_amount {
+    impl CstDecode<crate::model::PayAmount> for wire_cst_pay_amount {
         // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::PayOnchainAmount {
+        fn cst_decode(self) -> crate::model::PayAmount {
             match self.tag {
                 0 => {
                     let ans = unsafe { self.kind.Receiver };
-                    crate::model::PayOnchainAmount::Receiver {
+                    crate::model::PayAmount::Receiver {
                         amount_sat: ans.amount_sat.cst_decode(),
                     }
                 }
-                1 => crate::model::PayOnchainAmount::Drain,
+                1 => crate::model::PayAmount::Drain,
                 _ => unreachable!(),
             }
         }
@@ -9142,7 +9165,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareSendRequest {
             crate::model::PrepareSendRequest {
                 destination: self.destination.cst_decode(),
-                amount_sat: self.amount_sat.cst_decode(),
+                amount: self.amount.cst_decode(),
             }
         }
     }
@@ -10036,15 +10059,15 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
-    impl NewWithNullPtr for wire_cst_pay_onchain_amount {
+    impl NewWithNullPtr for wire_cst_pay_amount {
         fn new_with_null_ptr() -> Self {
             Self {
                 tag: -1,
-                kind: PayOnchainAmountKind { nil__: () },
+                kind: PayAmountKind { nil__: () },
             }
         }
     }
-    impl Default for wire_cst_pay_onchain_amount {
+    impl Default for wire_cst_pay_amount {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -10249,7 +10272,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 destination: core::ptr::null_mut(),
-                amount_sat: core::ptr::null_mut(),
+                amount: core::ptr::null_mut(),
             }
         }
     }
@@ -11105,6 +11128,14 @@ mod io {
     ) -> *mut wire_cst_message_success_action_data {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_message_success_action_data::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_amount(
+    ) -> *mut wire_cst_pay_amount {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_pay_amount::new_with_null_ptr(),
         )
     }
 
@@ -12042,19 +12073,19 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_pay_onchain_amount {
+    pub struct wire_cst_pay_amount {
         tag: i32,
-        kind: PayOnchainAmountKind,
+        kind: PayAmountKind,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub union PayOnchainAmountKind {
-        Receiver: wire_cst_PayOnchainAmount_Receiver,
+    pub union PayAmountKind {
+        Receiver: wire_cst_PayAmount_Receiver,
         nil__: (),
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_PayOnchainAmount_Receiver {
+    pub struct wire_cst_PayAmount_Receiver {
         amount_sat: u64,
     }
     #[repr(C)]
@@ -12217,7 +12248,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_pay_onchain_request {
-        amount: wire_cst_pay_onchain_amount,
+        amount: wire_cst_pay_amount,
         fee_rate_sat_per_vbyte: *mut u32,
     }
     #[repr(C)]
@@ -12258,7 +12289,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_send_request {
         destination: *mut wire_cst_list_prim_u_8_strict,
-        amount_sat: *mut u64,
+        amount: *mut wire_cst_pay_amount,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
