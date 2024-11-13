@@ -34,7 +34,9 @@
     "release": "release-it",
     "example": "yarn --cwd example",
     "pods": "cd example/ios && pod install",
-    "bootstrap": "rm -rf node_modules && rm -rf example/node_modules && yarn && yarn example && yarn pods"
+    "bootstrap": "rm -rf node_modules && rm -rf example/node_modules && yarn && yarn example && yarn pods",
+    "plugin:build": "expo-module build",
+    "plugin:clean": "expo-module clean"
   },
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -58,6 +60,8 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-prettier": "^3.1.3",
+    "expo": "^52.0.4",
+    "expo-module-scripts": "^4.0.2",
     "jest": "^26.6.3",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
