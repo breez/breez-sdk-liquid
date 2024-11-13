@@ -4615,7 +4615,7 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
-final class wire_cst_InputType_Bolt12 extends ffi.Struct {
+final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
 }
 
@@ -4650,7 +4650,7 @@ final class InputTypeKind extends ffi.Union {
 
   external wire_cst_InputType_Bolt11 Bolt11;
 
-  external wire_cst_InputType_Bolt12 Bolt12;
+  external wire_cst_InputType_Bolt12Offer Bolt12Offer;
 
   external wire_cst_InputType_NodeId NodeId;
 

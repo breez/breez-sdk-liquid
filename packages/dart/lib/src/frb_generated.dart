@@ -1760,7 +1760,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),
         );
       case 3:
-        return InputType_Bolt12(
+        return InputType_Bolt12Offer(
           offer: dco_decode_String(raw[1]),
         );
       case 4:
@@ -3549,7 +3549,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return InputType_Bolt11(invoice: var_invoice);
       case 3:
         var var_offer = sse_decode_String(deserializer);
-        return InputType_Bolt12(offer: var_offer);
+        return InputType_Bolt12Offer(offer: var_offer);
       case 4:
         var var_nodeId = sse_decode_String(deserializer);
         return InputType_NodeId(nodeId: var_nodeId);
@@ -5422,7 +5422,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case InputType_Bolt11(invoice: final invoice):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
-      case InputType_Bolt12(offer: final offer):
+      case InputType_Bolt12Offer(offer: final offer):
         sse_encode_i_32(3, serializer);
         sse_encode_String(offer, serializer);
       case InputType_NodeId(nodeId: final nodeId):

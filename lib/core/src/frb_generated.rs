@@ -1798,7 +1798,7 @@ const _: fn() = || {
         crate::bindings::InputType::Bolt11 { invoice } => {
             let _: crate::bindings::LNInvoice = invoice;
         }
-        crate::bindings::InputType::Bolt12 { offer } => {
+        crate::bindings::InputType::Bolt12Offer { offer } => {
             let _: String = offer;
         }
         crate::bindings::InputType::NodeId { node_id } => {
@@ -2436,7 +2436,7 @@ impl SseDecode for crate::bindings::InputType {
             }
             3 => {
                 let mut var_offer = <String>::sse_decode(deserializer);
-                return crate::bindings::InputType::Bolt12 { offer: var_offer };
+                return crate::bindings::InputType::Bolt12Offer { offer: var_offer };
             }
             4 => {
                 let mut var_nodeId = <String>::sse_decode(deserializer);
@@ -4468,7 +4468,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::InputType> {
             crate::bindings::InputType::Bolt11 { invoice } => {
                 [2.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::Bolt12 { offer } => {
+            crate::bindings::InputType::Bolt12Offer { offer } => {
                 [3.into_dart(), offer.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::NodeId { node_id } => {
@@ -6414,7 +6414,7 @@ impl SseEncode for crate::bindings::InputType {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
-            crate::bindings::InputType::Bolt12 { offer } => {
+            crate::bindings::InputType::Bolt12Offer { offer } => {
                 <i32>::sse_encode(3, serializer);
                 <String>::sse_encode(offer, serializer);
             }
@@ -8341,8 +8341,8 @@ mod io {
                     }
                 }
                 3 => {
-                    let ans = unsafe { self.kind.Bolt12 };
-                    crate::bindings::InputType::Bolt12 {
+                    let ans = unsafe { self.kind.Bolt12Offer };
+                    crate::bindings::InputType::Bolt12Offer {
                         offer: ans.offer.cst_decode(),
                     }
                 }
@@ -11585,7 +11585,7 @@ mod io {
         BitcoinAddress: wire_cst_InputType_BitcoinAddress,
         LiquidAddress: wire_cst_InputType_LiquidAddress,
         Bolt11: wire_cst_InputType_Bolt11,
-        Bolt12: wire_cst_InputType_Bolt12,
+        Bolt12Offer: wire_cst_InputType_Bolt12Offer,
         NodeId: wire_cst_InputType_NodeId,
         Url: wire_cst_InputType_Url,
         LnUrlPay: wire_cst_InputType_LnUrlPay,
@@ -11611,7 +11611,7 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_InputType_Bolt12 {
+    pub struct wire_cst_InputType_Bolt12Offer {
         offer: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]

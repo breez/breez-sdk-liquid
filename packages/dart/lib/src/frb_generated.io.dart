@@ -2064,10 +2064,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Bolt11.invoice = pre_invoice;
       return;
     }
-    if (apiObj is InputType_Bolt12) {
+    if (apiObj is InputType_Bolt12Offer) {
       var pre_offer = cst_encode_String(apiObj.offer);
       wireObj.tag = 3;
-      wireObj.kind.Bolt12.offer = pre_offer;
+      wireObj.kind.Bolt12Offer.offer = pre_offer;
       return;
     }
     if (apiObj is InputType_NodeId) {
@@ -5833,7 +5833,7 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
-final class wire_cst_InputType_Bolt12 extends ffi.Struct {
+final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
 }
 
@@ -5868,7 +5868,7 @@ final class InputTypeKind extends ffi.Union {
 
   external wire_cst_InputType_Bolt11 Bolt11;
 
-  external wire_cst_InputType_Bolt12 Bolt12;
+  external wire_cst_InputType_Bolt12Offer Bolt12Offer;
 
   external wire_cst_InputType_NodeId NodeId;
 

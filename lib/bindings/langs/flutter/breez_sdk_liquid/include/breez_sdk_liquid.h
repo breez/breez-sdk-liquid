@@ -627,9 +627,9 @@ typedef struct wire_cst_InputType_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
 } wire_cst_InputType_Bolt11;
 
-typedef struct wire_cst_InputType_Bolt12 {
+typedef struct wire_cst_InputType_Bolt12Offer {
   struct wire_cst_list_prim_u_8_strict *offer;
-} wire_cst_InputType_Bolt12;
+} wire_cst_InputType_Bolt12Offer;
 
 typedef struct wire_cst_InputType_NodeId {
   struct wire_cst_list_prim_u_8_strict *node_id;
@@ -659,7 +659,7 @@ typedef union InputTypeKind {
   struct wire_cst_InputType_BitcoinAddress BitcoinAddress;
   struct wire_cst_InputType_LiquidAddress LiquidAddress;
   struct wire_cst_InputType_Bolt11 Bolt11;
-  struct wire_cst_InputType_Bolt12 Bolt12;
+  struct wire_cst_InputType_Bolt12Offer Bolt12Offer;
   struct wire_cst_InputType_NodeId NodeId;
   struct wire_cst_InputType_Url Url;
   struct wire_cst_InputType_LnUrlPay LnUrlPay;

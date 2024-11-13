@@ -463,19 +463,20 @@ abstract class InputType_Bolt11 extends InputType {
 }
 
 /// @nodoc
-abstract class _$$InputType_Bolt12ImplCopyWith<$Res> {
-  factory _$$InputType_Bolt12ImplCopyWith(
-          _$InputType_Bolt12Impl value, $Res Function(_$InputType_Bolt12Impl) then) =
-      __$$InputType_Bolt12ImplCopyWithImpl<$Res>;
+abstract class _$$InputType_Bolt12OfferImplCopyWith<$Res> {
+  factory _$$InputType_Bolt12OfferImplCopyWith(
+          _$InputType_Bolt12OfferImpl value, $Res Function(_$InputType_Bolt12OfferImpl) then) =
+      __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String offer});
 }
 
 /// @nodoc
-class __$$InputType_Bolt12ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12Impl>
-    implements _$$InputType_Bolt12ImplCopyWith<$Res> {
-  __$$InputType_Bolt12ImplCopyWithImpl(
-      _$InputType_Bolt12Impl _value, $Res Function(_$InputType_Bolt12Impl) _then)
+class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
+    extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12OfferImpl>
+    implements _$$InputType_Bolt12OfferImplCopyWith<$Res> {
+  __$$InputType_Bolt12OfferImplCopyWithImpl(
+      _$InputType_Bolt12OfferImpl _value, $Res Function(_$InputType_Bolt12OfferImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of InputType
@@ -485,7 +486,7 @@ class __$$InputType_Bolt12ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl
   $Res call({
     Object? offer = null,
   }) {
-    return _then(_$InputType_Bolt12Impl(
+    return _then(_$InputType_Bolt12OfferImpl(
       offer: null == offer
           ? _value.offer
           : offer // ignore: cast_nullable_to_non_nullable
@@ -496,22 +497,22 @@ class __$$InputType_Bolt12ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl
 
 /// @nodoc
 
-class _$InputType_Bolt12Impl extends InputType_Bolt12 {
-  const _$InputType_Bolt12Impl({required this.offer}) : super._();
+class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
+  const _$InputType_Bolt12OfferImpl({required this.offer}) : super._();
 
   @override
   final String offer;
 
   @override
   String toString() {
-    return 'InputType.bolt12(offer: $offer)';
+    return 'InputType.bolt12Offer(offer: $offer)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$InputType_Bolt12Impl &&
+            other is _$InputType_Bolt12OfferImpl &&
             (identical(other.offer, offer) || other.offer == offer));
   }
 
@@ -523,20 +524,21 @@ class _$InputType_Bolt12Impl extends InputType_Bolt12 {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$InputType_Bolt12ImplCopyWith<_$InputType_Bolt12Impl> get copyWith =>
-      __$$InputType_Bolt12ImplCopyWithImpl<_$InputType_Bolt12Impl>(this, _$identity);
+  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
+      __$$InputType_Bolt12OfferImplCopyWithImpl<_$InputType_Bolt12OfferImpl>(this, _$identity);
 }
 
-abstract class InputType_Bolt12 extends InputType {
-  const factory InputType_Bolt12({required final String offer}) = _$InputType_Bolt12Impl;
-  const InputType_Bolt12._() : super._();
+abstract class InputType_Bolt12Offer extends InputType {
+  const factory InputType_Bolt12Offer({required final String offer}) = _$InputType_Bolt12OfferImpl;
+  const InputType_Bolt12Offer._() : super._();
 
   String get offer;
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_Bolt12ImplCopyWith<_$InputType_Bolt12Impl> get copyWith => throw _privateConstructorUsedError;
+  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc

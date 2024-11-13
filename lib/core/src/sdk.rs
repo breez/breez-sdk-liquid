@@ -788,7 +788,7 @@ impl LiquidSdk {
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
             }
-            Ok(InputType::Bolt12 { offer }) => {
+            Ok(InputType::Bolt12Offer { offer }) => {
                 let amount_sat = req
                     .amount_sat
                     .ok_or_else(|| anyhow!("Expected amount when processing BOLT12 offer"))?;
