@@ -15,6 +15,7 @@ use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::{ElementsNetwork, WalletTx};
 use sdk_common::bitcoin::hashes::hex::ToHex;
+use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
@@ -555,6 +556,26 @@ impl LiquidSdk {
             self.onchain_wallet
                 .check_message(&req.message, &req.pubkey, &req.signature)?;
         Ok(CheckMessageResponse { is_valid })
+    }
+
+    async fn validate_bitcoin_address(&self, input: &str) -> Result<String, PaymentError> {
+        match sdk::LiquidSdk::parse(input).await? {
+            InputType::BitcoinAddress {
+                address: bitcoin_address_data,
+                ..
+            } => match bitcoin_address_data.network == self.config.network.into() {
+                true => Ok(bitcoin_address_data.address),
+                false => Err(PaymentError::InvalidNetwork {
+                    err: format!(
+                        "Not a {} address",
+                        Into::<Network>::into(self.config.network)
+                    ),
+                }),
+            },
+            _ => Err(PaymentError::Generic {
+                err: "Invalid Bitcoin address".to_string(),
+            }),
+        }
     }
 
     fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
@@ -1301,6 +1322,7 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
         info!("Paying onchain, request = {req:?}");
 
+        let claim_address = self.validate_bitcoin_address(&req.address).await?;
         let balance_sat = self.get_info().await?.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
@@ -1382,7 +1404,7 @@ impl LiquidSdk {
         let swap = ChainSwap {
             id: swap_id.clone(),
             direction: Direction::Outgoing,
-            claim_address: Some(req.address.clone()),
+            claim_address: Some(claim_address),
             lockup_address: create_response.lockup_details.lockup_address,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
