@@ -38,8 +38,10 @@ class SwapUpdatedJob(
     private val fgService: SdkForegroundService,
     private val payload: String,
     private val logger: ServiceLogger,
-    private var swapIdHash: String? = null,
 ) : Job {
+    private var swapIdHash: String? = null
+    private var notified: Boolean = false
+
     companion object {
         private const val TAG = "SwapUpdatedJob"
     }
@@ -55,26 +57,8 @@ class SwapUpdatedJob(
 
     override fun onEvent(e: SdkEvent) {
         when (e) {
-            is SdkEvent.PaymentSucceeded -> {
-                val payment = e.details
-
-                val swapId = when (val details = payment.details) {
-                    is PaymentDetails.Bitcoin -> details.swapId
-                    is PaymentDetails.Lightning -> details.swapId
-                    else -> null
-                }
-
-                swapId?.let {
-                    if (this.swapIdHash == hashId(it)) {
-                        logger.log(
-                            TAG,
-                            "Received payment succeeded event: ${this.swapIdHash}",
-                            "TRACE"
-                        )
-                        notifySuccess(payment)
-                    }
-                }
-            }
+            is SdkEvent.PaymentWaitingConfirmation -> handlePaymentEvent(e.details)
+            is SdkEvent.PaymentSucceeded -> handlePaymentEvent(e.details)
 
             else -> {
                 logger.log(TAG, "Received event: ${e}", "TRACE")
@@ -92,27 +76,49 @@ class SwapUpdatedJob(
             .fold(StringBuilder()) { sb, it -> sb.append("%02x".format(it)) }
             .toString()
 
+    private fun handlePaymentEvent(payment: Payment) {
+        val swapId = when (val details = payment.details) {
+            is PaymentDetails.Bitcoin -> details.swapId
+            is PaymentDetails.Lightning -> details.swapId
+            else -> null
+        }
+
+        swapId?.let {
+            if (this.swapIdHash == hashId(it)) {
+                logger.log(
+                    TAG,
+                    "Received payment event: ${this.swapIdHash} ${payment.status}",
+                    "TRACE"
+                )
+                notifySuccess(payment)
+            }
+        }
+    }
+
     private fun notifySuccess(payment: Payment) {
-        logger.log(TAG, "Payment ${payment.txId} completed successfully", "INFO")
-        val received = payment.paymentType == PaymentType.RECEIVE
-        notifyChannel(
-            context,
-            NOTIFICATION_CHANNEL_SWAP_UPDATED,
-            getString(
+        if (!this.notified) {
+            logger.log(TAG, "Payment ${payment.txId} processing successful", "INFO")
+            val received = payment.paymentType == PaymentType.RECEIVE
+            notifyChannel(
                 context,
-                if (received) PAYMENT_RECEIVED_NOTIFICATION_TITLE else PAYMENT_SENT_NOTIFICATION_TITLE,
-                if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE else DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
-            ),
-            String.format(
+                NOTIFICATION_CHANNEL_SWAP_UPDATED,
                 getString(
                     context,
-                    if (received) PAYMENT_RECEIVED_NOTIFICATION_TEXT else PAYMENT_SENT_NOTIFICATION_TEXT,
-                    "%d",
-                    if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
-                ), payment.amountSat.toLong()
+                    if (received) PAYMENT_RECEIVED_NOTIFICATION_TITLE else PAYMENT_SENT_NOTIFICATION_TITLE,
+                    if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE else DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
+                ),
+                String.format(
+                    getString(
+                        context,
+                        if (received) PAYMENT_RECEIVED_NOTIFICATION_TEXT else PAYMENT_SENT_NOTIFICATION_TEXT,
+                        "%d",
+                        if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
+                    ), payment.amountSat.toLong()
+                )
             )
-        )
-        fgService.onFinished(this)
+            this.notified = true
+            fgService.onFinished(this)
+        }
     }
 
     private fun notifyFailure() {
