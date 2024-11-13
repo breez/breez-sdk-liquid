@@ -3054,7 +3054,7 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         return SendDestination.Bolt11(invoice)
     }
     if (type == "bolt12") {
-        val offer = sendDestination.getString("offer")!!
+        val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
         return SendDestination.Bolt12(offer, receiverAmountSat)
     }
@@ -3074,7 +3074,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         }
         is SendDestination.Bolt12 -> {
             pushToMap(map, "type", "bolt12")
-            pushToMap(map, "offer", sendDestination.offer)
+            pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
         }
     }

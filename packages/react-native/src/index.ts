@@ -667,7 +667,7 @@ export type SendDestination = {
     invoice: LnInvoice
 } | {
     type: SendDestinationVariant.BOLT12,
-    offer: string
+    offer: LnOffer
     receiverAmountSat: number
 }
 

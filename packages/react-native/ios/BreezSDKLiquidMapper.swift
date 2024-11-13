@@ -3916,9 +3916,11 @@ enum BreezSDKLiquidMapper {
             return SendDestination.bolt11(invoice: _invoice)
         }
         if type == "bolt12" {
-            guard let _offer = sendDestination["offer"] as? String else {
+            guard let offerTmp = sendDestination["offer"] as? [String: Any?] else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "offer", typeName: "SendDestination"))
             }
+            let _offer = try asLnOffer(lnOffer: offerTmp)
+
             guard let _receiverAmountSat = sendDestination["receiverAmountSat"] as? UInt64 else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "SendDestination"))
             }
@@ -3951,7 +3953,7 @@ enum BreezSDKLiquidMapper {
         ):
             return [
                 "type": "bolt12",
-                "offer": offer,
+                "offer": dictionaryOf(lnOffer: offer),
                 "receiverAmountSat": receiverAmountSat,
             ]
         }
