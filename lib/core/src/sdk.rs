@@ -706,7 +706,7 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PrepareSendRequest] containing:
-    ///     * `destination` - Either a Liquid BIP21 URI/address. a BOLT11 invoice or a BOLT12 offer
+    ///     * `destination` - Either a Liquid BIP21 URI/address, a BOLT11 invoice or a BOLT12 offer
     ///     * `amount_sat` - Should only be specified when paying directly onchain or via amount-less BIP21
     ///
     /// # Returns
