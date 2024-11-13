@@ -1,8 +1,7 @@
 import type { ExpoConfig } from 'expo/config';
 import { createRunOncePlugin } from 'expo/config-plugins';
-import { warnOnce } from './utils';
+import { warnOnce, sdkPackage } from './utils';
 import { withNotificationServiceExtension } from './withBreezIOS';
-const pkg = require("@breeztech/react-native-breez-sdk-liquid");
 
 type PluginProps = {
   apiKey: string;
@@ -29,4 +28,4 @@ function withBreezPlugin(config: ExpoConfig, props?: PluginProps): ExpoConfig {
   return config;
 }
 
-export default createRunOncePlugin(withBreezPlugin, pkg.name, pkg.version)
+export default createRunOncePlugin(withBreezPlugin, sdkPackage.name, sdkPackage.version)

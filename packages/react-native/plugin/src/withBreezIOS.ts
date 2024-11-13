@@ -63,10 +63,9 @@ export function withNotificationServiceExtension(config: ExpoConfig, props: Noti
         fs.mkdirSync(extensionDir);
       }
 
-      // TODO: Add multiple sources
       const swiftSource = path.join(
         __dirname,
-        "./../ios/BreezNotificationService.swift",
+        "./../../ios/BreezSDKLiquidNotificationService.swift",
       );
       const swiftDest = path.join(
         extensionDir,

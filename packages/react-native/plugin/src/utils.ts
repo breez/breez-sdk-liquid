@@ -19,3 +19,9 @@ export function yellow(message: string): string {
 export function bold(message: string): string {
   return `\x1b[1m${message}\x1b[22m`;
 }
+
+export const sdkPackage: {
+  name: string;
+  version: string;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require('../../package.json');
