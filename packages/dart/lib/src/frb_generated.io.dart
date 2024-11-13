@@ -3045,7 +3045,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       return;
     }
     if (apiObj is SendDestination_Bolt12) {
-      var pre_offer = cst_encode_String(apiObj.offer);
+      var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
       var pre_receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
       wireObj.tag = 2;
       wireObj.kind.Bolt12.offer = pre_offer;
@@ -5411,8 +5411,56 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_Amount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int amount_msat;
+}
+
+final class wire_cst_Amount_Currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iso4217_code;
+
+  @ffi.Uint64()
+  external int fractional_amount;
+}
+
+final class AmountKind extends ffi.Union {
+  external wire_cst_Amount_Bitcoin Bitcoin;
+
+  external wire_cst_Amount_Currency Currency;
+}
+
+final class wire_cst_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external AmountKind kind;
+}
+
+final class wire_cst_ln_offer extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12;
+
+  external ffi.Pointer<wire_cst_list_String> chains;
+
+  external ffi.Pointer<wire_cst_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> absolute_expiry;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
+}
+
 final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+  external ffi.Pointer<wire_cst_ln_offer> offer;
 
   @ffi.Uint64()
   external int receiver_amount_sat;
@@ -5842,31 +5890,6 @@ final class wire_cst_aes_success_action_data_result extends ffi.Struct {
   external AesSuccessActionDataResultKind kind;
 }
 
-final class wire_cst_Amount_Bitcoin extends ffi.Struct {
-  @ffi.Uint64()
-  external int amount_msat;
-}
-
-final class wire_cst_Amount_Currency extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iso4217_code;
-
-  @ffi.Uint64()
-  external int fractional_amount;
-}
-
-final class AmountKind extends ffi.Union {
-  external wire_cst_Amount_Bitcoin Bitcoin;
-
-  external wire_cst_Amount_Currency Currency;
-}
-
-final class wire_cst_amount extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external AmountKind kind;
-}
-
 final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
@@ -5878,29 +5901,6 @@ final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
-}
-
-final class wire_cst_list_String extends ffi.Struct {
-  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
-
-  @ffi.Int32()
-  external int len;
-}
-
-final class wire_cst_ln_offer extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12;
-
-  external ffi.Pointer<wire_cst_list_String> chains;
-
-  external ffi.Pointer<wire_cst_amount> amount;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<ffi.Uint64> absolute_expiry;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
 }
 
 final class wire_cst_ln_url_error_data extends ffi.Struct {

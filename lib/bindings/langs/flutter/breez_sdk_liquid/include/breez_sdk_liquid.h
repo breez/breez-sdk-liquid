@@ -171,8 +171,42 @@ typedef struct wire_cst_SendDestination_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
 } wire_cst_SendDestination_Bolt11;
 
+typedef struct wire_cst_list_String {
+  struct wire_cst_list_prim_u_8_strict **ptr;
+  int32_t len;
+} wire_cst_list_String;
+
+typedef struct wire_cst_Amount_Bitcoin {
+  uint64_t amount_msat;
+} wire_cst_Amount_Bitcoin;
+
+typedef struct wire_cst_Amount_Currency {
+  struct wire_cst_list_prim_u_8_strict *iso4217_code;
+  uint64_t fractional_amount;
+} wire_cst_Amount_Currency;
+
+typedef union AmountKind {
+  struct wire_cst_Amount_Bitcoin Bitcoin;
+  struct wire_cst_Amount_Currency Currency;
+} AmountKind;
+
+typedef struct wire_cst_amount {
+  int32_t tag;
+  union AmountKind kind;
+} wire_cst_amount;
+
+typedef struct wire_cst_ln_offer {
+  struct wire_cst_list_prim_u_8_strict *bolt12;
+  struct wire_cst_list_String *chains;
+  struct wire_cst_amount *amount;
+  struct wire_cst_list_prim_u_8_strict *description;
+  uint64_t *absolute_expiry;
+  struct wire_cst_list_prim_u_8_strict *issuer;
+  struct wire_cst_list_prim_u_8_strict *signing_pubkey;
+} wire_cst_ln_offer;
+
 typedef struct wire_cst_SendDestination_Bolt12 {
-  struct wire_cst_list_prim_u_8_strict *offer;
+  struct wire_cst_ln_offer *offer;
   uint64_t receiver_amount_sat;
 } wire_cst_SendDestination_Bolt12;
 
@@ -480,25 +514,6 @@ typedef struct wire_cst_aes_success_action_data_result {
   union AesSuccessActionDataResultKind kind;
 } wire_cst_aes_success_action_data_result;
 
-typedef struct wire_cst_Amount_Bitcoin {
-  uint64_t amount_msat;
-} wire_cst_Amount_Bitcoin;
-
-typedef struct wire_cst_Amount_Currency {
-  struct wire_cst_list_prim_u_8_strict *iso4217_code;
-  uint64_t fractional_amount;
-} wire_cst_Amount_Currency;
-
-typedef union AmountKind {
-  struct wire_cst_Amount_Bitcoin Bitcoin;
-  struct wire_cst_Amount_Currency Currency;
-} AmountKind;
-
-typedef struct wire_cst_amount {
-  int32_t tag;
-  union AmountKind kind;
-} wire_cst_amount;
-
 typedef struct wire_cst_bitcoin_address_data {
   struct wire_cst_list_prim_u_8_strict *address;
   int32_t network;
@@ -506,21 +521,6 @@ typedef struct wire_cst_bitcoin_address_data {
   struct wire_cst_list_prim_u_8_strict *label;
   struct wire_cst_list_prim_u_8_strict *message;
 } wire_cst_bitcoin_address_data;
-
-typedef struct wire_cst_list_String {
-  struct wire_cst_list_prim_u_8_strict **ptr;
-  int32_t len;
-} wire_cst_list_String;
-
-typedef struct wire_cst_ln_offer {
-  struct wire_cst_list_prim_u_8_strict *bolt12;
-  struct wire_cst_list_String *chains;
-  struct wire_cst_amount *amount;
-  struct wire_cst_list_prim_u_8_strict *description;
-  uint64_t *absolute_expiry;
-  struct wire_cst_list_prim_u_8_strict *issuer;
-  struct wire_cst_list_prim_u_8_strict *signing_pubkey;
-} wire_cst_ln_offer;
 
 typedef struct wire_cst_ln_url_error_data {
   struct wire_cst_list_prim_u_8_strict *reason;

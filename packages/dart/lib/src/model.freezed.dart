@@ -1927,7 +1927,7 @@ abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
           _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
       __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String offer, BigInt receiverAmountSat});
+  $Res call({LNOffer offer, BigInt receiverAmountSat});
 }
 
 /// @nodoc
@@ -1950,7 +1950,7 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
       offer: null == offer
           ? _value.offer
           : offer // ignore: cast_nullable_to_non_nullable
-              as String,
+              as LNOffer,
       receiverAmountSat: null == receiverAmountSat
           ? _value.receiverAmountSat
           : receiverAmountSat // ignore: cast_nullable_to_non_nullable
@@ -1965,7 +1965,7 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
   const _$SendDestination_Bolt12Impl({required this.offer, required this.receiverAmountSat}) : super._();
 
   @override
-  final String offer;
+  final LNOffer offer;
   @override
   final BigInt receiverAmountSat;
 
@@ -1998,10 +1998,10 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
 
 abstract class SendDestination_Bolt12 extends SendDestination {
   const factory SendDestination_Bolt12(
-      {required final String offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
+      {required final LNOffer offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
   const SendDestination_Bolt12._() : super._();
 
-  String get offer;
+  LNOffer get offer;
   BigInt get receiverAmountSat;
 
   /// Create a copy of SendDestination

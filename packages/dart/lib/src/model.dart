@@ -1258,7 +1258,7 @@ sealed class SendDestination with _$SendDestination {
     required LNInvoice invoice,
   }) = SendDestination_Bolt11;
   const factory SendDestination.bolt12({
-    required String offer,
+    required LNOffer offer,
     required BigInt receiverAmountSat,
   }) = SendDestination_Bolt12;
 }

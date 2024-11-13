@@ -3999,7 +3999,7 @@ impl SseDecode for crate::model::SendDestination {
                 };
             }
             2 => {
-                let mut var_offer = <String>::sse_decode(deserializer);
+                let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
@@ -7803,7 +7803,7 @@ impl SseEncode for crate::model::SendDestination {
                 receiver_amount_sat,
             } => {
                 <i32>::sse_encode(2, serializer);
-                <String>::sse_encode(offer, serializer);
+                <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
             }
             _ => {
@@ -12882,7 +12882,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_Bolt12 {
-        offer: *mut wire_cst_list_prim_u_8_strict,
+        offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
     }
     #[repr(C)]

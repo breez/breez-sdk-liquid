@@ -363,7 +363,7 @@ pub enum SendDestination {
         invoice: LNInvoice,
     },
     Bolt12 {
-        offer: String,
+        offer: LNOffer,
         receiver_amount_sat: u64,
     },
 }

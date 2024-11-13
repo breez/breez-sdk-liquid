@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+
 use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -19,9 +23,6 @@ use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
-use std::collections::HashMap;
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -45,6 +46,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
+use ::lightning::offers::offer::Offer;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
@@ -766,7 +768,7 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let payment_destination;
 
-        match sdk_common::input_parser::parse(&req.destination).await {
+        match Self::parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
                 address: mut liquid_address_data,
             }) => {
@@ -860,7 +862,7 @@ impl LiquidSdk {
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
             }
-            Ok(InputType::Bolt12Offer { offer: _ }) => {
+            Ok(InputType::Bolt12Offer { offer }) => {
                 receiver_amount_sat = match req.amount {
                     Some(PayAmount::Receiver { amount_sat }) => Ok(amount_sat),
                     _ => Err(PaymentError::amount_missing(
@@ -877,7 +879,7 @@ impl LiquidSdk {
                 fees_sat = boltz_fees_total + lockup_fees_sat;
 
                 payment_destination = SendDestination::Bolt12 {
-                    offer: req.destination.clone(),
+                    offer,
                     receiver_amount_sat,
                 };
             }
@@ -968,7 +970,7 @@ impl LiquidSdk {
             } => {
                 let bolt12_invoice = self
                     .swapper
-                    .get_bolt12_invoice(offer, *receiver_amount_sat)?;
+                    .get_bolt12_invoice(&offer.bolt12, *receiver_amount_sat)?;
                 self.pay_bolt12_invoice(&bolt12_invoice, *fees_sat).await
             }
         }
@@ -2582,9 +2584,43 @@ impl LiquidSdk {
 
     /// Parses a string into an [InputType]. See [input_parser::parse].
     pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
+        if let Ok(offer) = input.parse::<Offer>() {
+            return Ok(InputType::Bolt12Offer {
+                offer: LNOffer {
+                    bolt12: input.to_string(),
+                    chains: offer
+                        .chains()
+                        .iter()
+                        .map(|chain| chain.to_string())
+                        .collect(),
+                    // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
+                    //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
+                    amount: offer.amount().map(|amount| match amount {
+                        ::lightning::offers::offer::Amount::Bitcoin { amount_msats } => {
+                            Amount::Bitcoin {
+                                amount_msat: amount_msats,
+                            }
+                        }
+                        ::lightning::offers::offer::Amount::Currency {
+                            iso4217_code,
+                            amount,
+                        } => Amount::Currency {
+                            iso4217_code: String::from_utf8(iso4217_code.to_vec())
+                                .expect("Expecting a valid ISO 4217 character sequence"),
+                            fractional_amount: amount,
+                        },
+                    }),
+                    description: offer.description().map(|d| d.to_string()),
+                    absolute_expiry: offer.absolute_expiry().map(|expiry| expiry.as_secs()),
+                    issuer: offer.issuer().map(|s| s.to_string()),
+                    signing_pubkey: offer.signing_pubkey().map(|pk| pk.to_string()),
+                },
+            });
+        }
+
         parse(input)
             .await
-            .map_err(|e| PaymentError::Generic { err: e.to_string() })
+            .map_err(|e| PaymentError::generic(&e.to_string()))
     }
 
     /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
