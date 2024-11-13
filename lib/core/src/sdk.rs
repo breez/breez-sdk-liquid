@@ -284,23 +284,6 @@ impl LiquidSdk {
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> SdkResult<()> {
-        // Periodically run sync() in the background
-        let sdk_clone = self.clone();
-        let mut shutdown_rx_sync_loop = self.shutdown_receiver.clone();
-        tokio::spawn(async move {
-            loop {
-                _ = sdk_clone.sync().await;
-
-                tokio::select! {
-                    _ = tokio::time::sleep(Duration::from_secs(30)) => {}
-                    _ = shutdown_rx_sync_loop.changed() => {
-                        info!("Received shutdown signal, exiting periodic sync loop");
-                        return;
-                    }
-                }
-            }
-        });
-
         let reconnect_handler = Box::new(SwapperReconnectHandler::new(
             self.persister.clone(),
             self.status_stream.clone(),
@@ -309,16 +292,12 @@ impl LiquidSdk {
             .clone()
             .start(reconnect_handler, self.shutdown_receiver.clone())
             .await;
-        self.chain_swap_handler
-            .clone()
-            .start(self.shutdown_receiver.clone())
-            .await;
         self.sync_service
             .clone()
             .start(self.shutdown_receiver.clone())
             .await?;
+        self.track_new_blocks().await;
         self.track_swap_updates().await;
-        self.track_pending_swaps().await;
 
         Ok(())
     }
@@ -339,6 +318,58 @@ impl LiquidSdk {
             .map_err(|e| SdkError::generic(format!("Shutdown failed: {e}")))?;
         *is_started = false;
         Ok(())
+    }
+
+    async fn track_new_blocks(self: &Arc<LiquidSdk>) {
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            let mut current_liquid_block: u32 = 0;
+            let mut current_bitcoin_block: u32 = 0;
+            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
+            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        // Get the Liquid tip and process a new block
+                        let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
+                        match liquid_tip_res {
+                            Ok(height) => {
+                                debug!("Got Liquid tip: {height}");
+                                if height > current_liquid_block {
+                                    // Sync on new Liquid block
+                                    _ = cloned.sync().await;
+                                    // Update swap handlers
+                                    cloned.chain_swap_handler.on_liquid_block(height).await;
+                                    cloned.send_swap_handler.on_liquid_block(height).await;
+                                    current_liquid_block = height;
+                                }
+                            },
+                            Err(e) => error!("Failed to fetch Liquid tip {e}"),
+                        };
+                        // Get the Bitcoin tip and process a new block
+                        let bitcoin_tip_res = cloned.bitcoin_chain_service.lock().await.tip().map(|tip| tip.height as u32);
+                        match bitcoin_tip_res {
+                            Ok(height) => {
+                                debug!("Got Bitcoin tip: {height}");
+                                if height > current_bitcoin_block {
+                                    // Update swap handlers
+                                    cloned.chain_swap_handler.on_bitcoin_block(height).await;
+                                    cloned.send_swap_handler.on_bitcoin_block(height).await;
+                                    current_bitcoin_block = height;
+                                }
+                            },
+                            Err(e) => error!("Failed to fetch Bitcoin tip {e}"),
+                        };
+                    }
+
+                    _ = shutdown_receiver.changed() => {
+                        info!("Received shutdown signal, exiting track blocks loop");
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     async fn track_swap_updates(self: &Arc<LiquidSdk>) {
@@ -392,31 +423,6 @@ impl LiquidSdk {
                     },
                     _ = shutdown_receiver.changed() => {
                         info!("Received shutdown signal, exiting swap updates loop");
-                        return;
-                    }
-                }
-            }
-        });
-    }
-
-    async fn track_pending_swaps(self: &Arc<LiquidSdk>) {
-        let cloned = self.clone();
-        tokio::spawn(async move {
-            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
-            let mut interval = tokio::time::interval(Duration::from_secs(60));
-            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
-            loop {
-                tokio::select! {
-                    _ = interval.tick() => {
-                        if let Err(err) = cloned.send_swap_handler.track_refunds().await {
-                            warn!("Could not refund expired swaps, error: {err:?}");
-                        }
-                        if let Err(err) = cloned.chain_swap_handler.track_refunds_and_refundables().await {
-                            warn!("Could not refund expired swaps, error: {err:?}");
-                        }
-                    },
-                    _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting pending swaps loop");
                         return;
                     }
                 }
@@ -2120,8 +2126,14 @@ impl LiquidSdk {
     /// (within last [CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS] blocks = ~30 days), calling this
     /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
+        let height = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .tip()
+            .map(|tip| tip.height as u32)?;
         self.chain_swap_handler
-            .rescan_incoming_user_lockup_txs(true)
+            .rescan_incoming_user_lockup_txs(height, true)
             .await?;
         Ok(())
     }

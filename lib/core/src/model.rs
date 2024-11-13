@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-
+use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
     network::Chain,
@@ -563,6 +563,13 @@ pub enum ListPaymentDetails {
 pub enum GetPaymentRequest {
     /// The Lightning payment hash of the payment
     Lightning { payment_hash: String },
+}
+
+/// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
+#[async_trait]
+pub(crate) trait BlockListener: Send + Sync {
+    async fn on_bitcoin_block(&self, height: u32);
+    async fn on_liquid_block(&self, height: u32);
 }
 
 // A swap enum variant

@@ -2,6 +2,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use boltz_client::util::secrets::Preimage;
@@ -14,7 +15,7 @@ use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::{Config, PaymentState::*, SendSwap};
+use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
@@ -33,6 +34,17 @@ pub(crate) struct SendSwapHandler {
     swapper: Arc<dyn Swapper>,
     chain_service: Arc<Mutex<dyn LiquidChainService>>,
     subscription_notifier: broadcast::Sender<String>,
+}
+
+#[async_trait]
+impl BlockListener for SendSwapHandler {
+    async fn on_bitcoin_block(&self, _height: u32) {}
+
+    async fn on_liquid_block(&self, _height: u32) {
+        if let Err(err) = self.check_refunds().await {
+            warn!("Could not refund expired swaps, error: {err:?}");
+        }
+    }
 }
 
 impl SendSwapHandler {
@@ -485,7 +497,7 @@ impl SendSwapHandler {
 
     // Attempts refunding all payments whose state is `RefundPending` and with no
     // refund_tx_id field present
-    pub(crate) async fn track_refunds(&self) -> Result<(), PaymentError> {
+    pub(crate) async fn check_refunds(&self) -> Result<(), PaymentError> {
         let pending_swaps = self.persister.list_pending_send_swaps()?;
         self.try_refund_all(&pending_swaps).await;
         Ok(())
