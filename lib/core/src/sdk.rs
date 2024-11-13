@@ -860,7 +860,7 @@ impl LiquidSdk {
                 };
                 payment_destination = SendDestination::Bolt11 { invoice };
             }
-            Ok(InputType::Bolt12Offer { offer }) => {
+            Ok(InputType::Bolt12Offer { offer: _ }) => {
                 receiver_amount_sat = match req.amount {
                     Some(PayAmount::Receiver { amount_sat }) => Ok(amount_sat),
                     _ => Err(PaymentError::amount_missing(
@@ -877,7 +877,7 @@ impl LiquidSdk {
                 fees_sat = boltz_fees_total + lockup_fees_sat;
 
                 payment_destination = SendDestination::Bolt12 {
-                    offer,
+                    offer: req.destination.clone(),
                     receiver_amount_sat,
                 };
             }
