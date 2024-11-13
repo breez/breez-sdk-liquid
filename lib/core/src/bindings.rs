@@ -329,7 +329,6 @@ pub struct _RouteHintHop {
     pub htlc_maximum_msat: Option<u64>,
 }
 
-
 #[frb(mirror(Amount))]
 pub enum _Amount {
     Bitcoin {
