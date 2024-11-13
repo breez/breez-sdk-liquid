@@ -116,6 +116,16 @@ export interface LnInvoice {
     minFinalCltvExpiryDelta: number
 }
 
+export interface LnOffer {
+    bolt12: string
+    chains: string[]
+    description?: string
+    signingPubkey?: string
+    amount?: Amount
+    absoluteExpiry?: number
+    issuer?: string
+}
+
 export interface LightningPaymentLimitsResponse {
     send: Limits
     receive: Limits
@@ -408,6 +418,20 @@ export type AesSuccessActionDataResult = {
     reason: string
 }
 
+export enum AmountVariant {
+    BITCOIN = "bitcoin",
+    CURRENCY = "currency"
+}
+
+export type Amount = {
+    type: AmountVariant.BITCOIN,
+    amountMsat: number
+} | {
+    type: AmountVariant.CURRENCY,
+    iso4217Code: string
+    fractionalAmount: number
+}
+
 export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
@@ -445,7 +469,7 @@ export type InputType = {
     invoice: LnInvoice
 } | {
     type: InputTypeVariant.BOLT12_OFFER,
-    offer: string
+    offer: LnOffer
 } | {
     type: InputTypeVariant.NODE_ID,
     nodeId: string

@@ -564,6 +564,49 @@ fun asLnInvoiceList(arr: ReadableArray): List<LnInvoice> {
     return list
 }
 
+fun asLnOffer(lnOffer: ReadableMap): LnOffer? {
+    if (!validateMandatoryFields(
+            lnOffer,
+            arrayOf(
+                "bolt12",
+                "chains",
+            ),
+        )
+    ) {
+        return null
+    }
+    val bolt12 = lnOffer.getString("bolt12")!!
+    val chains = lnOffer.getArray("chains")?.let { asStringList(it) }!!
+    val description = if (hasNonNullKey(lnOffer, "description")) lnOffer.getString("description") else null
+    val signingPubkey = if (hasNonNullKey(lnOffer, "signingPubkey")) lnOffer.getString("signingPubkey") else null
+    val amount = if (hasNonNullKey(lnOffer, "amount")) lnOffer.getMap("amount")?.let { asAmount(it) } else null
+    val absoluteExpiry = if (hasNonNullKey(lnOffer, "absoluteExpiry")) lnOffer.getDouble("absoluteExpiry").toULong() else null
+    val issuer = if (hasNonNullKey(lnOffer, "issuer")) lnOffer.getString("issuer") else null
+    return LnOffer(bolt12, chains, description, signingPubkey, amount, absoluteExpiry, issuer)
+}
+
+fun readableMapOf(lnOffer: LnOffer): ReadableMap =
+    readableMapOf(
+        "bolt12" to lnOffer.bolt12,
+        "chains" to readableArrayOf(lnOffer.chains),
+        "description" to lnOffer.description,
+        "signingPubkey" to lnOffer.signingPubkey,
+        "amount" to lnOffer.amount?.let { readableMapOf(it) },
+        "absoluteExpiry" to lnOffer.absoluteExpiry,
+        "issuer" to lnOffer.issuer,
+    )
+
+fun asLnOfferList(arr: ReadableArray): List<LnOffer> {
+    val list = ArrayList<LnOffer>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnOffer(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asLightningPaymentLimitsResponse(lightningPaymentLimitsResponse: ReadableMap): LightningPaymentLimitsResponse? {
     if (!validateMandatoryFields(
             lightningPaymentLimitsResponse,
@@ -2367,6 +2410,48 @@ fun asAesSuccessActionDataResultList(arr: ReadableArray): List<AesSuccessActionD
     return list
 }
 
+fun asAmount(amount: ReadableMap): Amount? {
+    val type = amount.getString("type")
+
+    if (type == "bitcoin") {
+        val amountMsat = amount.getDouble("amountMsat").toULong()
+        return Amount.Bitcoin(amountMsat)
+    }
+    if (type == "currency") {
+        val iso4217Code = amount.getString("iso4217Code")!!
+        val fractionalAmount = amount.getDouble("fractionalAmount").toULong()
+        return Amount.Currency(iso4217Code, fractionalAmount)
+    }
+    return null
+}
+
+fun readableMapOf(amount: Amount): ReadableMap? {
+    val map = Arguments.createMap()
+    when (amount) {
+        is Amount.Bitcoin -> {
+            pushToMap(map, "type", "bitcoin")
+            pushToMap(map, "amountMsat", amount.amountMsat)
+        }
+        is Amount.Currency -> {
+            pushToMap(map, "type", "currency")
+            pushToMap(map, "iso4217Code", amount.iso4217Code)
+            pushToMap(map, "fractionalAmount", amount.fractionalAmount)
+        }
+    }
+    return map
+}
+
+fun asAmountList(arr: ReadableArray): List<Amount> {
+    val list = ArrayList<Amount>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAmount(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBuyBitcoinProvider(type: String): BuyBitcoinProvider = BuyBitcoinProvider.valueOf(camelToUpperSnakeCase(type))
 
 fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
@@ -2428,7 +2513,7 @@ fun asInputType(inputType: ReadableMap): InputType? {
         return InputType.Bolt11(invoice)
     }
     if (type == "bolt12Offer") {
-        val offer = inputType.getString("offer")!!
+        val offer = inputType.getMap("offer")?.let { asLnOffer(it) }!!
         return InputType.Bolt12Offer(offer)
     }
     if (type == "nodeId") {
@@ -2475,7 +2560,7 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
         }
         is InputType.Bolt12Offer -> {
             pushToMap(map, "type", "bolt12Offer")
-            pushToMap(map, "offer", inputType.offer)
+            pushToMap(map, "offer", readableMapOf(inputType.offer))
         }
         is InputType.NodeId -> {
             pushToMap(map, "type", "nodeId")
@@ -3142,6 +3227,7 @@ fun pushToArray(
         is RefundableSwap -> array.pushMap(readableMapOf(value))
         is RouteHint -> array.pushMap(readableMapOf(value))
         is RouteHintHop -> array.pushMap(readableMapOf(value))
+        is String -> array.pushString(value)
         is UByte -> array.pushInt(value.toInt())
         is Array<*> -> array.pushArray(readableArrayOf(value.asIterable()))
         is List<*> -> array.pushArray(readableArrayOf(value))

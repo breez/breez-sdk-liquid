@@ -846,6 +846,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr
           .asFunction<ffi.Pointer<wire_cst_aes_success_action_data_result> Function()>();
 
+  ffi.Pointer<wire_cst_amount> frbgen_breez_liquid_cst_new_box_autoadd_amount() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_amount();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_amountPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_amount> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_amount');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_amount =
+      _frbgen_breez_liquid_cst_new_box_autoadd_amountPtr
+          .asFunction<ffi.Pointer<wire_cst_amount> Function()>();
+
   ffi.Pointer<wire_cst_backup_request> frbgen_breez_liquid_cst_new_box_autoadd_backup_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_backup_request();
   }
@@ -997,6 +1008,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice =
       _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoicePtr
           .asFunction<ffi.Pointer<wire_cst_ln_invoice> Function()>();
+
+  ffi.Pointer<wire_cst_ln_offer> frbgen_breez_liquid_cst_new_box_autoadd_ln_offer() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_offer();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_offerPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_offer> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_ln_offer');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_offer =
+      _frbgen_breez_liquid_cst_new_box_autoadd_ln_offerPtr
+          .asFunction<ffi.Pointer<wire_cst_ln_offer> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_auth_request_data>
       frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data() {
@@ -1360,6 +1382,20 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data =
       _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<wire_cst_list_String> frbgen_breez_liquid_cst_new_list_String(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_String(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_StringPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_String');
+  late final _frbgen_breez_liquid_cst_new_list_String = _frbgen_breez_liquid_cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
 
   ffi.Pointer<wire_cst_list_fiat_currency> frbgen_breez_liquid_cst_new_list_fiat_currency(
     int len,
@@ -4428,6 +4464,31 @@ final class wire_cst_aes_success_action_data_result extends ffi.Struct {
   external AesSuccessActionDataResultKind kind;
 }
 
+final class wire_cst_Amount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int amount_msat;
+}
+
+final class wire_cst_Amount_Currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iso4217_code;
+
+  @ffi.Uint64()
+  external int fractional_amount;
+}
+
+final class AmountKind extends ffi.Union {
+  external wire_cst_Amount_Bitcoin Bitcoin;
+
+  external wire_cst_Amount_Currency Currency;
+}
+
+final class wire_cst_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external AmountKind kind;
+}
+
 final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
@@ -4439,6 +4500,29 @@ final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ln_offer extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12;
+
+  external ffi.Pointer<wire_cst_list_String> chains;
+
+  external ffi.Pointer<wire_cst_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> absolute_expiry;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
 }
 
 final class wire_cst_ln_url_error_data extends ffi.Struct {
@@ -4627,7 +4711,7 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
 }
 
 final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+  external ffi.Pointer<wire_cst_ln_offer> offer;
 }
 
 final class wire_cst_InputType_NodeId extends ffi.Struct {

@@ -60,6 +60,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AesSuccessActionDataResult dco_decode_aes_success_action_data_result(dynamic raw);
 
   @protected
+  Amount dco_decode_amount(dynamic raw);
+
+  @protected
   BackupRequest dco_decode_backup_request(dynamic raw);
 
   @protected
@@ -79,6 +82,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AesSuccessActionDataResult dco_decode_box_autoadd_aes_success_action_data_result(dynamic raw);
+
+  @protected
+  Amount dco_decode_box_autoadd_amount(dynamic raw);
 
   @protected
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw);
@@ -118,6 +124,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNInvoice dco_decode_box_autoadd_ln_invoice(dynamic raw);
+
+  @protected
+  LNOffer dco_decode_box_autoadd_ln_offer(dynamic raw);
 
   @protected
   LnUrlAuthRequestData dco_decode_box_autoadd_ln_url_auth_request_data(dynamic raw);
@@ -267,6 +276,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidNetwork dco_decode_liquid_network(dynamic raw);
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
   List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
 
   @protected
@@ -304,6 +316,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNInvoice dco_decode_ln_invoice(dynamic raw);
+
+  @protected
+  LNOffer dco_decode_ln_offer(dynamic raw);
 
   @protected
   LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw);
@@ -370,6 +385,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  Amount? dco_decode_opt_box_autoadd_amount(dynamic raw);
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
@@ -581,6 +599,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AesSuccessActionDataResult sse_decode_aes_success_action_data_result(SseDeserializer deserializer);
 
   @protected
+  Amount sse_decode_amount(SseDeserializer deserializer);
+
+  @protected
   BackupRequest sse_decode_backup_request(SseDeserializer deserializer);
 
   @protected
@@ -602,6 +623,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   AesSuccessActionDataResult sse_decode_box_autoadd_aes_success_action_data_result(
       SseDeserializer deserializer);
+
+  @protected
+  Amount sse_decode_box_autoadd_amount(SseDeserializer deserializer);
 
   @protected
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer);
@@ -641,6 +665,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNInvoice sse_decode_box_autoadd_ln_invoice(SseDeserializer deserializer);
+
+  @protected
+  LNOffer sse_decode_box_autoadd_ln_offer(SseDeserializer deserializer);
 
   @protected
   LnUrlAuthRequestData sse_decode_box_autoadd_ln_url_auth_request_data(SseDeserializer deserializer);
@@ -790,6 +817,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
   List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
 
   @protected
@@ -827,6 +857,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNInvoice sse_decode_ln_invoice(SseDeserializer deserializer);
+
+  @protected
+  LNOffer sse_decode_ln_offer(SseDeserializer deserializer);
 
   @protected
   LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer);
@@ -893,6 +926,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  Amount? sse_decode_opt_box_autoadd_amount(SseDeserializer deserializer);
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
@@ -1130,6 +1166,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_amount> cst_encode_box_autoadd_amount(Amount raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_amount();
+    cst_api_fill_to_wire_amount(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_backup_request> cst_encode_box_autoadd_backup_request(BackupRequest raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_backup_request();
@@ -1234,6 +1278,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_ln_invoice();
     cst_api_fill_to_wire_ln_invoice(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_ln_offer> cst_encode_box_autoadd_ln_offer(LNOffer raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_ln_offer();
+    cst_api_fill_to_wire_ln_offer(raw, ptr.ref);
     return ptr;
   }
 
@@ -1508,6 +1560,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_String(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_fiat_currency> cst_encode_list_fiat_currency(List<FiatCurrency> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_fiat_currency(raw.length);
@@ -1609,6 +1671,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_opt_String(String? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_String(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_amount> cst_encode_opt_box_autoadd_amount(Amount? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_amount(raw);
   }
 
   @protected
@@ -1724,6 +1792,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_amount(Amount apiObj, wire_cst_amount wireObj) {
+    if (apiObj is Amount_Bitcoin) {
+      var pre_amount_msat = cst_encode_u_64(apiObj.amountMsat);
+      wireObj.tag = 0;
+      wireObj.kind.Bitcoin.amount_msat = pre_amount_msat;
+      return;
+    }
+    if (apiObj is Amount_Currency) {
+      var pre_iso4217_code = cst_encode_String(apiObj.iso4217Code);
+      var pre_fractional_amount = cst_encode_u_64(apiObj.fractionalAmount);
+      wireObj.tag = 1;
+      wireObj.kind.Currency.iso4217_code = pre_iso4217_code;
+      wireObj.kind.Currency.fractional_amount = pre_fractional_amount;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_backup_request(BackupRequest apiObj, wire_cst_backup_request wireObj) {
     wireObj.backup_path = cst_encode_opt_String(apiObj.backupPath);
   }
@@ -1760,6 +1846,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_box_autoadd_aes_success_action_data_result(
       AesSuccessActionDataResult apiObj, ffi.Pointer<wire_cst_aes_success_action_data_result> wireObj) {
     cst_api_fill_to_wire_aes_success_action_data_result(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_amount(Amount apiObj, ffi.Pointer<wire_cst_amount> wireObj) {
+    cst_api_fill_to_wire_amount(apiObj, wireObj.ref);
   }
 
   @protected
@@ -1826,6 +1917,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_box_autoadd_ln_invoice(
       LNInvoice apiObj, ffi.Pointer<wire_cst_ln_invoice> wireObj) {
     cst_api_fill_to_wire_ln_invoice(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_ln_offer(LNOffer apiObj, ffi.Pointer<wire_cst_ln_offer> wireObj) {
+    cst_api_fill_to_wire_ln_offer(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2097,7 +2193,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       return;
     }
     if (apiObj is InputType_Bolt12Offer) {
-      var pre_offer = cst_encode_String(apiObj.offer);
+      var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
       wireObj.tag = 3;
       wireObj.kind.Bolt12Offer.offer = pre_offer;
       return;
@@ -2207,6 +2303,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.routing_hints = cst_encode_list_route_hint(apiObj.routingHints);
     wireObj.payment_secret = cst_encode_list_prim_u_8_strict(apiObj.paymentSecret);
     wireObj.min_final_cltv_expiry_delta = cst_encode_u_64(apiObj.minFinalCltvExpiryDelta);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_offer(LNOffer apiObj, wire_cst_ln_offer wireObj) {
+    wireObj.bolt12 = cst_encode_String(apiObj.bolt12);
+    wireObj.chains = cst_encode_list_String(apiObj.chains);
+    wireObj.amount = cst_encode_opt_box_autoadd_amount(apiObj.amount);
+    wireObj.description = cst_encode_opt_String(apiObj.description);
+    wireObj.absolute_expiry = cst_encode_opt_box_autoadd_u_64(apiObj.absoluteExpiry);
+    wireObj.issuer = cst_encode_opt_String(apiObj.issuer);
+    wireObj.signing_pubkey = cst_encode_opt_String(apiObj.signingPubkey);
   }
 
   @protected
@@ -3118,6 +3225,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_aes_success_action_data_result(AesSuccessActionDataResult self, SseSerializer serializer);
 
   @protected
+  void sse_encode_amount(Amount self, SseSerializer serializer);
+
+  @protected
   void sse_encode_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
@@ -3139,6 +3249,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_aes_success_action_data_result(
       AesSuccessActionDataResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_amount(Amount self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer);
@@ -3178,6 +3291,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_ln_invoice(LNInvoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_ln_offer(LNOffer self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_ln_url_auth_request_data(LnUrlAuthRequestData self, SseSerializer serializer);
@@ -3334,6 +3450,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
 
   @protected
@@ -3371,6 +3490,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_ln_invoice(LNInvoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_offer(LNOffer self, SseSerializer serializer);
 
   @protected
   void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer);
@@ -3438,6 +3560,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_amount(Amount? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
@@ -4440,6 +4565,16 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_aes_success_action_data_resultPtr
           .asFunction<ffi.Pointer<wire_cst_aes_success_action_data_result> Function()>();
 
+  ffi.Pointer<wire_cst_amount> cst_new_box_autoadd_amount() {
+    return _cst_new_box_autoadd_amount();
+  }
+
+  late final _cst_new_box_autoadd_amountPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_amount> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_amount');
+  late final _cst_new_box_autoadd_amount =
+      _cst_new_box_autoadd_amountPtr.asFunction<ffi.Pointer<wire_cst_amount> Function()>();
+
   ffi.Pointer<wire_cst_backup_request> cst_new_box_autoadd_backup_request() {
     return _cst_new_box_autoadd_backup_request();
   }
@@ -4577,6 +4712,16 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice');
   late final _cst_new_box_autoadd_ln_invoice =
       _cst_new_box_autoadd_ln_invoicePtr.asFunction<ffi.Pointer<wire_cst_ln_invoice> Function()>();
+
+  ffi.Pointer<wire_cst_ln_offer> cst_new_box_autoadd_ln_offer() {
+    return _cst_new_box_autoadd_ln_offer();
+  }
+
+  late final _cst_new_box_autoadd_ln_offerPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_offer> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_ln_offer');
+  late final _cst_new_box_autoadd_ln_offer =
+      _cst_new_box_autoadd_ln_offerPtr.asFunction<ffi.Pointer<wire_cst_ln_offer> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_auth_request_data> cst_new_box_autoadd_ln_url_auth_request_data() {
     return _cst_new_box_autoadd_ln_url_auth_request_data();
@@ -4901,6 +5046,20 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data');
   late final _cst_new_box_autoadd_url_success_action_data = _cst_new_box_autoadd_url_success_action_dataPtr
       .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
+
+  ffi.Pointer<wire_cst_list_String> cst_new_list_String(
+    int len,
+  ) {
+    return _cst_new_list_String(
+      len,
+    );
+  }
+
+  late final _cst_new_list_StringPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_String');
+  late final _cst_new_list_String =
+      _cst_new_list_StringPtr.asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
 
   ffi.Pointer<wire_cst_list_fiat_currency> cst_new_list_fiat_currency(
     int len,
@@ -5683,6 +5842,31 @@ final class wire_cst_aes_success_action_data_result extends ffi.Struct {
   external AesSuccessActionDataResultKind kind;
 }
 
+final class wire_cst_Amount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int amount_msat;
+}
+
+final class wire_cst_Amount_Currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iso4217_code;
+
+  @ffi.Uint64()
+  external int fractional_amount;
+}
+
+final class AmountKind extends ffi.Union {
+  external wire_cst_Amount_Bitcoin Bitcoin;
+
+  external wire_cst_Amount_Currency Currency;
+}
+
+final class wire_cst_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external AmountKind kind;
+}
+
 final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
@@ -5694,6 +5878,29 @@ final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ln_offer extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12;
+
+  external ffi.Pointer<wire_cst_list_String> chains;
+
+  external ffi.Pointer<wire_cst_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> absolute_expiry;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
 }
 
 final class wire_cst_ln_url_error_data extends ffi.Struct {
@@ -5882,7 +6089,7 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
 }
 
 final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+  external ffi.Pointer<wire_cst_ln_offer> offer;
 }
 
 final class wire_cst_InputType_NodeId extends ffi.Struct {

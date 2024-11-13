@@ -157,6 +157,19 @@ sealed class AesSuccessActionDataResult with _$AesSuccessActionDataResult {
   }) = AesSuccessActionDataResult_ErrorStatus;
 }
 
+@freezed
+sealed class Amount with _$Amount {
+  const Amount._();
+
+  const factory Amount.bitcoin({
+    required BigInt amountMsat,
+  }) = Amount_Bitcoin;
+  const factory Amount.currency({
+    required String iso4217Code,
+    required BigInt fractionalAmount,
+  }) = Amount_Currency;
+}
+
 class BindingEventListener {
   final RustStreamSink<SdkEvent> stream;
 
@@ -282,7 +295,7 @@ sealed class InputType with _$InputType {
     required LNInvoice invoice,
   }) = InputType_Bolt11;
   const factory InputType.bolt12Offer({
-    required String offer,
+    required LNOffer offer,
   }) = InputType_Bolt12Offer;
   const factory InputType.nodeId({
     required String nodeId,
@@ -404,6 +417,49 @@ class LNInvoice {
           routingHints == other.routingHints &&
           paymentSecret == other.paymentSecret &&
           minFinalCltvExpiryDelta == other.minFinalCltvExpiryDelta;
+}
+
+class LNOffer {
+  final String bolt12;
+  final List<String> chains;
+  final Amount? amount;
+  final String? description;
+  final BigInt? absoluteExpiry;
+  final String? issuer;
+  final String? signingPubkey;
+
+  const LNOffer({
+    required this.bolt12,
+    required this.chains,
+    this.amount,
+    this.description,
+    this.absoluteExpiry,
+    this.issuer,
+    this.signingPubkey,
+  });
+
+  @override
+  int get hashCode =>
+      bolt12.hashCode ^
+      chains.hashCode ^
+      amount.hashCode ^
+      description.hashCode ^
+      absoluteExpiry.hashCode ^
+      issuer.hashCode ^
+      signingPubkey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LNOffer &&
+          runtimeType == other.runtimeType &&
+          bolt12 == other.bolt12 &&
+          chains == other.chains &&
+          amount == other.amount &&
+          description == other.description &&
+          absoluteExpiry == other.absoluteExpiry &&
+          issuer == other.issuer &&
+          signingPubkey == other.signingPubkey;
 }
 
 class LnUrlAuthRequestData {

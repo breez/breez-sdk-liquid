@@ -665,6 +665,79 @@ enum BreezSDKLiquidMapper {
         return lnInvoiceList.map { v -> [String: Any?] in return dictionaryOf(lnInvoice: v) }
     }
 
+    static func asLnOffer(lnOffer: [String: Any?]) throws -> LnOffer {
+        guard let bolt12 = lnOffer["bolt12"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bolt12", typeName: "LnOffer"))
+        }
+        guard let chains = lnOffer["chains"] as? [String] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "chains", typeName: "LnOffer"))
+        }
+        var description: String?
+        if hasNonNilKey(data: lnOffer, key: "description") {
+            guard let descriptionTmp = lnOffer["description"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "description"))
+            }
+            description = descriptionTmp
+        }
+        var signingPubkey: String?
+        if hasNonNilKey(data: lnOffer, key: "signingPubkey") {
+            guard let signingPubkeyTmp = lnOffer["signingPubkey"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "signingPubkey"))
+            }
+            signingPubkey = signingPubkeyTmp
+        }
+        var amount: Amount?
+        if let amountTmp = lnOffer["amount"] as? [String: Any?] {
+            amount = try asAmount(amount: amountTmp)
+        }
+
+        var absoluteExpiry: UInt64?
+        if hasNonNilKey(data: lnOffer, key: "absoluteExpiry") {
+            guard let absoluteExpiryTmp = lnOffer["absoluteExpiry"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "absoluteExpiry"))
+            }
+            absoluteExpiry = absoluteExpiryTmp
+        }
+        var issuer: String?
+        if hasNonNilKey(data: lnOffer, key: "issuer") {
+            guard let issuerTmp = lnOffer["issuer"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "issuer"))
+            }
+            issuer = issuerTmp
+        }
+
+        return LnOffer(bolt12: bolt12, chains: chains, description: description, signingPubkey: signingPubkey, amount: amount, absoluteExpiry: absoluteExpiry, issuer: issuer)
+    }
+
+    static func dictionaryOf(lnOffer: LnOffer) -> [String: Any?] {
+        return [
+            "bolt12": lnOffer.bolt12,
+            "chains": lnOffer.chains,
+            "description": lnOffer.description == nil ? nil : lnOffer.description,
+            "signingPubkey": lnOffer.signingPubkey == nil ? nil : lnOffer.signingPubkey,
+            "amount": lnOffer.amount == nil ? nil : dictionaryOf(amount: lnOffer.amount!),
+            "absoluteExpiry": lnOffer.absoluteExpiry == nil ? nil : lnOffer.absoluteExpiry,
+            "issuer": lnOffer.issuer == nil ? nil : lnOffer.issuer,
+        ]
+    }
+
+    static func asLnOfferList(arr: [Any]) throws -> [LnOffer] {
+        var list = [LnOffer]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnOffer = try asLnOffer(lnOffer: val)
+                list.append(lnOffer)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "LnOffer"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnOfferList: [LnOffer]) -> [Any] {
+        return lnOfferList.map { v -> [String: Any?] in return dictionaryOf(lnOffer: v) }
+    }
+
     static func asLightningPaymentLimitsResponse(lightningPaymentLimitsResponse: [String: Any?]) throws -> LightningPaymentLimitsResponse {
         guard let sendTmp = lightningPaymentLimitsResponse["send"] as? [String: Any?] else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "send", typeName: "LightningPaymentLimitsResponse"))
@@ -2727,6 +2800,65 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asAmount(amount: [String: Any?]) throws -> Amount {
+        let type = amount["type"] as! String
+        if type == "bitcoin" {
+            guard let _amountMsat = amount["amountMsat"] as? UInt64 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "Amount"))
+            }
+            return Amount.bitcoin(amountMsat: _amountMsat)
+        }
+        if type == "currency" {
+            guard let _iso4217Code = amount["iso4217Code"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "iso4217Code", typeName: "Amount"))
+            }
+            guard let _fractionalAmount = amount["fractionalAmount"] as? UInt64 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "fractionalAmount", typeName: "Amount"))
+            }
+            return Amount.currency(iso4217Code: _iso4217Code, fractionalAmount: _fractionalAmount)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum Amount")
+    }
+
+    static func dictionaryOf(amount: Amount) -> [String: Any?] {
+        switch amount {
+        case let .bitcoin(
+            amountMsat
+        ):
+            return [
+                "type": "bitcoin",
+                "amountMsat": amountMsat,
+            ]
+
+        case let .currency(
+            iso4217Code, fractionalAmount
+        ):
+            return [
+                "type": "currency",
+                "iso4217Code": iso4217Code,
+                "fractionalAmount": fractionalAmount,
+            ]
+        }
+    }
+
+    static func arrayOf(amountList: [Amount]) -> [Any] {
+        return amountList.map { v -> [String: Any?] in return dictionaryOf(amount: v) }
+    }
+
+    static func asAmountList(arr: [Any]) throws -> [Amount] {
+        var list = [Amount]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var amount = try asAmount(amount: val)
+                list.append(amount)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "Amount"))
+            }
+        }
+        return list
+    }
+
     static func asBuyBitcoinProvider(buyBitcoinProvider: String) throws -> BuyBitcoinProvider {
         switch buyBitcoinProvider {
         case "moonpay":
@@ -2828,9 +2960,11 @@ enum BreezSDKLiquidMapper {
             return InputType.bolt11(invoice: _invoice)
         }
         if type == "bolt12Offer" {
-            guard let _offer = inputType["offer"] as? String else {
+            guard let offerTmp = inputType["offer"] as? [String: Any?] else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "offer", typeName: "InputType"))
             }
+            let _offer = try asLnOffer(lnOffer: offerTmp)
+
             return InputType.bolt12Offer(offer: _offer)
         }
         if type == "nodeId" {
@@ -2912,7 +3046,7 @@ enum BreezSDKLiquidMapper {
         ):
             return [
                 "type": "bolt12Offer",
-                "offer": offer,
+                "offer": dictionaryOf(lnOffer: offer),
             ]
 
         case let .nodeId(

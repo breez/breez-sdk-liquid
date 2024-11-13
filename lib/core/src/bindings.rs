@@ -329,12 +329,35 @@ pub struct _RouteHintHop {
     pub htlc_maximum_msat: Option<u64>,
 }
 
+
+#[frb(mirror(Amount))]
+pub enum _Amount {
+    Bitcoin {
+        amount_msat: u64,
+    },
+    Currency {
+        iso4217_code: String,
+        fractional_amount: u64,
+    },
+}
+
+#[frb(mirror(LNOffer))]
+pub struct _LNOffer {
+    pub bolt12: String,
+    pub chains: Vec<String>,
+    pub amount: Option<Amount>,
+    pub description: Option<String>,
+    pub absolute_expiry: Option<u64>,
+    pub issuer: Option<String>,
+    pub signing_pubkey: Option<String>,
+}
+
 #[frb(mirror(InputType))]
 pub enum _InputType {
     BitcoinAddress { address: BitcoinAddressData },
     LiquidAddress { address: LiquidAddressData },
     Bolt11 { invoice: LNInvoice },
-    Bolt12Offer { offer: String },
+    Bolt12Offer { offer: LNOffer },
     NodeId { node_id: String },
     Url { url: String },
     LnUrlPay { data: LnUrlPayRequestData },

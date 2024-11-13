@@ -480,6 +480,25 @@ typedef struct wire_cst_aes_success_action_data_result {
   union AesSuccessActionDataResultKind kind;
 } wire_cst_aes_success_action_data_result;
 
+typedef struct wire_cst_Amount_Bitcoin {
+  uint64_t amount_msat;
+} wire_cst_Amount_Bitcoin;
+
+typedef struct wire_cst_Amount_Currency {
+  struct wire_cst_list_prim_u_8_strict *iso4217_code;
+  uint64_t fractional_amount;
+} wire_cst_Amount_Currency;
+
+typedef union AmountKind {
+  struct wire_cst_Amount_Bitcoin Bitcoin;
+  struct wire_cst_Amount_Currency Currency;
+} AmountKind;
+
+typedef struct wire_cst_amount {
+  int32_t tag;
+  union AmountKind kind;
+} wire_cst_amount;
+
 typedef struct wire_cst_bitcoin_address_data {
   struct wire_cst_list_prim_u_8_strict *address;
   int32_t network;
@@ -487,6 +506,21 @@ typedef struct wire_cst_bitcoin_address_data {
   struct wire_cst_list_prim_u_8_strict *label;
   struct wire_cst_list_prim_u_8_strict *message;
 } wire_cst_bitcoin_address_data;
+
+typedef struct wire_cst_list_String {
+  struct wire_cst_list_prim_u_8_strict **ptr;
+  int32_t len;
+} wire_cst_list_String;
+
+typedef struct wire_cst_ln_offer {
+  struct wire_cst_list_prim_u_8_strict *bolt12;
+  struct wire_cst_list_String *chains;
+  struct wire_cst_amount *amount;
+  struct wire_cst_list_prim_u_8_strict *description;
+  uint64_t *absolute_expiry;
+  struct wire_cst_list_prim_u_8_strict *issuer;
+  struct wire_cst_list_prim_u_8_strict *signing_pubkey;
+} wire_cst_ln_offer;
 
 typedef struct wire_cst_ln_url_error_data {
   struct wire_cst_list_prim_u_8_strict *reason;
@@ -628,7 +662,7 @@ typedef struct wire_cst_InputType_Bolt11 {
 } wire_cst_InputType_Bolt11;
 
 typedef struct wire_cst_InputType_Bolt12Offer {
-  struct wire_cst_list_prim_u_8_strict *offer;
+  struct wire_cst_ln_offer *offer;
 } wire_cst_InputType_Bolt12Offer;
 
 typedef struct wire_cst_InputType_NodeId {
@@ -1131,6 +1165,8 @@ struct wire_cst_aes_success_action_data_decrypted *frbgen_breez_liquid_cst_new_b
 
 struct wire_cst_aes_success_action_data_result *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result(void);
 
+struct wire_cst_amount *frbgen_breez_liquid_cst_new_box_autoadd_amount(void);
+
 struct wire_cst_backup_request *frbgen_breez_liquid_cst_new_box_autoadd_backup_request(void);
 
 struct wire_cst_binding_event_listener *frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(void);
@@ -1156,6 +1192,8 @@ struct wire_cst_list_payment_details *frbgen_breez_liquid_cst_new_box_autoadd_li
 struct wire_cst_list_payments_request *frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request(void);
 
 struct wire_cst_ln_invoice *frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice(void);
+
+struct wire_cst_ln_offer *frbgen_breez_liquid_cst_new_box_autoadd_ln_offer(void);
 
 struct wire_cst_ln_url_auth_request_data *frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data(void);
 
@@ -1219,6 +1257,8 @@ uint64_t *frbgen_breez_liquid_cst_new_box_autoadd_u_64(uint64_t value);
 
 struct wire_cst_url_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data(void);
 
+struct wire_cst_list_String *frbgen_breez_liquid_cst_new_list_String(int32_t len);
+
 struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
 
 struct wire_cst_list_locale_overrides *frbgen_breez_liquid_cst_new_list_locale_overrides(int32_t len);
@@ -1243,6 +1283,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_amount);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
@@ -1256,6 +1297,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payment_details);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_list_payments_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_offer);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_error_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data);
@@ -1287,6 +1329,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_32);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_u_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_String);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_locale_overrides);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_localized_name);
