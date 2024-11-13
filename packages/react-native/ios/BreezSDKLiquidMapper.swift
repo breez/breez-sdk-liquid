@@ -2827,11 +2827,11 @@ enum BreezSDKLiquidMapper {
 
             return InputType.bolt11(invoice: _invoice)
         }
-        if type == "bolt12" {
+        if type == "bolt12Offer" {
             guard let _offer = inputType["offer"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "offer", typeName: "InputType"))
             }
-            return InputType.bolt12(offer: _offer)
+            return InputType.bolt12Offer(offer: _offer)
         }
         if type == "nodeId" {
             guard let _nodeId = inputType["nodeId"] as? String else {
@@ -2907,11 +2907,11 @@ enum BreezSDKLiquidMapper {
                 "invoice": dictionaryOf(lnInvoice: invoice),
             ]
 
-        case let .bolt12(
+        case let .bolt12Offer(
             offer
         ):
             return [
-                "type": "bolt12",
+                "type": "bolt12Offer",
                 "offer": offer,
             ]
 

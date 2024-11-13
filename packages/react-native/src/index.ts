@@ -425,7 +425,7 @@ export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
     BOLT11 = "bolt11",
-    BOLT12 = "bolt12",
+    BOLT12_OFFER = "bolt12Offer",
     NODE_ID = "nodeId",
     URL = "url",
     LN_URL_PAY = "lnUrlPay",
@@ -444,7 +444,7 @@ export type InputType = {
     type: InputTypeVariant.BOLT11,
     invoice: LnInvoice
 } | {
-    type: InputTypeVariant.BOLT12,
+    type: InputTypeVariant.BOLT12_OFFER,
     offer: string
 } | {
     type: InputTypeVariant.NODE_ID,
