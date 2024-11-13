@@ -267,16 +267,18 @@ impl Persister {
     pub(crate) fn set_chain_swap_claim_tx_id(
         &self,
         swap_id: &str,
+        claim_address: Option<String>,
         claim_tx_id: &str,
     ) -> Result<(), PaymentError> {
         let con = self.get_connection()?;
         let row_count = con
             .execute(
                 "UPDATE chain_swaps 
-            SET claim_tx_id = :claim_tx_id
+            SET claim_address = :claim_address, claim_tx_id = :claim_tx_id
             WHERE id = :id AND claim_tx_id IS NULL",
                 named_params! {
                             ":id": swap_id,
+                            ":claim_address": claim_address,
                             ":claim_tx_id": claim_tx_id,
                 },
             )

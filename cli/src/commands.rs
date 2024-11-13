@@ -38,8 +38,12 @@ pub(crate) enum Command {
         #[arg(short, long)]
         amount_sat: Option<u64>,
 
-        /// Delay for the send, in seconds
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
+        drain: Option<bool>,
+
+        /// Delay for the send, in seconds
+        #[arg(long)]
         delay: Option<u64>,
     },
     /// Fetch the current limits for Send and Receive payments
@@ -110,13 +114,13 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
 
-        /// Optional Liquid BIP21 URI / address destination
+        /// Optional Liquid BIP21 URI/address for Liquid payment method
         #[clap(short = 'd', long = "destination")]
-        liquid_destination: Option<String>,
+        destination: Option<String>,
 
-        /// Optional Bitcoin address
+        /// Optional Liquid/Bitcoin address for Bitcoin payment method
         #[clap(short = 'a', long = "address")]
-        bitcoin_address: Option<String>,
+        address: Option<String>,
     },
     /// Retrieve a payment
     GetPayment {
@@ -315,6 +319,7 @@ pub(crate) async fn handle_command(
             offer,
             address,
             amount_sat,
+            drain,
             delay,
         } => {
             let destination = match (invoice, offer, address) {
@@ -326,15 +331,25 @@ pub(crate) async fn handle_command(
                     ))
                 },
                 (None, None, Some(address)) => Ok(address),
+                (Some(_), _, Some(_)) => {
+                    Err(anyhow::anyhow!(
+                        "Cannot specify both invoice and address at the same time."
+                    ))
+                }
                 _ => Err(anyhow!(
                     "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
                 ))
             }?;
+            let amount = match (amount_sat, drain.unwrap_or(false)) {
+                (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
+                (_, true) => Some(PayAmount::Drain),
+                (_, _) => None,
+            };
 
             let prepare_response = sdk
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
-                    amount_sat,
+                    amount,
                 })
                 .await?;
 
@@ -370,9 +385,9 @@ pub(crate) async fn handle_command(
             fee_rate_sat_per_vbyte,
         } => {
             let amount = match drain.unwrap_or(false) {
-                true => PayOnchainAmount::Drain,
-                false => PayOnchainAmount::Receiver {
-                    amount_sat: receiver_amount_sat.ok_or(anyhow!(
+                true => PayAmount::Drain,
+                false => PayAmount::Receiver {
+                    amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
                         "Must specify `receiver_amount_sat` if not draining"
                     ))?,
                 },
@@ -458,10 +473,10 @@ pub(crate) async fn handle_command(
             to_timestamp,
             limit,
             offset,
-            liquid_destination,
-            bitcoin_address,
+            destination,
+            address,
         } => {
-            let details = match (liquid_destination, bitcoin_address) {
+            let details = match (destination, address) {
                 (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
                 (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
                 _ => None,

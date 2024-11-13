@@ -53,6 +53,15 @@ impl OnchainWallet for MockWallet {
         Ok(TEST_LIQUID_TX.clone())
     }
 
+    async fn build_tx_or_drain_tx(
+        &self,
+        _fee_rate_sats_per_kvb: Option<f32>,
+        _recipient_address: &str,
+        _amount_sat: u64,
+    ) -> Result<Transaction, PaymentError> {
+        Ok(TEST_LIQUID_TX.clone())
+    }
+
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
         Ok(TEST_P2TR_ADDR.clone())
     }
