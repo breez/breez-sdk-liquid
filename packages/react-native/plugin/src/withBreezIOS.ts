@@ -11,6 +11,7 @@ import {
 import { addExtension } from "./addExtension";
 import { withTargetPlist } from "./withExtensionInfoPlist";
 import { warnOnce } from "./utils";
+import { withTargetEntitlementsPlist } from "./withExtensionEntitlementsPlist";
 
 const NOTIFICATION_SERVICE_PODS = (targetName: string) => `
 target '${targetName}' do
@@ -19,39 +20,11 @@ target '${targetName}' do
 end
 `;
 
-const NOTIFICATION_SERVICE_ENTITLEMENT = `
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-</dict>
-</plist>
-`;
-
 type EASAppExtension = {
   targetName: string;
   bundleIdentifier: string;
   entitlements: Record<string, Array<string>>;
 };
-
-function generateEntitlementsXML(
-  entitlements: Record<string, Array<string>>,
-): string {
-  const dictEntries = Object.entries(entitlements)
-    .map(
-      ([key, values]) => `
-  <key>${key}</key>
-  <array>
-    ${values.map((value) => `<string>${value}</string>`).join("\n    ")}
-  </array>`,
-    )
-    .join("\n");
-
-  return NOTIFICATION_SERVICE_ENTITLEMENT.replace(
-    "<dict>",
-    `<dict>\n${dictEntries}`,
-  );
-}
 
 export type NotificationServiceExtensionProps = {
   apiKey: string;
@@ -90,17 +63,6 @@ export function withNotificationServiceExtension(config: ExpoConfig, props: Noti
         fs.mkdirSync(extensionDir);
       }
 
-      const entitlementsPath = path.join(
-        extensionDir,
-        `${targetName}.entitlements`,
-      );
-      if (!fs.existsSync(entitlementsPath)) {
-        fs.writeFileSync(
-          entitlementsPath,
-          generateEntitlementsXML(entitlements),
-        );
-      }
-
       // TODO: Add multiple sources
       const swiftSource = path.join(
         __dirname,
@@ -120,6 +82,10 @@ export function withNotificationServiceExtension(config: ExpoConfig, props: Noti
   // Create Target Info Plist
   config = withTargetPlist(config, { targetName, appGroup, ...props });
 
+  // Create Target Entitlements
+  config = withTargetEntitlementsPlist(config, { targetName, entitlements });
+
+  // Add the same entitlements to the main target
   config = withEntitlementsPlist(config, (config) => {
     config.modResults = { ...config.modResults, ...entitlements };
     return config;
@@ -134,7 +100,6 @@ export function withNotificationServiceExtension(config: ExpoConfig, props: Noti
   });
 
   // Add required Pods for the extension
-  // TODO: Support dynamic Pods
   config = withPodfile(config, (config) => {
     const podFile = config.modResults;
     if (podFile.contents.includes(targetName)) {
