@@ -124,12 +124,12 @@ impl LiquidOnchainWallet {
         signer: &SdkLwkSigner,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
-        let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
+        let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
         let mut lwk_persister =
             FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
 
         match Wollet::new(elements_network, lwk_persister, descriptor.clone()) {
-            Ok(wollet) => return Ok(wollet),
+            Ok(wollet) => Ok(wollet),
             Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
                 warn!("Update height too old, wipping storage and retrying");
                 let mut path = working_dir.as_ref().to_path_buf();
@@ -143,7 +143,7 @@ impl LiquidOnchainWallet {
                     descriptor.clone(),
                 )?)
             }
-            Err(e) => return Err(e.into()),
+            Err(e) => Err(e.into()),
         }
     }
 
