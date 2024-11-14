@@ -153,14 +153,18 @@ impl LiquidSdk {
         fs::create_dir_all(&config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let working_dir = config.get_wallet_working_dir(fingerprint_hex)?;
+        let working_dir = config.get_wallet_dir(&config.working_dir, &fingerprint_hex)?;
+        let cache_dir = config.get_wallet_dir(
+            config.cache_dir.as_ref().unwrap_or(&config.working_dir),
+            &fingerprint_hex,
+        )?;
 
         let persister = Arc::new(Persister::new(&working_dir, config.network)?);
         persister.init()?;
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             config.clone(),
-            &working_dir,
+            &cache_dir,
             persister.clone(),
             signer.clone(),
         )?);

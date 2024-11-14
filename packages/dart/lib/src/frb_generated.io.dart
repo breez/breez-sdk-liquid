@@ -2026,6 +2026,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.bitcoin_electrum_url = cst_encode_String(apiObj.bitcoinElectrumUrl);
     wireObj.mempoolspace_url = cst_encode_String(apiObj.mempoolspaceUrl);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
+    wireObj.cache_dir = cst_encode_opt_String(apiObj.cacheDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.zero_conf_min_fee_rate_msat = cst_encode_u_32(apiObj.zeroConfMinFeeRateMsat);
@@ -5612,6 +5613,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
 
   @ffi.Int32()
   external int network;

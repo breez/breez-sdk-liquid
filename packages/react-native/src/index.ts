@@ -62,6 +62,7 @@ export interface Config {
     bitcoinElectrumUrl: string
     mempoolspaceUrl: string
     workingDir: string
+    cacheDir?: string
     network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number

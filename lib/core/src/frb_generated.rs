@@ -2283,6 +2283,7 @@ impl SseDecode for crate::model::Config {
         let mut var_bitcoinElectrumUrl = <String>::sse_decode(deserializer);
         let mut var_mempoolspaceUrl = <String>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
+        let mut var_cacheDir = <Option<String>>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
@@ -2293,6 +2294,7 @@ impl SseDecode for crate::model::Config {
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
             mempoolspace_url: var_mempoolspaceUrl,
             working_dir: var_workingDir,
+            cache_dir: var_cacheDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
@@ -4324,6 +4326,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.bitcoin_electrum_url.into_into_dart().into_dart(),
             self.mempoolspace_url.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
+            self.cache_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
             self.zero_conf_min_fee_rate_msat
@@ -6293,6 +6296,7 @@ impl SseEncode for crate::model::Config {
         <String>::sse_encode(self.bitcoin_electrum_url, serializer);
         <String>::sse_encode(self.mempoolspace_url, serializer);
         <String>::sse_encode(self.working_dir, serializer);
+        <Option<String>>::sse_encode(self.cache_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
@@ -8236,6 +8240,7 @@ mod io {
                 bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
                 mempoolspace_url: self.mempoolspace_url.cst_decode(),
                 working_dir: self.working_dir.cst_decode(),
+                cache_dir: self.cache_dir.cst_decode(),
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
@@ -9593,6 +9598,7 @@ mod io {
                 bitcoin_electrum_url: core::ptr::null_mut(),
                 mempoolspace_url: core::ptr::null_mut(),
                 working_dir: core::ptr::null_mut(),
+                cache_dir: core::ptr::null_mut(),
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
@@ -11497,6 +11503,7 @@ mod io {
         bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
         mempoolspace_url: *mut wire_cst_list_prim_u_8_strict,
         working_dir: *mut wire_cst_list_prim_u_8_strict,
+        cache_dir: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,

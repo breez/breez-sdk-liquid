@@ -22,6 +22,7 @@ import breez_sdk_liquid_notification.job.Job
 import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
+import kotlin.io.path.Path
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +111,10 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
 
         // Connect to SDK if source intent has data message with valid payload
         getConnectRequest()?.let { connectRequest ->
+            if (connectRequest.config.cacheDir == null) {
+                connectRequest.config.cacheDir = Path(connectRequest.config.workingDir, "pluginCache").toString()
+            }
+
             getJobFromIntent(intent)?.also { job ->
                 launchSdkConnection(connectRequest, job)
             } ?: run {

@@ -119,10 +119,13 @@ class Config {
   /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
   final String mempoolspaceUrl;
 
-  /// Directory in which all SDK files (DB, log, cache) are stored.
+  /// Directory in which the DB and log files are stored.
   ///
   /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
+
+  /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
+  final String? cacheDir;
   final LiquidNetwork network;
 
   /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
@@ -143,6 +146,7 @@ class Config {
     required this.bitcoinElectrumUrl,
     required this.mempoolspaceUrl,
     required this.workingDir,
+    this.cacheDir,
     required this.network,
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
@@ -156,6 +160,7 @@ class Config {
       bitcoinElectrumUrl.hashCode ^
       mempoolspaceUrl.hashCode ^
       workingDir.hashCode ^
+      cacheDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
@@ -171,6 +176,7 @@ class Config {
           bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
           mempoolspaceUrl == other.mempoolspaceUrl &&
           workingDir == other.workingDir &&
+          cacheDir == other.cacheDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
@@ -211,7 +217,7 @@ class GetInfoResponse {
   /// Incoming amount that is pending from ongoing Receive swaps
   final BigInt pendingReceiveSat;
 
-  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
   final String fingerprint;
 
   /// The wallet's pubkey. Used to verify signed messages.

@@ -307,6 +307,7 @@ dictionary Config {
     string bitcoin_electrum_url;
     string mempoolspace_url;
     string working_dir;
+    string? cache_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
     u32 zero_conf_min_fee_rate_msat;
