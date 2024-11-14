@@ -342,7 +342,7 @@ pub enum _Amount {
 
 #[frb(mirror(LNOffer))]
 pub struct _LNOffer {
-    pub bolt12: String,
+    pub offer: String,
     pub chains: Vec<String>,
     pub min_amount: Option<Amount>,
     pub description: Option<String>,

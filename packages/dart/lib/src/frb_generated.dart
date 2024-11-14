@@ -1997,7 +1997,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return LNOffer(
-      bolt12: dco_decode_String(arr[0]),
+      offer: dco_decode_String(arr[0]),
       chains: dco_decode_list_String(arr[1]),
       minAmount: dco_decode_opt_box_autoadd_amount(arr[2]),
       description: dco_decode_opt_String(arr[3]),
@@ -3916,7 +3916,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   LNOffer sse_decode_ln_offer(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_bolt12 = sse_decode_String(deserializer);
+    var var_offer = sse_decode_String(deserializer);
     var var_chains = sse_decode_list_String(deserializer);
     var var_minAmount = sse_decode_opt_box_autoadd_amount(deserializer);
     var var_description = sse_decode_opt_String(deserializer);
@@ -3924,7 +3924,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_issuer = sse_decode_opt_String(deserializer);
     var var_signingPubkey = sse_decode_opt_String(deserializer);
     return LNOffer(
-        bolt12: var_bolt12,
+        offer: var_offer,
         chains: var_chains,
         minAmount: var_minAmount,
         description: var_description,
@@ -5818,7 +5818,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_ln_offer(LNOffer self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.bolt12, serializer);
+    sse_encode_String(self.offer, serializer);
     sse_encode_list_String(self.chains, serializer);
     sse_encode_opt_box_autoadd_amount(self.minAmount, serializer);
     sse_encode_opt_String(self.description, serializer);

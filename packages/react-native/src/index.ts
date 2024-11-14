@@ -117,7 +117,7 @@ export interface LnInvoice {
 }
 
 export interface LnOffer {
-    bolt12: string
+    offer: string
     chains: string[]
     description?: string
     signingPubkey?: string

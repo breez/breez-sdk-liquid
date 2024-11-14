@@ -1858,7 +1858,7 @@ const _: fn() = || {
     }
     {
         let LNOffer = None::<crate::bindings::LNOffer>.unwrap();
-        let _: String = LNOffer.bolt12;
+        let _: String = LNOffer.offer;
         let _: Vec<String> = LNOffer.chains;
         let _: Option<crate::bindings::Amount> = LNOffer.min_amount;
         let _: Option<String> = LNOffer.description;
@@ -2790,7 +2790,7 @@ impl SseDecode for crate::bindings::LNInvoice {
 impl SseDecode for crate::bindings::LNOffer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_bolt12 = <String>::sse_decode(deserializer);
+        let mut var_offer = <String>::sse_decode(deserializer);
         let mut var_chains = <Vec<String>>::sse_decode(deserializer);
         let mut var_minAmount = <Option<crate::bindings::Amount>>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
@@ -2798,7 +2798,7 @@ impl SseDecode for crate::bindings::LNOffer {
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
         let mut var_signingPubkey = <Option<String>>::sse_decode(deserializer);
         return crate::bindings::LNOffer {
-            bolt12: var_bolt12,
+            offer: var_offer,
             chains: var_chains,
             min_amount: var_minAmount,
             description: var_description,
@@ -4814,7 +4814,7 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNInvoice>>
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOffer> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.0.bolt12.into_into_dart().into_dart(),
+            self.0.offer.into_into_dart().into_dart(),
             self.0.chains.into_into_dart().into_dart(),
             self.0.min_amount.into_into_dart().into_dart(),
             self.0.description.into_into_dart().into_dart(),
@@ -6837,7 +6837,7 @@ impl SseEncode for crate::bindings::LNInvoice {
 impl SseEncode for crate::bindings::LNOffer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.bolt12, serializer);
+        <String>::sse_encode(self.offer, serializer);
         <Vec<String>>::sse_encode(self.chains, serializer);
         <Option<crate::bindings::Amount>>::sse_encode(self.min_amount, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
@@ -8851,7 +8851,7 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::LNOffer {
             crate::bindings::LNOffer {
-                bolt12: self.bolt12.cst_decode(),
+                offer: self.offer.cst_decode(),
                 chains: self.chains.cst_decode(),
                 min_amount: self.min_amount.cst_decode(),
                 description: self.description.cst_decode(),
@@ -10124,7 +10124,7 @@ mod io {
     impl NewWithNullPtr for wire_cst_ln_offer {
         fn new_with_null_ptr() -> Self {
             Self {
-                bolt12: core::ptr::null_mut(),
+                offer: core::ptr::null_mut(),
                 chains: core::ptr::null_mut(),
                 min_amount: core::ptr::null_mut(),
                 description: core::ptr::null_mut(),
@@ -12162,7 +12162,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_ln_offer {
-        bolt12: *mut wire_cst_list_prim_u_8_strict,
+        offer: *mut wire_cst_list_prim_u_8_strict,
         chains: *mut wire_cst_list_String,
         min_amount: *mut wire_cst_amount,
         description: *mut wire_cst_list_prim_u_8_strict,

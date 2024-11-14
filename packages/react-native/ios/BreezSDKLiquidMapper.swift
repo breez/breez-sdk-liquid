@@ -666,8 +666,8 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asLnOffer(lnOffer: [String: Any?]) throws -> LnOffer {
-        guard let bolt12 = lnOffer["bolt12"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bolt12", typeName: "LnOffer"))
+        guard let offer = lnOffer["offer"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "offer", typeName: "LnOffer"))
         }
         guard let chains = lnOffer["chains"] as? [String] else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "chains", typeName: "LnOffer"))
@@ -706,12 +706,12 @@ enum BreezSDKLiquidMapper {
             issuer = issuerTmp
         }
 
-        return LnOffer(bolt12: bolt12, chains: chains, description: description, signingPubkey: signingPubkey, minAmount: minAmount, absoluteExpiry: absoluteExpiry, issuer: issuer)
+        return LnOffer(offer: offer, chains: chains, description: description, signingPubkey: signingPubkey, minAmount: minAmount, absoluteExpiry: absoluteExpiry, issuer: issuer)
     }
 
     static func dictionaryOf(lnOffer: LnOffer) -> [String: Any?] {
         return [
-            "bolt12": lnOffer.bolt12,
+            "offer": lnOffer.offer,
             "chains": lnOffer.chains,
             "description": lnOffer.description == nil ? nil : lnOffer.description,
             "signingPubkey": lnOffer.signingPubkey == nil ? nil : lnOffer.signingPubkey,

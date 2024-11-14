@@ -45,7 +45,7 @@ interface Amount {
 };
 
 dictionary LNOffer {
-    string bolt12;
+    string offer;
     sequence<string> chains;
     string? description;
     string? signing_pubkey;

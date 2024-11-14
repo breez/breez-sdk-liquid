@@ -2307,7 +2307,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_ln_offer(LNOffer apiObj, wire_cst_ln_offer wireObj) {
-    wireObj.bolt12 = cst_encode_String(apiObj.bolt12);
+    wireObj.offer = cst_encode_String(apiObj.offer);
     wireObj.chains = cst_encode_list_String(apiObj.chains);
     wireObj.min_amount = cst_encode_opt_box_autoadd_amount(apiObj.minAmount);
     wireObj.description = cst_encode_opt_String(apiObj.description);
@@ -5444,7 +5444,7 @@ final class wire_cst_amount extends ffi.Struct {
 }
 
 final class wire_cst_ln_offer extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
 
   external ffi.Pointer<wire_cst_list_String> chains;
 

@@ -196,7 +196,7 @@ typedef struct wire_cst_amount {
 } wire_cst_amount;
 
 typedef struct wire_cst_ln_offer {
-  struct wire_cst_list_prim_u_8_strict *bolt12;
+  struct wire_cst_list_prim_u_8_strict *offer;
   struct wire_cst_list_String *chains;
   struct wire_cst_amount *min_amount;
   struct wire_cst_list_prim_u_8_strict *description;

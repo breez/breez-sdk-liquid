@@ -420,7 +420,7 @@ class LNInvoice {
 }
 
 class LNOffer {
-  final String bolt12;
+  final String offer;
   final List<String> chains;
   final Amount? minAmount;
   final String? description;
@@ -429,7 +429,7 @@ class LNOffer {
   final String? signingPubkey;
 
   const LNOffer({
-    required this.bolt12,
+    required this.offer,
     required this.chains,
     this.minAmount,
     this.description,
@@ -440,7 +440,7 @@ class LNOffer {
 
   @override
   int get hashCode =>
-      bolt12.hashCode ^
+      offer.hashCode ^
       chains.hashCode ^
       minAmount.hashCode ^
       description.hashCode ^
@@ -453,7 +453,7 @@ class LNOffer {
       identical(this, other) ||
       other is LNOffer &&
           runtimeType == other.runtimeType &&
-          bolt12 == other.bolt12 &&
+          offer == other.offer &&
           chains == other.chains &&
           minAmount == other.minAmount &&
           description == other.description &&

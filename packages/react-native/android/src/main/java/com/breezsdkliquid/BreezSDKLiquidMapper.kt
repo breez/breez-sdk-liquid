@@ -568,26 +568,26 @@ fun asLnOffer(lnOffer: ReadableMap): LnOffer? {
     if (!validateMandatoryFields(
             lnOffer,
             arrayOf(
-                "bolt12",
+                "offer",
                 "chains",
             ),
         )
     ) {
         return null
     }
-    val bolt12 = lnOffer.getString("bolt12")!!
+    val offer = lnOffer.getString("offer")!!
     val chains = lnOffer.getArray("chains")?.let { asStringList(it) }!!
     val description = if (hasNonNullKey(lnOffer, "description")) lnOffer.getString("description") else null
     val signingPubkey = if (hasNonNullKey(lnOffer, "signingPubkey")) lnOffer.getString("signingPubkey") else null
     val minAmount = if (hasNonNullKey(lnOffer, "minAmount")) lnOffer.getMap("minAmount")?.let { asAmount(it) } else null
     val absoluteExpiry = if (hasNonNullKey(lnOffer, "absoluteExpiry")) lnOffer.getDouble("absoluteExpiry").toULong() else null
     val issuer = if (hasNonNullKey(lnOffer, "issuer")) lnOffer.getString("issuer") else null
-    return LnOffer(bolt12, chains, description, signingPubkey, minAmount, absoluteExpiry, issuer)
+    return LnOffer(offer, chains, description, signingPubkey, minAmount, absoluteExpiry, issuer)
 }
 
 fun readableMapOf(lnOffer: LnOffer): ReadableMap =
     readableMapOf(
-        "bolt12" to lnOffer.bolt12,
+        "offer" to lnOffer.offer,
         "chains" to readableArrayOf(lnOffer.chains),
         "description" to lnOffer.description,
         "signingPubkey" to lnOffer.signingPubkey,

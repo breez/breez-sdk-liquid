@@ -970,7 +970,7 @@ impl LiquidSdk {
             } => {
                 let bolt12_invoice = self
                     .swapper
-                    .get_bolt12_invoice(&offer.bolt12, *receiver_amount_sat)?;
+                    .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)?;
                 self.pay_bolt12_invoice(&bolt12_invoice, *fees_sat).await
             }
         }
@@ -2585,31 +2585,40 @@ impl LiquidSdk {
     /// Parses a string into an [InputType]. See [input_parser::parse].
     pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
         if let Ok(offer) = input.parse::<Offer>() {
+            // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
+            //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
+            let min_amount = offer
+                .amount()
+                .map(|amount| match amount {
+                    ::lightning::offers::offer::Amount::Bitcoin { amount_msats } => {
+                        Ok(Amount::Bitcoin {
+                            amount_msat: amount_msats,
+                        })
+                    }
+                    ::lightning::offers::offer::Amount::Currency {
+                        iso4217_code,
+                        amount,
+                    } => Ok(Amount::Currency {
+                        iso4217_code: String::from_utf8(iso4217_code.to_vec()).map_err(|_| {
+                            anyhow!("Expecting a valid ISO 4217 character sequence")
+                        })?,
+                        fractional_amount: amount,
+                    }),
+                })
+                .transpose()
+                .map_err(|e: anyhow::Error| {
+                    PaymentError::generic(&format!("Failed to reconstruct amount: {e:?}"))
+                })?;
+
             return Ok(InputType::Bolt12Offer {
                 offer: LNOffer {
-                    bolt12: input.to_string(),
+                    offer: input.to_string(),
                     chains: offer
                         .chains()
                         .iter()
                         .map(|chain| chain.to_string())
                         .collect(),
-                    // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
-                    //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
-                    min_amount: offer.amount().map(|amount| match amount {
-                        ::lightning::offers::offer::Amount::Bitcoin { amount_msats } => {
-                            Amount::Bitcoin {
-                                amount_msat: amount_msats,
-                            }
-                        }
-                        ::lightning::offers::offer::Amount::Currency {
-                            iso4217_code,
-                            amount,
-                        } => Amount::Currency {
-                            iso4217_code: String::from_utf8(iso4217_code.to_vec())
-                                .expect("Expecting a valid ISO 4217 character sequence"),
-                            fractional_amount: amount,
-                        },
-                    }),
+                    min_amount,
                     description: offer.description().map(|d| d.to_string()),
                     absolute_expiry: offer.absolute_expiry().map(|expiry| expiry.as_secs()),
                     issuer: offer.issuer().map(|s| s.to_string()),
