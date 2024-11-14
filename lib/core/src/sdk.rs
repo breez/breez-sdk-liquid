@@ -2595,7 +2595,7 @@ impl LiquidSdk {
                         .collect(),
                     // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
                     //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
-                    amount: offer.amount().map(|amount| match amount {
+                    min_amount: offer.amount().map(|amount| match amount {
                         ::lightning::offers::offer::Amount::Bitcoin { amount_msats } => {
                             Amount::Bitcoin {
                                 amount_msat: amount_msats,

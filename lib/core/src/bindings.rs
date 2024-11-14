@@ -344,7 +344,7 @@ pub enum _Amount {
 pub struct _LNOffer {
     pub bolt12: String,
     pub chains: Vec<String>,
-    pub amount: Option<Amount>,
+    pub min_amount: Option<Amount>,
     pub description: Option<String>,
     pub absolute_expiry: Option<u64>,
     pub issuer: Option<String>,

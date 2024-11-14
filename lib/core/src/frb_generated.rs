@@ -1860,7 +1860,7 @@ const _: fn() = || {
         let LNOffer = None::<crate::bindings::LNOffer>.unwrap();
         let _: String = LNOffer.bolt12;
         let _: Vec<String> = LNOffer.chains;
-        let _: Option<crate::bindings::Amount> = LNOffer.amount;
+        let _: Option<crate::bindings::Amount> = LNOffer.min_amount;
         let _: Option<String> = LNOffer.description;
         let _: Option<u64> = LNOffer.absolute_expiry;
         let _: Option<String> = LNOffer.issuer;
@@ -2792,7 +2792,7 @@ impl SseDecode for crate::bindings::LNOffer {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_bolt12 = <String>::sse_decode(deserializer);
         let mut var_chains = <Vec<String>>::sse_decode(deserializer);
-        let mut var_amount = <Option<crate::bindings::Amount>>::sse_decode(deserializer);
+        let mut var_minAmount = <Option<crate::bindings::Amount>>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
         let mut var_absoluteExpiry = <Option<u64>>::sse_decode(deserializer);
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
@@ -2800,7 +2800,7 @@ impl SseDecode for crate::bindings::LNOffer {
         return crate::bindings::LNOffer {
             bolt12: var_bolt12,
             chains: var_chains,
-            amount: var_amount,
+            min_amount: var_minAmount,
             description: var_description,
             absolute_expiry: var_absoluteExpiry,
             issuer: var_issuer,
@@ -4816,7 +4816,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOffer> {
         [
             self.0.bolt12.into_into_dart().into_dart(),
             self.0.chains.into_into_dart().into_dart(),
-            self.0.amount.into_into_dart().into_dart(),
+            self.0.min_amount.into_into_dart().into_dart(),
             self.0.description.into_into_dart().into_dart(),
             self.0.absolute_expiry.into_into_dart().into_dart(),
             self.0.issuer.into_into_dart().into_dart(),
@@ -6839,7 +6839,7 @@ impl SseEncode for crate::bindings::LNOffer {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.bolt12, serializer);
         <Vec<String>>::sse_encode(self.chains, serializer);
-        <Option<crate::bindings::Amount>>::sse_encode(self.amount, serializer);
+        <Option<crate::bindings::Amount>>::sse_encode(self.min_amount, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
         <Option<u64>>::sse_encode(self.absolute_expiry, serializer);
         <Option<String>>::sse_encode(self.issuer, serializer);
@@ -8853,7 +8853,7 @@ mod io {
             crate::bindings::LNOffer {
                 bolt12: self.bolt12.cst_decode(),
                 chains: self.chains.cst_decode(),
-                amount: self.amount.cst_decode(),
+                min_amount: self.min_amount.cst_decode(),
                 description: self.description.cst_decode(),
                 absolute_expiry: self.absolute_expiry.cst_decode(),
                 issuer: self.issuer.cst_decode(),
@@ -10126,7 +10126,7 @@ mod io {
             Self {
                 bolt12: core::ptr::null_mut(),
                 chains: core::ptr::null_mut(),
-                amount: core::ptr::null_mut(),
+                min_amount: core::ptr::null_mut(),
                 description: core::ptr::null_mut(),
                 absolute_expiry: core::ptr::null_mut(),
                 issuer: core::ptr::null_mut(),
@@ -12164,7 +12164,7 @@ mod io {
     pub struct wire_cst_ln_offer {
         bolt12: *mut wire_cst_list_prim_u_8_strict,
         chains: *mut wire_cst_list_String,
-        amount: *mut wire_cst_amount,
+        min_amount: *mut wire_cst_amount,
         description: *mut wire_cst_list_prim_u_8_strict,
         absolute_expiry: *mut u64,
         issuer: *mut wire_cst_list_prim_u_8_strict,

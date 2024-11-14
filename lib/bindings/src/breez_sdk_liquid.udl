@@ -49,7 +49,7 @@ dictionary LNOffer {
     sequence<string> chains;
     string? description;
     string? signing_pubkey;
-    Amount? amount;
+    Amount? min_amount;
     u64? absolute_expiry;
     string? issuer;
 };

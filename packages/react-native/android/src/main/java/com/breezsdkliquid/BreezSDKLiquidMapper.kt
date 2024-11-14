@@ -579,10 +579,10 @@ fun asLnOffer(lnOffer: ReadableMap): LnOffer? {
     val chains = lnOffer.getArray("chains")?.let { asStringList(it) }!!
     val description = if (hasNonNullKey(lnOffer, "description")) lnOffer.getString("description") else null
     val signingPubkey = if (hasNonNullKey(lnOffer, "signingPubkey")) lnOffer.getString("signingPubkey") else null
-    val amount = if (hasNonNullKey(lnOffer, "amount")) lnOffer.getMap("amount")?.let { asAmount(it) } else null
+    val minAmount = if (hasNonNullKey(lnOffer, "minAmount")) lnOffer.getMap("minAmount")?.let { asAmount(it) } else null
     val absoluteExpiry = if (hasNonNullKey(lnOffer, "absoluteExpiry")) lnOffer.getDouble("absoluteExpiry").toULong() else null
     val issuer = if (hasNonNullKey(lnOffer, "issuer")) lnOffer.getString("issuer") else null
-    return LnOffer(bolt12, chains, description, signingPubkey, amount, absoluteExpiry, issuer)
+    return LnOffer(bolt12, chains, description, signingPubkey, minAmount, absoluteExpiry, issuer)
 }
 
 fun readableMapOf(lnOffer: LnOffer): ReadableMap =
@@ -591,7 +591,7 @@ fun readableMapOf(lnOffer: LnOffer): ReadableMap =
         "chains" to readableArrayOf(lnOffer.chains),
         "description" to lnOffer.description,
         "signingPubkey" to lnOffer.signingPubkey,
-        "amount" to lnOffer.amount?.let { readableMapOf(it) },
+        "minAmount" to lnOffer.minAmount?.let { readableMapOf(it) },
         "absoluteExpiry" to lnOffer.absoluteExpiry,
         "issuer" to lnOffer.issuer,
     )

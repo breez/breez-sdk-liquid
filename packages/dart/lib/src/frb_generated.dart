@@ -1999,7 +1999,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return LNOffer(
       bolt12: dco_decode_String(arr[0]),
       chains: dco_decode_list_String(arr[1]),
-      amount: dco_decode_opt_box_autoadd_amount(arr[2]),
+      minAmount: dco_decode_opt_box_autoadd_amount(arr[2]),
       description: dco_decode_opt_String(arr[3]),
       absoluteExpiry: dco_decode_opt_box_autoadd_u_64(arr[4]),
       issuer: dco_decode_opt_String(arr[5]),
@@ -3918,7 +3918,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_bolt12 = sse_decode_String(deserializer);
     var var_chains = sse_decode_list_String(deserializer);
-    var var_amount = sse_decode_opt_box_autoadd_amount(deserializer);
+    var var_minAmount = sse_decode_opt_box_autoadd_amount(deserializer);
     var var_description = sse_decode_opt_String(deserializer);
     var var_absoluteExpiry = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_issuer = sse_decode_opt_String(deserializer);
@@ -3926,7 +3926,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return LNOffer(
         bolt12: var_bolt12,
         chains: var_chains,
-        amount: var_amount,
+        minAmount: var_minAmount,
         description: var_description,
         absoluteExpiry: var_absoluteExpiry,
         issuer: var_issuer,
@@ -5820,7 +5820,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.bolt12, serializer);
     sse_encode_list_String(self.chains, serializer);
-    sse_encode_opt_box_autoadd_amount(self.amount, serializer);
+    sse_encode_opt_box_autoadd_amount(self.minAmount, serializer);
     sse_encode_opt_String(self.description, serializer);
     sse_encode_opt_box_autoadd_u_64(self.absoluteExpiry, serializer);
     sse_encode_opt_String(self.issuer, serializer);

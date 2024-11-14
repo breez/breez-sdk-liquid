@@ -686,9 +686,9 @@ enum BreezSDKLiquidMapper {
             }
             signingPubkey = signingPubkeyTmp
         }
-        var amount: Amount?
-        if let amountTmp = lnOffer["amount"] as? [String: Any?] {
-            amount = try asAmount(amount: amountTmp)
+        var minAmount: Amount?
+        if let minAmountTmp = lnOffer["minAmount"] as? [String: Any?] {
+            minAmount = try asAmount(amount: minAmountTmp)
         }
 
         var absoluteExpiry: UInt64?
@@ -706,7 +706,7 @@ enum BreezSDKLiquidMapper {
             issuer = issuerTmp
         }
 
-        return LnOffer(bolt12: bolt12, chains: chains, description: description, signingPubkey: signingPubkey, amount: amount, absoluteExpiry: absoluteExpiry, issuer: issuer)
+        return LnOffer(bolt12: bolt12, chains: chains, description: description, signingPubkey: signingPubkey, minAmount: minAmount, absoluteExpiry: absoluteExpiry, issuer: issuer)
     }
 
     static func dictionaryOf(lnOffer: LnOffer) -> [String: Any?] {
@@ -715,7 +715,7 @@ enum BreezSDKLiquidMapper {
             "chains": lnOffer.chains,
             "description": lnOffer.description == nil ? nil : lnOffer.description,
             "signingPubkey": lnOffer.signingPubkey == nil ? nil : lnOffer.signingPubkey,
-            "amount": lnOffer.amount == nil ? nil : dictionaryOf(amount: lnOffer.amount!),
+            "minAmount": lnOffer.minAmount == nil ? nil : dictionaryOf(amount: lnOffer.minAmount!),
             "absoluteExpiry": lnOffer.absoluteExpiry == nil ? nil : lnOffer.absoluteExpiry,
             "issuer": lnOffer.issuer == nil ? nil : lnOffer.issuer,
         ]

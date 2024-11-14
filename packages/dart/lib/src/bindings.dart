@@ -422,7 +422,7 @@ class LNInvoice {
 class LNOffer {
   final String bolt12;
   final List<String> chains;
-  final Amount? amount;
+  final Amount? minAmount;
   final String? description;
   final BigInt? absoluteExpiry;
   final String? issuer;
@@ -431,7 +431,7 @@ class LNOffer {
   const LNOffer({
     required this.bolt12,
     required this.chains,
-    this.amount,
+    this.minAmount,
     this.description,
     this.absoluteExpiry,
     this.issuer,
@@ -442,7 +442,7 @@ class LNOffer {
   int get hashCode =>
       bolt12.hashCode ^
       chains.hashCode ^
-      amount.hashCode ^
+      minAmount.hashCode ^
       description.hashCode ^
       absoluteExpiry.hashCode ^
       issuer.hashCode ^
@@ -455,7 +455,7 @@ class LNOffer {
           runtimeType == other.runtimeType &&
           bolt12 == other.bolt12 &&
           chains == other.chains &&
-          amount == other.amount &&
+          minAmount == other.minAmount &&
           description == other.description &&
           absoluteExpiry == other.absoluteExpiry &&
           issuer == other.issuer &&

@@ -121,7 +121,7 @@ export interface LnOffer {
     chains: string[]
     description?: string
     signingPubkey?: string
-    amount?: Amount
+    minAmount?: Amount
     absoluteExpiry?: number
     issuer?: string
 }
