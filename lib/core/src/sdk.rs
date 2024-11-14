@@ -1046,8 +1046,6 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        // TODO CHeck for MRH (if present, pay via Liquid)
-
         self.send_payment_via_swap(
             invoice,
             &invoice_parsed.payment_hash().to_string(),
