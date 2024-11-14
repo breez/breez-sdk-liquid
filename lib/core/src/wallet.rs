@@ -135,7 +135,7 @@ impl LiquidOnchainWallet {
                 let mut path = working_dir.as_ref().to_path_buf();
                 path.push(elements_network.as_str());
                 fs::remove_dir_all(&path)?;
-                warn!("Wippping wallet in path: {:?}", path);
+                warn!("Wiping wallet in path: {:?}", path);
                 lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
                 Ok(Wollet::new(
                     elements_network,
@@ -333,7 +333,7 @@ impl OnchainWallet for LiquidOnchainWallet {
         ) {
             Ok(()) => Ok(()),
             Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
-                warn!("Full scan failed with update height too old, wipping storage and retrying");
+                warn!("Full scan failed with update height too old, wiping storage and retrying");
                 let mut new_wallet =
                     Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
                 lwk_wollet::full_scan_to_index_with_electrum_client(
