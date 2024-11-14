@@ -3,9 +3,13 @@ use std::collections::HashMap;
 use anyhow::Result;
 use rusqlite::{named_params, Connection, OptionalExtension, Row, Statement, TransactionBehavior};
 
-use super::Persister;
+use super::{PaymentState, Persister};
 use crate::{
-    sync::model::{sync::Record, RecordType, SyncOutgoingChanges, SyncSettings, SyncState},
+    sync::model::{
+        data::{ChainSyncData, ReceiveSyncData, SendSyncData},
+        sync::Record,
+        RecordType, SyncOutgoingChanges, SyncSettings, SyncState,
+    },
     utils,
 };
 

@@ -20,6 +20,17 @@ pub(crate) struct ChainSyncData {
     pub(crate) description: Option<String>,
 }
 
+impl ChainSyncData {
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
+        for field in updated_fields {
+            match field.as_str() {
+                "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
+                _ => continue,
+            }
+        }
+    }
+}
+
 impl From<ChainSwap> for ChainSyncData {
     fn from(value: ChainSwap) -> Self {
         Self {
@@ -53,6 +64,17 @@ pub(crate) struct SendSyncData {
     pub(crate) preimage: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
+}
+
+impl SendSyncData {
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
+        for field in updated_fields {
+            match field.as_str() {
+                "preimage" => clone_if_set(&mut self.preimage, &other.preimage),
+                _ => continue,
+            }
+        }
+    }
 }
 
 impl From<SendSwap> for SendSyncData {
@@ -126,5 +148,27 @@ impl SyncData {
 
     pub(crate) fn to_bytes(&self) -> serde_json::Result<Vec<u8>> {
         serde_json::to_vec(self)
+    }
+
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) -> anyhow::Result<()> {
+        match (self, other) {
+            (SyncData::Chain(ref mut base), SyncData::Chain(other)) => {
+                base.merge(other, updated_fields)
+            }
+            (SyncData::Send(ref mut base), SyncData::Send(other)) => {
+                base.merge(other, updated_fields)
+            }
+            (SyncData::Receive(ref mut _base), SyncData::Receive(_other)) => {
+                log::warn!("Attempting to merge for unnecessary type SyncData::Receive");
+            }
+            _ => return Err(anyhow::anyhow!("Cannot merge data from two separate types")),
+        };
+        Ok(())
+    }
+}
+
+fn clone_if_set<T: Clone>(s: &mut Option<T>, other: &Option<T>) {
+    if other.is_some() {
+        s.clone_from(other)
     }
 }
