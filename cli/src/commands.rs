@@ -21,7 +21,7 @@ use serde_json::to_string_pretty;
 pub(crate) enum Command {
     /// Send a payment directly or via a swap
     SendPayment {
-        /// Invoice which has to be paid (BOLT11 or BOLT12)
+        /// Invoice which has to be paid (BOLT11)
         #[arg(long)]
         invoice: Option<String>,
 
