@@ -76,4 +76,45 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn get_sync_settings(&self) -> Result<SyncSettings> {
+        let con = self.get_connection()?;
+
+        let settings: HashMap<String, String> = con
+            .prepare("SELECT key, value FROM sync_settings")?
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .map(|e| e.unwrap())
+            .collect();
+
+        let latest_revision = match settings.get("latest_revision") {
+            Some(revision) => Some(revision.parse()?),
+            None => None,
+        };
+
+        let sync_settings = SyncSettings {
+            remote_url: settings.get("remote_url").cloned(),
+            latest_revision,
+        };
+
+        Ok(sync_settings)
+    }
+
+    pub(crate) fn set_sync_settings(&self, map: HashMap<&'static str, String>) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        for (key, value) in map {
+            tx.execute(
+                "INSERT OR REPLACE INTO sync_settings(key, value) VALUES(:key, :value)",
+                named_params! {
+                    ":key": key,
+                    ":value": value,
+                },
+            )?;
+        }
+
+        tx.commit()?;
+
+        Ok(())
+    }
+
 }

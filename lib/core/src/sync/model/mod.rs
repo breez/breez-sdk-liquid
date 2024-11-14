@@ -13,3 +13,8 @@ pub(crate) struct SyncState {
     pub(crate) is_local: bool,
 }
 
+pub(crate) struct SyncSettings {
+    pub(crate) remote_url: Option<String>,
+    pub(crate) latest_revision: Option<u64>,
+}
+
