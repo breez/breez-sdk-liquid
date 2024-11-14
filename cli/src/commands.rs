@@ -327,7 +327,7 @@ pub(crate) async fn handle_command(
                 (None, Some(offer), None) => match amount_sat {
                     Some(_) => Ok(offer),
                     None => Err(anyhow!(
-                        "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
+                        "Must specify an amount for a BOLT12 offer."
                     ))
                 },
                 (None, None, Some(address)) => Ok(address),
