@@ -211,4 +211,108 @@ impl SyncService {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use anyhow::{anyhow, Result};
+    use std::sync::Arc;
+    use tokio::sync::mpsc;
+
+    use crate::{
+        prelude::Signer,
+        test_utils::{
+            persist::new_persister,
+            sync::{
+                new_chain_sync_data, new_receive_sync_data, new_send_sync_data, MockSyncerClient,
+            },
+            wallet::MockSigner,
+        },
+    };
+
+    use super::{
+        model::{data::SyncData, sync::Record},
+        SyncService,
+    };
+
+    #[tokio::test]
+    async fn test_incoming_sync_create_and_update() -> Result<()> {
+        let (_temp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+
+        let sync_data = vec![
+            SyncData::Receive(new_receive_sync_data()),
+            SyncData::Send(new_send_sync_data(None)),
+            SyncData::Chain(new_chain_sync_data(None)),
+        ];
+        let incoming_records = vec![
+            Record::new(sync_data[0].clone(), 1, signer.clone())?,
+            Record::new(sync_data[1].clone(), 2, signer.clone())?,
+            Record::new(sync_data[2].clone(), 3, signer.clone())?,
+        ];
+
+        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
+        let client = Box::new(MockSyncerClient::new(incoming_rx));
+        let sync_service =
+            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+
+        for record in incoming_records {
+            incoming_tx.send(record).await?;
+        }
+        sync_service.pull().await?;
+
+        if let Some(receive_swap) = persister.fetch_receive_swap_by_id(&sync_data[0].id())? {
+            assert!(receive_swap.description.is_none());
+            assert!(receive_swap.payment_hash.is_none());
+        } else {
+            return Err(anyhow!("Receive swap not found"));
+        }
+        if let Some(send_swap) = persister.fetch_send_swap_by_id(&sync_data[1].id())? {
+            assert!(send_swap.preimage.is_none());
+            assert!(send_swap.description.is_none());
+            assert!(send_swap.payment_hash.is_none());
+        } else {
+            return Err(anyhow!("Send swap not found"));
+        }
+        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(&sync_data[2].id())? {
+            assert!(chain_swap.claim_address.is_none());
+            assert!(chain_swap.description.is_none());
+            assert!(chain_swap.accept_zero_conf.eq(&true));
+        } else {
+            return Err(anyhow!("Chain swap not found"));
+        }
+
+        let new_preimage = Some("preimage".to_string());
+        let new_accept_zero_conf = false;
+        let new_server_lockup_tx_id = Some("server_lockup_tx_id".to_string());
+        let sync_data = vec![
+            SyncData::Send(new_send_sync_data(new_preimage.clone())),
+            SyncData::Chain(new_chain_sync_data(Some(new_accept_zero_conf))),
+        ];
+        let incoming_records = vec![
+            Record::new(sync_data[0].clone(), 4, signer.clone())?,
+            Record::new(sync_data[1].clone(), 5, signer.clone())?,
+            Record::new(sync_data[2].clone(), 6, signer.clone())?,
+        ];
+
+        for record in incoming_records {
+            incoming_tx.send(record).await?;
+        }
+        sync_service.pull().await?;
+
+        if let Some(send_swap) = persister.fetch_send_swap_by_id(&sync_data[1].id())? {
+            assert_eq!(send_swap.preimage, new_preimage);
+        } else {
+            return Err(anyhow!("Send swap not found"));
+        }
+        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(&sync_data[2].id())? {
+            assert_eq!(chain_swap.accept_zero_conf, new_accept_zero_conf);
+            assert_eq!(chain_swap.server_lockup_tx_id, new_server_lockup_tx_id);
+        } else {
+            return Err(anyhow!("Chain swap not found"));
+        }
+
+        Ok(())
+    }
 }
