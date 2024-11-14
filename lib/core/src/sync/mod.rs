@@ -3,16 +3,17 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 
+use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
+use crate::utils;
 use crate::{persist::Persister, prelude::Signer};
 
 use self::client::SyncerClient;
-use self::model::sync::Record;
-use self::model::DecryptedRecord;
 use self::model::{
     data::{ChainSyncData, ReceiveSyncData, SendSyncData, SyncData},
     sync::ListChangesRequest,
     RecordType, SyncState,
 };
+use self::model::{DecryptedRecord, SyncOutgoingChanges};
 
 pub(crate) mod client;
 pub(crate) mod model;
@@ -206,6 +207,77 @@ impl SyncService {
 
         if !succeded.is_empty() {
             self.persister.remove_incoming_records(succeded)?;
+        }
+
+        Ok(())
+    }
+
+    async fn handle_push(
+        &self,
+        record_id: &str,
+        data_id: &str,
+        record_type: RecordType,
+    ) -> Result<()> {
+        log::info!("Handling push for record record_id {record_id} data_id {data_id}");
+
+        // Step 1: Get the sync state, if it exists, to compute the revision
+        let maybe_sync_state = self.persister.get_sync_state_by_record_id(record_id)?;
+        let record_revision = maybe_sync_state
+            .as_ref()
+            .map(|s| s.record_revision)
+            .unwrap_or(0);
+        let is_local = maybe_sync_state.map(|s| s.is_local).unwrap_or(true);
+
+        // Step 2: Fetch the sync data
+        let sync_data = self.load_sync_data(data_id, record_type)?;
+
+        // Step 3: Create the record to push outwards
+        let record = Record::new(sync_data, record_revision, self.signer.clone())?;
+
+        // Step 4: Push the record
+        let req = SetRecordRequest::new(record, utils::now(), self.signer.clone())?;
+        let reply = self.client.push(req).await?;
+
+        // Step 5: Check for conflict. If present, skip and retry on the next call
+        if reply.status() == SetRecordStatus::Conflict {
+            return Err(anyhow!(
+                "Got conflict status when attempting to push record"
+            ));
+        }
+
+        // Step 6: Set/update the state revision
+        self.persister.set_sync_state(SyncState {
+            data_id: data_id.to_string(),
+            record_id: record_id.to_string(),
+            record_revision: reply.new_revision,
+            is_local,
+        })?;
+
+        log::info!("Successfully pushed record record_id {record_id}");
+
+        Ok(())
+    }
+
+    async fn push(&self) -> Result<()> {
+        let outgoing_changes = self.persister.get_sync_outgoing_changes()?;
+
+        let mut succeded = vec![];
+        for SyncOutgoingChanges {
+            record_id,
+            data_id,
+            record_type,
+            ..
+        } in outgoing_changes
+        {
+            if let Err(err) = self.handle_push(&record_id, &data_id, record_type).await {
+                log::debug!("Could not handle push for record {record_id}: {err:?}");
+                continue;
+            }
+            succeded.push(record_id);
+        }
+
+        if !succeded.is_empty() {
+            self.persister.remove_sync_outgoing_changes(succeded)?;
         }
 
         Ok(())
