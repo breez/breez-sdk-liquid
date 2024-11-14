@@ -1034,7 +1034,6 @@ impl LiquidSdk {
         invoice: &str,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        // TODO Ensure it's not self-transfer
         // TODO Validate invoice
 
         let invoice_parsed = utils::parse_bolt12_invoice(invoice)?;
