@@ -195,6 +195,7 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ) STRICT;",
         "CREATE TABLE IF NOT EXISTS sync_outgoing(
             record_id TEXT NOT NULL PRIMARY KEY,
+            data_id TEXT NOT NULL UNIQUE,
             record_type INTEGER NOT NULL,
             commit_time INTEGER NOT NULL,
             updated_fields_json TEXT
