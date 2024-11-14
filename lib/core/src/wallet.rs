@@ -1,5 +1,6 @@
+use std::fs;
 use std::io::Write;
-use std::{str::FromStr, sync::Arc};
+use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -94,6 +95,7 @@ pub(crate) struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
+    working_dir: String,
     pub(crate) signer: SdkLwkSigner,
 }
 
@@ -104,18 +106,45 @@ impl LiquidOnchainWallet {
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
-        let signer = crate::signer::SdkLwkSigner::new(user_signer)?;
-        let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
-        let elements_network: ElementsNetwork = config.network.into();
+        let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, working_dir, &signer)?;
 
-        let lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
-        let wollet = Wollet::new(elements_network, lwk_persister, descriptor)?;
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
+            working_dir: working_dir.clone(),
             signer,
         })
+    }
+
+    fn create_wallet<P: AsRef<Path>>(
+        config: &Config,
+        working_dir: P,
+        signer: &SdkLwkSigner,
+    ) -> Result<Wollet> {
+        let elements_network: ElementsNetwork = config.network.into();
+        let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
+        let mut lwk_persister =
+            FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
+
+        match Wollet::new(elements_network, lwk_persister, descriptor.clone()) {
+            Ok(wollet) => return Ok(wollet),
+            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+                warn!("Update height too old, wipping storage and retrying");
+                let mut path = working_dir.as_ref().to_path_buf();
+                path.push(elements_network.as_str());
+                fs::remove_dir_all(&path)?;
+                warn!("Wippping wallet in path: {:?}", path);
+                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
+                Ok(Wollet::new(
+                    elements_network,
+                    lwk_persister,
+                    descriptor.clone(),
+                )?)
+            }
+            Err(e) => return Err(e.into()),
+        }
     }
 
     fn get_descriptor(
@@ -297,12 +326,26 @@ impl OnchainWallet for LiquidOnchainWallet {
             .persister
             .get_last_derivation_index()?
             .unwrap_or_default();
-        lwk_wollet::full_scan_to_index_with_electrum_client(
+        match lwk_wollet::full_scan_to_index_with_electrum_client(
             &mut wallet,
             index,
             &mut electrum_client,
-        )?;
-        Ok(())
+        ) {
+            Ok(()) => Ok(()),
+            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+                warn!("Full scan failed with update height too old, wipping storage and retrying");
+                let mut new_wallet =
+                    Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
+                lwk_wollet::full_scan_to_index_with_electrum_client(
+                    &mut new_wallet,
+                    index,
+                    &mut electrum_client,
+                )?;
+                *wallet = new_wallet;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
     }
 
     fn sign_message(&self, message: &str) -> Result<String> {
