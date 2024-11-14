@@ -87,7 +87,9 @@ impl LiquidSdk {
             req.config.network == LiquidNetwork::Mainnet,
         )?);
 
-        Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer).await
+        Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
+            .inspect_err(|e| error!("Failed to connect: {:?}", e))
+            .await
     }
 
     pub async fn connect_with_signer(
@@ -104,7 +106,9 @@ impl LiquidSdk {
                 Err(_) => None,
             };
         let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, Arc::new(signer))?;
-        sdk.start().await?;
+        sdk.start()
+            .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
+            .await?;
         Ok(sdk)
     }
 
@@ -237,8 +241,12 @@ impl LiquidSdk {
         let start_ts = Instant::now();
 
         self.persister
-            .update_send_swaps_by_state(Created, TimedOut)?;
-        self.start_background_tasks().await?;
+            .update_send_swaps_by_state(Created, TimedOut)
+            .inspect_err(|e| error!("Failed to update send swaps by state: {:?}", e))?;
+
+        self.start_background_tasks()
+            .inspect_err(|e| error!("Failed to start background tasks: {:?}", e))
+            .await?;
         *is_started = true;
 
         let start_duration = start_ts.elapsed();
