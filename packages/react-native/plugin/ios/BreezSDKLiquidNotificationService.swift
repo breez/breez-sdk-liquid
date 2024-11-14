@@ -11,6 +11,12 @@ class NotificationService: SDKNotificationService {
 
   override func getConnectRequest() -> ConnectRequest? {
     do {
+      let keychainService = Bundle.main.infoDictionary?["KeyService"] as? String
+      let keychainKeyMnemonic = Bundle.main.infoDictionary?["MnemonicKeyName"] as? String
+      guard let keychainService, let keychainKeyMnemonic else {
+        throw NotificationServiceError.infoDictionaryValueNotFound
+      }
+      
       let keychain = Keychain(service: keychainService)
       let mnemonic = try keychain.get(keychainKeyMnemonic)
 
@@ -20,10 +26,8 @@ class NotificationService: SDKNotificationService {
 
       let apiKey = Bundle.main.infoDictionary?["ApiKey"] as? String
       let appGroup = Bundle.main.infoDictionary?["AppGroup"] as? String
-      let keychainService = Bundle.main.infoDictionary?["KeyService"] as? String
-      let keychainKeyMnemonic = Bundle.main.infoDictionary["MnemonicKeyName"] as? String
 
-      guard let apiKey, let appGroup, let keychainService, let keychainKeyMnemonic else {
+      guard let apiKey, let appGroup else {
         throw NotificationServiceError.infoDictionaryValueNotFound
       }
 
@@ -33,8 +37,7 @@ class NotificationService: SDKNotificationService {
 
       let workDir = containerURL.appendingPathComponent("breezSdkLiquid", isDirectory: true).path
 
-      var config = defaultConfig(network: LiquidNetwork.mainnet)
-      config.breezApiKey = apiKey
+      var config = try defaultConfig(network: LiquidNetwork.mainnet, breezApiKey: apiKey)
       config.workingDir = workDir
 
       return ConnectRequest(config: config, mnemonic: mnemonic)
