@@ -570,6 +570,7 @@ fun asLnOffer(lnOffer: ReadableMap): LnOffer? {
             arrayOf(
                 "offer",
                 "chains",
+                "paths",
             ),
         )
     ) {
@@ -577,18 +578,20 @@ fun asLnOffer(lnOffer: ReadableMap): LnOffer? {
     }
     val offer = lnOffer.getString("offer")!!
     val chains = lnOffer.getArray("chains")?.let { asStringList(it) }!!
+    val paths = lnOffer.getArray("paths")?.let { asLnOfferBlindedPathList(it) }!!
     val description = if (hasNonNullKey(lnOffer, "description")) lnOffer.getString("description") else null
     val signingPubkey = if (hasNonNullKey(lnOffer, "signingPubkey")) lnOffer.getString("signingPubkey") else null
     val minAmount = if (hasNonNullKey(lnOffer, "minAmount")) lnOffer.getMap("minAmount")?.let { asAmount(it) } else null
     val absoluteExpiry = if (hasNonNullKey(lnOffer, "absoluteExpiry")) lnOffer.getDouble("absoluteExpiry").toULong() else null
     val issuer = if (hasNonNullKey(lnOffer, "issuer")) lnOffer.getString("issuer") else null
-    return LnOffer(offer, chains, description, signingPubkey, minAmount, absoluteExpiry, issuer)
+    return LnOffer(offer, chains, paths, description, signingPubkey, minAmount, absoluteExpiry, issuer)
 }
 
 fun readableMapOf(lnOffer: LnOffer): ReadableMap =
     readableMapOf(
         "offer" to lnOffer.offer,
         "chains" to readableArrayOf(lnOffer.chains),
+        "paths" to readableArrayOf(lnOffer.paths),
         "description" to lnOffer.description,
         "signingPubkey" to lnOffer.signingPubkey,
         "minAmount" to lnOffer.minAmount?.let { readableMapOf(it) },
@@ -772,6 +775,36 @@ fun asListPaymentsRequestList(arr: ReadableArray): List<ListPaymentsRequest> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asListPaymentsRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asLnOfferBlindedPath(lnOfferBlindedPath: ReadableMap): LnOfferBlindedPath? {
+    if (!validateMandatoryFields(
+            lnOfferBlindedPath,
+            arrayOf(
+                "blindedHops",
+            ),
+        )
+    ) {
+        return null
+    }
+    val blindedHops = lnOfferBlindedPath.getArray("blindedHops")?.let { asStringList(it) }!!
+    return LnOfferBlindedPath(blindedHops)
+}
+
+fun readableMapOf(lnOfferBlindedPath: LnOfferBlindedPath): ReadableMap =
+    readableMapOf(
+        "blindedHops" to readableArrayOf(lnOfferBlindedPath.blindedHops),
+    )
+
+fun asLnOfferBlindedPathList(arr: ReadableArray): List<LnOfferBlindedPath> {
+    val list = ArrayList<LnOfferBlindedPath>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnOfferBlindedPath(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -3219,6 +3252,7 @@ fun pushToArray(
     when (value) {
         null -> array.pushNull()
         is FiatCurrency -> array.pushMap(readableMapOf(value))
+        is LnOfferBlindedPath -> array.pushMap(readableMapOf(value))
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))

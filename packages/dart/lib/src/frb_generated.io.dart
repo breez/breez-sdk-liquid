@@ -282,6 +282,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
 
   @protected
+  List<LNOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw);
+
+  @protected
   List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw);
 
   @protected
@@ -319,6 +322,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNOffer dco_decode_ln_offer(dynamic raw);
+
+  @protected
+  LNOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw);
 
   @protected
   LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw);
@@ -823,6 +829,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
 
   @protected
+  List<LNOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer);
+
+  @protected
   List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer);
 
   @protected
@@ -860,6 +869,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LNOffer sse_decode_ln_offer(SseDeserializer deserializer);
+
+  @protected
+  LNOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer);
 
   @protected
   LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer);
@@ -1575,6 +1587,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ans = wire.cst_new_list_fiat_currency(raw.length);
     for (var i = 0; i < raw.length; ++i) {
       cst_api_fill_to_wire_fiat_currency(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ln_offer_blinded_path> cst_encode_list_ln_offer_blinded_path(
+      List<LNOfferBlindedPath> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ln_offer_blinded_path(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ln_offer_blinded_path(raw[i], ans.ref.ptr[i]);
     }
     return ans;
   }
@@ -2314,6 +2337,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.absolute_expiry = cst_encode_opt_box_autoadd_u_64(apiObj.absoluteExpiry);
     wireObj.issuer = cst_encode_opt_String(apiObj.issuer);
     wireObj.signing_pubkey = cst_encode_opt_String(apiObj.signingPubkey);
+    wireObj.paths = cst_encode_list_ln_offer_blinded_path(apiObj.paths);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ln_offer_blinded_path(
+      LNOfferBlindedPath apiObj, wire_cst_ln_offer_blinded_path wireObj) {
+    wireObj.blinded_hops = cst_encode_list_String(apiObj.blindedHops);
   }
 
   @protected
@@ -3456,6 +3486,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_ln_offer_blinded_path(List<LNOfferBlindedPath> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer);
 
   @protected
@@ -3493,6 +3526,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_ln_offer(LNOffer self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ln_offer_blinded_path(LNOfferBlindedPath self, SseSerializer serializer);
 
   @protected
   void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer);
@@ -5075,6 +5111,20 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_fiat_currency =
       _cst_new_list_fiat_currencyPtr.asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_ln_offer_blinded_path> cst_new_list_ln_offer_blinded_path(
+    int len,
+  ) {
+    return _cst_new_list_ln_offer_blinded_path(
+      len,
+    );
+  }
+
+  late final _cst_new_list_ln_offer_blinded_pathPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_ln_offer_blinded_path> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path');
+  late final _cst_new_list_ln_offer_blinded_path = _cst_new_list_ln_offer_blinded_pathPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ln_offer_blinded_path> Function(int)>();
+
   ffi.Pointer<wire_cst_list_locale_overrides> cst_new_list_locale_overrides(
     int len,
   ) {
@@ -5443,6 +5493,17 @@ final class wire_cst_amount extends ffi.Struct {
   external AmountKind kind;
 }
 
+final class wire_cst_ln_offer_blinded_path extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_String> blinded_hops;
+}
+
+final class wire_cst_list_ln_offer_blinded_path extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_offer_blinded_path> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_ln_offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
 
@@ -5457,6 +5518,8 @@ final class wire_cst_ln_offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
+
+  external ffi.Pointer<wire_cst_list_ln_offer_blinded_path> paths;
 }
 
 final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {

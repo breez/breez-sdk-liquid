@@ -195,6 +195,15 @@ typedef struct wire_cst_amount {
   union AmountKind kind;
 } wire_cst_amount;
 
+typedef struct wire_cst_ln_offer_blinded_path {
+  struct wire_cst_list_String *blinded_hops;
+} wire_cst_ln_offer_blinded_path;
+
+typedef struct wire_cst_list_ln_offer_blinded_path {
+  struct wire_cst_ln_offer_blinded_path *ptr;
+  int32_t len;
+} wire_cst_list_ln_offer_blinded_path;
+
 typedef struct wire_cst_ln_offer {
   struct wire_cst_list_prim_u_8_strict *offer;
   struct wire_cst_list_String *chains;
@@ -203,6 +212,7 @@ typedef struct wire_cst_ln_offer {
   uint64_t *absolute_expiry;
   struct wire_cst_list_prim_u_8_strict *issuer;
   struct wire_cst_list_prim_u_8_strict *signing_pubkey;
+  struct wire_cst_list_ln_offer_blinded_path *paths;
 } wire_cst_ln_offer;
 
 typedef struct wire_cst_SendDestination_Bolt12 {
@@ -1261,6 +1271,8 @@ struct wire_cst_list_String *frbgen_breez_liquid_cst_new_list_String(int32_t len
 
 struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
 
+struct wire_cst_list_ln_offer_blinded_path *frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path(int32_t len);
+
 struct wire_cst_list_locale_overrides *frbgen_breez_liquid_cst_new_list_locale_overrides(int32_t len);
 
 struct wire_cst_list_localized_name *frbgen_breez_liquid_cst_new_list_localized_name(int32_t len);
@@ -1331,6 +1343,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_String);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_locale_overrides);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_localized_name);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);

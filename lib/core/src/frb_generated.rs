@@ -1865,6 +1865,11 @@ const _: fn() = || {
         let _: Option<u64> = LNOffer.absolute_expiry;
         let _: Option<String> = LNOffer.issuer;
         let _: Option<String> = LNOffer.signing_pubkey;
+        let _: Vec<crate::bindings::LNOfferBlindedPath> = LNOffer.paths;
+    }
+    {
+        let LNOfferBlindedPath = None::<crate::bindings::LNOfferBlindedPath>.unwrap();
+        let _: Vec<String> = LNOfferBlindedPath.blinded_hops;
     }
     {
         let LnUrlAuthRequestData = None::<crate::bindings::LnUrlAuthRequestData>.unwrap();
@@ -2603,6 +2608,20 @@ impl SseDecode for Vec<crate::bindings::FiatCurrency> {
     }
 }
 
+impl SseDecode for Vec<crate::bindings::LNOfferBlindedPath> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bindings::LNOfferBlindedPath>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::bindings::LocaleOverrides> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2797,6 +2816,7 @@ impl SseDecode for crate::bindings::LNOffer {
         let mut var_absoluteExpiry = <Option<u64>>::sse_decode(deserializer);
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
         let mut var_signingPubkey = <Option<String>>::sse_decode(deserializer);
+        let mut var_paths = <Vec<crate::bindings::LNOfferBlindedPath>>::sse_decode(deserializer);
         return crate::bindings::LNOffer {
             offer: var_offer,
             chains: var_chains,
@@ -2805,6 +2825,17 @@ impl SseDecode for crate::bindings::LNOffer {
             absolute_expiry: var_absoluteExpiry,
             issuer: var_issuer,
             signing_pubkey: var_signingPubkey,
+            paths: var_paths,
+        };
+    }
+}
+
+impl SseDecode for crate::bindings::LNOfferBlindedPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_blindedHops = <Vec<String>>::sse_decode(deserializer);
+        return crate::bindings::LNOfferBlindedPath {
+            blinded_hops: var_blindedHops,
         };
     }
 }
@@ -4821,6 +4852,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOffer> {
             self.0.absolute_expiry.into_into_dart().into_dart(),
             self.0.issuer.into_into_dart().into_dart(),
             self.0.signing_pubkey.into_into_dart().into_dart(),
+            self.0.paths.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4833,6 +4865,23 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNOffer>>
     for crate::bindings::LNOffer
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::LNOffer> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOfferBlindedPath> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.0.blinded_hops.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::bindings::LNOfferBlindedPath>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNOfferBlindedPath>>
+    for crate::bindings::LNOfferBlindedPath
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::bindings::LNOfferBlindedPath> {
         self.into()
     }
 }
@@ -6695,6 +6744,16 @@ impl SseEncode for Vec<crate::bindings::FiatCurrency> {
     }
 }
 
+impl SseEncode for Vec<crate::bindings::LNOfferBlindedPath> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bindings::LNOfferBlindedPath>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::bindings::LocaleOverrides> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6844,6 +6903,14 @@ impl SseEncode for crate::bindings::LNOffer {
         <Option<u64>>::sse_encode(self.absolute_expiry, serializer);
         <Option<String>>::sse_encode(self.issuer, serializer);
         <Option<String>>::sse_encode(self.signing_pubkey, serializer);
+        <Vec<crate::bindings::LNOfferBlindedPath>>::sse_encode(self.paths, serializer);
+    }
+}
+
+impl SseEncode for crate::bindings::LNOfferBlindedPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<String>>::sse_encode(self.blinded_hops, serializer);
     }
 }
 
@@ -8706,6 +8773,18 @@ mod io {
             vec.into_iter().map(CstDecode::cst_decode).collect()
         }
     }
+    impl CstDecode<Vec<crate::bindings::LNOfferBlindedPath>>
+        for *mut wire_cst_list_ln_offer_blinded_path
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::bindings::LNOfferBlindedPath> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
     impl CstDecode<Vec<crate::bindings::LocaleOverrides>> for *mut wire_cst_list_locale_overrides {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::bindings::LocaleOverrides> {
@@ -8858,6 +8937,15 @@ mod io {
                 absolute_expiry: self.absolute_expiry.cst_decode(),
                 issuer: self.issuer.cst_decode(),
                 signing_pubkey: self.signing_pubkey.cst_decode(),
+                paths: self.paths.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::bindings::LNOfferBlindedPath> for wire_cst_ln_offer_blinded_path {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::LNOfferBlindedPath {
+            crate::bindings::LNOfferBlindedPath {
+                blinded_hops: self.blinded_hops.cst_decode(),
             }
         }
     }
@@ -10131,10 +10219,23 @@ mod io {
                 absolute_expiry: core::ptr::null_mut(),
                 issuer: core::ptr::null_mut(),
                 signing_pubkey: core::ptr::null_mut(),
+                paths: core::ptr::null_mut(),
             }
         }
     }
     impl Default for wire_cst_ln_offer {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_ln_offer_blinded_path {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                blinded_hops: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_ln_offer_blinded_path {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -11674,6 +11775,20 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path(
+        len: i32,
+    ) -> *mut wire_cst_list_ln_offer_blinded_path {
+        let wrap = wire_cst_list_ln_offer_blinded_path {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_ln_offer_blinded_path>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_list_locale_overrides(
         len: i32,
     ) -> *mut wire_cst_list_locale_overrides {
@@ -12058,6 +12173,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_list_ln_offer_blinded_path {
+        ptr: *mut wire_cst_ln_offer_blinded_path,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_locale_overrides {
         ptr: *mut wire_cst_locale_overrides,
         len: i32,
@@ -12169,6 +12290,12 @@ mod io {
         absolute_expiry: *mut u64,
         issuer: *mut wire_cst_list_prim_u_8_strict,
         signing_pubkey: *mut wire_cst_list_prim_u_8_strict,
+        paths: *mut wire_cst_list_ln_offer_blinded_path,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_ln_offer_blinded_path {
+        blinded_hops: *mut wire_cst_list_String,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

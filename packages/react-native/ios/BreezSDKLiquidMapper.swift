@@ -672,6 +672,11 @@ enum BreezSDKLiquidMapper {
         guard let chains = lnOffer["chains"] as? [String] else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "chains", typeName: "LnOffer"))
         }
+        guard let pathsTmp = lnOffer["paths"] as? [[String: Any?]] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paths", typeName: "LnOffer"))
+        }
+        let paths = try asLnOfferBlindedPathList(arr: pathsTmp)
+
         var description: String?
         if hasNonNilKey(data: lnOffer, key: "description") {
             guard let descriptionTmp = lnOffer["description"] as? String else {
@@ -706,13 +711,14 @@ enum BreezSDKLiquidMapper {
             issuer = issuerTmp
         }
 
-        return LnOffer(offer: offer, chains: chains, description: description, signingPubkey: signingPubkey, minAmount: minAmount, absoluteExpiry: absoluteExpiry, issuer: issuer)
+        return LnOffer(offer: offer, chains: chains, paths: paths, description: description, signingPubkey: signingPubkey, minAmount: minAmount, absoluteExpiry: absoluteExpiry, issuer: issuer)
     }
 
     static func dictionaryOf(lnOffer: LnOffer) -> [String: Any?] {
         return [
             "offer": lnOffer.offer,
             "chains": lnOffer.chains,
+            "paths": arrayOf(lnOfferBlindedPathList: lnOffer.paths),
             "description": lnOffer.description == nil ? nil : lnOffer.description,
             "signingPubkey": lnOffer.signingPubkey == nil ? nil : lnOffer.signingPubkey,
             "minAmount": lnOffer.minAmount == nil ? nil : dictionaryOf(amount: lnOffer.minAmount!),
@@ -952,6 +958,37 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(listPaymentsRequestList: [ListPaymentsRequest]) -> [Any] {
         return listPaymentsRequestList.map { v -> [String: Any?] in return dictionaryOf(listPaymentsRequest: v) }
+    }
+
+    static func asLnOfferBlindedPath(lnOfferBlindedPath: [String: Any?]) throws -> LnOfferBlindedPath {
+        guard let blindedHops = lnOfferBlindedPath["blindedHops"] as? [String] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "blindedHops", typeName: "LnOfferBlindedPath"))
+        }
+
+        return LnOfferBlindedPath(blindedHops: blindedHops)
+    }
+
+    static func dictionaryOf(lnOfferBlindedPath: LnOfferBlindedPath) -> [String: Any?] {
+        return [
+            "blindedHops": lnOfferBlindedPath.blindedHops,
+        ]
+    }
+
+    static func asLnOfferBlindedPathList(arr: [Any]) throws -> [LnOfferBlindedPath] {
+        var list = [LnOfferBlindedPath]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnOfferBlindedPath = try asLnOfferBlindedPath(lnOfferBlindedPath: val)
+                list.append(lnOfferBlindedPath)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "LnOfferBlindedPath"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnOfferBlindedPathList: [LnOfferBlindedPath]) -> [Any] {
+        return lnOfferBlindedPathList.map { v -> [String: Any?] in return dictionaryOf(lnOfferBlindedPath: v) }
     }
 
     static func asLnUrlAuthRequestData(lnUrlAuthRequestData: [String: Any?]) throws -> LnUrlAuthRequestData {

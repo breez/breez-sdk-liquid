@@ -1885,6 +1885,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<LNOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ln_offer_blinded_path).toList();
+  }
+
+  @protected
   List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_locale_overrides).toList();
@@ -1995,7 +2001,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LNOffer dco_decode_ln_offer(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return LNOffer(
       offer: dco_decode_String(arr[0]),
       chains: dco_decode_list_String(arr[1]),
@@ -2004,6 +2010,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       absoluteExpiry: dco_decode_opt_box_autoadd_u_64(arr[4]),
       issuer: dco_decode_opt_String(arr[5]),
       signingPubkey: dco_decode_opt_String(arr[6]),
+      paths: dco_decode_list_ln_offer_blinded_path(arr[7]),
+    );
+  }
+
+  @protected
+  LNOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return LNOfferBlindedPath(
+      blindedHops: dco_decode_list_String(arr[0]),
     );
   }
 
@@ -3746,6 +3763,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<LNOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LNOfferBlindedPath>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ln_offer_blinded_path(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3923,6 +3952,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_absoluteExpiry = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_issuer = sse_decode_opt_String(deserializer);
     var var_signingPubkey = sse_decode_opt_String(deserializer);
+    var var_paths = sse_decode_list_ln_offer_blinded_path(deserializer);
     return LNOffer(
         offer: var_offer,
         chains: var_chains,
@@ -3930,7 +3960,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         description: var_description,
         absoluteExpiry: var_absoluteExpiry,
         issuer: var_issuer,
-        signingPubkey: var_signingPubkey);
+        signingPubkey: var_signingPubkey,
+        paths: var_paths);
+  }
+
+  @protected
+  LNOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_blindedHops = sse_decode_list_String(deserializer);
+    return LNOfferBlindedPath(blindedHops: var_blindedHops);
   }
 
   @protected
@@ -5694,6 +5732,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_ln_offer_blinded_path(List<LNOfferBlindedPath> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ln_offer_blinded_path(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -5825,6 +5872,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_64(self.absoluteExpiry, serializer);
     sse_encode_opt_String(self.issuer, serializer);
     sse_encode_opt_String(self.signingPubkey, serializer);
+    sse_encode_list_ln_offer_blinded_path(self.paths, serializer);
+  }
+
+  @protected
+  void sse_encode_ln_offer_blinded_path(LNOfferBlindedPath self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_String(self.blindedHops, serializer);
   }
 
   @protected

@@ -427,6 +427,7 @@ class LNOffer {
   final BigInt? absoluteExpiry;
   final String? issuer;
   final String? signingPubkey;
+  final List<LNOfferBlindedPath> paths;
 
   const LNOffer({
     required this.offer,
@@ -436,6 +437,7 @@ class LNOffer {
     this.absoluteExpiry,
     this.issuer,
     this.signingPubkey,
+    required this.paths,
   });
 
   @override
@@ -446,7 +448,8 @@ class LNOffer {
       description.hashCode ^
       absoluteExpiry.hashCode ^
       issuer.hashCode ^
-      signingPubkey.hashCode;
+      signingPubkey.hashCode ^
+      paths.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -459,7 +462,24 @@ class LNOffer {
           description == other.description &&
           absoluteExpiry == other.absoluteExpiry &&
           issuer == other.issuer &&
-          signingPubkey == other.signingPubkey;
+          signingPubkey == other.signingPubkey &&
+          paths == other.paths;
+}
+
+class LNOfferBlindedPath {
+  final List<String> blindedHops;
+
+  const LNOfferBlindedPath({
+    required this.blindedHops,
+  });
+
+  @override
+  int get hashCode => blindedHops.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LNOfferBlindedPath && runtimeType == other.runtimeType && blindedHops == other.blindedHops;
 }
 
 class LnUrlAuthRequestData {

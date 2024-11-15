@@ -119,6 +119,7 @@ export interface LnInvoice {
 export interface LnOffer {
     offer: string
     chains: string[]
+    paths: LnOfferBlindedPath[]
     description?: string
     signingPubkey?: string
     minAmount?: Amount
@@ -153,6 +154,10 @@ export interface ListPaymentsRequest {
     offset?: number
     limit?: number
     details?: ListPaymentDetails
+}
+
+export interface LnOfferBlindedPath {
+    blindedHops: string[]
 }
 
 export interface LnUrlAuthRequestData {
