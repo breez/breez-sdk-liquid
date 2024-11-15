@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
@@ -13,11 +12,12 @@ use futures_util::{StreamExt, TryFutureExt};
 use lnurl::auth::SdkLnurlAuthSigner;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
-use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
-use lwk_wollet::{ElementsNetwork, WalletTx};
+use lwk_wollet::ElementsNetwork;
+use restore::{PartialSwapState, TxMap};
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
@@ -2217,135 +2217,212 @@ impl LiquidSdk {
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
-        let payments_before_sync: HashMap<String, Payment> = self
-            .list_payments(&ListPaymentsRequest::default())
-            .await?
-            .into_iter()
-            .flat_map(|payment| {
-                // Index payments by both tx_id (lockup/claim) and refund_tx_id
-                let mut res = vec![];
-                if let Some(tx_id) = payment.tx_id.clone() {
-                    res.push((tx_id, payment.clone()));
-                }
-                if let Some(refund_tx_id) = payment.get_refund_tx_id() {
-                    res.push((refund_tx_id, payment));
-                }
-                res
-            })
-            .collect();
         if with_scan {
             self.onchain_wallet.full_scan().await?;
         }
 
-        let pending_receive_swaps_by_claim_tx_id =
-            self.persister.list_pending_receive_swaps_by_claim_tx_id()?;
+        let height = self.liquid_chain_service.lock().await.tip().await?;
+        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
+        let swaps_list = self.get_monitored_swaps_list(height).await?;
+        let recovered_onchain_data = self
+            .recover_from_onchain(TxMap::from_raw_tx_map(tx_map.clone()), swaps_list)
+            .await?;
+
+        for (swap_id, receive_data) in recovered_onchain_data.receive {
+            if let Some(to_state) = receive_data.derive_partial_state() {
+                let lockup_tx_id = receive_data.lockup_tx_id.map(|h| h.txid.to_string());
+                let claim_tx_id = receive_data.claim_tx_id.clone().map(|h| h.txid.to_string());
+                _ = self
+                    .receive_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        claim_tx_id.as_deref(),
+                        lockup_tx_id.as_deref(),
+                        None,
+                        None,
+                    )
+                    .await
+                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
+                if let Some(history) = receive_data.claim_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped claim tx {claim_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+            }
+        }
+
+        for (swap_id, send_data) in recovered_onchain_data.send {
+            if let Some(to_state) = send_data.derive_partial_state() {
+                let lockup_tx_id = send_data.lockup_tx_id.clone().map(|h| h.txid.to_string());
+                let refund_tx_id = send_data.refund_tx_id.clone().map(|h| h.txid.to_string());
+                _ = self
+                    .send_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        None,
+                        lockup_tx_id.as_deref(),
+                        refund_tx_id.as_deref(),
+                    )
+                    .await
+                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
+                if let Some(history) = send_data.lockup_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped lockup tx {lockup_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+                if let Some(history) = send_data.refund_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped refund tx {refund_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+            }
+        }
+
+        for (swap_id, chain_receive_data) in recovered_onchain_data.chain_receive {
+            if let Some(to_state) = chain_receive_data.derive_partial_state() {
+                let server_lockup_tx_id = chain_receive_data
+                    .lbtc_server_lockup_tx_id
+                    .map(|h| h.txid.to_string());
+                let user_lockup_tx_id = chain_receive_data
+                    .btc_user_lockup_tx_id
+                    .map(|h| h.txid.to_string());
+                let claim_tx_id = chain_receive_data
+                    .lbtc_server_claim_tx_id
+                    .clone()
+                    .map(|h| h.txid.to_string());
+                let refund_tx_id = chain_receive_data
+                    .btc_refund_tx_id
+                    .map(|h| h.txid.to_string());
+                _ = self
+                    .chain_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        server_lockup_tx_id.as_deref(),
+                        user_lockup_tx_id.as_deref(),
+                        claim_tx_id.as_deref(),
+                        refund_tx_id.as_deref(),
+                    )
+                    .await
+                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
+                if let Some(history) = chain_receive_data.lbtc_server_claim_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped claim tx {claim_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+            }
+        }
+
+        for (swap_id, chain_send_data) in recovered_onchain_data.chain_send {
+            if let Some(to_state) = chain_send_data.derive_partial_state() {
+                let server_lockup_tx_id = chain_send_data
+                    .btc_server_lockup_tx_id
+                    .map(|h| h.txid.to_string());
+                let user_lockup_tx_id = chain_send_data
+                    .lbtc_user_lockup_tx_id
+                    .clone()
+                    .map(|h| h.txid.to_string());
+                let claim_tx_id = chain_send_data.btc_claim_tx_id.map(|h| h.txid.to_string());
+                let refund_tx_id = chain_send_data
+                    .lbtc_refund_tx_id
+                    .clone()
+                    .map(|h| h.txid.to_string());
+                _ = self
+                    .chain_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        server_lockup_tx_id.as_deref(),
+                        user_lockup_tx_id.as_deref(),
+                        claim_tx_id.as_deref(),
+                        refund_tx_id.as_deref(),
+                    )
+                    .await
+                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
+                if let Some(history) = chain_send_data.lbtc_user_lockup_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped lockup tx {user_lockup_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+                if let Some(history) = chain_send_data.lbtc_refund_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        debug!("Popped refund tx {refund_tx_id:?} from tx_map");
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
+            }
+        }
+
+        let payments = self
+            .persister
+            .get_payments_by_tx_id(&ListPaymentsRequest::default())?;
         let ongoing_receive_swaps_by_mrh_script_pubkey = self
             .persister
             .list_ongoing_receive_swaps_by_mrh_script_pubkey()?;
-        let pending_send_swaps_by_refund_tx_id =
-            self.persister.list_pending_send_swaps_by_refund_tx_id()?;
-        let pending_chain_swaps_by_claim_tx_id =
-            self.persister.list_pending_chain_swaps_by_claim_tx_id()?;
-        let pending_chain_swaps_by_refund_tx_id =
-            self.persister.list_pending_chain_swaps_by_refund_tx_id()?;
-
-        let tx_map: HashMap<Txid, WalletTx> = self
-            .onchain_wallet
-            .transactions()
-            .await?
-            .iter()
-            .map(|tx| (tx.txid, tx.clone()))
-            .collect();
 
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
-            let is_tx_confirmed = tx.height.is_some();
-            let amount_sat = tx.balance.values().sum::<i64>();
-            let maybe_script_pubkey = tx
-                .outputs
-                .iter()
-                .find(|output| output.is_some())
-                .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
-            let mrh_script_pubkey = maybe_script_pubkey.clone().unwrap_or_default();
+            let maybe_payment = payments.get(&tx_id);
+            match maybe_payment {
+                // When no payment is found or its a Lightning payment being received in an
+                // ongoing state, we need to update the payment tx data and handle if this
+                // tx a potential MRH tx
+                None
+                | Some(Payment {
+                    details: PaymentDetails::Lightning { .. },
+                    payment_type: PaymentType::Receive,
+                    status: PaymentState::Created | PaymentState::Pending,
+                    ..
+                }) => {
+                    let maybe_script_pubkey = tx
+                        .outputs
+                        .iter()
+                        .find(|output| output.is_some())
+                        .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
+                    let mrh_script_pubkey = maybe_script_pubkey.clone().unwrap_or_default();
 
-            self.persister.insert_or_update_payment(
-                PaymentTxData {
-                    tx_id: tx_id.clone(),
-                    timestamp: tx.timestamp,
-                    amount_sat: amount_sat.unsigned_abs(),
-                    fees_sat: tx.fee,
-                    payment_type: match amount_sat >= 0 {
-                        true => PaymentType::Receive,
-                        false => PaymentType::Send,
-                    },
-                    is_confirmed: is_tx_confirmed,
-                },
-                maybe_script_pubkey,
-                None,
-            )?;
+                    self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
 
-            if let Some(swap) = pending_receive_swaps_by_claim_tx_id.get(&tx_id) {
-                if is_tx_confirmed {
-                    self.receive_swap_handler
-                        .update_swap_info(&swap.id, Complete, None, None, None, None)
-                        .await?;
-                }
-            } else if let Some(swap) =
-                ongoing_receive_swaps_by_mrh_script_pubkey.get(&mrh_script_pubkey)
-            {
-                // Update the swap status according to the MRH tx confirmation state
-                let to_state = match is_tx_confirmed {
-                    true => Complete,
-                    false => Pending,
-                };
-                self.receive_swap_handler
-                    .update_swap_info(
-                        &swap.id,
-                        to_state,
-                        None,
-                        None,
-                        Some(&tx_id),
-                        Some(amount_sat.unsigned_abs()),
-                    )
-                    .await?;
-                // Remove the used MRH address from the reserved addresses
-                self.persister.delete_reserved_address(&swap.mrh_address)?;
-            } else if let Some(swap) = pending_send_swaps_by_refund_tx_id.get(&tx_id) {
-                if is_tx_confirmed {
-                    self.send_swap_handler
-                        .update_swap_info(&swap.id, Failed, None, None, None)
-                        .await?;
-                }
-            } else if let Some(swap) = pending_chain_swaps_by_claim_tx_id.get(&tx_id) {
-                if is_tx_confirmed {
-                    self.chain_swap_handler
-                        .update_swap_info(&swap.id, Complete, None, None, None, None)
-                        .await?;
-                }
-            } else if let Some(swap) = pending_chain_swaps_by_refund_tx_id.get(&tx_id) {
-                if is_tx_confirmed {
-                    self.chain_swap_handler
-                        .update_swap_info(&swap.id, Failed, None, None, None, None)
-                        .await?;
-                }
-            } else {
-                // Payments that are not directly associated with a swap
-                match payments_before_sync.get(&tx_id) {
-                    None => {
+                    if let Some(swap) =
+                        ongoing_receive_swaps_by_mrh_script_pubkey.get(&mrh_script_pubkey)
+                    {
+                        // Update the swap status according to the MRH tx confirmation state
+                        self.receive_swap_handler
+                            .update_swap_from_mrh_tx(swap, tx)
+                            .await?;
+                    } else if maybe_payment.is_none() {
                         // A completely new payment brought in by this sync, in mempool or confirmed
-                        // Covers events:
-                        // - onchain Receive Pending and Complete
-                        // - onchain Send Complete
                         self.emit_payment_updated(Some(tx_id)).await?;
                     }
-                    Some(payment_before_sync) => {
-                        if payment_before_sync.status == Pending && is_tx_confirmed {
-                            // A know payment that was in the mempool, but is now confirmed
-                            // Covers events: Send and Receive direct onchain payments transitioning to Complete
-                            self.emit_payment_updated(Some(tx_id)).await?;
-                        }
+                }
+
+                // When its a pending Liquid payment we need to confirm the tx
+                Some(Payment {
+                    details: PaymentDetails::Liquid { .. },
+                    status: PaymentState::Pending,
+                    ..
+                }) => {
+                    if tx.height.is_some() {
+                        // A known payment that was in the mempool, but is now confirmed
+                        self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
+                        self.emit_payment_updated(Some(tx_id)).await?;
                     }
                 }
+
+                _ => {}
             }
         }
 

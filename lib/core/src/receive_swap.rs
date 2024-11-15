@@ -6,6 +6,7 @@ use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
 use boltz_client::{Serialize, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
+use lwk_wollet::WalletTx;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
@@ -234,6 +235,32 @@ impl ReceiveSwapHandler {
                 Ok(())
             }
         }
+    }
+
+    /// Update the swap status according to the MRH tx confirmation state
+    pub(crate) async fn update_swap_from_mrh_tx(
+        &self,
+        swap: &ReceiveSwap,
+        tx: &WalletTx,
+    ) -> Result<(), PaymentError> {
+        let tx_id = tx.txid.to_string();
+        let is_tx_confirmed = tx.height.is_some();
+        let amount_sat = tx.balance.values().sum::<i64>();
+        let to_state = match is_tx_confirmed {
+            true => Complete,
+            false => Pending,
+        };
+        self.update_swap_info(
+            &swap.id,
+            to_state,
+            None,
+            None,
+            Some(&tx_id),
+            Some(amount_sat.unsigned_abs()),
+        )
+        .await?;
+        // Remove the used MRH address from the reserved addresses
+        self.persister.delete_reserved_address(&swap.mrh_address)
     }
 
     /// Transitions a Receive swap to a new state

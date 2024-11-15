@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use boltz_client::{
     boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
-    Address, ElementsLockTime, LockTime, Secp256k1, Serialize, ToHex,
+    ElementsLockTime, LockTime, Secp256k1, Serialize, ToHex,
 };
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
@@ -55,7 +55,10 @@ impl BlockListener for ChainSwapHandler {
         if let Err(e) = self.rescan_incoming_user_lockup_txs(height, false).await {
             error!("Error rescanning incoming user txs: {e:?}");
         }
-        if let Err(e) = self.rescan_outgoing_claim_txs(height).await {
+        if let Err(e) = self
+            .rescan_server_lockup_txs(Direction::Outgoing, height)
+            .await
+        {
             error!("Error rescanning outgoing server txs: {e:?}");
         }
     }
@@ -64,7 +67,10 @@ impl BlockListener for ChainSwapHandler {
         if let Err(e) = self.check_outgoing_refunds(height).await {
             warn!("Error checking outgoing refunds: {e:?}");
         }
-        if let Err(e) = self.rescan_incoming_server_lockup_txs(height).await {
+        if let Err(e) = self
+            .rescan_server_lockup_txs(Direction::Incoming, height)
+            .await
+        {
             error!("Error rescanning incoming server txs: {e:?}");
         }
     }
@@ -224,100 +230,56 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    pub(crate) async fn rescan_incoming_server_lockup_txs(&self, height: u32) -> Result<()> {
+    pub(crate) async fn rescan_server_lockup_txs(
+        &self,
+        direction: Direction,
+        height: u32,
+    ) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
             .list_chain_swaps()?
             .into_iter()
-            .filter(|s| {
-                s.direction == Direction::Incoming && s.state == Pending && s.claim_tx_id.is_none()
-            })
+            .filter(|s| s.direction == direction && s.state == Pending && s.claim_tx_id.is_none())
             .collect();
         info!(
-            "Rescanning {} incoming Chain Swap(s) server lockup txs at height {}",
+            "Rescanning {} {:?} Chain Swap(s) server lockup txs at height {}",
             chain_swaps.len(),
+            direction,
             height
         );
         for swap in chain_swaps {
-            if let Err(e) = self
-                .rescan_incoming_chain_swap_server_lockup_tx(&swap)
-                .await
-            {
+            if let Err(e) = self.rescan_chain_swap_server_lockup_tx(&swap).await {
                 error!(
-                    "Error rescanning server lockup of incoming Chain Swap {}: {e:?}",
-                    swap.id
+                    "Error rescanning server lockup of {:?} Chain Swap {}: {e:?}",
+                    direction, swap.id,
                 );
             }
         }
         Ok(())
     }
 
-    async fn rescan_incoming_chain_swap_server_lockup_tx(&self, swap: &ChainSwap) -> Result<()> {
+    async fn rescan_chain_swap_server_lockup_tx(&self, swap: &ChainSwap) -> Result<()> {
         let Some(tx_id) = swap.server_lockup_tx_id.clone() else {
             // Skip the rescan if there is no server_lockup_tx_id yet
             return Ok(());
         };
         let swap_id = &swap.id;
         let swap_script = swap.get_claim_swap_script()?;
-        let script_history = self.fetch_liquid_script_history(&swap_script).await?;
+        let script_history = match swap.direction {
+            Direction::Incoming => self.fetch_liquid_script_history(&swap_script).await,
+            Direction::Outgoing => self.fetch_bitcoin_script_history(&swap_script).await,
+        }?;
         let tx_history = script_history
             .iter()
             .find(|h| h.txid.to_hex().eq(&tx_id))
             .ok_or(anyhow!(
-                "Server lockup tx for incoming Chain Swap {swap_id} was not found, txid={tx_id}"
+                "Server lockup tx for Chain Swap {swap_id} was not found, txid={tx_id}"
             ))?;
         if tx_history.height > 0 {
-            info!("Incoming Chain Swap {swap_id} server lockup tx is confirmed");
+            info!("Chain Swap {swap_id} server lockup tx is confirmed");
             self.claim(swap_id)
                 .await
                 .map_err(|e| anyhow!("Could not claim Chain Swap {swap_id}: {e:?}"))?;
-        }
-        Ok(())
-    }
-
-    pub(crate) async fn rescan_outgoing_claim_txs(&self, height: u32) -> Result<()> {
-        let chain_swaps: Vec<ChainSwap> = self
-            .persister
-            .list_chain_swaps()?
-            .into_iter()
-            .filter(|s| {
-                s.direction == Direction::Outgoing && s.state == Pending && s.claim_tx_id.is_some()
-            })
-            .collect();
-        info!(
-            "Rescanning {} outgoing Chain Swap(s) claim txs at height {}",
-            chain_swaps.len(),
-            height
-        );
-        for swap in chain_swaps {
-            if let Err(e) = self.rescan_outgoing_chain_swap_claim_tx(&swap).await {
-                error!("Error rescanning outgoing Chain Swap {}: {e:?}", swap.id);
-            }
-        }
-        Ok(())
-    }
-
-    async fn rescan_outgoing_chain_swap_claim_tx(&self, swap: &ChainSwap) -> Result<()> {
-        if let Some(claim_address) = &swap.claim_address {
-            let address = Address::from_str(claim_address)?;
-            let claim_tx_id = swap.claim_tx_id.clone().ok_or(anyhow!("No claim tx id"))?;
-            let script_pubkey = address.assume_checked().script_pubkey();
-            let script_history = self
-                .bitcoin_chain_service
-                .lock()
-                .await
-                .get_script_history(script_pubkey.as_script())?;
-            let claim_tx_history = script_history
-                .iter()
-                .find(|h| h.txid.to_hex().eq(&claim_tx_id) && h.height > 0);
-            if claim_tx_history.is_some() {
-                info!(
-                    "Outgoing Chain Swap {} claim tx is confirmed. Setting the swap to Complete",
-                    swap.id
-                );
-                self.update_swap_info(&swap.id, Complete, None, None, None, None)
-                    .await?;
-            }
         }
         Ok(())
     }
@@ -721,7 +683,7 @@ impl ChainSwapHandler {
         claim_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        info!("Transitioning Chain swap {swap_id} to {to_state:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}), refund_tx_id = {:?})", server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id);
+        info!("Transitioning Chain swap {swap_id} to {to_state:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})", server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id);
 
         let swap: ChainSwap = self
             .persister
