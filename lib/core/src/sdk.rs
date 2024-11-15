@@ -46,6 +46,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
+use ::lightning::offers::invoice::Bolt12Invoice;
 use ::lightning::offers::offer::Offer;
 
 pub const DEFAULT_DATA_DIR: &str = ".data";
@@ -580,7 +581,7 @@ impl LiquidSdk {
         }
     }
 
-    fn validate_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
+    fn validate_bolt11_invoice(&self, invoice: &str) -> Result<Bolt11Invoice, PaymentError> {
         let invoice = invoice
             .trim()
             .parse::<Bolt11Invoice>()
@@ -602,6 +603,52 @@ impl LiquidSdk {
         );
 
         Ok(invoice)
+    }
+
+    fn validate_bolt12_invoice(
+        &self,
+        offer: &LNOffer,
+        user_specified_receiver_amount_sat: u64,
+        invoice: &str,
+    ) -> Result<Bolt12Invoice, PaymentError> {
+        let invoice_parsed = utils::parse_bolt12_invoice(invoice)?;
+        let invoice_signing_pubkey = invoice_parsed.signing_pubkey().to_hex();
+
+        // Check if the invoice is signed by same key as the offer
+        match &offer.signing_pubkey {
+            None => {
+                ensure_sdk!(
+                    &offer
+                        .paths
+                        .iter()
+                        .filter_map(|path| path.blinded_hops.last())
+                        .any(|last_hop| &invoice_signing_pubkey == last_hop),
+                    PaymentError::invalid_invoice(
+                        "Invalid Bolt12 invoice signing key when using blinded path"
+                    )
+                );
+            }
+            Some(offer_signing_pubkey) => {
+                ensure_sdk!(
+                    offer_signing_pubkey == &invoice_signing_pubkey,
+                    PaymentError::invalid_invoice("Invalid Bolt12 invoice signing key")
+                );
+            }
+        }
+
+        let receiver_amount_sat = invoice_parsed.amount_msats() / 1_000;
+        ensure_sdk!(
+            receiver_amount_sat == user_specified_receiver_amount_sat,
+            PaymentError::invalid_invoice("Invalid Bolt12 invoice amount")
+        );
+        if let Some(Amount::Bitcoin { amount_msat }) = &offer.min_amount {
+            ensure_sdk!(
+                receiver_amount_sat >= amount_msat / 1_000,
+                PaymentError::invalid_invoice("Invalid Bolt12 invoice amount: below offer minimum")
+            );
+        }
+
+        Ok(invoice_parsed)
     }
 
     /// For submarine swaps (Liquid -> LN), the output amount (invoice amount) is checked if it fits
@@ -829,7 +876,7 @@ impl LiquidSdk {
             }
             Ok(InputType::Bolt11 { invoice }) => {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
-                self.validate_invoice(&invoice.bolt11)?;
+                self.validate_bolt11_invoice(&invoice.bolt11)?;
 
                 receiver_amount_sat = invoice.amount_msat.ok_or(PaymentError::amount_missing(
                     "Expected invoice with an amount",
@@ -983,7 +1030,7 @@ impl LiquidSdk {
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_send_is_not_self_transfer(invoice)?;
-        let bolt11_invoice = self.validate_invoice(invoice)?;
+        let bolt11_invoice = self.validate_bolt11_invoice(invoice)?;
 
         let amount_sat = get_invoice_amount!(invoice);
         let payer_amount_sat = amount_sat + fees_sat;
@@ -1034,46 +1081,13 @@ impl LiquidSdk {
         &self,
         offer: &LNOffer,
         user_specified_receiver_amount_sat: u64,
-        invoice: &str,
+        invoice_str: &str,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let invoice_parsed = utils::parse_bolt12_invoice(invoice)?;
-        let invoice_signing_pubkey = invoice_parsed.signing_pubkey().to_hex();
+        let invoice =
+            self.validate_bolt12_invoice(offer, user_specified_receiver_amount_sat, invoice_str)?;
 
-        // Check if the invoice is signed by same key as the offer
-        match &offer.signing_pubkey {
-            None => {
-                ensure_sdk!(
-                    &offer
-                        .paths
-                        .iter()
-                        .filter_map(|path| path.blinded_hops.last())
-                        .any(|last_hop| &invoice_signing_pubkey == last_hop),
-                    PaymentError::invalid_invoice(
-                        "Invalid Bolt12 invoice signing key when using blinded path"
-                    )
-                );
-            }
-            Some(offer_signing_pubkey) => {
-                ensure_sdk!(
-                    offer_signing_pubkey == &invoice_signing_pubkey,
-                    PaymentError::invalid_invoice("Invalid Bolt12 invoice signing key")
-                );
-            }
-        }
-
-        let receiver_amount_sat = invoice_parsed.amount_msats() / 1_000;
-        ensure_sdk!(
-            receiver_amount_sat == user_specified_receiver_amount_sat,
-            PaymentError::invalid_invoice("Invalid Bolt12 invoice amount")
-        );
-        if let Some(Amount::Bitcoin { amount_msat }) = &offer.min_amount {
-            ensure_sdk!(
-                receiver_amount_sat >= amount_msat / 1_000,
-                PaymentError::invalid_invoice("Invalid Bolt12 invoice amount: below offer minimum")
-            );
-        }
-
+        let receiver_amount_sat = invoice.amount_msats() / 1_000;
         let payer_amount_sat = receiver_amount_sat + fees_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.balance_sat,
@@ -1081,9 +1095,9 @@ impl LiquidSdk {
         );
 
         self.send_payment_via_swap(
-            invoice,
-            &invoice_parsed.payment_hash().to_string(),
-            invoice_parsed.description().map(|desc| desc.to_string()),
+            invoice_str,
+            &invoice.payment_hash().to_string(),
+            invoice.description().map(|desc| desc.to_string()),
             receiver_amount_sat,
             fees_sat,
         )
