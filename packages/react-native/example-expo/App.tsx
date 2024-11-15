@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { StatusBar } from "expo-status-bar"
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native"
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView } from "react-native"
 import { getItemAsync, setItemAsync } from "expo-secure-store"
-import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
+import { Mnemonic } from "./mnemonic"
 import {
     addEventListener,
     connect,
@@ -32,6 +32,8 @@ const DebugLine = ({ title, text }: { title: string; text?: string }) => {
     )
 }
 
+const mnemonicGenerator = new Mnemonic();
+
 export default function App() {
     const [lines, setLines] = useState<Array<{ at: number; title: string; text?: string }>>([])
     const listenerIdRef = useRef<string>()
@@ -46,13 +48,13 @@ export default function App() {
     }
 
     useEffect(() => {
-        const bolt11Invoice: string | null = null
+        const bolt11Invoice: string = "";
 
-        ;async () => {
+        const asyncFn = async () => {
             try {
                 let mnemonic = await getItemAsync(MNEMONIC_STORE)
-                if (mnemonic === null) {
-                    mnemonic = generateMnemonic(256)
+                if (!mnemonic) {
+                    mnemonic = await mnemonicGenerator.generateMnemonic(256);
                     await setItemAsync(MNEMONIC_STORE, mnemonic)
                 }
 
@@ -116,6 +118,8 @@ export default function App() {
             }
         }
 
+        asyncFn();
+
         return () => {
             const listenerId = listenerIdRef.current
             if (listenerId) {
@@ -126,14 +130,14 @@ export default function App() {
     }, [])
 
     return (
-        <View style={styles.container}>
-            <StatusBar style="auto" />
+        <SafeAreaView style={styles.container}>
             <ScrollView style={{ margin: 5 }}>
                 {lines.map((line) => (
-                    <DebugLine key={line.at} title={line.title} text={line.text} />
+                    <DebugLine key={`${line.at}-${line.title}`} title={line.title} text={line.text} />
                 ))}
             </ScrollView>
-        </View>
+            <StatusBar style="auto" />
+        </SafeAreaView>
     )
 }
 

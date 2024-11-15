@@ -10,9 +10,9 @@
     "prebuild:ios": "expo prebuild --no-install --platform ios"
   },
   "dependencies": {
-    "@breeztech/react-native-breez-sdk-liquid": "0.4.0-rc3",
-    "@dreson4/react-native-quick-bip39": "^0.0.6",
+    "@breeztech/react-native-breez-sdk-liquid": "file:../",
     "expo": "~52.0.4",
+    "expo-crypto": "^14.0.1",
     "expo-secure-store": "^14.0.0",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
