@@ -6,7 +6,6 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "prebuild:ios": "expo prebuild --no-install --platform ios"
   },
   "dependencies": {
@@ -21,7 +20,6 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
-    "prettier": "^3.3.3",
     "typescript": "^5.3.3"
   },
   "private": true

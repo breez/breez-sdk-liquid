@@ -32,29 +32,29 @@ const DebugLine = ({ title, text }: { title: string; text?: string }) => {
     )
 }
 
-const mnemonicGenerator = new Mnemonic();
+const mnemonicGenerator = new Mnemonic()
 
 export default function App() {
     const [lines, setLines] = useState<Array<{ at: number; title: string; text?: string }>>([])
     const listenerIdRef = useRef<string>()
 
-    const addLine = (title: string, text?: string): void => {
-        setLines((lines) => [{ at: new Date().getTime(), title, text }, ...lines])
-        console.log(`${title}${text && text.length > 0 ? ": " + text : ""}`)
-    }
-
-    const eventHandler = (event: SdkEvent) => {
-        addLine("SDK Event", JSON.stringify(event))
-    }
-
     useEffect(() => {
-        const bolt11Invoice: string = "";
+        const addLine = (title: string, text?: string): void => {
+            setLines((lines) => [{ at: new Date().getTime(), title, text }, ...lines])
+            console.log(`${title}${text && text.length > 0 ? ": " + text : ""}`)
+        }
+
+        const eventHandler = (event: SdkEvent) => {
+            addLine("SDK Event", JSON.stringify(event))
+        }
+
+        const bolt11Invoice: string = ""
 
         const asyncFn = async () => {
             try {
                 let mnemonic = await getItemAsync(MNEMONIC_STORE)
                 if (!mnemonic) {
-                    mnemonic = await mnemonicGenerator.generateMnemonic(256);
+                    mnemonic = await mnemonicGenerator.generateMnemonic(256)
                     await setItemAsync(MNEMONIC_STORE, mnemonic)
                 }
 
@@ -118,7 +118,7 @@ export default function App() {
             }
         }
 
-        asyncFn();
+        asyncFn()
 
         return () => {
             const listenerId = listenerIdRef.current
@@ -127,7 +127,7 @@ export default function App() {
                 listenerIdRef.current = undefined
             }
         }
-    }, [])
+    }, [setLines])
 
     return (
         <SafeAreaView style={styles.container}>
