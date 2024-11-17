@@ -88,5 +88,6 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [ ]  Real-time sync
 - [ ]  External input parsers
 - [ ]  Bolt12
+- [ ]  Amountless BTC swaps
 - [ ]  TLV support
 - [ ]  WebAssembly 
