@@ -257,11 +257,11 @@ fun asConfig(config: ReadableMap): Config? {
     val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
     val mempoolspaceUrl = config.getString("mempoolspaceUrl")!!
     val workingDir = config.getString("workingDir")!!
-    val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
     val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
+    val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,
@@ -277,11 +277,11 @@ fun asConfig(config: ReadableMap): Config? {
         bitcoinElectrumUrl,
         mempoolspaceUrl,
         workingDir,
-        cacheDir,
         network,
         paymentTimeoutSec,
         zeroConfMinFeeRateMsat,
         breezApiKey,
+        cacheDir,
         zeroConfMaxAmountSat,
     )
 }
@@ -292,11 +292,11 @@ fun readableMapOf(config: Config): ReadableMap =
         "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
         "mempoolspaceUrl" to config.mempoolspaceUrl,
         "workingDir" to config.workingDir,
-        "cacheDir" to config.cacheDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
         "breezApiKey" to config.breezApiKey,
+        "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
     )
 
