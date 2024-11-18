@@ -282,7 +282,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
 
   @protected
-  List<LNOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw);
+  List<LnOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw);
 
   @protected
   List<LocaleOverrides> dco_decode_list_locale_overrides(dynamic raw);
@@ -324,7 +324,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNOffer dco_decode_ln_offer(dynamic raw);
 
   @protected
-  LNOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw);
+  LnOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw);
 
   @protected
   LnUrlAuthError dco_decode_ln_url_auth_error(dynamic raw);
@@ -829,7 +829,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
 
   @protected
-  List<LNOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer);
+  List<LnOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer);
 
   @protected
   List<LocaleOverrides> sse_decode_list_locale_overrides(SseDeserializer deserializer);
@@ -871,7 +871,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LNOffer sse_decode_ln_offer(SseDeserializer deserializer);
 
   @protected
-  LNOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer);
+  LnOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer);
 
   @protected
   LnUrlAuthError sse_decode_ln_url_auth_error(SseDeserializer deserializer);
@@ -1593,7 +1593,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ffi.Pointer<wire_cst_list_ln_offer_blinded_path> cst_encode_list_ln_offer_blinded_path(
-      List<LNOfferBlindedPath> raw) {
+      List<LnOfferBlindedPath> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_ln_offer_blinded_path(raw.length);
     for (var i = 0; i < raw.length; ++i) {
@@ -2342,7 +2342,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_ln_offer_blinded_path(
-      LNOfferBlindedPath apiObj, wire_cst_ln_offer_blinded_path wireObj) {
+      LnOfferBlindedPath apiObj, wire_cst_ln_offer_blinded_path wireObj) {
     wireObj.blinded_hops = cst_encode_list_String(apiObj.blindedHops);
   }
 
@@ -3488,7 +3488,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_ln_offer_blinded_path(List<LNOfferBlindedPath> self, SseSerializer serializer);
+  void sse_encode_list_ln_offer_blinded_path(List<LnOfferBlindedPath> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_locale_overrides(List<LocaleOverrides> self, SseSerializer serializer);
@@ -3530,7 +3530,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ln_offer(LNOffer self, SseSerializer serializer);
 
   @protected
-  void sse_encode_ln_offer_blinded_path(LNOfferBlindedPath self, SseSerializer serializer);
+  void sse_encode_ln_offer_blinded_path(LnOfferBlindedPath self, SseSerializer serializer);
 
   @protected
   void sse_encode_ln_url_auth_error(LnUrlAuthError self, SseSerializer serializer);

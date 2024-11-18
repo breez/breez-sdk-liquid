@@ -44,14 +44,14 @@ interface Amount {
     Currency(string iso4217_code, u64 fractional_amount);
 };
 
-dictionary LNOfferBlindedPath {
+dictionary LnOfferBlindedPath {
     sequence<string> blinded_hops;
 };
 
 dictionary LNOffer {
     string offer;
     sequence<string> chains;
-    sequence<LNOfferBlindedPath> paths;
+    sequence<LnOfferBlindedPath> paths;
     string? description;
     string? signing_pubkey;
     Amount? min_amount;

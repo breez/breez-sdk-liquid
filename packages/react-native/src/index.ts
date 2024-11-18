@@ -590,6 +590,7 @@ export type PaymentDetails = {
     description: string
     preimage?: string
     bolt11?: string
+    bolt12Offer?: string
     paymentHash?: string
     refundTxId?: string
     refundTxAmountSat?: number

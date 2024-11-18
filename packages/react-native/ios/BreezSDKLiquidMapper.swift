@@ -3561,13 +3561,15 @@ enum BreezSDKLiquidMapper {
 
             let _bolt11 = paymentDetails["bolt11"] as? String
 
+            let _bolt12Offer = paymentDetails["bolt12Offer"] as? String
+
             let _paymentHash = paymentDetails["paymentHash"] as? String
 
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, preimage: _preimage, bolt11: _bolt11, paymentHash: _paymentHash, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _destination = paymentDetails["destination"] as? String else {
@@ -3598,7 +3600,7 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat
+            swapId, description, preimage, bolt11, bolt12Offer, paymentHash, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
@@ -3606,6 +3608,7 @@ enum BreezSDKLiquidMapper {
                 "description": description,
                 "preimage": preimage == nil ? nil : preimage,
                 "bolt11": bolt11 == nil ? nil : bolt11,
+                "bolt12Offer": bolt12Offer == nil ? nil : bolt12Offer,
                 "paymentHash": paymentHash == nil ? nil : paymentHash,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,

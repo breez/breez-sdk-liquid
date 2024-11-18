@@ -2680,14 +2680,14 @@ impl LiquidSdk {
                     paths: offer
                         .paths()
                         .iter()
-                        .map(|path| LNOfferBlindedPath {
+                        .map(|path| LnOfferBlindedPath {
                             blinded_hops: path
                                 .blinded_hops()
                                 .iter()
                                 .map(|hop| hop.blinded_node_id.to_hex())
                                 .collect(),
                         })
-                        .collect::<Vec<LNOfferBlindedPath>>(),
+                        .collect::<Vec<LnOfferBlindedPath>>(),
                 },
             });
         }

@@ -340,8 +340,8 @@ pub enum _Amount {
     },
 }
 
-#[frb(mirror(LNOfferBlindedPath))]
-pub struct _LNOfferBlindedPath {
+#[frb(mirror(LnOfferBlindedPath))]
+pub struct _LnOfferBlindedPath {
     pub blinded_hops: Vec<String>,
 }
 
@@ -354,7 +354,7 @@ pub struct _LNOffer {
     pub absolute_expiry: Option<u64>,
     pub issuer: Option<String>,
     pub signing_pubkey: Option<String>,
-    pub paths: Vec<LNOfferBlindedPath>,
+    pub paths: Vec<LnOfferBlindedPath>,
 }
 
 #[frb(mirror(InputType))]

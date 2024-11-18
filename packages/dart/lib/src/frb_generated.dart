@@ -1885,7 +1885,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<LNOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw) {
+  List<LnOfferBlindedPath> dco_decode_list_ln_offer_blinded_path(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ln_offer_blinded_path).toList();
   }
@@ -2015,11 +2015,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  LNOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw) {
+  LnOfferBlindedPath dco_decode_ln_offer_blinded_path(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return LNOfferBlindedPath(
+    return LnOfferBlindedPath(
       blindedHops: dco_decode_list_String(arr[0]),
     );
   }
@@ -3764,11 +3764,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<LNOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer) {
+  List<LnOfferBlindedPath> sse_decode_list_ln_offer_blinded_path(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <LNOfferBlindedPath>[];
+    var ans_ = <LnOfferBlindedPath>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_ln_offer_blinded_path(deserializer));
     }
@@ -3966,10 +3966,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  LNOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer) {
+  LnOfferBlindedPath sse_decode_ln_offer_blinded_path(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_blindedHops = sse_decode_list_String(deserializer);
-    return LNOfferBlindedPath(blindedHops: var_blindedHops);
+    return LnOfferBlindedPath(blindedHops: var_blindedHops);
   }
 
   @protected
@@ -5735,7 +5735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_ln_offer_blinded_path(List<LNOfferBlindedPath> self, SseSerializer serializer) {
+  void sse_encode_list_ln_offer_blinded_path(List<LnOfferBlindedPath> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -5879,7 +5879,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_ln_offer_blinded_path(LNOfferBlindedPath self, SseSerializer serializer) {
+  void sse_encode_ln_offer_blinded_path(LnOfferBlindedPath self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_String(self.blindedHops, serializer);
   }

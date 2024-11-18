@@ -1865,11 +1865,11 @@ const _: fn() = || {
         let _: Option<u64> = LNOffer.absolute_expiry;
         let _: Option<String> = LNOffer.issuer;
         let _: Option<String> = LNOffer.signing_pubkey;
-        let _: Vec<crate::bindings::LNOfferBlindedPath> = LNOffer.paths;
+        let _: Vec<crate::bindings::LnOfferBlindedPath> = LNOffer.paths;
     }
     {
-        let LNOfferBlindedPath = None::<crate::bindings::LNOfferBlindedPath>.unwrap();
-        let _: Vec<String> = LNOfferBlindedPath.blinded_hops;
+        let LnOfferBlindedPath = None::<crate::bindings::LnOfferBlindedPath>.unwrap();
+        let _: Vec<String> = LnOfferBlindedPath.blinded_hops;
     }
     {
         let LnUrlAuthRequestData = None::<crate::bindings::LnUrlAuthRequestData>.unwrap();
@@ -2608,13 +2608,13 @@ impl SseDecode for Vec<crate::bindings::FiatCurrency> {
     }
 }
 
-impl SseDecode for Vec<crate::bindings::LNOfferBlindedPath> {
+impl SseDecode for Vec<crate::bindings::LnOfferBlindedPath> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::bindings::LNOfferBlindedPath>::sse_decode(
+            ans_.push(<crate::bindings::LnOfferBlindedPath>::sse_decode(
                 deserializer,
             ));
         }
@@ -2816,7 +2816,7 @@ impl SseDecode for crate::bindings::LNOffer {
         let mut var_absoluteExpiry = <Option<u64>>::sse_decode(deserializer);
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
         let mut var_signingPubkey = <Option<String>>::sse_decode(deserializer);
-        let mut var_paths = <Vec<crate::bindings::LNOfferBlindedPath>>::sse_decode(deserializer);
+        let mut var_paths = <Vec<crate::bindings::LnOfferBlindedPath>>::sse_decode(deserializer);
         return crate::bindings::LNOffer {
             offer: var_offer,
             chains: var_chains,
@@ -2830,11 +2830,11 @@ impl SseDecode for crate::bindings::LNOffer {
     }
 }
 
-impl SseDecode for crate::bindings::LNOfferBlindedPath {
+impl SseDecode for crate::bindings::LnOfferBlindedPath {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_blindedHops = <Vec<String>>::sse_decode(deserializer);
-        return crate::bindings::LNOfferBlindedPath {
+        return crate::bindings::LnOfferBlindedPath {
             blinded_hops: var_blindedHops,
         };
     }
@@ -4871,19 +4871,19 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNOffer>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOfferBlindedPath> {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LnOfferBlindedPath> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.0.blinded_hops.into_into_dart().into_dart()].into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for FrbWrapper<crate::bindings::LNOfferBlindedPath>
+    for FrbWrapper<crate::bindings::LnOfferBlindedPath>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNOfferBlindedPath>>
-    for crate::bindings::LNOfferBlindedPath
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LnOfferBlindedPath>>
+    for crate::bindings::LnOfferBlindedPath
 {
-    fn into_into_dart(self) -> FrbWrapper<crate::bindings::LNOfferBlindedPath> {
+    fn into_into_dart(self) -> FrbWrapper<crate::bindings::LnOfferBlindedPath> {
         self.into()
     }
 }
@@ -6748,12 +6748,12 @@ impl SseEncode for Vec<crate::bindings::FiatCurrency> {
     }
 }
 
-impl SseEncode for Vec<crate::bindings::LNOfferBlindedPath> {
+impl SseEncode for Vec<crate::bindings::LnOfferBlindedPath> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::bindings::LNOfferBlindedPath>::sse_encode(item, serializer);
+            <crate::bindings::LnOfferBlindedPath>::sse_encode(item, serializer);
         }
     }
 }
@@ -6907,11 +6907,11 @@ impl SseEncode for crate::bindings::LNOffer {
         <Option<u64>>::sse_encode(self.absolute_expiry, serializer);
         <Option<String>>::sse_encode(self.issuer, serializer);
         <Option<String>>::sse_encode(self.signing_pubkey, serializer);
-        <Vec<crate::bindings::LNOfferBlindedPath>>::sse_encode(self.paths, serializer);
+        <Vec<crate::bindings::LnOfferBlindedPath>>::sse_encode(self.paths, serializer);
     }
 }
 
-impl SseEncode for crate::bindings::LNOfferBlindedPath {
+impl SseEncode for crate::bindings::LnOfferBlindedPath {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<String>>::sse_encode(self.blinded_hops, serializer);
@@ -8779,11 +8779,11 @@ mod io {
             vec.into_iter().map(CstDecode::cst_decode).collect()
         }
     }
-    impl CstDecode<Vec<crate::bindings::LNOfferBlindedPath>>
+    impl CstDecode<Vec<crate::bindings::LnOfferBlindedPath>>
         for *mut wire_cst_list_ln_offer_blinded_path
     {
         // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> Vec<crate::bindings::LNOfferBlindedPath> {
+        fn cst_decode(self) -> Vec<crate::bindings::LnOfferBlindedPath> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -8947,10 +8947,10 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::bindings::LNOfferBlindedPath> for wire_cst_ln_offer_blinded_path {
+    impl CstDecode<crate::bindings::LnOfferBlindedPath> for wire_cst_ln_offer_blinded_path {
         // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::bindings::LNOfferBlindedPath {
-            crate::bindings::LNOfferBlindedPath {
+        fn cst_decode(self) -> crate::bindings::LnOfferBlindedPath {
+            crate::bindings::LnOfferBlindedPath {
                 blinded_hops: self.blinded_hops.cst_decode(),
             }
         }

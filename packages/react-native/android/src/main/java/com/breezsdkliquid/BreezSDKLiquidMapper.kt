@@ -2880,6 +2880,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val description = paymentDetails.getString("description")!!
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
+        val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
         val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
@@ -2892,7 +2893,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, bolt12Offer, paymentHash, refundTxId, refundTxAmountSat)
     }
     if (type == "liquid") {
         val destination = paymentDetails.getString("destination")!!
@@ -2927,6 +2928,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "bolt11", paymentDetails.bolt11)
+            pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
