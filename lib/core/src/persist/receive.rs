@@ -2,20 +2,23 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use boltz_client::swaps::boltz::CreateReverseResponse;
-use rusqlite::{named_params, params, Connection, Row};
+use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
-use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::RecordType;
+use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
     pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
-        let con = self.get_connection()?;
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
-        let mut stmt = con.prepare(
+        let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
+        tx.execute(
             "
             INSERT INTO receive_swaps (
                 id,
@@ -34,26 +37,25 @@ impl Persister {
                 state
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                &receive_swap.id,
+                id_hash,
+                &receive_swap.preimage,
+                &receive_swap.create_response_json,
+                &receive_swap.claim_private_key,
+                &receive_swap.invoice,
+                &receive_swap.payment_hash,
+                &receive_swap.payer_amount_sat,
+                &receive_swap.receiver_amount_sat,
+                &receive_swap.created_at,
+                &receive_swap.claim_fees_sat,
+                &receive_swap.mrh_address,
+                &receive_swap.mrh_script_pubkey,
+                &receive_swap.state,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute((
-            &receive_swap.id,
-            id_hash,
-            &receive_swap.preimage,
-            &receive_swap.create_response_json,
-            &receive_swap.claim_private_key,
-            &receive_swap.invoice,
-            &receive_swap.payment_hash,
-            &receive_swap.payer_amount_sat,
-            &receive_swap.receiver_amount_sat,
-            &receive_swap.created_at,
-            &receive_swap.claim_fees_sat,
-            &receive_swap.mrh_address,
-            &receive_swap.mrh_script_pubkey,
-            &receive_swap.state,
-        ))?;
 
-        con.execute(
+        tx.execute(
             "UPDATE receive_swaps
             SET
                 description = :description,
@@ -68,6 +70,10 @@ impl Persister {
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
             },
         )?;
+
+        Self::commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, None)?;
+
+        tx.commit()?;
 
         Ok(())
     }
@@ -282,8 +288,10 @@ impl Persister {
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite claim_tx_id or lockup_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE receive_swaps
             SET
                 claim_tx_id =
@@ -315,6 +323,12 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
+
+        // NOTE: Receive currently does not update any fields, bypassing the commit logic for now
+        // let updated_fields = None;
+        // Self::commit_outgoing(&tx, swap_id, RecordType::Receive, updated_fields)?;
+
+        tx.commit()?;
 
         Ok(())
     }
