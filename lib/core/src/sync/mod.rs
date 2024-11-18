@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
+use futures_util::TryFutureExt;
+use tokio::sync::watch;
 
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
@@ -38,6 +41,35 @@ impl SyncService {
             signer,
             client,
         }
+    }
+
+    pub(crate) async fn run(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
+        self.client.connect(self.remote_url.clone()).await?;
+
+        self.check_remote_change()?;
+
+        tokio::spawn(async move {
+            let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
+
+            loop {
+                tokio::select! {
+                    _ = event_loop_interval.tick() => {
+                        if let Err(err) = self.pull().and_then(|_| self.push()).await {
+                            log::debug!("Could not run sync event loop: {err:?}");
+                        }
+                    }
+                    _ = shutdown.changed() => {
+                        log::info!("Received shutdown signal, exiting realtime sync service loop");
+                        if let Err(err) = self.client.disconnect().await {
+                            log::debug!("Could not disconnect sync service client: {err:?}");
+                        };
+                        return;
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 
     fn commit_record(
