@@ -439,6 +439,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
   struct wire_cst_list_prim_u_8_strict *mempoolspace_url;
   struct wire_cst_list_prim_u_8_strict *working_dir;
+  struct wire_cst_list_prim_u_8_strict *cache_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
   uint32_t zero_conf_min_fee_rate_msat;

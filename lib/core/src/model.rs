@@ -36,10 +36,12 @@ pub struct Config {
     pub bitcoin_electrum_url: String,
     /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
     pub mempoolspace_url: String,
-    /// Directory in which all SDK files (DB, log, cache) are stored.
+    /// Directory in which the DB and log files are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
+    /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
+    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
@@ -59,6 +61,7 @@ impl Config {
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
+            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
@@ -73,6 +76,7 @@ impl Config {
             bitcoin_electrum_url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
             working_dir: ".".to_string(),
+            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
@@ -81,8 +85,12 @@ impl Config {
         }
     }
 
-    pub(crate) fn get_wallet_working_dir(&self, fingerprint_hex: String) -> anyhow::Result<String> {
-        Ok(PathBuf::from(self.working_dir.clone())
+    pub(crate) fn get_wallet_dir(
+        &self,
+        base_dir: &str,
+        fingerprint_hex: &str,
+    ) -> anyhow::Result<String> {
+        Ok(PathBuf::from(base_dir)
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",
                 LiquidNetwork::Testnet => "testnet",
@@ -459,7 +467,7 @@ pub struct GetInfoResponse {
     pub pending_send_sat: u64,
     /// Incoming amount that is pending from ongoing Receive swaps
     pub pending_receive_sat: u64,
-    /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+    /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,

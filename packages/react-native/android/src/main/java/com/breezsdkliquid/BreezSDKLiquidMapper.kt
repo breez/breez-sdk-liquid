@@ -261,6 +261,7 @@ fun asConfig(config: ReadableMap): Config? {
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
     val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
+    val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,
@@ -280,6 +281,7 @@ fun asConfig(config: ReadableMap): Config? {
         paymentTimeoutSec,
         zeroConfMinFeeRateMsat,
         breezApiKey,
+        cacheDir,
         zeroConfMaxAmountSat,
     )
 }
@@ -294,6 +296,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
         "breezApiKey" to config.breezApiKey,
+        "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
     )
 

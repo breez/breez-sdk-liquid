@@ -1,5 +1,6 @@
-use std::fs;
+use std::fs::{self, create_dir_all};
 use std::io::Write;
+use std::path::PathBuf;
 use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -108,6 +109,11 @@ impl LiquidOnchainWallet {
     ) -> Result<Self> {
         let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
         let wollet = Self::create_wallet(&config, working_dir, &signer)?;
+
+        let working_dir_buf = PathBuf::from_str(working_dir)?;
+        if !working_dir_buf.exists() {
+            create_dir_all(&working_dir_buf)?;
+        }
 
         Ok(Self {
             config,

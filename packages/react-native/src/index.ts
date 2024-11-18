@@ -66,6 +66,7 @@ export interface Config {
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
     breezApiKey?: string
+    cacheDir?: string
     zeroConfMaxAmountSat?: number
 }
 

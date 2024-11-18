@@ -20,11 +20,15 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
         self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
                 
-        guard let connectRequest = self.getConnectRequest() else {
+        guard var connectRequest = self.getConnectRequest() else {
             if let content = bestAttemptContent {
                 contentHandler(content)
             }
             return
+        }
+
+        if connectRequest.config.cacheDir == nil {
+            connectRequest.config.cacheDir = URL(filePath: connectRequest.config.workingDir).appendingPathComponent("pluginCache").path
         }
         
         if let currentTask = self.getTaskFromNotification() {

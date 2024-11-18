@@ -1652,17 +1652,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
       mempoolspaceUrl: dco_decode_String(arr[2]),
       workingDir: dco_decode_String(arr[3]),
-      network: dco_decode_liquid_network(arr[4]),
-      paymentTimeoutSec: dco_decode_u_64(arr[5]),
-      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[6]),
-      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
-      breezApiKey: dco_decode_opt_String(arr[8]),
+      cacheDir: dco_decode_opt_String(arr[4]),
+      network: dco_decode_liquid_network(arr[5]),
+      paymentTimeoutSec: dco_decode_u_64(arr[6]),
+      zeroConfMinFeeRateMsat: dco_decode_u_32(arr[7]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[8]),
+      breezApiKey: dco_decode_opt_String(arr[9]),
     );
   }
 
@@ -3440,6 +3441,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
     var var_mempoolspaceUrl = sse_decode_String(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
+    var var_cacheDir = sse_decode_opt_String(deserializer);
     var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
@@ -3450,6 +3452,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
         mempoolspaceUrl: var_mempoolspaceUrl,
         workingDir: var_workingDir,
+        cacheDir: var_cacheDir,
         network: var_network,
         paymentTimeoutSec: var_paymentTimeoutSec,
         zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat,
@@ -5355,6 +5358,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.bitcoinElectrumUrl, serializer);
     sse_encode_String(self.mempoolspaceUrl, serializer);
     sse_encode_String(self.workingDir, serializer);
+    sse_encode_opt_String(self.cacheDir, serializer);
     sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);

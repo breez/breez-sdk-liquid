@@ -314,6 +314,13 @@ enum BreezSDKLiquidMapper {
             }
             breezApiKey = breezApiKeyTmp
         }
+        var cacheDir: String?
+        if hasNonNilKey(data: config, key: "cacheDir") {
+            guard let cacheDirTmp = config["cacheDir"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "cacheDir"))
+            }
+            cacheDir = cacheDirTmp
+        }
         var zeroConfMaxAmountSat: UInt64?
         if hasNonNilKey(data: config, key: "zeroConfMaxAmountSat") {
             guard let zeroConfMaxAmountSatTmp = config["zeroConfMaxAmountSat"] as? UInt64 else {
@@ -322,7 +329,7 @@ enum BreezSDKLiquidMapper {
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -335,6 +342,7 @@ enum BreezSDKLiquidMapper {
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
+            "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
         ]
     }
