@@ -641,12 +641,6 @@ impl LiquidSdk {
             receiver_amount_sat == user_specified_receiver_amount_sat,
             PaymentError::invalid_invoice("Invalid Bolt12 invoice amount")
         );
-        if let Some(Amount::Bitcoin { amount_msat }) = &offer.min_amount {
-            ensure_sdk!(
-                receiver_amount_sat >= amount_msat / 1_000,
-                PaymentError::invalid_invoice("Invalid Bolt12 invoice amount: below offer minimum")
-            );
-        }
 
         Ok(invoice_parsed)
     }
@@ -916,6 +910,14 @@ impl LiquidSdk {
                         "Expected PayAmount of type Receiver when processing a Bolt12 offer",
                     )),
                 }?;
+                if let Some(Amount::Bitcoin { amount_msat }) = &offer.min_amount {
+                    ensure_sdk!(
+                        receiver_amount_sat >= amount_msat / 1_000,
+                        PaymentError::invalid_invoice(
+                            "Invalid receiver amount: below offer minimum"
+                        )
+                    );
+                }
 
                 let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
 
