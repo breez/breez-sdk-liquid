@@ -743,7 +743,10 @@ impl ChainSwap {
 #[derive(Clone, Debug)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
+    /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
     pub(crate) invoice: String,
+    /// The bolt12 offer, if this swap sends to a Bolt12 offer
+    pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
@@ -1115,6 +1118,7 @@ pub struct PaymentSwapData {
 
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
+    pub bolt12_offer: Option<String>,
     pub payment_hash: Option<String>,
     pub description: String,
 
@@ -1149,10 +1153,12 @@ pub enum PaymentDetails {
         /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
-        /// Represents the invoice associated with a payment
+        /// Represents the Bolt11 invoice associated with a payment
         /// In the case of a Send payment, this is the invoice paid by the swapper
         /// In the case of a Receive payment, this is the invoice paid by the user
         bolt11: Option<String>,
+
+        bolt12_offer: Option<String>,
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
@@ -1282,6 +1288,7 @@ impl Payment {
                 swap_id: swap.swap_id,
                 preimage: swap.preimage,
                 bolt11: swap.bolt11,
+                bolt12_offer: swap.bolt12_offer,
                 payment_hash: swap.payment_hash,
                 description: swap.description,
                 refund_tx_id: swap.refund_tx_id,

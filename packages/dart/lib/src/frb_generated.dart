@@ -2491,9 +2491,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           description: dco_decode_String(raw[2]),
           preimage: dco_decode_opt_String(raw[3]),
           bolt11: dco_decode_opt_String(raw[4]),
-          paymentHash: dco_decode_opt_String(raw[5]),
-          refundTxId: dco_decode_opt_String(raw[6]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[7]),
+          bolt12Offer: dco_decode_opt_String(raw[5]),
+          paymentHash: dco_decode_opt_String(raw[6]),
+          refundTxId: dco_decode_opt_String(raw[7]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[8]),
         );
       case 1:
         return PaymentDetails_Liquid(
@@ -4465,6 +4466,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_description = sse_decode_String(deserializer);
         var var_preimage = sse_decode_opt_String(deserializer);
         var var_bolt11 = sse_decode_opt_String(deserializer);
+        var var_bolt12Offer = sse_decode_opt_String(deserializer);
         var var_paymentHash = sse_decode_opt_String(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -4473,6 +4475,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             description: var_description,
             preimage: var_preimage,
             bolt11: var_bolt11,
+            bolt12Offer: var_bolt12Offer,
             paymentHash: var_paymentHash,
             refundTxId: var_refundTxId,
             refundTxAmountSat: var_refundTxAmountSat);
@@ -6309,6 +6312,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           description: final description,
           preimage: final preimage,
           bolt11: final bolt11,
+          bolt12Offer: final bolt12Offer,
           paymentHash: final paymentHash,
           refundTxId: final refundTxId,
           refundTxAmountSat: final refundTxAmountSat
@@ -6318,6 +6322,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(description, serializer);
         sse_encode_opt_String(preimage, serializer);
         sse_encode_opt_String(bolt11, serializer);
+        sse_encode_opt_String(bolt12Offer, serializer);
         sse_encode_opt_String(paymentHash, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);

@@ -3469,6 +3469,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
+                let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -3477,6 +3478,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     description: var_description,
                     preimage: var_preimage,
                     bolt11: var_bolt11,
+                    bolt12_offer: var_bolt12Offer,
                     payment_hash: var_paymentHash,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
@@ -5470,6 +5472,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                bolt12_offer,
                 payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -5479,6 +5482,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description.into_into_dart().into_dart(),
                 preimage.into_into_dart().into_dart(),
                 bolt11.into_into_dart().into_dart(),
+                bolt12_offer.into_into_dart().into_dart(),
                 payment_hash.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
@@ -7420,6 +7424,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                bolt12_offer,
                 payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -7429,6 +7434,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <String>::sse_encode(description, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
                 <Option<String>>::sse_encode(bolt11, serializer);
+                <Option<String>>::sse_encode(bolt12_offer, serializer);
                 <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
@@ -9357,6 +9363,7 @@ mod io {
                         description: ans.description.cst_decode(),
                         preimage: ans.preimage.cst_decode(),
                         bolt11: ans.bolt11.cst_decode(),
+                        bolt12_offer: ans.bolt12_offer.cst_decode(),
                         payment_hash: ans.payment_hash.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
@@ -12675,6 +12682,7 @@ mod io {
         description: *mut wire_cst_list_prim_u_8_strict,
         preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt11: *mut wire_cst_list_prim_u_8_strict,
+        bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,

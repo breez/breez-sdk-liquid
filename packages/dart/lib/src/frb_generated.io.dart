@@ -2686,6 +2686,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_description = cst_encode_String(apiObj.description);
       var pre_preimage = cst_encode_opt_String(apiObj.preimage);
       var pre_bolt11 = cst_encode_opt_String(apiObj.bolt11);
+      var pre_bolt12_offer = cst_encode_opt_String(apiObj.bolt12Offer);
       var pre_payment_hash = cst_encode_opt_String(apiObj.paymentHash);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
@@ -2694,6 +2695,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Lightning.description = pre_description;
       wireObj.kind.Lightning.preimage = pre_preimage;
       wireObj.kind.Lightning.bolt11 = pre_bolt11;
+      wireObj.kind.Lightning.bolt12_offer = pre_bolt12_offer;
       wireObj.kind.Lightning.payment_hash = pre_payment_hash;
       wireObj.kind.Lightning.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Lightning.refund_tx_amount_sat = pre_refund_tx_amount_sat;
@@ -5790,6 +5792,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 

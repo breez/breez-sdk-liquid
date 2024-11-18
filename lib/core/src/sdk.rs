@@ -1067,6 +1067,7 @@ impl LiquidSdk {
             None => {
                 self.send_payment_via_swap(
                     invoice,
+                    None,
                     &bolt11_invoice.payment_hash().to_string(),
                     description,
                     amount_sat,
@@ -1096,6 +1097,7 @@ impl LiquidSdk {
 
         self.send_payment_via_swap(
             invoice_str,
+            Some(offer.offer.clone()),
             &invoice.payment_hash().to_string(),
             invoice.description().map(|desc| desc.to_string()),
             receiver_amount_sat,
@@ -1163,9 +1165,12 @@ impl LiquidSdk {
     }
 
     /// Performs a Send Payment by doing a swap (create it, fund it, track it, etc).
+    ///
+    /// If `bolt12_offer` is set, `invoice` refers to a Bolt12 invoice, otherwise it's a Bolt11 one.
     async fn send_payment_via_swap(
         &self,
         invoice: &str,
+        bolt12_offer: Option<String>,
         payment_hash: &str,
         description: Option<String>,
         receiver_amount_sat: u64,
@@ -1233,6 +1238,7 @@ impl LiquidSdk {
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: invoice.to_string(),
+                    bolt12_offer,
                     payment_hash: Some(payment_hash.to_string()),
                     description,
                     preimage: None,

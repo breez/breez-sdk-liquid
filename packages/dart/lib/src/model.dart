@@ -611,10 +611,11 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
     String? preimage,
 
-    /// Represents the invoice associated with a payment
+    /// Represents the Bolt11 invoice associated with a payment
     /// In the case of a Send payment, this is the invoice paid by the swapper
     /// In the case of a Receive payment, this is the invoice paid by the user
     String? bolt11,
+    String? bolt12Offer,
 
     /// The payment hash of the invoice
     String? paymentHash,

@@ -183,5 +183,63 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
 
         DROP TABLE old_chain_swaps;
         ",
+        // Add bolt12_offer column for Send Swaps
+        "
+        ALTER TABLE send_swaps RENAME TO send_swaps_old;
+
+        CREATE TABLE send_swaps (
+            id TEXT NOT NULL PRIMARY KEY,
+            invoice TEXT NOT NULL UNIQUE,
+            bolt12_offer TEXT,
+            preimage TEXT,
+            payer_amount_sat INTEGER NOT NULL,
+            receiver_amount_sat INTEGER NOT NULL,
+            create_response_json TEXT NOT NULL,
+            refund_private_key TEXT NOT NULL,
+            lockup_tx_id TEXT,
+            refund_tx_id TEXT,
+            created_at INTEGER NOT NULL,
+            state INTEGER NOT NULL,
+            description TEXT,
+            id_hash TEXT,
+            payment_hash TEXT
+        ) STRICT;
+
+        INSERT INTO send_swaps (
+            id,
+            invoice,
+            bolt12_offer,
+            preimage,
+            payer_amount_sat,
+            receiver_amount_sat,
+            create_response_json,
+            refund_private_key,
+            lockup_tx_id,
+            refund_tx_id,
+            created_at,
+            state,
+            description,
+            id_hash,
+            payment_hash
+        ) SELECT
+            id,
+            invoice,
+            NULL,
+            preimage,
+            payer_amount_sat,
+            receiver_amount_sat,
+            create_response_json,
+            refund_private_key,
+            lockup_tx_id,
+            refund_tx_id,
+            created_at,
+            state,
+            description,
+            id_hash,
+            payment_hash
+        FROM send_swaps_old;
+
+        DROP TABLE send_swaps_old;
+        ",
     ]
 }

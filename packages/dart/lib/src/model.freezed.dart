@@ -793,6 +793,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String description,
       String? preimage,
       String? bolt11,
+      String? bolt12Offer,
       String? paymentHash,
       String? refundTxId,
       BigInt? refundTxAmountSat});
@@ -815,6 +816,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? description = null,
     Object? preimage = freezed,
     Object? bolt11 = freezed,
+    Object? bolt12Offer = freezed,
     Object? paymentHash = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
@@ -835,6 +837,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
       bolt11: freezed == bolt11
           ? _value.bolt11
           : bolt11 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      bolt12Offer: freezed == bolt12Offer
+          ? _value.bolt12Offer
+          : bolt12Offer // ignore: cast_nullable_to_non_nullable
               as String?,
       paymentHash: freezed == paymentHash
           ? _value.paymentHash
@@ -860,6 +866,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       required this.description,
       this.preimage,
       this.bolt11,
+      this.bolt12Offer,
       this.paymentHash,
       this.refundTxId,
       this.refundTxAmountSat})
@@ -876,11 +883,13 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String? preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   @override
   final String? bolt11;
+  @override
+  final String? bolt12Offer;
 
   /// The payment hash of the invoice
   @override
@@ -896,7 +905,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -908,6 +917,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.description, description) || other.description == description) &&
             (identical(other.preimage, preimage) || other.preimage == preimage) &&
             (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
+            (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
@@ -915,8 +925,8 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(runtimeType, swapId, description, preimage, bolt11, bolt12Offer,
+      paymentHash, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -933,6 +943,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       required final String description,
       final String? preimage,
       final String? bolt11,
+      final String? bolt12Offer,
       final String? paymentHash,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
@@ -947,10 +958,11 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
   String? get preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   String? get bolt11;
+  String? get bolt12Offer;
 
   /// The payment hash of the invoice
   String? get paymentHash;
