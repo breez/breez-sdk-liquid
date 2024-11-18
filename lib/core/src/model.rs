@@ -1597,3 +1597,19 @@ macro_rules! get_invoice_description {
         }
     };
 }
+
+#[macro_export]
+macro_rules! get_updated_fields {
+    ($($var:ident),* $(,)?) => {{
+        let mut options = Vec::new();
+        $(
+            if $var.is_some() {
+                options.push(stringify!($var).to_string());
+            }
+        )*
+        match options.len() > 0 {
+            true => Some(options),
+            false => None,
+        }
+    }};
+}
