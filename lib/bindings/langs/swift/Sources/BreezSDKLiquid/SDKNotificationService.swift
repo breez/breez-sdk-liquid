@@ -28,7 +28,13 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         }
 
         if connectRequest.config.cacheDir == nil {
-            connectRequest.config.cacheDir = URL(filePath: connectRequest.config.workingDir).appendingPathComponent("pluginCache").path
+            var workingDir: URL
+            if #available(iOS 16, *) {
+                workingDir = URL(filePath: connectRequest.config.workingDir)
+            } else {
+                workingDir = URL(fileURLWithPath: connectRequest.config.workingDir)
+            }
+            connectRequest.config.cacheDir = workingDir.appendingPathComponent("pluginCache").path
         }
         
         if let currentTask = self.getTaskFromNotification() {
