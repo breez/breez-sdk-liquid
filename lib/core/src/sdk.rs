@@ -17,6 +17,7 @@ use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
+use restore::immutable::HistoryTxId;
 use restore::{PartialSwapState, TxMap};
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
@@ -1907,7 +1908,6 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
-                lockup_tx_id: None,
                 mrh_address: mrh_addr_str,
                 mrh_script_pubkey: mrh_addr.to_unconfidential().script_pubkey().to_hex(),
                 mrh_tx_id: None,
@@ -2228,10 +2228,12 @@ impl LiquidSdk {
             .recover_from_onchain(TxMap::from_raw_tx_map(tx_map.clone()), swaps_list)
             .await?;
 
+        // Loop over the recovered chain data for monitored receive swaps
         for (swap_id, receive_data) in recovered_onchain_data.receive {
             if let Some(to_state) = receive_data.derive_partial_state() {
                 let lockup_tx_id = receive_data.lockup_tx_id.map(|h| h.txid.to_string());
                 let claim_tx_id = receive_data.claim_tx_id.clone().map(|h| h.txid.to_string());
+                let mrh_tx_id = receive_data.mrh_tx_id.clone().map(|h| h.txid.to_string());
                 _ = self
                     .receive_swap_handler
                     .update_swap_info(
@@ -2239,14 +2241,17 @@ impl LiquidSdk {
                         to_state,
                         claim_tx_id.as_deref(),
                         lockup_tx_id.as_deref(),
-                        None,
-                        None,
+                        mrh_tx_id.as_deref(),
+                        receive_data.mrh_amount_sat,
                     )
                     .await
                     .inspect_err(|e| debug!("Ignore recovery error: {e}"));
-                if let Some(history) = receive_data.claim_tx_id {
+                let history_updates = vec![receive_data.claim_tx_id, receive_data.mrh_tx_id]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<HistoryTxId>>();
+                for history in history_updates {
                     if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped claim tx {claim_tx_id:?} from tx_map");
                         self.persister
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
@@ -2254,6 +2259,7 @@ impl LiquidSdk {
             }
         }
 
+        // Loop over the recovered chain data for monitored send swaps
         for (swap_id, send_data) in recovered_onchain_data.send {
             if let Some(to_state) = send_data.derive_partial_state() {
                 let lockup_tx_id = send_data.lockup_tx_id.clone().map(|h| h.txid.to_string());
@@ -2269,16 +2275,12 @@ impl LiquidSdk {
                     )
                     .await
                     .inspect_err(|e| debug!("Ignore recovery error: {e}"));
-                if let Some(history) = send_data.lockup_tx_id {
+                let history_updates = vec![send_data.lockup_tx_id, send_data.refund_tx_id]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<HistoryTxId>>();
+                for history in history_updates {
                     if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped lockup tx {lockup_tx_id:?} from tx_map");
-                        self.persister
-                            .insert_or_update_payment_with_wallet_tx(&tx)?;
-                    }
-                }
-                if let Some(history) = send_data.refund_tx_id {
-                    if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped refund tx {refund_tx_id:?} from tx_map");
                         self.persister
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
@@ -2286,6 +2288,7 @@ impl LiquidSdk {
             }
         }
 
+        // Loop over the recovered chain data for monitored chain receive swaps
         for (swap_id, chain_receive_data) in recovered_onchain_data.chain_receive {
             if let Some(to_state) = chain_receive_data.derive_partial_state() {
                 let server_lockup_tx_id = chain_receive_data
@@ -2315,7 +2318,6 @@ impl LiquidSdk {
                     .inspect_err(|e| debug!("Ignore recovery error: {e}"));
                 if let Some(history) = chain_receive_data.lbtc_server_claim_tx_id {
                     if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped claim tx {claim_tx_id:?} from tx_map");
                         self.persister
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
@@ -2323,6 +2325,7 @@ impl LiquidSdk {
             }
         }
 
+        // Loop over the recovered chain data for monitored chain send swaps
         for (swap_id, chain_send_data) in recovered_onchain_data.chain_send {
             if let Some(to_state) = chain_send_data.derive_partial_state() {
                 let server_lockup_tx_id = chain_send_data
@@ -2349,16 +2352,15 @@ impl LiquidSdk {
                     )
                     .await
                     .inspect_err(|e| debug!("Ignore recovery error: {e}"));
-                if let Some(history) = chain_send_data.lbtc_user_lockup_tx_id {
+                let history_updates = vec![
+                    chain_send_data.lbtc_user_lockup_tx_id,
+                    chain_send_data.lbtc_refund_tx_id,
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<HistoryTxId>>();
+                for history in history_updates {
                     if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped lockup tx {user_lockup_tx_id:?} from tx_map");
-                        self.persister
-                            .insert_or_update_payment_with_wallet_tx(&tx)?;
-                    }
-                }
-                if let Some(history) = chain_send_data.lbtc_refund_tx_id {
-                    if let Some(tx) = tx_map.remove(&history.txid) {
-                        debug!("Popped refund tx {refund_tx_id:?} from tx_map");
                         self.persister
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
@@ -2369,54 +2371,23 @@ impl LiquidSdk {
         let payments = self
             .persister
             .get_payments_by_tx_id(&ListPaymentsRequest::default())?;
-        let ongoing_receive_swaps_by_mrh_script_pubkey = self
-            .persister
-            .list_ongoing_receive_swaps_by_mrh_script_pubkey()?;
 
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
             let maybe_payment = payments.get(&tx_id);
             match maybe_payment {
-                // When no payment is found or its a Lightning payment being received in an
-                // ongoing state, we need to update the payment tx data and handle if this
-                // tx a potential MRH tx
+                // When no payment is found or its a Liquid payment
                 None
                 | Some(Payment {
-                    details: PaymentDetails::Lightning { .. },
-                    payment_type: PaymentType::Receive,
-                    status: PaymentState::Created | PaymentState::Pending,
-                    ..
-                }) => {
-                    let maybe_script_pubkey = tx
-                        .outputs
-                        .iter()
-                        .find(|output| output.is_some())
-                        .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
-                    let mrh_script_pubkey = maybe_script_pubkey.clone().unwrap_or_default();
-
-                    self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
-
-                    if let Some(swap) =
-                        ongoing_receive_swaps_by_mrh_script_pubkey.get(&mrh_script_pubkey)
-                    {
-                        // Update the swap status according to the MRH tx confirmation state
-                        self.receive_swap_handler
-                            .update_swap_from_mrh_tx(swap, tx)
-                            .await?;
-                    } else if maybe_payment.is_none() {
-                        // A completely new payment brought in by this sync, in mempool or confirmed
-                        self.emit_payment_updated(Some(tx_id)).await?;
-                    }
-                }
-
-                // When its a pending Liquid payment we need to confirm the tx
-                Some(Payment {
                     details: PaymentDetails::Liquid { .. },
-                    status: PaymentState::Pending,
                     ..
                 }) => {
-                    if tx.height.is_some() {
-                        // A known payment that was in the mempool, but is now confirmed
+                    let updated_needed = maybe_payment.map_or(true, |payment| {
+                        payment.status == Pending && tx.height.is_some()
+                    });
+                    if updated_needed {
+                        // An unknown tx which needs inserting or a known Liquid payment tx
+                        // that was in the mempool, but is now confirmed
                         self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
                         self.emit_payment_updated(Some(tx_id)).await?;
                     }
