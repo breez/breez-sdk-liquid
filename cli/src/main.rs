@@ -17,6 +17,9 @@ pub(crate) struct Args {
     pub(crate) data_dir: Option<String>,
 
     #[clap(short, long)]
+    pub(crate) cache_dir: Option<String>,
+
+    #[clap(short, long)]
     pub(crate) log_file: Option<String>,
 
     #[clap(short, long, value_parser = parse_network_arg)]
@@ -75,6 +78,7 @@ async fn main() -> Result<()> {
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
+    config.cache_dir = args.cache_dir;
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         config,

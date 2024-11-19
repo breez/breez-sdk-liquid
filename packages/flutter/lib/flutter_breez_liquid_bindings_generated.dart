@@ -846,6 +846,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_resultPtr
           .asFunction<ffi.Pointer<wire_cst_aes_success_action_data_result> Function()>();
 
+  ffi.Pointer<wire_cst_amount> frbgen_breez_liquid_cst_new_box_autoadd_amount() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_amount();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_amountPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_amount> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_amount');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_amount =
+      _frbgen_breez_liquid_cst_new_box_autoadd_amountPtr
+          .asFunction<ffi.Pointer<wire_cst_amount> Function()>();
+
   ffi.Pointer<wire_cst_backup_request> frbgen_breez_liquid_cst_new_box_autoadd_backup_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_backup_request();
   }
@@ -997,6 +1008,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoice =
       _frbgen_breez_liquid_cst_new_box_autoadd_ln_invoicePtr
           .asFunction<ffi.Pointer<wire_cst_ln_invoice> Function()>();
+
+  ffi.Pointer<wire_cst_ln_offer> frbgen_breez_liquid_cst_new_box_autoadd_ln_offer() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_ln_offer();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_offerPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ln_offer> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_ln_offer');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_ln_offer =
+      _frbgen_breez_liquid_cst_new_box_autoadd_ln_offerPtr
+          .asFunction<ffi.Pointer<wire_cst_ln_offer> Function()>();
 
   ffi.Pointer<wire_cst_ln_url_auth_request_data>
       frbgen_breez_liquid_cst_new_box_autoadd_ln_url_auth_request_data() {
@@ -1361,6 +1383,20 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
 
+  ffi.Pointer<wire_cst_list_String> frbgen_breez_liquid_cst_new_list_String(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_String(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_StringPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_String');
+  late final _frbgen_breez_liquid_cst_new_list_String = _frbgen_breez_liquid_cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
   ffi.Pointer<wire_cst_list_fiat_currency> frbgen_breez_liquid_cst_new_list_fiat_currency(
     int len,
   ) {
@@ -1375,6 +1411,21 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_fiat_currency =
       _frbgen_breez_liquid_cst_new_list_fiat_currencyPtr
           .asFunction<ffi.Pointer<wire_cst_list_fiat_currency> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ln_offer_blinded_path> frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_ln_offer_blinded_pathPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_ln_offer_blinded_path> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path');
+  late final _frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path =
+      _frbgen_breez_liquid_cst_new_list_ln_offer_blinded_pathPtr
+          .asFunction<ffi.Pointer<wire_cst_list_ln_offer_blinded_path> Function(int)>();
 
   ffi.Pointer<wire_cst_list_locale_overrides> frbgen_breez_liquid_cst_new_list_locale_overrides(
     int len,
@@ -3997,10 +4048,80 @@ final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_Amount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int amount_msat;
+}
+
+final class wire_cst_Amount_Currency extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> iso4217_code;
+
+  @ffi.Uint64()
+  external int fractional_amount;
+}
+
+final class AmountKind extends ffi.Union {
+  external wire_cst_Amount_Bitcoin Bitcoin;
+
+  external wire_cst_Amount_Currency Currency;
+}
+
+final class wire_cst_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external AmountKind kind;
+}
+
+final class wire_cst_ln_offer_blinded_path extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_String> blinded_hops;
+}
+
+final class wire_cst_list_ln_offer_blinded_path extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_offer_blinded_path> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ln_offer extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_String> chains;
+
+  external ffi.Pointer<wire_cst_amount> min_amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint64> absolute_expiry;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> issuer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> signing_pubkey;
+
+  external ffi.Pointer<wire_cst_list_ln_offer_blinded_path> paths;
+}
+
+final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_offer> offer;
+
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+}
+
 final class SendDestinationKind extends ffi.Union {
   external wire_cst_SendDestination_LiquidAddress LiquidAddress;
 
   external wire_cst_SendDestination_Bolt11 Bolt11;
+
+  external wire_cst_SendDestination_Bolt12 Bolt12;
 }
 
 final class wire_cst_send_destination extends ffi.Struct {
@@ -4257,6 +4378,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
@@ -4371,6 +4494,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
 
   @ffi.Int32()
   external int network;
@@ -4617,6 +4742,10 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
 }
 
+final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ln_offer> offer;
+}
+
 final class wire_cst_InputType_NodeId extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> node_id;
 }
@@ -4647,6 +4776,8 @@ final class InputTypeKind extends ffi.Union {
   external wire_cst_InputType_LiquidAddress LiquidAddress;
 
   external wire_cst_InputType_Bolt11 Bolt11;
+
+  external wire_cst_InputType_Bolt12Offer Bolt12Offer;
 
   external wire_cst_InputType_NodeId NodeId;
 

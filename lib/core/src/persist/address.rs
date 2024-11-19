@@ -108,7 +108,7 @@ mod tests {
         let (_temp_dir, storage) = new_persister()?;
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
-        storage.insert_or_update_reserved_address(&address, 100)?;
+        storage.insert_or_update_reserved_address(address, 100)?;
 
         let maybe_reserved_address = storage.next_expired_reserved_address(99)?;
         // Under the expiry, not popped
@@ -134,13 +134,13 @@ mod tests {
         let (_temp_dir, storage) = new_persister()?;
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
-        storage.insert_or_update_reserved_address(&address, 100)?;
+        storage.insert_or_update_reserved_address(address, 100)?;
 
         let maybe_reserved_address = storage.next_expired_reserved_address(99)?;
         // Under the expiry, not popped
         assert!(maybe_reserved_address.is_none());
 
-        storage.delete_reserved_address(&address)?;
+        storage.delete_reserved_address(address)?;
 
         let maybe_reserved_address = storage.next_expired_reserved_address(101)?;
         // Over the expired, but already deleted

@@ -1765,6 +1765,18 @@ const _: fn() = || {
             let _: String = reason;
         }
     }
+    match None::<crate::bindings::Amount>.unwrap() {
+        crate::bindings::Amount::Bitcoin { amount_msat } => {
+            let _: u64 = amount_msat;
+        }
+        crate::bindings::Amount::Currency {
+            iso4217_code,
+            fractional_amount,
+        } => {
+            let _: String = iso4217_code;
+            let _: u64 = fractional_amount;
+        }
+    }
     {
         let BitcoinAddressData = None::<crate::bindings::BitcoinAddressData>.unwrap();
         let _: String = BitcoinAddressData.address;
@@ -1797,6 +1809,9 @@ const _: fn() = || {
         }
         crate::bindings::InputType::Bolt11 { invoice } => {
             let _: crate::bindings::LNInvoice = invoice;
+        }
+        crate::bindings::InputType::Bolt12Offer { offer } => {
+            let _: crate::bindings::LNOffer = offer;
         }
         crate::bindings::InputType::NodeId { node_id } => {
             let _: String = node_id;
@@ -1840,6 +1855,21 @@ const _: fn() = || {
         let _: Vec<crate::bindings::RouteHint> = LNInvoice.routing_hints;
         let _: Vec<u8> = LNInvoice.payment_secret;
         let _: u64 = LNInvoice.min_final_cltv_expiry_delta;
+    }
+    {
+        let LNOffer = None::<crate::bindings::LNOffer>.unwrap();
+        let _: String = LNOffer.offer;
+        let _: Vec<String> = LNOffer.chains;
+        let _: Option<crate::bindings::Amount> = LNOffer.min_amount;
+        let _: Option<String> = LNOffer.description;
+        let _: Option<u64> = LNOffer.absolute_expiry;
+        let _: Option<String> = LNOffer.issuer;
+        let _: Option<String> = LNOffer.signing_pubkey;
+        let _: Vec<crate::bindings::LnOfferBlindedPath> = LNOffer.paths;
+    }
+    {
+        let LnOfferBlindedPath = None::<crate::bindings::LnOfferBlindedPath>.unwrap();
+        let _: Vec<String> = LnOfferBlindedPath.blinded_hops;
     }
     {
         let LnUrlAuthRequestData = None::<crate::bindings::LnUrlAuthRequestData>.unwrap();
@@ -2182,6 +2212,32 @@ impl SseDecode for crate::bindings::AesSuccessActionDataResult {
     }
 }
 
+impl SseDecode for crate::bindings::Amount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_amountMsat = <u64>::sse_decode(deserializer);
+                return crate::bindings::Amount::Bitcoin {
+                    amount_msat: var_amountMsat,
+                };
+            }
+            1 => {
+                let mut var_iso4217Code = <String>::sse_decode(deserializer);
+                let mut var_fractionalAmount = <u64>::sse_decode(deserializer);
+                return crate::bindings::Amount::Currency {
+                    iso4217_code: var_iso4217Code,
+                    fractional_amount: var_fractionalAmount,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::BackupRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2283,6 +2339,7 @@ impl SseDecode for crate::model::Config {
         let mut var_bitcoinElectrumUrl = <String>::sse_decode(deserializer);
         let mut var_mempoolspaceUrl = <String>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
+        let mut var_cacheDir = <Option<String>>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
@@ -2293,6 +2350,7 @@ impl SseDecode for crate::model::Config {
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
             mempoolspace_url: var_mempoolspaceUrl,
             working_dir: var_workingDir,
+            cache_dir: var_cacheDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
@@ -2432,30 +2490,34 @@ impl SseDecode for crate::bindings::InputType {
                 };
             }
             3 => {
+                let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
+                return crate::bindings::InputType::Bolt12Offer { offer: var_offer };
+            }
+            4 => {
                 let mut var_nodeId = <String>::sse_decode(deserializer);
                 return crate::bindings::InputType::NodeId {
                     node_id: var_nodeId,
                 };
             }
-            4 => {
+            5 => {
                 let mut var_url = <String>::sse_decode(deserializer);
                 return crate::bindings::InputType::Url { url: var_url };
             }
-            5 => {
+            6 => {
                 let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlPay { data: var_data };
             }
-            6 => {
+            7 => {
                 let mut var_data =
                     <crate::bindings::LnUrlWithdrawRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlWithdraw { data: var_data };
             }
-            7 => {
+            8 => {
                 let mut var_data =
                     <crate::bindings::LnUrlAuthRequestData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlAuth { data: var_data };
             }
-            8 => {
+            9 => {
                 let mut var_data = <crate::bindings::LnUrlErrorData>::sse_decode(deserializer);
                 return crate::bindings::InputType::LnUrlError { data: var_data };
             }
@@ -2524,6 +2586,18 @@ impl SseDecode for crate::model::LiquidNetwork {
     }
 }
 
+impl SseDecode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::bindings::FiatCurrency> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2531,6 +2605,20 @@ impl SseDecode for Vec<crate::bindings::FiatCurrency> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::bindings::FiatCurrency>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::bindings::LnOfferBlindedPath> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bindings::LnOfferBlindedPath>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -2716,6 +2804,40 @@ impl SseDecode for crate::bindings::LNInvoice {
             routing_hints: var_routingHints,
             payment_secret: var_paymentSecret,
             min_final_cltv_expiry_delta: var_minFinalCltvExpiryDelta,
+        };
+    }
+}
+
+impl SseDecode for crate::bindings::LNOffer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_offer = <String>::sse_decode(deserializer);
+        let mut var_chains = <Vec<String>>::sse_decode(deserializer);
+        let mut var_minAmount = <Option<crate::bindings::Amount>>::sse_decode(deserializer);
+        let mut var_description = <Option<String>>::sse_decode(deserializer);
+        let mut var_absoluteExpiry = <Option<u64>>::sse_decode(deserializer);
+        let mut var_issuer = <Option<String>>::sse_decode(deserializer);
+        let mut var_signingPubkey = <Option<String>>::sse_decode(deserializer);
+        let mut var_paths = <Vec<crate::bindings::LnOfferBlindedPath>>::sse_decode(deserializer);
+        return crate::bindings::LNOffer {
+            offer: var_offer,
+            chains: var_chains,
+            min_amount: var_minAmount,
+            description: var_description,
+            absolute_expiry: var_absoluteExpiry,
+            issuer: var_issuer,
+            signing_pubkey: var_signingPubkey,
+            paths: var_paths,
+        };
+    }
+}
+
+impl SseDecode for crate::bindings::LnOfferBlindedPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_blindedHops = <Vec<String>>::sse_decode(deserializer);
+        return crate::bindings::LnOfferBlindedPath {
+            blinded_hops: var_blindedHops,
         };
     }
 }
@@ -3147,6 +3269,17 @@ impl SseDecode for Option<String> {
     }
 }
 
+impl SseDecode for Option<crate::bindings::Amount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::bindings::Amount>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<bool> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3338,6 +3471,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
+                let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -3346,6 +3480,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     description: var_description,
                     preimage: var_preimage,
                     bolt11: var_bolt11,
+                    bolt12_offer: var_bolt12Offer,
                     payment_hash: var_paymentHash,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
@@ -3898,6 +4033,14 @@ impl SseDecode for crate::model::SendDestination {
                     invoice: var_invoice,
                 };
             }
+            2 => {
+                let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
+                let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+                return crate::model::SendDestination::Bolt12 {
+                    offer: var_offer,
+                    receiver_amount_sat: var_receiverAmountSat,
+                };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -4182,6 +4325,39 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::AesSuccessAct
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::Amount> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::bindings::Amount::Bitcoin { amount_msat } => {
+                [0.into_dart(), amount_msat.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::Amount::Currency {
+                iso4217_code,
+                fractional_amount,
+            } => [
+                1.into_dart(),
+                iso4217_code.into_into_dart().into_dart(),
+                fractional_amount.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::bindings::Amount>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Amount>>
+    for crate::bindings::Amount
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::bindings::Amount> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::BackupRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.backup_path.into_into_dart().into_dart()].into_dart()
@@ -4324,6 +4500,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.bitcoin_electrum_url.into_into_dart().into_dart(),
             self.mempoolspace_url.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
+            self.cache_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
             self.zero_conf_min_fee_rate_msat
@@ -4464,23 +4641,26 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::InputType> {
             crate::bindings::InputType::Bolt11 { invoice } => {
                 [2.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
+            crate::bindings::InputType::Bolt12Offer { offer } => {
+                [3.into_dart(), offer.into_into_dart().into_dart()].into_dart()
+            }
             crate::bindings::InputType::NodeId { node_id } => {
-                [3.into_dart(), node_id.into_into_dart().into_dart()].into_dart()
+                [4.into_dart(), node_id.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::Url { url } => {
-                [4.into_dart(), url.into_into_dart().into_dart()].into_dart()
+                [5.into_dart(), url.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::LnUrlPay { data } => {
-                [5.into_dart(), data.into_into_dart().into_dart()].into_dart()
-            }
-            crate::bindings::InputType::LnUrlWithdraw { data } => {
                 [6.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::LnUrlAuth { data } => {
+            crate::bindings::InputType::LnUrlWithdraw { data } => {
                 [7.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::LnUrlError { data } => {
+            crate::bindings::InputType::LnUrlAuth { data } => {
                 [8.into_dart(), data.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::InputType::LnUrlError { data } => {
+                [9.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -4663,6 +4843,50 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNInvoice>>
     for crate::bindings::LNInvoice
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::LNInvoice> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LNOffer> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.offer.into_into_dart().into_dart(),
+            self.0.chains.into_into_dart().into_dart(),
+            self.0.min_amount.into_into_dart().into_dart(),
+            self.0.description.into_into_dart().into_dart(),
+            self.0.absolute_expiry.into_into_dart().into_dart(),
+            self.0.issuer.into_into_dart().into_dart(),
+            self.0.signing_pubkey.into_into_dart().into_dart(),
+            self.0.paths.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::bindings::LNOffer>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LNOffer>>
+    for crate::bindings::LNOffer
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::bindings::LNOffer> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LnOfferBlindedPath> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.0.blinded_hops.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::bindings::LnOfferBlindedPath>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LnOfferBlindedPath>>
+    for crate::bindings::LnOfferBlindedPath
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::bindings::LnOfferBlindedPath> {
         self.into()
     }
 }
@@ -5251,6 +5475,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                bolt12_offer,
                 payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -5260,6 +5485,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description.into_into_dart().into_dart(),
                 preimage.into_into_dart().into_dart(),
                 bolt11.into_into_dart().into_dart(),
+                bolt12_offer.into_into_dart().into_dart(),
                 payment_hash.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
@@ -5941,6 +6167,15 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
             crate::model::SendDestination::Bolt11 { invoice } => {
                 [1.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
+            crate::model::SendDestination::Bolt12 {
+                offer,
+                receiver_amount_sat,
+            } => [
+                2.into_dart(),
+                offer.into_into_dart().into_dart(),
+                receiver_amount_sat.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -6215,6 +6450,29 @@ impl SseEncode for crate::bindings::AesSuccessActionDataResult {
     }
 }
 
+impl SseEncode for crate::bindings::Amount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::bindings::Amount::Bitcoin { amount_msat } => {
+                <i32>::sse_encode(0, serializer);
+                <u64>::sse_encode(amount_msat, serializer);
+            }
+            crate::bindings::Amount::Currency {
+                iso4217_code,
+                fractional_amount,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(iso4217_code, serializer);
+                <u64>::sse_encode(fractional_amount, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::BackupRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6293,6 +6551,7 @@ impl SseEncode for crate::model::Config {
         <String>::sse_encode(self.bitcoin_electrum_url, serializer);
         <String>::sse_encode(self.mempoolspace_url, serializer);
         <String>::sse_encode(self.working_dir, serializer);
+        <Option<String>>::sse_encode(self.cache_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
@@ -6393,28 +6652,32 @@ impl SseEncode for crate::bindings::InputType {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
-            crate::bindings::InputType::NodeId { node_id } => {
+            crate::bindings::InputType::Bolt12Offer { offer } => {
                 <i32>::sse_encode(3, serializer);
+                <crate::bindings::LNOffer>::sse_encode(offer, serializer);
+            }
+            crate::bindings::InputType::NodeId { node_id } => {
+                <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(node_id, serializer);
             }
             crate::bindings::InputType::Url { url } => {
-                <i32>::sse_encode(4, serializer);
+                <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(url, serializer);
             }
             crate::bindings::InputType::LnUrlPay { data } => {
-                <i32>::sse_encode(5, serializer);
+                <i32>::sse_encode(6, serializer);
                 <crate::bindings::LnUrlPayRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlWithdraw { data } => {
-                <i32>::sse_encode(6, serializer);
+                <i32>::sse_encode(7, serializer);
                 <crate::bindings::LnUrlWithdrawRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlAuth { data } => {
-                <i32>::sse_encode(7, serializer);
+                <i32>::sse_encode(8, serializer);
                 <crate::bindings::LnUrlAuthRequestData>::sse_encode(data, serializer);
             }
             crate::bindings::InputType::LnUrlError { data } => {
-                <i32>::sse_encode(8, serializer);
+                <i32>::sse_encode(9, serializer);
                 <crate::bindings::LnUrlErrorData>::sse_encode(data, serializer);
             }
             _ => {
@@ -6469,12 +6732,32 @@ impl SseEncode for crate::model::LiquidNetwork {
     }
 }
 
+impl SseEncode for Vec<String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <String>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::bindings::FiatCurrency> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::bindings::FiatCurrency>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::bindings::LnOfferBlindedPath> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bindings::LnOfferBlindedPath>::sse_encode(item, serializer);
         }
     }
 }
@@ -6615,6 +6898,27 @@ impl SseEncode for crate::bindings::LNInvoice {
         <Vec<crate::bindings::RouteHint>>::sse_encode(self.routing_hints, serializer);
         <Vec<u8>>::sse_encode(self.payment_secret, serializer);
         <u64>::sse_encode(self.min_final_cltv_expiry_delta, serializer);
+    }
+}
+
+impl SseEncode for crate::bindings::LNOffer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.offer, serializer);
+        <Vec<String>>::sse_encode(self.chains, serializer);
+        <Option<crate::bindings::Amount>>::sse_encode(self.min_amount, serializer);
+        <Option<String>>::sse_encode(self.description, serializer);
+        <Option<u64>>::sse_encode(self.absolute_expiry, serializer);
+        <Option<String>>::sse_encode(self.issuer, serializer);
+        <Option<String>>::sse_encode(self.signing_pubkey, serializer);
+        <Vec<crate::bindings::LnOfferBlindedPath>>::sse_encode(self.paths, serializer);
+    }
+}
+
+impl SseEncode for crate::bindings::LnOfferBlindedPath {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<String>>::sse_encode(self.blinded_hops, serializer);
     }
 }
 
@@ -6955,6 +7259,16 @@ impl SseEncode for Option<String> {
     }
 }
 
+impl SseEncode for Option<crate::bindings::Amount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::bindings::Amount>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<bool> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7114,6 +7428,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 description,
                 preimage,
                 bolt11,
+                bolt12_offer,
                 payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -7123,6 +7438,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <String>::sse_encode(description, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
                 <Option<String>>::sse_encode(bolt11, serializer);
+                <Option<String>>::sse_encode(bolt12_offer, serializer);
                 <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
@@ -7559,6 +7875,14 @@ impl SseEncode for crate::model::SendDestination {
                 <i32>::sse_encode(1, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
+            crate::model::SendDestination::Bolt12 {
+                offer,
+                receiver_amount_sat,
+            } => {
+                <i32>::sse_encode(2, serializer);
+                <crate::bindings::LNOffer>::sse_encode(offer, serializer);
+                <u64>::sse_encode(receiver_amount_sat, serializer);
+            }
             _ => {
                 unimplemented!("");
             }
@@ -7833,6 +8157,27 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::bindings::Amount> for wire_cst_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::Amount {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Bitcoin };
+                    crate::bindings::Amount::Bitcoin {
+                        amount_msat: ans.amount_msat.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.Currency };
+                    crate::bindings::Amount::Currency {
+                        iso4217_code: ans.iso4217_code.cst_decode(),
+                        fractional_amount: ans.fractional_amount.cst_decode(),
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
     impl CstDecode<crate::model::BackupRequest> for wire_cst_backup_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::BackupRequest {
@@ -7884,6 +8229,13 @@ mod io {
         fn cst_decode(self) -> crate::bindings::AesSuccessActionDataResult {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::bindings::AesSuccessActionDataResult>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::bindings::Amount> for *mut wire_cst_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::Amount {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::bindings::Amount>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::BackupRequest> for *mut wire_cst_backup_request {
@@ -7973,6 +8325,13 @@ mod io {
         fn cst_decode(self) -> crate::bindings::LNInvoice {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::bindings::LNInvoice>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::bindings::LNOffer> for *mut wire_cst_ln_offer {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::LNOffer {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::bindings::LNOffer>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::bindings::LnUrlAuthRequestData> for *mut wire_cst_ln_url_auth_request_data {
@@ -8236,6 +8595,7 @@ mod io {
                 bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
                 mempoolspace_url: self.mempoolspace_url.cst_decode(),
                 working_dir: self.working_dir.cst_decode(),
+                cache_dir: self.cache_dir.cst_decode(),
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
@@ -8325,36 +8685,42 @@ mod io {
                     }
                 }
                 3 => {
+                    let ans = unsafe { self.kind.Bolt12Offer };
+                    crate::bindings::InputType::Bolt12Offer {
+                        offer: ans.offer.cst_decode(),
+                    }
+                }
+                4 => {
                     let ans = unsafe { self.kind.NodeId };
                     crate::bindings::InputType::NodeId {
                         node_id: ans.node_id.cst_decode(),
                     }
                 }
-                4 => {
+                5 => {
                     let ans = unsafe { self.kind.Url };
                     crate::bindings::InputType::Url {
                         url: ans.url.cst_decode(),
                     }
                 }
-                5 => {
+                6 => {
                     let ans = unsafe { self.kind.LnUrlPay };
                     crate::bindings::InputType::LnUrlPay {
                         data: ans.data.cst_decode(),
                     }
                 }
-                6 => {
+                7 => {
                     let ans = unsafe { self.kind.LnUrlWithdraw };
                     crate::bindings::InputType::LnUrlWithdraw {
                         data: ans.data.cst_decode(),
                     }
                 }
-                7 => {
+                8 => {
                     let ans = unsafe { self.kind.LnUrlAuth };
                     crate::bindings::InputType::LnUrlAuth {
                         data: ans.data.cst_decode(),
                     }
                 }
-                8 => {
+                9 => {
                     let ans = unsafe { self.kind.LnUrlError };
                     crate::bindings::InputType::LnUrlError {
                         data: ans.data.cst_decode(),
@@ -8398,9 +8764,31 @@ mod io {
             }
         }
     }
+    impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<String> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
     impl CstDecode<Vec<crate::bindings::FiatCurrency>> for *mut wire_cst_list_fiat_currency {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::bindings::FiatCurrency> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
+    impl CstDecode<Vec<crate::bindings::LnOfferBlindedPath>>
+        for *mut wire_cst_list_ln_offer_blinded_path
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::bindings::LnOfferBlindedPath> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -8546,6 +8934,29 @@ mod io {
                 routing_hints: self.routing_hints.cst_decode(),
                 payment_secret: self.payment_secret.cst_decode(),
                 min_final_cltv_expiry_delta: self.min_final_cltv_expiry_delta.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::bindings::LNOffer> for wire_cst_ln_offer {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::LNOffer {
+            crate::bindings::LNOffer {
+                offer: self.offer.cst_decode(),
+                chains: self.chains.cst_decode(),
+                min_amount: self.min_amount.cst_decode(),
+                description: self.description.cst_decode(),
+                absolute_expiry: self.absolute_expiry.cst_decode(),
+                issuer: self.issuer.cst_decode(),
+                signing_pubkey: self.signing_pubkey.cst_decode(),
+                paths: self.paths.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::bindings::LnOfferBlindedPath> for wire_cst_ln_offer_blinded_path {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::bindings::LnOfferBlindedPath {
+            crate::bindings::LnOfferBlindedPath {
+                blinded_hops: self.blinded_hops.cst_decode(),
             }
         }
     }
@@ -8957,6 +9368,7 @@ mod io {
                         description: ans.description.cst_decode(),
                         preimage: ans.preimage.cst_decode(),
                         bolt11: ans.bolt11.cst_decode(),
+                        bolt12_offer: ans.bolt12_offer.cst_decode(),
                         payment_hash: ans.payment_hash.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
@@ -9358,6 +9770,13 @@ mod io {
                         invoice: ans.invoice.cst_decode(),
                     }
                 }
+                2 => {
+                    let ans = unsafe { self.kind.Bolt12 };
+                    crate::model::SendDestination::Bolt12 {
+                        offer: ans.offer.cst_decode(),
+                        receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -9507,6 +9926,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_amount {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: AmountKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_amount {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_backup_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -9593,6 +10025,7 @@ mod io {
                 bitcoin_electrum_url: core::ptr::null_mut(),
                 mempoolspace_url: core::ptr::null_mut(),
                 working_dir: core::ptr::null_mut(),
+                cache_dir: core::ptr::null_mut(),
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
@@ -9785,6 +10218,37 @@ mod io {
         }
     }
     impl Default for wire_cst_ln_invoice {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_ln_offer {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                offer: core::ptr::null_mut(),
+                chains: core::ptr::null_mut(),
+                min_amount: core::ptr::null_mut(),
+                description: core::ptr::null_mut(),
+                absolute_expiry: core::ptr::null_mut(),
+                issuer: core::ptr::null_mut(),
+                signing_pubkey: core::ptr::null_mut(),
+                paths: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_ln_offer {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_ln_offer_blinded_path {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                blinded_hops: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_ln_offer_blinded_path {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -10954,6 +11418,11 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_amount() -> *mut wire_cst_amount {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_amount::new_with_null_ptr())
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_backup_request(
     ) -> *mut wire_cst_backup_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -11049,6 +11518,11 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_ln_invoice::new_with_null_ptr(),
         )
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_offer() -> *mut wire_cst_ln_offer {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_ln_offer::new_with_null_ptr())
     }
 
     #[no_mangle]
@@ -11286,12 +11760,40 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_String(
+        len: i32,
+    ) -> *mut wire_cst_list_String {
+        let wrap = wire_cst_list_String {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_list_fiat_currency(
         len: i32,
     ) -> *mut wire_cst_list_fiat_currency {
         let wrap = wire_cst_list_fiat_currency {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <wire_cst_fiat_currency>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path(
+        len: i32,
+    ) -> *mut wire_cst_list_ln_offer_blinded_path {
+        let wrap = wire_cst_list_ln_offer_blinded_path {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_ln_offer_blinded_path>::new_with_null_ptr(),
                 len,
             ),
             len,
@@ -11455,6 +11957,30 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_amount {
+        tag: i32,
+        kind: AmountKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union AmountKind {
+        Bitcoin: wire_cst_Amount_Bitcoin,
+        Currency: wire_cst_Amount_Currency,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_Amount_Bitcoin {
+        amount_msat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_Amount_Currency {
+        iso4217_code: *mut wire_cst_list_prim_u_8_strict,
+        fractional_amount: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_backup_request {
         backup_path: *mut wire_cst_list_prim_u_8_strict,
     }
@@ -11497,6 +12023,7 @@ mod io {
         bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
         mempoolspace_url: *mut wire_cst_list_prim_u_8_strict,
         working_dir: *mut wire_cst_list_prim_u_8_strict,
+        cache_dir: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,
@@ -11564,6 +12091,7 @@ mod io {
         BitcoinAddress: wire_cst_InputType_BitcoinAddress,
         LiquidAddress: wire_cst_InputType_LiquidAddress,
         Bolt11: wire_cst_InputType_Bolt11,
+        Bolt12Offer: wire_cst_InputType_Bolt12Offer,
         NodeId: wire_cst_InputType_NodeId,
         Url: wire_cst_InputType_Url,
         LnUrlPay: wire_cst_InputType_LnUrlPay,
@@ -11586,6 +12114,11 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_InputType_Bolt11 {
         invoice: *mut wire_cst_ln_invoice,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_InputType_Bolt12Offer {
+        offer: *mut wire_cst_ln_offer,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -11642,8 +12175,20 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_list_String {
+        ptr: *mut *mut wire_cst_list_prim_u_8_strict,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_fiat_currency {
         ptr: *mut wire_cst_fiat_currency,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_list_ln_offer_blinded_path {
+        ptr: *mut wire_cst_ln_offer_blinded_path,
         len: i32,
     }
     #[repr(C)]
@@ -11748,6 +12293,23 @@ mod io {
         routing_hints: *mut wire_cst_list_route_hint,
         payment_secret: *mut wire_cst_list_prim_u_8_strict,
         min_final_cltv_expiry_delta: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_ln_offer {
+        offer: *mut wire_cst_list_prim_u_8_strict,
+        chains: *mut wire_cst_list_String,
+        min_amount: *mut wire_cst_amount,
+        description: *mut wire_cst_list_prim_u_8_strict,
+        absolute_expiry: *mut u64,
+        issuer: *mut wire_cst_list_prim_u_8_strict,
+        signing_pubkey: *mut wire_cst_list_prim_u_8_strict,
+        paths: *mut wire_cst_list_ln_offer_blinded_path,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_ln_offer_blinded_path {
+        blinded_hops: *mut wire_cst_list_String,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -12127,6 +12689,7 @@ mod io {
         description: *mut wire_cst_list_prim_u_8_strict,
         preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt11: *mut wire_cst_list_prim_u_8_strict,
+        bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
@@ -12445,6 +13008,7 @@ mod io {
     pub union SendDestinationKind {
         LiquidAddress: wire_cst_SendDestination_LiquidAddress,
         Bolt11: wire_cst_SendDestination_Bolt11,
+        Bolt12: wire_cst_SendDestination_Bolt12,
         nil__: (),
     }
     #[repr(C)]
@@ -12456,6 +13020,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_Bolt11 {
         invoice: *mut wire_cst_ln_invoice,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SendDestination_Bolt12 {
+        offer: *mut wire_cst_ln_offer,
+        receiver_amount_sat: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

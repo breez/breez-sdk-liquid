@@ -104,6 +104,8 @@ pub trait Swapper: Send + Sync {
         &self,
         invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError>;
+
+    fn get_bolt12_invoice(&self, offer: &str, amount_sat: u64) -> Result<String, PaymentError>;
 }
 
 #[async_trait]
