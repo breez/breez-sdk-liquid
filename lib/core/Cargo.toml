@@ -20,6 +20,8 @@ env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.4.0", features = [
   "chrono",
 ], optional = true }
+# We need at least lightning v0.0.125 for the Bolt12 structs. The lightning version from sdk-common is too old (v0.0.118, matching vls-core).
+lightning = "0.0.125"
 log = { workspace = true }
 lwk_common = "0.7.0"
 lwk_signer = "0.7.0"
@@ -27,7 +29,7 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-s
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "441a9fd50c32098b2887e960c8a4bcc5956da1af", features = ["liquid"]}
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5955216ec4ed003972b4473a77207dfb744da882", features = ["liquid"]}
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"

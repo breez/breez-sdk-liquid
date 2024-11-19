@@ -42,6 +42,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
     SendSwap {
         id: generate_random_string(4),
         invoice: invoice.to_string(),
+        bolt12_offer: None,
         payment_hash: Some(payment_hash.to_string()),
         description: Some("Send to BTC lightning".to_string()),
         preimage: None,

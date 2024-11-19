@@ -413,4 +413,10 @@ impl Swapper for BoltzSwapper {
         )
         .map_err(Into::into)
     }
+
+    fn get_bolt12_invoice(&self, offer: &str, amount_sat: u64) -> Result<String, PaymentError> {
+        let invoice_res = self.client.get_bolt12_invoice(offer, amount_sat)?;
+        info!("Received BOLT12 invoice response: {invoice_res:?}");
+        Ok(invoice_res.invoice)
+    }
 }

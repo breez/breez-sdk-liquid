@@ -21,6 +21,7 @@ impl Persister {
                 id,
                 id_hash,
                 invoice,
+                bolt12_offer,
                 payment_hash,
                 description,
                 payer_amount_sat,
@@ -32,13 +33,14 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
             &send_swap.id,
             &id_hash,
             &send_swap.invoice,
+            &send_swap.bolt12_offer,
             &send_swap.payment_hash,
             &send_swap.description,
             &send_swap.payer_amount_sat,
@@ -88,6 +90,7 @@ impl Persister {
             SELECT
                 id,
                 invoice,
+                bolt12_offer,
                 payment_hash,
                 description,
                 preimage,
@@ -126,17 +129,18 @@ impl Persister {
         Ok(SendSwap {
             id: row.get(0)?,
             invoice: row.get(1)?,
-            payment_hash: row.get(2)?,
-            description: row.get(3)?,
-            preimage: row.get(4)?,
-            payer_amount_sat: row.get(5)?,
-            receiver_amount_sat: row.get(6)?,
-            create_response_json: row.get(7)?,
-            refund_private_key: row.get(8)?,
-            lockup_tx_id: row.get(9)?,
-            refund_tx_id: row.get(10)?,
-            created_at: row.get(11)?,
-            state: row.get(12)?,
+            bolt12_offer: row.get(2)?,
+            payment_hash: row.get(3)?,
+            description: row.get(4)?,
+            preimage: row.get(5)?,
+            payer_amount_sat: row.get(6)?,
+            receiver_amount_sat: row.get(7)?,
+            create_response_json: row.get(8)?,
+            refund_private_key: row.get(9)?,
+            lockup_tx_id: row.get(10)?,
+            refund_tx_id: row.get(11)?,
+            created_at: row.get(12)?,
+            state: row.get(13)?,
         })
     }
 

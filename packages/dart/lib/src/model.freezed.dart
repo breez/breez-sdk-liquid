@@ -793,6 +793,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String description,
       String? preimage,
       String? bolt11,
+      String? bolt12Offer,
       String? paymentHash,
       String? refundTxId,
       BigInt? refundTxAmountSat});
@@ -815,6 +816,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? description = null,
     Object? preimage = freezed,
     Object? bolt11 = freezed,
+    Object? bolt12Offer = freezed,
     Object? paymentHash = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
@@ -835,6 +837,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
       bolt11: freezed == bolt11
           ? _value.bolt11
           : bolt11 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      bolt12Offer: freezed == bolt12Offer
+          ? _value.bolt12Offer
+          : bolt12Offer // ignore: cast_nullable_to_non_nullable
               as String?,
       paymentHash: freezed == paymentHash
           ? _value.paymentHash
@@ -860,6 +866,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       required this.description,
       this.preimage,
       this.bolt11,
+      this.bolt12Offer,
       this.paymentHash,
       this.refundTxId,
       this.refundTxAmountSat})
@@ -876,11 +883,13 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String? preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   @override
   final String? bolt11;
+  @override
+  final String? bolt12Offer;
 
   /// The payment hash of the invoice
   @override
@@ -896,7 +905,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -908,6 +917,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.description, description) || other.description == description) &&
             (identical(other.preimage, preimage) || other.preimage == preimage) &&
             (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
+            (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
@@ -915,8 +925,8 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(runtimeType, swapId, description, preimage, bolt11, bolt12Offer,
+      paymentHash, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -933,6 +943,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       required final String description,
       final String? preimage,
       final String? bolt11,
+      final String? bolt12Offer,
       final String? paymentHash,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
@@ -947,10 +958,11 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
   String? get preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   String? get bolt11;
+  String? get bolt12Offer;
 
   /// The payment hash of the invoice
   String? get paymentHash;
@@ -1918,5 +1930,95 @@ abstract class SendDestination_Bolt11 extends SendDestination {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  factory _$$SendDestination_Bolt12ImplCopyWith(
+          _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
+      __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LNOffer offer, BigInt receiverAmountSat});
+}
+
+/// @nodoc
+class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
+    extends _$SendDestinationCopyWithImpl<$Res, _$SendDestination_Bolt12Impl>
+    implements _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  __$$SendDestination_Bolt12ImplCopyWithImpl(
+      _$SendDestination_Bolt12Impl _value, $Res Function(_$SendDestination_Bolt12Impl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? offer = null,
+    Object? receiverAmountSat = null,
+  }) {
+    return _then(_$SendDestination_Bolt12Impl(
+      offer: null == offer
+          ? _value.offer
+          : offer // ignore: cast_nullable_to_non_nullable
+              as LNOffer,
+      receiverAmountSat: null == receiverAmountSat
+          ? _value.receiverAmountSat
+          : receiverAmountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
+  const _$SendDestination_Bolt12Impl({required this.offer, required this.receiverAmountSat}) : super._();
+
+  @override
+  final LNOffer offer;
+  @override
+  final BigInt receiverAmountSat;
+
+  @override
+  String toString() {
+    return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SendDestination_Bolt12Impl &&
+            (identical(other.offer, offer) || other.offer == offer) &&
+            (identical(other.receiverAmountSat, receiverAmountSat) ||
+                other.receiverAmountSat == receiverAmountSat));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, offer, receiverAmountSat);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
+      __$$SendDestination_Bolt12ImplCopyWithImpl<_$SendDestination_Bolt12Impl>(this, _$identity);
+}
+
+abstract class SendDestination_Bolt12 extends SendDestination {
+  const factory SendDestination_Bolt12(
+      {required final LNOffer offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
+  const SendDestination_Bolt12._() : super._();
+
+  LNOffer get offer;
+  BigInt get receiverAmountSat;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }

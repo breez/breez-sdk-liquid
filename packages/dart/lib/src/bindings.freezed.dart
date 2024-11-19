@@ -204,6 +204,191 @@ abstract class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDa
 }
 
 /// @nodoc
+mixin _$Amount {}
+
+/// @nodoc
+abstract class $AmountCopyWith<$Res> {
+  factory $AmountCopyWith(Amount value, $Res Function(Amount) then) = _$AmountCopyWithImpl<$Res, Amount>;
+}
+
+/// @nodoc
+class _$AmountCopyWithImpl<$Res, $Val extends Amount> implements $AmountCopyWith<$Res> {
+  _$AmountCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+abstract class _$$Amount_BitcoinImplCopyWith<$Res> {
+  factory _$$Amount_BitcoinImplCopyWith(
+          _$Amount_BitcoinImpl value, $Res Function(_$Amount_BitcoinImpl) then) =
+      __$$Amount_BitcoinImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({BigInt amountMsat});
+}
+
+/// @nodoc
+class __$$Amount_BitcoinImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_BitcoinImpl>
+    implements _$$Amount_BitcoinImplCopyWith<$Res> {
+  __$$Amount_BitcoinImplCopyWithImpl(_$Amount_BitcoinImpl _value, $Res Function(_$Amount_BitcoinImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? amountMsat = null,
+  }) {
+    return _then(_$Amount_BitcoinImpl(
+      amountMsat: null == amountMsat
+          ? _value.amountMsat
+          : amountMsat // ignore: cast_nullable_to_non_nullable
+              as BigInt,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$Amount_BitcoinImpl extends Amount_Bitcoin {
+  const _$Amount_BitcoinImpl({required this.amountMsat}) : super._();
+
+  @override
+  final BigInt amountMsat;
+
+  @override
+  String toString() {
+    return 'Amount.bitcoin(amountMsat: $amountMsat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$Amount_BitcoinImpl &&
+            (identical(other.amountMsat, amountMsat) || other.amountMsat == amountMsat));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, amountMsat);
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$Amount_BitcoinImplCopyWith<_$Amount_BitcoinImpl> get copyWith =>
+      __$$Amount_BitcoinImplCopyWithImpl<_$Amount_BitcoinImpl>(this, _$identity);
+}
+
+abstract class Amount_Bitcoin extends Amount {
+  const factory Amount_Bitcoin({required final BigInt amountMsat}) = _$Amount_BitcoinImpl;
+  const Amount_Bitcoin._() : super._();
+
+  BigInt get amountMsat;
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$Amount_BitcoinImplCopyWith<_$Amount_BitcoinImpl> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$Amount_CurrencyImplCopyWith<$Res> {
+  factory _$$Amount_CurrencyImplCopyWith(
+          _$Amount_CurrencyImpl value, $Res Function(_$Amount_CurrencyImpl) then) =
+      __$$Amount_CurrencyImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String iso4217Code, BigInt fractionalAmount});
+}
+
+/// @nodoc
+class __$$Amount_CurrencyImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_CurrencyImpl>
+    implements _$$Amount_CurrencyImplCopyWith<$Res> {
+  __$$Amount_CurrencyImplCopyWithImpl(
+      _$Amount_CurrencyImpl _value, $Res Function(_$Amount_CurrencyImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? iso4217Code = null,
+    Object? fractionalAmount = null,
+  }) {
+    return _then(_$Amount_CurrencyImpl(
+      iso4217Code: null == iso4217Code
+          ? _value.iso4217Code
+          : iso4217Code // ignore: cast_nullable_to_non_nullable
+              as String,
+      fractionalAmount: null == fractionalAmount
+          ? _value.fractionalAmount
+          : fractionalAmount // ignore: cast_nullable_to_non_nullable
+              as BigInt,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$Amount_CurrencyImpl extends Amount_Currency {
+  const _$Amount_CurrencyImpl({required this.iso4217Code, required this.fractionalAmount}) : super._();
+
+  @override
+  final String iso4217Code;
+  @override
+  final BigInt fractionalAmount;
+
+  @override
+  String toString() {
+    return 'Amount.currency(iso4217Code: $iso4217Code, fractionalAmount: $fractionalAmount)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$Amount_CurrencyImpl &&
+            (identical(other.iso4217Code, iso4217Code) || other.iso4217Code == iso4217Code) &&
+            (identical(other.fractionalAmount, fractionalAmount) ||
+                other.fractionalAmount == fractionalAmount));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, iso4217Code, fractionalAmount);
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$Amount_CurrencyImplCopyWith<_$Amount_CurrencyImpl> get copyWith =>
+      __$$Amount_CurrencyImplCopyWithImpl<_$Amount_CurrencyImpl>(this, _$identity);
+}
+
+abstract class Amount_Currency extends Amount {
+  const factory Amount_Currency({required final String iso4217Code, required final BigInt fractionalAmount}) =
+      _$Amount_CurrencyImpl;
+  const Amount_Currency._() : super._();
+
+  String get iso4217Code;
+  BigInt get fractionalAmount;
+
+  /// Create a copy of Amount
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$Amount_CurrencyImplCopyWith<_$Amount_CurrencyImpl> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$InputType {}
 
 /// @nodoc
@@ -460,6 +645,85 @@ abstract class InputType_Bolt11 extends InputType {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InputType_Bolt11ImplCopyWith<_$InputType_Bolt11Impl> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$InputType_Bolt12OfferImplCopyWith<$Res> {
+  factory _$$InputType_Bolt12OfferImplCopyWith(
+          _$InputType_Bolt12OfferImpl value, $Res Function(_$InputType_Bolt12OfferImpl) then) =
+      __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LNOffer offer});
+}
+
+/// @nodoc
+class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
+    extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12OfferImpl>
+    implements _$$InputType_Bolt12OfferImplCopyWith<$Res> {
+  __$$InputType_Bolt12OfferImplCopyWithImpl(
+      _$InputType_Bolt12OfferImpl _value, $Res Function(_$InputType_Bolt12OfferImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? offer = null,
+  }) {
+    return _then(_$InputType_Bolt12OfferImpl(
+      offer: null == offer
+          ? _value.offer
+          : offer // ignore: cast_nullable_to_non_nullable
+              as LNOffer,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
+  const _$InputType_Bolt12OfferImpl({required this.offer}) : super._();
+
+  @override
+  final LNOffer offer;
+
+  @override
+  String toString() {
+    return 'InputType.bolt12Offer(offer: $offer)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$InputType_Bolt12OfferImpl &&
+            (identical(other.offer, offer) || other.offer == offer));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, offer);
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
+      __$$InputType_Bolt12OfferImplCopyWithImpl<_$InputType_Bolt12OfferImpl>(this, _$identity);
+}
+
+abstract class InputType_Bolt12Offer extends InputType {
+  const factory InputType_Bolt12Offer({required final LNOffer offer}) = _$InputType_Bolt12OfferImpl;
+  const InputType_Bolt12Offer._() : super._();
+
+  LNOffer get offer;
+
+  /// Create a copy of InputType
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc

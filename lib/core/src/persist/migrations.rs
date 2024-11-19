@@ -183,5 +183,6 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
 
         DROP TABLE old_chain_swaps;
         ",
+        "ALTER TABLE send_swaps ADD COLUMN bolt12_offer TEXT;",
     ]
 }
