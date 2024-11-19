@@ -549,4 +549,69 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_sync_clean() -> Result<()> {
+        let (_temp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+
+        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
+        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
+        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
+        let sync_service =
+            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+
+        // Clean incoming
+        let record = Record::new(
+            SyncData::Receive(new_receive_sync_data()),
+            1,
+            signer.clone(),
+        )?;
+        incoming_tx.send(record).await?;
+        sync_service.pull().await?;
+
+        let incoming_records = persister.get_incoming_records()?;
+        assert_eq!(incoming_records.len(), 0); // Records have been cleaned
+
+        let mut inapplicable_record = Record::new(
+            SyncData::Receive(new_receive_sync_data()),
+            2,
+            signer.clone(),
+        )?;
+        inapplicable_record.schema_version = "9.9.9".to_string();
+        incoming_tx.send(inapplicable_record).await?;
+        sync_service.pull().await?;
+
+        let incoming_records = persister.get_incoming_records()?;
+        assert_eq!(incoming_records.len(), 1); // Inapplicable records are stored for later
+
+        // Clean outgoing
+        let swap = new_send_swap(None);
+        persister.insert_send_swap(&swap)?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 1); // Changes have been set
+
+        sync_service.push().await?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
+
+        let new_preimage = Some("new-preimage");
+        persister.try_handle_send_swap_update(
+            &swap.id,
+            PaymentState::Pending,
+            new_preimage.clone(),
+            None,
+            None,
+        )?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 1); // Changes have been set
+
+        sync_service.push().await?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
+
+        Ok(())
+    }
 }
