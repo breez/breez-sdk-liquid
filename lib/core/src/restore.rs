@@ -161,7 +161,11 @@ pub(crate) struct RecoveredOnchainData {
 }
 
 impl LiquidSdk {
-    pub(crate) async fn get_monitored_swaps_list(&self, height: u32) -> Result<SwapsList> {
+    pub(crate) async fn get_monitored_swaps_list(&self) -> Result<SwapsList> {
+        let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+        let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+        let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
+
         let send_swaps = self.persister.list_pending_send_swaps()?;
         let receive_swaps = self.persister.list_ongoing_receive_swaps()?;
         let chain_swaps: Vec<ChainSwap> = self
@@ -170,10 +174,13 @@ impl LiquidSdk {
             .into_iter()
             .filter(|swap| match swap.direction {
                 Direction::Incoming => {
-                    height
+                    bitcoin_height
                         <= swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
                 }
-                Direction::Outgoing => true,
+                Direction::Outgoing => {
+                    !final_swap_states.contains(&swap.state)
+                        && liquid_height <= swap.timeout_block_height
+                }
             })
             .collect();
         let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) = chain_swaps
@@ -338,6 +345,12 @@ impl LiquidSdk {
                         }
                     }
                 }
+                0 => {
+                    debug!(
+                        "No script history found while recovering data for Receive Swap {swap_id}"
+                    );
+                    (None, None)
+                }
                 n => {
                     info!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
                     (None, None)
@@ -416,6 +429,12 @@ impl LiquidSdk {
                         false => (Some(second_tx_id), Some(first_tx_id)),
                     }
                 }
+                0 => {
+                    debug!(
+                        "No BTC script history found while recovering data for Chain Send Swap {swap_id}"
+                    );
+                    (None, None)
+                }
                 n => {
                     info!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
                     (None, None)
@@ -469,6 +488,12 @@ impl LiquidSdk {
                         };
                     (Some(lockup_tx_id.clone()), Some(claim_tx_id.clone()))
                 }
+                0 => {
+                    debug!(
+                        "No L-BTC script history found while recovering data for Chain Receive Swap {swap_id}"
+                    );
+                    (None, None)
+                }
                 n => {
                     info!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
@@ -513,6 +538,12 @@ impl LiquidSdk {
                         true => (Some(first_tx_id), Some(second_tx_id)),
                         false => (Some(second_tx_id), Some(first_tx_id)),
                     }
+                }
+                0 => {
+                    debug!(
+                        "No BTC script history found while recovering data for Chain Receive Swap {swap_id}"
+                    );
+                    (None, None)
                 }
                 n => {
                     info!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");

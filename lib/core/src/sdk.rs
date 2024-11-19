@@ -2221,9 +2221,8 @@ impl LiquidSdk {
             self.onchain_wallet.full_scan().await?;
         }
 
-        let height = self.liquid_chain_service.lock().await.tip().await?;
         let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
-        let swaps_list = self.get_monitored_swaps_list(height).await?;
+        let swaps_list = self.get_monitored_swaps_list().await?;
         let recovered_onchain_data = self
             .recover_from_onchain(TxMap::from_raw_tx_map(tx_map.clone()), swaps_list)
             .await?;
