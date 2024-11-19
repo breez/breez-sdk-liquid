@@ -1308,18 +1308,17 @@ impl Payment {
             // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
             destination: match &swap {
-                Some(
-                    PaymentSwapData {
-                        swap_type: PaymentSwapType::Receive,
-                        bolt11,
-                        ..
-                    }
-                    | PaymentSwapData {
-                        swap_type: PaymentSwapType::Send,
-                        bolt11,
-                        ..
-                    },
-                ) => bolt11.clone(),
+                Some(PaymentSwapData {
+                    swap_type: PaymentSwapType::Receive,
+                    bolt11,
+                    ..
+                }) => bolt11.clone(),
+                Some(PaymentSwapData {
+                    swap_type: PaymentSwapType::Send,
+                    bolt11,
+                    bolt12_offer,
+                    ..
+                }) => bolt11.clone().or(bolt12_offer.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
                     claim_address,
