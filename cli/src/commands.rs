@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use breez_sdk_liquid::prelude::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -21,13 +21,9 @@ use serde_json::to_string_pretty;
 pub(crate) enum Command {
     /// Send a payment directly or via a swap
     SendPayment {
-        /// Invoice which has to be paid (BOLT11)
+        /// Invoice which has to be paid
         #[arg(long)]
         invoice: Option<String>,
-
-        /// BOLT12 offer. If specified, amount_sat must also be set.
-        #[arg(long)]
-        offer: Option<String>,
 
         /// Either BIP21 URI or Liquid address we intend to pay to
         #[arg(long)]
@@ -294,12 +290,12 @@ pub(crate) async fn handle_command(
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
+                        anyhow::anyhow!("Could not build BIP21 from address data: {e:?}")
                     })?))
                 }
                 InputType::BitcoinAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
+                        anyhow::anyhow!("Could not build BIP21 from address data: {e:?}")
                     })?))
                 }
                 _ => {}
@@ -316,30 +312,25 @@ pub(crate) async fn handle_command(
         }
         Command::SendPayment {
             invoice,
-            offer,
             address,
             amount_sat,
             drain,
             delay,
         } => {
-            let destination = match (invoice, offer, address) {
-                (Some(invoice), None, None) => Ok(invoice),
-                (None, Some(offer), None) => match amount_sat {
-                    Some(_) => Ok(offer),
-                    None => Err(anyhow!(
-                        "Must specify an amount for a BOLT12 offer."
+            let destination = match (invoice, address) {
+                (None, None) => {
+                    return Err(anyhow::anyhow!(
+                        "Must specify either an invoice or a direct/BIP21 address."
                     ))
-                },
-                (None, None, Some(address)) => Ok(address),
-                (Some(_), _, Some(_)) => {
-                    Err(anyhow::anyhow!(
+                }
+                (Some(invoice), None) => invoice,
+                (None, Some(address)) => address,
+                (Some(_), Some(_)) => {
+                    return Err(anyhow::anyhow!(
                         "Cannot specify both invoice and address at the same time."
                     ))
                 }
-                _ => Err(anyhow!(
-                    "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
-                ))
-            }?;
+            };
             let amount = match (amount_sat, drain.unwrap_or(false)) {
                 (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
                 (_, true) => Some(PayAmount::Drain),
@@ -501,7 +492,7 @@ pub(crate) async fn handle_command(
             match maybe_payment {
                 Some(payment) => command_result!(payment),
                 None => {
-                    return Err(anyhow!("Payment not found."));
+                    return Err(anyhow::anyhow!("Payment not found."));
                 }
             }
         }
@@ -604,7 +595,7 @@ pub(crate) async fn handle_command(
                         .await?;
                     Ok(pay_res)
                 }
-                _ => Err(anyhow!("Invalid input")),
+                _ => Err(anyhow::anyhow!("Invalid input")),
             }?;
 
             command_result!(res)
@@ -628,7 +619,7 @@ pub(crate) async fn handle_command(
                         .await?;
                     Ok(withdraw_res)
                 }
-                _ => Err(anyhow!("Invalid input")),
+                _ => Err(anyhow::anyhow!("Invalid input")),
             }?;
 
             command_result!(res)
@@ -641,7 +632,7 @@ pub(crate) async fn handle_command(
                     let auth_res = sdk.lnurl_auth(ad).await?;
                     serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())
                 }
-                _ => Err(anyhow!("Unexpected result type")),
+                _ => Err(anyhow::anyhow!("Unexpected result type")),
             }?;
 
             command_result!(res)

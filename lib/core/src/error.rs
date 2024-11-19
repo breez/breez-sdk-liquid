@@ -125,12 +125,6 @@ pub enum PaymentError {
     SignerError { err: String },
 }
 impl PaymentError {
-    pub(crate) fn generic(err: &str) -> Self {
-        Self::Generic {
-            err: err.to_string(),
-        }
-    }
-
     pub(crate) fn invalid_invoice(err: &str) -> Self {
         Self::InvalidInvoice {
             err: err.to_string(),
@@ -139,12 +133,6 @@ impl PaymentError {
 
     pub(crate) fn receive_error(err: &str) -> Self {
         Self::ReceiveError {
-            err: err.to_string(),
-        }
-    }
-
-    pub(crate) fn amount_missing(err: &str) -> Self {
-        Self::AmountMissing {
             err: err.to_string(),
         }
     }

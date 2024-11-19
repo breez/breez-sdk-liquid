@@ -309,8 +309,4 @@ impl Swapper for MockSwapper {
         // Ok(Some(("".to_string(), 0.0)))
         unimplemented!()
     }
-
-    fn get_bolt12_invoice(&self, _offer: &str, _amount_sat: u64) -> Result<String, PaymentError> {
-        unimplemented!()
-    }
 }

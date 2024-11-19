@@ -617,11 +617,10 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
     String? preimage,
 
-    /// Represents the Bolt11 invoice associated with a payment
+    /// Represents the invoice associated with a payment
     /// In the case of a Send payment, this is the invoice paid by the swapper
     /// In the case of a Receive payment, this is the invoice paid by the user
     String? bolt11,
-    String? bolt12Offer,
 
     /// The payment hash of the invoice
     String? paymentHash,
@@ -1008,7 +1007,7 @@ class PrepareRefundResponse {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendRequest {
   /// The destination we intend to pay to.
-  /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
+  /// Supports BIP21 URIs, BOLT11 invoices and Liquid addresses
   final String destination;
 
   /// Should only be set when paying directly onchain or to a BIP21 URI
@@ -1264,10 +1263,6 @@ sealed class SendDestination with _$SendDestination {
   const factory SendDestination.bolt11({
     required LNInvoice invoice,
   }) = SendDestination_Bolt11;
-  const factory SendDestination.bolt12({
-    required LNOffer offer,
-    required BigInt receiverAmountSat,
-  }) = SendDestination_Bolt12;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

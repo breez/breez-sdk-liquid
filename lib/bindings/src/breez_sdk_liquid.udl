@@ -39,32 +39,10 @@ dictionary RouteHintHop {
 };
 
 [Enum]
-interface Amount {
-    Bitcoin(u64 amount_msat);
-    Currency(string iso4217_code, u64 fractional_amount);
-};
-
-dictionary LnOfferBlindedPath {
-    sequence<string> blinded_hops;
-};
-
-dictionary LNOffer {
-    string offer;
-    sequence<string> chains;
-    sequence<LnOfferBlindedPath> paths;
-    string? description;
-    string? signing_pubkey;
-    Amount? min_amount;
-    u64? absolute_expiry;
-    string? issuer;
-};
-
-[Enum]
 interface InputType {
     BitcoinAddress(BitcoinAddressData address);
     LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
-    Bolt12Offer(LNOffer offer);
     NodeId(string node_id);
     Url(string url);
     LnUrlPay(LnUrlPayRequestData data);
@@ -403,7 +381,6 @@ dictionary PrepareSendRequest {
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
     Bolt11(LNInvoice invoice);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat);
 };
 
 dictionary PrepareSendResponse {
@@ -534,7 +511,7 @@ interface GetPaymentRequest {
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string destination, string description);
     Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
