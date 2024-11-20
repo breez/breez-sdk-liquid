@@ -137,6 +137,12 @@ impl PaymentError {
         }
     }
 
+    pub(crate) fn invalid_network(err: &str) -> Self {
+        Self::InvalidNetwork {
+            err: err.to_string(),
+        }
+    }
+
     pub(crate) fn receive_error(err: &str) -> Self {
         Self::ReceiveError {
             err: err.to_string(),
