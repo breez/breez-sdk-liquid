@@ -473,25 +473,42 @@ impl LiquidSdk {
                         Pending => {
                             match &payment.details.get_swap_id() {
                                 Some(swap_id) => match self.persister.fetch_swap_by_id(swap_id)? {
-                                    Swap::Chain(ChainSwap { claim_tx_id, .. })
-                                    | Swap::Receive(ReceiveSwap { claim_tx_id, .. }) => {
-                                        match claim_tx_id {
-                                            Some(_) => {
-                                                // The claim tx has now been broadcast
-                                                self.notify_event_listeners(
-                                                    SdkEvent::PaymentWaitingConfirmation {
-                                                        details: payment,
-                                                    },
-                                                )
-                                                .await?
-                                            }
-                                            None => {
-                                                // The lockup tx is in the mempool/confirmed
-                                                self.notify_event_listeners(
-                                                    SdkEvent::PaymentPending { details: payment },
-                                                )
-                                                .await?
-                                            }
+                                    Swap::Chain(ChainSwap { claim_tx_id, .. }) => {
+                                        if claim_tx_id.is_some() {
+                                            // The claim tx has now been broadcast
+                                            self.notify_event_listeners(
+                                                SdkEvent::PaymentWaitingConfirmation {
+                                                    details: payment,
+                                                },
+                                            )
+                                            .await?
+                                        } else {
+                                            // The lockup tx is in the mempool/confirmed
+                                            self.notify_event_listeners(SdkEvent::PaymentPending {
+                                                details: payment,
+                                            })
+                                            .await?
+                                        }
+                                    }
+                                    Swap::Receive(ReceiveSwap {
+                                        claim_tx_id,
+                                        mrh_tx_id,
+                                        ..
+                                    }) => {
+                                        if claim_tx_id.is_some() || mrh_tx_id.is_some() {
+                                            // The a claim or mrh tx has now been broadcast
+                                            self.notify_event_listeners(
+                                                SdkEvent::PaymentWaitingConfirmation {
+                                                    details: payment,
+                                                },
+                                            )
+                                            .await?
+                                        } else {
+                                            // The lockup tx is in the mempool/confirmed
+                                            self.notify_event_listeners(SdkEvent::PaymentPending {
+                                                details: payment,
+                                            })
+                                            .await?
                                         }
                                     }
                                     Swap::Send(_) => {

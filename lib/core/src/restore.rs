@@ -197,14 +197,12 @@ impl LiquidSdk {
                     receive_chain_swaps,
                 )
             }
-            true => {
-                SwapsList::init(
-                    Default::default(),
-                    receive_swaps,
-                    Default::default(),
-                    Default::default(),
-                )
-            }
+            true => SwapsList::init(
+                Default::default(),
+                receive_swaps,
+                Default::default(),
+                Default::default(),
+            ),
         }
     }
 
