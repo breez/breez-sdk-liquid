@@ -2097,6 +2097,19 @@ impl LiquidSdk {
         Ok(())
     }
 
+    fn validate_buy_bitcoin(&self, amount_sat: u64) -> Result<(), PaymentError> {
+        ensure_sdk!(
+            self.config.network == LiquidNetwork::Mainnet,
+            PaymentError::invalid_network("Can only buy bitcoin on Mainnet")
+        );
+        // The Moonpay API defines BTC amounts as having precision = 5, so only 5 decimals are considered
+        ensure_sdk!(
+            amount_sat % 1_000 == 0,
+            PaymentError::generic("Can only buy sat amounts that are multiples of 1000")
+        );
+        Ok(())
+    }
+
     /// Prepares to buy Bitcoin via a chain swap.
     ///
     /// # Arguments
@@ -2108,11 +2121,7 @@ impl LiquidSdk {
         &self,
         req: &PrepareBuyBitcoinRequest,
     ) -> Result<PrepareBuyBitcoinResponse, PaymentError> {
-        if self.config.network != LiquidNetwork::Mainnet {
-            return Err(PaymentError::InvalidNetwork {
-                err: "Can only buy bitcoin on Mainnet".to_string(),
-            });
-        }
+        self.validate_buy_bitcoin(req.amount_sat)?;
 
         let res = self
             .prepare_receive_payment(&PrepareReceiveRequest {
@@ -2145,6 +2154,8 @@ impl LiquidSdk {
     ///     * `prepare_response` - the [PrepareBuyBitcoinResponse] from calling [LiquidSdk::prepare_buy_bitcoin]
     ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     pub async fn buy_bitcoin(&self, req: &BuyBitcoinRequest) -> Result<String, PaymentError> {
+        self.validate_buy_bitcoin(req.prepare_response.amount_sat)?;
+
         let swap = self
             .create_receive_chain_swap(
                 req.prepare_response.amount_sat,
