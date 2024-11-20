@@ -69,11 +69,6 @@ jobs:
           name: bindings-x86_64-pc-windows-msvc
           path: lib/bindings/langs/csharp/src/runtimes/win-x64/native
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-i686-pc-windows-msvc
-          path: lib/bindings/langs/csharp/src/runtimes/win-x86/native
-
       - name: Update package version
         if: ${{ inputs.package-version }}
         working-directory: lib/bindings/langs/csharp/src

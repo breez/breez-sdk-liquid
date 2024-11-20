@@ -32,7 +32,6 @@ jobs:
         target: [
           aarch64-linux-android,
           armv7-linux-androideabi,
-          i686-linux-android,
           x86_64-linux-android,
         ]
     steps:
@@ -100,11 +99,6 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-i686-linux-android
-          path: x86
-
-      - uses: actions/download-artifact@v4
-        with:
           name: bindings-x86_64-linux-android
           path: x86_64
       
@@ -123,7 +117,6 @@ jobs:
         target: [
           aarch64-linux-android,
           armv7-linux-androideabi,
-          i686-linux-android,
           x86_64-linux-android,
         ]
     steps:
@@ -152,11 +145,6 @@ jobs:
         with:
           name: bindings-armv7-linux-androideabi
           path: armeabi-v7a
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-i686-linux-android
-          path: x86
 
       - uses: actions/download-artifact@v4
         with:

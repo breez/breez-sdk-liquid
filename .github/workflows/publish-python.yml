@@ -151,12 +151,6 @@ jobs:
           path: lib/bindings/langs/python/src/breez_sdk_liquid
 
       - uses: actions/download-artifact@v4
-        if: matrix.arch == 'win32'
-        with:
-          name: bindings-i686-pc-windows-msvc
-          path: lib/bindings/langs/python/src/breez_sdk_liquid
-
-      - uses: actions/download-artifact@v4
         with:
           name: bindings-python
           path: lib/bindings/langs/python/src/breez_sdk_liquid
