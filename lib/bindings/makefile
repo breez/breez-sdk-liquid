@@ -9,7 +9,7 @@ init:
 	rustup target add aarch64-apple-ios x86_64-apple-ios
 	rustup target add aarch64-apple-darwin x86_64-apple-darwin
 	rustup target add aarch64-apple-ios-sim
-	rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+	rustup target add aarch64-linux-android x86_64-linux-android
 	rustup target add aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu
 	@if [ $$(uname) == "Darwin" ] ; then cargo install cargo-lipo ; fi
 	cargo install cbindgen
@@ -36,20 +36,12 @@ all: bindings-swift bindings-android python-darwin react-native
 
 ## Android 
 .PHONY: android
-android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+android: aarch64-linux-android x86_64-linux-android
 	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
 
 aarch64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --release	
 	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/arm64-v8a/
-
-armv7-linux-androideabi: $(SOURCES) ndk-home
-	cargo ndk -t armv7-linux-androideabi -o ffi/kotlin/jniLibs build --release
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ffi/kotlin/jniLibs/armeabi-v7a/
-
-i686-linux-android: $(SOURCES) ndk-home
-	cargo ndk -t i686-linux-android -o ffi/kotlin/jniLibs build --release
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86/
 
 x86_64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --release
