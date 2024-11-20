@@ -31,8 +31,6 @@ jobs:
       matrix:
         target: [
           aarch64-linux-android,
-          armv7-linux-androideabi,
-          i686-linux-android,
           x86_64-linux-android,
         ]
     steps:
@@ -70,11 +68,6 @@ jobs:
         cp lib/target/${{ matrix.target }}/release/libbreez_sdk_liquid_bindings.so dist
 
     - name: Copy libc++_shared
-      if: ${{ matrix.target == 'armv7-linux-androideabi'}}
-      run: cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so dist
-
-    - name: Copy libc++_shared
-      if: ${{ matrix.target != 'armv7-linux-androideabi'}}
       run: cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${{ matrix.target }}/libc++_shared.so dist
 
     - name: Archive release
@@ -92,16 +85,6 @@ jobs:
         with:
           name: bindings-aarch64-linux-android
           path: arm64-v8a
-      
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-armv7-linux-androideabi
-          path: armeabi-v7a
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-i686-linux-android
-          path: x86
 
       - uses: actions/download-artifact@v4
         with:
@@ -122,8 +105,6 @@ jobs:
       matrix:
         target: [
           aarch64-linux-android,
-          armv7-linux-androideabi,
-          i686-linux-android,
           x86_64-linux-android,
         ]
     steps:
@@ -147,16 +128,6 @@ jobs:
         with:
           name: bindings-aarch64-linux-android
           path: arm64-v8a
-      
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-armv7-linux-androideabi
-          path: armeabi-v7a
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: bindings-i686-linux-android
-          path: x86
 
       - uses: actions/download-artifact@v4
         with:
