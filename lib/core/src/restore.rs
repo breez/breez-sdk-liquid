@@ -161,38 +161,51 @@ pub(crate) struct RecoveredOnchainData {
 }
 
 impl LiquidSdk {
-    pub(crate) async fn get_monitored_swaps_list(&self) -> Result<SwapsList> {
-        let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-        let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
-        let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
-
-        let send_swaps = self.persister.list_pending_send_swaps()?;
+    pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<SwapsList> {
         let receive_swaps = self.persister.list_ongoing_receive_swaps()?;
-        let chain_swaps: Vec<ChainSwap> = self
-            .persister
-            .list_chain_swaps()?
-            .into_iter()
-            .filter(|swap| match swap.direction {
-                Direction::Incoming => {
-                    bitcoin_height
-                        <= swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
-                }
-                Direction::Outgoing => {
-                    !final_swap_states.contains(&swap.state)
-                        && liquid_height <= swap.timeout_block_height
-                }
-            })
-            .collect();
-        let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) = chain_swaps
-            .into_iter()
-            .partition(|swap| swap.direction == Direction::Outgoing);
+        match partial_sync {
+            false => {
+                let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
-        SwapsList::init(
-            send_swaps,
-            receive_swaps,
-            send_chain_swaps,
-            receive_chain_swaps,
-        )
+                let send_swaps = self.persister.list_pending_send_swaps()?;
+                let chain_swaps: Vec<ChainSwap> = self
+                    .persister
+                    .list_chain_swaps()?
+                    .into_iter()
+                    .filter(|swap| match swap.direction {
+                        Direction::Incoming => {
+                            bitcoin_height
+                                <= swap.timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                        }
+                        Direction::Outgoing => {
+                            !final_swap_states.contains(&swap.state)
+                                && liquid_height <= swap.timeout_block_height
+                        }
+                    })
+                    .collect();
+                let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) =
+                    chain_swaps
+                        .into_iter()
+                        .partition(|swap| swap.direction == Direction::Outgoing);
+                SwapsList::init(
+                    send_swaps,
+                    receive_swaps,
+                    send_chain_swaps,
+                    receive_chain_swaps,
+                )
+            }
+            true => {
+                SwapsList::init(
+                    Default::default(),
+                    receive_swaps,
+                    Default::default(),
+                    Default::default(),
+                )
+            }
+        }
     }
 
     /// For each swap, recovers data from chain services.
@@ -206,12 +219,14 @@ impl LiquidSdk {
     ///
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
+    /// - `partial_sync`: recovers related scripts like MRH when true, otherwise recovers all scripts.
     pub(crate) async fn recover_from_onchain(
         &self,
         tx_map: TxMap,
         swaps: SwapsList,
+        partial_sync: bool,
     ) -> Result<RecoveredOnchainData> {
-        let histories = self.fetch_swaps_histories(&swaps).await?;
+        let histories = self.fetch_swaps_histories(&swaps, partial_sync).await?;
 
         let recovered_send_data = self
             .recover_send_swap_tx_ids(&tx_map, histories.send)
@@ -1007,62 +1022,65 @@ pub(crate) mod immutable {
             data
         }
 
-        fn get_all_swap_lbtc_scripts(&self) -> Vec<LBtcScript> {
-            let send_swap_scripts: Vec<LBtcScript> = self
-                .send_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.lockup_script)
-                .collect();
-            let receive_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
-                .receive_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
-                .collect();
+        fn get_swap_lbtc_scripts(&self, partial_sync: bool) -> Vec<LBtcScript> {
             let receive_swap_lbtc_mrh_scripts: Vec<LBtcScript> = self
                 .receive_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
                 .map(|imm| imm.mrh_script)
                 .collect();
-            let send_chain_swap_lbtc_lockup_scripts: Vec<LBtcScript> = self
-                .send_chain_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.lockup_script)
-                .collect();
-            let receive_chain_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
-                .receive_chain_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
-                .collect();
-
-            let mut swap_scripts = send_swap_scripts.clone();
-            swap_scripts.extend(receive_swap_lbtc_claim_scripts.clone());
-            swap_scripts.extend(receive_swap_lbtc_mrh_scripts.clone());
-            swap_scripts.extend(send_chain_swap_lbtc_lockup_scripts.clone());
-            swap_scripts.extend(receive_chain_swap_lbtc_claim_scripts.clone());
+            let mut swap_scripts = receive_swap_lbtc_mrh_scripts.clone();
+            if !partial_sync {
+                let send_swap_scripts: Vec<LBtcScript> = self
+                    .send_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                let receive_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
+                    .receive_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                let send_chain_swap_lbtc_lockup_scripts: Vec<LBtcScript> = self
+                    .send_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                let receive_chain_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
+                    .receive_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                swap_scripts.extend(send_swap_scripts.clone());
+                swap_scripts.extend(receive_swap_lbtc_claim_scripts.clone());
+                swap_scripts.extend(send_chain_swap_lbtc_lockup_scripts.clone());
+                swap_scripts.extend(receive_chain_swap_lbtc_claim_scripts.clone());
+            }
             swap_scripts
         }
 
-        fn get_all_swap_btc_scripts(&self) -> Vec<BtcScript> {
-            let send_chain_swap_btc_claim_scripts: Vec<BtcScript> = self
-                .send_chain_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
-                .collect();
-            let receive_chain_swap_btc_lockup_scripts: Vec<BtcScript> = self
-                .receive_chain_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.lockup_script)
-                .collect();
-
-            let mut swap_scripts = send_chain_swap_btc_claim_scripts.clone();
-            swap_scripts.extend(receive_chain_swap_btc_lockup_scripts.clone());
+        fn get_swap_btc_scripts(&self, partial_sync: bool) -> Vec<BtcScript> {
+            let mut swap_scripts = vec![];
+            if !partial_sync {
+                let send_chain_swap_btc_claim_scripts: Vec<BtcScript> = self
+                    .send_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                let receive_chain_swap_btc_lockup_scripts: Vec<BtcScript> = self
+                    .receive_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                swap_scripts.extend(send_chain_swap_btc_claim_scripts.clone());
+                swap_scripts.extend(receive_chain_swap_btc_lockup_scripts.clone());
+            }
             swap_scripts
         }
     }
@@ -1096,8 +1114,9 @@ pub(crate) mod immutable {
         pub(crate) async fn fetch_swaps_histories(
             &self,
             swaps_list: &SwapsList,
+            partial_sync: bool,
         ) -> Result<SwapsHistories> {
-            let swap_lbtc_scripts = swaps_list.get_all_swap_lbtc_scripts();
+            let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts(partial_sync);
 
             let lbtc_script_histories = self
                 .liquid_chain_service
@@ -1118,7 +1137,7 @@ pub(crate) mod immutable {
                     .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
                     .collect();
 
-            let swap_btc_scripts = swaps_list.get_all_swap_btc_scripts();
+            let swap_btc_scripts = swaps_list.get_swap_btc_scripts(partial_sync);
             let btc_script_histories = self
                 .bitcoin_chain_service
                 .lock()

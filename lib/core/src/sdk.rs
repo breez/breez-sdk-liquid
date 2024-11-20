@@ -344,6 +344,9 @@ impl LiquidSdk {
                                     cloned.chain_swap_handler.on_liquid_block(height).await;
                                     cloned.send_swap_handler.on_liquid_block(height).await;
                                     current_liquid_block = height;
+                                } else {
+                                    // Partial sync of wallet txs
+                                    _ = cloned.sync_payments_with_chain_data(true).await;
                                 }
                             },
                             Err(e) => error!("Failed to fetch Liquid tip {e}"),
@@ -2216,15 +2219,17 @@ impl LiquidSdk {
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
-    async fn sync_payments_with_chain_data(&self, with_scan: bool) -> Result<()> {
-        if with_scan {
-            self.onchain_wallet.full_scan().await?;
-        }
+    async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
+        self.onchain_wallet.full_scan().await?;
 
         let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
-        let swaps_list = self.get_monitored_swaps_list().await?;
+        let swaps_list = self.get_monitored_swaps_list(partial_sync).await?;
         let recovered_onchain_data = self
-            .recover_from_onchain(TxMap::from_raw_tx_map(tx_map.clone()), swaps_list)
+            .recover_from_onchain(
+                TxMap::from_raw_tx_map(tx_map.clone()),
+                swaps_list,
+                partial_sync,
+            )
             .await?;
 
         // Loop over the recovered chain data for monitored receive swaps
@@ -2453,12 +2458,12 @@ impl LiquidSdk {
         match is_first_sync {
             true => {
                 self.event_manager.pause_notifications();
-                self.sync_payments_with_chain_data(true).await?;
+                self.sync_payments_with_chain_data(false).await?;
                 self.event_manager.resume_notifications();
                 self.persister.set_is_first_sync_complete(true)?;
             }
             false => {
-                self.sync_payments_with_chain_data(true).await?;
+                self.sync_payments_with_chain_data(false).await?;
             }
         }
         let duration_ms = Instant::now().duration_since(t0).as_millis();
