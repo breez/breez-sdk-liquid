@@ -105,19 +105,66 @@ impl Persister {
         Ok(sync_settings)
     }
 
+    fn set_sync_setting_stmt(con: &Connection) -> rusqlite::Result<Statement> {
+        con.prepare("INSERT OR REPLACE INTO sync_settings(key, value) VALUES(:key, :value)")
+    }
+
     pub(crate) fn set_sync_settings(&self, map: HashMap<&'static str, String>) -> Result<()> {
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         for (key, value) in map {
-            tx.execute(
-                "INSERT OR REPLACE INTO sync_settings(key, value) VALUES(:key, :value)",
-                named_params! {
-                    ":key": key,
-                    ":value": value,
-                },
-            )?;
+            Self::set_sync_setting_stmt(&tx)?.execute(named_params! {
+                ":key": key,
+                ":value": value,
+            })?;
         }
+
+        tx.commit()?;
+
+        Ok(())
+    }
+
+    pub(crate) fn set_new_remote(&self, remote_url: String) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute("DELETE FROM sync_state", [])?;
+        tx.execute("DELETE FROM sync_incoming", [])?;
+        tx.execute("DELETE FROM sync_outgoing", [])?;
+
+        let swap_tables = HashMap::from([
+            ("receive_swaps", RecordType::Receive),
+            ("send_swaps", RecordType::Send),
+            ("chain_swaps", RecordType::Chain),
+        ]);
+        for (table_name, record_type) in swap_tables {
+            let mut stmt = tx.prepare(&format!("SELECT id FROM {table_name}"))?;
+            let mut rows = stmt.query([])?;
+
+            while let Some(row) = rows.next()? {
+                let data_id: String = row.get(0)?;
+                let record_id = Record::get_id_from_record_type(record_type, &data_id);
+
+                tx.execute(
+                    "
+                    INSERT INTO sync_outgoing(record_id, data_id, record_type, commit_time)
+                    VALUES(:record_id, :data_id, :record_type, :commit_time)
+                ",
+                    named_params! {
+                        ":record_id": record_id,
+                        ":data_id": data_id,
+                        ":record_type": record_type,
+                        ":commit_time": utils::now(),
+                    },
+                )?;
+            }
+        }
+
+        Self::set_sync_setting_stmt(&tx)?.execute(named_params! {
+            ":key": "remote_url",
+            ":value": remote_url
+        })?;
 
         tx.commit()?;
 
