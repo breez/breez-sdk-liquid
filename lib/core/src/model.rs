@@ -29,6 +29,7 @@ use crate::utils;
 // Both use f64 for the maximum precision when converting between units
 pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -48,6 +49,8 @@ pub struct Config {
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
+    /// The url of the real-time sync service
+    pub sync_service_url: String,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
@@ -66,6 +69,7 @@ impl Config {
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
         }
@@ -81,6 +85,7 @@ impl Config {
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key,
         }
@@ -260,10 +265,10 @@ pub trait Signer: Send + Sync {
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
 
     /// Encrypts a message using (ECIES)[ecies::encrypt]
-    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 
     /// Decrypts a message using (ECIES)[ecies::decrypt]
-    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError>;
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].

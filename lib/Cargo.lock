@@ -4283,6 +4283,7 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
+ "webpki-roots 0.26.5",
 ]
 
 [[package]]

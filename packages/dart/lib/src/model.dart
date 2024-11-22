@@ -134,6 +134,9 @@ class Config {
   /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
   final int zeroConfMinFeeRateMsat;
 
+  /// The url of the real-time sync service
+  final String syncServiceUrl;
+
   /// Maximum amount in satoshi to accept zero-conf payments with
   /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
@@ -150,6 +153,7 @@ class Config {
     required this.network,
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
+    required this.syncServiceUrl,
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
   });
@@ -164,6 +168,7 @@ class Config {
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
+      syncServiceUrl.hashCode ^
       zeroConfMaxAmountSat.hashCode ^
       breezApiKey.hashCode;
 
@@ -180,6 +185,7 @@ class Config {
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
+          syncServiceUrl == other.syncServiceUrl &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
           breezApiKey == other.breezApiKey;
 }

@@ -111,6 +111,23 @@ impl ChainSwapHandler {
             .fetch_chain_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Chain Swap found for ID {id}"))?;
 
+        if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&swap.id)? {
+            if !sync_state.is_local {
+                let status = &update.status;
+                let swap_state = ChainSwapStates::from_str(status)
+                    .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
+
+                match swap_state {
+                    // If the swap is not local (pulled from real-time sync) we do not claim twice
+                    ChainSwapStates::TransactionServerMempool
+                    | ChainSwapStates::TransactionServerConfirmed => {
+                        return Ok(());
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         match swap.direction {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
@@ -1446,10 +1463,7 @@ impl ChainSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use anyhow::Result;
 
@@ -1460,16 +1474,15 @@ mod tests {
         },
         test_utils::{
             chain_swap::{new_chain_swap, new_chain_swap_handler},
-            persist::new_persister,
+            persist::create_persister,
         },
     };
 
     #[tokio::test]
     async fn test_chain_swap_state_transitions() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
-        let storage = Arc::new(storage);
+        create_persister!(persister);
 
-        let chain_swap_handler = new_chain_swap_handler(storage.clone())?;
+        let chain_swap_handler = new_chain_swap_handler(persister.clone())?;
 
         // Test valid combinations of states
         let all_states = HashSet::from([Created, Pending, Complete, TimedOut, Failed]);
@@ -1493,7 +1506,7 @@ mod tests {
             for allowed_state in allowed_states {
                 let chain_swap =
                     new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
-                storage.insert_chain_swap(&chain_swap)?;
+                persister.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
                     .update_swap_info(&chain_swap.id, *allowed_state, None, None, None, None)
@@ -1517,7 +1530,7 @@ mod tests {
             for disallowed_state in disallowed_states {
                 let chain_swap =
                     new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
-                storage.insert_chain_swap(&chain_swap)?;
+                persister.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
                     .update_swap_info(&chain_swap.id, *disallowed_state, None, None, None, None)

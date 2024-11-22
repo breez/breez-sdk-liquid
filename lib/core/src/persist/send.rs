@@ -57,9 +57,9 @@ impl Persister {
             ),
         )?;
 
-        Self::commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
-
+        self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
         tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(())
     }
@@ -254,9 +254,13 @@ impl Persister {
         )?;
 
         let updated_fields = get_updated_fields!(preimage);
-        Self::commit_outgoing(&tx, swap_id, RecordType::Send, updated_fields)?;
-
+        self.commit_outgoing(&tx, swap_id, RecordType::Send, updated_fields)?;
         tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
 
         Ok(())
     }
@@ -349,13 +353,13 @@ impl InternalCreateSubmarineResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::persist::{new_persister, new_send_swap};
+    use crate::test_utils::persist::{create_persister, new_send_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let send_swap = new_send_swap(None);
 
         storage.insert_send_swap(&send_swap)?;
@@ -371,7 +375,7 @@ mod tests {
 
     #[test]
     fn test_list_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         // List general send swaps
         let range = 0..3;
@@ -397,7 +401,7 @@ mod tests {
 
     #[test]
     fn test_update_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let mut send_swap = new_send_swap(None);
         storage.insert_send_swap(&send_swap)?;

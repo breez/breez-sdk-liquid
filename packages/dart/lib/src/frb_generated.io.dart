@@ -2173,6 +2173,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.zero_conf_min_fee_rate_msat = cst_encode_u_32(apiObj.zeroConfMinFeeRateMsat);
+    wireObj.sync_service_url = cst_encode_String(apiObj.syncServiceUrl);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
     wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
   }
@@ -5977,6 +5978,8 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Uint32()
   external int zero_conf_min_fee_rate_msat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> sync_service_url;
 
   external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
 

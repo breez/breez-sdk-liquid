@@ -85,7 +85,7 @@ impl Record {
         let id = Self::get_id_from_sync_data(&data);
         let data = data.to_bytes()?;
         let data = signer
-            .ecies_encrypt(&data)
+            .ecies_encrypt(data)
             .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
         let schema_version = CURRENT_SCHEMA_VERSION.to_string();
         Ok(Self {
@@ -126,7 +126,7 @@ impl Record {
     }
 
     pub(crate) fn decrypt(self, signer: Arc<Box<dyn Signer>>) -> Result<DecryptedRecord> {
-        let dec_data = signer.ecies_decrypt(self.data.as_slice())?;
+        let dec_data = signer.ecies_decrypt(self.data)?;
         let data = serde_json::from_slice(&dec_data)?;
         Ok(DecryptedRecord {
             id: self.id,
