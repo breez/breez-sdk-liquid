@@ -310,6 +310,7 @@ dictionary Config {
     LiquidNetwork network;
     u64 payment_timeout_sec;
     u32 zero_conf_min_fee_rate_msat;
+    string sync_service_url;
     string? breez_api_key;
     u64? zero_conf_max_amount_sat;
 };
@@ -644,6 +645,12 @@ callback interface Signer {
 
     [Throws=SignerError]
     sequence<u8> hmac_sha256(sequence<u8> msg, string derivation_path);
+
+    [Throws=SignerError]
+    sequence<u8> ecies_encrypt(sequence<u8> msg);
+
+    [Throws=SignerError]
+    sequence<u8> ecies_decrypt(sequence<u8> msg);
 };
 
 interface BindingLiquidSdk {

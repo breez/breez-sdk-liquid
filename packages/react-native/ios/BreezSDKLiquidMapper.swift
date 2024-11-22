@@ -307,6 +307,9 @@ enum BreezSDKLiquidMapper {
         guard let zeroConfMinFeeRateMsat = config["zeroConfMinFeeRateMsat"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRateMsat", typeName: "Config"))
         }
+        guard let syncServiceUrl = config["syncServiceUrl"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "syncServiceUrl", typeName: "Config"))
+        }
         var breezApiKey: String?
         if hasNonNilKey(data: config, key: "breezApiKey") {
             guard let breezApiKeyTmp = config["breezApiKey"] as? String else {
@@ -322,7 +325,7 @@ enum BreezSDKLiquidMapper {
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -334,6 +337,7 @@ enum BreezSDKLiquidMapper {
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
+            "syncServiceUrl": config.syncServiceUrl,
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
         ]

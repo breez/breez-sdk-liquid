@@ -65,6 +65,7 @@ export interface Config {
     network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
+    syncServiceUrl: string
     breezApiKey?: string
     zeroConfMaxAmountSat?: number
 }

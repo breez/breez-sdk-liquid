@@ -55,12 +55,17 @@ impl SyncService {
         }
     }
 
-    pub(crate) async fn run(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
-        self.client.connect(self.remote_url.clone()).await?;
-
-        self.check_remote_change()?;
-
+    pub(crate) async fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
         tokio::spawn(async move {
+            if let Err(err) = self.client.connect(self.remote_url.clone()).await {
+                log::warn!("Could not connect to sync service: {err:?}");
+                return;
+            }
+            if let Err(err) = self.check_remote_change() {
+                log::warn!("Could not check for remote change: {err:?}");
+                return;
+            }
+
             let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
 
             loop {

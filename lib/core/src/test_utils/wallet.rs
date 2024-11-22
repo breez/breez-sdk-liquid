@@ -130,21 +130,17 @@ impl Signer for MockSigner {
         todo!()
     }
 
-    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
         let rc_pub = self.keypair.public_key().to_public_key().to_bytes();
-        Ok(
-            ecies::encrypt(&rc_pub, msg).map_err(|err| SignerError::Generic {
-                err: format!("Could not encrypt data: {err}"),
-            })?,
-        )
+        ecies::encrypt(&rc_pub, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not encrypt data: {err}"),
+        })
     }
 
-    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
         let rc_prv = self.keypair.secret_bytes();
-        Ok(
-            ecies::decrypt(&rc_prv, msg).map_err(|err| SignerError::Generic {
-                err: format!("Could not decrypt data: {err}"),
-            })?,
-        )
+        ecies::decrypt(&rc_prv, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not decrypt data: {err}"),
+        })
     }
 }

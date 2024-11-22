@@ -45,6 +45,9 @@ use crate::{
     utils, *,
 };
 
+use self::sync::client::BreezSyncerClient;
+use self::sync::SyncService;
+
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
@@ -66,6 +69,7 @@ pub struct LiquidSdk {
     pub(crate) shutdown_sender: watch::Sender<()>,
     pub(crate) shutdown_receiver: watch::Receiver<()>,
     pub(crate) send_swap_handler: SendSwapHandler,
+    pub(crate) sync_service: Arc<SyncService>,
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
@@ -205,6 +209,14 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            signer.clone(),
+            syncer_client,
+        ));
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
@@ -221,6 +233,7 @@ impl LiquidSdk {
             shutdown_receiver,
             send_swap_handler,
             receive_swap_handler,
+            sync_service,
             chain_swap_handler,
             buy_bitcoin_service,
         });
@@ -278,6 +291,10 @@ impl LiquidSdk {
             .clone()
             .start(self.shutdown_receiver.clone())
             .await;
+        self.sync_service
+            .clone()
+            .start(self.shutdown_receiver.clone())
+            .await?;
         self.track_swap_updates().await;
         self.track_pending_swaps().await;
 
