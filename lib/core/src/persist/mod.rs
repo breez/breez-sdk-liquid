@@ -19,12 +19,14 @@ use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use migrations::current_migrations;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
+use tokio::sync::mpsc::Sender;
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
+    sync_trigger: Sender<()>,
 }
 
 /// Builds a WHERE clause that checks if `state` is any of the given arguments
@@ -40,7 +42,11 @@ fn get_where_clause_state_in(allowed_states: &[PaymentState]) -> String {
 }
 
 impl Persister {
-    pub fn new(working_dir: &str, network: LiquidNetwork) -> Result<Self> {
+    pub fn new(
+        working_dir: &str,
+        network: LiquidNetwork,
+        sync_trigger: Sender<()>,
+    ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;
@@ -48,6 +54,7 @@ impl Persister {
         Ok(Persister {
             main_db_dir,
             network,
+            sync_trigger,
         })
     }
 
@@ -573,7 +580,7 @@ mod tests {
     use crate::{
         prelude::ListPaymentsRequest,
         test_utils::persist::{
-            new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
+            create_persister, new_payment_tx_data, new_receive_swap, new_send_swap,
         },
     };
 
@@ -581,7 +588,7 @@ mod tests {
 
     #[test]
     fn test_get_payments() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(
@@ -603,7 +610,7 @@ mod tests {
 
     #[test]
     fn test_list_ongoing_swaps() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         storage.insert_send_swap(&new_send_swap(None))?;
         storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;

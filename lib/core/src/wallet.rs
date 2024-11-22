@@ -377,12 +377,13 @@ mod tests {
     use super::*;
     use crate::model::Config;
     use crate::signer::SdkSigner;
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
-    use tempfile::TempDir;
+    use anyhow::Result;
+    use tempdir::TempDir;
 
     #[tokio::test]
-    async fn test_sign_and_check_message() {
+    async fn test_sign_and_check_message() -> Result<()> {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
@@ -390,11 +391,10 @@ mod tests {
         let config = Config::testnet(None);
 
         // Create a temporary directory for working_dir
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new("").unwrap();
         let working_dir = temp_dir.path().to_str().unwrap().to_string();
 
-        let (_temp_dir, storage) = new_persister().unwrap();
-        let storage = Arc::new(storage);
+        create_persister!(storage);
 
         let wallet: Arc<dyn OnchainWallet> = Arc::new(
             LiquidOnchainWallet::new(config, &working_dir, storage, sdk_signer.clone()).unwrap(),
@@ -444,5 +444,6 @@ mod tests {
         );
 
         // The temporary directory will be automatically deleted when temp_dir goes out of scope
+        Ok(())
     }
 }
