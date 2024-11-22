@@ -43,6 +43,18 @@ impl SyncService {
         }
     }
 
+    fn check_remote_change(&self) -> Result<()> {
+        match self
+            .persister
+            .get_sync_settings()?
+            .remote_url
+            .is_some_and(|url| url == self.remote_url)
+        {
+            true => Ok(()),
+            false => self.persister.set_new_remote(self.remote_url.clone()),
+        }
+    }
+
     pub(crate) async fn run(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
         self.client.connect(self.remote_url.clone()).await?;
 
