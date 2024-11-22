@@ -49,6 +49,9 @@ use crate::{
 use ::lightning::offers::invoice::Bolt12Invoice;
 use ::lightning::offers::offer::Offer;
 
+use self::sync::client::BreezSyncerClient;
+use self::sync::SyncService;
+
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
@@ -70,6 +73,7 @@ pub struct LiquidSdk {
     pub(crate) shutdown_sender: watch::Sender<()>,
     pub(crate) shutdown_receiver: watch::Receiver<()>,
     pub(crate) send_swap_handler: SendSwapHandler,
+    pub(crate) sync_service: Arc<SyncService>,
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
@@ -162,8 +166,22 @@ impl LiquidSdk {
             &fingerprint_hex,
         )?;
 
-        let persister = Arc::new(Persister::new(&working_dir, config.network)?);
+        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
+        let persister = Arc::new(Persister::new(
+            &working_dir,
+            config.network,
+            sync_trigger_tx,
+        )?);
         persister.init()?;
+
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            signer.clone(),
+            syncer_client,
+            sync_trigger_rx,
+        ));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             config.clone(),
@@ -233,6 +251,7 @@ impl LiquidSdk {
             shutdown_receiver,
             send_swap_handler,
             receive_swap_handler,
+            sync_service,
             chain_swap_handler,
             buy_bitcoin_service,
         });
@@ -294,6 +313,10 @@ impl LiquidSdk {
             .clone()
             .start(self.shutdown_receiver.clone())
             .await;
+        self.sync_service
+            .clone()
+            .start(self.shutdown_receiver.clone())
+            .await?;
         self.track_swap_updates().await;
         self.track_pending_swaps().await;
 
@@ -881,6 +904,12 @@ impl LiquidSdk {
                 };
             }
             Ok(InputType::Bolt11 { invoice }) => {
+                self.sync_service
+                    .pull()
+                    .await
+                    .map_err(|err| PaymentError::Generic {
+                        err: format!("Could not pull real-time sync changes: {err:?}"),
+                    })?;
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_bolt11_invoice(&invoice.bolt11)?;
 
@@ -2771,7 +2800,7 @@ mod tests {
         test_utils::{
             chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
-            persist::{new_persister, new_receive_swap, new_send_swap},
+            persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
             status_stream::MockStatusStream,
             swapper::MockSwapper,
@@ -2876,8 +2905,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_receive_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
@@ -2943,8 +2971,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_send_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
@@ -3000,8 +3027,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_chain_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
         let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));

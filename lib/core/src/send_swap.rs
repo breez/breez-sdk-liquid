@@ -61,7 +61,9 @@ impl SendSwapHandler {
     /// Handles status updates from Boltz for Send swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap_state = &update.status;
+        let status = &update.status;
+        let swap_state = SubSwapStates::from_str(status)
+            .map_err(|_| anyhow!("Invalid SubSwapState for Send Swap {id}: {status}"))?;
         let swap = self
             .persister
             .fetch_send_swap_by_id(id)?
@@ -70,16 +72,16 @@ impl SendSwapHandler {
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
         // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
-        match SubSwapStates::from_str(swap_state) {
+        match swap_state {
             // Boltz has locked the HTLC
-            Ok(SubSwapStates::InvoiceSet) => {
+            SubSwapStates::InvoiceSet => {
                 warn!("Received `invoice.set` state for Send Swap {id}");
                 Ok(())
             }
 
             // Boltz has detected the lockup in the mempool, we can speed up
             // the claim by doing so cooperatively
-            Ok(SubSwapStates::TransactionClaimPending) => {
+            SubSwapStates::TransactionClaimPending => {
                 self.cooperate_claim(&swap).await.map_err(|e| {
                     error!("Could not cooperate Send Swap {id} claim: {e}");
                     anyhow!("Could not post claim details. Err: {e:?}")
@@ -89,7 +91,7 @@ impl SendSwapHandler {
             }
 
             // Boltz announced they successfully broadcast the (cooperative or non-cooperative) claim tx
-            Ok(SubSwapStates::TransactionClaimed) => {
+            SubSwapStates::TransactionClaimed => {
                 debug!("Send Swap {id} has been claimed");
 
                 match swap.preimage {
@@ -118,11 +120,9 @@ impl SendSwapHandler {
             // 2. The swap has expired (>24h)
             // 3. Lockup failed (we sent too little funds)
             // We initiate a cooperative refund, and then fallback to a regular one
-            Ok(
-                SubSwapStates::TransactionLockupFailed
-                | SubSwapStates::InvoiceFailedToPay
-                | SubSwapStates::SwapExpired,
-            ) => {
+            SubSwapStates::TransactionLockupFailed
+            | SubSwapStates::InvoiceFailedToPay
+            | SubSwapStates::SwapExpired => {
                 match swap.lockup_tx_id {
                     Some(_) => match swap.refund_tx_id {
                         Some(refund_tx_id) => warn!(
@@ -161,14 +161,10 @@ impl SendSwapHandler {
                 Ok(())
             }
 
-            Ok(_) => {
-                debug!("Unhandled state for Send Swap {id}: {swap_state}");
+            _ => {
+                debug!("Unhandled state for Send Swap {id}: {swap_state:?}");
                 Ok(())
             }
-
-            _ => Err(anyhow!(
-                "Invalid SubSwapState for Send Swap {id}: {swap_state}"
-            )),
         }
     }
 
@@ -551,25 +547,21 @@ impl SendSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use anyhow::Result;
 
     use crate::{
         model::PaymentState::{self, *},
         test_utils::{
-            persist::{new_persister, new_send_swap},
+            persist::{create_persister, new_send_swap},
             send_swap::new_send_swap_handler,
         },
     };
 
     #[tokio::test]
     async fn test_send_swap_state_transitions() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
-        let storage = Arc::new(storage);
+        create_persister!(storage);
         let send_swap_handler = new_send_swap_handler(storage.clone())?;
 
         // Test valid combinations of states
