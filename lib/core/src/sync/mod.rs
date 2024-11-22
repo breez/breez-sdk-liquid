@@ -4,7 +4,8 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
-use tokio::sync::watch;
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::{watch, Mutex};
 
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
@@ -26,6 +27,7 @@ pub(crate) struct SyncService {
     persister: Arc<Persister>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
+    sync_trigger: Mutex<Receiver<()>>,
 }
 
 impl SyncService {
@@ -34,12 +36,15 @@ impl SyncService {
         persister: Arc<Persister>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
+        sync_trigger: Receiver<()>,
     ) -> Self {
+        let sync_trigger = Mutex::new(sync_trigger);
         Self {
             remote_url,
             persister,
             signer,
             client,
+            sync_trigger,
         }
     }
 
@@ -55,20 +60,32 @@ impl SyncService {
         }
     }
 
-    pub(crate) async fn run(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
-        self.client.connect(self.remote_url.clone()).await?;
+    async fn run_event_loop(&self) {
+        if let Err(err) = self.pull().and_then(|_| self.push()).await {
+            log::debug!("Could not run sync event loop: {err:?}");
+        }
+    }
 
-        self.check_remote_change()?;
-
+    pub(crate) async fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
         tokio::spawn(async move {
+            if let Err(err) = self.client.connect(self.remote_url.clone()).await {
+                log::warn!("Could not connect to sync service: {err:?}");
+                return;
+            }
+            if let Err(err) = self.check_remote_change() {
+                log::warn!("Could not check for remote change: {err:?}");
+                return;
+            }
+
+            let mut sync_trigger = self.sync_trigger.lock().await;
             let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
 
             loop {
                 tokio::select! {
-                    _ = event_loop_interval.tick() => {
-                        if let Err(err) = self.pull().and_then(|_| self.push()).await {
-                            log::debug!("Could not run sync event loop: {err:?}");
-                        }
+                    _ = event_loop_interval.tick() => self.run_event_loop().await,
+                    Some(_) = sync_trigger.recv() => {
+                        self.run_event_loop().await;
+                        event_loop_interval.reset();
                     }
                     _ = shutdown.changed() => {
                         log::info!("Received shutdown signal, exiting realtime sync service loop");
@@ -232,7 +249,7 @@ impl SyncService {
         Ok(())
     }
 
-    async fn pull(&self) -> Result<()> {
+    pub(crate) async fn pull(&self) -> Result<()> {
         // Step 1: Fetch and save incoming records from remote, then update local tip
         self.fetch_and_save_records().await?;
 
@@ -332,7 +349,6 @@ impl SyncService {
 mod tests {
     use anyhow::{anyhow, Result};
     use std::{collections::HashMap, sync::Arc};
-    use tokio::sync::{mpsc, Mutex};
 
     use crate::{
         persist::Persister,
@@ -340,24 +356,19 @@ mod tests {
         sync::model::SyncState,
         test_utils::{
             chain_swap::new_chain_swap,
-            persist::{new_persister, new_receive_swap, new_send_swap},
+            persist::{create_persister, new_receive_swap, new_send_swap},
             sync::{
-                new_chain_sync_data, new_receive_sync_data, new_send_sync_data, MockSyncerClient,
+                new_chain_sync_data, new_receive_sync_data, new_send_sync_data, new_sync_service,
             },
             wallet::MockSigner,
         },
     };
 
-    use super::{
-        model::{data::SyncData, sync::Record, RecordType},
-        SyncService,
-    };
+    use super::model::{data::SyncData, sync::Record, RecordType};
 
     #[tokio::test]
     async fn test_incoming_sync_create_and_update() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
         let sync_data = vec![
@@ -371,31 +382,28 @@ mod tests {
             Record::new(sync_data[2].clone(), 3, signer.clone())?,
         ];
 
-        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         for record in incoming_records {
             incoming_tx.send(record).await?;
         }
         sync_service.pull().await?;
 
-        if let Some(receive_swap) = persister.fetch_receive_swap_by_id(&sync_data[0].id())? {
+        if let Some(receive_swap) = persister.fetch_receive_swap_by_id(sync_data[0].id())? {
             assert!(receive_swap.description.is_none());
             assert!(receive_swap.payment_hash.is_none());
         } else {
             return Err(anyhow!("Receive swap not found"));
         }
-        if let Some(send_swap) = persister.fetch_send_swap_by_id(&sync_data[1].id())? {
+        if let Some(send_swap) = persister.fetch_send_swap_by_id(sync_data[1].id())? {
             assert!(send_swap.preimage.is_none());
             assert!(send_swap.description.is_none());
             assert!(send_swap.payment_hash.is_none());
         } else {
             return Err(anyhow!("Send swap not found"));
         }
-        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(&sync_data[2].id())? {
+        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(sync_data[2].id())? {
             assert!(chain_swap.claim_address.is_none());
             assert!(chain_swap.description.is_none());
             assert!(chain_swap.accept_zero_conf.eq(&true));
@@ -412,7 +420,6 @@ mod tests {
         let incoming_records = vec![
             Record::new(sync_data[0].clone(), 4, signer.clone())?,
             Record::new(sync_data[1].clone(), 5, signer.clone())?,
-            Record::new(sync_data[2].clone(), 6, signer.clone())?,
         ];
 
         for record in incoming_records {
@@ -420,12 +427,12 @@ mod tests {
         }
         sync_service.pull().await?;
 
-        if let Some(send_swap) = persister.fetch_send_swap_by_id(&sync_data[1].id())? {
+        if let Some(send_swap) = persister.fetch_send_swap_by_id(sync_data[0].id())? {
             assert_eq!(send_swap.preimage, new_preimage);
         } else {
             return Err(anyhow!("Send swap not found"));
         }
-        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(&sync_data[2].id())? {
+        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(sync_data[1].id())? {
             assert_eq!(chain_swap.accept_zero_conf, new_accept_zero_conf);
         } else {
             return Err(anyhow!("Chain swap not found"));
@@ -434,10 +441,10 @@ mod tests {
         Ok(())
     }
 
-    fn get_outgoing_record<'a, 'b>(
+    fn get_outgoing_record<'a>(
         persister: Arc<Persister>,
         outgoing: &'a HashMap<String, Record>,
-        data_id: &'b str,
+        data_id: &str,
         record_type: RecordType,
     ) -> Result<&'a Record> {
         let record_id = Record::get_id_from_record_type(record_type, data_id);
@@ -454,16 +461,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_outgoing_sync() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
-        let (_incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (_incoming_tx, outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         // Test insert
         persister.insert_receive_swap(&new_receive_swap(None))?;
@@ -507,7 +509,7 @@ mod tests {
         persister.try_handle_send_swap_update(
             &swap.id,
             PaymentState::Pending,
-            new_preimage.clone(),
+            new_preimage,
             None,
             None,
         )?;
@@ -539,7 +541,7 @@ mod tests {
         persister.try_handle_send_swap_update(
             &swap.id,
             PaymentState::Pending,
-            new_preimage.clone(),
+            new_preimage,
             None,
             None,
         )?;
@@ -564,16 +566,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_sync_clean() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
-        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         // Clean incoming
         let record = Record::new(
@@ -613,7 +610,7 @@ mod tests {
         persister.try_handle_send_swap_update(
             &swap.id,
             PaymentState::Pending,
-            new_preimage.clone(),
+            new_preimage,
             None,
             None,
         )?;

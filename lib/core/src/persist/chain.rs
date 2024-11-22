@@ -6,11 +6,11 @@ use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
+use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
 use crate::sync::model::RecordType;
-use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
     pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
@@ -81,9 +81,9 @@ impl Persister {
             },
         )?;
 
-        Self::commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
-
+        self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
         tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(())
     }
@@ -254,8 +254,10 @@ impl Persister {
         swap_id: &str,
         accept_zero_conf: bool,
     ) -> Result<(), PaymentError> {
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con: Connection = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 accept_zero_conf = :accept_zero_conf
@@ -266,6 +268,19 @@ impl Persister {
                 ":accept_zero_conf": accept_zero_conf,
             },
         )?;
+        self.commit_outgoing(
+            &tx,
+            swap_id,
+            RecordType::Chain,
+            Some(vec!["accept_zero_conf".to_string()]),
+        )?;
+        tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
+
         Ok(())
     }
 
@@ -367,9 +382,6 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
-
-        let updated_fields = get_updated_fields!(server_lockup_tx_id);
-        Self::commit_outgoing(&tx, swap_id, RecordType::Chain, updated_fields)?;
 
         tx.commit()?;
 

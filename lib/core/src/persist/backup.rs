@@ -40,12 +40,12 @@ mod tests {
 
     use crate::{
         model::PaymentState,
-        test_utils::persist::{new_persister, new_receive_swap, new_send_swap},
+        test_utils::persist::{create_persister, new_receive_swap, new_send_swap},
     };
 
     #[test]
     fn test_backup_and_restore() -> Result<()> {
-        let (_local_temp_dir, local) = new_persister()?;
+        create_persister!(local);
 
         local.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
         local.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
@@ -55,7 +55,7 @@ mod tests {
         local.backup(backup_path.clone())?;
         assert!(backup_path.exists());
 
-        let (_remote_temp_dir, remote) = new_persister()?;
+        create_persister!(remote);
 
         remote.restore_from_backup(backup_path)?;
         assert_eq!(remote.list_ongoing_swaps()?.len(), 2);
