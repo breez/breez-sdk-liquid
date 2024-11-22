@@ -2343,6 +2343,7 @@ impl SseDecode for crate::model::Config {
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
+        let mut var_syncServiceUrl = <String>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         return crate::model::Config {
@@ -2354,6 +2355,7 @@ impl SseDecode for crate::model::Config {
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
+            sync_service_url: var_syncServiceUrl,
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
             breez_api_key: var_breezApiKey,
         };
@@ -4506,6 +4508,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.zero_conf_min_fee_rate_msat
                 .into_into_dart()
                 .into_dart(),
+            self.sync_service_url.into_into_dart().into_dart(),
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
             self.breez_api_key.into_into_dart().into_dart(),
         ]
@@ -6555,6 +6558,7 @@ impl SseEncode for crate::model::Config {
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
+        <String>::sse_encode(self.sync_service_url, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
         <Option<String>>::sse_encode(self.breez_api_key, serializer);
     }
@@ -8599,6 +8603,7 @@ mod io {
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
+                sync_service_url: self.sync_service_url.cst_decode(),
                 zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
                 breez_api_key: self.breez_api_key.cst_decode(),
             }
@@ -10029,6 +10034,7 @@ mod io {
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
+                sync_service_url: core::ptr::null_mut(),
                 zero_conf_max_amount_sat: core::ptr::null_mut(),
                 breez_api_key: core::ptr::null_mut(),
             }
@@ -12027,6 +12033,7 @@ mod io {
         network: i32,
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,
+        sync_service_url: *mut wire_cst_list_prim_u_8_strict,
         zero_conf_max_amount_sat: *mut u64,
         breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     }
