@@ -9,7 +9,10 @@ use tokio::sync::{watch, Mutex};
 
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
-use crate::{persist::Persister, prelude::Signer};
+use crate::{
+    persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
+    prelude::Signer,
+};
 
 use self::client::SyncerClient;
 use self::model::{
@@ -127,6 +130,9 @@ impl SyncService {
                 is_update,
                 last_commit_time,
             )?,
+            SyncData::LastDerivationIndex(new_address_index) => self
+                .persister
+                .commit_incoming_address_index(new_address_index, sync_state, last_commit_time)?,
         }
         Ok(())
     }
@@ -157,6 +163,12 @@ impl SyncService {
                     .into();
                 SyncData::Chain(chain_data)
             }
+            RecordType::LastDerivationIndex => SyncData::LastDerivationIndex(
+                self.persister
+                    .get_cached_item(KEY_LAST_DERIVATION_INDEX)?
+                    .ok_or(anyhow!("Could not find last derivation index"))?
+                    .parse()?,
+            ),
         };
         Ok(data)
     }
@@ -351,9 +363,9 @@ mod tests {
     use std::{collections::HashMap, sync::Arc};
 
     use crate::{
-        persist::Persister,
+        persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
         prelude::{Direction, PaymentState, Signer},
-        sync::model::SyncState,
+        sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, SyncState},
         test_utils::{
             chain_swap::new_chain_swap,
             persist::{create_persister, new_receive_swap, new_send_swap},
@@ -620,6 +632,91 @@ mod tests {
         sync_service.push().await?;
         let outgoing_changes = persister.get_sync_outgoing_changes()?;
         assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_last_derivation_index_update() -> Result<()> {
+        create_persister!(persister);
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+
+        let (incoming_tx, outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
+
+        // Check pull
+        assert_eq!(persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?, None);
+
+        let new_last_derivation_index = 10;
+        let data = SyncData::LastDerivationIndex(new_last_derivation_index);
+        incoming_tx
+            .send(Record::new(data, 0, signer.clone())?)
+            .await?;
+
+        sync_service.pull().await?;
+
+        assert_eq!(
+            persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?,
+            Some(new_last_derivation_index.to_string())
+        );
+
+        // Check push
+        let new_last_derivation_index = 20;
+        persister.set_last_derivation_index(new_last_derivation_index)?;
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+        let record = get_outgoing_record(
+            persister.clone(),
+            &outgoing,
+            LAST_DERIVATION_INDEX_DATA_ID,
+            RecordType::LastDerivationIndex,
+        )?;
+        let decrypted_record = record.clone().decrypt(signer.clone())?;
+        match decrypted_record.data {
+            SyncData::LastDerivationIndex(last_derivation_index) => {
+                assert_eq!(last_derivation_index, new_last_derivation_index);
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Unexpected sync data type received."));
+            }
+        }
+
+        // Check pull with merge
+        let new_local_last_derivation_index = 30;
+        persister.set_last_derivation_index(new_local_last_derivation_index)?;
+
+        let new_remote_last_derivation_index = 25;
+        let data = SyncData::LastDerivationIndex(new_remote_last_derivation_index);
+        incoming_tx
+            .send(Record::new(data, 0, signer.clone())?)
+            .await?;
+
+        sync_service.pull().await?;
+
+        // Newer one is persisted (local > remote)
+        assert_eq!(
+            persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?,
+            Some(new_local_last_derivation_index.to_string())
+        );
+
+        let new_local_last_derivation_index = 35;
+        persister.set_last_derivation_index(new_local_last_derivation_index)?;
+
+        let new_remote_last_derivation_index = 40;
+        let data = SyncData::LastDerivationIndex(new_remote_last_derivation_index);
+        incoming_tx
+            .send(Record::new(data, 2, signer.clone())?)
+            .await?;
+
+        sync_service.pull().await?;
+
+        // Newer one is persisted (remote > local)
+        assert_eq!(
+            persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?,
+            Some(new_remote_last_derivation_index.to_string())
+        );
 
         Ok(())
     }

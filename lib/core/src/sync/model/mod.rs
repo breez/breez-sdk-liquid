@@ -26,6 +26,7 @@ pub(crate) enum RecordType {
     Receive = 0,
     Send = 1,
     Chain = 2,
+    LastDerivationIndex = 3,
 }
 
 impl ToSql for RecordType {
@@ -41,6 +42,7 @@ impl FromSql for RecordType {
                 0 => Ok(Self::Receive),
                 1 => Ok(Self::Send),
                 2 => Ok(Self::Chain),
+                3 => Ok(Self::LastDerivationIndex),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),
@@ -105,6 +107,7 @@ impl Record {
             SyncData::Chain(_) => "chain-swap",
             SyncData::Send(_) => "send-swap",
             SyncData::Receive(_) => "receive-swap",
+            SyncData::LastDerivationIndex(_) => "derivation-index",
         }
         .to_string();
         Self::id(prefix, data.id())
@@ -115,6 +118,7 @@ impl Record {
             RecordType::Chain => "chain-swap",
             RecordType::Send => "send-swap",
             RecordType::Receive => "receive-swap",
+            RecordType::LastDerivationIndex => "derivation-index",
         }
         .to_string();
         Self::id(prefix, data_id)
