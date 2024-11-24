@@ -2,13 +2,14 @@ use anyhow::Result;
 use rusqlite::{Transaction, TransactionBehavior};
 use std::str::FromStr;
 
+use crate::sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, RecordType};
+
 use super::Persister;
 
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
-// TODO: The `last_derivation_index` needs to be synced
-const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
+pub(crate) const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
 
 impl Persister {
     fn get_cached_item_inner(tx: &Transaction, key: &str) -> Result<Option<String>> {
@@ -20,7 +21,11 @@ impl Persister {
         Ok(res.ok())
     }
 
-    fn update_cached_item_inner(tx: &Transaction, key: &str, value: String) -> Result<()> {
+    pub(crate) fn update_cached_item_inner(
+        tx: &Transaction,
+        key: &str,
+        value: String,
+    ) -> Result<()> {
         tx.execute(
             "INSERT OR REPLACE INTO cached_items (key, value) VALUES (?1,?2)",
             (key, value),
@@ -92,7 +97,21 @@ impl Persister {
     }
 
     pub fn set_last_derivation_index(&self, index: u32) -> Result<()> {
-        self.update_cached_item(KEY_LAST_DERIVATION_INDEX, index.to_string())
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::update_cached_item_inner(&tx, KEY_LAST_DERIVATION_INDEX, index.to_string())?;
+        self.commit_outgoing(
+            &tx,
+            LAST_DERIVATION_INDEX_DATA_ID,
+            RecordType::LastDerivationIndex,
+            // insert a mock updated field so that merging with incoming data works as expected
+            Some(vec![LAST_DERIVATION_INDEX_DATA_ID.to_string()]),
+        )?;
+        tx.commit()?;
+        self.sync_trigger.try_send(())?;
+
+        Ok(())
     }
 
     pub fn get_last_derivation_index(&self) -> Result<Option<u32>> {
