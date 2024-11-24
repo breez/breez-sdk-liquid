@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::{ChainSwap, Direction, ReceiveSwap, SendSwap};
 
+pub(crate) const LAST_DERIVATION_INDEX_DATA_ID: &str = "last-derivation-index";
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
@@ -135,6 +137,7 @@ pub(crate) enum SyncData {
     Chain(ChainSyncData),
     Send(SendSyncData),
     Receive(ReceiveSyncData),
+    LastDerivationIndex(u32),
 }
 
 impl SyncData {
@@ -143,6 +146,7 @@ impl SyncData {
             SyncData::Chain(chain_data) => &chain_data.swap_id,
             SyncData::Send(send_data) => &send_data.swap_id,
             SyncData::Receive(receive_data) => &receive_data.swap_id,
+            SyncData::LastDerivationIndex(_) => LAST_DERIVATION_INDEX_DATA_ID,
         }
     }
 
@@ -160,6 +164,12 @@ impl SyncData {
             }
             (SyncData::Receive(ref mut _base), SyncData::Receive(_other)) => {
                 log::warn!("Attempting to merge for unnecessary type SyncData::Receive");
+            }
+            (
+                SyncData::LastDerivationIndex(our_index),
+                SyncData::LastDerivationIndex(their_index),
+            ) => {
+                *our_index = std::cmp::max(*their_index, *our_index);
             }
             _ => return Err(anyhow::anyhow!("Cannot merge data from two separate types")),
         };
