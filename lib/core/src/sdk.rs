@@ -154,8 +154,22 @@ impl LiquidSdk {
             Xpub::decode(signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
         let working_dir = config.get_wallet_working_dir(fingerprint_hex)?;
 
-        let persister = Arc::new(Persister::new(&working_dir, config.network)?);
+        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
+        let persister = Arc::new(Persister::new(
+            &working_dir,
+            config.network,
+            sync_trigger_tx,
+        )?);
         persister.init()?;
+
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            signer.clone(),
+            syncer_client,
+            sync_trigger_rx,
+        ));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             config.clone(),
@@ -208,14 +222,6 @@ impl LiquidSdk {
 
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
-
-        let syncer_client = Box::new(BreezSyncerClient::new());
-        let sync_service = Arc::new(SyncService::new(
-            config.sync_service_url.clone(),
-            persister.clone(),
-            signer.clone(),
-            syncer_client,
-        ));
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -2522,7 +2528,7 @@ mod tests {
         test_utils::{
             chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
-            persist::{new_persister, new_receive_swap, new_send_swap},
+            persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
             status_stream::MockStatusStream,
             swapper::MockSwapper,
@@ -2627,8 +2633,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_receive_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
@@ -2694,8 +2699,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_send_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
@@ -2751,8 +2755,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_chain_swap_update_tracking() -> Result<()> {
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
         let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));

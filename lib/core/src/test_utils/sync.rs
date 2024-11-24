@@ -3,7 +3,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    prelude::Direction,
+    persist::Persister,
+    prelude::{Direction, Signer},
     sync::{
         client::SyncerClient,
         model::{
@@ -13,11 +14,15 @@ use crate::{
                 SetRecordStatus,
             },
         },
+        SyncService,
     },
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use tokio::sync::{mpsc::Receiver, Mutex};
+use tokio::sync::{
+    mpsc::{self, Receiver, Sender},
+    Mutex,
+};
 
 pub(crate) struct MockSyncerClient {
     pub(crate) incoming_rx: Mutex<Receiver<Record>>,
@@ -78,6 +83,29 @@ impl SyncerClient for MockSyncerClient {
     async fn disconnect(&self) -> Result<()> {
         todo!()
     }
+}
+
+pub(crate) fn new_sync_service(
+    persister: Arc<Persister>,
+    signer: Arc<Box<dyn Signer>>,
+) -> Result<(
+    Sender<Record>,
+    Arc<Mutex<HashMap<String, Record>>>,
+    SyncService,
+)> {
+    let (_, sync_trigger_rx) = mpsc::channel::<()>(30);
+    let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
+    let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
+    let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
+    let sync_service = SyncService::new(
+        "".to_string(),
+        persister.clone(),
+        signer.clone(),
+        client,
+        sync_trigger_rx,
+    );
+
+    Ok((incoming_tx, outgoing_records, sync_service))
 }
 
 pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {

@@ -4,7 +4,8 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
-use tokio::sync::watch;
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::{watch, Mutex};
 
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
@@ -26,6 +27,7 @@ pub(crate) struct SyncService {
     persister: Arc<Persister>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
+    sync_trigger: Mutex<Receiver<()>>,
 }
 
 impl SyncService {
@@ -34,12 +36,15 @@ impl SyncService {
         persister: Arc<Persister>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
+        sync_trigger: Receiver<()>,
     ) -> Self {
+        let sync_trigger = Mutex::new(sync_trigger);
         Self {
             remote_url,
             persister,
             signer,
             client,
+            sync_trigger,
         }
     }
 
@@ -55,6 +60,12 @@ impl SyncService {
         }
     }
 
+    async fn run_event_loop(&self) {
+        if let Err(err) = self.pull().and_then(|_| self.push()).await {
+            log::debug!("Could not run sync event loop: {err:?}");
+        }
+    }
+
     pub(crate) async fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
@@ -66,14 +77,15 @@ impl SyncService {
                 return;
             }
 
+            let mut sync_trigger = self.sync_trigger.lock().await;
             let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
 
             loop {
                 tokio::select! {
-                    _ = event_loop_interval.tick() => {
-                        if let Err(err) = self.pull().and_then(|_| self.push()).await {
-                            log::debug!("Could not run sync event loop: {err:?}");
-                        }
+                    _ = event_loop_interval.tick() => self.run_event_loop().await,
+                    Some(_) = sync_trigger.recv() => {
+                        self.run_event_loop().await;
+                        event_loop_interval.reset();
                     }
                     _ = shutdown.changed() => {
                         log::info!("Received shutdown signal, exiting realtime sync service loop");
@@ -337,7 +349,6 @@ impl SyncService {
 mod tests {
     use anyhow::{anyhow, Result};
     use std::{collections::HashMap, sync::Arc};
-    use tokio::sync::{mpsc, Mutex};
 
     use crate::{
         persist::Persister,
@@ -345,24 +356,19 @@ mod tests {
         sync::model::SyncState,
         test_utils::{
             chain_swap::new_chain_swap,
-            persist::{new_persister, new_receive_swap, new_send_swap},
+            persist::{create_persister, new_receive_swap, new_send_swap},
             sync::{
-                new_chain_sync_data, new_receive_sync_data, new_send_sync_data, MockSyncerClient,
+                new_chain_sync_data, new_receive_sync_data, new_send_sync_data, new_sync_service,
             },
             wallet::MockSigner,
         },
     };
 
-    use super::{
-        model::{data::SyncData, sync::Record, RecordType},
-        SyncService,
-    };
+    use super::model::{data::SyncData, sync::Record, RecordType};
 
     #[tokio::test]
     async fn test_incoming_sync_create_and_update() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
         let sync_data = vec![
@@ -376,11 +382,8 @@ mod tests {
             Record::new(sync_data[2].clone(), 3, signer.clone())?,
         ];
 
-        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         for record in incoming_records {
             incoming_tx.send(record).await?;
@@ -459,16 +462,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_outgoing_sync() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
-        let (_incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (_incoming_tx, outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         // Test insert
         persister.insert_receive_swap(&new_receive_swap(None))?;
@@ -569,16 +567,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_sync_clean() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
-
+        create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
 
-        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
-        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
-        let sync_service =
-            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), signer.clone())?;
 
         // Clean incoming
         let record = Record::new(

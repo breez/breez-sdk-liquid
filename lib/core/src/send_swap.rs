@@ -553,25 +553,21 @@ impl SendSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use anyhow::Result;
 
     use crate::{
         model::PaymentState::{self, *},
         test_utils::{
-            persist::{new_persister, new_send_swap},
+            persist::{create_persister, new_send_swap},
             send_swap::new_send_swap_handler,
         },
     };
 
     #[tokio::test]
     async fn test_send_swap_state_transitions() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
-        let storage = Arc::new(storage);
+        create_persister!(storage);
         let send_swap_handler = new_send_swap_handler(storage.clone())?;
 
         // Test valid combinations of states

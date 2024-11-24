@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use sdk_common::prelude::{BreezServer, STAGING_BREEZSERVER_URL};
 use std::sync::Arc;
 
-use tokio::sync::{mpsc, watch, Mutex, RwLock};
+use tokio::sync::{watch, Mutex, RwLock};
 
 use crate::{
     buy::BuyBitcoinService,
@@ -15,14 +15,13 @@ use crate::{
     receive_swap::ReceiveSwapHandler,
     sdk::LiquidSdk,
     send_swap::SendSwapHandler,
-    sync::{model::sync::Record, SyncService},
 };
 
 use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     status_stream::MockStatusStream,
     swapper::MockSwapper,
-    sync::MockSyncerClient,
+    sync::new_sync_service,
     wallet::{MockSigner, MockWallet},
 };
 
@@ -93,14 +92,9 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     let buy_bitcoin_service =
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
-    let (_, incoming_rx) = mpsc::channel::<Record>(10);
-    let syncer_client = Box::new(MockSyncerClient::new(incoming_rx, Default::default()));
-    let sync_service = Arc::new(SyncService::new(
-        "".to_string(),
-        persister.clone(),
-        signer.clone(),
-        syncer_client,
-    ));
+    let (_incoming_tx, _outgoing_records, sync_service) =
+        new_sync_service(persister.clone(), signer.clone())?;
+    let sync_service = Arc::new(sync_service);
 
     Ok(LiquidSdk {
         config,

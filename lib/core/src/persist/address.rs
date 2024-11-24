@@ -101,11 +101,11 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
 
     #[test]
     fn test_next_expired_reserved_address() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
         storage.insert_or_update_reserved_address(&address, 100)?;
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_delete_reserved_address() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
         storage.insert_or_update_reserved_address(&address, 100)?;
