@@ -128,11 +128,11 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
 
     #[test]
     fn test_cached_items() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         persister.update_cached_item("key1", "val1".to_string())?;
         let item_value = persister.get_cached_item("key1")?;
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_get_last_derivation_index() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         let maybe_last_index = persister.get_last_derivation_index()?;
         assert!(maybe_last_index.is_none());
@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_next_derivation_index() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         let maybe_next_index = persister.next_derivation_index()?;
         assert!(maybe_next_index.is_none());

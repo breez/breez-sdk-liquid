@@ -6,11 +6,11 @@ use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
+use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
 use crate::sync::model::RecordType;
-use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
     pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
@@ -71,9 +71,9 @@ impl Persister {
             },
         )?;
 
-        Self::commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, None)?;
-
+        self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, None)?;
         tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(())
     }
@@ -327,6 +327,11 @@ impl Persister {
         // NOTE: Receive currently does not update any fields, bypassing the commit logic for now
         // let updated_fields = None;
         // Self::commit_outgoing(&tx, swap_id, RecordType::Receive, updated_fields)?;
+        // self.sync_trigger
+        //     .try_send(())
+        //     .map_err(|err| PaymentError::Generic {
+        //         err: format!("Could not trigger manual sync: {err:?}"),
+        //     })?;
 
         tx.commit()?;
 
@@ -376,13 +381,13 @@ impl InternalCreateReverseResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::persist::{new_persister, new_receive_swap};
+    use crate::test_utils::persist::{create_persister, new_receive_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let receive_swap = new_receive_swap(None);
 
@@ -399,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_list_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         // List general receive swaps
         let range = 0..3;
@@ -425,7 +430,7 @@ mod tests {
 
     #[test]
     fn test_update_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let receive_swap = new_receive_swap(None);
         storage.insert_receive_swap(&receive_swap)?;

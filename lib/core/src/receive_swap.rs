@@ -428,27 +428,23 @@ impl ReceiveSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use anyhow::Result;
 
     use crate::{
         model::PaymentState::{self, *},
         test_utils::{
-            persist::{new_persister, new_receive_swap},
+            persist::{create_persister, new_receive_swap},
             receive_swap::new_receive_swap_handler,
         },
     };
 
     #[tokio::test]
     async fn test_receive_swap_state_transitions() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
-        let storage = Arc::new(storage);
+        create_persister!(persister);
 
-        let receive_swap_state_handler = new_receive_swap_handler(storage.clone())?;
+        let receive_swap_state_handler = new_receive_swap_handler(persister.clone())?;
 
         // Test valid combinations of states
         let valid_combinations = HashMap::from([
@@ -467,7 +463,7 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                storage.insert_receive_swap(&receive_swap)?;
+                persister.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
@@ -491,7 +487,7 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                storage.insert_receive_swap(&receive_swap)?;
+                persister.insert_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)

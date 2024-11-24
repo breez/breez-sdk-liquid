@@ -1,6 +1,5 @@
 #![cfg(test)]
 
-use anyhow::{anyhow, Result};
 use bip39::rand::{self, RngCore};
 use sdk_common::{
     bitcoin::{
@@ -10,11 +9,9 @@ use sdk_common::{
     lightning::ln::PaymentSecret,
     lightning_invoice::{Currency, InvoiceBuilder},
 };
-use tempdir::TempDir;
 
 use crate::{
-    model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
-    persist::Persister,
+    model::{PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
     test_utils::generate_random_string,
     utils,
 };
@@ -113,18 +110,22 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
     }
 }
 
-pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
-    let temp_dir = TempDir::new("liquid-sdk")?;
-    let persister = Persister::new(
-        temp_dir
-            .path()
-            .to_str()
-            .ok_or(anyhow!("Could not create temporary directory"))?,
-        LiquidNetwork::Testnet,
-    )?;
-    persister.init()?;
-    Ok((temp_dir, persister))
+macro_rules! create_persister {
+    ($name:ident) => {
+        let (sync_trigger_tx, _sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(100);
+        let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
+        let $name = std::sync::Arc::new(crate::persist::Persister::new(
+            temp_dir
+                .path()
+                .to_str()
+                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
+            crate::model::LiquidNetwork::Testnet,
+            sync_trigger_tx,
+        )?);
+        $name.init()?;
+    };
 }
+pub(crate) use create_persister;
 
 pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
     PaymentTxData {

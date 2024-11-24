@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use rusqlite::{named_params, Connection, OptionalExtension, Row, Statement, TransactionBehavior};
+use rusqlite::{
+    named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
+};
 
 use super::{PaymentState, Persister};
 use crate::{
@@ -242,7 +244,8 @@ impl Persister {
     }
 
     pub(crate) fn commit_outgoing(
-        con: &Connection,
+        &self,
+        tx: &Transaction,
         data_id: &str,
         record_type: RecordType,
         updated_fields: Option<Vec<String>>,
@@ -261,7 +264,7 @@ impl Persister {
                 )")
             })
             .unwrap_or("NULL".to_string());
-        con.execute(&format!("
+        tx.execute(&format!("
             INSERT OR REPLACE INTO sync_outgoing(record_id, data_id, record_type, commit_time, updated_fields_json)
             VALUES(
                 :record_id, 
