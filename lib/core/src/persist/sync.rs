@@ -5,10 +5,10 @@ use rusqlite::{
     named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
 };
 
-use super::{PaymentState, Persister};
+use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentState, Persister};
 use crate::{
     sync::model::{
-        data::{ChainSyncData, ReceiveSyncData, SendSyncData},
+        data::{ChainSyncData, ReceiveSyncData, SendSyncData, LAST_DERIVATION_INDEX_DATA_ID},
         sync::Record,
         RecordType, SyncOutgoingChanges, SyncSettings, SyncState,
     },
@@ -690,6 +690,44 @@ impl Persister {
                 )?;
             }
         }
+
+        Self::set_sync_state_stmt(&tx)?.execute(named_params! {
+            ":data_id": &sync_state.data_id,
+            ":record_id": &sync_state.record_id,
+            ":record_revision": &sync_state.record_revision,
+            ":is_local": &sync_state.is_local,
+        })?;
+
+        tx.commit()?;
+
+        Ok(())
+    }
+
+    pub(crate) fn commit_incoming_address_index(
+        &self,
+        new_address_index: u32,
+        sync_state: SyncState,
+        last_commit_time: Option<u32>,
+    ) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        if let Some(last_commit_time) = last_commit_time {
+            Self::check_commit_update(
+                &tx,
+                &Record::get_id_from_record_type(
+                    RecordType::LastDerivationIndex,
+                    LAST_DERIVATION_INDEX_DATA_ID,
+                ),
+                last_commit_time,
+            )?;
+        }
+
+        Self::update_cached_item_inner(
+            &tx,
+            KEY_LAST_DERIVATION_INDEX,
+            new_address_index.to_string(),
+        )?;
 
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
