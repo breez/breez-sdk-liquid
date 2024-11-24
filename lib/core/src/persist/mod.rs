@@ -1,6 +1,6 @@
 mod address;
 mod backup;
-mod cache;
+pub(crate) mod cache;
 pub(crate) mod chain;
 mod migrations;
 pub(crate) mod receive;
