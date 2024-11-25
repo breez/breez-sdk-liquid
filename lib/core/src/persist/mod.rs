@@ -393,7 +393,7 @@ impl Persister {
                 payment_hash,
                 refund_tx_id,
                 refund_tx_amount_sat,
-                description: description.unwrap_or("Liquid transfer".to_string()),
+                description: description.unwrap_or("Lightning transfer".to_string()),
             },
             Some(PaymentSwapData {
                 swap_type: PaymentSwapType::Chain,
