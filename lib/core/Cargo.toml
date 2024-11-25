@@ -51,11 +51,11 @@ electrum-client = { version = "0.19.0" }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
-tonic = { version = "0.12.3", features = ["tls"] }
 prost = "0.13.3"
 ecies = "0.2.7"
 semver = "1.0.23"
 lazy_static = "1.5.0"
+tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 
 [dev-dependencies]
 paste = "1.0.15"
