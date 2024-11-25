@@ -327,7 +327,7 @@ impl LiquidSdk {
             let mut current_liquid_block: u32 = 0;
             let mut current_bitcoin_block: u32 = 0;
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
-            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            let mut interval = tokio::time::interval(Duration::from_secs(10));
             interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
             loop {
                 tokio::select! {

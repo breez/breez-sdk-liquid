@@ -190,19 +190,14 @@ impl LiquidSdk {
                     chain_swaps
                         .into_iter()
                         .partition(|swap| swap.direction == Direction::Outgoing);
-                SwapsList::init(
+                SwapsList::all(
                     send_swaps,
                     receive_swaps,
                     send_chain_swaps,
                     receive_chain_swaps,
                 )
             }
-            true => SwapsList::init(
-                Default::default(),
-                receive_swaps,
-                Default::default(),
-                Default::default(),
-            ),
+            true => SwapsList::receive_only(receive_swaps),
         }
     }
 
@@ -696,7 +691,30 @@ pub(crate) mod immutable {
     }
 
     impl SwapsList {
-        pub(crate) fn init(
+        pub(crate) fn all(
+            send_swaps: Vec<SendSwap>,
+            receive_swaps: Vec<ReceiveSwap>,
+            send_chain_swaps: Vec<ChainSwap>,
+            receive_chain_swaps: Vec<ChainSwap>,
+        ) -> Result<Self> {
+            SwapsList::init(
+                send_swaps,
+                receive_swaps,
+                send_chain_swaps,
+                receive_chain_swaps,
+            )
+        }
+
+        pub(crate) fn receive_only(receive_swaps: Vec<ReceiveSwap>) -> Result<Self> {
+            SwapsList::init(
+                Default::default(),
+                receive_swaps,
+                Default::default(),
+                Default::default(),
+            )
+        }
+
+        fn init(
             send_swaps: Vec<SendSwap>,
             receive_swaps: Vec<ReceiveSwap>,
             send_chain_swaps: Vec<ChainSwap>,
@@ -1100,7 +1118,7 @@ pub(crate) mod immutable {
                     .into_iter()
                     .partition(|swap| swap.direction == Direction::Outgoing);
 
-            SwapsList::init(
+            SwapsList::all(
                 send_swaps,
                 receive_swaps,
                 send_chain_swaps,
