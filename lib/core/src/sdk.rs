@@ -1992,13 +1992,13 @@ impl LiquidSdk {
     /// the service fees.
     async fn receive_onchain(
         &self,
-        payer_amount_sat: Option<u64>,
+        user_lockup_amount_sat: Option<u64>,
         fees_sat: u64,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
         let swap = self
-            .create_receive_chain_swap(payer_amount_sat, fees_sat)
+            .create_receive_chain_swap(user_lockup_amount_sat, fees_sat)
             .await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
