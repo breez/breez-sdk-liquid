@@ -66,6 +66,7 @@ export interface Config {
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
     breezApiKey?: string
+    cacheDir?: string
     zeroConfMaxAmountSat?: number
 }
 
@@ -116,6 +117,17 @@ export interface LnInvoice {
     minFinalCltvExpiryDelta: number
 }
 
+export interface LnOffer {
+    offer: string
+    chains: string[]
+    paths: LnOfferBlindedPath[]
+    description?: string
+    signingPubkey?: string
+    minAmount?: Amount
+    absoluteExpiry?: number
+    issuer?: string
+}
+
 export interface LightningPaymentLimitsResponse {
     send: Limits
     receive: Limits
@@ -143,6 +155,10 @@ export interface ListPaymentsRequest {
     offset?: number
     limit?: number
     details?: ListPaymentDetails
+}
+
+export interface LnOfferBlindedPath {
+    blindedHops: string[]
 }
 
 export interface LnUrlAuthRequestData {
@@ -266,7 +282,7 @@ export interface PrepareLnUrlPayResponse {
 }
 
 export interface PreparePayOnchainRequest {
-    amount: PayOnchainAmount
+    amount: PayAmount
     feeRateSatPerVbyte?: number
 }
 
@@ -304,7 +320,7 @@ export interface PrepareRefundResponse {
 
 export interface PrepareSendRequest {
     destination: string
-    amountSat?: number
+    amount?: PayAmount
 }
 
 export interface PrepareSendResponse {
@@ -411,6 +427,20 @@ export type AesSuccessActionDataResult = {
     reason: string
 }
 
+export enum AmountVariant {
+    BITCOIN = "bitcoin",
+    CURRENCY = "currency"
+}
+
+export type Amount = {
+    type: AmountVariant.BITCOIN,
+    amountMsat: number
+} | {
+    type: AmountVariant.CURRENCY,
+    iso4217Code: string
+    fractionalAmount: number
+}
+
 export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
@@ -428,6 +458,7 @@ export enum InputTypeVariant {
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress",
     BOLT11 = "bolt11",
+    BOLT12_OFFER = "bolt12Offer",
     NODE_ID = "nodeId",
     URL = "url",
     LN_URL_PAY = "lnUrlPay",
@@ -445,6 +476,9 @@ export type InputType = {
 } | {
     type: InputTypeVariant.BOLT11,
     invoice: LnInvoice
+} | {
+    type: InputTypeVariant.BOLT12_OFFER,
+    offer: LnOffer
 } | {
     type: InputTypeVariant.NODE_ID,
     nodeId: string
@@ -536,16 +570,16 @@ export enum Network {
     REGTEST = "regtest"
 }
 
-export enum PayOnchainAmountVariant {
+export enum PayAmountVariant {
     RECEIVER = "receiver",
     DRAIN = "drain"
 }
 
-export type PayOnchainAmount = {
-    type: PayOnchainAmountVariant.RECEIVER,
+export type PayAmount = {
+    type: PayAmountVariant.RECEIVER,
     amountSat: number
 } | {
-    type: PayOnchainAmountVariant.DRAIN
+    type: PayAmountVariant.DRAIN
 }
 
 export enum PaymentDetailsVariant {
@@ -560,6 +594,7 @@ export type PaymentDetails = {
     description: string
     preimage?: string
     bolt11?: string
+    bolt12Offer?: string
     paymentHash?: string
     refundTxId?: string
     refundTxAmountSat?: number
@@ -630,7 +665,8 @@ export type SdkEvent = {
 
 export enum SendDestinationVariant {
     LIQUID_ADDRESS = "liquidAddress",
-    BOLT11 = "bolt11"
+    BOLT11 = "bolt11",
+    BOLT12 = "bolt12"
 }
 
 export type SendDestination = {
@@ -639,6 +675,10 @@ export type SendDestination = {
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice
+} | {
+    type: SendDestinationVariant.BOLT12,
+    offer: LnOffer
+    receiverAmountSat: number
 }
 
 export enum SuccessActionVariant {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use breez_sdk_liquid::prelude::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -21,9 +21,13 @@ use serde_json::to_string_pretty;
 pub(crate) enum Command {
     /// Send a payment directly or via a swap
     SendPayment {
-        /// Invoice which has to be paid
+        /// Invoice which has to be paid (BOLT11)
         #[arg(long)]
         invoice: Option<String>,
+
+        /// BOLT12 offer. If specified, amount_sat must also be set.
+        #[arg(long)]
+        offer: Option<String>,
 
         /// Either BIP21 URI or Liquid address we intend to pay to
         #[arg(long)]
@@ -34,8 +38,12 @@ pub(crate) enum Command {
         #[arg(short, long)]
         amount_sat: Option<u64>,
 
-        /// Delay for the send, in seconds
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
+        drain: Option<bool>,
+
+        /// Delay for the send, in seconds
+        #[arg(long)]
         delay: Option<u64>,
     },
     /// Fetch the current limits for Send and Receive payments
@@ -106,13 +114,13 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
 
-        /// Optional Liquid BIP21 URI / address destination
+        /// Optional Liquid BIP21 URI/address for Liquid payment method
         #[clap(short = 'd', long = "destination")]
-        liquid_destination: Option<String>,
+        destination: Option<String>,
 
-        /// Optional Bitcoin address
+        /// Optional Liquid/Bitcoin address for Bitcoin payment method
         #[clap(short = 'a', long = "address")]
-        bitcoin_address: Option<String>,
+        address: Option<String>,
     },
     /// Retrieve a payment
     GetPayment {
@@ -294,12 +302,12 @@ pub(crate) async fn handle_command(
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow::anyhow!("Could not build BIP21 from address data: {e:?}")
+                        anyhow!("Could not build BIP21 from address data: {e:?}")
                     })?))
                 }
                 InputType::BitcoinAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow::anyhow!("Could not build BIP21 from address data: {e:?}")
+                        anyhow!("Could not build BIP21 from address data: {e:?}")
                     })?))
                 }
                 _ => {}
@@ -316,29 +324,40 @@ pub(crate) async fn handle_command(
         }
         Command::SendPayment {
             invoice,
+            offer,
             address,
             amount_sat,
+            drain,
             delay,
         } => {
-            let destination = match (invoice, address) {
-                (None, None) => {
-                    return Err(anyhow::anyhow!(
-                        "Must specify either an invoice or a direct/BIP21 address."
+            let destination = match (invoice, offer, address) {
+                (Some(invoice), None, None) => Ok(invoice),
+                (None, Some(offer), None) => match amount_sat {
+                    Some(_) => Ok(offer),
+                    None => Err(anyhow!(
+                        "Must specify an amount for a BOLT12 offer."
                     ))
-                }
-                (Some(invoice), None) => invoice,
-                (None, Some(address)) => address,
-                (Some(_), Some(_)) => {
-                    return Err(anyhow::anyhow!(
+                },
+                (None, None, Some(address)) => Ok(address),
+                (Some(_), _, Some(_)) => {
+                    Err(anyhow::anyhow!(
                         "Cannot specify both invoice and address at the same time."
                     ))
                 }
+                _ => Err(anyhow!(
+                    "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
+                ))
+            }?;
+            let amount = match (amount_sat, drain.unwrap_or(false)) {
+                (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
+                (_, true) => Some(PayAmount::Drain),
+                (_, _) => None,
             };
 
             let prepare_response = sdk
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
-                    amount_sat,
+                    amount,
                 })
                 .await?;
 
@@ -374,8 +393,8 @@ pub(crate) async fn handle_command(
             fee_rate_sat_per_vbyte,
         } => {
             let amount = match drain.unwrap_or(false) {
-                true => PayOnchainAmount::Drain,
-                false => PayOnchainAmount::Receiver {
+                true => PayAmount::Drain,
+                false => PayAmount::Receiver {
                     amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
                         "Must specify `receiver_amount_sat` if not draining"
                     ))?,
@@ -462,10 +481,10 @@ pub(crate) async fn handle_command(
             to_timestamp,
             limit,
             offset,
-            liquid_destination,
-            bitcoin_address,
+            destination,
+            address,
         } => {
-            let details = match (liquid_destination, bitcoin_address) {
+            let details = match (destination, address) {
                 (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
                 (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
                 _ => None,
@@ -490,7 +509,7 @@ pub(crate) async fn handle_command(
             match maybe_payment {
                 Some(payment) => command_result!(payment),
                 None => {
-                    return Err(anyhow::anyhow!("Payment not found."));
+                    return Err(anyhow!("Payment not found."));
                 }
             }
         }
@@ -593,7 +612,7 @@ pub(crate) async fn handle_command(
                         .await?;
                     Ok(pay_res)
                 }
-                _ => Err(anyhow::anyhow!("Invalid input")),
+                _ => Err(anyhow!("Invalid input")),
             }?;
 
             command_result!(res)
@@ -617,7 +636,7 @@ pub(crate) async fn handle_command(
                         .await?;
                     Ok(withdraw_res)
                 }
-                _ => Err(anyhow::anyhow!("Invalid input")),
+                _ => Err(anyhow!("Invalid input")),
             }?;
 
             command_result!(res)
@@ -630,7 +649,7 @@ pub(crate) async fn handle_command(
                     let auth_res = sdk.lnurl_auth(ad).await?;
                     serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())
                 }
-                _ => Err(anyhow::anyhow!("Unexpected result type")),
+                _ => Err(anyhow!("Unexpected result type")),
             }?;
 
             command_result!(res)

@@ -14,6 +14,7 @@ class SwapUpdatedTask : TaskProtocol {
     internal var bestAttemptContent: UNMutableNotificationContent?
     internal var logger: ServiceLogger
     internal var request: SwapUpdatedRequest? = nil
+    internal var notified: Bool = false
     
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         self.payload = payload
@@ -35,10 +36,10 @@ class SwapUpdatedTask : TaskProtocol {
     public func onEvent(e: SdkEvent) {
         if let swapIdHash = self.request?.id {
             switch e {
-            case .paymentSucceeded(details: let payment):
+            case .paymentWaitingConfirmation(details: let payment), .paymentSucceeded(details: let payment):
                 let swapId = self.getSwapId(details: payment.details)
                 if swapIdHash == swapId?.sha256() {
-                    self.logger.log(tag: TAG, line: "Received payment succeeded event: \(swapIdHash)", level: "INFO")
+                    self.logger.log(tag: TAG, line: "Received payment event: \(swapIdHash) \(payment.status)", level: "INFO")
                     self.notifySuccess(payment: payment)
                 }
                 break
@@ -53,7 +54,7 @@ class SwapUpdatedTask : TaskProtocol {
             switch details {
             case let .bitcoin(swapId, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break
@@ -69,12 +70,15 @@ class SwapUpdatedTask : TaskProtocol {
     }
 
     func notifySuccess(payment: Payment) {
-        self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") completed successfully", level: "INFO")
-        let received = payment.paymentType == PaymentType.receive
-        let notificationTitle = ResourceHelper.shared.getString(
-            key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE, 
-            validateContains: "%d", 
-            fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
-        self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+        if !self.notified {
+            self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") processing successful", level: "INFO")
+            let received = payment.paymentType == PaymentType.receive
+            let notificationTitle = ResourceHelper.shared.getString(
+                key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE, 
+                validateContains: "%d", 
+                fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
+            self.notified = true
+            self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+        }
     }
 }

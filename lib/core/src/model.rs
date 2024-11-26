@@ -36,10 +36,12 @@ pub struct Config {
     pub bitcoin_electrum_url: String,
     /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
     pub mempoolspace_url: String,
-    /// Directory in which all SDK files (DB, log, cache) are stored.
+    /// Directory in which the DB and log files are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
+    /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
+    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
     pub payment_timeout_sec: u64,
@@ -59,6 +61,7 @@ impl Config {
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/api".to_string(),
             working_dir: ".".to_string(),
+            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
@@ -73,6 +76,7 @@ impl Config {
             bitcoin_electrum_url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
             working_dir: ".".to_string(),
+            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
@@ -81,8 +85,12 @@ impl Config {
         }
     }
 
-    pub(crate) fn get_wallet_working_dir(&self, fingerprint_hex: String) -> anyhow::Result<String> {
-        Ok(PathBuf::from(self.working_dir.clone())
+    pub(crate) fn get_wallet_dir(
+        &self,
+        base_dir: &str,
+        fingerprint_hex: &str,
+    ) -> anyhow::Result<String> {
+        Ok(PathBuf::from(base_dir)
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",
                 LiquidNetwork::Testnet => "testnet",
@@ -100,9 +108,9 @@ impl Config {
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 
-    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f64> {
+    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
         match self.network {
-            LiquidNetwork::Mainnet => Some(LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0),
+            LiquidNetwork::Mainnet => Some((LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32),
             LiquidNetwork::Testnet => None,
         }
     }
@@ -360,12 +368,12 @@ pub struct OnchainPaymentLimitsResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
-    /// Supports BIP21 URIs, BOLT11 invoices and Liquid addresses
+    /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
     pub destination: String,
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
-    /// where no amount is specified
-    pub amount_sat: Option<u64>,
+    /// where no amount is specified, or when the caller wishes to drain
+    pub amount: Option<PayAmount>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -376,6 +384,10 @@ pub enum SendDestination {
     },
     Bolt11 {
         invoice: LNInvoice,
+    },
+    Bolt12 {
+        offer: LNOffer,
+        receiver_amount_sat: u64,
     },
 }
 
@@ -399,7 +411,7 @@ pub struct SendPaymentResponse {
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub enum PayOnchainAmount {
+pub enum PayAmount {
     /// The amount in satoshi that will be received
     Receiver { amount_sat: u64 },
     /// Indicates that all available funds should be sent
@@ -409,7 +421,7 @@ pub enum PayOnchainAmount {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
-    pub amount: PayOnchainAmount,
+    pub amount: PayAmount,
     /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
     pub fee_rate_sat_per_vbyte: Option<u32>,
 }
@@ -474,7 +486,7 @@ pub struct GetInfoResponse {
     pub pending_send_sat: u64,
     /// Incoming amount that is pending from ongoing Receive swaps
     pub pending_receive_sat: u64,
-    /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_working_dir].
+    /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
@@ -754,7 +766,10 @@ impl ChainSwap {
 #[derive(Clone, Debug)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
+    /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
     pub(crate) invoice: String,
+    /// The bolt12 offer, if this swap sends to a Bolt12 offer
+    pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
@@ -1126,6 +1141,7 @@ pub struct PaymentSwapData {
 
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
+    pub bolt12_offer: Option<String>,
     pub payment_hash: Option<String>,
     pub description: String,
 
@@ -1160,10 +1176,12 @@ pub enum PaymentDetails {
         /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
-        /// Represents the invoice associated with a payment
+        /// Represents the Bolt11 invoice associated with a payment
         /// In the case of a Send payment, this is the invoice paid by the swapper
         /// In the case of a Receive payment, this is the invoice paid by the user
         bolt11: Option<String>,
+
+        bolt12_offer: Option<String>,
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
@@ -1293,6 +1311,7 @@ impl Payment {
                 swap_id: swap.swap_id,
                 preimage: swap.preimage,
                 bolt11: swap.bolt11,
+                bolt12_offer: swap.bolt12_offer,
                 payment_hash: swap.payment_hash,
                 description: swap.description,
                 refund_tx_id: swap.refund_tx_id,
@@ -1312,18 +1331,17 @@ impl Payment {
             // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
             destination: match &swap {
-                Some(
-                    PaymentSwapData {
-                        swap_type: PaymentSwapType::Receive,
-                        bolt11,
-                        ..
-                    }
-                    | PaymentSwapData {
-                        swap_type: PaymentSwapType::Send,
-                        bolt11,
-                        ..
-                    },
-                ) => bolt11.clone(),
+                Some(PaymentSwapData {
+                    swap_type: PaymentSwapType::Receive,
+                    bolt11,
+                    ..
+                }) => bolt11.clone(),
+                Some(PaymentSwapData {
+                    swap_type: PaymentSwapType::Send,
+                    bolt11,
+                    bolt12_offer,
+                    ..
+                }) => bolt11.clone().or(bolt12_offer.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
                     claim_address,
@@ -1334,10 +1352,10 @@ impl Payment {
                     _ => None,
                 },
             },
-            timestamp: match swap {
-                Some(ref swap) => swap.created_at,
-                None => tx.timestamp.unwrap_or(utils::now()),
-            },
+            timestamp: tx
+                .timestamp
+                .or(swap.as_ref().map(|s| s.created_at))
+                .unwrap_or(utils::now()),
             amount_sat: tx.amount_sat,
             fees_sat: match swap.as_ref() {
                 Some(s) => s.payer_amount_sat - s.receiver_amount_sat,

@@ -1,10 +1,12 @@
+use std::fs::{self, create_dir_all};
 use std::io::Write;
-use std::{str::FromStr, sync::Arc};
+use std::path::PathBuf;
+use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
-use log::debug;
+use log::{debug, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::{
@@ -56,6 +58,16 @@ pub trait OnchainWallet: Send + Sync {
         enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError>;
 
+    /// Build a transaction to send funds to a recipient. If building a transaction
+    /// results in an InsufficientFunds error, attempt to build a drain transaction
+    /// validating that the `amount_sat` matches the drain output.
+    async fn build_tx_or_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        amount_sat: u64,
+    ) -> Result<Transaction, PaymentError>;
+
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
 
@@ -84,6 +96,7 @@ pub(crate) struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
+    working_dir: String,
     pub(crate) signer: SdkLwkSigner,
 }
 
@@ -94,18 +107,50 @@ impl LiquidOnchainWallet {
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
-        let signer = crate::signer::SdkLwkSigner::new(user_signer)?;
-        let descriptor = LiquidOnchainWallet::get_descriptor(&signer, config.network)?;
-        let elements_network: ElementsNetwork = config.network.into();
+        let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, working_dir, &signer)?;
 
-        let lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
-        let wollet = Wollet::new(elements_network, lwk_persister, descriptor)?;
+        let working_dir_buf = PathBuf::from_str(working_dir)?;
+        if !working_dir_buf.exists() {
+            create_dir_all(&working_dir_buf)?;
+        }
+
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
+            working_dir: working_dir.clone(),
             signer,
         })
+    }
+
+    fn create_wallet<P: AsRef<Path>>(
+        config: &Config,
+        working_dir: P,
+        signer: &SdkLwkSigner,
+    ) -> Result<Wollet> {
+        let elements_network: ElementsNetwork = config.network.into();
+        let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
+        let mut lwk_persister =
+            FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
+
+        match Wollet::new(elements_network, lwk_persister, descriptor.clone()) {
+            Ok(wollet) => Ok(wollet),
+            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+                warn!("Update height too old, wipping storage and retrying");
+                let mut path = working_dir.as_ref().to_path_buf();
+                path.push(elements_network.as_str());
+                fs::remove_dir_all(&path)?;
+                warn!("Wiping wallet in path: {:?}", path);
+                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
+                Ok(Wollet::new(
+                    elements_network,
+                    lwk_persister,
+                    descriptor.clone(),
+                )?)
+            }
+            Err(e) => Err(e.into()),
+        }
     }
 
     fn get_descriptor(
@@ -209,6 +254,26 @@ impl OnchainWallet for LiquidOnchainWallet {
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
+    async fn build_tx_or_drain_tx(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        amount_sat: u64,
+    ) -> Result<Transaction, PaymentError> {
+        match self
+            .build_tx(fee_rate_sats_per_kvb, recipient_address, amount_sat)
+            .await
+        {
+            Ok(tx) => Ok(tx),
+            Err(PaymentError::InsufficientFunds) => {
+                warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
+                self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
+                    .await
+            }
+            Err(e) => Err(e),
+        }
+    }
+
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
         let tip = self.tip().await.height();
@@ -267,12 +332,26 @@ impl OnchainWallet for LiquidOnchainWallet {
             .persister
             .get_last_derivation_index()?
             .unwrap_or_default();
-        lwk_wollet::full_scan_to_index_with_electrum_client(
+        match lwk_wollet::full_scan_to_index_with_electrum_client(
             &mut wallet,
             index,
             &mut electrum_client,
-        )?;
-        Ok(())
+        ) {
+            Ok(()) => Ok(()),
+            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+                warn!("Full scan failed with update height too old, wiping storage and retrying");
+                let mut new_wallet =
+                    Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
+                lwk_wollet::full_scan_to_index_with_electrum_client(
+                    &mut new_wallet,
+                    index,
+                    &mut electrum_client,
+                )?;
+                *wallet = new_wallet;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
     }
 
     fn sign_message(&self, message: &str) -> Result<String> {

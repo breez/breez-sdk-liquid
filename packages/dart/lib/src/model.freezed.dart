@@ -594,53 +594,52 @@ abstract class LnUrlPayResult_PayError extends LnUrlPayResult {
 }
 
 /// @nodoc
-mixin _$PayOnchainAmount {}
+mixin _$PayAmount {}
 
 /// @nodoc
-abstract class $PayOnchainAmountCopyWith<$Res> {
-  factory $PayOnchainAmountCopyWith(PayOnchainAmount value, $Res Function(PayOnchainAmount) then) =
-      _$PayOnchainAmountCopyWithImpl<$Res, PayOnchainAmount>;
+abstract class $PayAmountCopyWith<$Res> {
+  factory $PayAmountCopyWith(PayAmount value, $Res Function(PayAmount) then) =
+      _$PayAmountCopyWithImpl<$Res, PayAmount>;
 }
 
 /// @nodoc
-class _$PayOnchainAmountCopyWithImpl<$Res, $Val extends PayOnchainAmount>
-    implements $PayOnchainAmountCopyWith<$Res> {
-  _$PayOnchainAmountCopyWithImpl(this._value, this._then);
+class _$PayAmountCopyWithImpl<$Res, $Val extends PayAmount> implements $PayAmountCopyWith<$Res> {
+  _$PayAmountCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of PayOnchainAmount
+  /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
-abstract class _$$PayOnchainAmount_ReceiverImplCopyWith<$Res> {
-  factory _$$PayOnchainAmount_ReceiverImplCopyWith(
-          _$PayOnchainAmount_ReceiverImpl value, $Res Function(_$PayOnchainAmount_ReceiverImpl) then) =
-      __$$PayOnchainAmount_ReceiverImplCopyWithImpl<$Res>;
+abstract class _$$PayAmount_ReceiverImplCopyWith<$Res> {
+  factory _$$PayAmount_ReceiverImplCopyWith(
+          _$PayAmount_ReceiverImpl value, $Res Function(_$PayAmount_ReceiverImpl) then) =
+      __$$PayAmount_ReceiverImplCopyWithImpl<$Res>;
   @useResult
   $Res call({BigInt amountSat});
 }
 
 /// @nodoc
-class __$$PayOnchainAmount_ReceiverImplCopyWithImpl<$Res>
-    extends _$PayOnchainAmountCopyWithImpl<$Res, _$PayOnchainAmount_ReceiverImpl>
-    implements _$$PayOnchainAmount_ReceiverImplCopyWith<$Res> {
-  __$$PayOnchainAmount_ReceiverImplCopyWithImpl(
-      _$PayOnchainAmount_ReceiverImpl _value, $Res Function(_$PayOnchainAmount_ReceiverImpl) _then)
+class __$$PayAmount_ReceiverImplCopyWithImpl<$Res>
+    extends _$PayAmountCopyWithImpl<$Res, _$PayAmount_ReceiverImpl>
+    implements _$$PayAmount_ReceiverImplCopyWith<$Res> {
+  __$$PayAmount_ReceiverImplCopyWithImpl(
+      _$PayAmount_ReceiverImpl _value, $Res Function(_$PayAmount_ReceiverImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of PayOnchainAmount
+  /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? amountSat = null,
   }) {
-    return _then(_$PayOnchainAmount_ReceiverImpl(
+    return _then(_$PayAmount_ReceiverImpl(
       amountSat: null == amountSat
           ? _value.amountSat
           : amountSat // ignore: cast_nullable_to_non_nullable
@@ -651,93 +650,90 @@ class __$$PayOnchainAmount_ReceiverImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PayOnchainAmount_ReceiverImpl extends PayOnchainAmount_Receiver {
-  const _$PayOnchainAmount_ReceiverImpl({required this.amountSat}) : super._();
+class _$PayAmount_ReceiverImpl extends PayAmount_Receiver {
+  const _$PayAmount_ReceiverImpl({required this.amountSat}) : super._();
 
   @override
   final BigInt amountSat;
 
   @override
   String toString() {
-    return 'PayOnchainAmount.receiver(amountSat: $amountSat)';
+    return 'PayAmount.receiver(amountSat: $amountSat)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PayOnchainAmount_ReceiverImpl &&
+            other is _$PayAmount_ReceiverImpl &&
             (identical(other.amountSat, amountSat) || other.amountSat == amountSat));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, amountSat);
 
-  /// Create a copy of PayOnchainAmount
+  /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$PayOnchainAmount_ReceiverImplCopyWith<_$PayOnchainAmount_ReceiverImpl> get copyWith =>
-      __$$PayOnchainAmount_ReceiverImplCopyWithImpl<_$PayOnchainAmount_ReceiverImpl>(this, _$identity);
+  _$$PayAmount_ReceiverImplCopyWith<_$PayAmount_ReceiverImpl> get copyWith =>
+      __$$PayAmount_ReceiverImplCopyWithImpl<_$PayAmount_ReceiverImpl>(this, _$identity);
 }
 
-abstract class PayOnchainAmount_Receiver extends PayOnchainAmount {
-  const factory PayOnchainAmount_Receiver({required final BigInt amountSat}) =
-      _$PayOnchainAmount_ReceiverImpl;
-  const PayOnchainAmount_Receiver._() : super._();
+abstract class PayAmount_Receiver extends PayAmount {
+  const factory PayAmount_Receiver({required final BigInt amountSat}) = _$PayAmount_ReceiverImpl;
+  const PayAmount_Receiver._() : super._();
 
   BigInt get amountSat;
 
-  /// Create a copy of PayOnchainAmount
+  /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$PayOnchainAmount_ReceiverImplCopyWith<_$PayOnchainAmount_ReceiverImpl> get copyWith =>
+  _$$PayAmount_ReceiverImplCopyWith<_$PayAmount_ReceiverImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$PayOnchainAmount_DrainImplCopyWith<$Res> {
-  factory _$$PayOnchainAmount_DrainImplCopyWith(
-          _$PayOnchainAmount_DrainImpl value, $Res Function(_$PayOnchainAmount_DrainImpl) then) =
-      __$$PayOnchainAmount_DrainImplCopyWithImpl<$Res>;
+abstract class _$$PayAmount_DrainImplCopyWith<$Res> {
+  factory _$$PayAmount_DrainImplCopyWith(
+          _$PayAmount_DrainImpl value, $Res Function(_$PayAmount_DrainImpl) then) =
+      __$$PayAmount_DrainImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
-class __$$PayOnchainAmount_DrainImplCopyWithImpl<$Res>
-    extends _$PayOnchainAmountCopyWithImpl<$Res, _$PayOnchainAmount_DrainImpl>
-    implements _$$PayOnchainAmount_DrainImplCopyWith<$Res> {
-  __$$PayOnchainAmount_DrainImplCopyWithImpl(
-      _$PayOnchainAmount_DrainImpl _value, $Res Function(_$PayOnchainAmount_DrainImpl) _then)
+class __$$PayAmount_DrainImplCopyWithImpl<$Res> extends _$PayAmountCopyWithImpl<$Res, _$PayAmount_DrainImpl>
+    implements _$$PayAmount_DrainImplCopyWith<$Res> {
+  __$$PayAmount_DrainImplCopyWithImpl(
+      _$PayAmount_DrainImpl _value, $Res Function(_$PayAmount_DrainImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of PayOnchainAmount
+  /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
 
-class _$PayOnchainAmount_DrainImpl extends PayOnchainAmount_Drain {
-  const _$PayOnchainAmount_DrainImpl() : super._();
+class _$PayAmount_DrainImpl extends PayAmount_Drain {
+  const _$PayAmount_DrainImpl() : super._();
 
   @override
   String toString() {
-    return 'PayOnchainAmount.drain()';
+    return 'PayAmount.drain()';
   }
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$PayOnchainAmount_DrainImpl);
+    return identical(this, other) || (other.runtimeType == runtimeType && other is _$PayAmount_DrainImpl);
   }
 
   @override
   int get hashCode => runtimeType.hashCode;
 }
 
-abstract class PayOnchainAmount_Drain extends PayOnchainAmount {
-  const factory PayOnchainAmount_Drain() = _$PayOnchainAmount_DrainImpl;
-  const PayOnchainAmount_Drain._() : super._();
+abstract class PayAmount_Drain extends PayAmount {
+  const factory PayAmount_Drain() = _$PayAmount_DrainImpl;
+  const PayAmount_Drain._() : super._();
 }
 
 /// @nodoc
@@ -797,6 +793,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String description,
       String? preimage,
       String? bolt11,
+      String? bolt12Offer,
       String? paymentHash,
       String? refundTxId,
       BigInt? refundTxAmountSat});
@@ -819,6 +816,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? description = null,
     Object? preimage = freezed,
     Object? bolt11 = freezed,
+    Object? bolt12Offer = freezed,
     Object? paymentHash = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
@@ -839,6 +837,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
       bolt11: freezed == bolt11
           ? _value.bolt11
           : bolt11 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      bolt12Offer: freezed == bolt12Offer
+          ? _value.bolt12Offer
+          : bolt12Offer // ignore: cast_nullable_to_non_nullable
               as String?,
       paymentHash: freezed == paymentHash
           ? _value.paymentHash
@@ -864,6 +866,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       required this.description,
       this.preimage,
       this.bolt11,
+      this.bolt12Offer,
       this.paymentHash,
       this.refundTxId,
       this.refundTxAmountSat})
@@ -880,11 +883,13 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String? preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   @override
   final String? bolt11;
+  @override
+  final String? bolt12Offer;
 
   /// The payment hash of the invoice
   @override
@@ -900,7 +905,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -912,6 +917,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.description, description) || other.description == description) &&
             (identical(other.preimage, preimage) || other.preimage == preimage) &&
             (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
+            (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
@@ -919,8 +925,8 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, swapId, description, preimage, bolt11, paymentHash, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(runtimeType, swapId, description, preimage, bolt11, bolt12Offer,
+      paymentHash, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -937,6 +943,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       required final String description,
       final String? preimage,
       final String? bolt11,
+      final String? bolt12Offer,
       final String? paymentHash,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
@@ -951,10 +958,11 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
   String? get preimage;
 
-  /// Represents the invoice associated with a payment
+  /// Represents the Bolt11 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   String? get bolt11;
+  String? get bolt12Offer;
 
   /// The payment hash of the invoice
   String? get paymentHash;
@@ -1922,5 +1930,95 @@ abstract class SendDestination_Bolt11 extends SendDestination {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  factory _$$SendDestination_Bolt12ImplCopyWith(
+          _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
+      __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({LNOffer offer, BigInt receiverAmountSat});
+}
+
+/// @nodoc
+class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
+    extends _$SendDestinationCopyWithImpl<$Res, _$SendDestination_Bolt12Impl>
+    implements _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+  __$$SendDestination_Bolt12ImplCopyWithImpl(
+      _$SendDestination_Bolt12Impl _value, $Res Function(_$SendDestination_Bolt12Impl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? offer = null,
+    Object? receiverAmountSat = null,
+  }) {
+    return _then(_$SendDestination_Bolt12Impl(
+      offer: null == offer
+          ? _value.offer
+          : offer // ignore: cast_nullable_to_non_nullable
+              as LNOffer,
+      receiverAmountSat: null == receiverAmountSat
+          ? _value.receiverAmountSat
+          : receiverAmountSat // ignore: cast_nullable_to_non_nullable
+              as BigInt,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
+  const _$SendDestination_Bolt12Impl({required this.offer, required this.receiverAmountSat}) : super._();
+
+  @override
+  final LNOffer offer;
+  @override
+  final BigInt receiverAmountSat;
+
+  @override
+  String toString() {
+    return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SendDestination_Bolt12Impl &&
+            (identical(other.offer, offer) || other.offer == offer) &&
+            (identical(other.receiverAmountSat, receiverAmountSat) ||
+                other.receiverAmountSat == receiverAmountSat));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, offer, receiverAmountSat);
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
+      __$$SendDestination_Bolt12ImplCopyWithImpl<_$SendDestination_Bolt12Impl>(this, _$identity);
+}
+
+abstract class SendDestination_Bolt12 extends SendDestination {
+  const factory SendDestination_Bolt12(
+      {required final LNOffer offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
+  const SendDestination_Bolt12._() : super._();
+
+  LNOffer get offer;
+  BigInt get receiverAmountSat;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }

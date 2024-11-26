@@ -310,6 +310,10 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
+    fn get_bolt12_invoice(&self, _offer: &str, _amount_sat: u64) -> Result<String, PaymentError> {
+        unimplemented!()
+    }
+
     fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError> {
         unimplemented!()
     }

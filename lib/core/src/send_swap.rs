@@ -190,10 +190,8 @@ impl SendSwapHandler {
 
         let lockup_tx = self
             .onchain_wallet
-            .build_tx(
-                self.config
-                    .lowball_fee_rate_msat_per_vbyte()
-                    .map(|v| v as f32),
+            .build_tx_or_drain_tx(
+                self.config.lowball_fee_rate_msat_per_vbyte(),
                 &create_response.address,
                 create_response.expected_amount,
             )
@@ -502,8 +500,9 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
-                err: "Cannot transition to Created state".to_string(),
+                err: "Cannot transition from {from_state:?} to Created state".to_string(),
             }),
 
             (Created | Pending, Pending) => Ok(()),
@@ -583,7 +582,7 @@ mod tests {
                 Pending,
                 HashSet::from([Pending, RefundPending, Complete, Failed]),
             ),
-            (TimedOut, HashSet::from([TimedOut, Failed])),
+            (TimedOut, HashSet::from([TimedOut, Created, Failed])),
             (Complete, HashSet::from([])),
             (Refundable, HashSet::from([Failed])),
             (Failed, HashSet::from([Failed])),

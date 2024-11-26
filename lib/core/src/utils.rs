@@ -2,13 +2,16 @@ use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{PaymentError, SdkResult};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, ensure, Result};
+use lightning::offers::invoice::Bolt12Invoice;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
 };
+use sdk_common::bitcoin::bech32;
+use sdk_common::bitcoin::bech32::FromBase32;
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -48,4 +51,17 @@ pub(crate) fn deserialize_tx_hex(tx_hex: &str) -> Result<Transaction> {
     Ok(deserialize(&Vec::<u8>::from_hex(tx_hex).map_err(
         |err| anyhow!("Could not deserialize transaction: {err:?}"),
     )?)?)
+}
+
+/// Parsing logic that decodes a string into a [Bolt12Invoice].
+///
+/// It matches the encoding logic on Boltz side.
+pub(crate) fn parse_bolt12_invoice(invoice: &str) -> Result<Bolt12Invoice> {
+    let (hrp, data) = bech32::decode_without_checksum(invoice)?;
+    ensure!(hrp.as_str() == "lni", "Invalid HRP");
+
+    let data = Vec::<u8>::from_base32(&data)?;
+
+    lightning::offers::invoice::Bolt12Invoice::try_from(data)
+        .map_err(|e| anyhow!("Failed to parse BOLT12: {e:?}"))
 }
