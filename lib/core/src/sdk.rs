@@ -2255,18 +2255,6 @@ impl LiquidSdk {
                 let lockup_tx_id = receive_data.lockup_tx_id.map(|h| h.txid.to_string());
                 let claim_tx_id = receive_data.claim_tx_id.clone().map(|h| h.txid.to_string());
                 let mrh_tx_id = receive_data.mrh_tx_id.clone().map(|h| h.txid.to_string());
-                _ = self
-                    .receive_swap_handler
-                    .update_swap_info(
-                        &swap_id,
-                        to_state,
-                        claim_tx_id.as_deref(),
-                        lockup_tx_id.as_deref(),
-                        mrh_tx_id.as_deref(),
-                        receive_data.mrh_amount_sat,
-                    )
-                    .await
-                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
                 let history_updates = vec![receive_data.claim_tx_id, receive_data.mrh_tx_id]
                     .into_iter()
                     .flatten()
@@ -2277,6 +2265,17 @@ impl LiquidSdk {
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
                 }
+                _ = self
+                    .receive_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        claim_tx_id.as_deref(),
+                        lockup_tx_id.as_deref(),
+                        mrh_tx_id.as_deref(),
+                        receive_data.mrh_amount_sat,
+                    )
+                    .await;
             }
         }
 
@@ -2285,17 +2284,6 @@ impl LiquidSdk {
             if let Some(to_state) = send_data.derive_partial_state() {
                 let lockup_tx_id = send_data.lockup_tx_id.clone().map(|h| h.txid.to_string());
                 let refund_tx_id = send_data.refund_tx_id.clone().map(|h| h.txid.to_string());
-                _ = self
-                    .send_swap_handler
-                    .update_swap_info(
-                        &swap_id,
-                        to_state,
-                        None,
-                        lockup_tx_id.as_deref(),
-                        refund_tx_id.as_deref(),
-                    )
-                    .await
-                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
                 let history_updates = vec![send_data.lockup_tx_id, send_data.refund_tx_id]
                     .into_iter()
                     .flatten()
@@ -2306,6 +2294,16 @@ impl LiquidSdk {
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
                 }
+                _ = self
+                    .send_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        None,
+                        lockup_tx_id.as_deref(),
+                        refund_tx_id.as_deref(),
+                    )
+                    .await;
             }
         }
 
@@ -2325,6 +2323,12 @@ impl LiquidSdk {
                 let refund_tx_id = chain_receive_data
                     .btc_refund_tx_id
                     .map(|h| h.txid.to_string());
+                if let Some(history) = chain_receive_data.lbtc_server_claim_tx_id {
+                    if let Some(tx) = tx_map.remove(&history.txid) {
+                        self.persister
+                            .insert_or_update_payment_with_wallet_tx(&tx)?;
+                    }
+                }
                 _ = self
                     .chain_swap_handler
                     .update_swap_info(
@@ -2335,14 +2339,7 @@ impl LiquidSdk {
                         claim_tx_id.as_deref(),
                         refund_tx_id.as_deref(),
                     )
-                    .await
-                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
-                if let Some(history) = chain_receive_data.lbtc_server_claim_tx_id {
-                    if let Some(tx) = tx_map.remove(&history.txid) {
-                        self.persister
-                            .insert_or_update_payment_with_wallet_tx(&tx)?;
-                    }
-                }
+                    .await;
             }
         }
 
@@ -2361,18 +2358,6 @@ impl LiquidSdk {
                     .lbtc_refund_tx_id
                     .clone()
                     .map(|h| h.txid.to_string());
-                _ = self
-                    .chain_swap_handler
-                    .update_swap_info(
-                        &swap_id,
-                        to_state,
-                        server_lockup_tx_id.as_deref(),
-                        user_lockup_tx_id.as_deref(),
-                        claim_tx_id.as_deref(),
-                        refund_tx_id.as_deref(),
-                    )
-                    .await
-                    .inspect_err(|e| debug!("Ignore recovery error: {e}"));
                 let history_updates = vec![
                     chain_send_data.lbtc_user_lockup_tx_id,
                     chain_send_data.lbtc_refund_tx_id,
@@ -2386,6 +2371,17 @@ impl LiquidSdk {
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
                     }
                 }
+                _ = self
+                    .chain_swap_handler
+                    .update_swap_info(
+                        &swap_id,
+                        to_state,
+                        server_lockup_tx_id.as_deref(),
+                        user_lockup_tx_id.as_deref(),
+                        claim_tx_id.as_deref(),
+                        refund_tx_id.as_deref(),
+                    )
+                    .await;
             }
         }
 

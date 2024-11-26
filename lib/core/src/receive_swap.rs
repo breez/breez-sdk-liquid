@@ -62,10 +62,7 @@ impl ReceiveSwapHandler {
         let status = &update.status;
         let swap_state = RevSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid RevSwapState for Receive Swap {id}: {status}"))?;
-        let receive_swap = self
-            .persister
-            .fetch_receive_swap_by_id(id)?
-            .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
+        let receive_swap = self.fetch_receive_swap_by_id(id)?;
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
@@ -236,6 +233,14 @@ impl ReceiveSwapHandler {
         }
     }
 
+    fn fetch_receive_swap_by_id(&self, swap_id: &str) -> Result<ReceiveSwap, PaymentError> {
+        self.persister
+            .fetch_receive_swap_by_id(swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Receive Swap not found {swap_id}"),
+            })
+    }
     /// Transitions a Receive swap to a new state
     pub(crate) async fn update_swap_info(
         &self,
@@ -246,25 +251,12 @@ impl ReceiveSwapHandler {
         mrh_tx_id: Option<&str>,
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
+        Self::validate_state_transition(swap.state, to_state)?;
         info!(
             "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
             swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
         );
-
-        let swap = self
-            .persister
-            .fetch_receive_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Receive Swap not found {swap_id}"),
-            })?;
-        let payment_id = claim_tx_id
-            .or(lockup_tx_id)
-            .or(mrh_tx_id)
-            .map(|id| id.to_string())
-            .or(swap.claim_tx_id);
-
-        Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_receive_swap_update(
             swap_id,
             to_state,
@@ -273,22 +265,26 @@ impl ReceiveSwapHandler {
             mrh_tx_id,
             mrh_amount_sat,
         )?;
+        let updated_swap = self.fetch_receive_swap_by_id(swap_id)?;
 
         if mrh_tx_id.is_some() {
             self.persister.delete_reserved_address(&swap.mrh_address)?;
         }
 
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
+        // Only notify subscribers if the swap changes
+        let payment_id = claim_tx_id
+            .or(mrh_tx_id)
+            .map(|id| id.to_string())
+            .or(swap.claim_tx_id.clone())
+            .or(swap.mrh_tx_id.clone());
+        if updated_swap != swap {
+            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
         Ok(())
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
-        let swap = self
-            .persister
-            .fetch_receive_swap_by_id(swap_id)?
-            .ok_or(anyhow!("No Receive Swap found for ID {swap_id}"))?;
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         info!("Initiating claim for Receive Swap {swap_id}");
@@ -339,15 +335,10 @@ impl ReceiveSwapHandler {
                         )?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
-                        self.update_swap_info(
-                            swap_id,
-                            Pending,
-                            Some(&claim_tx_id),
-                            None,
-                            None,
-                            None,
-                        )
-                        .await
+                        // The claim_tx_id is already set by set_receive_swap_claim_tx_id. Manually trigger notifying
+                        // subscribers as update_swap_info will not recognise a change to the swap
+                        _ = self.subscription_notifier.send(claim_tx_id);
+                        Ok(())
                     }
                     Err(err) => {
                         // Multiple attempts to broadcast have failed. Unset the swap claim_tx_id

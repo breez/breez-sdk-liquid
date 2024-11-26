@@ -76,10 +76,7 @@ impl SendSwapHandler {
         let status = &update.status;
         let swap_state = SubSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid SubSwapState for Send Swap {id}: {status}"))?;
-        let swap = self
-            .persister
-            .fetch_send_swap_by_id(id)?
-            .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
+        let swap = self.fetch_send_swap_by_id(id)?;
 
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
@@ -249,6 +246,15 @@ impl SendSwapHandler {
         Ok(lockup_tx)
     }
 
+    fn fetch_send_swap_by_id(&self, swap_id: &str) -> Result<SendSwap, PaymentError> {
+        self.persister
+            .fetch_send_swap_by_id(swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Send Swap not found {swap_id}"),
+            })
+    }
+
     /// Transitions a Send swap to a new state
     pub(crate) async fn update_swap_info(
         &self,
@@ -258,18 +264,12 @@ impl SendSwapHandler {
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
-
-        let swap: SendSwap = self
-            .persister
-            .fetch_send_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Send Swap not found {swap_id}"),
-            })?;
-        let payment_id = lockup_tx_id.map(|c| c.to_string()).or(swap.lockup_tx_id);
-
+        let swap = self.fetch_send_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;
+        info!(
+            "Transitioning Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
+            swap_id, to_state, lockup_tx_id, refund_tx_id
+        );
         self.persister.try_handle_send_swap_update(
             swap_id,
             to_state,
@@ -277,8 +277,14 @@ impl SendSwapHandler {
             lockup_tx_id,
             refund_tx_id,
         )?;
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
+        let updated_swap = self.fetch_send_swap_by_id(swap_id)?;
+
+        // Only notify subscribers if the swap changes
+        let payment_id = lockup_tx_id
+            .map(|c| c.to_string())
+            .or(swap.lockup_tx_id.clone());
+        if updated_swap != swap {
+            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
         Ok(())
     }

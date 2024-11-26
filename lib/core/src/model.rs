@@ -636,7 +636,7 @@ impl FromSql for Direction {
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
@@ -766,7 +766,7 @@ impl ChainSwap {
 }
 
 /// A submarine swap, used for Send
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
@@ -851,7 +851,7 @@ impl SendSwap {
 }
 
 /// A reverse swap, used for Receive
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,

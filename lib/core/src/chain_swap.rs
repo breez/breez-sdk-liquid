@@ -104,10 +104,7 @@ impl ChainSwapHandler {
     /// Handles status updates from Boltz for Chain swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap = self
-            .persister
-            .fetch_chain_swap_by_id(id)?
-            .ok_or(anyhow!("No ongoing Chain Swap found for ID {id}"))?;
+        let swap = self.fetch_chain_swap_by_id(id)?;
 
         if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&swap.id)? {
             if !sync_state.is_local {
@@ -673,6 +670,15 @@ impl ChainSwapHandler {
         Ok(lockup_tx)
     }
 
+    fn fetch_chain_swap_by_id(&self, swap_id: &str) -> Result<ChainSwap, PaymentError> {
+        self.persister
+            .fetch_chain_swap_by_id(swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Chain Swap not found {swap_id}"),
+            })
+    }
+
     /// Transitions a Chain swap to a new state
     pub(crate) async fn update_swap_info(
         &self,
@@ -683,23 +689,17 @@ impl ChainSwapHandler {
         claim_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        info!("Transitioning Chain swap {swap_id} to {to_state:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})", server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id);
-
-        let swap: ChainSwap = self
-            .persister
-            .fetch_chain_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Chain Swap not found {swap_id}"),
-            })?;
-        let payment_id = match swap.direction {
-            Direction::Incoming => claim_tx_id.map(|c| c.to_string()).or(swap.claim_tx_id),
-            Direction::Outgoing => user_lockup_tx_id
-                .map(|c| c.to_string())
-                .or(swap.user_lockup_tx_id),
-        };
-
+        let swap = self.fetch_chain_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;
+        info!(
+            "Transitioning Chain swap {} to {:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})", 
+            swap_id,
+            to_state,
+            server_lockup_tx_id,
+            user_lockup_tx_id,
+            claim_tx_id,
+            refund_tx_id
+        );
         self.persister.try_handle_chain_swap_update(
             swap_id,
             to_state,
@@ -708,17 +708,25 @@ impl ChainSwapHandler {
             claim_tx_id,
             refund_tx_id,
         )?;
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
+        let updated_swap = self.fetch_chain_swap_by_id(swap_id)?;
+
+        // Only notify subscribers if the swap changes
+        let payment_id = match swap.direction {
+            Direction::Incoming => claim_tx_id
+                .map(|c| c.to_string())
+                .or(swap.claim_tx_id.clone()),
+            Direction::Outgoing => user_lockup_tx_id
+                .map(|c| c.to_string())
+                .or(swap.user_lockup_tx_id.clone()),
+        };
+        if updated_swap != swap {
+            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
         Ok(())
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
-        let swap = self
-            .persister
-            .fetch_chain_swap_by_id(swap_id)?
-            .ok_or(anyhow!("No Chain Swap found for ID {swap_id}"))?;
+        let swap = self.fetch_chain_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         debug!("Initiating claim for Chain Swap {swap_id}");
@@ -789,15 +797,10 @@ impl ChainSwapHandler {
                         }
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Chain Swap {swap_id}");
-                        self.update_swap_info(
-                            &swap.id,
-                            Pending,
-                            None,
-                            None,
-                            Some(&claim_tx_id),
-                            None,
-                        )
-                        .await
+                        // The claim_tx_id is already set by set_chain_swap_claim_tx_id. Manually trigger notifying
+                        // subscribers as update_swap_info will not recognise a change to the swap
+                        _ = self.subscription_notifier.send(claim_tx_id);
+                        Ok(())
                     }
                     Err(err) => {
                         // Multiple attempts to broadcast have failed. Unset the swap claim_tx_id

@@ -744,9 +744,6 @@ pub(crate) mod immutable {
                         }
                     })
                     .collect();
-            let send_swap_immutable_data_size = send_swap_immutable_data_by_swap_id.len();
-            debug!("Send Swap immutable data: {send_swap_immutable_data_size} items");
-
             let receive_swap_immutable_data_by_swap_id: HashMap<String, ReceiveSwapImmutableData> =
                 receive_swaps
                     .iter()
@@ -780,9 +777,6 @@ pub(crate) mod immutable {
                         }
                     })
                     .collect();
-            let receive_swap_immutable_data_size = receive_swap_immutable_data_by_swap_id.len();
-            debug!("Receive Swap immutable data: {receive_swap_immutable_data_size} items");
-
             let send_chain_swap_immutable_data_by_swap_id: HashMap<String, SendChainSwapImmutableData> =
                 send_chain_swaps.iter().filter_map(|swap| {
                     let swap_id = &swap.id;
@@ -816,10 +810,6 @@ pub(crate) mod immutable {
                     }
                 })
                 .collect();
-            let send_chain_swap_immutable_data_size =
-                send_chain_swap_immutable_data_by_swap_id.len();
-            debug!("Send Chain Swap immutable data: {send_chain_swap_immutable_data_size} items");
-
             let receive_chain_swap_immutable_data_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData> =
                 receive_chain_swaps.iter().filter_map(|swap| {
                     let swap_id = &swap.id;
@@ -851,10 +841,19 @@ pub(crate) mod immutable {
                     }
                 })
                 .collect();
+
+            let send_swap_immutable_data_size = send_swap_immutable_data_by_swap_id.len();
+            let receive_swap_immutable_data_size = receive_swap_immutable_data_by_swap_id.len();
+            let send_chain_swap_immutable_data_size =
+                send_chain_swap_immutable_data_by_swap_id.len();
             let receive_chain_swap_immutable_data_size =
                 receive_chain_swap_immutable_data_by_swap_id.len();
             debug!(
-                "Receive Chain Swap immutable data: {receive_chain_swap_immutable_data_size} items"
+                "Immutable data items: send {}, receive {}, chain send {}, chain receive {}",
+                send_swap_immutable_data_size,
+                receive_swap_immutable_data_size,
+                send_chain_swap_immutable_data_size,
+                receive_chain_swap_immutable_data_size
             );
 
             Ok(SwapsList {
