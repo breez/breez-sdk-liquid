@@ -60,11 +60,12 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         
     open func getTaskFromNotification() -> TaskProtocol? {
         guard let content = bestAttemptContent else { return nil }
-        guard let notificationType = content.userInfo[Constants.MESSAGE_DATA_TYPE] as? String else { return nil }
+        let userInfo = content.userInfo["body"] as? NSDictionary ?? content.userInfo as NSDictionary
+        guard let notificationType = userInfo[Constants.MESSAGE_DATA_TYPE] as? String else { return nil }
         self.logger.log(tag: TAG, line: "Notification payload: \(content.userInfo)", level: "INFO")
         self.logger.log(tag: TAG, line: "Notification type: \(notificationType)", level: "INFO")
         
-        guard let payload = content.userInfo[Constants.MESSAGE_DATA_PAYLOAD] as? String else {
+        guard let payload = userInfo[Constants.MESSAGE_DATA_PAYLOAD] as? String else {
             contentHandler!(content)
             return nil
         }
