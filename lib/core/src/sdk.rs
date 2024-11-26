@@ -2153,7 +2153,7 @@ impl LiquidSdk {
             .tip()
             .map(|tip| tip.height as u32)?;
         self.chain_swap_handler
-            .rescan_incoming_user_lockup_txs(height, true)
+            .rescan_incoming_refunds(height, true)
             .await?;
         Ok(())
     }

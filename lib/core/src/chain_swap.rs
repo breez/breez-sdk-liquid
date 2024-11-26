@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use boltz_client::{
     boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
-    ElementsLockTime, LockTime, Secp256k1, Serialize, ToHex,
+    ElementsLockTime, Secp256k1, Serialize, ToHex,
 };
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
@@ -49,29 +49,20 @@ pub(crate) struct ChainSwapHandler {
 #[async_trait]
 impl BlockListener for ChainSwapHandler {
     async fn on_bitcoin_block(&self, height: u32) {
-        if let Err(e) = self.check_incoming_refunds(height).await {
-            warn!("Error checking incoming refunds: {e:?}");
+        if let Err(e) = self.rescan_incoming_refunds(height, false).await {
+            error!("Error rescanning incoming refunds: {e:?}");
         }
-        if let Err(e) = self.rescan_incoming_user_lockup_txs(height, false).await {
-            error!("Error rescanning incoming user txs: {e:?}");
-        }
-        if let Err(e) = self
-            .rescan_server_lockup_txs(Direction::Outgoing, height)
-            .await
-        {
-            error!("Error rescanning outgoing server txs: {e:?}");
+        if let Err(e) = self.claim_outgoing(height).await {
+            error!("Error claiming outgoing: {e:?}");
         }
     }
 
     async fn on_liquid_block(&self, height: u32) {
-        if let Err(e) = self.check_outgoing_refunds(height).await {
-            warn!("Error checking outgoing refunds: {e:?}");
+        if let Err(e) = self.refund_outgoing(height).await {
+            warn!("Error refunding outgoing: {e:?}");
         }
-        if let Err(e) = self
-            .rescan_server_lockup_txs(Direction::Incoming, height)
-            .await
-        {
-            error!("Error rescanning incoming server txs: {e:?}");
+        if let Err(e) = self.claim_incoming(height).await {
+            error!("Error claiming incoming: {e:?}");
         }
     }
 }
@@ -129,7 +120,7 @@ impl ChainSwapHandler {
         }
     }
 
-    pub(crate) async fn rescan_incoming_user_lockup_txs(
+    pub(crate) async fn rescan_incoming_refunds(
         &self,
         height: u32,
         ignore_monitoring_block_height: bool,
@@ -147,11 +138,7 @@ impl ChainSwapHandler {
         );
         for swap in chain_swaps {
             if let Err(e) = self
-                .rescan_incoming_chain_swap_user_lockup_tx(
-                    &swap,
-                    height,
-                    ignore_monitoring_block_height,
-                )
+                .rescan_incoming_user_lockup_balance(&swap, height, ignore_monitoring_block_height)
                 .await
             {
                 error!(
@@ -168,7 +155,7 @@ impl ChainSwapHandler {
     /// - `current_height`: the tip
     /// - `ignore_monitoring_block_height`: if true, it rescans an expired swap even after the
     ///   cutoff monitoring block height
-    async fn rescan_incoming_chain_swap_user_lockup_tx(
+    async fn rescan_incoming_user_lockup_balance(
         &self,
         swap: &ChainSwap,
         current_height: u32,
@@ -227,35 +214,57 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    pub(crate) async fn rescan_server_lockup_txs(
-        &self,
-        direction: Direction,
-        height: u32,
-    ) -> Result<()> {
+    async fn claim_incoming(&self, height: u32) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
             .list_chain_swaps()?
             .into_iter()
-            .filter(|s| s.direction == direction && s.state == Pending && s.claim_tx_id.is_none())
+            .filter(|s| {
+                s.direction == Direction::Incoming && s.state == Pending && s.claim_tx_id.is_none()
+            })
             .collect();
         info!(
-            "Rescanning {} {:?} Chain Swap(s) server lockup txs at height {}",
+            "Rescanning {} incoming Chain Swap(s) server lockup txs at height {}",
             chain_swaps.len(),
-            direction,
             height
         );
         for swap in chain_swaps {
-            if let Err(e) = self.rescan_chain_swap_server_lockup_tx(&swap).await {
+            if let Err(e) = self.claim_confirmed_server_lockup(&swap).await {
                 error!(
-                    "Error rescanning server lockup of {:?} Chain Swap {}: {e:?}",
-                    direction, swap.id,
+                    "Error rescanning server lockup of incoming Chain Swap {}: {e:?}",
+                    swap.id,
                 );
             }
         }
         Ok(())
     }
 
-    async fn rescan_chain_swap_server_lockup_tx(&self, swap: &ChainSwap) -> Result<()> {
+    async fn claim_outgoing(&self, height: u32) -> Result<()> {
+        let chain_swaps: Vec<ChainSwap> = self
+            .persister
+            .list_chain_swaps()?
+            .into_iter()
+            .filter(|s| {
+                s.direction == Direction::Outgoing && s.state == Pending && s.claim_tx_id.is_none()
+            })
+            .collect();
+        info!(
+            "Rescanning {} outgoing Chain Swap(s) server lockup txs at height {}",
+            chain_swaps.len(),
+            height
+        );
+        for swap in chain_swaps {
+            if let Err(e) = self.claim_confirmed_server_lockup(&swap).await {
+                error!(
+                    "Error rescanning server lockup of outgoing Chain Swap {}: {e:?}",
+                    swap.id
+                );
+            }
+        }
+        Ok(())
+    }
+
+    async fn claim_confirmed_server_lockup(&self, swap: &ChainSwap) -> Result<()> {
         let Some(tx_id) = swap.server_lockup_tx_id.clone() else {
             // Skip the rescan if there is no server_lockup_tx_id yet
             return Ok(());
@@ -991,41 +1000,7 @@ impl ChainSwapHandler {
         Ok(refund_tx_id)
     }
 
-    pub(crate) async fn check_incoming_refunds(&self, height: u32) -> Result<(), PaymentError> {
-        // Get all pending incoming chain swaps with a user lockup tx and no refund tx
-        let pending_swaps: Vec<ChainSwap> = self
-            .persister
-            .list_pending_chain_swaps()?
-            .into_iter()
-            .filter(|s| {
-                s.direction == Direction::Incoming
-                    && s.user_lockup_tx_id.is_some()
-                    && s.refund_tx_id.is_none()
-            })
-            .collect();
-        for swap in pending_swaps {
-            let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
-            let locktime_from_height =
-                LockTime::from_height(height).map_err(|e| PaymentError::Generic {
-                    err: format!("Error getting locktime from height {height:?}: {e}"),
-                })?;
-            info!("Checking Chain Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", swap.id, swap_script.locktime);
-            if swap_script.locktime.is_implied_by(locktime_from_height) {
-                let update_swap_info_res = self
-                    .update_swap_info(&swap.id, Refundable, None, None, None, None)
-                    .await;
-                if let Err(err) = update_swap_info_res {
-                    warn!(
-                        "Could not update incoming Chain swap {} information: {err:?}",
-                        swap.id
-                    );
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub(crate) async fn check_outgoing_refunds(&self, height: u32) -> Result<(), PaymentError> {
+    async fn refund_outgoing(&self, height: u32) -> Result<(), PaymentError> {
         // Get all pending outgoing chain swaps with no refund tx
         let pending_swaps: Vec<ChainSwap> = self
             .persister
