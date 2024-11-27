@@ -1627,9 +1627,9 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let mut zero_amount_min_payer_amount_sat = None;
-        let mut zero_amount_max_payer_amount_sat = None;
-        let mut zero_amount_service_feerate = None;
+        let mut min_payer_amount_sat = None;
+        let mut max_payer_amount_sat = None;
+        let mut service_feerate = None;
         let fees_sat;
         match req.payment_method {
             PaymentMethod::Lightning => {
@@ -1665,9 +1665,9 @@ impl LiquidSdk {
                     .unwrap_or_default();
 
                 if payer_amount_sat.is_none() {
-                    zero_amount_min_payer_amount_sat = Some(pair.limits.minimal);
-                    zero_amount_max_payer_amount_sat = Some(pair.limits.maximal);
-                    zero_amount_service_feerate = Some(pair.fees.percentage);
+                    min_payer_amount_sat = Some(pair.limits.minimal);
+                    max_payer_amount_sat = Some(pair.limits.maximal);
+                    service_feerate = Some(pair.fees.percentage);
                 }
 
                 fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
@@ -1684,9 +1684,9 @@ impl LiquidSdk {
             payer_amount_sat: req.payer_amount_sat,
             fees_sat,
             payment_method: req.payment_method.clone(),
-            zero_amount_min_payer_amount_sat,
-            zero_amount_max_payer_amount_sat,
-            zero_amount_service_feerate,
+            min_payer_amount_sat,
+            max_payer_amount_sat,
+            service_feerate,
         })
     }
 

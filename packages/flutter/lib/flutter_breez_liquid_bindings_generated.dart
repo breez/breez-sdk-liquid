@@ -4342,11 +4342,11 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Uint64()
   external int fees_sat;
 
-  external ffi.Pointer<ffi.Uint64> zero_amount_min_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> zero_amount_max_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Double> zero_amount_service_feerate;
+  external ffi.Pointer<ffi.Double> service_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {

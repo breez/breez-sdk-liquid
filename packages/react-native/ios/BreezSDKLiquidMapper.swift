@@ -1979,29 +1979,29 @@ enum BreezSDKLiquidMapper {
             }
             payerAmountSat = payerAmountSatTmp
         }
-        var zeroAmountMinPayerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountMinPayerAmountSat") {
-            guard let zeroAmountMinPayerAmountSatTmp = prepareReceiveResponse["zeroAmountMinPayerAmountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountMinPayerAmountSat"))
+        var minPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "minPayerAmountSat") {
+            guard let minPayerAmountSatTmp = prepareReceiveResponse["minPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "minPayerAmountSat"))
             }
-            zeroAmountMinPayerAmountSat = zeroAmountMinPayerAmountSatTmp
+            minPayerAmountSat = minPayerAmountSatTmp
         }
-        var zeroAmountMaxPayerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountMaxPayerAmountSat") {
-            guard let zeroAmountMaxPayerAmountSatTmp = prepareReceiveResponse["zeroAmountMaxPayerAmountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountMaxPayerAmountSat"))
+        var maxPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "maxPayerAmountSat") {
+            guard let maxPayerAmountSatTmp = prepareReceiveResponse["maxPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "maxPayerAmountSat"))
             }
-            zeroAmountMaxPayerAmountSat = zeroAmountMaxPayerAmountSatTmp
+            maxPayerAmountSat = maxPayerAmountSatTmp
         }
-        var zeroAmountServiceFeerate: Double?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "zeroAmountServiceFeerate") {
-            guard let zeroAmountServiceFeerateTmp = prepareReceiveResponse["zeroAmountServiceFeerate"] as? Double else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "zeroAmountServiceFeerate"))
+        var serviceFeerate: Double?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "serviceFeerate") {
+            guard let serviceFeerateTmp = prepareReceiveResponse["serviceFeerate"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "serviceFeerate"))
             }
-            zeroAmountServiceFeerate = zeroAmountServiceFeerateTmp
+            serviceFeerate = serviceFeerateTmp
         }
 
-        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, zeroAmountMinPayerAmountSat: zeroAmountMinPayerAmountSat, zeroAmountMaxPayerAmountSat: zeroAmountMaxPayerAmountSat, zeroAmountServiceFeerate: zeroAmountServiceFeerate)
+        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, serviceFeerate: serviceFeerate)
     }
 
     static func dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [String: Any?] {
@@ -2009,9 +2009,9 @@ enum BreezSDKLiquidMapper {
             "paymentMethod": valueOf(paymentMethod: prepareReceiveResponse.paymentMethod),
             "feesSat": prepareReceiveResponse.feesSat,
             "payerAmountSat": prepareReceiveResponse.payerAmountSat == nil ? nil : prepareReceiveResponse.payerAmountSat,
-            "zeroAmountMinPayerAmountSat": prepareReceiveResponse.zeroAmountMinPayerAmountSat == nil ? nil : prepareReceiveResponse.zeroAmountMinPayerAmountSat,
-            "zeroAmountMaxPayerAmountSat": prepareReceiveResponse.zeroAmountMaxPayerAmountSat == nil ? nil : prepareReceiveResponse.zeroAmountMaxPayerAmountSat,
-            "zeroAmountServiceFeerate": prepareReceiveResponse.zeroAmountServiceFeerate == nil ? nil : prepareReceiveResponse.zeroAmountServiceFeerate,
+            "minPayerAmountSat": prepareReceiveResponse.minPayerAmountSat == nil ? nil : prepareReceiveResponse.minPayerAmountSat,
+            "maxPayerAmountSat": prepareReceiveResponse.maxPayerAmountSat == nil ? nil : prepareReceiveResponse.maxPayerAmountSat,
+            "serviceFeerate": prepareReceiveResponse.serviceFeerate == nil ? nil : prepareReceiveResponse.serviceFeerate,
         ]
     }
 

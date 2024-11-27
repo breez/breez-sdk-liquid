@@ -933,26 +933,26 @@ class PrepareReceiveResponse {
 
   /// The minimum amount the payer can send for this swap to succeed.
   ///
-  /// Only applicable to Zero-Amount Receive Chain Swaps.
-  final BigInt? zeroAmountMinPayerAmountSat;
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? minPayerAmountSat;
 
   /// The maximum amount the payer can send for this swap to succeed.
   ///
-  /// Only applicable to Zero-Amount Receive Chain Swaps.
-  final BigInt? zeroAmountMaxPayerAmountSat;
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? maxPayerAmountSat;
 
   /// The percentage of the sent amount that will count towards the service fee.
   ///
-  /// Only applicable to Zero-Amount Receive Chain Swaps.
-  final double? zeroAmountServiceFeerate;
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final double? serviceFeerate;
 
   const PrepareReceiveResponse({
     required this.paymentMethod,
     this.payerAmountSat,
     required this.feesSat,
-    this.zeroAmountMinPayerAmountSat,
-    this.zeroAmountMaxPayerAmountSat,
-    this.zeroAmountServiceFeerate,
+    this.minPayerAmountSat,
+    this.maxPayerAmountSat,
+    this.serviceFeerate,
   });
 
   @override
@@ -960,9 +960,9 @@ class PrepareReceiveResponse {
       paymentMethod.hashCode ^
       payerAmountSat.hashCode ^
       feesSat.hashCode ^
-      zeroAmountMinPayerAmountSat.hashCode ^
-      zeroAmountMaxPayerAmountSat.hashCode ^
-      zeroAmountServiceFeerate.hashCode;
+      minPayerAmountSat.hashCode ^
+      maxPayerAmountSat.hashCode ^
+      serviceFeerate.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -972,9 +972,9 @@ class PrepareReceiveResponse {
           paymentMethod == other.paymentMethod &&
           payerAmountSat == other.payerAmountSat &&
           feesSat == other.feesSat &&
-          zeroAmountMinPayerAmountSat == other.zeroAmountMinPayerAmountSat &&
-          zeroAmountMaxPayerAmountSat == other.zeroAmountMaxPayerAmountSat &&
-          zeroAmountServiceFeerate == other.zeroAmountServiceFeerate;
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSat == other.maxPayerAmountSat &&
+          serviceFeerate == other.serviceFeerate;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

@@ -1697,44 +1697,37 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    val zeroAmountMinPayerAmountSat =
+    val minPayerAmountSat =
         if (hasNonNullKey(
                 prepareReceiveResponse,
-                "zeroAmountMinPayerAmountSat",
+                "minPayerAmountSat",
             )
         ) {
-            prepareReceiveResponse.getDouble("zeroAmountMinPayerAmountSat").toULong()
+            prepareReceiveResponse.getDouble("minPayerAmountSat").toULong()
         } else {
             null
         }
-    val zeroAmountMaxPayerAmountSat =
+    val maxPayerAmountSat =
         if (hasNonNullKey(
                 prepareReceiveResponse,
-                "zeroAmountMaxPayerAmountSat",
+                "maxPayerAmountSat",
             )
         ) {
-            prepareReceiveResponse.getDouble("zeroAmountMaxPayerAmountSat").toULong()
+            prepareReceiveResponse.getDouble("maxPayerAmountSat").toULong()
         } else {
             null
         }
-    val zeroAmountServiceFeerate =
+    val serviceFeerate =
         if (hasNonNullKey(
                 prepareReceiveResponse,
-                "zeroAmountServiceFeerate",
+                "serviceFeerate",
             )
         ) {
-            prepareReceiveResponse.getDouble("zeroAmountServiceFeerate")
+            prepareReceiveResponse.getDouble("serviceFeerate")
         } else {
             null
         }
-    return PrepareReceiveResponse(
-        paymentMethod,
-        feesSat,
-        payerAmountSat,
-        zeroAmountMinPayerAmountSat,
-        zeroAmountMaxPayerAmountSat,
-        zeroAmountServiceFeerate,
-    )
+    return PrepareReceiveResponse(paymentMethod, feesSat, payerAmountSat, minPayerAmountSat, maxPayerAmountSat, serviceFeerate)
 }
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
@@ -1742,9 +1735,9 @@ fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
         "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
         "feesSat" to prepareReceiveResponse.feesSat,
         "payerAmountSat" to prepareReceiveResponse.payerAmountSat,
-        "zeroAmountMinPayerAmountSat" to prepareReceiveResponse.zeroAmountMinPayerAmountSat,
-        "zeroAmountMaxPayerAmountSat" to prepareReceiveResponse.zeroAmountMaxPayerAmountSat,
-        "zeroAmountServiceFeerate" to prepareReceiveResponse.zeroAmountServiceFeerate,
+        "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
+        "maxPayerAmountSat" to prepareReceiveResponse.maxPayerAmountSat,
+        "serviceFeerate" to prepareReceiveResponse.serviceFeerate,
     )
 
 fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveResponse> {

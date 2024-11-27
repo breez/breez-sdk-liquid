@@ -2918,11 +2918,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
     wireObj.payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.payerAmountSat);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
-    wireObj.zero_amount_min_payer_amount_sat =
-        cst_encode_opt_box_autoadd_u_64(apiObj.zeroAmountMinPayerAmountSat);
-    wireObj.zero_amount_max_payer_amount_sat =
-        cst_encode_opt_box_autoadd_u_64(apiObj.zeroAmountMaxPayerAmountSat);
-    wireObj.zero_amount_service_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.zeroAmountServiceFeerate);
+    wireObj.min_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.minPayerAmountSat);
+    wireObj.max_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.maxPayerAmountSat);
+    wireObj.service_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.serviceFeerate);
   }
 
   @protected
@@ -5793,11 +5791,11 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Uint64()
   external int fees_sat;
 
-  external ffi.Pointer<ffi.Uint64> zero_amount_min_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Uint64> zero_amount_max_payer_amount_sat;
+  external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Double> zero_amount_service_feerate;
+  external ffi.Pointer<ffi.Double> service_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {

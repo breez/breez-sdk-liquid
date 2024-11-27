@@ -301,9 +301,9 @@ export interface PrepareReceiveResponse {
     paymentMethod: PaymentMethod
     feesSat: number
     payerAmountSat?: number
-    zeroAmountMinPayerAmountSat?: number
-    zeroAmountMaxPayerAmountSat?: number
-    zeroAmountServiceFeerate?: number
+    minPayerAmountSat?: number
+    maxPayerAmountSat?: number
+    serviceFeerate?: number
 }
 
 export interface PrepareRefundRequest {

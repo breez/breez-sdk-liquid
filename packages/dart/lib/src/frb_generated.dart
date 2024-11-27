@@ -2707,9 +2707,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       paymentMethod: dco_decode_payment_method(arr[0]),
       payerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[1]),
       feesSat: dco_decode_u_64(arr[2]),
-      zeroAmountMinPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
-      zeroAmountMaxPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
-      zeroAmountServiceFeerate: dco_decode_opt_box_autoadd_f_64(arr[5]),
+      minPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      maxPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      serviceFeerate: dco_decode_opt_box_autoadd_f_64(arr[5]),
     );
   }
 
@@ -4693,16 +4693,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentMethod = sse_decode_payment_method(deserializer);
     var var_payerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
-    var var_zeroAmountMinPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-    var var_zeroAmountMaxPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-    var var_zeroAmountServiceFeerate = sse_decode_opt_box_autoadd_f_64(deserializer);
+    var var_minPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_serviceFeerate = sse_decode_opt_box_autoadd_f_64(deserializer);
     return PrepareReceiveResponse(
         paymentMethod: var_paymentMethod,
         payerAmountSat: var_payerAmountSat,
         feesSat: var_feesSat,
-        zeroAmountMinPayerAmountSat: var_zeroAmountMinPayerAmountSat,
-        zeroAmountMaxPayerAmountSat: var_zeroAmountMaxPayerAmountSat,
-        zeroAmountServiceFeerate: var_zeroAmountServiceFeerate);
+        minPayerAmountSat: var_minPayerAmountSat,
+        maxPayerAmountSat: var_maxPayerAmountSat,
+        serviceFeerate: var_serviceFeerate);
   }
 
   @protected
@@ -6546,9 +6546,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_payment_method(self.paymentMethod, serializer);
     sse_encode_opt_box_autoadd_u_64(self.payerAmountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
-    sse_encode_opt_box_autoadd_u_64(self.zeroAmountMinPayerAmountSat, serializer);
-    sse_encode_opt_box_autoadd_u_64(self.zeroAmountMaxPayerAmountSat, serializer);
-    sse_encode_opt_box_autoadd_f_64(self.zeroAmountServiceFeerate, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.minPayerAmountSat, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxPayerAmountSat, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.serviceFeerate, serializer);
   }
 
   @protected
