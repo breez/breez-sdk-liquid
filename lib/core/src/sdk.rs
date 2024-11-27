@@ -1650,6 +1650,10 @@ impl LiquidSdk {
                     .within(payer_amount_sat)
                     .map_err(|_| PaymentError::AmountOutOfRange)?;
 
+                min_payer_amount_sat = Some(reverse_pair.limits.minimal);
+                max_payer_amount_sat = Some(reverse_pair.limits.maximal);
+                service_feerate = Some(reverse_pair.fees.percentage);
+
                 debug!(
                     "Preparing Lightning Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
                 );
@@ -1664,11 +1668,9 @@ impl LiquidSdk {
                     .map(|user_lockup_amount_sat| pair.fees.boltz(user_lockup_amount_sat))
                     .unwrap_or_default();
 
-                if payer_amount_sat.is_none() {
-                    min_payer_amount_sat = Some(pair.limits.minimal);
-                    max_payer_amount_sat = Some(pair.limits.maximal);
-                    service_feerate = Some(pair.fees.percentage);
-                }
+                min_payer_amount_sat = Some(pair.limits.minimal);
+                max_payer_amount_sat = Some(pair.limits.maximal);
+                service_feerate = Some(pair.fees.percentage);
 
                 fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
