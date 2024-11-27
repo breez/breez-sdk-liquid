@@ -265,10 +265,10 @@ impl Persister {
 
     /// Used for Zero-amount Receive Chain swaps, when we fetched the quote and we know how much
     /// the sender locked up
-    pub(crate) fn update_swap_payer_amount(
+    pub(crate) fn update_zero_amount_swap_values(
         &self,
         swap_id: &str,
-        payer_amount_sat: u64,
+        server_lockup_amount_sat: u64,
     ) -> Result<(), PaymentError> {
         let swap = self
             .fetch_chain_swap_by_id(swap_id)?
@@ -279,22 +279,27 @@ impl Persister {
             matches!(swap.direction, Direction::Incoming),
             PaymentError::Generic {
                 err: format!(
-                    "Can only update payer_amount_sat for incoming chain swaps. Swap ID: {swap_id}"
+                    "Only an incoming chain swap can be a zero-amount swap. Swap ID: {swap_id}"
                 )
             }
         );
 
-        log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}");
+        let payer_amount_sat = server_lockup_amount_sat;
+        let receiver_amount_sat = server_lockup_amount_sat - swap.claim_fees_sat;
+
+        log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}, receiver_amount_sat = {receiver_amount_sat}");
         let con: Connection = self.get_connection()?;
         con.execute(
             "UPDATE chain_swaps
             SET
-                payer_amount_sat = :payer_amount_sat
+                payer_amount_sat = :payer_amount_sat,
+                receiver_amount_sat = :receiver_amount_sat
             WHERE
                 id = :id",
             named_params! {
                 ":id": swap_id,
                 ":payer_amount_sat": payer_amount_sat,
+                ":receiver_amount_sat": receiver_amount_sat,
             },
         )?;
         Ok(())

@@ -447,7 +447,8 @@ impl ChainSwapHandler {
                         .and_then(|quote| {
                             info!("Got quote of {quote} sat for swap {}", &swap.id);
 
-                            self.persister.update_swap_payer_amount(&swap.id, quote)?;
+                            self.persister
+                                .update_zero_amount_swap_values(&swap.id, quote)?;
                             self.swapper
                                 .accept_zero_amount_chain_swap_quote(&swap.id, quote)
                         });
