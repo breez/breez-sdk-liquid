@@ -358,14 +358,8 @@ impl LiquidSdk {
                         }
                     }
                 }
-                0 => {
-                    debug!(
-                        "No script history found while recovering data for Receive Swap {swap_id}"
-                    );
-                    (None, None)
-                }
                 n => {
-                    error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
+                    warn!("Script history with length {n} found while recovering data for Receive Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -442,14 +436,8 @@ impl LiquidSdk {
                         false => (Some(second_tx_id), Some(first_tx_id)),
                     }
                 }
-                0 => {
-                    debug!(
-                        "No BTC script history found while recovering data for Chain Send Swap {swap_id}"
-                    );
-                    (None, None)
-                }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
+                    warn!("BTC script history with length {n} found while recovering data for Chain Send Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -501,14 +489,8 @@ impl LiquidSdk {
                         };
                     (Some(lockup_tx_id.clone()), Some(claim_tx_id.clone()))
                 }
-                0 => {
-                    debug!(
-                        "No L-BTC script history found while recovering data for Chain Receive Swap {swap_id}"
-                    );
-                    (None, None)
-                }
                 n => {
-                    error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    warn!("L-BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -552,14 +534,8 @@ impl LiquidSdk {
                         false => (Some(second_tx_id), Some(first_tx_id)),
                     }
                 }
-                0 => {
-                    debug!(
-                        "No BTC script history found while recovering data for Chain Receive Swap {swap_id}"
-                    );
-                    (None, None)
-                }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    warn!("BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
             };
