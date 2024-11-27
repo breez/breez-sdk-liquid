@@ -440,7 +440,7 @@ impl ChainSwapHandler {
                 let is_zero_amount = swap.payer_amount_sat == 0;
                 if matches!(swap_state, ChainSwapStates::TransactionLockupFailed) && is_zero_amount
                 {
-                    if let Err(e) = self
+                    let accept_quote_res = self
                         .swapper
                         .get_zero_amount_chain_swap_quote(&swap.id)
                         .map(|quote| quote.to_sat())
@@ -450,13 +450,15 @@ impl ChainSwapHandler {
                             self.persister.update_swap_payer_amount(&swap.id, quote)?;
                             self.swapper
                                 .accept_zero_amount_chain_swap_quote(&swap.id, quote)
-                        })
-                    {
-                        warn!("Failed to accept the quote for swap {}: {e:?}", &swap.id);
+                        });
+                    match accept_quote_res {
+                        Ok(_) => {
+                            // We successfully accepted the quote, the swap should continue as normal
+                            return Ok(()); // Break from TxLockupFailed branch
+                        }
+                        // In case of error, we continue and mark it as refundable
+                        Err(e) => error!("Failed to accept the quote for swap {}: {e:?}", &swap.id),
                     }
-
-                    // We successfully accepted the quote, the swap should continue as normal
-                    return Ok(()); // Break from TxLockupFailed branch
                 }
 
                 match swap.refund_tx_id.clone() {
