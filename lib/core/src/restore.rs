@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
-use log::{debug, error, info};
+use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
 
@@ -34,7 +34,7 @@ pub(crate) trait PartialSwapState {
     ///
     /// This is a partial state, which means it may be incomplete because it's based on partial
     /// information. Some swap states cannot be determined based only on chain data.
-    /// In these cases we do not assume any swap state,
+    /// In these cases we do not assume any swap state.
     fn derive_partial_state(&self) -> Option<PaymentState>;
 }
 
@@ -56,7 +56,8 @@ impl PartialSwapState for RecoveredOnchainDataSend {
                     None => Some(PaymentState::Pending),
                 },
             },
-            // We cannot derive the state here, so return None
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created, TimedOut or Failed after expiry. In this case we return None.
             None => None,
         }
     }
@@ -83,7 +84,8 @@ impl PartialSwapState for RecoveredOnchainDataReceive {
                     true => Some(PaymentState::Complete),
                     false => Some(PaymentState::Pending),
                 },
-                // We cannot derive the state here, so return None
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created or Failed after expiry. In this case we return None.
                 None => None,
             },
         }
@@ -116,7 +118,8 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
                     None => Some(PaymentState::Pending),
                 },
             },
-            // We cannot derive the state here, so return None
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created, TimedOut or Failed after expiry. In this case we return None.
             None => None,
         }
     }
@@ -148,6 +151,8 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
                     None => Some(PaymentState::Pending),
                 },
             },
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created or Failed after expiry. In this case we return None.
             None => None,
         }
     }
@@ -250,7 +255,7 @@ impl LiquidSdk {
         })
     }
 
-    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable data data
+    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable data
     async fn recover_send_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -295,7 +300,7 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable data data
+    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable data
     async fn recover_receive_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -347,7 +352,7 @@ impl LiquidSdk {
 
                             // If neither is confirmed, this is an edge-case
                             (false, false) => {
-                                info!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
+                                warn!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
                                 (None, None)
                             }
                         }
@@ -360,7 +365,7 @@ impl LiquidSdk {
                     (None, None)
                 }
                 n => {
-                    info!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
+                    error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -379,7 +384,7 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable data data
+    /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable data
     async fn recover_send_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -444,7 +449,7 @@ impl LiquidSdk {
                     (None, None)
                 }
                 n => {
-                    info!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
+                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -503,7 +508,7 @@ impl LiquidSdk {
                     (None, None)
                 }
                 n => {
-                    info!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -554,7 +559,7 @@ impl LiquidSdk {
                     (None, None)
                 }
                 n => {
-                    info!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
             };

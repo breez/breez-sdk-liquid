@@ -251,12 +251,12 @@ impl ReceiveSwapHandler {
         mrh_tx_id: Option<&str>,
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
-        let swap = self.fetch_receive_swap_by_id(swap_id)?;
-        Self::validate_state_transition(swap.state, to_state)?;
         info!(
             "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
             swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
         );
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
+        Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_receive_swap_update(
             swap_id,
             to_state,

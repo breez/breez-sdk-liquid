@@ -698,8 +698,6 @@ impl ChainSwapHandler {
         claim_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        let swap = self.fetch_chain_swap_by_id(swap_id)?;
-        Self::validate_state_transition(swap.state, to_state)?;
         info!(
             "Transitioning Chain swap {} to {:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})", 
             swap_id,
@@ -709,6 +707,8 @@ impl ChainSwapHandler {
             claim_tx_id,
             refund_tx_id
         );
+        let swap = self.fetch_chain_swap_by_id(swap_id)?;
+        Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_chain_swap_update(
             swap_id,
             to_state,
