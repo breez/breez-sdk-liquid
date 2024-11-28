@@ -111,6 +111,23 @@ impl ChainSwapHandler {
             .fetch_chain_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Chain Swap found for ID {id}"))?;
 
+        if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&swap.id)? {
+            if !sync_state.is_local {
+                let status = &update.status;
+                let swap_state = ChainSwapStates::from_str(status)
+                    .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
+
+                match swap_state {
+                    // If the swap is not local (pulled from real-time sync) we do not claim twice
+                    ChainSwapStates::TransactionServerMempool
+                    | ChainSwapStates::TransactionServerConfirmed => {
+                        return Ok(());
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         match swap.direction {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
