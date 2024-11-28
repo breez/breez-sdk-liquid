@@ -296,14 +296,9 @@ impl Persister {
 
     pub(crate) fn try_handle_chain_swap_update(
         &self,
-        swap_id: &str,
-        to_state: PaymentState,
-        server_lockup_tx_id: Option<&str>,
-        user_lockup_tx_id: Option<&str>,
-        claim_tx_id: Option<&str>,
-        refund_tx_id: Option<&str>,
+        swap_update: &ChainSwapUpdate,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id
+        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_address, claim_tx_id, refund_tx_id
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
@@ -322,6 +317,12 @@ impl Persister {
                         ELSE user_lockup_tx_id
                     END,
 
+                claim_address =
+                    CASE
+                        WHEN claim_address IS NULL THEN :claim_address
+                        ELSE claim_address
+                    END,
+
                 claim_tx_id =
                     CASE
                         WHEN claim_tx_id IS NULL THEN :claim_tx_id
@@ -338,12 +339,13 @@ impl Persister {
             WHERE
                 id = :id",
             named_params! {
-                ":id": swap_id,
-                ":server_lockup_tx_id": server_lockup_tx_id,
-                ":user_lockup_tx_id": user_lockup_tx_id,
-                ":claim_tx_id": claim_tx_id,
-                ":refund_tx_id": refund_tx_id,
-                ":state": to_state,
+                ":id": swap_update.swap_id,
+                ":server_lockup_tx_id": swap_update.server_lockup_tx_id,
+                ":user_lockup_tx_id": swap_update.user_lockup_tx_id,
+                ":claim_address": swap_update.claim_address,
+                ":claim_tx_id": swap_update.claim_tx_id,
+                ":refund_tx_id": swap_update.refund_tx_id,
+                ":state": swap_update.to_state,
             },
         )?;
 

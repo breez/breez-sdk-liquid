@@ -3,8 +3,11 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
+use boltz_client::ElementsAddress;
 use log::{debug, error, warn};
-use lwk_wollet::elements::Txid;
+use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
+use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::WalletTx;
 
 use crate::prelude::*;
@@ -129,7 +132,9 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
     pub(crate) lbtc_server_lockup_tx_id: Option<HistoryTxId>,
     /// LBTC tx that claims to our wallet. The final step in a successful swap.
-    pub(crate) lbtc_server_claim_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_claim_tx_id: Option<HistoryTxId>,
+    /// LBTC tx out address for the claim tx.
+    pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
     pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
@@ -138,8 +143,8 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
     fn derive_partial_state(&self) -> Option<PaymentState> {
         match &self.btc_user_lockup_tx_id {
-            Some(_) => match &self.lbtc_server_claim_tx_id {
-                Some(lbtc_server_claim_tx_id) => match lbtc_server_claim_tx_id.confirmed() {
+            Some(_) => match &self.lbtc_claim_tx_id {
+                Some(lbtc_claim_tx_id) => match lbtc_claim_tx_id.confirmed() {
                     true => Some(PaymentState::Complete),
                     false => Some(PaymentState::Pending),
                 },
@@ -466,16 +471,28 @@ impl LiquidSdk {
             ReceiveChainSwapImmutableData,
         >,
     ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
+        let blinding_key = MasterBlindingKey::from_hex(
+            &self
+                .signer
+                .slip77_master_blinding_key()?
+                .to_lower_hex_string(),
+        )?;
+        let secp = secp256k1_zkp::Secp256k1::new();
+
         let mut res: HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             debug!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            let (lbtc_server_lockup_tx_id, lbtc_server_claim_tx_id) = match history
+            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id, lbtc_claim_address) = match history
                 .lbtc_claim_script_history
                 .len()
             {
                 // Only lockup tx available
-                1 => (Some(history.lbtc_claim_script_history[0].clone()), None),
+                1 => (
+                    Some(history.lbtc_claim_script_history[0].clone()),
+                    None,
+                    None,
+                ),
 
                 2 => {
                     let first = &history.lbtc_claim_script_history[0];
@@ -487,11 +504,35 @@ impl LiquidSdk {
                             true => (second, first),
                             false => (first, second),
                         };
-                    (Some(lockup_tx_id.clone()), Some(claim_tx_id.clone()))
+
+                    // Get the claim address from the claim tx output
+                    let claim_address = tx_map
+                        .incoming_tx_map
+                        .get(&claim_tx_id.txid)
+                        .and_then(|tx| {
+                            tx.outputs
+                                .iter()
+                                .find(|output| output.is_some())
+                                .and_then(|output| output.clone().map(|o| o.script_pubkey))
+                        })
+                        .and_then(|script| {
+                            ElementsAddress::from_script(
+                                &script,
+                                Some(blinding_key.blinding_key(&secp, &script)),
+                                &AddressParams::LIQUID,
+                            )
+                            .map(|addr| addr.to_string())
+                        });
+
+                    (
+                        Some(lockup_tx_id.clone()),
+                        Some(claim_tx_id.clone()),
+                        claim_address,
+                    )
                 }
                 n => {
                     warn!("L-BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
-                    (None, None)
+                    (None, None, None)
                 }
             };
 
@@ -542,7 +583,7 @@ impl LiquidSdk {
 
             // The second BTC tx is only a refund in case we didn't claim.
             // If we claimed, then the second BTC tx was an internal BTC server claim tx, which we're not tracking.
-            let btc_refund_tx_id = match lbtc_server_claim_tx_id.is_some() {
+            let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
                 true => None,
                 false => btc_second_tx_id,
             };
@@ -551,7 +592,8 @@ impl LiquidSdk {
                 swap_id,
                 RecoveredOnchainDataChainReceive {
                     lbtc_server_lockup_tx_id,
-                    lbtc_server_claim_tx_id,
+                    lbtc_claim_tx_id,
+                    lbtc_claim_address,
                     btc_user_lockup_tx_id,
                     btc_refund_tx_id,
                 },

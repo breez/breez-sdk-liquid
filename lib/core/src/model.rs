@@ -765,6 +765,17 @@ impl ChainSwap {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ChainSwapUpdate {
+    pub(crate) swap_id: String,
+    pub(crate) to_state: PaymentState,
+    pub(crate) server_lockup_tx_id: Option<String>,
+    pub(crate) user_lockup_tx_id: Option<String>,
+    pub(crate) claim_address: Option<String>,
+    pub(crate) claim_tx_id: Option<String>,
+    pub(crate) refund_tx_id: Option<String>,
+}
+
 /// A submarine swap, used for Send
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct SendSwap {
@@ -958,8 +969,9 @@ pub struct RefundableSwap {
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
+    #[default]
     Created = 0,
 
     /// ## Receive Swaps

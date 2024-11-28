@@ -1632,7 +1632,11 @@ impl LiquidSdk {
                         debug!("Timeout occurred without payment, set swap to timed out");
                         match swap {
                             Swap::Send(_) => self.send_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None).await?,
-                            Swap::Chain(_) => self.chain_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None, None).await?,
+                            Swap::Chain(_) => self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
+                                swap_id: expected_swap_id,
+                                to_state: TimedOut,
+                                ..Default::default()
+                            }).await?,
                             _ => ()
                         }
                         return Err(PaymentError::PaymentTimeout)
@@ -2317,13 +2321,13 @@ impl LiquidSdk {
                     .btc_user_lockup_tx_id
                     .map(|h| h.txid.to_string());
                 let claim_tx_id = chain_receive_data
-                    .lbtc_server_claim_tx_id
+                    .lbtc_claim_tx_id
                     .clone()
                     .map(|h| h.txid.to_string());
                 let refund_tx_id = chain_receive_data
                     .btc_refund_tx_id
                     .map(|h| h.txid.to_string());
-                if let Some(history) = chain_receive_data.lbtc_server_claim_tx_id {
+                if let Some(history) = chain_receive_data.lbtc_claim_tx_id {
                     if let Some(tx) = tx_map.remove(&history.txid) {
                         self.persister
                             .insert_or_update_payment_with_wallet_tx(&tx)?;
@@ -2331,14 +2335,15 @@ impl LiquidSdk {
                 }
                 _ = self
                     .chain_swap_handler
-                    .update_swap_info(
-                        &swap_id,
+                    .update_swap_info(&ChainSwapUpdate {
+                        swap_id,
                         to_state,
-                        server_lockup_tx_id.as_deref(),
-                        user_lockup_tx_id.as_deref(),
-                        claim_tx_id.as_deref(),
-                        refund_tx_id.as_deref(),
-                    )
+                        server_lockup_tx_id,
+                        user_lockup_tx_id,
+                        claim_address: chain_receive_data.lbtc_claim_address,
+                        claim_tx_id,
+                        refund_tx_id,
+                    })
                     .await;
             }
         }
@@ -2373,14 +2378,15 @@ impl LiquidSdk {
                 }
                 _ = self
                     .chain_swap_handler
-                    .update_swap_info(
-                        &swap_id,
+                    .update_swap_info(&ChainSwapUpdate {
+                        swap_id,
                         to_state,
-                        server_lockup_tx_id.as_deref(),
-                        user_lockup_tx_id.as_deref(),
-                        claim_tx_id.as_deref(),
-                        refund_tx_id.as_deref(),
-                    )
+                        server_lockup_tx_id,
+                        user_lockup_tx_id,
+                        claim_address: None,
+                        claim_tx_id,
+                        refund_tx_id,
+                    })
                     .await;
             }
         }

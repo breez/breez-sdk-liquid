@@ -16,7 +16,7 @@ use lwk_wollet::{
 };
 use tokio::sync::{broadcast, Mutex};
 
-use crate::model::BlockListener;
+use crate::model::{BlockListener, ChainSwapUpdate};
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     ensure_sdk,
@@ -191,8 +191,12 @@ impl ChainSwapHandler {
                     "Incoming Chain Swap {} has {} unspent sats. Setting the swap to refundable",
                     swap.id, script_balance.confirmed
                 );
-                self.update_swap_info(&swap.id, Refundable, None, None, None, None)
-                    .await?;
+                self.update_swap_info(&ChainSwapUpdate {
+                    swap_id: swap.id.clone(),
+                    to_state: Refundable,
+                    ..Default::default()
+                })
+                .await?;
             } else if script_balance.confirmed == 0 {
                 // If the funds sent to the lockup script address are spent then set the
                 // state back to Complete/Failed.
@@ -206,8 +210,12 @@ impl ChainSwapHandler {
                         "Incoming Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
                         swap.id, to_state
                     );
-                    self.update_swap_info(&swap.id, to_state, None, None, None, None)
-                        .await?;
+                    self.update_swap_info(&ChainSwapUpdate {
+                        swap_id: swap.id.clone(),
+                        to_state,
+                        ..Default::default()
+                    })
+                    .await?;
                 }
             }
         }
@@ -291,7 +299,7 @@ impl ChainSwapHandler {
     }
 
     async fn on_new_incoming_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
-        let id = &update.id;
+        let id = update.id.clone();
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
@@ -304,11 +312,16 @@ impl ChainSwapHandler {
                 if let Some(zero_conf_rejected) = update.zero_conf_rejected {
                     info!("Is zero conf rejected for Chain Swap {id}: {zero_conf_rejected}");
                     self.persister
-                        .update_chain_swap_accept_zero_conf(id, !zero_conf_rejected)?;
+                        .update_chain_swap_accept_zero_conf(&id, !zero_conf_rejected)?;
                 }
                 if let Some(transaction) = update.transaction.clone() {
-                    self.update_swap_info(id, Pending, None, Some(&transaction.id), None, None)
-                        .await?;
+                    self.update_swap_info(&ChainSwapUpdate {
+                        swap_id: id,
+                        to_state: Pending,
+                        user_lockup_tx_id: Some(transaction.id),
+                        ..Default::default()
+                    })
+                    .await?;
                 }
                 Ok(())
             }
@@ -337,11 +350,16 @@ impl ChainSwapHandler {
                         }
 
                         info!("Server lockup mempool transaction was verified for incoming Chain Swap {}", swap.id);
-                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
-                            .await?;
+                        self.update_swap_info(&ChainSwapUpdate {
+                            swap_id: id.clone(),
+                            to_state: Pending,
+                            server_lockup_tx_id: Some(transaction.id),
+                            ..Default::default()
+                        })
+                        .await?;
 
                         if swap.accept_zero_conf {
-                            self.claim(id).await.map_err(|e| {
+                            self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
@@ -374,13 +392,18 @@ impl ChainSwapHandler {
                         // Set the server_lockup_tx_id if it is verified or not.
                         // If it is not yet confirmed, then it will be claimed after confirmation
                         // in rescan_incoming_chain_swap_server_lockup_tx()
-                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
-                            .await?;
+                        self.update_swap_info(&ChainSwapUpdate {
+                            swap_id: id.clone(),
+                            to_state: Pending,
+                            server_lockup_tx_id: Some(transaction.id.clone()),
+                            ..Default::default()
+                        })
+                        .await?;
 
                         match verify_res {
                             Ok(_) => {
                                 info!("Server lockup transaction was verified for incoming Chain Swap {}", swap.id);
-                                self.claim(id).await.map_err(|e| {
+                                self.claim(&id).await.map_err(|e| {
                                     error!("Could not cooperate Chain Swap {id} claim: {e}");
                                     anyhow!("Could not post claim details. Err: {e:?}")
                                 })?;
@@ -417,13 +440,21 @@ impl ChainSwapHandler {
                         match self.verify_user_lockup_tx(swap).await {
                             Ok(_) => {
                                 info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
-                                self.update_swap_info(id, Refundable, None, None, None, None)
-                                    .await?;
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: id,
+                                    to_state: Refundable,
+                                    ..Default::default()
+                                })
+                                .await?;
                             }
                             Err(_) => {
                                 info!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
-                                self.update_swap_info(id, Failed, None, None, None, None)
-                                    .await?;
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: id,
+                                    to_state: Failed,
+                                    ..Default::default()
+                                })
+                                .await?;
                             }
                         }
                     }
@@ -442,7 +473,7 @@ impl ChainSwapHandler {
     }
 
     async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
-        let id = &update.id;
+        let id = update.id.clone();
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
@@ -459,7 +490,7 @@ impl ChainSwapHandler {
                     // Create the user lockup tx
                     (_, None) => {
                         let create_response = swap.get_boltz_create_response()?;
-                        let user_lockup_tx = self.lockup_funds(id, &create_response).await?;
+                        let user_lockup_tx = self.lockup_funds(&id, &create_response).await?;
                         let lockup_tx_id = user_lockup_tx.txid().to_string();
                         let lockup_tx_fees_sat: u64 = user_lockup_tx.all_fees().values().sum();
 
@@ -475,7 +506,12 @@ impl ChainSwapHandler {
                             is_confirmed: false,
                         }, None, None)?;
 
-                        self.update_swap_info(id, Pending, None, Some(&lockup_tx_id), None, None)
+                        self.update_swap_info(&ChainSwapUpdate {
+                            swap_id: id,
+                            to_state: Pending,
+                            user_lockup_tx_id: Some(lockup_tx_id),
+                            ..Default::default()
+                        })
                             .await?;
                     },
 
@@ -490,11 +526,16 @@ impl ChainSwapHandler {
                 if let Some(zero_conf_rejected) = update.zero_conf_rejected {
                     info!("Is zero conf rejected for Chain Swap {id}: {zero_conf_rejected}");
                     self.persister
-                        .update_chain_swap_accept_zero_conf(id, !zero_conf_rejected)?;
+                        .update_chain_swap_accept_zero_conf(&id, !zero_conf_rejected)?;
                 }
                 if let Some(transaction) = update.transaction.clone() {
-                    self.update_swap_info(id, Pending, None, Some(&transaction.id), None, None)
-                        .await?;
+                    self.update_swap_info(&ChainSwapUpdate {
+                        swap_id: id,
+                        to_state: Pending,
+                        user_lockup_tx_id: Some(transaction.id),
+                        ..Default::default()
+                    })
+                    .await?;
                 }
                 Ok(())
             }
@@ -523,11 +564,16 @@ impl ChainSwapHandler {
                         }
 
                         info!("Server lockup mempool transaction was verified for outgoing Chain Swap {}", swap.id);
-                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
-                            .await?;
+                        self.update_swap_info(&ChainSwapUpdate {
+                            swap_id: id.clone(),
+                            to_state: Pending,
+                            server_lockup_tx_id: Some(transaction.id),
+                            ..Default::default()
+                        })
+                        .await?;
 
                         if swap.accept_zero_conf {
-                            self.claim(id).await.map_err(|e| {
+                            self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
                             })?;
@@ -570,9 +616,14 @@ impl ChainSwapHandler {
                             "Server lockup transaction was verified for outgoing Chain Swap {}",
                             swap.id
                         );
-                        self.update_swap_info(id, Pending, Some(&transaction.id), None, None, None)
-                            .await?;
-                        self.claim(id).await.map_err(|e| {
+                        self.update_swap_info(&ChainSwapUpdate {
+                            swap_id: id.clone(),
+                            to_state: Pending,
+                            server_lockup_tx_id: Some(transaction.id),
+                            ..Default::default()
+                        })
+                        .await?;
+                        self.claim(&id).await.map_err(|e| {
                             error!("Could not cooperate Chain Swap {id} claim: {e}");
                             anyhow!("Could not post claim details. Err: {e:?}")
                         })?;
@@ -613,20 +664,22 @@ impl ChainSwapHandler {
                                 // Set the payment state to `RefundPending`. This ensures that the
                                 // background thread will pick it up and try to refund it
                                 // periodically
-                                self.update_swap_info(
-                                    &swap.id,
-                                    RefundPending,
-                                    None,
-                                    None,
-                                    None,
-                                    refund_tx_id.as_deref(),
-                                )
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: id,
+                                    to_state: RefundPending,
+                                    refund_tx_id,
+                                    ..Default::default()
+                                })
                                 .await?;
                             }
                             None => {
                                 warn!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
-                                self.update_swap_info(id, Failed, None, None, None, None)
-                                    .await?;
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: id,
+                                    to_state: Failed,
+                                    ..Default::default()
+                                })
+                                .await?;
                             }
                         }
                     }
@@ -691,40 +744,24 @@ impl ChainSwapHandler {
     /// Transitions a Chain swap to a new state
     pub(crate) async fn update_swap_info(
         &self,
-        swap_id: &str,
-        to_state: PaymentState,
-        server_lockup_tx_id: Option<&str>,
-        user_lockup_tx_id: Option<&str>,
-        claim_tx_id: Option<&str>,
-        refund_tx_id: Option<&str>,
+        swap_update: &ChainSwapUpdate,
     ) -> Result<(), PaymentError> {
-        info!(
-            "Transitioning Chain swap {} to {:?} (server_lockup_tx_id = {:?}, user_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})", 
-            swap_id,
-            to_state,
-            server_lockup_tx_id,
-            user_lockup_tx_id,
-            claim_tx_id,
-            refund_tx_id
-        );
-        let swap = self.fetch_chain_swap_by_id(swap_id)?;
-        Self::validate_state_transition(swap.state, to_state)?;
-        self.persister.try_handle_chain_swap_update(
-            swap_id,
-            to_state,
-            server_lockup_tx_id,
-            user_lockup_tx_id,
-            claim_tx_id,
-            refund_tx_id,
-        )?;
-        let updated_swap = self.fetch_chain_swap_by_id(swap_id)?;
+        info!("Updating Chain swap {swap_update:?}");
+        let swap = self.fetch_chain_swap_by_id(&swap_update.swap_id)?;
+        Self::validate_state_transition(swap.state, swap_update.to_state)?;
+        self.persister.try_handle_chain_swap_update(swap_update)?;
+        let updated_swap = self.fetch_chain_swap_by_id(&swap_update.swap_id)?;
 
         // Only notify subscribers if the swap changes
         let payment_id = match swap.direction {
-            Direction::Incoming => claim_tx_id
+            Direction::Incoming => swap_update
+                .claim_tx_id
+                .clone()
                 .map(|c| c.to_string())
                 .or(swap.claim_tx_id.clone()),
-            Direction::Outgoing => user_lockup_tx_id
+            Direction::Outgoing => swap_update
+                .user_lockup_tx_id
+                .clone()
                 .map(|c| c.to_string())
                 .or(swap.user_lockup_tx_id.clone()),
         };
@@ -924,14 +961,12 @@ impl ChainSwapHandler {
         // After refund tx is broadcasted, set the payment state to `RefundPending`. This ensures:
         // - the swap is not shown in `list-refundables` anymore
         // - the background thread will move it to Failed once the refund tx confirms
-        self.update_swap_info(
-            &swap.id,
-            RefundPending,
-            None,
-            None,
-            None,
-            Some(&refund_tx_id),
-        )
+        self.update_swap_info(&ChainSwapUpdate {
+            swap_id: swap.id,
+            to_state: RefundPending,
+            refund_tx_id: Some(refund_tx_id.clone()),
+            ..Default::default()
+        })
         .await?;
 
         Ok(refund_tx_id)
@@ -1036,14 +1071,12 @@ impl ChainSwapHandler {
 
                 if let Ok(refund_tx_id) = refund_tx_id_res {
                     let update_swap_info_res = self
-                        .update_swap_info(
-                            &swap.id,
-                            RefundPending,
-                            None,
-                            None,
-                            None,
-                            Some(&refund_tx_id),
-                        )
+                        .update_swap_info(&ChainSwapUpdate {
+                            swap_id: swap.id.clone(),
+                            to_state: RefundPending,
+                            refund_tx_id: Some(refund_tx_id),
+                            ..Default::default()
+                        })
                         .await;
                     if let Err(err) = update_swap_info_res {
                         warn!(
@@ -1246,8 +1279,13 @@ impl ChainSwapHandler {
                     .ok_or(anyhow!("Script history has no transactions"))?
                     .txid
                     .to_hex();
-                self.update_swap_info(&chain_swap.id, Pending, None, Some(&txid), None, None)
-                    .await?;
+                self.update_swap_info(&ChainSwapUpdate {
+                    swap_id: chain_swap.id.clone(),
+                    to_state: Pending,
+                    user_lockup_tx_id: Some(txid.clone()),
+                    ..Default::default()
+                })
+                .await?;
                 Ok(txid)
             }
         }
@@ -1297,7 +1335,7 @@ mod tests {
 
     use crate::{
         model::{
-            Direction,
+            ChainSwapUpdate, Direction,
             PaymentState::{self, *},
         },
         test_utils::{
@@ -1337,7 +1375,11 @@ mod tests {
                 persister.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
-                    .update_swap_info(&chain_swap.id, *allowed_state, None, None, None, None)
+                    .update_swap_info(&ChainSwapUpdate {
+                        swap_id: chain_swap.id,
+                        to_state: *allowed_state,
+                        ..Default::default()
+                    })
                     .await
                     .is_ok());
             }
@@ -1361,7 +1403,11 @@ mod tests {
                 persister.insert_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
-                    .update_swap_info(&chain_swap.id, *disallowed_state, None, None, None, None)
+                    .update_swap_info(&ChainSwapUpdate {
+                        swap_id: chain_swap.id,
+                        to_state: *disallowed_state,
+                        ..Default::default()
+                    })
                     .await
                     .is_err());
             }
