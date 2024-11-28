@@ -507,7 +507,12 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
     if let Some(details) = &req.details {
         match details {
             ListPaymentDetails::Bitcoin { address } => {
-                where_clause.push("cs.claim_address = ?".to_string());
+                // Use the lockup address if it's incoming, else use the claim address
+                where_clause.push(
+                    "(cs.direction = 0 AND cs.lockup_address = ? OR cs.direction = 1 AND cs.claim_address = ?)"
+                        .to_string(),
+                );
+                where_params.push(Box::new(address));
                 where_params.push(Box::new(address));
             }
             ListPaymentDetails::Liquid { destination } => {
