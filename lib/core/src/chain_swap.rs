@@ -104,6 +104,22 @@ impl ChainSwapHandler {
             .fetch_chain_swap_by_id(id)?
             .ok_or(anyhow!("No ongoing Chain Swap found for ID {id}"))?;
 
+        if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&swap.id)? {
+            if !sync_state.is_local {
+                let status = &update.status;
+                let swap_state = ChainSwapStates::from_str(status)
+                    .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
+
+                match swap_state {
+                    ChainSwapStates::TransactionServerMempool
+                    | ChainSwapStates::TransactionServerConfirmed => {
+                        self.ensure_single_claim(&swap).await?;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         match swap.direction {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
@@ -689,6 +705,39 @@ impl ChainSwapHandler {
         if let Some(payment_id) = payment_id {
             let _ = self.subscription_notifier.send(payment_id);
         }
+        Ok(())
+    }
+
+    async fn ensure_single_claim(&self, swap: &ChainSwap) -> Result<()> {
+        let swap_script = swap.get_claim_swap_script()?;
+        let history = match swap_script {
+            SwapScriptV2::Bitcoin(script) => {
+                let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+                let swap_script_pk = script
+                    .to_address(self.config.network.into())
+                    .map_err(|err| {
+                        anyhow!("Could not retrieve taproot address from script: {err:?}")
+                    })?
+                    .script_pubkey();
+                bitcoin_chain_service.get_script_history(&swap_script_pk)?
+            }
+            SwapScriptV2::Liquid(script) => {
+                let liquid_chain_service = self.liquid_chain_service.lock().await;
+                let swap_script_pk = script
+                    .to_address(self.config.network.into())
+                    .map_err(|err| {
+                        anyhow!("Could not retrieve taproot address from script: {err:?}")
+                    })?
+                    .script_pubkey();
+                liquid_chain_service
+                    .get_script_history(&swap_script_pk)
+                    .await?
+            }
+        };
+        if history.len() > 1 {
+            return Err(anyhow!("Claim transaction has already been broadcasted"));
+        }
+
         Ok(())
     }
 

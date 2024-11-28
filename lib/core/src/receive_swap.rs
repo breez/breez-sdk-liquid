@@ -61,7 +61,9 @@ impl ReceiveSwapHandler {
     /// Handles status updates from Boltz for Receive swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap_state = &update.status;
+        let status = &update.status;
+        let swap_state = RevSwapStates::from_str(status)
+            .map_err(|_| anyhow!("Invalid RevSwapState for Receive Swap {id}: {status}"))?;
         let receive_swap = self
             .persister
             .fetch_receive_swap_by_id(id)?
@@ -69,13 +71,24 @@ impl ReceiveSwapHandler {
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
-        match RevSwapStates::from_str(swap_state) {
-            Ok(
-                RevSwapStates::SwapExpired
-                | RevSwapStates::InvoiceExpired
-                | RevSwapStates::TransactionFailed
-                | RevSwapStates::TransactionRefunded,
-            ) => {
+        if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&receive_swap.id)? {
+            if !sync_state.is_local {
+                match swap_state {
+                    // If the swap is not local (pulled from real-time sync)  we want to ensure
+                    // only one claim is being broadcast
+                    RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {
+                        self.ensure_single_claim(&receive_swap).await?;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        match swap_state {
+            RevSwapStates::SwapExpired
+            | RevSwapStates::InvoiceExpired
+            | RevSwapStates::TransactionFailed
+            | RevSwapStates::TransactionRefunded => {
                 match receive_swap.mrh_tx_id {
                     Some(mrh_tx_id) => {
                         warn!("Swap {id} is expired but MRH payment was received: txid {mrh_tx_id}")
@@ -90,7 +103,7 @@ impl ReceiveSwapHandler {
             }
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // Execute 0-conf preconditions check
-            Ok(RevSwapStates::TransactionMempool) => {
+            RevSwapStates::TransactionMempool => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -173,7 +186,7 @@ impl ReceiveSwapHandler {
 
                 Ok(())
             }
-            Ok(RevSwapStates::TransactionConfirmed) => {
+            RevSwapStates::TransactionConfirmed => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -219,14 +232,10 @@ impl ReceiveSwapHandler {
                 Ok(())
             }
 
-            Ok(_) => {
-                debug!("Unhandled state for Receive Swap {id}: {swap_state}");
+            _ => {
+                debug!("Unhandled state for Receive Swap {id}: {swap_state:?}");
                 Ok(())
             }
-
-            _ => Err(anyhow!(
-                "Invalid RevSwapState for Receive Swap {id}: {swap_state}"
-            )),
         }
     }
 
@@ -270,6 +279,22 @@ impl ReceiveSwapHandler {
 
         if let Some(payment_id) = payment_id {
             let _ = self.subscription_notifier.send(payment_id);
+        }
+        Ok(())
+    }
+
+    async fn ensure_single_claim(&self, swap: &ReceiveSwap) -> Result<()> {
+        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        let swap_script_pk = swap
+            .get_swap_script()?
+            .to_address(self.config.network.into())
+            .map_err(|err| anyhow!("Could not retrieve taproot address from script: {err:?}"))?
+            .script_pubkey();
+        let history = liquid_chain_service
+            .get_script_history(&swap_script_pk)
+            .await?;
+        if history.len() > 1 {
+            return Err(anyhow!("Claim transaction has already been broadcasted"));
         }
         Ok(())
     }
