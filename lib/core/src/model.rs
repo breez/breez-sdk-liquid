@@ -880,8 +880,6 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
-    /// The script pubkey for a magic routing hint payment
-    pub(crate) mrh_script_pubkey: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
     pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.

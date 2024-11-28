@@ -102,7 +102,6 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         claim_fees_sat: 200,
         claim_tx_id: None,
         mrh_address: "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n".to_string(),
-        mrh_script_pubkey: "tex1qnkznyyxwnxnkk0j94cnvq27h24jk6sqf0te55x".to_string(),
         mrh_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),

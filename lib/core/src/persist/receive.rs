@@ -31,10 +31,9 @@ impl Persister {
                 created_at,
                 claim_fees_sat,
                 mrh_address,
-                mrh_script_pubkey,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 &receive_swap.id,
                 id_hash,
@@ -48,7 +47,6 @@ impl Persister {
                 &receive_swap.created_at,
                 &receive_swap.claim_fees_sat,
                 &receive_swap.mrh_address,
-                &receive_swap.mrh_script_pubkey,
                 &receive_swap.state,
             ),
         )?;
@@ -98,7 +96,6 @@ impl Persister {
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
                 rs.mrh_address,
-                rs.mrh_script_pubkey,
                 rs.mrh_tx_id,
                 rs.created_at,
                 rs.state
@@ -142,10 +139,9 @@ impl Persister {
             claim_fees_sat: row.get(9)?,
             claim_tx_id: row.get(10)?,
             mrh_address: row.get(11)?,
-            mrh_script_pubkey: row.get(12)?,
-            mrh_tx_id: row.get(13)?,
-            created_at: row.get(14)?,
-            state: row.get(15)?,
+            mrh_tx_id: row.get(12)?,
+            created_at: row.get(13)?,
+            state: row.get(14)?,
         })
     }
 
