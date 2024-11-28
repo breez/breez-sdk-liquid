@@ -174,7 +174,7 @@ impl LiquidSdk {
                 let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
-                let send_swaps = self.persister.list_pending_send_swaps()?;
+                let send_swaps = self.persister.list_pending_and_ongoing_send_swaps()?;
                 let chain_swaps: Vec<ChainSwap> = self
                     .persister
                     .list_chain_swaps()?
