@@ -213,5 +213,6 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             data BLOB NOT NULL
         ) STRICT;",
         "ALTER TABLE receive_swaps DROP COLUMN mrh_script_pubkey;",
+        "ALTER TABLE payment_tx_data ADD COLUMN unblinding_data TEXT;",
     ]
 }

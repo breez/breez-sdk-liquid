@@ -1221,6 +1221,7 @@ impl LiquidSdk {
             fees_sat,
             payment_type: PaymentType::Send,
             is_confirmed: false,
+            unblinding_data: None,
         };
 
         let destination = address_data.to_uri().unwrap_or(address_data.address);
