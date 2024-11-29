@@ -162,5 +162,6 @@ pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
         fees_sat: 0,
         payment_type,
         is_confirmed: false,
+        unblinding_data: None,
     }
 }
