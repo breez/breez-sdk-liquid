@@ -256,6 +256,7 @@ export interface Payment {
     details: PaymentDetails
     destination?: string
     txId?: string
+    unblindingData?: string
 }
 
 export interface PrepareBuyBitcoinRequest {

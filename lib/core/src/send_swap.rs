@@ -234,6 +234,7 @@ impl SendSwapHandler {
                 fees_sat: lockup_tx_fees_sat,
                 payment_type: PaymentType::Send,
                 is_confirmed: false,
+                unblinding_data: None,
             },
             None,
             None,
