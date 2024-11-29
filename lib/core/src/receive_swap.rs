@@ -337,6 +337,7 @@ impl ReceiveSwapHandler {
                                 fees_sat: 0,
                                 payment_type: PaymentType::Receive,
                                 is_confirmed: false,
+                                unblinding_data: None,
                             },
                             None,
                             false,

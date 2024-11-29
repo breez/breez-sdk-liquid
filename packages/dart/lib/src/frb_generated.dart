@@ -2554,17 +2554,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Payment dco_decode_payment(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return Payment(
       destination: dco_decode_opt_String(arr[0]),
       txId: dco_decode_opt_String(arr[1]),
-      timestamp: dco_decode_u_32(arr[2]),
-      amountSat: dco_decode_u_64(arr[3]),
-      feesSat: dco_decode_u_64(arr[4]),
-      swapperFeesSat: dco_decode_opt_box_autoadd_u_64(arr[5]),
-      paymentType: dco_decode_payment_type(arr[6]),
-      status: dco_decode_payment_state(arr[7]),
-      details: dco_decode_payment_details(arr[8]),
+      unblindingData: dco_decode_opt_String(arr[2]),
+      timestamp: dco_decode_u_32(arr[3]),
+      amountSat: dco_decode_u_64(arr[4]),
+      feesSat: dco_decode_u_64(arr[5]),
+      swapperFeesSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+      paymentType: dco_decode_payment_type(arr[7]),
+      status: dco_decode_payment_state(arr[8]),
+      details: dco_decode_payment_details(arr[9]),
     );
   }
 
@@ -4651,6 +4652,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_destination = sse_decode_opt_String(deserializer);
     var var_txId = sse_decode_opt_String(deserializer);
+    var var_unblindingData = sse_decode_opt_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
@@ -4661,6 +4663,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return Payment(
         destination: var_destination,
         txId: var_txId,
+        unblindingData: var_unblindingData,
         timestamp: var_timestamp,
         amountSat: var_amountSat,
         feesSat: var_feesSat,
@@ -6621,6 +6624,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_String(self.destination, serializer);
     sse_encode_opt_String(self.txId, serializer);
+    sse_encode_opt_String(self.unblindingData, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
     sse_encode_u_64(self.feesSat, serializer);
