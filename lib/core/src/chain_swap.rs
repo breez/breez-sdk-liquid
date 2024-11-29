@@ -485,6 +485,7 @@ impl ChainSwapHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
+                            unblinding_data: None,
                         }, None, None)?;
 
                         self.update_swap_info(&ChainSwapUpdate {
@@ -838,6 +839,7 @@ impl ChainSwapHandler {
                                         fees_sat: 0,
                                         payment_type: PaymentType::Receive,
                                         is_confirmed: false,
+                                        unblinding_data: None,
                                     },
                                     None,
                                     None,
