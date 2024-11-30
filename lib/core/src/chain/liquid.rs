@@ -3,7 +3,7 @@ use std::{str::FromStr, thread, time::Duration};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
-use log::info;
+use log::{info, warn};
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
     elements::{
@@ -279,17 +279,18 @@ async fn get_with_retry(url: &str, retries: usize) -> Result<Response> {
         info!("liquid chain service get_with_retry for url {url}");
         let response = reqwest::get(url).await?;
         attempt += 1;
-        // 429 Too many requests
-        // 503 Service Temporarily Unavailable
-        if response.status() == 429 || response.status() == 503 {
+
+        let status = response.status();
+        if status.is_success() {
+            return Ok(response);
+        } else {
+            warn!("get_with_retry attempt {attempt} of {retries} failed with {status:?}, retrying");
             if attempt >= retries {
-                return Err(anyhow!("Too many retry".to_string()));
+                return Err(anyhow!("Too many retries".to_string()));
             }
             let secs = 1 << attempt;
 
             thread::sleep(Duration::from_secs(secs));
-        } else {
-            return Ok(response);
         }
     }
 }
