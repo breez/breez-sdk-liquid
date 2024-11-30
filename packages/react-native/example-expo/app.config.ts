@@ -1,6 +1,6 @@
 import type { ConfigContext, ExpoConfig } from "expo/config"
 export default function defineConfig({ config }: ConfigContext): ExpoConfig {
-    const apiKey = process.env.EXPO_PUBLIC_API_KEY ?? ""
+    const apiKey = process.env.EXPO_PUBLIC_BREEZ_LIQUID_API_KEY ?? ""
     return {
         ...config,
         name: "expo-breez-sdk-liquid-example",
