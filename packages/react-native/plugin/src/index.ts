@@ -1,5 +1,5 @@
-import type { ExpoConfig } from "expo/config"
-import { createRunOncePlugin } from "expo/config-plugins"
+import type { ExpoConfig } from "@expo/config"
+import { createRunOncePlugin } from "@expo/config-plugins"
 import { warnOnce, sdkPackage } from "./utils"
 import { withNotificationServiceExtension } from "./withBreezIOS"
 

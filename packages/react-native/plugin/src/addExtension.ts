@@ -1,5 +1,5 @@
 import * as path from "path"
-import type { XcodeProject } from "expo/config-plugins"
+import type { XcodeProject } from "@expo/config-plugins"
 
 const isaXCBuildConfiguration = "XCBuildConfiguration"
 const pbxTargetDependency = "PBXTargetDependency"

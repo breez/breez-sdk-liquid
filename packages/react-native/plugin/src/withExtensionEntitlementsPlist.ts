@@ -1,8 +1,8 @@
 import * as fs from "fs"
 import * as path from "path"
 import type { ExpoConfig } from "@expo/config"
-import type { InfoPlist } from "expo/config-plugins"
-import { withDangerousMod } from "expo/config-plugins"
+import type { InfoPlist } from "@expo/config-plugins"
+import { withDangerousMod } from "@expo/config-plugins"
 import plist from "@expo/plist"
 
 type EntitlementsProps = {
