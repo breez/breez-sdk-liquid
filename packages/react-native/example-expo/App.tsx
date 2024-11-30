@@ -59,7 +59,7 @@ export default function App() {
                 }
 
                 // Get API Key
-                const apiKey = process.env.EXPO_PUBLIC_API_KEY
+                const apiKey = process.env.EXPO_PUBLIC_BREEZ_LIQUID_API_KEY
 
                 if (!apiKey) {
                     throw new Error("No API Key set")
