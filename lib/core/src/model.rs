@@ -846,6 +846,7 @@ pub(crate) struct ReceiveSwap {
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    pub(crate) swapper_service_fee_sat: u64,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
@@ -1136,8 +1137,8 @@ pub struct PaymentSwapData {
     /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
 
-    /// For swaps that involve the swapper service, this represents the swapper service fee
-    pub swapper_fees_sat: Option<u64>,
+    /// The swapper service fee
+    pub swapper_fees_sat: u64,
 
     pub refund_tx_id: Option<String>,
     pub refund_tx_amount_sat: Option<u64>,
@@ -1297,7 +1298,7 @@ impl Payment {
             timestamp: swap.created_at,
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
-            swapper_fees_sat: swap.swapper_fees_sat,
+            swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
             details: PaymentDetails::Lightning {
@@ -1357,7 +1358,7 @@ impl Payment {
                     PaymentType::Send => tx.fees_sat,
                 },
             },
-            swapper_fees_sat: None,
+            swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
             payment_type: tx.payment_type,
             status: match &swap {
                 Some(swap) => swap.status,

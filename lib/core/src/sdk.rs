@@ -1870,6 +1870,7 @@ impl LiquidSdk {
                 description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
+                swapper_service_fee_sat: reverse_pair.fees.boltz(payer_amount_sat),
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 claim_tx_id: None,
                 lockup_tx_id: None,
