@@ -201,6 +201,7 @@ impl Persister {
                 cs.receiver_amount_sat,
                 cs.claim_address,
                 cs.state,
+                cs.swapper_service_feerate,
                 rtx.amount_sat,
                 pd.destination,
                 pd.description
@@ -282,11 +283,12 @@ impl Persister {
         let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(35)?;
         let maybe_chain_swap_claim_address: Option<String> = row.get(36)?;
         let maybe_chain_swap_state: Option<PaymentState> = row.get(37)?;
+        let maybe_chain_swap_swapper_service_feerate: Option<f64> = row.get(38)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(38)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(39)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(39)?;
-        let maybe_payment_details_description: Option<String> = row.get(40)?;
+        let maybe_payment_details_destination: Option<String> = row.get(40)?;
+        let maybe_payment_details_description: Option<String> = row.get(41)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
@@ -339,29 +341,37 @@ impl Persister {
                     PaymentType::Send,
                 ),
                 None => match maybe_chain_swap_id {
-                    Some(chain_swap_id) => (
-                        Some(PaymentSwapData {
-                            swap_id: chain_swap_id,
-                            swap_type: PaymentSwapType::Chain,
-                            created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
-                            preimage: maybe_chain_swap_preimage,
-                            bolt11: None,
-                            bolt12_offer: None, // Bolt12 not supported for Chain Swaps
-                            payment_hash: None,
-                            description: maybe_chain_swap_description
-                                .unwrap_or("Bitcoin transfer".to_string()),
-                            payer_amount_sat: maybe_chain_swap_payer_amount_sat.unwrap_or(0),
-                            receiver_amount_sat: maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
-                            swapper_fees_sat: 0, // TODO Populate from new swap field
-                            refund_tx_id: maybe_chain_swap_refund_tx_id,
-                            refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
-                            claim_address: maybe_chain_swap_claim_address,
-                            status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
-                        }),
-                        maybe_chain_swap_direction
-                            .unwrap_or(Direction::Outgoing)
-                            .into(),
-                    ),
+                    Some(chain_swap_id) => {
+                        let payer_amount_sat = maybe_chain_swap_payer_amount_sat.unwrap_or(0);
+                        let swapper_fees_sat = maybe_chain_swap_swapper_service_feerate
+                            .map(|fr| ((fr / 100.0) * payer_amount_sat as f64).ceil() as u64)
+                            .unwrap_or(0);
+
+                        (
+                            Some(PaymentSwapData {
+                                swap_id: chain_swap_id,
+                                swap_type: PaymentSwapType::Chain,
+                                created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
+                                preimage: maybe_chain_swap_preimage,
+                                bolt11: None,
+                                bolt12_offer: None, // Bolt12 not supported for Chain Swaps
+                                payment_hash: None,
+                                description: maybe_chain_swap_description
+                                    .unwrap_or("Bitcoin transfer".to_string()),
+                                payer_amount_sat,
+                                receiver_amount_sat: maybe_chain_swap_receiver_amount_sat
+                                    .unwrap_or(0),
+                                swapper_fees_sat,
+                                refund_tx_id: maybe_chain_swap_refund_tx_id,
+                                refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                                claim_address: maybe_chain_swap_claim_address,
+                                status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
+                            }),
+                            maybe_chain_swap_direction
+                                .unwrap_or(Direction::Outgoing)
+                                .into(),
+                        )
+                    }
                     None => (None, PaymentType::Send),
                 },
             },

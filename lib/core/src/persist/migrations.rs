@@ -187,6 +187,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         "
         ALTER TABLE receive_swaps ADD COLUMN swapper_service_fee_sat INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE send_swaps ADD COLUMN swapper_service_fee_sat INTEGER NOT NULL DEFAULT 0;
+
+        ALTER TABLE chain_swaps ADD COLUMN swapper_service_feerate REAL NOT NULL DEFAULT 0;
+        ALTER TABLE chain_swaps ADD COLUMN swapper_server_fees_sat INTEGER NOT NULL DEFAULT 0;
         ",
     ]
 }

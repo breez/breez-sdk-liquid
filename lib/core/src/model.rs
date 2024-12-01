@@ -631,6 +631,8 @@ pub(crate) struct ChainSwap {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
+    pub(crate) swapper_service_feerate: f64,
+    pub(crate) swapper_server_fees_sat: u64,
     pub(crate) accept_zero_conf: bool,
     /// JSON representation of [crate::persist::chain::InternalCreateChainResponse]
     pub(crate) create_response_json: String,
