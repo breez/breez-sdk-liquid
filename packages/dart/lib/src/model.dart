@@ -552,6 +552,10 @@ class Payment {
   /// - for Receive payments, this is zero
   final BigInt feesSat;
 
+  /// Service fees paid to the swapper service. This is only set for swaps (i.e. doesn't apply to
+  /// direct Liquid payments).
+  final BigInt? swapperFeesSat;
+
   /// If it is a `Send` or `Receive` payment
   final PaymentType paymentType;
 
@@ -572,6 +576,7 @@ class Payment {
     required this.timestamp,
     required this.amountSat,
     required this.feesSat,
+    this.swapperFeesSat,
     required this.paymentType,
     required this.status,
     required this.details,
@@ -584,6 +589,7 @@ class Payment {
       timestamp.hashCode ^
       amountSat.hashCode ^
       feesSat.hashCode ^
+      swapperFeesSat.hashCode ^
       paymentType.hashCode ^
       status.hashCode ^
       details.hashCode;
@@ -598,6 +604,7 @@ class Payment {
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
+          swapperFeesSat == other.swapperFeesSat &&
           paymentType == other.paymentType &&
           status == other.status &&
           details == other.details;

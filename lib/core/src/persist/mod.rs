@@ -301,6 +301,7 @@ impl Persister {
                     }),
                     payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
                     receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
+                    swapper_fees_sat: None,  // TODO Populate from new swap field
                     refund_tx_id: None,
                     refund_tx_amount_sat: None,
                     claim_address: None,
@@ -325,6 +326,7 @@ impl Persister {
                             .unwrap_or("Lightning payment".to_string()),
                         payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                         receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
+                        swapper_fees_sat: None, // TODO Populate from new swap field
                         refund_tx_id: maybe_send_swap_refund_tx_id,
                         refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
                         claim_address: None,
@@ -346,6 +348,7 @@ impl Persister {
                                 .unwrap_or("Bitcoin transfer".to_string()),
                             payer_amount_sat: maybe_chain_swap_payer_amount_sat.unwrap_or(0),
                             receiver_amount_sat: maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
+                            swapper_fees_sat: None,  // TODO Populate from new swap field
                             refund_tx_id: maybe_chain_swap_refund_tx_id,
                             refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
                             claim_address: maybe_chain_swap_claim_address,

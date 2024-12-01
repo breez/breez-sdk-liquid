@@ -1136,6 +1136,9 @@ pub struct PaymentSwapData {
     /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
 
+    /// For swaps that involve the swapper service, this represents the swapper service fee
+    pub swapper_fees_sat: Option<u64>,
+
     pub refund_tx_id: Option<String>,
     pub refund_tx_amount_sat: Option<u64>,
 
@@ -1263,6 +1266,10 @@ pub struct Payment {
     /// - for Receive payments, this is zero
     pub fees_sat: u64,
 
+    /// Service fees paid to the swapper service. This is only set for swaps (i.e. doesn't apply to
+    /// direct Liquid payments).
+    pub swapper_fees_sat: Option<u64>,
+
     /// If it is a `Send` or `Receive` payment
     pub payment_type: PaymentType,
 
@@ -1290,6 +1297,7 @@ impl Payment {
             timestamp: swap.created_at,
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            swapper_fees_sat: swap.swapper_fees_sat,
             payment_type,
             status: swap.status,
             details: PaymentDetails::Lightning {
@@ -1349,6 +1357,7 @@ impl Payment {
                     PaymentType::Send => tx.fees_sat,
                 },
             },
+            swapper_fees_sat: None,
             payment_type: tx.payment_type,
             status: match &swap {
                 Some(swap) => swap.status,

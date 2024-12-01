@@ -1621,6 +1621,13 @@ enum BreezSDKLiquidMapper {
         }
         let details = try asPaymentDetails(paymentDetails: detailsTmp)
 
+        var swapperFeesSat: UInt64?
+        if hasNonNilKey(data: payment, key: "swapperFeesSat") {
+            guard let swapperFeesSatTmp = payment["swapperFeesSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "swapperFeesSat"))
+            }
+            swapperFeesSat = swapperFeesSatTmp
+        }
         var destination: String?
         if hasNonNilKey(data: payment, key: "destination") {
             guard let destinationTmp = payment["destination"] as? String else {
@@ -1636,7 +1643,7 @@ enum BreezSDKLiquidMapper {
             txId = txIdTmp
         }
 
-        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details, destination: destination, txId: txId)
+        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details, swapperFeesSat: swapperFeesSat, destination: destination, txId: txId)
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
@@ -1647,6 +1654,7 @@ enum BreezSDKLiquidMapper {
             "paymentType": valueOf(paymentType: payment.paymentType),
             "status": valueOf(paymentState: payment.status),
             "details": dictionaryOf(paymentDetails: payment.details),
+            "swapperFeesSat": payment.swapperFeesSat == nil ? nil : payment.swapperFeesSat,
             "destination": payment.destination == nil ? nil : payment.destination,
             "txId": payment.txId == nil ? nil : payment.txId,
         ]

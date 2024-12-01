@@ -253,6 +253,7 @@ export interface Payment {
     paymentType: PaymentType
     status: PaymentState
     details: PaymentDetails
+    swapperFeesSat?: number
     destination?: string
     txId?: string
 }
