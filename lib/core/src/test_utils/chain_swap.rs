@@ -112,6 +112,8 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
+            swapper_service_feerate: 0.25,
+            swapper_server_fees_sat: 100,
         },
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
@@ -175,6 +177,8 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
+            swapper_service_feerate: 0.25,
+            swapper_server_fees_sat: 100,
         }
     }
 }

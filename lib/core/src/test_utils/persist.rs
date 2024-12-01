@@ -48,6 +48,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         preimage: None,
         payer_amount_sat: 1149,
         receiver_amount_sat: 1000,
+        swapper_service_fee_sat: 1,
         create_response_json: r#"{
             "accept_zero_conf": true,
             "address": "tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z",
@@ -102,6 +103,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         payment_hash: Some("e4a0052cd7e967393b71803ef5c507b935e6e80c18de4b110b26332ad64c6fe4".to_string()),
         payer_amount_sat: 1000,
         receiver_amount_sat: 587,
+        swapper_service_fee_sat: 1,
         claim_fees_sat: 200,
         claim_tx_id: None,
         lockup_tx_id: None,
