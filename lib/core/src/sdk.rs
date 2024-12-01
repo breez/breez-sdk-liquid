@@ -1258,6 +1258,7 @@ impl LiquidSdk {
                     preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
+                    swapper_service_fee_sat: lbtc_pair.fees.boltz(receiver_amount_sat),
                     create_response_json,
                     lockup_tx_id: None,
                     refund_tx_id: None,

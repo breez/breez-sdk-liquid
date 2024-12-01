@@ -190,6 +190,7 @@ impl Persister {
                 ss.payer_amount_sat,
                 ss.receiver_amount_sat,
                 ss.state,
+                ss.swapper_service_fee_sat,
                 cs.id,
                 cs.created_at,
                 cs.direction,
@@ -269,22 +270,23 @@ impl Persister {
         let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(24)?;
         let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(25)?;
         let maybe_send_swap_state: Option<PaymentState> = row.get(26)?;
+        let maybe_send_swap_swapper_service_fee_sat: Option<u64> = row.get(27)?;
 
-        let maybe_chain_swap_id: Option<String> = row.get(27)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(28)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(29)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(30)?;
-        let maybe_chain_swap_description: Option<String> = row.get(31)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(32)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(33)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(34)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(35)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(36)?;
+        let maybe_chain_swap_id: Option<String> = row.get(28)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(29)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(30)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(31)?;
+        let maybe_chain_swap_description: Option<String> = row.get(32)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(33)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(34)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(35)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(36)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(37)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(37)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(38)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(38)?;
-        let maybe_payment_details_description: Option<String> = row.get(39)?;
+        let maybe_payment_details_destination: Option<String> = row.get(39)?;
+        let maybe_payment_details_description: Option<String> = row.get(40)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => (
@@ -328,7 +330,7 @@ impl Persister {
                             .unwrap_or("Lightning payment".to_string()),
                         payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                         receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
-                        swapper_fees_sat: 0, // TODO Populate from new swap field
+                        swapper_fees_sat: maybe_send_swap_swapper_service_fee_sat.unwrap_or(0),
                         refund_tx_id: maybe_send_swap_refund_tx_id,
                         refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
                         claim_address: None,
