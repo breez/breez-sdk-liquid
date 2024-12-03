@@ -825,27 +825,33 @@ impl ChainSwapHandler {
 
                 match broadcast_res {
                     Ok(claim_tx_id) => {
-                        if swap.direction == Direction::Incoming {
-                            // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
-                            // This makes the tx known to the SDK (get_info, list_payments) instantly
-                            self.persister.insert_or_update_payment(
-                                PaymentTxData {
-                                    tx_id: claim_tx_id.clone(),
-                                    timestamp: Some(utils::now()),
-                                    amount_sat: swap.receiver_amount_sat,
-                                    fees_sat: 0,
-                                    payment_type: PaymentType::Receive,
-                                    is_confirmed: false,
-                                },
-                                None,
-                                None,
-                            )?;
-                        }
+                        let payment_id = match swap.direction {
+                            Direction::Incoming => {
+                                // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
+                                // This makes the tx known to the SDK (get_info, list_payments) instantly
+                                self.persister.insert_or_update_payment(
+                                    PaymentTxData {
+                                        tx_id: claim_tx_id.clone(),
+                                        timestamp: Some(utils::now()),
+                                        amount_sat: swap.receiver_amount_sat,
+                                        fees_sat: 0,
+                                        payment_type: PaymentType::Receive,
+                                        is_confirmed: false,
+                                    },
+                                    None,
+                                    None,
+                                )?;
+                                Some(claim_tx_id.clone())
+                            }
+                            Direction::Outgoing => swap.user_lockup_tx_id,
+                        };
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Chain Swap {swap_id}");
                         // The claim_tx_id is already set by set_chain_swap_claim_tx_id. Manually trigger notifying
                         // subscribers as update_swap_info will not recognise a change to the swap
-                        _ = self.subscription_notifier.send(claim_tx_id);
+                        payment_id.and_then(|payment_id| {
+                            self.subscription_notifier.send(payment_id).ok()
+                        });
                         Ok(())
                     }
                     Err(err) => {
