@@ -369,15 +369,24 @@ impl LiquidSdk {
                 }
             };
 
-            res.insert(
-                swap_id,
-                RecoveredOnchainDataReceive {
+            // Take only the lockup_tx_id and claim_tx_id if either are set,
+            // otherwise take the mrh_tx_id and mrh_amount_sat
+            let recovered_onchain_data = match (lockup_tx_id.as_ref(), claim_tx_id.as_ref()) {
+                (Some(_), None) | (Some(_), Some(_)) => RecoveredOnchainDataReceive {
                     lockup_tx_id,
                     claim_tx_id,
+                    mrh_tx_id: None,
+                    mrh_amount_sat: None,
+                },
+                _ => RecoveredOnchainDataReceive {
+                    lockup_tx_id: None,
+                    claim_tx_id: None,
                     mrh_tx_id,
                     mrh_amount_sat,
                 },
-            );
+            };
+
+            res.insert(swap_id, recovered_onchain_data);
         }
 
         Ok(res)
