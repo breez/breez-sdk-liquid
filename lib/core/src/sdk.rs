@@ -2252,6 +2252,12 @@ impl LiquidSdk {
             )
             .await?;
 
+        let wallet_amount_sat = tx_map
+            .values()
+            .map(|tx| tx.balance.values().sum::<i64>())
+            .sum::<i64>();
+        debug!("Onchain wallet balance: {wallet_amount_sat} sats");
+
         // Loop over the recovered chain data for monitored receive swaps
         for (swap_id, receive_data) in recovered_onchain_data.receive {
             if let Some(to_state) = receive_data.derive_partial_state() {
