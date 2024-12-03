@@ -383,6 +383,8 @@ impl Persister {
             },
         )?;
 
+        tx.commit()?;
+
         Ok(())
     }
 }
