@@ -671,9 +671,10 @@ pub(crate) mod immutable {
     #[derive(Clone)]
     pub(crate) struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
+        pub(crate) timeout_block_height: u32,
         pub(crate) claim_swap_script: LBtcSwapScript,
         pub(crate) claim_script: LBtcScript,
-        pub(crate) mrh_script: LBtcScript,
+        pub(crate) mrh_script: Option<LBtcScript>,
     }
 
     pub(crate) struct ReceiveSwapHistory {
@@ -781,25 +782,24 @@ pub(crate) mod immutable {
                     .iter()
                     .filter_map(|swap| {
                         let swap_id = &swap.id;
-
+                        let create_response = swap.get_boltz_create_response().ok()?;
                         let swap_script = swap
                             .get_swap_script()
-                            .map_err(|e| {
+                            .inspect_err(|e| {
                                 error!("Failed to get swap script for Receive Swap {swap_id}: {e}")
                             })
                             .ok()?;
-                        let mrh_address = ElementsAddress::from_str(&swap.mrh_address)
-                            .map_err(|e| error!("Not a valid ElementsAddress: {e:?}"))
-                            .ok()?;
+                        let mrh_address = ElementsAddress::from_str(&swap.mrh_address).ok();
 
                         match &swap_script.funding_addrs {
                             Some(address) => Some((
                                 swap.id.clone(),
                                 ReceiveSwapImmutableData {
                                     swap_id: swap.id.clone(),
+                                    timeout_block_height: create_response.timeout_block_height,
                                     claim_swap_script: swap_script.clone(),
                                     claim_script: address.script_pubkey(),
-                                    mrh_script: mrh_address.script_pubkey(),
+                                    mrh_script: mrh_address.map(|s| s.script_pubkey()),
                                 },
                             )),
                             None => {
@@ -933,7 +933,7 @@ pub(crate) mod immutable {
             self.receive_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
-                .map(|imm| (imm.mrh_script.clone(), imm))
+                .filter_map(|imm| imm.mrh_script.clone().map(|mrh_script| (mrh_script, imm)))
                 .collect()
         }
 
@@ -949,9 +949,20 @@ pub(crate) mod immutable {
                 .iter()
                 .for_each(|(lbtc_script, lbtc_script_history)| {
                     if let Some(imm) = receive_swaps_by_claim_script.get(lbtc_script) {
-                        let mrh_script_history = lbtc_script_to_history_map
-                            .get(&imm.mrh_script)
-                            .cloned()
+                        // The MRH script history filtered by the swap timeout block height
+                        let mrh_script_history = imm
+                            .mrh_script
+                            .clone()
+                            .and_then(|mrh_script| {
+                                lbtc_script_to_history_map.get(&mrh_script).map(|h| {
+                                    h.iter()
+                                        .filter(|&tx_history| {
+                                            tx_history.height < imm.timeout_block_height as i32
+                                        })
+                                        .cloned()
+                                        .collect::<Vec<HistoryTxId>>()
+                                })
+                            })
                             .unwrap_or_default();
                         data.insert(
                             imm.swap_id.clone(),
@@ -966,11 +977,19 @@ pub(crate) mod immutable {
                             .get(&imm.claim_script)
                             .cloned()
                             .unwrap_or_default();
+                        // The MRH script history filtered by the swap timeout block height
+                        let mrh_script_history = lbtc_script_history
+                            .iter()
+                            .filter(|&tx_history| {
+                                tx_history.height < imm.timeout_block_height as i32
+                            })
+                            .cloned()
+                            .collect::<Vec<HistoryTxId>>();
                         data.insert(
                             imm.swap_id.clone(),
                             ReceiveSwapHistory {
                                 lbtc_claim_script_history: claim_script_history,
-                                lbtc_mrh_script_history: lbtc_script_history.clone(),
+                                lbtc_mrh_script_history: mrh_script_history,
                             },
                         );
                     }
@@ -1074,7 +1093,7 @@ pub(crate) mod immutable {
                 .receive_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
-                .map(|imm| imm.mrh_script)
+                .filter_map(|imm| imm.mrh_script)
                 .collect();
             let mut swap_scripts = receive_swap_lbtc_mrh_scripts.clone();
             if !partial_sync {
