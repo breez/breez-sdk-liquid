@@ -1240,6 +1240,11 @@ impl ChainSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (Recoverable, Pending | Refundable | RefundPending | Failed | Complete) => Ok(()),
+            (_, Recoverable) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Recoverable state"),
+            }),
+
             (_, Created) => Err(PaymentError::Generic {
                 err: "Cannot transition to Created state".to_string(),
             }),

@@ -1087,6 +1087,12 @@ pub enum PaymentState {
     ///
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
+
+    /// ## Recoverable Swaps
+    ///
+    /// The status for swaps that have been synced in, and whose information is recoverable from
+    /// chain
+    Recoverable = 7,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -1104,6 +1110,7 @@ impl FromSql for PaymentState {
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
                 6 => Ok(PaymentState::RefundPending),
+                7 => Ok(PaymentState::Recoverable),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

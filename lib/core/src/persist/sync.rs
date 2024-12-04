@@ -479,7 +479,7 @@ impl Persister {
                         :description,
                         :state
                     )",
-                    [params, &[(":state", &PaymentState::Created)]]
+                    [params, &[(":state", &PaymentState::Recoverable)]]
                         .concat()
                         .as_slice(),
                 )?;
@@ -572,7 +572,7 @@ impl Persister {
                         :description,
                         :state
                     )",
-                    [params, &[(":state", &PaymentState::Created)]]
+                    [params, &[(":state", &PaymentState::Recoverable)]]
                         .concat()
                         .as_slice(),
                 )?;
@@ -684,7 +684,7 @@ impl Persister {
                         :server_lockup_tx_id,
                         :state
                     )",
-                    [params, &[(":state", &PaymentState::Created)]]
+                    [params, &[(":state", &PaymentState::Recoverable)]]
                         .concat()
                         .as_slice(),
                 )?;

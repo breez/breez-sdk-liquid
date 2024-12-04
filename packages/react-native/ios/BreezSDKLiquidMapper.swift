@@ -3809,6 +3809,9 @@ enum BreezSDKLiquidMapper {
         case "refundPending":
             return PaymentState.refundPending
 
+        case "recoverable":
+            return PaymentState.recoverable
+
         default: throw SdkError.Generic(message: "Invalid variant \(paymentState) for enum PaymentState")
         }
     }
@@ -3835,6 +3838,9 @@ enum BreezSDKLiquidMapper {
 
         case .refundPending:
             return "refundPending"
+
+        case .recoverable:
+            return "recoverable"
         }
     }
 
