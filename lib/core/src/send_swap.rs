@@ -496,6 +496,11 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (Recoverable, Pending | Refundable | RefundPending | Failed | Complete) => Ok(()),
+            (_, Recoverable) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Recoverable state"),
+            }),
+
             (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
                 err: "Cannot transition from {from_state:?} to Created state".to_string(),
