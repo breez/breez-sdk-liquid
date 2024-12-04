@@ -561,12 +561,12 @@ impl LiquidSdk {
                         None => pending_send_sat += p.amount_sat,
                     },
                     Created => pending_send_sat += p.amount_sat,
-                    Refundable | RefundPending | TimedOut => {}
+                    Refundable | RefundPending | TimedOut | Recoverable => {}
                 },
                 PaymentType::Receive => match p.status {
                     Complete => confirmed_received_sat += p.amount_sat,
                     Pending => pending_receive_sat += p.amount_sat,
-                    Created | Refundable | RefundPending | Failed | TimedOut => {}
+                    Created | Refundable | RefundPending | Failed | TimedOut | Recoverable => {}
                 },
             }
         }
@@ -1257,7 +1257,7 @@ impl LiquidSdk {
                 }
                 Pending => return Err(PaymentError::PaymentInProgress),
                 Complete => return Err(PaymentError::AlreadyPaid),
-                RefundPending | Refundable | Failed => {
+                RefundPending | Refundable | Failed | Recoverable => {
                     return Err(PaymentError::invalid_invoice(
                         "Payment has already failed. Please try with another invoice",
                     ))
