@@ -9,9 +9,7 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::{
-    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
-};
+use crate::model::PaymentState::*;
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::{Swap, Transaction};
 use crate::{ensure_sdk, utils};
@@ -372,6 +370,11 @@ impl ReceiveSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
+            (Recoverable, Pending | Refundable | RefundPending | Failed | Complete) => Ok(()),
+            (_, Recoverable) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to Recoverable state"),
+            }),
+
             (_, Created) => Err(PaymentError::Generic {
                 err: "Cannot transition to Created state".to_string(),
             }),
