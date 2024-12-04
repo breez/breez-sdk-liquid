@@ -621,7 +621,8 @@ export enum PaymentState {
     FAILED = "failed",
     TIMED_OUT = "timedOut",
     REFUNDABLE = "refundable",
-    REFUND_PENDING = "refundPending"
+    REFUND_PENDING = "refundPending",
+    RECOVERABLE = "recoverable"
 }
 
 export enum PaymentType {
