@@ -409,6 +409,12 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_b
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256(void
     
 );
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt(void
+    
+);
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt(void
+    
+);
 uint32_t ffi_breez_sdk_liquid_bindings_uniffi_contract_version(void
     
 );

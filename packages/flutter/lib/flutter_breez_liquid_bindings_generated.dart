@@ -3826,6 +3826,26 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256 =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256Ptr.asFunction<int Function()>();
 
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encryptPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encryptPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decryptPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decryptPtr.asFunction<int Function()>();
+
   int ffi_breez_sdk_liquid_bindings_uniffi_contract_version() {
     return _ffi_breez_sdk_liquid_bindings_uniffi_contract_version();
   }
