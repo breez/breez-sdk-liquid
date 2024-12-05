@@ -190,12 +190,12 @@ impl Persister {
         self.list_send_swaps_where(&con, where_clause)
     }
 
-    pub(crate) fn list_pending_and_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+    pub(crate) fn list_recoverable_send_swaps(&self) -> Result<Vec<SendSwap>> {
         let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&[
-            PaymentState::Created,
             PaymentState::Pending,
             PaymentState::RefundPending,
+            PaymentState::Recoverable,
         ])];
         self.list_send_swaps_where(&con, where_clause)
     }
