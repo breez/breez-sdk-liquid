@@ -36,10 +36,9 @@ impl Persister {
                 claim_fees_sat,
                 created_at,
                 state,
-                swapper_service_feerate,
-                swapper_server_fees_sat
+                pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
         _ = stmt.execute(params![
@@ -59,8 +58,7 @@ impl Persister {
             &chain_swap.claim_fees_sat,
             &chain_swap.created_at,
             &chain_swap.state,
-            &chain_swap.swapper_service_feerate,
-            &chain_swap.swapper_server_fees_sat,
+            &chain_swap.pair_fees_json
         ])?;
 
         con.execute(
@@ -116,8 +114,7 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                swapper_service_feerate,
-                swapper_server_fees_sat
+                pair_fees_json
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -166,8 +163,7 @@ impl Persister {
             refund_tx_id: row.get(17)?,
             created_at: row.get(18)?,
             state: row.get(19)?,
-            swapper_service_feerate: row.get(20)?,
-            swapper_server_fees_sat: row.get(21)?,
+            pair_fees_json: row.get(20)?,
         })
     }
 

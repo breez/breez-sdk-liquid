@@ -1517,7 +1517,7 @@ impl LiquidSdk {
             refund_public_key: Some(refund_public_key),
             user_lock_amount: None,
             server_lock_amount: Some(server_lockup_amount_sat),
-            pair_hash: Some(pair.hash),
+            pair_hash: Some(pair.hash.clone()),
             referral_id: None,
             webhook,
         })?;
@@ -1540,8 +1540,9 @@ impl LiquidSdk {
             payer_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
-            swapper_service_feerate: pair.fees.percentage,
-            swapper_server_fees_sat: server_fees_sat,
+            pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
+                PaymentError::generic(&format!("Failed to serialize outgoing ChainPair: {e:?}"))
+            })?,
             accept_zero_conf,
             create_response_json,
             claim_private_key: claim_keypair.display_secret().to_string(),
@@ -1939,7 +1940,7 @@ impl LiquidSdk {
             refund_public_key: Some(refund_public_key),
             user_lock_amount: Some(user_lockup_amount_sat),
             server_lock_amount: None,
-            pair_hash: Some(pair.hash),
+            pair_hash: Some(pair.hash.clone()),
             referral_id: None,
             webhook,
         })?;
@@ -1962,8 +1963,9 @@ impl LiquidSdk {
             payer_amount_sat: user_lockup_amount_sat,
             receiver_amount_sat,
             claim_fees_sat,
-            swapper_service_feerate: pair.fees.percentage,
-            swapper_server_fees_sat: server_fees_sat,
+            pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
+                PaymentError::generic(&format!("Failed to serialize incoming ChainPair: {e:?}"))
+            })?,
             accept_zero_conf,
             create_response_json,
             claim_private_key: claim_keypair.display_secret().to_string(),

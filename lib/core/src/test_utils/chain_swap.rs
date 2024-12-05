@@ -112,8 +112,25 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
-            swapper_service_feerate: 0.25,
-            swapper_server_fees_sat: 100,
+            pair_fees_json: r#"{
+                "hash": "43087e267db95668b9b7c48efcf44d922484870f1bdb8b926e5d6b76bf4d0709",
+                "rate": 1,
+                "limits": {
+                    "maximal": 4294967,
+                    "minimal": 10000,
+                    "maximalZeroConf": 0
+                },
+                "fees": {
+                    "percentage": 0.25,
+                    "minerFees": {
+                        "server": 4455,
+                        "user": {
+                            "claim": 3108,
+                            "lockup": 276
+                        }
+                    }
+                }
+            }"#.to_string(),
         },
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
@@ -177,8 +194,24 @@ pub(crate) fn new_chain_swap(
             created_at: utils::now(),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
-            swapper_service_feerate: 0.25,
-            swapper_server_fees_sat: 100,
+            pair_fees_json: r#"{
+                "hash": "3ec520412cee74863f2c75a9cd7b8d2077f68267632344ec3c4646e100883091",
+                "rate": 1,
+                "limits": {
+                    "maximal": 4294967,
+                    "minimal": 10000,
+                    "maximalZeroConf": 0
+                },
+                "fees": {
+                    "percentage": 0.25,
+                    "minerFees": {
+                    "server": 3384,
+                    "user": {
+                        "claim": 143,
+                        "lockup": 4312
+                    }
+                }
+            }"#.to_string(),
         }
     }
 }

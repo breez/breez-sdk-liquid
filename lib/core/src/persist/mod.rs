@@ -14,7 +14,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
-use boltz_client::boltz::{ReversePair, SubmarinePair};
+use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use migrations::current_migrations;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
@@ -202,7 +202,7 @@ impl Persister {
                 cs.receiver_amount_sat,
                 cs.claim_address,
                 cs.state,
-                cs.swapper_service_feerate,
+                cs.pair_fees_json,
                 rtx.amount_sat,
                 pd.destination,
                 pd.description
@@ -288,7 +288,9 @@ impl Persister {
         let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(35)?;
         let maybe_chain_swap_claim_address: Option<String> = row.get(36)?;
         let maybe_chain_swap_state: Option<PaymentState> = row.get(37)?;
-        let maybe_chain_swap_swapper_service_feerate: Option<f64> = row.get(38)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(38)?;
+        let maybe_chain_swap_pair_fees: Option<ChainPair> =
+            maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
         let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(39)?;
 
@@ -359,7 +361,8 @@ impl Persister {
                 None => match maybe_chain_swap_id {
                     Some(chain_swap_id) => {
                         let payer_amount_sat = maybe_chain_swap_payer_amount_sat.unwrap_or(0);
-                        let swapper_fees_sat = maybe_chain_swap_swapper_service_feerate
+                        let swapper_fees_sat = maybe_chain_swap_pair_fees
+                            .map(|pair| pair.fees.percentage)
                             .map(|fr| ((fr / 100.0) * payer_amount_sat as f64).ceil() as u64)
                             .unwrap_or(0);
 
