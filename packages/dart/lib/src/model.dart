@@ -739,8 +739,7 @@ enum PaymentState {
 
   /// ## Recoverable Swaps
   ///
-  /// The status for swaps that have been synced in, and whose information is recoverable from
-  /// chain
+  /// The status for swaps that have been synced in, and whose information is recoverable from chain
   recoverable,
   ;
 }

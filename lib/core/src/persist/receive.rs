@@ -174,6 +174,17 @@ impl Persister {
         self.list_receive_swaps_where(&con, where_clause)
     }
 
+    pub(crate) fn list_recoverable_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+        let con = self.get_connection()?;
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+            PaymentState::Recoverable,
+        ])];
+
+        self.list_receive_swaps_where(&con, where_clause)
+    }
+
     // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
     pub(crate) fn set_receive_swap_claim_tx_id(
         &self,

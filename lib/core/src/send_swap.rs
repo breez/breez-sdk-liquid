@@ -262,7 +262,7 @@ impl SendSwapHandler {
         preimage: Option<&str>,
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
-    ) -> Result<(), PaymentError> {
+    ) -> Result<(PaymentState, PaymentState), PaymentError> {
         info!(
             "Transitioning Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
             swap_id, to_state, lockup_tx_id, refund_tx_id
@@ -285,7 +285,7 @@ impl SendSwapHandler {
         if updated_swap != swap {
             payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
-        Ok(())
+        Ok((swap.state, updated_swap.state))
     }
 
     async fn cooperate_claim(&self, send_swap: &SendSwap) -> Result<(), PaymentError> {
@@ -513,7 +513,9 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
-            (Recoverable, Pending | Refundable | RefundPending | Failed | Complete) => Ok(()),
+            (Recoverable, Created | Pending | Refundable | RefundPending | Failed | Complete) => {
+                Ok(())
+            }
             (_, Recoverable) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Recoverable state"),
             }),
