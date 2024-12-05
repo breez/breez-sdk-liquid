@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option go_package = "github.com/breez/data-sync/proto";
+package sync;
+
+service Syncer {
+  rpc SetRecord(SetRecordRequest) returns (SetRecordReply) {}
+  rpc ListChanges(ListChangesRequest) returns (ListChangesReply) {}
+  rpc TrackChanges(TrackChangesRequest) returns (stream Record);
+}
+
+message Record {
+  string id = 1;
+  uint64 revision = 2;
+  string schema_version = 3;
+  bytes data = 4;
+}
+
+message SetRecordRequest {
+  Record record = 1;
+  uint32 request_time = 2;
+  string signature = 3;
+}
+enum SetRecordStatus {
+  SUCCESS = 0;
+  CONFLICT = 1;
+}
+message SetRecordReply {
+  SetRecordStatus status = 1;
+  uint64 new_revision = 2;
+}
+
+message ListChangesRequest {
+  uint64 since_revision = 1;
+  uint32 request_time = 2;
+  string signature = 3;
+}
+message ListChangesReply { repeated Record changes = 1; }
+
+message TrackChangesRequest {
+  uint32 request_time = 1;
+  string signature = 2;
+}
