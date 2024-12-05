@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::{self, create_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
@@ -9,6 +10,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
+use lwk_wollet::elements::Txid;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
@@ -35,6 +37,9 @@ static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 pub trait OnchainWallet: Send + Sync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
+
+    /// List all transactions in the wallet mapped by tx id
+    async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError>;
 
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
@@ -177,6 +182,17 @@ impl OnchainWallet for LiquidOnchainWallet {
         wallet.transactions().map_err(|e| PaymentError::Generic {
             err: format!("Failed to fetch wallet transactions: {e:?}"),
         })
+    }
+
+    /// List all transactions in the wallet mapped by tx id
+    async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError> {
+        let tx_map: HashMap<Txid, WalletTx> = self
+            .transactions()
+            .await?
+            .iter()
+            .map(|tx| (tx.txid, tx.clone()))
+            .collect();
+        Ok(tx_map)
     }
 
     /// Build a transaction to send funds to a recipient
