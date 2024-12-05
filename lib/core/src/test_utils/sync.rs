@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+use std::{collections::HashMap, sync::Arc};
+
 use crate::{
     prelude::Direction,
     sync::{
@@ -8,6 +10,7 @@ use crate::{
             data::{ChainSyncData, ReceiveSyncData, SendSyncData},
             sync::{
                 ListChangesReply, ListChangesRequest, Record, SetRecordReply, SetRecordRequest,
+                SetRecordStatus,
             },
         },
     },
@@ -18,12 +21,17 @@ use tokio::sync::{mpsc::Receiver, Mutex};
 
 pub(crate) struct MockSyncerClient {
     pub(crate) incoming_rx: Mutex<Receiver<Record>>,
+    pub(crate) outgoing_records: Arc<Mutex<HashMap<String, Record>>>,
 }
 
 impl MockSyncerClient {
-    pub(crate) fn new(incoming_rx: Receiver<Record>) -> Self {
+    pub(crate) fn new(
+        incoming_rx: Receiver<Record>,
+        outgoing_records: Arc<Mutex<HashMap<String, Record>>>,
+    ) -> Self {
         Self {
             incoming_rx: Mutex::new(incoming_rx),
+            outgoing_records,
         }
     }
 }
@@ -34,8 +42,30 @@ impl SyncerClient for MockSyncerClient {
         todo!()
     }
 
-    async fn push(&self, _req: SetRecordRequest) -> Result<SetRecordReply> {
-        todo!()
+    async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply> {
+        if let Some(mut record) = req.record {
+            let mut outgoing_records = self.outgoing_records.lock().await;
+
+            if let Some(existing_record) = outgoing_records.get(&record.id) {
+                if existing_record.revision != record.revision {
+                    return Ok(SetRecordReply {
+                        status: SetRecordStatus::Conflict as i32,
+                        new_revision: 0,
+                    });
+                }
+            }
+
+            record.revision = outgoing_records.len() as u64 + 1;
+            let record_revision = record.revision;
+
+            outgoing_records.insert(record.id.clone(), record);
+            return Ok(SetRecordReply {
+                status: SetRecordStatus::Success as i32,
+                new_revision: record_revision,
+            });
+        }
+
+        return Err(anyhow::anyhow!("No record was sent"));
     }
 
     async fn pull(&self, _req: ListChangesRequest) -> Result<ListChangesReply> {
