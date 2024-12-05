@@ -2,22 +2,25 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
-use rusqlite::{named_params, params, Connection, Row};
+use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
-use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::RecordType;
+use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
     pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
-        let con = self.get_connection()?;
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         // There is a limit of 16 param elements in a single tuple in rusqlite,
         // so we split up the insert into two statements.
-        let mut stmt = con.prepare(
+        let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
+        tx.execute(
             "
             INSERT INTO chain_swaps (
                 id,
@@ -39,29 +42,28 @@ impl Persister {
                 pair_fees_json
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                &chain_swap.id,
+                &id_hash,
+                &chain_swap.direction,
+                &chain_swap.claim_address,
+                &chain_swap.lockup_address,
+                &chain_swap.timeout_block_height,
+                &chain_swap.preimage,
+                &chain_swap.payer_amount_sat,
+                &chain_swap.receiver_amount_sat,
+                &chain_swap.accept_zero_conf,
+                &chain_swap.create_response_json,
+                &chain_swap.claim_private_key,
+                &chain_swap.refund_private_key,
+                &chain_swap.claim_fees_sat,
+                &chain_swap.created_at,
+                &chain_swap.state,
+                &chain_swap.pair_fees_json,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute(params![
-            &chain_swap.id,
-            &id_hash,
-            &chain_swap.direction,
-            &chain_swap.claim_address,
-            &chain_swap.lockup_address,
-            &chain_swap.timeout_block_height,
-            &chain_swap.preimage,
-            &chain_swap.payer_amount_sat,
-            &chain_swap.receiver_amount_sat,
-            &chain_swap.accept_zero_conf,
-            &chain_swap.create_response_json,
-            &chain_swap.claim_private_key,
-            &chain_swap.refund_private_key,
-            &chain_swap.claim_fees_sat,
-            &chain_swap.created_at,
-            &chain_swap.state,
-            &chain_swap.pair_fees_json
-        ])?;
 
-        con.execute(
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 description = :description,
@@ -80,6 +82,10 @@ impl Persister {
                 ":refund_tx_id": &chain_swap.refund_tx_id,
             },
         )?;
+
+        Self::commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
+
+        tx.commit()?;
 
         Ok(())
     }
@@ -349,8 +355,10 @@ impl Persister {
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 server_lockup_tx_id =
@@ -389,6 +397,11 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
+
+        let updated_fields = get_updated_fields!(server_lockup_tx_id);
+        Self::commit_outgoing(&tx, swap_id, RecordType::Chain, updated_fields)?;
+
+        tx.commit()?;
 
         Ok(())
     }

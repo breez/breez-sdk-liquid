@@ -1,18 +1,22 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
+use futures_util::TryFutureExt;
+use tokio::sync::watch;
 
+use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
+use crate::utils;
 use crate::{persist::Persister, prelude::Signer};
 
 use self::client::SyncerClient;
-use self::model::sync::Record;
-use self::model::DecryptedRecord;
 use self::model::{
     data::{ChainSyncData, ReceiveSyncData, SendSyncData, SyncData},
     sync::ListChangesRequest,
     RecordType, SyncState,
 };
+use self::model::{DecryptedRecord, SyncOutgoingChanges};
 
 pub(crate) mod client;
 pub(crate) mod model;
@@ -37,6 +41,47 @@ impl SyncService {
             signer,
             client,
         }
+    }
+
+    fn check_remote_change(&self) -> Result<()> {
+        match self
+            .persister
+            .get_sync_settings()?
+            .remote_url
+            .is_some_and(|url| url == self.remote_url)
+        {
+            true => Ok(()),
+            false => self.persister.set_new_remote(self.remote_url.clone()),
+        }
+    }
+
+    pub(crate) async fn run(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
+        self.client.connect(self.remote_url.clone()).await?;
+
+        self.check_remote_change()?;
+
+        tokio::spawn(async move {
+            let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
+
+            loop {
+                tokio::select! {
+                    _ = event_loop_interval.tick() => {
+                        if let Err(err) = self.pull().and_then(|_| self.push()).await {
+                            log::debug!("Could not run sync event loop: {err:?}");
+                        }
+                    }
+                    _ = shutdown.changed() => {
+                        log::info!("Received shutdown signal, exiting realtime sync service loop");
+                        if let Err(err) = self.client.disconnect().await {
+                            log::debug!("Could not disconnect sync service client: {err:?}");
+                        };
+                        return;
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 
     fn commit_record(
@@ -210,18 +255,92 @@ impl SyncService {
 
         Ok(())
     }
+
+    async fn handle_push(
+        &self,
+        record_id: &str,
+        data_id: &str,
+        record_type: RecordType,
+    ) -> Result<()> {
+        log::info!("Handling push for record record_id {record_id} data_id {data_id}");
+
+        // Step 1: Get the sync state, if it exists, to compute the revision
+        let maybe_sync_state = self.persister.get_sync_state_by_record_id(record_id)?;
+        let record_revision = maybe_sync_state
+            .as_ref()
+            .map(|s| s.record_revision)
+            .unwrap_or(0);
+        let is_local = maybe_sync_state.map(|s| s.is_local).unwrap_or(true);
+
+        // Step 2: Fetch the sync data
+        let sync_data = self.load_sync_data(data_id, record_type)?;
+
+        // Step 3: Create the record to push outwards
+        let record = Record::new(sync_data, record_revision, self.signer.clone())?;
+
+        // Step 4: Push the record
+        let req = SetRecordRequest::new(record, utils::now(), self.signer.clone())?;
+        let reply = self.client.push(req).await?;
+
+        // Step 5: Check for conflict. If present, skip and retry on the next call
+        if reply.status() == SetRecordStatus::Conflict {
+            return Err(anyhow!(
+                "Got conflict status when attempting to push record"
+            ));
+        }
+
+        // Step 6: Set/update the state revision
+        self.persister.set_sync_state(SyncState {
+            data_id: data_id.to_string(),
+            record_id: record_id.to_string(),
+            record_revision: reply.new_revision,
+            is_local,
+        })?;
+
+        log::info!("Successfully pushed record record_id {record_id}");
+
+        Ok(())
+    }
+
+    async fn push(&self) -> Result<()> {
+        let outgoing_changes = self.persister.get_sync_outgoing_changes()?;
+
+        let mut succeded = vec![];
+        for SyncOutgoingChanges {
+            record_id,
+            data_id,
+            record_type,
+            ..
+        } in outgoing_changes
+        {
+            if let Err(err) = self.handle_push(&record_id, &data_id, record_type).await {
+                log::debug!("Could not handle push for record {record_id}: {err:?}");
+                continue;
+            }
+            succeded.push(record_id);
+        }
+
+        if !succeded.is_empty() {
+            self.persister.remove_sync_outgoing_changes(succeded)?;
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use anyhow::{anyhow, Result};
-    use std::sync::Arc;
-    use tokio::sync::mpsc;
+    use std::{collections::HashMap, sync::Arc};
+    use tokio::sync::{mpsc, Mutex};
 
     use crate::{
-        prelude::Signer,
+        persist::Persister,
+        prelude::{Direction, PaymentState, Signer},
+        sync::model::SyncState,
         test_utils::{
-            persist::new_persister,
+            chain_swap::new_chain_swap,
+            persist::{new_persister, new_receive_swap, new_send_swap},
             sync::{
                 new_chain_sync_data, new_receive_sync_data, new_send_sync_data, MockSyncerClient,
             },
@@ -230,7 +349,7 @@ mod tests {
     };
 
     use super::{
-        model::{data::SyncData, sync::Record},
+        model::{data::SyncData, sync::Record, RecordType},
         SyncService,
     };
 
@@ -253,7 +372,8 @@ mod tests {
         ];
 
         let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
-        let client = Box::new(MockSyncerClient::new(incoming_rx));
+        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
+        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
         let sync_service =
             SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
 
@@ -285,7 +405,6 @@ mod tests {
 
         let new_preimage = Some("preimage".to_string());
         let new_accept_zero_conf = false;
-        let new_server_lockup_tx_id = Some("server_lockup_tx_id".to_string());
         let sync_data = vec![
             SyncData::Send(new_send_sync_data(new_preimage.clone())),
             SyncData::Chain(new_chain_sync_data(Some(new_accept_zero_conf))),
@@ -308,10 +427,202 @@ mod tests {
         }
         if let Some(chain_swap) = persister.fetch_chain_swap_by_id(&sync_data[2].id())? {
             assert_eq!(chain_swap.accept_zero_conf, new_accept_zero_conf);
-            assert_eq!(chain_swap.server_lockup_tx_id, new_server_lockup_tx_id);
         } else {
             return Err(anyhow!("Chain swap not found"));
         }
+
+        Ok(())
+    }
+
+    fn get_outgoing_record<'a, 'b>(
+        persister: Arc<Persister>,
+        outgoing: &'a HashMap<String, Record>,
+        data_id: &'b str,
+        record_type: RecordType,
+    ) -> Result<&'a Record> {
+        let record_id = Record::get_id_from_record_type(record_type, data_id);
+        let sync_state = persister
+            .get_sync_state_by_record_id(&record_id)?
+            .ok_or(anyhow::anyhow!("Expected existing swap state"))?;
+        let Some(record) = outgoing.get(&sync_state.record_id) else {
+            return Err(anyhow::anyhow!(
+                "Expecting existing record in client's outgoing list"
+            ));
+        };
+        Ok(record)
+    }
+
+    #[tokio::test]
+    async fn test_outgoing_sync() -> Result<()> {
+        let (_temp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+
+        let (_incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
+        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
+        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
+        let sync_service =
+            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+
+        // Test insert
+        persister.insert_receive_swap(&new_receive_swap(None))?;
+        persister.insert_send_swap(&new_send_swap(None))?;
+        persister.insert_chain_swap(&new_chain_swap(Direction::Incoming, None, true, None))?;
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+        assert_eq!(outgoing.len(), 3);
+        drop(outgoing);
+
+        // Test conflict
+        let swap = new_receive_swap(None);
+        persister.insert_receive_swap(&swap)?;
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+        assert_eq!(outgoing.len(), 4);
+        let record =
+            get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Receive)?;
+        persister.set_sync_state(SyncState {
+            data_id: swap.id.clone(),
+            record_id: record.id.clone(),
+            record_revision: 90, // Set a wrong record revision
+            is_local: true,
+        })?;
+        drop(outgoing);
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+        assert_eq!(outgoing.len(), 4); // No records were added
+        drop(outgoing);
+
+        // Test update before push
+        let swap = new_send_swap(None);
+        persister.insert_send_swap(&swap)?;
+        let new_preimage = Some("new-preimage");
+        persister.try_handle_send_swap_update(
+            &swap.id,
+            PaymentState::Pending,
+            new_preimage.clone(),
+            None,
+            None,
+        )?;
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+
+        let record = get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Send)?;
+        let decrypted_record = record.clone().decrypt(signer.clone())?;
+        assert_eq!(decrypted_record.data.id(), &swap.id);
+        match decrypted_record.data {
+            SyncData::Send(data) => {
+                assert_eq!(data.preimage, new_preimage.map(|p| p.to_string()));
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Unexpected sync data type received."));
+            }
+        }
+        drop(outgoing);
+
+        // Test update after push
+        let swap = new_send_swap(None);
+        persister.insert_send_swap(&swap)?;
+
+        sync_service.push().await?;
+
+        let new_preimage = Some("new-preimage");
+        persister.try_handle_send_swap_update(
+            &swap.id,
+            PaymentState::Pending,
+            new_preimage.clone(),
+            None,
+            None,
+        )?;
+
+        sync_service.push().await?;
+
+        let outgoing = outgoing_records.lock().await;
+        let record = get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Send)?;
+        let decrypted_record = record.clone().decrypt(signer.clone())?;
+        assert_eq!(decrypted_record.data.id(), &swap.id);
+        match decrypted_record.data {
+            SyncData::Send(data) => {
+                assert_eq!(data.preimage, new_preimage.map(|p| p.to_string()),);
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Unexpected sync data type received."));
+            }
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_sync_clean() -> Result<()> {
+        let (_temp_dir, persister) = new_persister()?;
+        let persister = Arc::new(persister);
+
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+
+        let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
+        let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
+        let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
+        let sync_service =
+            SyncService::new("".to_string(), persister.clone(), signer.clone(), client);
+
+        // Clean incoming
+        let record = Record::new(
+            SyncData::Receive(new_receive_sync_data()),
+            1,
+            signer.clone(),
+        )?;
+        incoming_tx.send(record).await?;
+        sync_service.pull().await?;
+
+        let incoming_records = persister.get_incoming_records()?;
+        assert_eq!(incoming_records.len(), 0); // Records have been cleaned
+
+        let mut inapplicable_record = Record::new(
+            SyncData::Receive(new_receive_sync_data()),
+            2,
+            signer.clone(),
+        )?;
+        inapplicable_record.schema_version = "9.9.9".to_string();
+        incoming_tx.send(inapplicable_record).await?;
+        sync_service.pull().await?;
+
+        let incoming_records = persister.get_incoming_records()?;
+        assert_eq!(incoming_records.len(), 1); // Inapplicable records are stored for later
+
+        // Clean outgoing
+        let swap = new_send_swap(None);
+        persister.insert_send_swap(&swap)?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 1); // Changes have been set
+
+        sync_service.push().await?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
+
+        let new_preimage = Some("new-preimage");
+        persister.try_handle_send_swap_update(
+            &swap.id,
+            PaymentState::Pending,
+            new_preimage.clone(),
+            None,
+            None,
+        )?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 1); // Changes have been set
+
+        sync_service.push().await?;
+        let outgoing_changes = persister.get_sync_outgoing_changes()?;
+        assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
 
         Ok(())
     }
