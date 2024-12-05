@@ -904,6 +904,12 @@ impl LiquidSdk {
                 };
             }
             Ok(InputType::Bolt11 { invoice }) => {
+                self.sync_service
+                    .pull()
+                    .await
+                    .map_err(|err| PaymentError::Generic {
+                        err: format!("Could not pull real-time sync changes: {err:?}"),
+                    })?;
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_bolt11_invoice(&invoice.bolt11)?;
 

@@ -249,7 +249,7 @@ impl SyncService {
         Ok(())
     }
 
-    async fn pull(&self) -> Result<()> {
+    pub(crate) async fn pull(&self) -> Result<()> {
         // Step 1: Fetch and save incoming records from remote, then update local tip
         self.fetch_and_save_records().await?;
 
