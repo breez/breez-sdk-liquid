@@ -7,7 +7,7 @@ pub(crate) mod receive;
 pub(crate) mod send;
 pub(crate) mod sync;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use crate::error::PaymentError;
@@ -16,9 +16,11 @@ use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
+use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
+use sdk_common::bitcoin::hashes::hex::ToHex;
 use tokio::sync::mpsc::Sender;
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
@@ -94,6 +96,35 @@ impl Persister {
         }
     }
 
+    pub(crate) fn insert_or_update_payment_with_wallet_tx(
+        &self,
+        tx: &WalletTx,
+    ) -> Result<(), PaymentError> {
+        let tx_id = tx.txid.to_string();
+        let is_tx_confirmed = tx.height.is_some();
+        let amount_sat = tx.balance.values().sum::<i64>();
+        let maybe_script_pubkey = tx
+            .outputs
+            .iter()
+            .find(|output| output.is_some())
+            .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
+        self.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: tx_id.clone(),
+                timestamp: tx.timestamp,
+                amount_sat: amount_sat.unsigned_abs(),
+                fees_sat: tx.fee,
+                payment_type: match amount_sat >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                },
+                is_confirmed: is_tx_confirmed,
+            },
+            maybe_script_pubkey,
+            None,
+        )
+    }
+
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
@@ -139,19 +170,18 @@ impl Persister {
     }
 
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
-        let con = self.get_connection()?;
         let ongoing_send_swaps: Vec<Swap> = self
-            .list_ongoing_send_swaps(&con)?
+            .list_ongoing_send_swaps()?
             .into_iter()
             .map(Swap::Send)
             .collect();
         let ongoing_receive_swaps: Vec<Swap> = self
-            .list_ongoing_receive_swaps(&con)?
+            .list_ongoing_receive_swaps()?
             .into_iter()
             .map(Swap::Receive)
             .collect();
         let ongoing_chain_swaps: Vec<Swap> = self
-            .list_ongoing_chain_swaps(&con)?
+            .list_ongoing_chain_swaps()?
             .into_iter()
             .map(Swap::Chain)
             .collect();
@@ -513,6 +543,28 @@ impl Persister {
             .map(|i| i.unwrap())
             .collect();
         Ok(payments)
+    }
+
+    pub fn get_payments_by_tx_id(
+        &self,
+        req: &ListPaymentsRequest,
+    ) -> Result<HashMap<String, Payment>> {
+        let res: HashMap<String, Payment> = self
+            .get_payments(req)?
+            .into_iter()
+            .flat_map(|payment| {
+                // Index payments by both tx_id (lockup/claim) and refund_tx_id
+                let mut res = vec![];
+                if let Some(tx_id) = payment.tx_id.clone() {
+                    res.push((tx_id, payment.clone()));
+                }
+                if let Some(refund_tx_id) = payment.get_refund_tx_id() {
+                    res.push((refund_tx_id, payment));
+                }
+                res
+            })
+            .collect();
+        Ok(res)
     }
 }
 

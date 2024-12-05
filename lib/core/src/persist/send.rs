@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use boltz_client::swaps::boltz::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, Row};
@@ -173,13 +171,14 @@ impl Persister {
         Ok(ongoing_send)
     }
 
-    pub(crate) fn list_ongoing_send_swaps(&self, con: &Connection) -> Result<Vec<SendSwap>> {
+    pub(crate) fn list_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
 
-        self.list_send_swaps_where(con, where_clause)
+        self.list_send_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
@@ -191,21 +190,14 @@ impl Persister {
         self.list_send_swaps_where(&con, where_clause)
     }
 
-    /// Pending Send swaps, indexed by refund tx id
-    pub(crate) fn list_pending_send_swaps_by_refund_tx_id(
-        &self,
-    ) -> Result<HashMap<String, SendSwap>> {
-        let res: HashMap<String, SendSwap> = self
-            .list_pending_send_swaps()?
-            .iter()
-            .filter_map(|pending_send_swap| {
-                pending_send_swap
-                    .refund_tx_id
-                    .as_ref()
-                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_send_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+    pub(crate) fn list_pending_and_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let con = self.get_connection()?;
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+            PaymentState::RefundPending,
+        ])];
+        self.list_send_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn try_handle_send_swap_update(
@@ -389,7 +381,7 @@ mod tests {
 
         // List ongoing send swaps
         storage.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
-        let ongoing_swaps = storage.list_ongoing_send_swaps(&con)?;
+        let ongoing_swaps = storage.list_ongoing_send_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
         // List pending send swaps

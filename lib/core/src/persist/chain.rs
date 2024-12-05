@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
@@ -194,63 +192,29 @@ impl Persister {
 
     pub(crate) fn list_chain_swaps_by_state(
         &self,
-        con: &Connection,
         states: Vec<PaymentState>,
     ) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&states)];
-        self.list_chain_swaps_where(con, where_clause)
+        self.list_chain_swaps_where(&con, where_clause)
     }
 
-    pub(crate) fn list_ongoing_chain_swaps(&self, con: &Connection) -> Result<Vec<ChainSwap>> {
-        self.list_chain_swaps_by_state(con, vec![PaymentState::Created, PaymentState::Pending])
+    pub(crate) fn list_ongoing_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+        ])];
+
+        self.list_chain_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_chain_swaps_by_state(
-            &con,
-            vec![PaymentState::Pending, PaymentState::RefundPending],
-        )
+        self.list_chain_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending])
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_chain_swaps_by_state(&con, vec![PaymentState::Refundable])
-    }
-
-    /// Pending Chain swaps, indexed by refund tx id
-    pub(crate) fn list_pending_chain_swaps_by_refund_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ChainSwap>> {
-        let res: HashMap<String, ChainSwap> = self
-            .list_pending_chain_swaps()?
-            .iter()
-            .filter_map(|pending_chain_swap| {
-                pending_chain_swap
-                    .refund_tx_id
-                    .as_ref()
-                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_chain_swap.clone()))
-            })
-            .collect();
-        Ok(res)
-    }
-
-    /// This only returns the swaps that have a claim tx, skipping the pending ones that are being refunded.
-    pub(crate) fn list_pending_chain_swaps_by_claim_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        let res: HashMap<String, ChainSwap> = self
-            .list_chain_swaps_by_state(&con, vec![PaymentState::Pending])?
-            .iter()
-            .filter_map(|pending_chain_swap| {
-                pending_chain_swap
-                    .claim_tx_id
-                    .as_ref()
-                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_chain_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+        self.list_chain_swaps_by_state(vec![PaymentState::Refundable])
     }
 
     pub(crate) fn update_chain_swap_accept_zero_conf(
@@ -362,14 +326,9 @@ impl Persister {
 
     pub(crate) fn try_handle_chain_swap_update(
         &self,
-        swap_id: &str,
-        to_state: PaymentState,
-        server_lockup_tx_id: Option<&str>,
-        user_lockup_tx_id: Option<&str>,
-        claim_tx_id: Option<&str>,
-        refund_tx_id: Option<&str>,
+        swap_update: &ChainSwapUpdate,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id
+        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_address, claim_tx_id, refund_tx_id
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
@@ -388,6 +347,12 @@ impl Persister {
                         ELSE user_lockup_tx_id
                     END,
 
+                claim_address =
+                    CASE
+                        WHEN claim_address IS NULL THEN :claim_address
+                        ELSE claim_address
+                    END,
+
                 claim_tx_id =
                     CASE
                         WHEN claim_tx_id IS NULL THEN :claim_tx_id
@@ -404,12 +369,13 @@ impl Persister {
             WHERE
                 id = :id",
             named_params! {
-                ":id": swap_id,
-                ":server_lockup_tx_id": server_lockup_tx_id,
-                ":user_lockup_tx_id": user_lockup_tx_id,
-                ":claim_tx_id": claim_tx_id,
-                ":refund_tx_id": refund_tx_id,
-                ":state": to_state,
+                ":id": swap_update.swap_id,
+                ":server_lockup_tx_id": swap_update.server_lockup_tx_id,
+                ":user_lockup_tx_id": swap_update.user_lockup_tx_id,
+                ":claim_address": swap_update.claim_address,
+                ":claim_tx_id": swap_update.claim_tx_id,
+                ":refund_tx_id": swap_update.refund_tx_id,
+                ":state": swap_update.to_state,
             },
         )?;
 

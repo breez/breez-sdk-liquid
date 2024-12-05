@@ -212,5 +212,6 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             schema_version TEXT NOT NULL,
             data BLOB NOT NULL
         ) STRICT;",
+        "ALTER TABLE receive_swaps DROP COLUMN mrh_script_pubkey;",
     ]
 }

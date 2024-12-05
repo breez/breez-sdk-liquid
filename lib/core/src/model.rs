@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-
-use boltz_client::boltz::ChainPair;
+use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
+    boltz::ChainPair,
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -590,6 +590,13 @@ pub enum GetPaymentRequest {
     Lightning { payment_hash: String },
 }
 
+/// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
+#[async_trait]
+pub(crate) trait BlockListener: Send + Sync {
+    async fn on_bitcoin_block(&self, height: u32);
+    async fn on_liquid_block(&self, height: u32);
+}
+
 // A swap enum variant
 #[derive(Clone, Debug)]
 pub(crate) enum Swap {
@@ -654,7 +661,7 @@ impl FromSql for Direction {
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
@@ -792,8 +799,19 @@ impl ChainSwap {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ChainSwapUpdate {
+    pub(crate) swap_id: String,
+    pub(crate) to_state: PaymentState,
+    pub(crate) server_lockup_tx_id: Option<String>,
+    pub(crate) user_lockup_tx_id: Option<String>,
+    pub(crate) claim_address: Option<String>,
+    pub(crate) claim_tx_id: Option<String>,
+    pub(crate) refund_tx_id: Option<String>,
+}
+
 /// A submarine swap, used for Send
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
@@ -880,7 +898,7 @@ impl SendSwap {
 }
 
 /// A reverse swap, used for Receive
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
@@ -898,12 +916,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
-    /// Persisted only when the lockup tx is broadcast
-    pub(crate) lockup_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
-    /// The script pubkey for a magic routing hint payment
-    pub(crate) mrh_script_pubkey: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
     pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
@@ -991,8 +1005,9 @@ pub struct RefundableSwap {
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
+    #[default]
     Created = 0,
 
     /// ## Receive Swaps
