@@ -6,16 +6,19 @@ use rusqlite::{named_params, params, Connection, Row};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
-use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::RecordType;
+use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
     pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
-        let con = self.get_connection()?;
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
 
-        let mut stmt = con.prepare(
+        let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
+        tx.execute(
             "
             INSERT INTO send_swaps (
                 id,
@@ -35,25 +38,28 @@ impl Persister {
                 pair_fees_json
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                &send_swap.id,
+                &id_hash,
+                &send_swap.invoice,
+                &send_swap.bolt12_offer,
+                &send_swap.payment_hash,
+                &send_swap.description,
+                &send_swap.payer_amount_sat,
+                &send_swap.receiver_amount_sat,
+                &send_swap.create_response_json,
+                &send_swap.refund_private_key,
+                &send_swap.lockup_tx_id,
+                &send_swap.refund_tx_id,
+                &send_swap.created_at,
+                &send_swap.state,
+                &send_swap.pair_fees_json,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute((
-            &send_swap.id,
-            &id_hash,
-            &send_swap.invoice,
-            &send_swap.bolt12_offer,
-            &send_swap.payment_hash,
-            &send_swap.description,
-            &send_swap.payer_amount_sat,
-            &send_swap.receiver_amount_sat,
-            &send_swap.create_response_json,
-            &send_swap.refund_private_key,
-            &send_swap.lockup_tx_id,
-            &send_swap.refund_tx_id,
-            &send_swap.created_at,
-            &send_swap.state,
-            &send_swap.pair_fees_json,
-        ))?;
+
+        Self::commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
+
+        tx.commit()?;
 
         Ok(())
     }
@@ -211,8 +217,10 @@ impl Persister {
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite preimage, lockup_tx_id, refund_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE send_swaps
             SET
                 preimage =
@@ -244,6 +252,11 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
+
+        let updated_fields = get_updated_fields!(preimage);
+        Self::commit_outgoing(&tx, swap_id, RecordType::Send, updated_fields)?;
+
+        tx.commit()?;
 
         Ok(())
     }
