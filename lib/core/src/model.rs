@@ -1021,8 +1021,7 @@ pub enum PaymentState {
 
     /// ## Recoverable Swaps
     ///
-    /// The status for swaps that have been synced in, and whose information is recoverable from
-    /// chain
+    /// The status for swaps that have been synced in, and whose information is recoverable from chain
     Recoverable = 7,
 }
 impl ToSql for PaymentState {
@@ -1041,6 +1040,7 @@ impl FromSql for PaymentState {
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
                 6 => Ok(PaymentState::RefundPending),
+                7 => Ok(PaymentState::Recoverable),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),
