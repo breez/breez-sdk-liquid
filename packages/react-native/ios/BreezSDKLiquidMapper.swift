@@ -1639,8 +1639,15 @@ enum BreezSDKLiquidMapper {
             }
             txId = txIdTmp
         }
+        var unblindingData: String?
+        if hasNonNilKey(data: payment, key: "unblindingData") {
+            guard let unblindingDataTmp = payment["unblindingData"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "unblindingData"))
+            }
+            unblindingData = unblindingDataTmp
+        }
 
-        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details, destination: destination, txId: txId)
+        return Payment(timestamp: timestamp, amountSat: amountSat, feesSat: feesSat, paymentType: paymentType, status: status, details: details, destination: destination, txId: txId, unblindingData: unblindingData)
     }
 
     static func dictionaryOf(payment: Payment) -> [String: Any?] {
@@ -1653,6 +1660,7 @@ enum BreezSDKLiquidMapper {
             "details": dictionaryOf(paymentDetails: payment.details),
             "destination": payment.destination == nil ? nil : payment.destination,
             "txId": payment.txId == nil ? nil : payment.txId,
+            "unblindingData": payment.unblindingData == nil ? nil : payment.unblindingData,
         ]
     }
 
