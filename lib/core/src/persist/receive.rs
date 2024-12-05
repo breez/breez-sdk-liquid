@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
@@ -33,11 +31,10 @@ impl Persister {
                 created_at,
                 claim_fees_sat,
                 mrh_address,
-                mrh_script_pubkey,
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 &receive_swap.id,
                 id_hash,
@@ -51,7 +48,6 @@ impl Persister {
                 &receive_swap.created_at,
                 &receive_swap.claim_fees_sat,
                 &receive_swap.mrh_address,
-                &receive_swap.mrh_script_pubkey,
                 &receive_swap.state,
                 &receive_swap.pair_fees_json,
             ),
@@ -101,9 +97,7 @@ impl Persister {
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
-                rs.lockup_tx_id,
                 rs.mrh_address,
-                rs.mrh_script_pubkey,
                 rs.mrh_tx_id,
                 rs.created_at,
                 rs.state,
@@ -147,13 +141,11 @@ impl Persister {
             receiver_amount_sat: row.get(8)?,
             claim_fees_sat: row.get(9)?,
             claim_tx_id: row.get(10)?,
-            lockup_tx_id: row.get(11)?,
-            mrh_address: row.get(12)?,
-            mrh_script_pubkey: row.get(13)?,
-            mrh_tx_id: row.get(14)?,
-            created_at: row.get(15)?,
-            state: row.get(16)?,
-            pair_fees_json: row.get(17)?,
+            mrh_address: row.get(11)?,
+            mrh_tx_id: row.get(12)?,
+            created_at: row.get(13)?,
+            state: row.get(14)?,
+            pair_fees_json: row.get(15)?,
         })
     }
 
@@ -176,66 +168,14 @@ impl Persister {
         Ok(ongoing_receive)
     }
 
-    pub(crate) fn list_ongoing_receive_swaps(&self, con: &Connection) -> Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_ongoing_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
 
-        self.list_receive_swaps_where(con, where_clause)
-    }
-
-    pub(crate) fn list_pending_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        let query = Self::list_receive_swaps_query(vec!["state = ?1".to_string()]);
-        let res = con
-            .prepare(&query)?
-            .query_map(
-                params![PaymentState::Pending],
-                Self::sql_row_to_receive_swap,
-            )?
-            .map(|i| i.unwrap())
-            .collect();
-        Ok(res)
-    }
-
-    /// Ongoing Receive Swaps with no claim or lockup transactions, indexed by mrh_script_pubkey
-    pub(crate) fn list_ongoing_receive_swaps_by_mrh_script_pubkey(
-        &self,
-    ) -> Result<HashMap<String, ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        let res = self
-            .list_ongoing_receive_swaps(&con)?
-            .iter()
-            .filter_map(|swap| {
-                match (
-                    swap.lockup_tx_id.clone(),
-                    swap.claim_tx_id.clone(),
-                    swap.mrh_script_pubkey.is_empty(),
-                ) {
-                    (None, None, false) => Some((swap.mrh_script_pubkey.clone(), swap.clone())),
-                    _ => None,
-                }
-            })
-            .collect();
-        Ok(res)
-    }
-
-    /// Pending Receive Swaps, indexed by claim_tx_id
-    pub(crate) fn list_pending_receive_swaps_by_claim_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ReceiveSwap>> {
-        let res = self
-            .list_pending_receive_swaps()?
-            .iter()
-            .filter_map(|pending_receive_swap| {
-                pending_receive_swap
-                    .claim_tx_id
-                    .as_ref()
-                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_receive_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+        self.list_receive_swaps_where(&con, where_clause)
     }
 
     // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
@@ -422,12 +362,8 @@ mod tests {
 
         // List ongoing receive swaps
         storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
-        let ongoing_swaps = storage.list_ongoing_receive_swaps(&con)?;
+        let ongoing_swaps = storage.list_ongoing_receive_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
-
-        // List pending receive swaps
-        let ongoing_swaps = storage.list_pending_receive_swaps()?;
-        assert_eq!(ongoing_swaps.len(), 1);
 
         Ok(())
     }
