@@ -145,11 +145,6 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_receive_swaps_where(&con, vec![])
-    }
-
     pub(crate) fn list_receive_swaps_where(
         &self,
         con: &Connection,

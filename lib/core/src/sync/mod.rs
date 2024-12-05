@@ -7,6 +7,7 @@ use futures_util::TryFutureExt;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
+use crate::recover::recoverer::Recoverer;
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
 use crate::{
@@ -28,6 +29,7 @@ pub(crate) mod model;
 pub(crate) struct SyncService {
     remote_url: String,
     persister: Arc<Persister>,
+    recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
     sync_trigger: Mutex<Receiver<()>>,
@@ -37,6 +39,7 @@ impl SyncService {
     pub(crate) fn new(
         remote_url: String,
         persister: Arc<Persister>,
+        recoverer: Arc<Recoverer>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
         sync_trigger: Receiver<()>,
@@ -45,6 +48,7 @@ impl SyncService {
         Self {
             remote_url,
             persister,
+            recoverer,
             signer,
             client,
             sync_trigger,
@@ -369,6 +373,7 @@ mod tests {
         test_utils::{
             chain_swap::new_chain_swap,
             persist::{create_persister, new_receive_swap, new_send_swap},
+            recover::new_recoverer,
             sync::{
                 new_chain_sync_data, new_receive_sync_data, new_send_sync_data, new_sync_service,
             },
@@ -382,6 +387,7 @@ mod tests {
     async fn test_incoming_sync_create_and_update() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let sync_data = vec![
             SyncData::Receive(new_receive_sync_data()),
@@ -395,7 +401,7 @@ mod tests {
         ];
 
         let (incoming_tx, _outgoing_records, sync_service) =
-            new_sync_service(persister.clone(), signer.clone())?;
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         for record in incoming_records {
             incoming_tx.send(record).await?;
@@ -475,9 +481,10 @@ mod tests {
     async fn test_outgoing_sync() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (_incoming_tx, outgoing_records, sync_service) =
-            new_sync_service(persister.clone(), signer.clone())?;
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Test insert
         persister.insert_receive_swap(&new_receive_swap(None))?;
@@ -580,9 +587,10 @@ mod tests {
     async fn test_sync_clean() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (incoming_tx, _outgoing_records, sync_service) =
-            new_sync_service(persister.clone(), signer.clone())?;
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Clean incoming
         let record = Record::new(
@@ -640,9 +648,10 @@ mod tests {
     async fn test_last_derivation_index_update() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (incoming_tx, outgoing_records, sync_service) =
-            new_sync_service(persister.clone(), signer.clone())?;
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Check pull
         assert_eq!(persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?, None);

@@ -136,7 +136,7 @@ impl Signer for MockSigner {
     }
 
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
-        todo!()
+        Ok(vec![])
     }
 
     fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {

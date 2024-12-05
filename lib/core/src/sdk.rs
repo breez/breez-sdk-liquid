@@ -17,8 +17,8 @@ use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
-use restore::immutable::HistoryTxId;
-use restore::{PartialSwapState, TxMap};
+use recover::model::{HistoryTxId, PartialSwapState as _, SwapsList, TxMap};
+use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
@@ -65,6 +65,7 @@ pub struct LiquidSdk {
     pub(crate) event_manager: Arc<EventManager>,
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
     pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) recoverer: Arc<Recoverer>,
     // TODO: Remove field if unnecessary
     #[allow(dead_code)]
     pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
@@ -175,10 +176,22 @@ impl LiquidSdk {
         )?);
         persister.init()?;
 
+        let liquid_chain_service =
+            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
+        let bitcoin_chain_service =
+            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
+
+        let recoverer = Arc::new(Recoverer::new(
+            signer.slip77_master_blinding_key()?,
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+        )?);
+
         let syncer_client = Box::new(BreezSyncerClient::new());
         let sync_service = Arc::new(SyncService::new(
             config.sync_service_url.clone(),
             persister.clone(),
+            recoverer.clone(),
             signer.clone(),
             syncer_client,
             sync_trigger_rx,
@@ -200,11 +213,6 @@ impl LiquidSdk {
         let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
         let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
-
-        let liquid_chain_service =
-            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
-        let bitcoin_chain_service =
-            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),
@@ -244,6 +252,7 @@ impl LiquidSdk {
             event_manager,
             status_stream: status_stream.clone(),
             swapper,
+            recoverer,
             bitcoin_chain_service,
             liquid_chain_service,
             fiat_api: breez_server,
@@ -2241,6 +2250,46 @@ impl LiquidSdk {
             .await?)
     }
 
+    pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<SwapsList> {
+        let receive_swaps = self.persister.list_recoverable_receive_swaps()?;
+        match partial_sync {
+            false => {
+                let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
+
+                let send_swaps = self.persister.list_recoverable_send_swaps()?;
+                let chain_swaps: Vec<ChainSwap> = self
+                    .persister
+                    .list_chain_swaps()?
+                    .into_iter()
+                    .filter(|swap| match swap.direction {
+                        Direction::Incoming => {
+                            bitcoin_height
+                                <= swap.timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                        }
+                        Direction::Outgoing => {
+                            !final_swap_states.contains(&swap.state)
+                                && liquid_height <= swap.timeout_block_height
+                        }
+                    })
+                    .collect();
+                let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) =
+                    chain_swaps
+                        .into_iter()
+                        .partition(|swap| swap.direction == Direction::Outgoing);
+                SwapsList::all(
+                    send_swaps,
+                    receive_swaps,
+                    send_chain_swaps,
+                    receive_chain_swaps,
+                )
+            }
+            true => SwapsList::receive_only(receive_swaps),
+        }
+    }
+
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
@@ -2249,6 +2298,7 @@ impl LiquidSdk {
         let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
         let swaps_list = self.get_monitored_swaps_list(partial_sync).await?;
         let recovered_onchain_data = self
+            .recoverer
             .recover_from_onchain(
                 TxMap::from_raw_tx_map(tx_map.clone()),
                 swaps_list,
