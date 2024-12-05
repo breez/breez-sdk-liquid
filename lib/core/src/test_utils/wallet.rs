@@ -14,7 +14,7 @@ use boltz_client::{Keypair, Secp256k1};
 use lazy_static::lazy_static;
 use lwk_wollet::{
     elements::{Address, Transaction, Txid},
-    elements_miniscript::ToPublicKey as _,
+    elements_miniscript::{slip77::MasterBlindingKey, ToPublicKey as _},
     secp256k1::Message,
     Tip, WalletTx,
 };
@@ -136,7 +136,8 @@ impl Signer for MockSigner {
     }
 
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
-        Ok(vec![])
+        let blinding_key: MasterBlindingKey = self.keypair.secret_key().secret_bytes().into();
+        Ok(blinding_key.as_bytes().to_vec())
     }
 
     fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
