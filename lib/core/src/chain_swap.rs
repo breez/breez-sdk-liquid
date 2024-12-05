@@ -129,7 +129,7 @@ impl ChainSwapHandler {
             .persister
             .list_chain_swaps()?
             .into_iter()
-            .filter(|s| s.direction == Direction::Incoming)
+            .filter(|s| s.direction == Direction::Incoming && s.state != PaymentState::Recoverable)
             .collect();
         info!(
             "Rescanning {} incoming Chain Swap(s) user lockup txs at height {}",
@@ -745,7 +745,7 @@ impl ChainSwapHandler {
     pub(crate) async fn update_swap_info(
         &self,
         swap_update: &ChainSwapUpdate,
-    ) -> Result<(), PaymentError> {
+    ) -> Result<(PaymentState, PaymentState), PaymentError> {
         info!("Updating Chain swap {swap_update:?}");
         let swap = self.fetch_chain_swap_by_id(&swap_update.swap_id)?;
         Self::validate_state_transition(swap.state, swap_update.to_state)?;
@@ -768,7 +768,7 @@ impl ChainSwapHandler {
         if updated_swap != swap {
             payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
-        Ok(())
+        Ok((swap.state, updated_swap.state))
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
@@ -1101,7 +1101,9 @@ impl ChainSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
-            (Recoverable, Pending | Refundable | RefundPending | Failed | Complete) => Ok(()),
+            (Recoverable, Created | Pending | Refundable | RefundPending | Failed | Complete) => {
+                Ok(())
+            }
             (_, Recoverable) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Recoverable state"),
             }),
