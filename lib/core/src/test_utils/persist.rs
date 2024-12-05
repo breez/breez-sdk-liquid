@@ -115,7 +115,21 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         payment_hash: Some("e4a0052cd7e967393b71803ef5c507b935e6e80c18de4b110b26332ad64c6fe4".to_string()),
         payer_amount_sat: 1000,
         receiver_amount_sat: 587,
-        swapper_service_fee_sat: 1,
+        pair_fees_json: r#"{
+            "hash": "976e6dad9097f657213244b046e5f29524b743568a2c3d569b421df1e07e1b44",
+            "rate": 1,
+            "limits": {
+                "maximal": 25000000,
+                "minimal": 1000
+            },
+            "fees": {
+                "percentage": 0.25,
+                "minerFees": {
+                    "claim": 143,
+                    "lockup": 276
+                }
+            }
+        }"#.to_string(),
         claim_fees_sat: 200,
         claim_tx_id: None,
         lockup_tx_id: None,

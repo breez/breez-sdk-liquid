@@ -32,7 +32,7 @@ impl Persister {
                 mrh_address,
                 mrh_script_pubkey,
                 state,
-                swapper_service_fee_sat
+                pair_fees_json
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
@@ -52,7 +52,7 @@ impl Persister {
             &receive_swap.mrh_address,
             &receive_swap.mrh_script_pubkey,
             &receive_swap.state,
-            &receive_swap.swapper_service_fee_sat,
+            &receive_swap.pair_fees_json,
         ))?;
 
         con.execute(
@@ -101,7 +101,7 @@ impl Persister {
                 rs.mrh_tx_id,
                 rs.created_at,
                 rs.state,
-                rs.swapper_service_fee_sat
+                rs.pair_fees_json
             FROM receive_swaps AS rs
             {where_clause_str}
             ORDER BY rs.created_at
@@ -147,7 +147,7 @@ impl Persister {
             mrh_tx_id: row.get(14)?,
             created_at: row.get(15)?,
             state: row.get(16)?,
-            swapper_service_fee_sat: row.get(17)?,
+            pair_fees_json: row.get(17)?,
         })
     }
 

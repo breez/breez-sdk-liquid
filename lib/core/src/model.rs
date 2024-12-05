@@ -850,7 +850,8 @@ pub(crate) struct ReceiveSwap {
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
-    pub(crate) swapper_service_fee_sat: u64,
+    /// The [ReversePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,

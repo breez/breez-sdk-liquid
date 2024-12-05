@@ -14,7 +14,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
-use boltz_client::boltz::SubmarinePair;
+use boltz_client::boltz::{ReversePair, SubmarinePair};
 use migrations::current_migrations;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
@@ -179,7 +179,7 @@ impl Persister {
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.state,
-                rs.swapper_service_fee_sat,
+                rs.pair_fees_json,
                 ss.id,
                 ss.created_at,
                 ss.invoice,
@@ -259,7 +259,9 @@ impl Persister {
         let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(12)?;
         let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(13)?;
         let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(14)?;
-        let maybe_receive_swap_swapper_service_fee_sat: Option<u64> = row.get(15)?;
+        let maybe_receive_swap_pair_fees_json: Option<String> = row.get(15)?;
+        let maybe_receive_swap_pair_fees: Option<ReversePair> =
+            maybe_receive_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
         let maybe_send_swap_id: Option<String> = row.get(16)?;
         let maybe_send_swap_created_at: Option<u32> = row.get(17)?;
@@ -294,30 +296,36 @@ impl Persister {
         let maybe_payment_details_description: Option<String> = row.get(41)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
-            Some(receive_swap_id) => (
-                Some(PaymentSwapData {
-                    swap_id: receive_swap_id,
-                    swap_type: PaymentSwapType::Receive,
-                    created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
-                    preimage: maybe_receive_swap_preimage,
-                    bolt11: maybe_receive_swap_invoice.clone(),
-                    bolt12_offer: None, // Bolt12 not supported for Receive Swaps
-                    payment_hash: maybe_receive_swap_payment_hash,
-                    description: maybe_receive_swap_description.unwrap_or_else(|| {
-                        maybe_receive_swap_invoice
-                            .and_then(|bolt11| get_invoice_description!(bolt11))
-                            .unwrap_or("Lightning payment".to_string())
+            Some(receive_swap_id) => {
+                let payer_amount_sat = maybe_receive_swap_payer_amount_sat.unwrap_or(0);
+
+                (
+                    Some(PaymentSwapData {
+                        swap_id: receive_swap_id,
+                        swap_type: PaymentSwapType::Receive,
+                        created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
+                        preimage: maybe_receive_swap_preimage,
+                        bolt11: maybe_receive_swap_invoice.clone(),
+                        bolt12_offer: None, // Bolt12 not supported for Receive Swaps
+                        payment_hash: maybe_receive_swap_payment_hash,
+                        description: maybe_receive_swap_description.unwrap_or_else(|| {
+                            maybe_receive_swap_invoice
+                                .and_then(|bolt11| get_invoice_description!(bolt11))
+                                .unwrap_or("Lightning payment".to_string())
+                        }),
+                        payer_amount_sat,
+                        receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
+                        swapper_fees_sat: maybe_receive_swap_pair_fees
+                            .map(|pair| pair.fees.boltz(payer_amount_sat))
+                            .unwrap_or(0),
+                        refund_tx_id: None,
+                        refund_tx_amount_sat: None,
+                        claim_address: None,
+                        status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
                     }),
-                    payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
-                    receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
-                    swapper_fees_sat: maybe_receive_swap_swapper_service_fee_sat.unwrap_or(0),
-                    refund_tx_id: None,
-                    refund_tx_amount_sat: None,
-                    claim_address: None,
-                    status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
-                }),
-                PaymentType::Receive,
-            ),
+                    PaymentType::Receive,
+                )
+            }
             None => match maybe_send_swap_id {
                 Some(send_swap_id) => {
                     let receiver_amount_sat = maybe_send_swap_receiver_amount_sat.unwrap_or(0);
