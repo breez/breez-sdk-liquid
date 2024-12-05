@@ -172,14 +172,14 @@ pub(crate) struct RecoveredOnchainData {
 
 impl LiquidSdk {
     pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<SwapsList> {
-        let receive_swaps = self.persister.list_ongoing_receive_swaps()?;
+        let receive_swaps = self.persister.list_recoverable_receive_swaps()?;
         match partial_sync {
             false => {
                 let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
                 let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
-                let send_swaps = self.persister.list_pending_and_ongoing_send_swaps()?;
+                let send_swaps = self.persister.list_recoverable_send_swaps()?;
                 let chain_swaps: Vec<ChainSwap> = self
                     .persister
                     .list_chain_swaps()?
