@@ -1239,7 +1239,7 @@ impl LiquidSdk {
                     to: "BTC".to_string(),
                     invoice: invoice.to_string(),
                     refund_public_key,
-                    pair_hash: Some(lbtc_pair.hash),
+                    pair_hash: Some(lbtc_pair.hash.clone()),
                     referral_id: None,
                     webhook,
                 })?;
@@ -1258,7 +1258,9 @@ impl LiquidSdk {
                     preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
-                    swapper_service_fee_sat: lbtc_pair.fees.boltz(receiver_amount_sat),
+                    pair_fees_json: serde_json::to_string(&lbtc_pair).map_err(|e| {
+                        PaymentError::generic(&format!("Failed to serialize xc: {e:?}"))
+                    })?,
                     create_response_json,
                     lockup_tx_id: None,
                     refund_tx_id: None,

@@ -48,7 +48,19 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         preimage: None,
         payer_amount_sat: 1149,
         receiver_amount_sat: 1000,
-        swapper_service_fee_sat: 1,
+        pair_fees_json: r#"{
+            "hash": "b53c0ac3da051a78f67f6dd25f2ab0858492dc6881015b236d554227c85fda7d",
+            "rate": 1,
+            "limits": {
+                "maximal": 25000000,
+                "minimal": 1000,
+                "maximalZeroConf": 100000
+            },
+            "fees": {
+                "percentage": 0.1,
+                "minerFees": 148
+            }
+        }"#.to_string(),
         create_response_json: r#"{
             "accept_zero_conf": true,
             "address": "tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z",

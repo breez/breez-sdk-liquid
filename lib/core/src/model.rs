@@ -762,7 +762,8 @@ pub(crate) struct SendSwap {
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
-    pub(crate) swapper_service_fee_sat: u64,
+    /// The [SubmarinePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     /// JSON representation of [crate::persist::send::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcast

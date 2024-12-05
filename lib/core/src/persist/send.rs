@@ -32,7 +32,7 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                swapper_service_fee_sat
+                pair_fees_json
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
@@ -52,7 +52,7 @@ impl Persister {
             &send_swap.refund_tx_id,
             &send_swap.created_at,
             &send_swap.state,
-            &send_swap.swapper_service_fee_sat,
+            &send_swap.pair_fees_json,
         ))?;
 
         Ok(())
@@ -104,7 +104,7 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                swapper_service_fee_sat
+                pair_fees_json
             FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -144,7 +144,7 @@ impl Persister {
             refund_tx_id: row.get(11)?,
             created_at: row.get(12)?,
             state: row.get(13)?,
-            swapper_service_fee_sat: row.get(14)?,
+            pair_fees_json: row.get(14)?,
         })
     }
 
