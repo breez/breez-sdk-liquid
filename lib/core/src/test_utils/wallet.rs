@@ -10,9 +10,12 @@ use crate::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
+use boltz_client::{Keypair, Secp256k1};
 use lazy_static::lazy_static;
 use lwk_wollet::{
     elements::{Address, Transaction},
+    elements_miniscript::ToPublicKey as _,
+    secp256k1::Message,
     Tip, WalletTx,
 };
 
@@ -91,11 +94,15 @@ impl OnchainWallet for MockWallet {
     }
 }
 
-pub(crate) struct MockSigner {}
+pub(crate) struct MockSigner {
+    keypair: Keypair,
+}
 
 impl MockSigner {
     pub(crate) fn new() -> Self {
-        Self {}
+        let secp = Secp256k1::new();
+        let keypair = Keypair::new(&secp, &mut bip39::rand::thread_rng());
+        Self { keypair }
     }
 }
 
@@ -112,8 +119,16 @@ impl Signer for MockSigner {
         todo!()
     }
 
-    fn sign_ecdsa_recoverable(&self, _msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
-        todo!()
+    fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        let secp = Secp256k1::new();
+        let msg: Message = Message::from_digest_slice(msg.as_slice())
+            .map_err(|e| SignerError::Generic { err: e.to_string() })?;
+        // Get message signature and encode to zbase32
+        let recoverable_sig = secp.sign_ecdsa_recoverable(&msg, &self.keypair.secret_key());
+        let (recovery_id, sig) = recoverable_sig.serialize_compact();
+        let mut complete_signature = vec![31 + recovery_id.to_i32() as u8];
+        complete_signature.extend_from_slice(&sig);
+        Ok(complete_signature)
     }
 
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
@@ -122,5 +137,23 @@ impl Signer for MockSigner {
 
     fn hmac_sha256(&self, _msg: Vec<u8>, _derivation_path: String) -> Result<Vec<u8>, SignerError> {
         todo!()
+    }
+
+    fn ecies_encrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let rc_pub = self.keypair.public_key().to_public_key().to_bytes();
+        Ok(
+            ecies::encrypt(&rc_pub, msg).map_err(|err| SignerError::Generic {
+                err: format!("Could not encrypt data: {err}"),
+            })?,
+        )
+    }
+
+    fn ecies_decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, SignerError> {
+        let rc_prv = self.keypair.secret_bytes();
+        Ok(
+            ecies::decrypt(&rc_prv, msg).map_err(|err| SignerError::Generic {
+                err: format!("Could not decrypt data: {err}"),
+            })?,
+        )
     }
 }
