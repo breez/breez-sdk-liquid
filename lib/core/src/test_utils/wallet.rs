@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use crate::{
     error::PaymentError,
@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use boltz_client::{Keypair, Secp256k1};
 use lazy_static::lazy_static;
 use lwk_wollet::{
-    elements::{Address, Transaction},
+    elements::{Address, Transaction, Txid},
     elements_miniscript::ToPublicKey as _,
     secp256k1::Message,
     Tip, WalletTx,
@@ -36,6 +36,10 @@ impl MockWallet {
 impl OnchainWallet for MockWallet {
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         Ok(vec![])
+    }
+
+    async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError> {
+        Ok(Default::default())
     }
 
     async fn build_tx(

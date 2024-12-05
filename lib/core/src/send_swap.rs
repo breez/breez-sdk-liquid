@@ -2,6 +2,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use boltz_client::util::secrets::Preimage;
@@ -14,7 +15,7 @@ use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::{Config, PaymentState::*, SendSwap};
+use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
@@ -33,6 +34,17 @@ pub(crate) struct SendSwapHandler {
     swapper: Arc<dyn Swapper>,
     chain_service: Arc<Mutex<dyn LiquidChainService>>,
     subscription_notifier: broadcast::Sender<String>,
+}
+
+#[async_trait]
+impl BlockListener for SendSwapHandler {
+    async fn on_bitcoin_block(&self, _height: u32) {}
+
+    async fn on_liquid_block(&self, _height: u32) {
+        if let Err(err) = self.check_refunds().await {
+            warn!("Could not refund expired swaps, error: {err:?}");
+        }
+    }
 }
 
 impl SendSwapHandler {
@@ -64,11 +76,7 @@ impl SendSwapHandler {
         let status = &update.status;
         let swap_state = SubSwapStates::from_str(status)
             .map_err(|_| anyhow!("Invalid SubSwapState for Send Swap {id}: {status}"))?;
-        let swap = self
-            .persister
-            .fetch_send_swap_by_id(id)?
-            .ok_or(anyhow!("No ongoing Send Swap found for ID {id}"))?;
-
+        let swap = self.fetch_send_swap_by_id(id)?;
         info!("Handling Send Swap transition to {swap_state:?} for swap {id}");
 
         // See https://docs.boltz.exchange/v/api/lifecycle#normal-submarine-swaps
@@ -237,6 +245,15 @@ impl SendSwapHandler {
         Ok(lockup_tx)
     }
 
+    fn fetch_send_swap_by_id(&self, swap_id: &str) -> Result<SendSwap, PaymentError> {
+        self.persister
+            .fetch_send_swap_by_id(swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Send Swap not found {swap_id}"),
+            })
+    }
+
     /// Transitions a Send swap to a new state
     pub(crate) async fn update_swap_info(
         &self,
@@ -246,17 +263,11 @@ impl SendSwapHandler {
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
-        info!("Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})");
-
-        let swap: SendSwap = self
-            .persister
-            .fetch_send_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Send Swap not found {swap_id}"),
-            })?;
-        let payment_id = lockup_tx_id.map(|c| c.to_string()).or(swap.lockup_tx_id);
-
+        info!(
+            "Transitioning Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
+            swap_id, to_state, lockup_tx_id, refund_tx_id
+        );
+        let swap = self.fetch_send_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_send_swap_update(
             swap_id,
@@ -265,8 +276,14 @@ impl SendSwapHandler {
             lockup_tx_id,
             refund_tx_id,
         )?;
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
+        let updated_swap = self.fetch_send_swap_by_id(swap_id)?;
+
+        // Only notify subscribers if the swap changes
+        let payment_id = lockup_tx_id
+            .map(|c| c.to_string())
+            .or(swap.lockup_tx_id.clone());
+        if updated_swap != swap {
+            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
         }
         Ok(())
     }
@@ -485,7 +502,7 @@ impl SendSwapHandler {
 
     // Attempts refunding all payments whose state is `RefundPending` and with no
     // refund_tx_id field present
-    pub(crate) async fn track_refunds(&self) -> Result<(), PaymentError> {
+    pub(crate) async fn check_refunds(&self) -> Result<(), PaymentError> {
         let pending_swaps = self.persister.list_pending_send_swaps()?;
         self.try_refund_all(&pending_swaps).await;
         Ok(())

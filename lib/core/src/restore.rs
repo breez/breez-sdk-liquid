@@ -3,8 +3,11 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
-use log::{error, info};
-use lwk_wollet::elements::Txid;
+use boltz_client::ElementsAddress;
+use log::{debug, error, warn};
+use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
+use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::WalletTx;
 
 use crate::prelude::*;
@@ -29,135 +32,185 @@ impl TxMap {
     }
 }
 
-trait PartialSwapState {
+pub(crate) trait PartialSwapState {
     /// Determine partial swap state, based on recovered chain data.
     ///
     /// This is a partial state, which means it may be incomplete because it's based on partial
     /// information. Some swap states cannot be determined based only on chain data.
-    ///
-    /// For example, it cannot distinguish between [PaymentState::Created] and [PaymentState::TimedOut],
-    /// and in some cases, between [PaymentState::Created] and [PaymentState::Failed].
-    fn derive_partial_state(&self) -> PaymentState;
+    /// In these cases we do not assume any swap state.
+    fn derive_partial_state(&self) -> Option<PaymentState>;
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
-    lockup_tx_id: Option<HistoryTxId>,
-    claim_tx_id: Option<HistoryTxId>,
-    refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) claim_tx_id: Option<HistoryTxId>,
+    pub(crate) refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataSend {
-    fn derive_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> Option<PaymentState> {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
-                Some(_) => PaymentState::Complete,
+                Some(_) => Some(PaymentState::Complete),
                 None => match &self.refund_tx_id {
                     Some(refund_tx_id) => match refund_tx_id.confirmed() {
-                        true => PaymentState::Failed,
-                        false => PaymentState::RefundPending,
+                        true => Some(PaymentState::Failed),
+                        false => Some(PaymentState::RefundPending),
                     },
-                    None => PaymentState::Pending,
+                    None => Some(PaymentState::Pending),
                 },
             },
-            // For Send swaps, no lockup could mean both Created or TimedOut.
-            // However, we're in Created for a very short period of time in the originating instance,
-            // after which we expect Pending or TimedOut. Therefore here we default to TimedOut.
-            None => PaymentState::TimedOut,
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created, TimedOut or Failed after expiry. In this case we return None.
+            None => None,
         }
     }
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
-    lockup_tx_id: Option<HistoryTxId>,
-    claim_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) claim_tx_id: Option<HistoryTxId>,
+    pub(crate) mrh_tx_id: Option<HistoryTxId>,
+    pub(crate) mrh_amount_sat: Option<u64>,
 }
 impl PartialSwapState for RecoveredOnchainDataReceive {
-    fn derive_partial_state(&self) -> PaymentState {
-        match (&self.lockup_tx_id, &self.claim_tx_id) {
-            (Some(_), Some(claim_tx_id)) => match claim_tx_id.confirmed() {
-                true => PaymentState::Complete,
-                false => PaymentState::Pending,
+    fn derive_partial_state(&self) -> Option<PaymentState> {
+        match &self.lockup_tx_id {
+            Some(_) => match &self.claim_tx_id {
+                Some(claim_tx_id) => match claim_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
+                },
+                None => Some(PaymentState::Pending),
             },
-            (Some(_), None) => PaymentState::Pending,
-            // TODO How to distinguish between Failed and Created (if in both cases, no lockup or claim tx present)
-            //   See https://docs.boltz.exchange/v/api/lifecycle#reverse-submarine-swaps
-            _ => PaymentState::Created,
+            None => match &self.mrh_tx_id {
+                Some(mrh_tx_id) => match mrh_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
+                },
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created or Failed after expiry. In this case we return None.
+                None => None,
+            },
         }
     }
 }
 
 pub(crate) struct RecoveredOnchainDataChainSend {
     /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
-    lbtc_user_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_user_lockup_tx_id: Option<HistoryTxId>,
     /// LBTC tx initiated by the SDK to itself, in case the initial funds have to be refunded.
-    lbtc_refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_refund_tx_id: Option<HistoryTxId>,
     /// BTC tx locking up funds by the swapper
-    btc_server_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_server_lockup_tx_id: Option<HistoryTxId>,
     /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
-    btc_claim_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_claim_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainSend {
-    fn derive_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> Option<PaymentState> {
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => match &self.btc_claim_tx_id {
                 Some(btc_claim_tx_id) => match btc_claim_tx_id.confirmed() {
-                    true => PaymentState::Complete,
-                    false => PaymentState::Pending,
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
                 },
                 None => match &self.lbtc_refund_tx_id {
                     Some(tx) => match tx.confirmed() {
-                        true => PaymentState::Failed,
-                        false => PaymentState::RefundPending,
+                        true => Some(PaymentState::Failed),
+                        false => Some(PaymentState::RefundPending),
                     },
-                    None => PaymentState::Created,
+                    None => Some(PaymentState::Pending),
                 },
             },
-            // For Send swaps, no lockup could mean both Created or TimedOut.
-            // However, we're in Created for a very short period of time in the originating instance,
-            // after which we expect Pending or TimedOut. Therefore here we default to TimedOut.
-            None => PaymentState::TimedOut,
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created, TimedOut or Failed after expiry. In this case we return None.
+            None => None,
         }
     }
 }
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
-    lbtc_server_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_server_lockup_tx_id: Option<HistoryTxId>,
     /// LBTC tx that claims to our wallet. The final step in a successful swap.
-    lbtc_server_claim_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_claim_tx_id: Option<HistoryTxId>,
+    /// LBTC tx out address for the claim tx.
+    pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
-    btc_user_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
-    btc_refund_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
 }
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
-    fn derive_partial_state(&self) -> PaymentState {
+    fn derive_partial_state(&self) -> Option<PaymentState> {
         match &self.btc_user_lockup_tx_id {
-            Some(_) => match &self.lbtc_server_claim_tx_id {
-                Some(lbtc_server_claim_tx_id) => match lbtc_server_claim_tx_id.confirmed() {
-                    true => PaymentState::Complete,
-                    false => PaymentState::Pending,
+            Some(_) => match &self.lbtc_claim_tx_id {
+                Some(lbtc_claim_tx_id) => match lbtc_claim_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
                 },
                 None => match &self.btc_refund_tx_id {
                     Some(tx) => match tx.confirmed() {
-                        true => PaymentState::Failed,
-                        false => PaymentState::RefundPending,
+                        true => Some(PaymentState::Failed),
+                        false => Some(PaymentState::RefundPending),
                     },
-                    None => PaymentState::Created,
+                    None => Some(PaymentState::Pending),
                 },
             },
-            None => PaymentState::Created,
+            // We have no onchain data to support deriving the state as the swap could
+            // potentially be Created or Failed after expiry. In this case we return None.
+            None => None,
         }
     }
 }
 
 pub(crate) struct RecoveredOnchainData {
-    send: HashMap<String, RecoveredOnchainDataSend>,
-    receive: HashMap<String, RecoveredOnchainDataReceive>,
-    chain_send: HashMap<String, RecoveredOnchainDataChainSend>,
-    chain_receive: HashMap<String, RecoveredOnchainDataChainReceive>,
+    pub(crate) send: HashMap<String, RecoveredOnchainDataSend>,
+    pub(crate) receive: HashMap<String, RecoveredOnchainDataReceive>,
+    pub(crate) chain_send: HashMap<String, RecoveredOnchainDataChainSend>,
+    pub(crate) chain_receive: HashMap<String, RecoveredOnchainDataChainReceive>,
 }
 
 impl LiquidSdk {
+    pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<SwapsList> {
+        let receive_swaps = self.persister.list_ongoing_receive_swaps()?;
+        match partial_sync {
+            false => {
+                let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
+
+                let send_swaps = self.persister.list_pending_and_ongoing_send_swaps()?;
+                let chain_swaps: Vec<ChainSwap> = self
+                    .persister
+                    .list_chain_swaps()?
+                    .into_iter()
+                    .filter(|swap| match swap.direction {
+                        Direction::Incoming => {
+                            bitcoin_height
+                                <= swap.timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                        }
+                        Direction::Outgoing => {
+                            !final_swap_states.contains(&swap.state)
+                                && liquid_height <= swap.timeout_block_height
+                        }
+                    })
+                    .collect();
+                let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) =
+                    chain_swaps
+                        .into_iter()
+                        .partition(|swap| swap.direction == Direction::Outgoing);
+                SwapsList::all(
+                    send_swaps,
+                    receive_swaps,
+                    send_chain_swaps,
+                    receive_chain_swaps,
+                )
+            }
+            true => SwapsList::receive_only(receive_swaps),
+        }
+    }
+
     /// For each swap, recovers data from chain services.
     ///
     /// The returned data include txs and the partial swap state. See [PartialSwapState::derive_partial_state].
@@ -169,12 +222,14 @@ impl LiquidSdk {
     ///
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
+    /// - `partial_sync`: recovers related scripts like MRH when true, otherwise recovers all scripts.
     pub(crate) async fn recover_from_onchain(
         &self,
         tx_map: TxMap,
         swaps: SwapsList,
+        partial_sync: bool,
     ) -> Result<RecoveredOnchainData> {
-        let histories = self.fetch_swaps_histories(&swaps).await?;
+        let histories = self.fetch_swaps_histories(&swaps, partial_sync).await?;
 
         let recovered_send_data = self
             .recover_send_swap_tx_ids(&tx_map, histories.send)
@@ -186,14 +241,14 @@ impl LiquidSdk {
             .recover_send_chain_swap_tx_ids(
                 &tx_map,
                 histories.send_chain,
-                &swaps.send_chain_swap_immutable_db_by_swap_id,
+                &swaps.send_chain_swap_immutable_data_by_swap_id,
             )
             .await?;
         let recovered_chain_receive_data = self
             .recover_receive_chain_swap_tx_ids(
                 &tx_map,
                 histories.receive_chain,
-                &swaps.receive_chain_swap_immutable_db_by_swap_id,
+                &swaps.receive_chain_swap_immutable_data_by_swap_id,
             )
             .await?;
 
@@ -205,7 +260,7 @@ impl LiquidSdk {
         })
     }
 
-    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable DB data
+    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable data
     async fn recover_send_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -213,6 +268,8 @@ impl LiquidSdk {
     ) -> Result<HashMap<String, RecoveredOnchainDataSend>> {
         let mut res: HashMap<String, RecoveredOnchainDataSend> = HashMap::new();
         for (swap_id, history) in send_histories_by_swap_id {
+            debug!("[Recover Send] Checking swap {swap_id}");
+
             // If a history tx is one of our outgoing txs, it's a lockup tx
             let lockup_tx_id = history
                 .iter()
@@ -248,7 +305,7 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable DB data
+    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable data
     async fn recover_receive_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -256,13 +313,25 @@ impl LiquidSdk {
     ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
         let mut res: HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
-            let (lockup_tx_id, claim_tx_id) = match history.len() {
+            debug!("[Recover Receive] Checking swap {swap_id}");
+
+            let mrh_tx_id = history
+                .lbtc_mrh_script_history
+                .iter()
+                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned();
+            let mrh_amount_sat = mrh_tx_id
+                .clone()
+                .and_then(|h| tx_map.incoming_tx_map.get(&h.txid))
+                .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
+
+            let (lockup_tx_id, claim_tx_id) = match history.lbtc_claim_script_history.len() {
                 // Only lockup tx available
-                1 => (Some(history[0].clone()), None),
+                1 => (Some(history.lbtc_claim_script_history[0].clone()), None),
 
                 2 => {
-                    let first = history[0].clone();
-                    let second = history[1].clone();
+                    let first = history.lbtc_claim_script_history[0].clone();
+                    let second = history.lbtc_claim_script_history[1].clone();
 
                     if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
                         // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
@@ -288,40 +357,51 @@ impl LiquidSdk {
 
                             // If neither is confirmed, this is an edge-case
                             (false, false) => {
-                                error!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
+                                warn!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
                                 (None, None)
                             }
                         }
                     }
                 }
                 n => {
-                    error!("Script history with unexpected length {n} found while recovering data for Receive Swap {swap_id}");
+                    warn!("Script history with length {n} found while recovering data for Receive Swap {swap_id}");
                     (None, None)
                 }
             };
 
-            res.insert(
-                swap_id,
-                RecoveredOnchainDataReceive {
+            // Take only the lockup_tx_id and claim_tx_id if either are set,
+            // otherwise take the mrh_tx_id and mrh_amount_sat
+            let recovered_onchain_data = match (lockup_tx_id.as_ref(), claim_tx_id.as_ref()) {
+                (Some(_), None) | (Some(_), Some(_)) => RecoveredOnchainDataReceive {
                     lockup_tx_id,
                     claim_tx_id,
+                    mrh_tx_id: None,
+                    mrh_amount_sat: None,
                 },
-            );
+                _ => RecoveredOnchainDataReceive {
+                    lockup_tx_id: None,
+                    claim_tx_id: None,
+                    mrh_tx_id,
+                    mrh_amount_sat,
+                },
+            };
+
+            res.insert(swap_id, recovered_onchain_data);
         }
 
         Ok(res)
     }
 
-    /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable DB data
+    /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable data
     async fn recover_send_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
         chain_send_histories_by_swap_id: HashMap<String, SendChainSwapHistory>,
-        send_chain_swap_immutable_db_by_swap_id: &HashMap<String, SendChainSwapImmutableData>,
+        send_chain_swap_immutable_data_by_swap_id: &HashMap<String, SendChainSwapImmutableData>,
     ) -> Result<HashMap<String, RecoveredOnchainDataChainSend>> {
         let mut res: HashMap<String, RecoveredOnchainDataChainSend> = HashMap::new();
         for (swap_id, history) in chain_send_histories_by_swap_id {
-            info!("[Recover Chain Send] Checking swap {swap_id}");
+            debug!("[Recover Chain Send] Checking swap {swap_id}");
 
             // If a history tx is one of our outgoing txs, it's a lockup tx
             let lbtc_user_lockup_tx_id = history
@@ -352,7 +432,7 @@ impl LiquidSdk {
                     let first_tx_id = history.btc_claim_script_history[0].clone();
                     let second_tx_id = history.btc_claim_script_history[1].clone();
 
-                    let btc_lockup_script = send_chain_swap_immutable_db_by_swap_id
+                    let btc_lockup_script = send_chain_swap_immutable_data_by_swap_id
                         .get(&swap_id)
                         .map(|imm| imm.claim_script.clone())
                         .ok_or_else(|| {
@@ -371,7 +451,7 @@ impl LiquidSdk {
                     }
                 }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Send Swap {swap_id}");
+                    warn!("BTC script history with length {n} found while recovering data for Chain Send Swap {swap_id}");
                     (None, None)
                 }
             };
@@ -390,23 +470,38 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable DB data
+    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data data
     async fn recover_receive_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
         chain_receive_histories_by_swap_id: HashMap<String, ReceiveChainSwapHistory>,
-        receive_chain_swap_immutable_db_by_swap_id: &HashMap<String, ReceiveChainSwapImmutableData>,
+        receive_chain_swap_immutable_data_by_swap_id: &HashMap<
+            String,
+            ReceiveChainSwapImmutableData,
+        >,
     ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
+        let blinding_key = MasterBlindingKey::from_hex(
+            &self
+                .signer
+                .slip77_master_blinding_key()?
+                .to_lower_hex_string(),
+        )?;
+        let secp = secp256k1_zkp::Secp256k1::new();
+
         let mut res: HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
         for (swap_id, history) in chain_receive_histories_by_swap_id {
-            info!("[Recover Chain Receive] Checking swap {swap_id}");
+            debug!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            let (lbtc_server_lockup_tx_id, lbtc_server_claim_tx_id) = match history
+            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id, lbtc_claim_address) = match history
                 .lbtc_claim_script_history
                 .len()
             {
                 // Only lockup tx available
-                1 => (Some(history.lbtc_claim_script_history[0].clone()), None),
+                1 => (
+                    Some(history.lbtc_claim_script_history[0].clone()),
+                    None,
+                    None,
+                ),
 
                 2 => {
                     let first = &history.lbtc_claim_script_history[0];
@@ -418,11 +513,35 @@ impl LiquidSdk {
                             true => (second, first),
                             false => (first, second),
                         };
-                    (Some(lockup_tx_id.clone()), Some(claim_tx_id.clone()))
+
+                    // Get the claim address from the claim tx output
+                    let claim_address = tx_map
+                        .incoming_tx_map
+                        .get(&claim_tx_id.txid)
+                        .and_then(|tx| {
+                            tx.outputs
+                                .iter()
+                                .find(|output| output.is_some())
+                                .and_then(|output| output.clone().map(|o| o.script_pubkey))
+                        })
+                        .and_then(|script| {
+                            ElementsAddress::from_script(
+                                &script,
+                                Some(blinding_key.blinding_key(&secp, &script)),
+                                &AddressParams::LIQUID,
+                            )
+                            .map(|addr| addr.to_string())
+                        });
+
+                    (
+                        Some(lockup_tx_id.clone()),
+                        Some(claim_tx_id.clone()),
+                        claim_address,
+                    )
                 }
                 n => {
-                    error!("L-BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
-                    (None, None)
+                    warn!("L-BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    (None, None, None)
                 }
             };
 
@@ -445,7 +564,7 @@ impl LiquidSdk {
                     let first_tx_id = history.btc_lockup_script_history[0].clone();
                     let second_tx_id = history.btc_lockup_script_history[1].clone();
 
-                    let btc_lockup_script = receive_chain_swap_immutable_db_by_swap_id
+                    let btc_lockup_script = receive_chain_swap_immutable_data_by_swap_id
                         .get(&swap_id)
                         .map(|imm| imm.lockup_script.clone())
                         .ok_or_else(|| {
@@ -466,14 +585,14 @@ impl LiquidSdk {
                     }
                 }
                 n => {
-                    error!("BTC script history with unexpected length {n} found while recovering data for Chain Receive Swap {swap_id}");
+                    warn!("BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
                     (None, None)
                 }
             };
 
             // The second BTC tx is only a refund in case we didn't claim.
             // If we claimed, then the second BTC tx was an internal BTC server claim tx, which we're not tracking.
-            let btc_refund_tx_id = match lbtc_server_claim_tx_id.is_some() {
+            let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
                 true => None,
                 false => btc_second_tx_id,
             };
@@ -482,7 +601,8 @@ impl LiquidSdk {
                 swap_id,
                 RecoveredOnchainDataChainReceive {
                     lbtc_server_lockup_tx_id,
-                    lbtc_server_claim_tx_id,
+                    lbtc_claim_tx_id,
+                    lbtc_claim_address,
                     btc_user_lockup_tx_id,
                     btc_refund_tx_id,
                 },
@@ -493,14 +613,15 @@ impl LiquidSdk {
     }
 }
 
-/// Methods to simulate the immutable DB data available from real-time sync
+/// Methods to simulate the immutable data data available from real-time sync
 // TODO Remove once real-time sync is integrated
 pub(crate) mod immutable {
     use std::collections::HashMap;
+    use std::str::FromStr;
 
     use anyhow::{anyhow, ensure, Result};
-    use boltz_client::{BtcSwapScript, LBtcSwapScript};
-    use log::{error, info};
+    use boltz_client::{BtcSwapScript, ElementsAddress, LBtcSwapScript};
+    use log::{debug, error};
     use lwk_wollet::elements::Txid;
     use lwk_wollet::History;
 
@@ -511,7 +632,6 @@ pub(crate) mod immutable {
     type LBtcScript = lwk_wollet::elements::Script;
 
     pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
-    pub(crate) type ReceiveSwapHistory = Vec<HistoryTxId>;
 
     #[derive(Clone)]
     pub(crate) struct HistoryTxId {
@@ -544,15 +664,22 @@ pub(crate) mod immutable {
     #[derive(Clone)]
     pub(crate) struct SendSwapImmutableData {
         pub(crate) swap_id: String,
-        pub(crate) swap_script: LBtcSwapScript,
-        pub(crate) script: LBtcScript,
+        pub(crate) lockup_swap_script: LBtcSwapScript,
+        pub(crate) lockup_script: LBtcScript,
     }
 
     #[derive(Clone)]
     pub(crate) struct ReceiveSwapImmutableData {
         pub(crate) swap_id: String,
-        pub(crate) swap_script: LBtcSwapScript,
-        pub(crate) script: LBtcScript,
+        pub(crate) timeout_block_height: u32,
+        pub(crate) claim_swap_script: LBtcSwapScript,
+        pub(crate) claim_script: LBtcScript,
+        pub(crate) mrh_script: Option<LBtcScript>,
+    }
+
+    pub(crate) struct ReceiveSwapHistory {
+        pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
+        pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
     }
 
     #[derive(Clone)]
@@ -585,24 +712,48 @@ pub(crate) mod immutable {
         pub(crate) btc_lockup_script_txs: Vec<boltz_client::bitcoin::Transaction>,
     }
 
-    /// Swap data received from the immutable DB
+    /// Swap immutable data
     pub(crate) struct SwapsList {
-        pub(crate) send_swap_immutable_db_by_swap_id: HashMap<String, SendSwapImmutableData>,
-        pub(crate) receive_swap_immutable_db_by_swap_id_: HashMap<String, ReceiveSwapImmutableData>,
-        pub(crate) send_chain_swap_immutable_db_by_swap_id:
+        pub(crate) send_swap_immutable_data_by_swap_id: HashMap<String, SendSwapImmutableData>,
+        pub(crate) receive_swap_immutable_data_by_swap_id:
+            HashMap<String, ReceiveSwapImmutableData>,
+        pub(crate) send_chain_swap_immutable_data_by_swap_id:
             HashMap<String, SendChainSwapImmutableData>,
-        pub(crate) receive_chain_swap_immutable_db_by_swap_id:
+        pub(crate) receive_chain_swap_immutable_data_by_swap_id:
             HashMap<String, ReceiveChainSwapImmutableData>,
     }
 
     impl SwapsList {
+        pub(crate) fn all(
+            send_swaps: Vec<SendSwap>,
+            receive_swaps: Vec<ReceiveSwap>,
+            send_chain_swaps: Vec<ChainSwap>,
+            receive_chain_swaps: Vec<ChainSwap>,
+        ) -> Result<Self> {
+            SwapsList::init(
+                send_swaps,
+                receive_swaps,
+                send_chain_swaps,
+                receive_chain_swaps,
+            )
+        }
+
+        pub(crate) fn receive_only(receive_swaps: Vec<ReceiveSwap>) -> Result<Self> {
+            SwapsList::init(
+                Default::default(),
+                receive_swaps,
+                Default::default(),
+                Default::default(),
+            )
+        }
+
         fn init(
             send_swaps: Vec<SendSwap>,
             receive_swaps: Vec<ReceiveSwap>,
             send_chain_swaps: Vec<ChainSwap>,
             receive_chain_swaps: Vec<ChainSwap>,
         ) -> Result<Self> {
-            let send_swap_immutable_db_by_swap_id: HashMap<String, SendSwapImmutableData> =
+            let send_swap_immutable_data_by_swap_id: HashMap<String, SendSwapImmutableData> =
                 send_swaps
                     .iter()
                     .filter_map(|swap| match swap.get_swap_script() {
@@ -611,8 +762,8 @@ pub(crate) mod immutable {
                                 swap.id.clone(),
                                 SendSwapImmutableData {
                                     swap_id: swap.id.clone(),
-                                    swap_script: swap_script.clone(),
-                                    script: address.script_pubkey(),
+                                    lockup_swap_script: swap_script.clone(),
+                                    lockup_script: address.script_pubkey(),
                                 },
                             )),
                             None => {
@@ -626,29 +777,29 @@ pub(crate) mod immutable {
                         }
                     })
                     .collect();
-            let send_swap_immutable_db_size = send_swap_immutable_db_by_swap_id.len();
-            info!("Send Swap immutable DB: {send_swap_immutable_db_size} rows");
-
-            let receive_swap_immutable_db_by_swap_id_: HashMap<String, ReceiveSwapImmutableData> =
+            let receive_swap_immutable_data_by_swap_id: HashMap<String, ReceiveSwapImmutableData> =
                 receive_swaps
                     .iter()
                     .filter_map(|swap| {
                         let swap_id = &swap.id;
-
+                        let create_response = swap.get_boltz_create_response().ok()?;
                         let swap_script = swap
                             .get_swap_script()
-                            .map_err(|e| {
+                            .inspect_err(|e| {
                                 error!("Failed to get swap script for Receive Swap {swap_id}: {e}")
                             })
                             .ok()?;
+                        let mrh_address = ElementsAddress::from_str(&swap.mrh_address).ok();
 
                         match &swap_script.funding_addrs {
                             Some(address) => Some((
                                 swap.id.clone(),
                                 ReceiveSwapImmutableData {
                                     swap_id: swap.id.clone(),
-                                    swap_script: swap_script.clone(),
-                                    script: address.script_pubkey(),
+                                    timeout_block_height: create_response.timeout_block_height,
+                                    claim_swap_script: swap_script.clone(),
+                                    claim_script: address.script_pubkey(),
+                                    mrh_script: mrh_address.map(|s| s.script_pubkey()),
                                 },
                             )),
                             None => {
@@ -658,10 +809,7 @@ pub(crate) mod immutable {
                         }
                     })
                     .collect();
-            let receive_swap_immutable_db_size = receive_swap_immutable_db_by_swap_id_.len();
-            info!("Receive Swap immutable DB: {receive_swap_immutable_db_size} rows");
-
-            let send_chain_swap_immutable_db_by_swap_id: HashMap<String, SendChainSwapImmutableData> =
+            let send_chain_swap_immutable_data_by_swap_id: HashMap<String, SendChainSwapImmutableData> =
                 send_chain_swaps.iter().filter_map(|swap| {
                     let swap_id = &swap.id;
 
@@ -694,10 +842,7 @@ pub(crate) mod immutable {
                     }
                 })
                 .collect();
-            let send_chain_swap_immutable_db_size = send_chain_swap_immutable_db_by_swap_id.len();
-            info!("Send Chain Swap immutable DB: {send_chain_swap_immutable_db_size} rows");
-
-            let receive_chain_swap_immutable_db_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData> =
+            let receive_chain_swap_immutable_data_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData> =
                 receive_chain_swaps.iter().filter_map(|swap| {
                     let swap_id = &swap.id;
 
@@ -728,23 +873,34 @@ pub(crate) mod immutable {
                     }
                 })
                 .collect();
-            let receive_chain_swap_immutable_db_size =
-                receive_chain_swap_immutable_db_by_swap_id.len();
-            info!("Receive Chain Swap immutable DB: {receive_chain_swap_immutable_db_size} rows");
+
+            let send_swap_immutable_data_size = send_swap_immutable_data_by_swap_id.len();
+            let receive_swap_immutable_data_size = receive_swap_immutable_data_by_swap_id.len();
+            let send_chain_swap_immutable_data_size =
+                send_chain_swap_immutable_data_by_swap_id.len();
+            let receive_chain_swap_immutable_data_size =
+                receive_chain_swap_immutable_data_by_swap_id.len();
+            debug!(
+                "Immutable data items: send {}, receive {}, chain send {}, chain receive {}",
+                send_swap_immutable_data_size,
+                receive_swap_immutable_data_size,
+                send_chain_swap_immutable_data_size,
+                receive_chain_swap_immutable_data_size
+            );
 
             Ok(SwapsList {
-                send_swap_immutable_db_by_swap_id,
-                receive_swap_immutable_db_by_swap_id_,
-                send_chain_swap_immutable_db_by_swap_id,
-                receive_chain_swap_immutable_db_by_swap_id,
+                send_swap_immutable_data_by_swap_id,
+                receive_swap_immutable_data_by_swap_id,
+                send_chain_swap_immutable_data_by_swap_id,
+                receive_chain_swap_immutable_data_by_swap_id,
             })
         }
 
         fn send_swaps_by_script(&self) -> HashMap<LBtcScript, SendSwapImmutableData> {
-            self.send_swap_immutable_db_by_swap_id
+            self.send_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
-                .map(|imm| (imm.script.clone(), imm))
+                .map(|imm| (imm.lockup_script.clone(), imm))
                 .collect()
         }
 
@@ -765,11 +921,19 @@ pub(crate) mod immutable {
             data
         }
 
-        fn receive_swaps_by_script(&self) -> HashMap<LBtcScript, ReceiveSwapImmutableData> {
-            self.receive_swap_immutable_db_by_swap_id_
+        fn receive_swaps_by_claim_script(&self) -> HashMap<LBtcScript, ReceiveSwapImmutableData> {
+            self.receive_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
-                .map(|imm| (imm.script.clone(), imm))
+                .map(|imm| (imm.claim_script.clone(), imm))
+                .collect()
+        }
+
+        fn receive_swaps_by_mrh_script(&self) -> HashMap<LBtcScript, ReceiveSwapImmutableData> {
+            self.receive_swap_immutable_data_by_swap_id
+                .clone()
+                .into_values()
+                .filter_map(|imm| imm.mrh_script.clone().map(|mrh_script| (mrh_script, imm)))
                 .collect()
         }
 
@@ -777,14 +941,57 @@ pub(crate) mod immutable {
             &self,
             lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
         ) -> HashMap<String, ReceiveSwapHistory> {
-            let receive_swaps_by_script = self.receive_swaps_by_script();
+            let receive_swaps_by_claim_script = self.receive_swaps_by_claim_script();
+            let receive_swaps_by_mrh_script = self.receive_swaps_by_mrh_script();
 
             let mut data: HashMap<String, ReceiveSwapHistory> = HashMap::new();
             lbtc_script_to_history_map
                 .iter()
                 .for_each(|(lbtc_script, lbtc_script_history)| {
-                    if let Some(imm) = receive_swaps_by_script.get(lbtc_script) {
-                        data.insert(imm.swap_id.clone(), lbtc_script_history.clone());
+                    if let Some(imm) = receive_swaps_by_claim_script.get(lbtc_script) {
+                        // The MRH script history filtered by the swap timeout block height
+                        let mrh_script_history = imm
+                            .mrh_script
+                            .clone()
+                            .and_then(|mrh_script| {
+                                lbtc_script_to_history_map.get(&mrh_script).map(|h| {
+                                    h.iter()
+                                        .filter(|&tx_history| {
+                                            tx_history.height < imm.timeout_block_height as i32
+                                        })
+                                        .cloned()
+                                        .collect::<Vec<HistoryTxId>>()
+                                })
+                            })
+                            .unwrap_or_default();
+                        data.insert(
+                            imm.swap_id.clone(),
+                            ReceiveSwapHistory {
+                                lbtc_claim_script_history: lbtc_script_history.clone(),
+                                lbtc_mrh_script_history: mrh_script_history,
+                            },
+                        );
+                    }
+                    if let Some(imm) = receive_swaps_by_mrh_script.get(lbtc_script) {
+                        let claim_script_history = lbtc_script_to_history_map
+                            .get(&imm.claim_script)
+                            .cloned()
+                            .unwrap_or_default();
+                        // The MRH script history filtered by the swap timeout block height
+                        let mrh_script_history = lbtc_script_history
+                            .iter()
+                            .filter(|&tx_history| {
+                                tx_history.height < imm.timeout_block_height as i32
+                            })
+                            .cloned()
+                            .collect::<Vec<HistoryTxId>>();
+                        data.insert(
+                            imm.swap_id.clone(),
+                            ReceiveSwapHistory {
+                                lbtc_claim_script_history: claim_script_history,
+                                lbtc_mrh_script_history: mrh_script_history,
+                            },
+                        );
                     }
                 });
             data
@@ -793,7 +1000,7 @@ pub(crate) mod immutable {
         fn send_chain_swaps_by_lbtc_lockup_script(
             &self,
         ) -> HashMap<LBtcScript, SendChainSwapImmutableData> {
-            self.send_chain_swap_immutable_db_by_swap_id
+            self.send_chain_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
                 .map(|imm| (imm.lockup_script.clone(), imm))
@@ -838,7 +1045,7 @@ pub(crate) mod immutable {
         fn receive_chain_swaps_by_lbtc_claim_script(
             &self,
         ) -> HashMap<LBtcScript, ReceiveChainSwapImmutableData> {
-            self.receive_chain_swap_immutable_db_by_swap_id
+            self.receive_chain_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
                 .map(|imm| (imm.claim_script.clone(), imm))
@@ -881,55 +1088,65 @@ pub(crate) mod immutable {
             data
         }
 
-        fn get_all_swap_lbtc_scripts(&self) -> Vec<LBtcScript> {
-            let send_swap_scripts: Vec<LBtcScript> = self
-                .send_swap_immutable_db_by_swap_id
+        fn get_swap_lbtc_scripts(&self, partial_sync: bool) -> Vec<LBtcScript> {
+            let receive_swap_lbtc_mrh_scripts: Vec<LBtcScript> = self
+                .receive_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
-                .map(|imm| imm.script)
+                .filter_map(|imm| imm.mrh_script)
                 .collect();
-            let receive_swap_scripts: Vec<LBtcScript> = self
-                .receive_swap_immutable_db_by_swap_id_
-                .clone()
-                .into_values()
-                .map(|imm| imm.script)
-                .collect();
-            let send_chain_swap_lbtc_lockup_scripts: Vec<LBtcScript> = self
-                .send_chain_swap_immutable_db_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.lockup_script)
-                .collect();
-            let receive_chain_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
-                .receive_chain_swap_immutable_db_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
-                .collect();
-
-            let mut swap_scripts = send_swap_scripts.clone();
-            swap_scripts.extend(receive_swap_scripts.clone());
-            swap_scripts.extend(send_chain_swap_lbtc_lockup_scripts.clone());
-            swap_scripts.extend(receive_chain_swap_lbtc_claim_scripts.clone());
+            let mut swap_scripts = receive_swap_lbtc_mrh_scripts.clone();
+            if !partial_sync {
+                let send_swap_scripts: Vec<LBtcScript> = self
+                    .send_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                let receive_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
+                    .receive_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                let send_chain_swap_lbtc_lockup_scripts: Vec<LBtcScript> = self
+                    .send_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                let receive_chain_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
+                    .receive_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                swap_scripts.extend(send_swap_scripts.clone());
+                swap_scripts.extend(receive_swap_lbtc_claim_scripts.clone());
+                swap_scripts.extend(send_chain_swap_lbtc_lockup_scripts.clone());
+                swap_scripts.extend(receive_chain_swap_lbtc_claim_scripts.clone());
+            }
             swap_scripts
         }
 
-        fn get_all_swap_btc_scripts(&self) -> Vec<BtcScript> {
-            let send_chain_swap_btc_claim_scripts: Vec<BtcScript> = self
-                .send_chain_swap_immutable_db_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
-                .collect();
-            let receive_chain_swap_btc_lockup_scripts: Vec<BtcScript> = self
-                .receive_chain_swap_immutable_db_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.lockup_script)
-                .collect();
-
-            let mut swap_scripts = send_chain_swap_btc_claim_scripts.clone();
-            swap_scripts.extend(receive_chain_swap_btc_lockup_scripts.clone());
+        fn get_swap_btc_scripts(&self, partial_sync: bool) -> Vec<BtcScript> {
+            let mut swap_scripts = vec![];
+            if !partial_sync {
+                let send_chain_swap_btc_claim_scripts: Vec<BtcScript> = self
+                    .send_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.claim_script)
+                    .collect();
+                let receive_chain_swap_btc_lockup_scripts: Vec<BtcScript> = self
+                    .receive_chain_swap_immutable_data_by_swap_id
+                    .clone()
+                    .into_values()
+                    .map(|imm| imm.lockup_script)
+                    .collect();
+                swap_scripts.extend(send_chain_swap_btc_claim_scripts.clone());
+                swap_scripts.extend(receive_chain_swap_btc_lockup_scripts.clone());
+            }
             swap_scripts
         }
     }
@@ -951,7 +1168,7 @@ pub(crate) mod immutable {
                     .into_iter()
                     .partition(|swap| swap.direction == Direction::Outgoing);
 
-            SwapsList::init(
+            SwapsList::all(
                 send_swaps,
                 receive_swaps,
                 send_chain_swaps,
@@ -963,8 +1180,9 @@ pub(crate) mod immutable {
         pub(crate) async fn fetch_swaps_histories(
             &self,
             swaps_list: &SwapsList,
+            partial_sync: bool,
         ) -> Result<SwapsHistories> {
-            let swap_lbtc_scripts = swaps_list.get_all_swap_lbtc_scripts();
+            let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts(partial_sync);
 
             let lbtc_script_histories = self
                 .liquid_chain_service
@@ -985,7 +1203,7 @@ pub(crate) mod immutable {
                     .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
                     .collect();
 
-            let swap_btc_scripts = swaps_list.get_all_swap_btc_scripts();
+            let swap_btc_scripts = swaps_list.get_swap_btc_scripts(partial_sync);
             let btc_script_histories = self
                 .bitcoin_chain_service
                 .lock()
