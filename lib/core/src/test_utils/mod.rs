@@ -10,6 +10,7 @@ pub(crate) mod sdk;
 pub(crate) mod send_swap;
 pub(crate) mod status_stream;
 pub(crate) mod swapper;
+pub(crate) mod sync;
 pub(crate) mod wallet;
 
 pub(crate) fn generate_random_string(size: usize) -> String {
