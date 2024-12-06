@@ -570,9 +570,16 @@ impl LiquidSdk {
     /// Get the wallet info from persistant storage
     pub async fn get_info(&self) -> SdkResult<GetInfoResponse> {
         self.ensure_is_started().await?;
-        self.persister.get_wallet_info()?.ok_or(SdkError::Generic {
-            err: "Info not found".into(),
-        })
+        let maybe_wallet_info = self.persister.get_wallet_info()?;
+        match maybe_wallet_info {
+            Some(wallet_info) => Ok(wallet_info),
+            None => {
+                self.update_wallet_info().await?;
+                self.persister.get_wallet_info()?.ok_or(SdkError::Generic {
+                    err: "Info not found".into(),
+                })
+            }
+        }
     }
 
     /// Sign given message with the private key. Returns a zbase encoded signature.
