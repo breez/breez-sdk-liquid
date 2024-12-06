@@ -908,6 +908,11 @@ enum BreezSDKLiquidMapper {
             filters = try asPaymentTypeList(arr: filtersTmp)
         }
 
+        var states: [PaymentState]?
+        if let statesTmp = listPaymentsRequest["states"] as? [String] {
+            states = try asPaymentStateList(arr: statesTmp)
+        }
+
         var fromTimestamp: Int64?
         if hasNonNilKey(data: listPaymentsRequest, key: "fromTimestamp") {
             guard let fromTimestampTmp = listPaymentsRequest["fromTimestamp"] as? Int64 else {
@@ -941,12 +946,13 @@ enum BreezSDKLiquidMapper {
             details = try asListPaymentDetails(listPaymentDetails: detailsTmp)
         }
 
-        return ListPaymentsRequest(filters: filters, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
+        return ListPaymentsRequest(filters: filters, states: states, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
     }
 
     static func dictionaryOf(listPaymentsRequest: ListPaymentsRequest) -> [String: Any?] {
         return [
             "filters": listPaymentsRequest.filters == nil ? nil : arrayOf(paymentTypeList: listPaymentsRequest.filters!),
+            "states": listPaymentsRequest.states == nil ? nil : arrayOf(paymentStateList: listPaymentsRequest.states!),
             "fromTimestamp": listPaymentsRequest.fromTimestamp == nil ? nil : listPaymentsRequest.fromTimestamp,
             "toTimestamp": listPaymentsRequest.toTimestamp == nil ? nil : listPaymentsRequest.toTimestamp,
             "offset": listPaymentsRequest.offset == nil ? nil : listPaymentsRequest.offset,
