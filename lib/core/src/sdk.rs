@@ -470,6 +470,7 @@ impl LiquidSdk {
         if let Some(id) = payment_id {
             match self.persister.get_payment(&id)? {
                 Some(payment) => {
+                    self.update_wallet_info().await?;
                     match payment.status {
                         Complete => {
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
@@ -566,52 +567,11 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Get the wallet info, calculating the current pending and confirmed balances.
-    pub async fn get_info(&self) -> Result<GetInfoResponse> {
+    /// Get the wallet info from persistant storage
+    pub async fn get_info(&self) -> SdkResult<GetInfoResponse> {
         self.ensure_is_started().await?;
-        let mut pending_send_sat = 0;
-        let mut pending_receive_sat = 0;
-        let mut confirmed_sent_sat = 0;
-        let mut confirmed_received_sat = 0;
-
-        for p in self
-            .list_payments(&ListPaymentsRequest {
-                ..Default::default()
-            })
-            .await?
-        {
-            match p.payment_type {
-                PaymentType::Send => match p.status {
-                    Complete => confirmed_sent_sat += p.amount_sat,
-                    Failed => {
-                        confirmed_sent_sat += p.amount_sat;
-                        confirmed_received_sat +=
-                            p.details.get_refund_tx_amount_sat().unwrap_or_default();
-                    }
-                    Pending => match p.details.get_refund_tx_amount_sat() {
-                        Some(refund_tx_amount_sat) => {
-                            confirmed_sent_sat += p.amount_sat;
-                            pending_receive_sat += refund_tx_amount_sat;
-                        }
-                        None => pending_send_sat += p.amount_sat,
-                    },
-                    Created => pending_send_sat += p.amount_sat,
-                    Refundable | RefundPending | TimedOut => {}
-                },
-                PaymentType::Receive => match p.status {
-                    Complete => confirmed_received_sat += p.amount_sat,
-                    Pending => pending_receive_sat += p.amount_sat,
-                    Created | Refundable | RefundPending | Failed | TimedOut => {}
-                },
-            }
-        }
-
-        Ok(GetInfoResponse {
-            balance_sat: confirmed_received_sat - confirmed_sent_sat - pending_send_sat,
-            pending_send_sat,
-            pending_receive_sat,
-            fingerprint: self.onchain_wallet.fingerprint()?,
-            pubkey: self.onchain_wallet.pubkey()?,
+        self.persister.get_wallet_info()?.ok_or(SdkError::Generic {
+            err: "Info not found".into(),
         })
     }
 
@@ -1684,8 +1644,8 @@ impl LiquidSdk {
                             return Ok(payment);
                         }
                     },
-                    Ok(event) => debug!("Unhandled event: {event:?}"),
-                    Err(e) => debug!("Received error waiting for event: {e:?}"),
+                    Ok(event) => debug!("Unhandled event waiting for payment: {event:?}"),
+                    Err(e) => debug!("Received error waiting for payment: {e:?}"),
                 }
             }
         }
@@ -2341,12 +2301,6 @@ impl LiquidSdk {
             .await?;
         let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
-        let wallet_amount_sat = tx_map
-            .values()
-            .map(|tx| tx.balance.values().sum::<i64>())
-            .sum::<i64>();
-        debug!("Onchain wallet balance: {wallet_amount_sat} sats");
-
         for swap in recoverable_swaps {
             let swap_id = &swap.id();
 
@@ -2443,7 +2397,43 @@ impl LiquidSdk {
             }
         }
 
+        self.update_wallet_info().await?;
         Ok(())
+    }
+
+    async fn update_wallet_info(&self) -> Result<()> {
+        let transactions = self.onchain_wallet.transactions().await?;
+        let wallet_amount_sat = transactions
+            .into_iter()
+            .map(|tx| tx.balance.values().sum::<i64>())
+            .sum::<i64>();
+        debug!("Onchain wallet balance: {wallet_amount_sat} sats");
+
+        let mut pending_send_sat = 0;
+        let mut pending_receive_sat = 0;
+        let payments = self.persister.get_payments(&ListPaymentsRequest {
+            states: Some(vec![PaymentState::Pending, PaymentState::RefundPending]),
+            ..Default::default()
+        })?;
+
+        for payment in payments {
+            match payment.payment_type {
+                PaymentType::Send => match payment.details.get_refund_tx_amount_sat() {
+                    Some(refund_tx_amount_sat) => pending_receive_sat += refund_tx_amount_sat,
+                    None => pending_send_sat += payment.amount_sat,
+                },
+                PaymentType::Receive => pending_receive_sat += payment.amount_sat,
+            }
+        }
+
+        let info_response = GetInfoResponse {
+            balance_sat: wallet_amount_sat as u64,
+            pending_send_sat,
+            pending_receive_sat,
+            fingerprint: self.onchain_wallet.fingerprint()?,
+            pubkey: self.onchain_wallet.pubkey()?,
+        };
+        self.persister.set_wallet_info(&info_response)
     }
 
     /// Lists the SDK payments in reverse chronological order, from newest to oldest.

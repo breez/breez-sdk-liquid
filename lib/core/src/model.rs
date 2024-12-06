@@ -499,7 +499,7 @@ pub struct RefundResponse {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
