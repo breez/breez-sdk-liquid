@@ -445,6 +445,7 @@ typedef struct wire_cst_payment {
   uint32_t timestamp;
   uint64_t amount_sat;
   uint64_t fees_sat;
+  uint64_t *swapper_fees_sat;
   int32_t payment_type;
   int32_t status;
   struct wire_cst_payment_details details;

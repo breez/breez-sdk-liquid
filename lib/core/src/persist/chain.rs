@@ -35,12 +35,13 @@ impl Persister {
                 refund_private_key,
                 claim_fees_sat,
                 created_at,
-                state
+                state,
+                pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute((
+        _ = stmt.execute(params![
             &chain_swap.id,
             &id_hash,
             &chain_swap.direction,
@@ -57,7 +58,8 @@ impl Persister {
             &chain_swap.claim_fees_sat,
             &chain_swap.created_at,
             &chain_swap.state,
-        ))?;
+            &chain_swap.pair_fees_json
+        ])?;
 
         con.execute(
             "UPDATE chain_swaps
@@ -111,7 +113,8 @@ impl Persister {
                 claim_tx_id,
                 refund_tx_id,
                 created_at,
-                state
+                state,
+                pair_fees_json
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -160,6 +163,7 @@ impl Persister {
             refund_tx_id: row.get(17)?,
             created_at: row.get(18)?,
             state: row.get(19)?,
+            pair_fees_json: row.get(20)?,
         })
     }
 
@@ -315,7 +319,7 @@ impl Persister {
         let con = self.get_connection()?;
         let row_count = con
             .execute(
-                "UPDATE chain_swaps 
+                "UPDATE chain_swaps
             SET claim_address = :claim_address, claim_tx_id = :claim_tx_id
             WHERE id = :id AND claim_tx_id IS NULL",
                 named_params! {
@@ -339,7 +343,7 @@ impl Persister {
     ) -> Result<(), PaymentError> {
         let con = self.get_connection()?;
         con.execute(
-            "UPDATE chain_swaps 
+            "UPDATE chain_swaps
             SET claim_tx_id = NULL
             WHERE id = :id AND claim_tx_id = :claim_tx_id",
             named_params! {

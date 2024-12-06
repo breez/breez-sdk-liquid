@@ -646,6 +646,8 @@ pub(crate) struct ChainSwap {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) claim_fees_sat: u64,
+    /// The [ChainPair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     pub(crate) accept_zero_conf: bool,
     /// JSON representation of [crate::persist::chain::InternalCreateChainResponse]
     pub(crate) create_response_json: String,
@@ -775,6 +777,8 @@ pub(crate) struct SendSwap {
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    /// The [SubmarinePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     /// JSON representation of [crate::persist::send::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcast
@@ -861,6 +865,8 @@ pub(crate) struct ReceiveSwap {
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    /// The [ReversePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
@@ -1151,6 +1157,9 @@ pub struct PaymentSwapData {
     /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
 
+    /// The swapper service fee
+    pub swapper_fees_sat: u64,
+
     pub refund_tx_id: Option<String>,
     pub refund_tx_amount_sat: Option<u64>,
 
@@ -1278,6 +1287,10 @@ pub struct Payment {
     /// - for Receive payments, this is zero
     pub fees_sat: u64,
 
+    /// Service fees paid to the swapper service. This is only set for swaps (i.e. doesn't apply to
+    /// direct Liquid payments).
+    pub swapper_fees_sat: Option<u64>,
+
     /// If it is a `Send` or `Receive` payment
     pub payment_type: PaymentType,
 
@@ -1305,6 +1318,7 @@ impl Payment {
             timestamp: swap.created_at,
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
             details: PaymentDetails::Lightning {
@@ -1364,6 +1378,7 @@ impl Payment {
                     PaymentType::Send => tx.fees_sat,
                 },
             },
+            swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
             payment_type: tx.payment_type,
             status: match &swap {
                 Some(swap) => swap.status,
