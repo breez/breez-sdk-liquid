@@ -31,9 +31,10 @@ impl Persister {
                 claim_fees_sat,
                 mrh_address,
                 mrh_script_pubkey,
-                state
+                state,
+                pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         _ = stmt.execute((
@@ -51,6 +52,7 @@ impl Persister {
             &receive_swap.mrh_address,
             &receive_swap.mrh_script_pubkey,
             &receive_swap.state,
+            &receive_swap.pair_fees_json,
         ))?;
 
         con.execute(
@@ -98,7 +100,8 @@ impl Persister {
                 rs.mrh_script_pubkey,
                 rs.mrh_tx_id,
                 rs.created_at,
-                rs.state
+                rs.state,
+                rs.pair_fees_json
             FROM receive_swaps AS rs
             {where_clause_str}
             ORDER BY rs.created_at
@@ -144,6 +147,7 @@ impl Persister {
             mrh_tx_id: row.get(14)?,
             created_at: row.get(15)?,
             state: row.get(16)?,
+            pair_fees_json: row.get(17)?,
         })
     }
 

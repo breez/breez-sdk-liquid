@@ -48,6 +48,19 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         preimage: None,
         payer_amount_sat: 1149,
         receiver_amount_sat: 1000,
+        pair_fees_json: r#"{
+            "hash": "b53c0ac3da051a78f67f6dd25f2ab0858492dc6881015b236d554227c85fda7d",
+            "rate": 1,
+            "limits": {
+                "maximal": 25000000,
+                "minimal": 1000,
+                "maximalZeroConf": 100000
+            },
+            "fees": {
+                "percentage": 0.1,
+                "minerFees": 148
+            }
+        }"#.to_string(),
         create_response_json: r#"{
             "accept_zero_conf": true,
             "address": "tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z",
@@ -102,6 +115,21 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         payment_hash: Some("e4a0052cd7e967393b71803ef5c507b935e6e80c18de4b110b26332ad64c6fe4".to_string()),
         payer_amount_sat: 1000,
         receiver_amount_sat: 587,
+        pair_fees_json: r#"{
+            "hash": "976e6dad9097f657213244b046e5f29524b743568a2c3d569b421df1e07e1b44",
+            "rate": 1,
+            "limits": {
+                "maximal": 25000000,
+                "minimal": 1000
+            },
+            "fees": {
+                "percentage": 0.25,
+                "minerFees": {
+                    "claim": 143,
+                    "lockup": 276
+                }
+            }
+        }"#.to_string(),
         claim_fees_sat: 200,
         claim_tx_id: None,
         lockup_tx_id: None,

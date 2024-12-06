@@ -4432,6 +4432,8 @@ final class wire_cst_payment extends ffi.Struct {
   @ffi.Uint64()
   external int fees_sat;
 
+  external ffi.Pointer<ffi.Uint64> swapper_fees_sat;
+
   @ffi.Int32()
   external int payment_type;
 

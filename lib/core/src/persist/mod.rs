@@ -14,6 +14,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
+use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use migrations::current_migrations;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
@@ -178,6 +179,7 @@ impl Persister {
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.state,
+                rs.pair_fees_json,
                 ss.id,
                 ss.created_at,
                 ss.invoice,
@@ -189,6 +191,7 @@ impl Persister {
                 ss.payer_amount_sat,
                 ss.receiver_amount_sat,
                 ss.state,
+                ss.pair_fees_json,
                 cs.id,
                 cs.created_at,
                 cs.direction,
@@ -199,6 +202,7 @@ impl Persister {
                 cs.receiver_amount_sat,
                 cs.claim_address,
                 cs.state,
+                cs.pair_fees_json,
                 rtx.amount_sat,
                 pd.destination,
                 pd.description
@@ -255,106 +259,138 @@ impl Persister {
         let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(12)?;
         let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(13)?;
         let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(14)?;
+        let maybe_receive_swap_pair_fees_json: Option<String> = row.get(15)?;
+        let maybe_receive_swap_pair_fees: Option<ReversePair> =
+            maybe_receive_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_send_swap_id: Option<String> = row.get(15)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(16)?;
-        let maybe_send_swap_invoice: Option<String> = row.get(17)?;
-        let maybe_send_swap_bolt12_offer: Option<String> = row.get(18)?;
-        let maybe_send_swap_payment_hash: Option<String> = row.get(19)?;
-        let maybe_send_swap_description: Option<String> = row.get(20)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(21)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(22)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(23)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(24)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(25)?;
+        let maybe_send_swap_id: Option<String> = row.get(16)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(17)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(18)?;
+        let maybe_send_swap_bolt12_offer: Option<String> = row.get(19)?;
+        let maybe_send_swap_payment_hash: Option<String> = row.get(20)?;
+        let maybe_send_swap_description: Option<String> = row.get(21)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(22)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(23)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(24)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(25)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(26)?;
+        let maybe_send_swap_pair_fees_json: Option<String> = row.get(27)?;
+        let maybe_send_swap_pair_fees: Option<SubmarinePair> =
+            maybe_send_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_chain_swap_id: Option<String> = row.get(26)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(27)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(28)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(29)?;
-        let maybe_chain_swap_description: Option<String> = row.get(30)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(31)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(32)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(33)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(34)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(35)?;
+        let maybe_chain_swap_id: Option<String> = row.get(28)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(29)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(30)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(31)?;
+        let maybe_chain_swap_description: Option<String> = row.get(32)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(33)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(34)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(35)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(36)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(37)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(38)?;
+        let maybe_chain_swap_pair_fees: Option<ChainPair> =
+            maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(36)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(39)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(37)?;
-        let maybe_payment_details_description: Option<String> = row.get(38)?;
+        let maybe_payment_details_destination: Option<String> = row.get(40)?;
+        let maybe_payment_details_description: Option<String> = row.get(41)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
-            Some(receive_swap_id) => (
-                Some(PaymentSwapData {
-                    swap_id: receive_swap_id,
-                    swap_type: PaymentSwapType::Receive,
-                    created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
-                    preimage: maybe_receive_swap_preimage,
-                    bolt11: maybe_receive_swap_invoice.clone(),
-                    bolt12_offer: None, // Bolt12 not supported for Receive Swaps
-                    payment_hash: maybe_receive_swap_payment_hash,
-                    description: maybe_receive_swap_description.unwrap_or_else(|| {
-                        maybe_receive_swap_invoice
-                            .and_then(|bolt11| get_invoice_description!(bolt11))
-                            .unwrap_or("Lightning payment".to_string())
-                    }),
-                    payer_amount_sat: maybe_receive_swap_payer_amount_sat.unwrap_or(0),
-                    receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
-                    refund_tx_id: None,
-                    refund_tx_amount_sat: None,
-                    claim_address: None,
-                    status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
-                }),
-                PaymentType::Receive,
-            ),
-            None => match maybe_send_swap_id {
-                Some(send_swap_id) => (
+            Some(receive_swap_id) => {
+                let payer_amount_sat = maybe_receive_swap_payer_amount_sat.unwrap_or(0);
+
+                (
                     Some(PaymentSwapData {
-                        swap_id: send_swap_id,
-                        swap_type: PaymentSwapType::Send,
-                        created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
-                        preimage: maybe_send_swap_preimage,
-                        bolt11: match maybe_send_swap_bolt12_offer.is_some() {
-                            true => None, // We don't expose the Bolt12 invoice
-                            false => maybe_send_swap_invoice,
-                        },
-                        bolt12_offer: maybe_send_swap_bolt12_offer,
-                        payment_hash: maybe_send_swap_payment_hash,
-                        description: maybe_send_swap_description
-                            .unwrap_or("Lightning payment".to_string()),
-                        payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
-                        receiver_amount_sat: maybe_send_swap_receiver_amount_sat.unwrap_or(0),
-                        refund_tx_id: maybe_send_swap_refund_tx_id,
-                        refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
-                        claim_address: None,
-                        status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
-                    }),
-                    PaymentType::Send,
-                ),
-                None => match maybe_chain_swap_id {
-                    Some(chain_swap_id) => (
-                        Some(PaymentSwapData {
-                            swap_id: chain_swap_id,
-                            swap_type: PaymentSwapType::Chain,
-                            created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
-                            preimage: maybe_chain_swap_preimage,
-                            bolt11: None,
-                            bolt12_offer: None, // Bolt12 not supported for Chain Swaps
-                            payment_hash: None,
-                            description: maybe_chain_swap_description
-                                .unwrap_or("Bitcoin transfer".to_string()),
-                            payer_amount_sat: maybe_chain_swap_payer_amount_sat.unwrap_or(0),
-                            receiver_amount_sat: maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
-                            refund_tx_id: maybe_chain_swap_refund_tx_id,
-                            refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
-                            claim_address: maybe_chain_swap_claim_address,
-                            status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
+                        swap_id: receive_swap_id,
+                        swap_type: PaymentSwapType::Receive,
+                        created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
+                        preimage: maybe_receive_swap_preimage,
+                        bolt11: maybe_receive_swap_invoice.clone(),
+                        bolt12_offer: None, // Bolt12 not supported for Receive Swaps
+                        payment_hash: maybe_receive_swap_payment_hash,
+                        description: maybe_receive_swap_description.unwrap_or_else(|| {
+                            maybe_receive_swap_invoice
+                                .and_then(|bolt11| get_invoice_description!(bolt11))
+                                .unwrap_or("Lightning payment".to_string())
                         }),
-                        maybe_chain_swap_direction
-                            .unwrap_or(Direction::Outgoing)
-                            .into(),
-                    ),
+                        payer_amount_sat,
+                        receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
+                        swapper_fees_sat: maybe_receive_swap_pair_fees
+                            .map(|pair| pair.fees.boltz(payer_amount_sat))
+                            .unwrap_or(0),
+                        refund_tx_id: None,
+                        refund_tx_amount_sat: None,
+                        claim_address: None,
+                        status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
+                    }),
+                    PaymentType::Receive,
+                )
+            }
+            None => match maybe_send_swap_id {
+                Some(send_swap_id) => {
+                    let receiver_amount_sat = maybe_send_swap_receiver_amount_sat.unwrap_or(0);
+                    (
+                        Some(PaymentSwapData {
+                            swap_id: send_swap_id,
+                            swap_type: PaymentSwapType::Send,
+                            created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
+                            preimage: maybe_send_swap_preimage,
+                            bolt11: match maybe_send_swap_bolt12_offer.is_some() {
+                                true => None, // We don't expose the Bolt12 invoice
+                                false => maybe_send_swap_invoice,
+                            },
+                            bolt12_offer: maybe_send_swap_bolt12_offer,
+                            payment_hash: maybe_send_swap_payment_hash,
+                            description: maybe_send_swap_description
+                                .unwrap_or("Lightning payment".to_string()),
+                            payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
+                            receiver_amount_sat,
+                            swapper_fees_sat: maybe_send_swap_pair_fees
+                                .map(|pair| pair.fees.boltz(receiver_amount_sat))
+                                .unwrap_or(0),
+                            refund_tx_id: maybe_send_swap_refund_tx_id,
+                            refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                            claim_address: None,
+                            status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
+                        }),
+                        PaymentType::Send,
+                    )
+                }
+                None => match maybe_chain_swap_id {
+                    Some(chain_swap_id) => {
+                        let payer_amount_sat = maybe_chain_swap_payer_amount_sat.unwrap_or(0);
+                        let swapper_fees_sat = maybe_chain_swap_pair_fees
+                            .map(|pair| pair.fees.percentage)
+                            .map(|fr| ((fr / 100.0) * payer_amount_sat as f64).ceil() as u64)
+                            .unwrap_or(0);
+
+                        (
+                            Some(PaymentSwapData {
+                                swap_id: chain_swap_id,
+                                swap_type: PaymentSwapType::Chain,
+                                created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
+                                preimage: maybe_chain_swap_preimage,
+                                bolt11: None,
+                                bolt12_offer: None, // Bolt12 not supported for Chain Swaps
+                                payment_hash: None,
+                                description: maybe_chain_swap_description
+                                    .unwrap_or("Bitcoin transfer".to_string()),
+                                payer_amount_sat,
+                                receiver_amount_sat: maybe_chain_swap_receiver_amount_sat
+                                    .unwrap_or(0),
+                                swapper_fees_sat,
+                                refund_tx_id: maybe_chain_swap_refund_tx_id,
+                                refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                                claim_address: maybe_chain_swap_claim_address,
+                                status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
+                            }),
+                            maybe_chain_swap_direction
+                                .unwrap_or(Direction::Outgoing)
+                                .into(),
+                        )
+                    }
                     None => (None, PaymentType::Send),
                 },
             },

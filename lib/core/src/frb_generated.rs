@@ -3445,6 +3445,7 @@ impl SseDecode for crate::model::Payment {
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_swapperFeesSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_paymentType = <crate::model::PaymentType>::sse_decode(deserializer);
         let mut var_status = <crate::model::PaymentState>::sse_decode(deserializer);
         let mut var_details = <crate::model::PaymentDetails>::sse_decode(deserializer);
@@ -3454,6 +3455,7 @@ impl SseDecode for crate::model::Payment {
             timestamp: var_timestamp,
             amount_sat: var_amountSat,
             fees_sat: var_feesSat,
+            swapper_fees_sat: var_swapperFeesSat,
             payment_type: var_paymentType,
             status: var_status,
             details: var_details,
@@ -5453,6 +5455,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Payment {
             self.timestamp.into_into_dart().into_dart(),
             self.amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.swapper_fees_sat.into_into_dart().into_dart(),
             self.payment_type.into_into_dart().into_dart(),
             self.status.into_into_dart().into_dart(),
             self.details.into_into_dart().into_dart(),
@@ -7413,6 +7416,7 @@ impl SseEncode for crate::model::Payment {
         <u32>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <Option<u64>>::sse_encode(self.swapper_fees_sat, serializer);
         <crate::model::PaymentType>::sse_encode(self.payment_type, serializer);
         <crate::model::PaymentState>::sse_encode(self.status, serializer);
         <crate::model::PaymentDetails>::sse_encode(self.details, serializer);
@@ -9351,6 +9355,7 @@ mod io {
                 timestamp: self.timestamp.cst_decode(),
                 amount_sat: self.amount_sat.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
+                swapper_fees_sat: self.swapper_fees_sat.cst_decode(),
                 payment_type: self.payment_type.cst_decode(),
                 status: self.status.cst_decode(),
                 details: self.details.cst_decode(),
@@ -10557,6 +10562,7 @@ mod io {
                 timestamp: Default::default(),
                 amount_sat: Default::default(),
                 fees_sat: Default::default(),
+                swapper_fees_sat: core::ptr::null_mut(),
                 payment_type: Default::default(),
                 status: Default::default(),
                 details: Default::default(),
@@ -12664,6 +12670,7 @@ mod io {
         timestamp: u32,
         amount_sat: u64,
         fees_sat: u64,
+        swapper_fees_sat: *mut u64,
         payment_type: i32,
         status: i32,
         details: wire_cst_payment_details,
