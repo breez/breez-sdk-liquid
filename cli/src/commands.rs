@@ -275,12 +275,12 @@ pub(crate) async fn handle_command(
             let confirmation_msg = match payer_amount_sat {
                 Some(_) => format!("Fees: {fees} sat. Are the fees acceptable? (y/N)"),
                 None => {
-                    let min = prepare_response.min_payer_amount_sat.unwrap();
-                    let max = prepare_response.max_payer_amount_sat.unwrap();
-                    let service_feerate = prepare_response.service_feerate.unwrap();
+                    let min = prepare_response.min_payer_amount_sat;
+                    let max = prepare_response.max_payer_amount_sat;
+                    let service_feerate = prepare_response.service_feerate;
                     format!(
-                        "Fees: {fees} sat + {service_feerate}% of the sent amount. \
-                        Sender should send between {min} sat and {max} sat. \
+                        "Fees: {fees} sat + {service_feerate:?}% of the sent amount. \
+                        Sender should send between {min:?} sat and {max:?} sat. \
                         Are the fees acceptable? (y/N)"
                     )
                 }
