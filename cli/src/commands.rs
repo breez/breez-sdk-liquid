@@ -98,6 +98,10 @@ pub(crate) enum Command {
         #[clap(name = "filter", short = 'r', long = "filter")]
         filters: Option<Vec<PaymentType>>,
 
+        /// The optional payment state. Either "pending", "complete", "failed", "pendingrefund" or "refundable"
+        #[clap(name = "state", short = 's', long = "state")]
+        states: Option<Vec<PaymentState>>,
+
         /// The optional from unix timestamp
         #[clap(name = "from_timestamp", short = 'f', long = "from")]
         from_timestamp: Option<i64>,
@@ -469,6 +473,7 @@ pub(crate) async fn handle_command(
         }
         Command::ListPayments {
             filters,
+            states,
             from_timestamp,
             to_timestamp,
             limit,
@@ -485,6 +490,7 @@ pub(crate) async fn handle_command(
             let payments = sdk
                 .list_payments(&ListPaymentsRequest {
                     filters,
+                    states,
                     from_timestamp,
                     to_timestamp,
                     limit,
