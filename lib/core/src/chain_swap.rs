@@ -487,20 +487,13 @@ impl ChainSwapHandler {
             .map(|quote| quote.to_sat())?;
         info!("Got quote of {quote} sat for swap {}", &swap.id);
 
-        self.validate_amountless_swap(swap, quote).await?;
-
-        self.persister.update_zero_amount_swap_values(
-            &swap.id,
-            swap.payer_amount_sat,
-            swap.receiver_amount_sat,
-        )?;
+        self.validate_and_update_amountless_swap(swap, quote)
+            .await?;
         self.swapper
-            .accept_zero_amount_chain_swap_quote(&swap.id, quote)?;
-
-        Ok(())
+            .accept_zero_amount_chain_swap_quote(&swap.id, quote)
     }
 
-    async fn validate_amountless_swap(
+    async fn validate_and_update_amountless_swap(
         &self,
         swap: &ChainSwap,
         quote_server_lockup_amount_sat: u64,
@@ -552,6 +545,13 @@ impl ChainSwapHandler {
             expected_server_lockup_amount_sat == quote_server_lockup_amount_sat,
             PaymentError::generic(&format!("Invalid quote: expected {expected_server_lockup_amount_sat} sat, got {quote_server_lockup_amount_sat} sat"))
         );
+
+        let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
+        self.persister.update_zero_amount_swap_values(
+            &swap.id,
+            user_lockup_amount_sat,
+            receiver_amount_sat,
+        )?;
 
         Ok(())
     }
