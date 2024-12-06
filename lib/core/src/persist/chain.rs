@@ -272,25 +272,9 @@ impl Persister {
     pub(crate) fn update_zero_amount_swap_values(
         &self,
         swap_id: &str,
-        server_lockup_amount_sat: u64,
+        payer_amount_sat: u64,
+        receiver_amount_sat: u64,
     ) -> Result<(), PaymentError> {
-        let swap = self
-            .fetch_chain_swap_by_id(swap_id)?
-            .ok_or_else(|| PaymentError::Generic {
-                err: format!("Cannot update non-existent chain swap with ID: {swap_id}"),
-            })?;
-        ensure_sdk!(
-            matches!(swap.direction, Direction::Incoming),
-            PaymentError::Generic {
-                err: format!(
-                    "Only an incoming chain swap can be a zero-amount swap. Swap ID: {swap_id}"
-                )
-            }
-        );
-
-        let payer_amount_sat = server_lockup_amount_sat;
-        let receiver_amount_sat = server_lockup_amount_sat - swap.claim_fees_sat;
-
         log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}, receiver_amount_sat = {receiver_amount_sat}");
         let con: Connection = self.get_connection()?;
         con.execute(
