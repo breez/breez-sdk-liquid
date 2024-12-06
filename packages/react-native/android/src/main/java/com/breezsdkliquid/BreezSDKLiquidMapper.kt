@@ -789,6 +789,14 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
+    val states =
+        if (hasNonNullKey(listPaymentsRequest, "states")) {
+            listPaymentsRequest.getArray("states")?.let {
+                asPaymentStateList(it)
+            }
+        } else {
+            null
+        }
     val fromTimestamp =
         if (hasNonNullKey(
                 listPaymentsRequest,
@@ -810,12 +818,13 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
-    return ListPaymentsRequest(filters, fromTimestamp, toTimestamp, offset, limit, details)
+    return ListPaymentsRequest(filters, states, fromTimestamp, toTimestamp, offset, limit, details)
 }
 
 fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
     readableMapOf(
         "filters" to listPaymentsRequest.filters?.let { readableArrayOf(it) },
+        "states" to listPaymentsRequest.states?.let { readableArrayOf(it) },
         "fromTimestamp" to listPaymentsRequest.fromTimestamp,
         "toTimestamp" to listPaymentsRequest.toTimestamp,
         "offset" to listPaymentsRequest.offset,
@@ -3347,6 +3356,7 @@ fun pushToArray(
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
+        is PaymentState -> array.pushString(value.name.lowercase())
         is PaymentType -> array.pushString(value.name.lowercase())
         is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))

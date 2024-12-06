@@ -584,6 +584,7 @@ pub struct RestoreRequest {
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
+    pub states: Option<Vec<PaymentState>>,
     /// Epoch time, in seconds
     pub from_timestamp: Option<i64>,
     /// Epoch time, in seconds
@@ -1011,7 +1012,7 @@ pub struct RefundableSwap {
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, EnumString, Eq, PartialEq, Serialize, Hash)]
 pub enum PaymentState {
     Created = 0,
 
