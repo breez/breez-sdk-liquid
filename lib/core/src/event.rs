@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
-use log::info;
+use log::{debug, info};
 use tokio::sync::{broadcast, RwLock};
 
 use crate::model::{EventListener, SdkEvent};
@@ -42,6 +42,7 @@ impl EventManager {
         match self.is_paused.load(Ordering::SeqCst) {
             true => info!("Event notifications are paused, not emitting event {e:?}"),
             false => {
+                debug!("Emitting event: {e:?}");
                 let _ = self.notifier.send(e.clone());
 
                 for listener in (*self.listeners.read().await).values() {

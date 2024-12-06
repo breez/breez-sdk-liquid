@@ -81,7 +81,7 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub async fn get_info(&self) -> Result<GetInfoResponse, SdkError> {
-        self.sdk.get_info().await.map_err(Into::into)
+        self.sdk.get_info().await
     }
 
     #[frb(sync)]
