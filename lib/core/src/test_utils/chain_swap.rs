@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     chain_swap::ChainSwapHandler,
-    model::{ChainSwap, Config, Direction, PaymentState},
+    model::{ChainSwap, Config, Direction, PaymentState, Signer},
     persist::Persister,
     swapper::boltz::BoltzSwapper,
     utils,
@@ -19,7 +19,7 @@ use crate::{
 use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     generate_random_string,
-    wallet::MockWallet,
+    wallet::{MockSigner, MockWallet},
 };
 
 lazy_static! {
@@ -28,7 +28,8 @@ lazy_static! {
 
 pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainSwapHandler> {
     let config = Config::testnet(None);
-    let onchain_wallet = Arc::new(MockWallet::new());
+    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+    let onchain_wallet = Arc::new(MockWallet::new(signer)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
