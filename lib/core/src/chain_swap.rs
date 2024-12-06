@@ -524,7 +524,7 @@ impl ChainSwapHandler {
         };
         ensure_sdk!(
             user_lockup_amount_sat > 0,
-            PaymentError::generic("Lockup address has no confirmed balance")
+            PaymentError::generic("Lockup address has no confirmed or unconfirmed balance")
         );
 
         let pair = swap.get_boltz_pair()?;
