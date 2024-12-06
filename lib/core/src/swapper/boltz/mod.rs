@@ -8,6 +8,7 @@ use boltz_client::{
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
     util::secrets::Preimage,
+    Amount,
 };
 use log::info;
 use url::Url;
@@ -177,6 +178,23 @@ impl Swapper for BoltzSwapper {
         let pair_outgoing = pairs.get_lbtc_to_btc_pair();
         let pair_incoming = pairs.get_btc_to_lbtc_pair();
         Ok((pair_outgoing, pair_incoming))
+    }
+
+    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError> {
+        self.client
+            .get_quote(swap_id)
+            .map(|r| Amount::from_sat(r.amount))
+            .map_err(Into::into)
+    }
+
+    fn accept_zero_amount_chain_swap_quote(
+        &self,
+        swap_id: &str,
+        server_lockup_sat: u64,
+    ) -> Result<(), PaymentError> {
+        self.client
+            .accept_quote(swap_id, server_lockup_sat)
+            .map_err(Into::into)
     }
 
     /// Get a submarine pair information

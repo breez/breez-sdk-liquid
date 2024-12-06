@@ -938,14 +938,38 @@ class PrepareReceiveResponse {
   final BigInt? payerAmountSat;
   final BigInt feesSat;
 
+  /// The minimum amount the payer can send for this swap to succeed.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? minPayerAmountSat;
+
+  /// The maximum amount the payer can send for this swap to succeed.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? maxPayerAmountSat;
+
+  /// The percentage of the sent amount that will count towards the service fee.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final double? serviceFeerate;
+
   const PrepareReceiveResponse({
     required this.paymentMethod,
     this.payerAmountSat,
     required this.feesSat,
+    this.minPayerAmountSat,
+    this.maxPayerAmountSat,
+    this.serviceFeerate,
   });
 
   @override
-  int get hashCode => paymentMethod.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      paymentMethod.hashCode ^
+      payerAmountSat.hashCode ^
+      feesSat.hashCode ^
+      minPayerAmountSat.hashCode ^
+      maxPayerAmountSat.hashCode ^
+      serviceFeerate.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -954,7 +978,10 @@ class PrepareReceiveResponse {
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
           payerAmountSat == other.payerAmountSat &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSat == other.maxPayerAmountSat &&
+          serviceFeerate == other.serviceFeerate;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

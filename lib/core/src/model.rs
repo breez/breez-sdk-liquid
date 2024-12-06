@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 
+use boltz_client::boltz::ChainPair;
 use boltz_client::{
     bitcoin::ScriptBuf,
     network::Chain,
@@ -303,6 +304,21 @@ pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
     pub payer_amount_sat: Option<u64>,
     pub fees_sat: u64,
+
+    /// The minimum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub min_payer_amount_sat: Option<u64>,
+
+    /// The maximum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub max_payer_amount_sat: Option<u64>,
+
+    /// The percentage of the sent amount that will count towards the service fee.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub service_feerate: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -669,6 +685,13 @@ impl ChainSwap {
             claim_details: internal_create_response.claim_details,
             lockup_details: internal_create_response.lockup_details,
         })
+    }
+
+    pub(crate) fn get_boltz_pair(&self) -> Result<ChainPair> {
+        let pair: ChainPair = serde_json::from_str(&self.pair_fees_json)
+            .map_err(|e| anyhow!("Failed to deserialize ChainPair: {e:?}"))?;
+
+        Ok(pair)
     }
 
     pub(crate) fn get_claim_swap_script(&self) -> SdkResult<SwapScriptV2> {
