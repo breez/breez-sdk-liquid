@@ -386,7 +386,7 @@ mod tests {
     #[tokio::test]
     async fn test_incoming_sync_create_and_update() -> Result<()> {
         create_persister!(persister);
-        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let sync_data = vec![
@@ -480,7 +480,7 @@ mod tests {
     #[tokio::test]
     async fn test_outgoing_sync() -> Result<()> {
         create_persister!(persister);
-        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (_incoming_tx, outgoing_records, sync_service) =
@@ -586,7 +586,7 @@ mod tests {
     #[tokio::test]
     async fn test_sync_clean() -> Result<()> {
         create_persister!(persister);
-        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (incoming_tx, _outgoing_records, sync_service) =
@@ -647,7 +647,7 @@ mod tests {
     #[tokio::test]
     async fn test_last_derivation_index_update() -> Result<()> {
         create_persister!(persister);
-        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let recoverer = Arc::new(new_recoverer(signer.clone())?);
 
         let (incoming_tx, outgoing_records, sync_service) =
