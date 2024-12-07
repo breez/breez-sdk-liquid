@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anyhow::Result;
+use anyhow::anyhow;
 use boltz_client::ElementsAddress;
-use log::{debug, error};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
@@ -205,12 +204,54 @@ pub(crate) struct SendSwapImmutableData {
     pub(crate) lockup_script: LBtcScript,
 }
 
+impl TryFrom<SendSwap> for SendSwapImmutableData {
+    type Error = anyhow::Error;
+
+    fn try_from(swap: SendSwap) -> std::result::Result<Self, Self::Error> {
+        let swap_script = swap.get_swap_script()?;
+
+        let funding_address = swap_script.funding_addrs.ok_or(anyhow!(
+            "No funding address found for Send Swap {}",
+            swap.id
+        ))?;
+
+        let swap_id = swap.id;
+        Ok(SendSwapImmutableData {
+            swap_id,
+            lockup_script: funding_address.script_pubkey(),
+        })
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct ReceiveSwapImmutableData {
     pub(crate) swap_id: String,
     pub(crate) timeout_block_height: u32,
     pub(crate) claim_script: LBtcScript,
     pub(crate) mrh_script: Option<LBtcScript>,
+}
+
+impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
+    type Error = anyhow::Error;
+
+    fn try_from(swap: ReceiveSwap) -> std::result::Result<Self, Self::Error> {
+        let swap_script = swap.get_swap_script()?;
+        let create_response = swap.get_boltz_create_response()?;
+        let mrh_address = ElementsAddress::from_str(&swap.mrh_address).ok();
+
+        let funding_address = swap_script.funding_addrs.ok_or(anyhow!(
+            "No funding address found for Receive Swap {}",
+            swap.id
+        ))?;
+
+        let swap_id = swap.id;
+        Ok(ReceiveSwapImmutableData {
+            swap_id,
+            timeout_block_height: create_response.timeout_block_height,
+            claim_script: funding_address.script_pubkey(),
+            mrh_script: mrh_address.map(|s| s.script_pubkey()),
+        })
+    }
 }
 
 pub(crate) struct ReceiveSwapHistory {
@@ -223,6 +264,40 @@ pub(crate) struct SendChainSwapImmutableData {
     swap_id: String,
     lockup_script: LBtcScript,
     pub(crate) claim_script: BtcScript,
+}
+
+impl TryFrom<ChainSwap> for SendChainSwapImmutableData {
+    type Error = anyhow::Error;
+
+    fn try_from(swap: ChainSwap) -> std::result::Result<Self, Self::Error> {
+        if swap.direction == Direction::Incoming {
+            return Err(anyhow!(
+                "Cannot convert incoming chain swap to `SendChainSwapImmutableData`"
+            ));
+        }
+
+        let lockup_swap_script = swap.get_lockup_swap_script()?.as_liquid_script()?;
+        let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
+
+        let maybe_lockup_script = lockup_swap_script
+            .clone()
+            .funding_addrs
+            .map(|addr| addr.script_pubkey());
+        let maybe_claim_script = claim_swap_script
+            .clone()
+            .funding_addrs
+            .map(|addr| addr.script_pubkey());
+
+        let swap_id = swap.id;
+        match (maybe_lockup_script, maybe_claim_script) {
+            (Some(lockup_script), Some(claim_script)) => Ok(SendChainSwapImmutableData {
+                swap_id,
+                lockup_script,
+                claim_script,
+            }),
+            (lockup_script, claim_script) => Err(anyhow!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}")),
+        }
+    }
 }
 
 pub(crate) struct SendChainSwapHistory {
@@ -238,6 +313,40 @@ pub(crate) struct ReceiveChainSwapImmutableData {
     claim_script: LBtcScript,
 }
 
+impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
+    type Error = anyhow::Error;
+
+    fn try_from(swap: ChainSwap) -> std::result::Result<Self, Self::Error> {
+        if swap.direction == Direction::Outgoing {
+            return Err(anyhow!(
+                "Cannot convert outgoing chain swap to `ReceiveChainSwapImmutableData`"
+            ));
+        }
+
+        let lockup_swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+        let claim_swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
+
+        let maybe_lockup_script = lockup_swap_script
+            .clone()
+            .funding_addrs
+            .map(|addr| addr.script_pubkey());
+        let maybe_claim_script = claim_swap_script
+            .clone()
+            .funding_addrs
+            .map(|addr| addr.script_pubkey());
+
+        let swap_id = swap.id;
+        match (maybe_lockup_script, maybe_claim_script) {
+            (Some(lockup_script), Some(claim_script)) => Ok(ReceiveChainSwapImmutableData {
+                swap_id,
+                lockup_script,
+                claim_script,
+            }),
+            (lockup_script, claim_script) => Err(anyhow!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}")),
+        }
+    }
+}
+
 pub(crate) struct ReceiveChainSwapHistory {
     pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
     pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
@@ -245,6 +354,7 @@ pub(crate) struct ReceiveChainSwapHistory {
 }
 
 /// Swap immutable data
+#[derive(Default)]
 pub(crate) struct SwapsList {
     pub(crate) send_swap_immutable_data_by_swap_id: HashMap<String, SendSwapImmutableData>,
     pub(crate) receive_swap_immutable_data_by_swap_id: HashMap<String, ReceiveSwapImmutableData>,
@@ -254,172 +364,73 @@ pub(crate) struct SwapsList {
         HashMap<String, ReceiveChainSwapImmutableData>,
 }
 
-impl SwapsList {
-    pub(crate) fn all(
-        send_swaps: Vec<SendSwap>,
-        receive_swaps: Vec<ReceiveSwap>,
-        send_chain_swaps: Vec<ChainSwap>,
-        receive_chain_swaps: Vec<ChainSwap>,
-    ) -> Result<Self> {
-        SwapsList::init(
-            send_swaps,
-            receive_swaps,
-            send_chain_swaps,
-            receive_chain_swaps,
-        )
-    }
+impl TryFrom<Vec<Swap>> for SwapsList {
+    type Error = anyhow::Error;
 
-    pub(crate) fn receive_only(receive_swaps: Vec<ReceiveSwap>) -> Result<Self> {
-        SwapsList::init(
-            Default::default(),
-            receive_swaps,
-            Default::default(),
-            Default::default(),
-        )
-    }
+    fn try_from(swaps: Vec<Swap>) -> std::result::Result<Self, Self::Error> {
+        let mut swaps_list = Self::default();
 
-    fn init(
-        send_swaps: Vec<SendSwap>,
-        receive_swaps: Vec<ReceiveSwap>,
-        send_chain_swaps: Vec<ChainSwap>,
-        receive_chain_swaps: Vec<ChainSwap>,
-    ) -> Result<Self> {
-        let send_swap_immutable_data_by_swap_id: HashMap<String, SendSwapImmutableData> =
-            send_swaps
-                .iter()
-                .filter_map(|swap| match swap.get_swap_script() {
-                    Ok(swap_script) => match &swap_script.funding_addrs {
-                        Some(address) => Some((
-                            swap.id.clone(),
-                            SendSwapImmutableData {
-                                swap_id: swap.id.clone(),
-                                lockup_script: address.script_pubkey(),
-                            },
-                        )),
-                        None => {
-                            error!("No funding address found for Send Swap {}", swap.id);
-                            None
+        for swap in swaps.into_iter() {
+            let swap_id = swap.id();
+            match swap {
+                Swap::Send(send_swap) => match send_swap.try_into() {
+                    Ok(send_swap_immutable_data) => {
+                        swaps_list
+                            .send_swap_immutable_data_by_swap_id
+                            .insert(swap_id, send_swap_immutable_data);
+                    }
+                    Err(e) => {
+                        log::error!("Could not retrieve send swap immutable data: {e:?}");
+                        continue;
+                    }
+                },
+                Swap::Receive(receive_swap) => match receive_swap.try_into() {
+                    Ok(receive_swap_immutable_data) => {
+                        swaps_list
+                            .receive_swap_immutable_data_by_swap_id
+                            .insert(swap_id, receive_swap_immutable_data);
+                    }
+                    Err(e) => {
+                        log::error!("Could not retrieve receive swap immutable data: {e:?}");
+                        continue;
+                    }
+                },
+                Swap::Chain(chain_swap) => match chain_swap.direction {
+                    Direction::Incoming => match chain_swap.try_into() {
+                        Ok(receive_chain_swap_immutable_data) => {
+                            swaps_list
+                                .receive_chain_swap_immutable_data_by_swap_id
+                                .insert(swap_id, receive_chain_swap_immutable_data);
+                        }
+                        Err(e) => {
+                            log::error!(
+                                "Could not retrieve incoming chain swap immutable data: {e:?}"
+                            );
+                            continue;
                         }
                     },
-                    Err(e) => {
-                        error!("Failed to get swap script for Send Swap {}: {e}", swap.id);
-                        None
-                    }
-                })
-                .collect();
-        let receive_swap_immutable_data_by_swap_id: HashMap<String, ReceiveSwapImmutableData> =
-            receive_swaps
-                .iter()
-                .filter_map(|swap| {
-                    let swap_id = &swap.id;
-                    let create_response = swap.get_boltz_create_response().ok()?;
-                    let swap_script = swap
-                        .get_swap_script()
-                        .inspect_err(|e| {
-                            error!("Failed to get swap script for Receive Swap {swap_id}: {e}")
-                        })
-                        .ok()?;
-                    let mrh_address = ElementsAddress::from_str(&swap.mrh_address).ok();
-
-                    match &swap_script.funding_addrs {
-                        Some(address) => Some((
-                            swap.id.clone(),
-                            ReceiveSwapImmutableData {
-                                swap_id: swap.id.clone(),
-                                timeout_block_height: create_response.timeout_block_height,
-                                claim_script: address.script_pubkey(),
-                                mrh_script: mrh_address.map(|s| s.script_pubkey()),
-                            },
-                        )),
-                        None => {
-                            error!("No funding address found for Receive Swap {}", swap.id);
-                            None
+                    Direction::Outgoing => match chain_swap.try_into() {
+                        Ok(send_chain_swap_immutable_data) => {
+                            swaps_list
+                                .send_chain_swap_immutable_data_by_swap_id
+                                .insert(swap_id, send_chain_swap_immutable_data);
                         }
-                    }
-                })
-                .collect();
-        let send_chain_swap_immutable_data_by_swap_id: HashMap<String, SendChainSwapImmutableData> =
-                send_chain_swaps.iter().filter_map(|swap| {
-                    let swap_id = &swap.id;
-
-                    let lockup_swap_script = swap.get_lockup_swap_script()
-                        .map_err(|e| error!("Failed to get lockup swap script for swap {swap_id}: {e}"))
-                        .map(|s| s.as_liquid_script().ok())
-                        .ok()
-                        .flatten()?;
-                    let claim_swap_script = swap.get_claim_swap_script()
-                        .map_err(|e| error!("Failed to get claim swap script for swap {swap_id}: {e}"))
-                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten()?;
-
-                    let maybe_lockup_script = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-                    let maybe_claim_script = claim_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-
-                    match (maybe_lockup_script, maybe_claim_script) {
-                        (Some(lockup_script), Some(claim_script)) => {
-                            Some((swap.id.clone(), SendChainSwapImmutableData {
-                                swap_id: swap.id.clone(),
-                                lockup_script,
-                                claim_script,
-                            }))
+                        Err(e) => {
+                            log::error!(
+                                "Could not retrieve outgoing chain swap immutable data: {e:?}"
+                            );
+                            continue;
                         }
-                        (lockup_script, claim_script) => {
-                            error!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}");
-                            None
-                        }
-                    }
-                })
-                .collect();
-        let receive_chain_swap_immutable_data_by_swap_id: HashMap<String, ReceiveChainSwapImmutableData> =
-                receive_chain_swaps.iter().filter_map(|swap| {
-                    let swap_id = &swap.id;
+                    },
+                },
+            }
+        }
 
-                    let lockup_swap_script = swap.get_lockup_swap_script()
-                        .map_err(|e| error!("Failed to get lockup swap script for swap {swap_id}: {e}"))
-                        .map(|s| s.as_bitcoin_script().ok()).ok().flatten()?;
-                    let claim_swap_script = swap.get_claim_swap_script()
-                        .map_err(|e| error!("Failed to get claim swap script for swap {swap_id}: {e}"))
-                        .map(|s| s.as_liquid_script().ok()).ok().flatten()?;
-
-                    let maybe_lockup_script = lockup_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-                    let maybe_claim_script = claim_swap_script.clone().funding_addrs.map(|addr| addr.script_pubkey());
-
-                    match (maybe_lockup_script, maybe_claim_script) {
-                        (Some(lockup_script), Some(claim_script)) => {
-                            Some((swap.id.clone(), ReceiveChainSwapImmutableData {
-                                swap_id: swap.id.clone(),
-                                lockup_script,
-                                claim_script,
-                            }))
-                        }
-                        (lockup_script, claim_script) => {
-                            error!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}");
-                            None
-                        }
-                    }
-                })
-                .collect();
-
-        let send_swap_immutable_data_size = send_swap_immutable_data_by_swap_id.len();
-        let receive_swap_immutable_data_size = receive_swap_immutable_data_by_swap_id.len();
-        let send_chain_swap_immutable_data_size = send_chain_swap_immutable_data_by_swap_id.len();
-        let receive_chain_swap_immutable_data_size =
-            receive_chain_swap_immutable_data_by_swap_id.len();
-        debug!(
-            "Immutable data items: send {}, receive {}, chain send {}, chain receive {}",
-            send_swap_immutable_data_size,
-            receive_swap_immutable_data_size,
-            send_chain_swap_immutable_data_size,
-            receive_chain_swap_immutable_data_size
-        );
-
-        Ok(SwapsList {
-            send_swap_immutable_data_by_swap_id,
-            receive_swap_immutable_data_by_swap_id,
-            send_chain_swap_immutable_data_by_swap_id,
-            receive_chain_swap_immutable_data_by_swap_id,
-        })
+        Ok(swaps_list)
     }
+}
 
+impl SwapsList {
     fn send_swaps_by_script(&self) -> HashMap<LBtcScript, SendSwapImmutableData> {
         self.send_swap_immutable_data_by_swap_id
             .clone()

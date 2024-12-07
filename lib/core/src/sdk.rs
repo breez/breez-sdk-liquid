@@ -2251,15 +2251,25 @@ impl LiquidSdk {
     }
 
     pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<SwapsList> {
-        let receive_swaps = self.persister.list_recoverable_receive_swaps()?;
+        let receive_swaps = self
+            .persister
+            .list_recoverable_receive_swaps()?
+            .into_iter()
+            .map(Into::into)
+            .collect();
         match partial_sync {
             false => {
                 let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
                 let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
-                let send_swaps = self.persister.list_recoverable_send_swaps()?;
-                let chain_swaps: Vec<ChainSwap> = self
+                let send_swaps = self
+                    .persister
+                    .list_recoverable_send_swaps()?
+                    .into_iter()
+                    .map(Into::into)
+                    .collect();
+                let chain_swaps: Vec<Swap> = self
                     .persister
                     .list_chain_swaps()?
                     .into_iter()
@@ -2274,19 +2284,11 @@ impl LiquidSdk {
                                 && liquid_height <= swap.timeout_block_height
                         }
                     })
+                    .map(Into::into)
                     .collect();
-                let (send_chain_swaps, receive_chain_swaps): (Vec<ChainSwap>, Vec<ChainSwap>) =
-                    chain_swaps
-                        .into_iter()
-                        .partition(|swap| swap.direction == Direction::Outgoing);
-                SwapsList::all(
-                    send_swaps,
-                    receive_swaps,
-                    send_chain_swaps,
-                    receive_chain_swaps,
-                )
+                SwapsList::try_from([receive_swaps, send_swaps, chain_swaps].concat())
             }
-            true => SwapsList::receive_only(receive_swaps),
+            true => SwapsList::try_from(receive_swaps),
         }
     }
 
