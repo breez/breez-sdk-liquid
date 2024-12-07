@@ -8,6 +8,7 @@ use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use tokio::sync::Mutex;
 
+use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     recover::model::{BtcScript, HistoryTxId, LBtcScript},
@@ -17,6 +18,7 @@ use super::model::*;
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
+    onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
 }
@@ -24,6 +26,7 @@ pub(crate) struct Recoverer {
 impl Recoverer {
     pub(crate) fn new(
         master_blinding_key: Vec<u8>,
+        onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
         bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     ) -> Result<Self> {
@@ -31,6 +34,7 @@ impl Recoverer {
             master_blinding_key: MasterBlindingKey::from_hex(
                 &master_blinding_key.to_lower_hex_string(),
             )?,
+            onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
         })
@@ -50,10 +54,12 @@ impl Recoverer {
     /// - `partial_sync`: recovers related scripts like MRH when true, otherwise recovers all scripts.
     pub(crate) async fn recover_from_onchain(
         &self,
-        tx_map: TxMap,
         swaps: SwapsList,
         partial_sync: bool,
     ) -> Result<RecoveredOnchainData> {
+        self.onchain_wallet.full_scan().await?;
+        let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
+
         let histories = self.fetch_swaps_histories(&swaps, partial_sync).await?;
 
         let recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;

@@ -377,7 +377,7 @@ mod tests {
             sync::{
                 new_chain_sync_data, new_receive_sync_data, new_send_sync_data, new_sync_service,
             },
-            wallet::MockSigner,
+            wallet::{MockSigner, MockWallet},
         },
     };
 
@@ -386,8 +386,9 @@ mod tests {
     #[tokio::test]
     async fn test_incoming_sync_create_and_update() -> Result<()> {
         create_persister!(persister);
+        let onchain_wallet = Arc::new(MockWallet::new());
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-        let recoverer = Arc::new(new_recoverer(signer.clone())?);
+        let recoverer = Arc::new(new_recoverer(signer.clone(), onchain_wallet.clone())?);
 
         let sync_data = vec![
             SyncData::Receive(new_receive_sync_data()),
@@ -480,8 +481,9 @@ mod tests {
     #[tokio::test]
     async fn test_outgoing_sync() -> Result<()> {
         create_persister!(persister);
+        let onchain_wallet = Arc::new(MockWallet::new());
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-        let recoverer = Arc::new(new_recoverer(signer.clone())?);
+        let recoverer = Arc::new(new_recoverer(signer.clone(), onchain_wallet.clone())?);
 
         let (_incoming_tx, outgoing_records, sync_service) =
             new_sync_service(persister.clone(), recoverer, signer.clone())?;
@@ -586,8 +588,9 @@ mod tests {
     #[tokio::test]
     async fn test_sync_clean() -> Result<()> {
         create_persister!(persister);
+        let onchain_wallet = Arc::new(MockWallet::new());
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-        let recoverer = Arc::new(new_recoverer(signer.clone())?);
+        let recoverer = Arc::new(new_recoverer(signer.clone(), onchain_wallet.clone())?);
 
         let (incoming_tx, _outgoing_records, sync_service) =
             new_sync_service(persister.clone(), recoverer, signer.clone())?;
@@ -647,8 +650,9 @@ mod tests {
     #[tokio::test]
     async fn test_last_derivation_index_update() -> Result<()> {
         create_persister!(persister);
+        let onchain_wallet = Arc::new(MockWallet::new());
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-        let recoverer = Arc::new(new_recoverer(signer.clone())?);
+        let recoverer = Arc::new(new_recoverer(signer.clone(), onchain_wallet.clone())?);
 
         let (incoming_tx, outgoing_records, sync_service) =
             new_sync_service(persister.clone(), recoverer, signer.clone())?;

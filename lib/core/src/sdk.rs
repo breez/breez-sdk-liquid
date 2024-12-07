@@ -17,7 +17,7 @@ use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
-use recover::model::{HistoryTxId, PartialSwapState as _, SwapsList, TxMap};
+use recover::model::{HistoryTxId, PartialSwapState as _, SwapsList};
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
@@ -181,8 +181,16 @@ impl LiquidSdk {
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
+        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
+            config.clone(),
+            &cache_dir,
+            persister.clone(),
+            signer.clone(),
+        )?);
+
         let recoverer = Arc::new(Recoverer::new(
             signer.slip77_master_blinding_key()?,
+            onchain_wallet.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
         )?);
@@ -196,13 +204,6 @@ impl LiquidSdk {
             syncer_client,
             sync_trigger_rx,
         ));
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
-            config.clone(),
-            &cache_dir,
-            persister.clone(),
-            signer.clone(),
-        )?);
 
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
@@ -2295,18 +2296,12 @@ impl LiquidSdk {
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
-        self.onchain_wallet.full_scan().await?;
-
-        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
         let swaps_list = self.get_monitored_swaps_list(partial_sync).await?;
         let recovered_onchain_data = self
             .recoverer
-            .recover_from_onchain(
-                TxMap::from_raw_tx_map(tx_map.clone()),
-                swaps_list,
-                partial_sync,
-            )
+            .recover_from_onchain(swaps_list, partial_sync)
             .await?;
+        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         let wallet_amount_sat = tx_map
             .values()
