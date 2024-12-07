@@ -588,6 +588,21 @@ impl Swap {
         }
     }
 }
+impl From<ChainSwap> for Swap {
+    fn from(swap: ChainSwap) -> Self {
+        Self::Chain(swap)
+    }
+}
+impl From<SendSwap> for Swap {
+    fn from(swap: SendSwap) -> Self {
+        Self::Send(swap)
+    }
+}
+impl From<ReceiveSwap> for Swap {
+    fn from(swap: ReceiveSwap) -> Self {
+        Self::Receive(swap)
+    }
+}
 
 #[derive(Clone, Debug)]
 pub(crate) enum SwapScriptV2 {

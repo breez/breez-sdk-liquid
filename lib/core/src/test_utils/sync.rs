@@ -5,6 +5,7 @@ use std::{collections::HashMap, sync::Arc};
 use crate::{
     persist::Persister,
     prelude::{Direction, Signer},
+    recover::recoverer::Recoverer,
     sync::{
         client::SyncerClient,
         model::{
@@ -88,6 +89,7 @@ impl SyncerClient for MockSyncerClient {
 #[allow(clippy::type_complexity)]
 pub(crate) fn new_sync_service(
     persister: Arc<Persister>,
+    recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
 ) -> Result<(
     Sender<Record>,
@@ -101,6 +103,7 @@ pub(crate) fn new_sync_service(
     let sync_service = SyncService::new(
         "".to_string(),
         persister.clone(),
+        recoverer,
         signer.clone(),
         client,
         sync_trigger_rx,

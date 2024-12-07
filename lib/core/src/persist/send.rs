@@ -148,11 +148,6 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_send_swaps_where(&con, vec![])
-    }
-
     pub(crate) fn list_send_swaps_where(
         &self,
         con: &Connection,
