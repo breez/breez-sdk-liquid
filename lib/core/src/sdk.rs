@@ -2344,6 +2344,7 @@ impl LiquidSdk {
                 }
                 Swap::Send(SendSwap {
                     state,
+                    preimage,
                     lockup_tx_id,
                     refund_tx_id,
                     ..
@@ -2364,7 +2365,7 @@ impl LiquidSdk {
                         .update_swap_info(
                             swap_id,
                             state,
-                            None, // TODO: Recover preimage
+                            preimage.as_deref(),
                             lockup_tx_id.as_deref(),
                             refund_tx_id.as_deref(),
                         )

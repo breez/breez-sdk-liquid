@@ -1,11 +1,14 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
-use boltz_client::ElementsAddress;
+use boltz_client::{ElementsAddress, ToHex as _};
+use electrum_client::GetBalanceRes;
 use log::{debug, error, warn};
+use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
+use lwk_wollet::hashes::{sha256, Hash as _};
 use tokio::sync::Mutex;
 
 use crate::prelude::{Direction, Swap};
@@ -39,6 +42,43 @@ impl Recoverer {
             liquid_chain_service,
             bitcoin_chain_service,
         })
+    }
+
+    pub(crate) async fn get_send_swap_preimage_from_claim_tx_id(
+        swap_id: &str,
+        claim_tx_id: &lwk_wollet::elements::Txid,
+        chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    ) -> Result<String, anyhow::Error> {
+        debug!("Send Swap {swap_id} has claim tx {claim_tx_id}");
+
+        let claim_tx = chain_service
+            .lock()
+            .await
+            .get_transactions(&[*claim_tx_id])
+            .await
+            .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
+            .first()
+            .cloned()
+            .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
+
+        let input = claim_tx
+            .input
+            .first()
+            .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
+
+        let script_witness_bytes = input.clone().witness.script_witness;
+        log::info!("Found Send Swap {swap_id} claim tx witness: {script_witness_bytes:?}");
+        let script_witness = Witness::from(script_witness_bytes);
+
+        let preimage_bytes = script_witness
+            .nth(1)
+            .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
+        let preimage = sha256::Hash::from_slice(preimage_bytes)
+            .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
+        let preimage_hex = preimage.to_hex();
+        debug!("Found Send Swap {swap_id} claim tx preimage: {preimage_hex}");
+
+        Ok(preimage_hex)
     }
 
     /// For each swap, recovers data from chain services.
@@ -99,6 +139,15 @@ impl Recoverer {
                         .refund_tx_id
                         .clone()
                         .map(|h| h.txid.to_string());
+                    if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
+                        send_swap.preimage = Self::get_send_swap_preimage_from_claim_tx_id(
+                            &send_swap.id,
+                            &claim_tx_id.txid,
+                            self.liquid_chain_service.clone(),
+                        )
+                        .await
+                        .ok();
+                    }
                 }
                 Swap::Receive(receive_swap) => {
                     let Some(recovered_data) = recovered_receive_data.get(swap_id) else {

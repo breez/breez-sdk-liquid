@@ -6,17 +6,16 @@ use async_trait::async_trait;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Bolt11Invoice, ToHex};
+use boltz_client::Bolt11Invoice;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
-use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::elements::{LockTime, Transaction};
-use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
+use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
@@ -308,7 +307,7 @@ impl SendSwapHandler {
         Ok(())
     }
 
-    async fn get_preimage_from_script_path_claim_spend(
+    pub(crate) async fn get_preimage_from_script_path_claim_spend(
         &self,
         swap: &SendSwap,
     ) -> Result<String, PaymentError> {
@@ -343,37 +342,12 @@ impl SendSwapHandler {
             }),
             Some(claim_tx_entry) => {
                 let claim_tx_id = claim_tx_entry.txid;
-                debug!("Send Swap {id} has claim tx {claim_tx_id}");
-
-                let claim_tx = self
-                    .chain_service
-                    .lock()
-                    .await
-                    .get_transactions(&[claim_tx_id])
-                    .await
-                    .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
-                    .first()
-                    .cloned()
-                    .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
-
-                let input = claim_tx
-                    .input
-                    .first()
-                    .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
-
-                let script_witness_bytes = input.clone().witness.script_witness;
-                info!("Found Send Swap {id} claim tx witness: {script_witness_bytes:?}");
-                let script_witness = Witness::from(script_witness_bytes);
-
-                let preimage_bytes = script_witness
-                    .nth(1)
-                    .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
-                let preimage = sha256::Hash::from_slice(preimage_bytes)
-                    .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
-                let preimage_hex = preimage.to_hex();
-                debug!("Found Send Swap {id} claim tx preimage: {preimage_hex}");
-
-                Ok(preimage_hex)
+                Ok(Recoverer::get_send_swap_preimage_from_claim_tx_id(
+                    id,
+                    &claim_tx_id,
+                    self.chain_service.clone(),
+                )
+                .await?)
             }
         }
     }
