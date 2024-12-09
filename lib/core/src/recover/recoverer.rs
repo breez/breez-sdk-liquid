@@ -9,6 +9,7 @@ use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use tokio::sync::Mutex;
 
 use crate::prelude::{Direction, Swap};
+use crate::send_swap::SendSwapHandler;
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -99,6 +100,15 @@ impl Recoverer {
                         .refund_tx_id
                         .clone()
                         .map(|h| h.txid.to_string());
+                    if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
+                        send_swap.preimage = SendSwapHandler::get_preimage_from_claim_tx_id(
+                            &send_swap.id,
+                            &claim_tx_id.txid,
+                            self.liquid_chain_service.clone(),
+                        )
+                        .await
+                        .ok();
+                    }
                 }
                 Swap::Receive(receive_swap) => {
                     let Some(recovered_data) = recovered_receive_data.get(swap_id) else {
