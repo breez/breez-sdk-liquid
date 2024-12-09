@@ -303,6 +303,15 @@ pub struct PrepareReceiveRequest {
 pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
     pub payer_amount_sat: Option<u64>,
+
+    /// Generally represents the total fees that would be paid to send or receive this payment.
+    ///
+    /// In case of Zero-Amount Receive Chain swaps, the swapper service fee (`swapper_feerate` times
+    /// the amount) is paid in addition to `fees_sat`. The swapper service feerate is already known
+    /// in the beginning, but the exact swapper service fee will only be known when the
+    /// `payer_amount_sat` is known.
+    ///
+    /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
     pub fees_sat: u64,
 
     /// The minimum amount the payer can send for this swap to succeed.
