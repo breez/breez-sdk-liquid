@@ -11,6 +11,9 @@ crate-type = ["lib", "cdylib", "staticlib"]
 default = ["frb"]
 frb = ["dep:flutter_rust_bridge"]
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"

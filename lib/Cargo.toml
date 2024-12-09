@@ -30,6 +30,9 @@ resolver = "2"
 [workspace.package]
 version = "0.4.0-rc3"
 
+[workspace.lints.clippy]
+empty_line_after_doc_comments = "allow"
+
 [workspace.dependencies]
 anyhow = "1.0"
 log = "0.4.20"
