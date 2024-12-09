@@ -82,7 +82,7 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _txids: &[lwk_wollet::elements::Txid],
     ) -> Result<Vec<lwk_wollet::elements::Transaction>> {
-        unimplemented!()
+        Ok(vec![])
     }
 
     async fn get_script_history(
@@ -101,7 +101,7 @@ impl LiquidChainService for MockLiquidChainService {
     }
 
     async fn get_scripts_history(&self, _scripts: &[&ElementsScript]) -> Result<Vec<Vec<History>>> {
-        unimplemented!()
+        Ok(vec![])
     }
 
     async fn get_script_utxos(&self, _script: &ElementsScript) -> Result<Vec<Utxo>> {
@@ -154,7 +154,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _txids: &[boltz_client::bitcoin::Txid],
     ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
-        unimplemented!()
+        Ok(vec![])
     }
 
     fn get_script_history(&self, _script: &Script) -> Result<Vec<lwk_wollet::History>> {
@@ -170,7 +170,7 @@ impl BitcoinChainService for MockBitcoinChainService {
     }
 
     fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        unimplemented!()
+        Ok(vec![])
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

@@ -7,8 +7,10 @@ use futures_util::TryFutureExt;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
+use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
+use crate::sync::model::DecryptionInfo;
 use crate::utils;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
@@ -16,12 +18,12 @@ use crate::{
 };
 
 use self::client::SyncerClient;
+use self::model::SyncOutgoingChanges;
 use self::model::{
     data::{ChainSyncData, ReceiveSyncData, SendSyncData, SyncData},
     sync::ListChangesRequest,
     RecordType, SyncState,
 };
-use self::model::{DecryptedRecord, SyncOutgoingChanges};
 
 pub(crate) mod client;
 pub(crate) mod model;
@@ -108,37 +110,31 @@ impl SyncService {
         Ok(())
     }
 
-    fn commit_record(
-        &self,
-        decrypted_record: &DecryptedRecord,
-        sync_state: SyncState,
-        is_update: bool,
-        last_commit_time: Option<u32>,
-    ) -> Result<()> {
-        match decrypted_record.data.clone() {
-            SyncData::Chain(chain_data) => self.persister.commit_incoming_chain_swap(
-                &chain_data,
-                sync_state,
-                is_update,
-                last_commit_time,
-            )?,
-            SyncData::Send(send_data) => self.persister.commit_incoming_send_swap(
-                &send_data,
-                sync_state,
-                is_update,
-                last_commit_time,
-            )?,
-            SyncData::Receive(receive_data) => self.persister.commit_incoming_receive_swap(
-                &receive_data,
-                sync_state,
-                is_update,
-                last_commit_time,
-            )?,
-            SyncData::LastDerivationIndex(new_address_index) => self
-                .persister
-                .commit_incoming_address_index(new_address_index, sync_state, last_commit_time)?,
+    fn commit_record(&self, decryption_info: &DecryptionInfo, swap: Option<Swap>) -> Result<()> {
+        let DecryptionInfo {
+            record,
+            new_sync_state,
+            last_commit_time,
+            ..
+        } = decryption_info;
+        match record.data.clone() {
+            SyncData::Chain(_) | SyncData::Receive(_) | SyncData::Send(_) => {
+                let Some(swap) = swap else {
+                    return Err(anyhow!(
+                        "Cannot commit a swap-related record without specifying a swap."
+                    ));
+                };
+                self.persister
+                    .commit_incoming_swap(&swap, new_sync_state, *last_commit_time)
+            }
+            SyncData::LastDerivationIndex(new_address_index) => {
+                self.persister.commit_incoming_address_index(
+                    new_address_index,
+                    new_sync_state,
+                    *last_commit_time,
+                )
+            }
         }
-        Ok(())
     }
 
     fn load_sync_data(&self, data_id: &str, record_type: RecordType) -> Result<SyncData> {
@@ -205,8 +201,11 @@ impl SyncService {
         Ok(())
     }
 
-    async fn handle_pull(&self, new_record: Record) -> Result<()> {
-        log::info!("Handling pull for record record_id {}", &new_record.id);
+    async fn handle_decryption(&self, new_record: Record) -> Result<DecryptionInfo> {
+        log::info!(
+            "Handling decryption for record record_id {}",
+            &new_record.id
+        );
 
         // Step 3: Check whether or not record is applicable (from its schema_version)
         if !new_record.is_applicable()? {
@@ -217,8 +216,7 @@ impl SyncService {
         let maybe_sync_state = self.persister.get_sync_state_by_record_id(&new_record.id)?;
         if let Some(sync_state) = &maybe_sync_state {
             if sync_state.record_revision >= new_record.revision {
-                log::info!("Remote record revision is lower or equal to the persisted one. Skipping update.");
-                return Ok(());
+                return Err(anyhow!("Remote record revision is lower or equal to the persisted one. Skipping update."));
             }
         }
 
@@ -238,7 +236,6 @@ impl SyncService {
             }
         }
 
-        // Step 7: Apply the changes and update sync state
         let new_sync_state = SyncState {
             data_id: decrypted_record.data.id().to_string(),
             record_id: decrypted_record.id.clone(),
@@ -248,40 +245,97 @@ impl SyncService {
                 .map(|state| state.is_local)
                 .unwrap_or(false),
         };
-        let is_update = maybe_sync_state.is_some();
         let last_commit_time = maybe_outgoing_changes.map(|details| details.commit_time);
-        self.commit_record(
-            &decrypted_record,
+
+        Ok(DecryptionInfo {
             new_sync_state,
-            is_update,
+            record: decrypted_record,
             last_commit_time,
-        )?;
+        })
+    }
 
-        log::info!(
-            "Successfully pulled record record_id {}",
-            &decrypted_record.id
-        );
+    async fn handle_recovery(
+        &self,
+        swap_decryption_info: Vec<DecryptionInfo>,
+    ) -> Result<Vec<(DecryptionInfo, Swap)>> {
+        let mut succeded = vec![];
+        let mut swaps = vec![];
 
-        Ok(())
+        // Step 1: Convert each record into a swap, if possible
+        for decryption_info in swap_decryption_info {
+            let record = &decryption_info.record;
+            match TryInto::<Swap>::try_into(record.data.clone()) {
+                Ok(swap) => {
+                    succeded.push(decryption_info);
+                    swaps.push(swap);
+                }
+                Err(e) => {
+                    log::warn!("Could not convert sync data to swap: {e}");
+                    continue;
+                }
+            };
+        }
+
+        // Step 2: Recover each swap's data from chain
+        self.recoverer
+            .recover_from_onchain(&mut swaps, false)
+            .await?;
+
+        Ok(succeded.into_iter().zip(swaps.into_iter()).collect())
     }
 
     pub(crate) async fn pull(&self) -> Result<()> {
         // Step 1: Fetch and save incoming records from remote, then update local tip
         self.fetch_and_save_records().await?;
 
-        // Step 2: Grab all pending incoming records from the database, merge them with
-        // outgoing if necessary, then apply
-        let mut succeded = vec![];
+        // Step 2: Grab all pending incoming records from the database
         let incoming_records = self.persister.get_incoming_records()?;
-        for new_record in incoming_records {
-            let record_id = new_record.id.clone();
-            if let Err(err) = self.handle_pull(new_record).await {
-                log::debug!("Could not handle incoming record {record_id}: {err:?}");
-                continue;
+
+        // Step 3: Decrypt all the records, if possible. Filter those whose revision/schema is not
+        // applicable
+        let mut decrypted: Vec<DecryptionInfo> = vec![];
+        for record in incoming_records {
+            let record_id = record.id.clone();
+            match self.handle_decryption(record).await {
+                Ok(decryption_info) => decrypted.push(decryption_info),
+                Err(e) => {
+                    log::debug!(
+                        "Could not handle decryption of incoming record {record_id}: {e:?}",
+                    );
+                    continue;
+                }
             }
-            succeded.push(record_id);
         }
 
+        // Step 4: Split each record into two categories: swap and non-swap
+        let (decrypted_swap_info, decrypted_non_swap_info): (
+            Vec<DecryptionInfo>,
+            Vec<DecryptionInfo>,
+        ) = decrypted
+            .into_iter()
+            .partition(|result| result.record.data.is_swap());
+
+        let mut succeded = vec![];
+
+        // Step 5: Recover the swap records' data from onchain, and commit it
+        for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
+            if let Err(e) = self.commit_record(&decryption_info, Some(swap)) {
+                log::warn!("Could not commit swap record: {e:?}");
+                continue;
+            }
+            succeded.push(decryption_info.record.id);
+        }
+
+        // Step 6: Commit non-swap-related data
+        for decryption_info in decrypted_non_swap_info {
+            if let Err(e) = self.commit_record(&decryption_info, None) {
+                log::warn!("Could not commit generic record: {e:?}");
+                continue;
+            }
+            succeded.push(decryption_info.record.id);
+        }
+
+        // Step 7: Clear succeded records
         if !succeded.is_empty() {
             self.persister.remove_incoming_records(succeded)?;
         }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::{ChainSwap, Direction, ReceiveSwap, SendSwap};
+use crate::prelude::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Swap};
 
 pub(crate) const LAST_DERIVATION_INDEX_DATA_ID: &str = "last-derivation-index";
 
@@ -54,6 +54,33 @@ impl From<ChainSwap> for ChainSyncData {
     }
 }
 
+impl From<ChainSyncData> for ChainSwap {
+    fn from(val: ChainSyncData) -> Self {
+        ChainSwap {
+            id: val.swap_id,
+            direction: val.direction,
+            lockup_address: val.lockup_address,
+            timeout_block_height: val.timeout_block_height,
+            preimage: val.preimage,
+            description: val.description,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            claim_fees_sat: val.claim_fees_sat,
+            accept_zero_conf: val.accept_zero_conf,
+            create_response_json: val.create_response_json,
+            created_at: val.created_at,
+            claim_private_key: val.claim_private_key,
+            refund_private_key: val.refund_private_key,
+            state: PaymentState::Created,
+            claim_address: None,
+            server_lockup_tx_id: None,
+            user_lockup_tx_id: None,
+            claim_tx_id: None,
+            refund_tx_id: None,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct SendSyncData {
     pub(crate) swap_id: String,
@@ -96,6 +123,27 @@ impl From<SendSwap> for SendSyncData {
     }
 }
 
+impl From<SendSyncData> for SendSwap {
+    fn from(val: SendSyncData) -> Self {
+        SendSwap {
+            id: val.swap_id,
+            invoice: val.invoice,
+            payment_hash: val.payment_hash,
+            description: val.description,
+            preimage: val.preimage,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            create_response_json: val.create_response_json,
+            created_at: val.created_at,
+            refund_private_key: val.refund_private_key,
+            state: PaymentState::Created,
+            bolt12_offer: None, // TODO: Add bolt_12_offer
+            lockup_tx_id: None,
+            refund_tx_id: None,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ReceiveSyncData {
     pub(crate) swap_id: String,
@@ -131,6 +179,28 @@ impl From<ReceiveSwap> for ReceiveSyncData {
     }
 }
 
+impl From<ReceiveSyncData> for ReceiveSwap {
+    fn from(val: ReceiveSyncData) -> Self {
+        ReceiveSwap {
+            id: val.swap_id,
+            preimage: val.preimage,
+            create_response_json: val.create_response_json,
+            claim_private_key: val.claim_private_key,
+            invoice: val.invoice,
+            payment_hash: val.payment_hash,
+            description: val.description,
+            payer_amount_sat: val.payer_amount_sat,
+            receiver_amount_sat: val.receiver_amount_sat,
+            claim_fees_sat: val.claim_fees_sat,
+            mrh_address: val.mrh_address,
+            created_at: val.created_at,
+            state: PaymentState::Created,
+            claim_tx_id: None,
+            mrh_tx_id: None,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
@@ -154,6 +224,14 @@ impl SyncData {
         serde_json::to_vec(self)
     }
 
+    /// Whether the data is a swap
+    pub(crate) fn is_swap(&self) -> bool {
+        match self {
+            SyncData::LastDerivationIndex(_) => false,
+            SyncData::Chain(_) | SyncData::Send(_) | SyncData::Receive(_) => true,
+        }
+    }
+
     pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) -> anyhow::Result<()> {
         match (self, other) {
             (SyncData::Chain(ref mut base), SyncData::Chain(other)) => {
@@ -174,6 +252,20 @@ impl SyncData {
             _ => return Err(anyhow::anyhow!("Cannot merge data from two separate types")),
         };
         Ok(())
+    }
+}
+
+impl TryInto<Swap> for SyncData {
+    type Error = anyhow::Error;
+    fn try_into(self) -> std::result::Result<Swap, Self::Error> {
+        match self {
+            SyncData::Chain(chain_data) => Ok(Swap::Chain(chain_data.into())),
+            SyncData::Send(send_data) => Ok(Swap::Send(send_data.into())),
+            SyncData::Receive(receive_data) => Ok(Swap::Receive(receive_data.into())),
+            _ => Err(anyhow::anyhow!(
+                "Cannot convert this sync data type to a swap"
+            )),
+        }
     }
 }
 

@@ -11,18 +11,19 @@ use crate::sync::model::RecordType;
 use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
-    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
-
+    pub(crate) fn insert_or_update_send_swap_inner(
+        con: &Connection,
+        send_swap: &SendSwap,
+    ) -> Result<()> {
         let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
-        tx.execute(
+        con.execute(
             "
-            INSERT INTO send_swaps (
+            INSERT OR REPLACE INTO send_swaps (
                 id,
                 id_hash,
                 invoice,
                 bolt12_offer,
+                preimage,
                 payment_hash,
                 description,
                 payer_amount_sat,
@@ -34,12 +35,13 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 &send_swap.id,
                 &id_hash,
                 &send_swap.invoice,
                 &send_swap.bolt12_offer,
+                &send_swap.preimage,
                 &send_swap.payment_hash,
                 &send_swap.description,
                 &send_swap.payer_amount_sat,
@@ -53,6 +55,14 @@ impl Persister {
             ),
         )?;
 
+        Ok(())
+    }
+
+    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_send_swap_inner(&tx, send_swap)?;
         self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
         tx.commit()?;
         self.sync_trigger.try_send(())?;

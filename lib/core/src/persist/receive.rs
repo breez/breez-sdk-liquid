@@ -11,14 +11,14 @@ use crate::persist::{get_where_clause_state_in, Persister};
 use crate::sync::model::RecordType;
 
 impl Persister {
-    pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
+    pub(crate) fn insert_or_update_receive_swap_inner(
+        con: &Connection,
+        receive_swap: &ReceiveSwap,
+    ) -> Result<()> {
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
-        tx.execute(
+        con.execute(
             "
-            INSERT INTO receive_swaps (
+            INSERT OR REPLACE INTO receive_swaps (
                 id,
                 id_hash,
                 preimage,
@@ -51,7 +51,7 @@ impl Persister {
             ),
         )?;
 
-        tx.execute(
+        con.execute(
             "UPDATE receive_swaps
             SET
                 description = :description,
@@ -67,6 +67,14 @@ impl Persister {
             },
         )?;
 
+        Ok(())
+    }
+
+    pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_receive_swap_inner(&tx, receive_swap)?;
         self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, None)?;
         tx.commit()?;
         self.sync_trigger.try_send(())?;
