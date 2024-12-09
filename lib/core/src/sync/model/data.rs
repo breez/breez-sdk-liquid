@@ -91,6 +91,7 @@ pub(crate) struct SendSyncData {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
     pub(crate) preimage: Option<String>,
+    pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
 }
@@ -119,6 +120,7 @@ impl From<SendSwap> for SendSyncData {
             created_at: value.created_at,
             preimage: value.preimage,
             description: value.description,
+            bolt12_offer: value.bolt12_offer,
         }
     }
 }
@@ -136,8 +138,8 @@ impl From<SendSyncData> for SendSwap {
             create_response_json: val.create_response_json,
             created_at: val.created_at,
             refund_private_key: val.refund_private_key,
+            bolt12_offer: val.bolt12_offer,
             state: PaymentState::Created,
-            bolt12_offer: None, // TODO: Add bolt_12_offer
             lockup_tx_id: None,
             refund_tx_id: None,
         }

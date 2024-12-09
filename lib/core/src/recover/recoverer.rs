@@ -8,7 +8,7 @@ use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use tokio::sync::Mutex;
 
-use crate::prelude::{Direction, PaymentState, Swap};
+use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
