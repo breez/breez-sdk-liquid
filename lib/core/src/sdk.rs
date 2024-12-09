@@ -1944,6 +1944,7 @@ impl LiquidSdk {
                 payer_amount_sat,
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
+                lockup_tx_id: None,
                 claim_tx_id: None,
                 mrh_address: mrh_addr_str,
                 mrh_tx_id: None,
@@ -2315,6 +2316,7 @@ impl LiquidSdk {
                     state,
                     claim_tx_id,
                     mrh_tx_id,
+                    lockup_tx_id,
                     ..
                 }) => {
                     let history_updates = vec![&claim_tx_id, &mrh_tx_id]
@@ -2334,7 +2336,7 @@ impl LiquidSdk {
                             swap_id,
                             state,
                             claim_tx_id.as_deref(),
-                            None, // TODO: lockup_tx_id,
+                            lockup_tx_id.as_deref(),
                             mrh_tx_id.as_deref(),
                             None,
                         )

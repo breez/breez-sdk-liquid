@@ -116,14 +116,14 @@ impl Recoverer {
                         .mrh_tx_id
                         .clone()
                         .map(|history_tx_id| history_tx_id.txid.to_string());
+                    receive_swap.lockup_tx_id = recovered_data
+                        .lockup_tx_id
+                        .clone()
+                        .map(|history_tx_id| history_tx_id.txid.to_string());
                     if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
                         receive_swap.payer_amount_sat = mrh_amount_sat;
                         receive_swap.receiver_amount_sat = mrh_amount_sat;
                     }
-                    // TODO: Add lockup_tx_id to ReceiveSwap
-                    // receive_swap.lockup_tx_id = recovered_data
-                    //     .lockup_tx_id
-                    //     .map(|history_tx_id| history_tx_id.txid.to_string());
                 }
                 Swap::Chain(chain_swap) => match chain_swap.direction {
                     Direction::Incoming => {

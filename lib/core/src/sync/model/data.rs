@@ -198,6 +198,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             created_at: val.created_at,
             state: PaymentState::Created,
             claim_tx_id: None,
+            lockup_tx_id: None,
             mrh_tx_id: None,
         }
     }

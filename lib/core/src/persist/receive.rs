@@ -103,6 +103,7 @@ impl Persister {
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
                 rs.claim_tx_id,
+                rs.lockup_tx_id,
                 rs.mrh_address,
                 rs.mrh_tx_id,
                 rs.created_at,
@@ -146,10 +147,11 @@ impl Persister {
             receiver_amount_sat: row.get(8)?,
             claim_fees_sat: row.get(9)?,
             claim_tx_id: row.get(10)?,
-            mrh_address: row.get(11)?,
-            mrh_tx_id: row.get(12)?,
-            created_at: row.get(13)?,
-            state: row.get(14)?,
+            lockup_tx_id: row.get(11)?,
+            mrh_address: row.get(12)?,
+            mrh_tx_id: row.get(13)?,
+            created_at: row.get(14)?,
+            state: row.get(15)?,
         })
     }
 
