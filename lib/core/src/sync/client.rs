@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
 
 use async_trait::async_trait;
+use http::Uri;
 use log::debug;
+use rustls::ClientConfig;
+use rustls_platform_verifier::BuilderVerifierExt;
 use tokio::sync::Mutex;
 
 use super::model::sync::{
@@ -18,7 +21,7 @@ pub(crate) trait SyncerClient: Send + Sync {
 }
 
 pub(crate) struct BreezSyncerClient {
-    inner: Mutex<Option<ProtoSyncerClient<tonic::transport::Channel>>>,
+    inner: Mutex<Option<ProtoSyncerClient<tonic_rustls::Channel>>>,
 }
 
 impl BreezSyncerClient {
@@ -29,11 +32,35 @@ impl BreezSyncerClient {
     }
 }
 
+impl ProtoSyncerClient<tonic_rustls::Channel> {
+    /// Attempt to create a new client by connecting to a given endpoint.
+    pub async fn connect<D>(dst: D) -> Result<Self, tonic_rustls::Error>
+    where
+        D: TryInto<tonic_rustls::Endpoint>,
+        D::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
+    {
+        let conn = tonic_rustls::Endpoint::new(dst)?.connect().await?;
+        Ok(Self::new(conn))
+    }
+}
+
 #[async_trait]
 impl SyncerClient for BreezSyncerClient {
     async fn connect(&self, connect_url: String) -> Result<()> {
         let mut client = self.inner.lock().await;
-        *client = Some(ProtoSyncerClient::connect(connect_url.clone()).await?);
+
+        let uri: Uri = connect_url.parse()?;
+        let mut endpoint = tonic_rustls::Endpoint::from(uri.clone());
+        if let Some("https") = uri.scheme_str() {
+            let crypto_provider = std::sync::Arc::new(rustls::crypto::ring::default_provider());
+            let tls_config = ClientConfig::builder_with_provider(crypto_provider)
+                .with_safe_default_protocol_versions()?
+                .with_platform_verifier()
+                .with_no_client_auth();
+            endpoint = endpoint.tls_config(tls_config)?;
+        };
+
+        *client = Some(ProtoSyncerClient::<tonic_rustls::Channel>::connect(endpoint).await?);
         debug!("Successfully connected to {connect_url}");
         Ok(())
     }
