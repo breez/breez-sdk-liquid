@@ -542,8 +542,8 @@ impl ChainSwapHandler {
         debug!("user_lockup_amount_sat = {}, service_fees_sat = {}, server_fees_sat = {}, expected_server_lockup_amount_sat = {}, quote_server_lockup_amount_sat = {}",
             user_lockup_amount_sat, service_fees_sat, swapper_server_fees_sat, expected_server_lockup_amount_sat, quote_server_lockup_amount_sat);
         ensure_sdk!(
-            expected_server_lockup_amount_sat == quote_server_lockup_amount_sat,
-            PaymentError::generic(&format!("Invalid quote: expected {expected_server_lockup_amount_sat} sat, got {quote_server_lockup_amount_sat} sat"))
+            expected_server_lockup_amount_sat <= quote_server_lockup_amount_sat,
+            PaymentError::generic(&format!("Invalid quote: expected at least {expected_server_lockup_amount_sat} sat, got {quote_server_lockup_amount_sat} sat"))
         );
 
         let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
