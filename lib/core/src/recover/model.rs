@@ -98,7 +98,7 @@ pub(crate) struct RecoveredOnchainDataReceive {
     pub(crate) lockup_tx_id: Option<HistoryTxId>,
     pub(crate) claim_tx_id: Option<HistoryTxId>,
     pub(crate) mrh_tx_id: Option<HistoryTxId>,
-    pub(crate) mrh_amount_sat: Option<u64>,
+    pub(crate) mrh_amount_sat: Option<u64>, // TODO: Add mrh_amount recovery
 }
 impl PartialSwapState for RecoveredOnchainDataReceive {
     fn derive_partial_state(&self) -> Option<PaymentState> {
@@ -189,13 +189,6 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
             None => None,
         }
     }
-}
-
-pub(crate) struct RecoveredOnchainData {
-    pub(crate) send: HashMap<String, RecoveredOnchainDataSend>,
-    pub(crate) receive: HashMap<String, RecoveredOnchainDataReceive>,
-    pub(crate) chain_send: HashMap<String, RecoveredOnchainDataChainSend>,
-    pub(crate) chain_receive: HashMap<String, RecoveredOnchainDataChainReceive>,
 }
 
 #[derive(Clone)]

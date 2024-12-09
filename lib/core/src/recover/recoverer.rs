@@ -8,6 +8,7 @@ use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use tokio::sync::Mutex;
 
+use crate::prelude::{Direction, PaymentState, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -54,13 +55,16 @@ impl Recoverer {
     /// - `partial_sync`: recovers related scripts like MRH when true, otherwise recovers all scripts.
     pub(crate) async fn recover_from_onchain(
         &self,
-        swaps: SwapsList,
+        swaps: &mut [Swap],
         partial_sync: bool,
-    ) -> Result<RecoveredOnchainData> {
+    ) -> Result<()> {
         self.onchain_wallet.full_scan().await?;
         let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
 
-        let histories = self.fetch_swaps_histories(&swaps, partial_sync).await?;
+        let swaps_list = swaps.to_vec().try_into()?;
+        let histories = self
+            .fetch_swaps_histories(&swaps_list, partial_sync)
+            .await?;
 
         let recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
         let recovered_receive_data =
@@ -68,20 +72,114 @@ impl Recoverer {
         let recovered_chain_send_data = self.recover_send_chain_swap_tx_ids(
             &tx_map,
             histories.send_chain,
-            &swaps.send_chain_swap_immutable_data_by_swap_id,
+            &swaps_list.send_chain_swap_immutable_data_by_swap_id,
         )?;
         let recovered_chain_receive_data = self.recover_receive_chain_swap_tx_ids(
             &tx_map,
             histories.receive_chain,
-            &swaps.receive_chain_swap_immutable_data_by_swap_id,
+            &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        Ok(RecoveredOnchainData {
-            send: recovered_send_data,
-            receive: recovered_receive_data,
-            chain_send: recovered_chain_send_data,
-            chain_receive: recovered_chain_receive_data,
-        })
+        for swap in swaps.iter_mut() {
+            let swap_id = &swap.id();
+            match swap {
+                Swap::Send(send_swap) => {
+                    let Some(recovered_data) = recovered_send_data.get(swap_id) else {
+                        log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
+                        continue;
+                    };
+                    if let Some(new_state) = recovered_data.derive_partial_state() {
+                        send_swap.state = new_state;
+                    }
+                    send_swap.lockup_tx_id = recovered_data
+                        .lockup_tx_id
+                        .clone()
+                        .map(|h| h.txid.to_string());
+                    send_swap.refund_tx_id = recovered_data
+                        .refund_tx_id
+                        .clone()
+                        .map(|h| h.txid.to_string());
+                }
+                Swap::Receive(receive_swap) => {
+                    let Some(recovered_data) = recovered_receive_data.get(swap_id) else {
+                        log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
+                        continue;
+                    };
+                    if let Some(new_state) = recovered_data.derive_partial_state() {
+                        receive_swap.state = new_state;
+                    }
+                    receive_swap.claim_tx_id = recovered_data
+                        .claim_tx_id
+                        .clone()
+                        .map(|history_tx_id| history_tx_id.txid.to_string());
+                    receive_swap.mrh_tx_id = recovered_data
+                        .mrh_tx_id
+                        .clone()
+                        .map(|history_tx_id| history_tx_id.txid.to_string());
+                    // TODO: Add lockup_tx_id to ReceiveSwap
+                    // receive_swap.lockup_tx_id = recovered_data
+                    //     .lockup_tx_id
+                    //     .map(|history_tx_id| history_tx_id.txid.to_string());
+                }
+                Swap::Chain(chain_swap) => match chain_swap.direction {
+                    Direction::Incoming => {
+                        let Some(recovered_data) = recovered_chain_receive_data.get(swap_id) else {
+                            log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
+                            continue;
+                        };
+                        if let Some(new_state) = recovered_data.derive_partial_state() {
+                            chain_swap.state = new_state;
+                        }
+                        chain_swap.server_lockup_tx_id = recovered_data
+                            .lbtc_server_lockup_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap
+                            .claim_address
+                            .clone_from(&recovered_data.lbtc_claim_address);
+                        chain_swap.user_lockup_tx_id = recovered_data
+                            .btc_user_lockup_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap.claim_tx_id = recovered_data
+                            .lbtc_claim_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap.refund_tx_id = recovered_data
+                            .btc_refund_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                    }
+                    Direction::Outgoing => {
+                        let Some(recovered_data) = recovered_chain_send_data.get(swap_id) else {
+                            log::warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
+                            continue;
+                        };
+                        if let Some(new_state) = recovered_data.derive_partial_state() {
+                            chain_swap.state = new_state;
+                        }
+                        chain_swap.server_lockup_tx_id = recovered_data
+                            .btc_server_lockup_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap.user_lockup_tx_id = recovered_data
+                            .lbtc_user_lockup_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap.claim_tx_id = recovered_data
+                            .btc_claim_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        chain_swap.refund_tx_id = recovered_data
+                            .lbtc_refund_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                    }
+                },
+            }
+        }
+
+        Ok(())
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
