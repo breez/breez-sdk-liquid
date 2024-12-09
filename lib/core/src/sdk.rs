@@ -2336,7 +2336,7 @@ impl LiquidSdk {
                             claim_tx_id.as_deref(),
                             None, // TODO: lockup_tx_id,
                             mrh_tx_id.as_deref(),
-                            None, // TODO: receive_data.mrh_amount_sat,
+                            None,
                         )
                         .await
                 }
