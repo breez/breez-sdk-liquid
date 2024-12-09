@@ -543,9 +543,14 @@ mod tests {
             new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Test insert
-        persister.insert_receive_swap(&new_receive_swap(None))?;
-        persister.insert_send_swap(&new_send_swap(None))?;
-        persister.insert_chain_swap(&new_chain_swap(Direction::Incoming, None, true, None))?;
+        persister.insert_or_update_receive_swap(&new_receive_swap(None))?;
+        persister.insert_or_update_send_swap(&new_send_swap(None))?;
+        persister.insert_or_update_chain_swap(&new_chain_swap(
+            Direction::Incoming,
+            None,
+            true,
+            None,
+        ))?;
 
         sync_service.push().await?;
 
@@ -555,7 +560,7 @@ mod tests {
 
         // Test conflict
         let swap = new_receive_swap(None);
-        persister.insert_receive_swap(&swap)?;
+        persister.insert_or_update_receive_swap(&swap)?;
 
         sync_service.push().await?;
 
@@ -579,7 +584,7 @@ mod tests {
 
         // Test update before push
         let swap = new_send_swap(None);
-        persister.insert_send_swap(&swap)?;
+        persister.insert_or_update_send_swap(&swap)?;
         let new_preimage = Some("new-preimage");
         persister.try_handle_send_swap_update(
             &swap.id,
@@ -608,7 +613,7 @@ mod tests {
 
         // Test update after push
         let swap = new_send_swap(None);
-        persister.insert_send_swap(&swap)?;
+        persister.insert_or_update_send_swap(&swap)?;
 
         sync_service.push().await?;
 
@@ -675,7 +680,7 @@ mod tests {
 
         // Clean outgoing
         let swap = new_send_swap(None);
-        persister.insert_send_swap(&swap)?;
+        persister.insert_or_update_send_swap(&swap)?;
         let outgoing_changes = persister.get_sync_outgoing_changes()?;
         assert_eq!(outgoing_changes.len(), 1); // Changes have been set
 

@@ -82,7 +82,7 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
+    pub(crate) fn insert_or_update_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 

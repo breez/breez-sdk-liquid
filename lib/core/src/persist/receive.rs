@@ -70,7 +70,7 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
+    pub(crate) fn insert_or_update_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
@@ -345,7 +345,7 @@ mod tests {
 
         let receive_swap = new_receive_swap(None);
 
-        storage.insert_receive_swap(&receive_swap)?;
+        storage.insert_or_update_receive_swap(&receive_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_receive_swap_by_id(&receive_swap.id).is_ok());
         // Fetch swap by invoice
@@ -363,7 +363,7 @@ mod tests {
         // List general receive swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_receive_swap(&new_receive_swap(None))?;
+            storage.insert_or_update_receive_swap(&new_receive_swap(None))?;
         }
 
         let con = storage.get_connection()?;
@@ -371,7 +371,7 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing receive swaps
-        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
         let ongoing_swaps = storage.list_ongoing_receive_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
@@ -383,7 +383,7 @@ mod tests {
         create_persister!(storage);
 
         let receive_swap = new_receive_swap(None);
-        storage.insert_receive_swap(&receive_swap)?;
+        storage.insert_or_update_receive_swap(&receive_swap)?;
 
         // Update metadata
         let new_state = PaymentState::Pending;

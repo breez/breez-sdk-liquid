@@ -58,7 +58,7 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
+    pub(crate) fn insert_or_update_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
 
@@ -355,7 +355,7 @@ mod tests {
         create_persister!(storage);
         let send_swap = new_send_swap(None);
 
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_send_swap_by_id(&send_swap.id).is_ok());
         // Fetch swap by invoice
@@ -373,7 +373,7 @@ mod tests {
         // List general send swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_send_swap(&new_send_swap(None))?;
+            storage.insert_or_update_send_swap(&new_send_swap(None))?;
         }
 
         let con = storage.get_connection()?;
@@ -381,7 +381,7 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing send swaps
-        storage.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
         let ongoing_swaps = storage.list_ongoing_send_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
@@ -397,7 +397,7 @@ mod tests {
         create_persister!(storage);
 
         let mut send_swap = new_send_swap(None);
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
 
         // Update metadata
         let new_state = PaymentState::Pending;

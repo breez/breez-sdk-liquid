@@ -471,7 +471,7 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                persister.insert_receive_swap(&receive_swap)?;
+                persister.insert_or_update_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
@@ -495,7 +495,7 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                persister.insert_receive_swap(&receive_swap)?;
+                persister.insert_or_update_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)

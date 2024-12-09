@@ -1330,7 +1330,7 @@ impl LiquidSdk {
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
                 };
-                self.persister.insert_send_swap(&swap)?;
+                self.persister.insert_or_update_send_swap(&swap)?;
                 swap
             }
         };
@@ -1613,7 +1613,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
-        self.persister.insert_chain_swap(&swap)?;
+        self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
@@ -1933,7 +1933,7 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
         self.persister
-            .insert_receive_swap(&ReceiveSwap {
+            .insert_or_update_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -2036,7 +2036,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
-        self.persister.insert_chain_swap(&swap)?;
+        self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
         Ok(swap)
     }
@@ -2982,17 +2982,17 @@ mod tests {
                         $args.accepts_zero_conf,
                         $args.user_lockup_tx_id,
                     );
-                    $persister.insert_chain_swap(&swap).unwrap();
+                    $persister.insert_or_update_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
                 }
                 "send" => {
                     let swap = new_send_swap($args.initial_payment_state);
-                    $persister.insert_send_swap(&swap).unwrap();
+                    $persister.insert_or_update_send_swap(&swap).unwrap();
                     Swap::Send(swap)
                 }
                 "receive" => {
                     let swap = new_receive_swap($args.initial_payment_state);
-                    $persister.insert_receive_swap(&swap).unwrap();
+                    $persister.insert_or_update_receive_swap(&swap).unwrap();
                     Swap::Receive(swap)
                 }
                 _ => panic!(),

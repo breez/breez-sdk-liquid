@@ -624,8 +624,8 @@ mod tests {
     fn test_list_ongoing_swaps() -> Result<()> {
         create_persister!(storage);
 
-        storage.insert_send_swap(&new_send_swap(None))?;
-        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(None))?;
+        storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
 
         assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
 
