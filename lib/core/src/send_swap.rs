@@ -308,7 +308,44 @@ impl SendSwapHandler {
         Ok(())
     }
 
-    async fn get_preimage_from_script_path_claim_spend(
+    pub(crate) async fn get_preimage_from_claim_tx_id(
+        swap_id: &str,
+        claim_tx_id: &lwk_wollet::elements::Txid,
+        chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    ) -> Result<String, anyhow::Error> {
+        debug!("Send Swap {swap_id} has claim tx {claim_tx_id}");
+
+        let claim_tx = chain_service
+            .lock()
+            .await
+            .get_transactions(&[*claim_tx_id])
+            .await
+            .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
+            .first()
+            .cloned()
+            .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
+
+        let input = claim_tx
+            .input
+            .first()
+            .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
+
+        let script_witness_bytes = input.clone().witness.script_witness;
+        info!("Found Send Swap {swap_id} claim tx witness: {script_witness_bytes:?}");
+        let script_witness = Witness::from(script_witness_bytes);
+
+        let preimage_bytes = script_witness
+            .nth(1)
+            .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
+        let preimage = sha256::Hash::from_slice(preimage_bytes)
+            .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
+        let preimage_hex = preimage.to_hex();
+        debug!("Found Send Swap {swap_id} claim tx preimage: {preimage_hex}");
+
+        Ok(preimage_hex)
+    }
+
+    pub(crate) async fn get_preimage_from_script_path_claim_spend(
         &self,
         swap: &SendSwap,
     ) -> Result<String, PaymentError> {
@@ -343,37 +380,12 @@ impl SendSwapHandler {
             }),
             Some(claim_tx_entry) => {
                 let claim_tx_id = claim_tx_entry.txid;
-                debug!("Send Swap {id} has claim tx {claim_tx_id}");
-
-                let claim_tx = self
-                    .chain_service
-                    .lock()
-                    .await
-                    .get_transactions(&[claim_tx_id])
-                    .await
-                    .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
-                    .first()
-                    .cloned()
-                    .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
-
-                let input = claim_tx
-                    .input
-                    .first()
-                    .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
-
-                let script_witness_bytes = input.clone().witness.script_witness;
-                info!("Found Send Swap {id} claim tx witness: {script_witness_bytes:?}");
-                let script_witness = Witness::from(script_witness_bytes);
-
-                let preimage_bytes = script_witness
-                    .nth(1)
-                    .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
-                let preimage = sha256::Hash::from_slice(preimage_bytes)
-                    .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
-                let preimage_hex = preimage.to_hex();
-                debug!("Found Send Swap {id} claim tx preimage: {preimage_hex}");
-
-                Ok(preimage_hex)
+                Ok(Self::get_preimage_from_claim_tx_id(
+                    id,
+                    &claim_tx_id,
+                    self.chain_service.clone(),
+                )
+                .await?)
             }
         }
     }
@@ -607,7 +619,7 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let send_swap = new_send_swap(Some(*first_state));
-                storage.insert_send_swap(&send_swap)?;
+                storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler
                     .update_swap_info(&send_swap.id, *allowed_state, None, None, None)
@@ -631,7 +643,7 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let send_swap = new_send_swap(Some(*first_state));
-                storage.insert_send_swap(&send_swap)?;
+                storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler
                     .update_swap_info(&send_swap.id, *disallowed_state, None, None, None)

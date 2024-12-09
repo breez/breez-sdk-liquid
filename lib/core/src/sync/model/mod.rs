@@ -78,6 +78,12 @@ pub(crate) struct DecryptedRecord {
     pub(crate) data: SyncData,
 }
 
+pub(crate) struct DecryptionInfo {
+    pub(crate) new_sync_state: SyncState,
+    pub(crate) record: DecryptedRecord,
+    pub(crate) last_commit_time: Option<u32>,
+}
+
 impl Record {
     pub(crate) fn new(
         data: SyncData,

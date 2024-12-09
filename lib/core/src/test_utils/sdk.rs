@@ -13,6 +13,7 @@ use crate::{
     model::{Config, Signer},
     persist::Persister,
     receive_swap::ReceiveSwapHandler,
+    recover::recoverer::Recoverer,
     sdk::LiquidSdk,
     send_swap::SendSwapHandler,
 };
@@ -84,6 +85,13 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         bitcoin_chain_service.clone(),
     )?);
 
+    let recoverer = Arc::new(Recoverer::new(
+        signer.slip77_master_blinding_key()?,
+        onchain_wallet.clone(),
+        liquid_chain_service.clone(),
+        bitcoin_chain_service.clone(),
+    )?);
+
     let event_manager = Arc::new(EventManager::new());
     let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
@@ -93,7 +101,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
     let (_incoming_tx, _outgoing_records, sync_service) =
-        new_sync_service(persister.clone(), signer.clone())?;
+        new_sync_service(persister.clone(), recoverer.clone(), signer.clone())?;
     let sync_service = Arc::new(sync_service);
 
     Ok(LiquidSdk {
@@ -104,6 +112,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         event_manager,
         status_stream,
         swapper,
+        recoverer,
         liquid_chain_service,
         bitcoin_chain_service,
         fiat_api: breez_server,

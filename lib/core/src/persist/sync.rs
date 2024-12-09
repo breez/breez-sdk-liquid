@@ -5,12 +5,11 @@ use rusqlite::{
     named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
 };
 
-use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentState, Persister};
+use super::{cache::KEY_LAST_DERIVATION_INDEX, Persister, Swap};
 use crate::{
     sync::model::{
-        data::{ChainSyncData, ReceiveSyncData, SendSyncData, LAST_DERIVATION_INDEX_DATA_ID},
-        sync::Record,
-        RecordType, SyncOutgoingChanges, SyncSettings, SyncState,
+        data::LAST_DERIVATION_INDEX_DATA_ID, sync::Record, RecordType, SyncOutgoingChanges,
+        SyncSettings, SyncState,
     },
     utils,
 };
@@ -397,11 +396,10 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn commit_incoming_receive_swap(
+    pub(crate) fn commit_incoming_swap(
         &self,
-        data: &ReceiveSyncData,
-        sync_state: SyncState,
-        is_update: bool,
+        swap: &Swap,
+        sync_state: &SyncState,
         last_commit_time: Option<u32>,
     ) -> Result<()> {
         let mut con = self.get_connection()?;
@@ -411,285 +409,13 @@ impl Persister {
             Self::check_commit_update(&tx, &sync_state.record_id, last_commit_time)?;
         }
 
-        let params = named_params! {
-            ":id": &data.swap_id,
-            ":invoice": &data.invoice,
-            ":preimage": &data.preimage,
-            ":create_response_json": &data.create_response_json,
-            ":claim_fees_sat": &data.claim_fees_sat,
-            ":claim_private_key": &data.claim_private_key,
-            ":payer_amount_sat": &data.payer_amount_sat,
-            ":receiver_amount_sat": &data.receiver_amount_sat,
-            ":mrh_address": &data.mrh_address,
-            ":created_at": &data.created_at,
-            ":payment_hash": &data.payment_hash,
-            ":description": &data.description,
-        };
-        match is_update {
-            true => {
-                tx.execute(
-                    "
-                    UPDATE receive_swaps
-                    SET
-                        invoice = :invoice,
-                        preimage = :preimage,
-                        create_response_json = :create_response_json,
-                        claim_fees_sat = :claim_fees_sat,
-                        claim_private_key = :claim_private_key,
-                        payer_amount_sat = :payer_amount_sat,
-                        receiver_amount_sat = :receiver_amount_sat,
-                        mrh_address = :mrh_address,
-                        created_at = :created_at,
-                        payment_hash = :payment_hash,
-                        description = :description
-                    WHERE id = :id",
-                    params,
-                )?;
+        match swap {
+            Swap::Receive(receive_swap) => {
+                Self::insert_or_update_receive_swap_inner(&tx, receive_swap)
             }
-            false => {
-                tx.execute(
-                    "
-                    INSERT INTO receive_swaps(
-                        id,
-                        invoice,
-                        preimage,
-                        create_response_json,
-                        claim_fees_sat,
-                        claim_private_key,
-                        payer_amount_sat,
-                        receiver_amount_sat,
-                        mrh_address,
-                        created_at,
-                        payment_hash,
-                        description,
-                        state
-                    )
-                    VALUES(
-                        :id,
-                        :invoice,
-                        :preimage,
-                        :create_response_json,
-                        :claim_fees_sat,
-                        :claim_private_key,
-                        :payer_amount_sat,
-                        :receiver_amount_sat,
-                        :mrh_address,
-                        :created_at,
-                        :payment_hash,
-                        :description,
-                        :state
-                    )",
-                    [params, &[(":state", &PaymentState::Recoverable)]]
-                        .concat()
-                        .as_slice(),
-                )?;
-            }
-        }
-
-        Self::set_sync_state_stmt(&tx)?.execute(named_params! {
-            ":data_id": &sync_state.data_id,
-            ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
-            ":is_local": &sync_state.is_local,
-        })?;
-
-        tx.commit()?;
-
-        Ok(())
-    }
-
-    pub(crate) fn commit_incoming_send_swap(
-        &self,
-        data: &SendSyncData,
-        sync_state: SyncState,
-        is_update: bool,
-        last_commit_time: Option<u32>,
-    ) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
-        if let Some(last_commit_time) = last_commit_time {
-            Self::check_commit_update(&tx, &sync_state.record_id, last_commit_time)?;
-        }
-
-        let params = named_params! {
-            ":id": &data.swap_id,
-            ":invoice": &data.invoice,
-            ":create_response_json": &data.create_response_json,
-            ":refund_private_key": &data.refund_private_key,
-            ":payer_amount_sat": &data.payer_amount_sat,
-            ":receiver_amount_sat": &data.receiver_amount_sat,
-            ":created_at": &data.created_at,
-            ":preimage": &data.preimage,
-            ":payment_hash": &data.payment_hash,
-            ":description": &data.description,
-        };
-        match is_update {
-            true => {
-                tx.execute(
-                    "
-                    UPDATE send_swaps
-                    SET
-                        invoice = :invoice,
-                        create_response_json = :create_response_json,
-                        refund_private_key = :refund_private_key,
-                        payer_amount_sat = :payer_amount_sat,
-                        receiver_amount_sat = :receiver_amount_sat,
-                        created_at = :created_at,
-                        preimage = :preimage,
-                        payment_hash = :payment_hash,
-                        description = :description
-                    WHERE id = :id",
-                    params,
-                )?;
-            }
-            false => {
-                tx.execute(
-                    "
-                    INSERT INTO send_swaps(
-                        id,
-                        invoice,
-                        create_response_json,
-                        refund_private_key,
-                        payer_amount_sat,
-                        receiver_amount_sat,
-                        created_at,
-                        preimage,
-                        payment_hash,
-                        description,
-                        state
-                    )
-                    VALUES(
-                        :id,
-                        :invoice,
-                        :create_response_json,
-                        :refund_private_key,
-                        :payer_amount_sat,
-                        :receiver_amount_sat,
-                        :created_at,
-                        :preimage,
-                        :payment_hash,
-                        :description,
-                        :state
-                    )",
-                    [params, &[(":state", &PaymentState::Recoverable)]]
-                        .concat()
-                        .as_slice(),
-                )?;
-            }
-        }
-
-        Self::set_sync_state_stmt(&tx)?.execute(named_params! {
-            ":data_id": &sync_state.data_id,
-            ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
-            ":is_local": &sync_state.is_local,
-        })?;
-
-        tx.commit()?;
-
-        Ok(())
-    }
-
-    pub(crate) fn commit_incoming_chain_swap(
-        &self,
-        data: &ChainSyncData,
-        sync_state: SyncState,
-        is_update: bool,
-        last_commit_time: Option<u32>,
-    ) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
-        if let Some(last_commit_time) = last_commit_time {
-            Self::check_commit_update(&tx, &sync_state.record_id, last_commit_time)?;
-        }
-
-        let params = named_params! {
-            ":id": &data.swap_id,
-            ":preimage": &data.preimage,
-            ":create_response_json": &data.create_response_json,
-            ":direction": &data.direction,
-            ":lockup_address": &data.lockup_address,
-            ":claim_fees_sat": &data.claim_fees_sat,
-            ":claim_private_key": &data.claim_private_key,
-            ":refund_private_key": &data.refund_private_key,
-            ":timeout_block_height": &data.timeout_block_height,
-            ":payer_amount_sat": &data.payer_amount_sat,
-            ":receiver_amount_sat": &data.receiver_amount_sat,
-            ":accept_zero_conf": &data.accept_zero_conf,
-            ":created_at": &data.created_at,
-            ":description": &data.description,
-        };
-        match is_update {
-            true => {
-                tx.execute(
-                    "
-                    UPDATE chain_swaps
-                    SET
-                        preimage = :preimage,
-                        create_response_json = :create_response_json,
-                        direction = :direction,
-                        lockup_address = :lockup_address,
-                        claim_fees_sat = :claim_fees_sat,
-                        claim_private_key = :claim_private_key,
-                        refund_private_key = :refund_private_key,
-                        timeout_block_height = :timeout_block_height,
-                        payer_amount_sat = :payer_amount_sat,
-                        receiver_amount_sat = :receiver_amount_sat,
-                        accept_zero_conf = :accept_zero_conf,
-                        created_at = :created_at,
-                        description = :description,
-                        server_lockup_tx_id = :server_lockup_tx_id
-                    WHERE id = :id",
-                    params,
-                )?;
-            }
-            false => {
-                tx.execute(
-                    "
-                    INSERT INTO chain_swaps( 
-                        id,
-                        preimage,
-                        create_response_json,
-                        direction,
-                        lockup_address,
-                        claim_fees_sat,
-                        claim_private_key,
-                        refund_private_key,
-                        timeout_block_height,
-                        payer_amount_sat,
-                        receiver_amount_sat,
-                        accept_zero_conf,
-                        created_at,
-                        description,
-                        server_lockup_tx_id,
-                        state
-                    )
-                    VALUES(
-                        :id,
-                        :preimage,
-                        :create_response_json,
-                        :direction,
-                        :lockup_address,
-                        :claim_fees_sat,
-                        :claim_private_key,
-                        :refund_private_key,
-                        :timeout_block_height,
-                        :payer_amount_sat,
-                        :receiver_amount_sat,
-                        :accept_zero_conf,
-                        :created_at,
-                        :description,
-                        :server_lockup_tx_id,
-                        :state
-                    )",
-                    [params, &[(":state", &PaymentState::Recoverable)]]
-                        .concat()
-                        .as_slice(),
-                )?;
-            }
-        }
+            Swap::Send(send_swap) => Self::insert_or_update_send_swap_inner(&tx, send_swap),
+            Swap::Chain(chain_swap) => Self::insert_or_update_chain_swap_inner(&tx, chain_swap),
+        }?;
 
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
@@ -706,7 +432,7 @@ impl Persister {
     pub(crate) fn commit_incoming_address_index(
         &self,
         new_address_index: u32,
-        sync_state: SyncState,
+        sync_state: &SyncState,
         last_commit_time: Option<u32>,
     ) -> Result<()> {
         let mut con = self.get_connection()?;
@@ -730,10 +456,10 @@ impl Persister {
         )?;
 
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
-            ":data_id": &sync_state.data_id,
-            ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
-            ":is_local": &sync_state.is_local,
+            ":data_id": sync_state.data_id,
+            ":record_id": sync_state.record_id,
+            ":record_revision": sync_state.record_revision,
+            ":is_local": sync_state.is_local,
         })?;
 
         tx.commit()?;

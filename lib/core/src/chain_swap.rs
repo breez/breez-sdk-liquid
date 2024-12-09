@@ -1380,7 +1380,7 @@ mod tests {
             for allowed_state in allowed_states {
                 let chain_swap =
                     new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
-                persister.insert_chain_swap(&chain_swap)?;
+                persister.insert_or_update_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
                     .update_swap_info(&ChainSwapUpdate {
@@ -1408,7 +1408,7 @@ mod tests {
             for disallowed_state in disallowed_states {
                 let chain_swap =
                     new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
-                persister.insert_chain_swap(&chain_swap)?;
+                persister.insert_or_update_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
                     .update_swap_info(&ChainSwapUpdate {

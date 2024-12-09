@@ -17,8 +17,7 @@ use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
-use restore::immutable::HistoryTxId;
-use restore::{PartialSwapState, TxMap};
+use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
@@ -65,6 +64,7 @@ pub struct LiquidSdk {
     pub(crate) event_manager: Arc<EventManager>,
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
     pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) recoverer: Arc<Recoverer>,
     // TODO: Remove field if unnecessary
     #[allow(dead_code)]
     pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
@@ -175,14 +175,10 @@ impl LiquidSdk {
         )?);
         persister.init()?;
 
-        let syncer_client = Box::new(BreezSyncerClient::new());
-        let sync_service = Arc::new(SyncService::new(
-            config.sync_service_url.clone(),
-            persister.clone(),
-            signer.clone(),
-            syncer_client,
-            sync_trigger_rx,
-        ));
+        let liquid_chain_service =
+            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
+        let bitcoin_chain_service =
+            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             config.clone(),
@@ -190,6 +186,23 @@ impl LiquidSdk {
             persister.clone(),
             signer.clone(),
         )?);
+
+        let recoverer = Arc::new(Recoverer::new(
+            signer.slip77_master_blinding_key()?,
+            onchain_wallet.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+        )?);
+
+        let syncer_client = Box::new(BreezSyncerClient::new());
+        let sync_service = Arc::new(SyncService::new(
+            config.sync_service_url.clone(),
+            persister.clone(),
+            recoverer.clone(),
+            signer.clone(),
+            syncer_client,
+            sync_trigger_rx,
+        ));
 
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
@@ -200,11 +213,6 @@ impl LiquidSdk {
         let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
         let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
-
-        let liquid_chain_service =
-            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
-        let bitcoin_chain_service =
-            Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),
@@ -244,6 +252,7 @@ impl LiquidSdk {
             event_manager,
             status_stream: status_stream.clone(),
             swapper,
+            recoverer,
             bitcoin_chain_service,
             liquid_chain_service,
             fiat_api: breez_server,
@@ -1321,7 +1330,7 @@ impl LiquidSdk {
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
                 };
-                self.persister.insert_send_swap(&swap)?;
+                self.persister.insert_or_update_send_swap(&swap)?;
                 swap
             }
         };
@@ -1604,7 +1613,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
-        self.persister.insert_chain_swap(&swap)?;
+        self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
         self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
@@ -1924,7 +1933,7 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
         self.persister
-            .insert_receive_swap(&ReceiveSwap {
+            .insert_or_update_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
                 preimage: preimage_str,
                 create_response_json,
@@ -1935,6 +1944,7 @@ impl LiquidSdk {
                 payer_amount_sat,
                 receiver_amount_sat,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
+                lockup_tx_id: None,
                 claim_tx_id: None,
                 mrh_address: mrh_addr_str,
                 mrh_tx_id: None,
@@ -2027,7 +2037,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
         };
-        self.persister.insert_chain_swap(&swap)?;
+        self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;
         Ok(swap)
     }
@@ -2241,20 +2251,56 @@ impl LiquidSdk {
             .await?)
     }
 
+    pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<Vec<Swap>> {
+        let receive_swaps = self
+            .persister
+            .list_recoverable_receive_swaps()?
+            .into_iter()
+            .map(Into::into)
+            .collect();
+        match partial_sync {
+            false => {
+                let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
+
+                let send_swaps = self
+                    .persister
+                    .list_recoverable_send_swaps()?
+                    .into_iter()
+                    .map(Into::into)
+                    .collect();
+                let chain_swaps: Vec<Swap> = self
+                    .persister
+                    .list_chain_swaps()?
+                    .into_iter()
+                    .filter(|swap| match swap.direction {
+                        Direction::Incoming => {
+                            bitcoin_height
+                                <= swap.timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                        }
+                        Direction::Outgoing => {
+                            !final_swap_states.contains(&swap.state)
+                                && liquid_height <= swap.timeout_block_height
+                        }
+                    })
+                    .map(Into::into)
+                    .collect();
+                Ok([receive_swaps, send_swaps, chain_swaps].concat())
+            }
+            true => Ok(receive_swaps),
+        }
+    }
+
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
-        self.onchain_wallet.full_scan().await?;
-
-        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
-        let swaps_list = self.get_monitored_swaps_list(partial_sync).await?;
-        let recovered_onchain_data = self
-            .recover_from_onchain(
-                TxMap::from_raw_tx_map(tx_map.clone()),
-                swaps_list,
-                partial_sync,
-            )
+        let mut recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
+        self.recoverer
+            .recover_from_onchain(&mut recoverable_swaps, partial_sync)
             .await?;
+        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         let wallet_amount_sat = tx_map
             .values()
@@ -2262,211 +2308,117 @@ impl LiquidSdk {
             .sum::<i64>();
         debug!("Onchain wallet balance: {wallet_amount_sat} sats");
 
-        // Loop over the recovered chain data for Created, Pending or Recoverable receive swaps
-        for (swap_id, receive_data) in recovered_onchain_data.receive {
-            let to_state: PaymentState = receive_data
-                .derive_partial_state()
-                .unwrap_or(PaymentState::Created);
-            let lockup_tx_id = receive_data.lockup_tx_id.map(|h| h.txid.to_string());
-            let claim_tx_id = receive_data.claim_tx_id.clone().map(|h| h.txid.to_string());
-            let mrh_tx_id = receive_data.mrh_tx_id.clone().map(|h| h.txid.to_string());
-            let history_updates = vec![receive_data.claim_tx_id, receive_data.mrh_tx_id]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<HistoryTxId>>();
-            for history in history_updates {
-                if let Some(tx) = tx_map.remove(&history.txid) {
-                    self.persister
-                        .insert_or_update_payment_with_wallet_tx(&tx)?;
-                }
-            }
-            let update_swap_info_res = self
-                .receive_swap_handler
-                .update_swap_info(
-                    &swap_id,
-                    to_state,
-                    claim_tx_id.as_deref(),
-                    lockup_tx_id.as_deref(),
-                    mrh_tx_id.as_deref(),
-                    receive_data.mrh_amount_sat,
-                )
-                .await;
-            match update_swap_info_res {
-                Ok((PaymentState::Recoverable, PaymentState::Created))
-                | Ok((PaymentState::Recoverable, PaymentState::Pending)) => {
-                    info!("Tracking recoverable swap: {swap_id}");
-                    if let Err(e) = self.status_stream.track_swap_id(&swap_id) {
-                        error!("Unable to track swap id {swap_id}: {e}");
-                    }
-                }
-                _ => {}
-            }
-        }
+        for swap in recoverable_swaps {
+            let swap_id = &swap.id();
 
-        // Loop over the recovered chain data for Created, Pending or Recoverable send swaps
-        for (swap_id, send_data) in recovered_onchain_data.send {
-            let to_state: PaymentState = send_data
-                .derive_partial_state()
-                .unwrap_or(PaymentState::Created);
-            let lockup_tx_id = send_data.lockup_tx_id.clone().map(|h| h.txid.to_string());
-            let refund_tx_id = send_data.refund_tx_id.clone().map(|h| h.txid.to_string());
-            let history_updates = vec![send_data.lockup_tx_id, send_data.refund_tx_id]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<HistoryTxId>>();
-            for history in history_updates {
-                if let Some(tx) = tx_map.remove(&history.txid) {
-                    self.persister
-                        .insert_or_update_payment_with_wallet_tx(&tx)?;
-                }
-            }
-            let update_swap_info_res = self
-                .send_swap_handler
-                .update_swap_info(
-                    &swap_id,
-                    to_state,
-                    None,
-                    lockup_tx_id.as_deref(),
-                    refund_tx_id.as_deref(),
-                )
-                .await;
-            match update_swap_info_res {
-                Ok((PaymentState::Recoverable, PaymentState::Created))
-                | Ok((PaymentState::Recoverable, PaymentState::Pending)) => {
-                    info!("Tracking recoverable swap: {swap_id}");
-                    if let Err(e) = self.status_stream.track_swap_id(&swap_id) {
-                        error!("Unable to track swap id {swap_id}: {e}");
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        // Loop over the recovered chain data for monitored chain receive swaps
-        for (swap_id, chain_receive_data) in recovered_onchain_data.chain_receive {
-            let to_state: PaymentState = chain_receive_data
-                .derive_partial_state()
-                .or_else(|| {
-                    // When the state cannot be derived from onchain data then use the swap state.
-                    // If the swap state is Recoverable, set it to Created and let the status loop
-                    // determine the state.
-                    self.persister
-                        .fetch_chain_swap_by_id(&swap_id)
-                        .map(|maybe_swap| {
-                            maybe_swap.map(|swap| match swap.state {
-                                PaymentState::Recoverable => PaymentState::Created,
-                                state => state,
-                            })
-                        })
-                        .ok()
+            let update_swap_info_res = match swap {
+                Swap::Receive(ReceiveSwap {
+                    state,
+                    claim_tx_id,
+                    mrh_tx_id,
+                    lockup_tx_id,
+                    ..
+                }) => {
+                    let history_updates = vec![&claim_tx_id, &mrh_tx_id]
+                        .into_iter()
                         .flatten()
-                })
-                .unwrap_or(PaymentState::Created);
-            let server_lockup_tx_id = chain_receive_data
-                .lbtc_server_lockup_tx_id
-                .map(|h| h.txid.to_string());
-            let user_lockup_tx_id = chain_receive_data
-                .btc_user_lockup_tx_id
-                .map(|h| h.txid.to_string());
-            let claim_tx_id = chain_receive_data
-                .lbtc_claim_tx_id
-                .clone()
-                .map(|h| h.txid.to_string());
-            let refund_tx_id = chain_receive_data
-                .btc_refund_tx_id
-                .map(|h| h.txid.to_string());
-            if let Some(history) = chain_receive_data.lbtc_claim_tx_id {
-                if let Some(tx) = tx_map.remove(&history.txid) {
-                    self.persister
-                        .insert_or_update_payment_with_wallet_tx(&tx)?;
+                        .collect::<Vec<&String>>();
+                    for tx_id in history_updates {
+                        if let Some(tx) =
+                            tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
+                        {
+                            self.persister
+                                .insert_or_update_payment_with_wallet_tx(&tx)?;
+                        }
+                    }
+                    self.receive_swap_handler
+                        .update_swap_info(
+                            swap_id,
+                            state,
+                            claim_tx_id.as_deref(),
+                            lockup_tx_id.as_deref(),
+                            mrh_tx_id.as_deref(),
+                            None,
+                        )
+                        .await
                 }
-            }
-            let update_swap_info_res = self
-                .chain_swap_handler
-                .update_swap_info(&ChainSwapUpdate {
-                    swap_id: swap_id.clone(),
-                    to_state,
+                Swap::Send(SendSwap {
+                    state,
+                    preimage,
+                    lockup_tx_id,
+                    refund_tx_id,
+                    ..
+                }) => {
+                    let history_updates = vec![&lockup_tx_id, &refund_tx_id]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<&String>>();
+                    for tx_id in history_updates {
+                        if let Some(tx) =
+                            tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
+                        {
+                            self.persister
+                                .insert_or_update_payment_with_wallet_tx(&tx)?;
+                        }
+                    }
+                    self.send_swap_handler
+                        .update_swap_info(
+                            swap_id,
+                            state,
+                            preimage.as_deref(),
+                            lockup_tx_id.as_deref(),
+                            refund_tx_id.as_deref(),
+                        )
+                        .await
+                }
+                Swap::Chain(ChainSwap {
+                    state,
+                    direction,
                     server_lockup_tx_id,
                     user_lockup_tx_id,
-                    claim_address: chain_receive_data.lbtc_claim_address,
+                    claim_address,
                     claim_tx_id,
                     refund_tx_id,
-                })
-                .await;
-            match update_swap_info_res {
-                Ok((PaymentState::Recoverable, PaymentState::Created))
-                | Ok((PaymentState::Recoverable, PaymentState::Pending)) => {
-                    info!("Tracking recoverable swap: {swap_id}");
-                    if let Err(e) = self.status_stream.track_swap_id(&swap_id) {
-                        error!("Unable to track swap id {swap_id}: {e}");
+                    ..
+                }) => {
+                    let history_updates = match direction {
+                        Direction::Incoming => vec![&claim_tx_id],
+                        Direction::Outgoing => vec![&user_lockup_tx_id, &refund_tx_id],
                     }
-                }
-                _ => {}
-            }
-        }
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<&String>>();
+                    for tx_id in history_updates {
+                        if let Some(tx) =
+                            tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
+                        {
+                            self.persister
+                                .insert_or_update_payment_with_wallet_tx(&tx)?;
+                        }
+                    }
 
-        // Loop over the recovered chain data for monitored chain send swaps
-        for (swap_id, chain_send_data) in recovered_onchain_data.chain_send {
-            let to_state: PaymentState = chain_send_data
-                .derive_partial_state()
-                .or_else(|| {
-                    // When the state cannot be derived from onchain data then use the swap state.
-                    // If the swap state is Recoverable, set it to Created and let the status loop
-                    // determine the state.
-                    self.persister
-                        .fetch_chain_swap_by_id(&swap_id)
-                        .map(|maybe_swap| {
-                            maybe_swap.map(|swap| match swap.state {
-                                PaymentState::Recoverable => PaymentState::Created,
-                                state => state,
-                            })
+                    self.chain_swap_handler
+                        .update_swap_info(&ChainSwapUpdate {
+                            swap_id: swap_id.clone(),
+                            to_state: state,
+                            server_lockup_tx_id,
+                            user_lockup_tx_id,
+                            claim_address: match direction {
+                                Direction::Incoming => claim_address,
+                                Direction::Outgoing => None,
+                            },
+                            claim_tx_id,
+                            refund_tx_id,
                         })
-                        .ok()
-                        .flatten()
-                })
-                .unwrap_or(PaymentState::Created);
-            let server_lockup_tx_id = chain_send_data
-                .btc_server_lockup_tx_id
-                .map(|h| h.txid.to_string());
-            let user_lockup_tx_id = chain_send_data
-                .lbtc_user_lockup_tx_id
-                .clone()
-                .map(|h| h.txid.to_string());
-            let claim_tx_id = chain_send_data.btc_claim_tx_id.map(|h| h.txid.to_string());
-            let refund_tx_id = chain_send_data
-                .lbtc_refund_tx_id
-                .clone()
-                .map(|h| h.txid.to_string());
-            let history_updates = vec![
-                chain_send_data.lbtc_user_lockup_tx_id,
-                chain_send_data.lbtc_refund_tx_id,
-            ]
-            .into_iter()
-            .flatten()
-            .collect::<Vec<HistoryTxId>>();
-            for history in history_updates {
-                if let Some(tx) = tx_map.remove(&history.txid) {
-                    self.persister
-                        .insert_or_update_payment_with_wallet_tx(&tx)?;
+                        .await
                 }
-            }
-            let update_swap_info_res = self
-                .chain_swap_handler
-                .update_swap_info(&ChainSwapUpdate {
-                    swap_id: swap_id.clone(),
-                    to_state,
-                    server_lockup_tx_id,
-                    user_lockup_tx_id,
-                    claim_address: None,
-                    claim_tx_id,
-                    refund_tx_id,
-                })
-                .await;
+            };
+
             match update_swap_info_res {
                 Ok((PaymentState::Recoverable, PaymentState::Created))
                 | Ok((PaymentState::Recoverable, PaymentState::Pending)) => {
                     info!("Tracking recoverable swap: {swap_id}");
-                    if let Err(e) = self.status_stream.track_swap_id(&swap_id) {
+                    if let Err(e) = self.status_stream.track_swap_id(swap_id) {
                         error!("Unable to track swap id {swap_id}: {e}");
                     }
                 }
@@ -3033,17 +2985,17 @@ mod tests {
                         $args.accepts_zero_conf,
                         $args.user_lockup_tx_id,
                     );
-                    $persister.insert_chain_swap(&swap).unwrap();
+                    $persister.insert_or_update_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
                 }
                 "send" => {
                     let swap = new_send_swap($args.initial_payment_state);
-                    $persister.insert_send_swap(&swap).unwrap();
+                    $persister.insert_or_update_send_swap(&swap).unwrap();
                     Swap::Send(swap)
                 }
                 "receive" => {
                     let swap = new_receive_swap($args.initial_payment_state);
-                    $persister.insert_receive_swap(&swap).unwrap();
+                    $persister.insert_or_update_receive_swap(&swap).unwrap();
                     Swap::Receive(swap)
                 }
                 _ => panic!(),

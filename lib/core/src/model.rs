@@ -588,6 +588,21 @@ impl Swap {
         }
     }
 }
+impl From<ChainSwap> for Swap {
+    fn from(swap: ChainSwap) -> Self {
+        Self::Chain(swap)
+    }
+}
+impl From<SendSwap> for Swap {
+    fn from(swap: SendSwap) -> Self {
+        Self::Send(swap)
+    }
+}
+impl From<ReceiveSwap> for Swap {
+    fn from(swap: ReceiveSwap) -> Self {
+        Self::Receive(swap)
+    }
+}
 
 #[derive(Clone, Debug)]
 pub(crate) enum SwapScriptV2 {
@@ -878,6 +893,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// The transaction id of the swapper's tx broadcast
+    pub(crate) lockup_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
