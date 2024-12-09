@@ -939,6 +939,20 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_connect_requestPtr
           .asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
 
+  ffi.Pointer<ffi.Double> frbgen_breez_liquid_cst_new_box_autoadd_f_64(
+    double value,
+  ) {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_f_64(
+      value,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_f_64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Double> Function(ffi.Double)>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_f_64');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_f_64 =
+      _frbgen_breez_liquid_cst_new_box_autoadd_f_64Ptr.asFunction<ffi.Pointer<ffi.Double> Function(double)>();
+
   ffi.Pointer<wire_cst_get_payment_request> frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request();
   }
@@ -4327,6 +4341,12 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 
   @ffi.Uint64()
   external int fees_sat;
+
+  external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
+
+  external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
+
+  external ffi.Pointer<ffi.Double> swapper_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {

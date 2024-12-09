@@ -367,6 +367,9 @@ typedef struct wire_cst_prepare_receive_response {
   int32_t payment_method;
   uint64_t *payer_amount_sat;
   uint64_t fees_sat;
+  uint64_t *min_payer_amount_sat;
+  uint64_t *max_payer_amount_sat;
+  double *swapper_feerate;
 } wire_cst_prepare_receive_response;
 
 typedef struct wire_cst_receive_payment_request {
@@ -1194,6 +1197,8 @@ struct wire_cst_check_message_request *frbgen_breez_liquid_cst_new_box_autoadd_c
 
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
+double *frbgen_breez_liquid_cst_new_box_autoadd_f_64(double value);
+
 struct wire_cst_get_payment_request *frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request(void);
 
 int64_t *frbgen_breez_liquid_cst_new_box_autoadd_i_64(int64_t value);
@@ -1306,6 +1311,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_check_message_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_f_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data);

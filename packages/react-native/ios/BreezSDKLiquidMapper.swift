@@ -1972,13 +1972,6 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asPrepareReceiveResponse(prepareReceiveResponse: [String: Any?]) throws -> PrepareReceiveResponse {
-        var payerAmountSat: UInt64?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "payerAmountSat") {
-            guard let payerAmountSatTmp = prepareReceiveResponse["payerAmountSat"] as? UInt64 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "payerAmountSat"))
-            }
-            payerAmountSat = payerAmountSatTmp
-        }
         guard let paymentMethodTmp = prepareReceiveResponse["paymentMethod"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentMethod", typeName: "PrepareReceiveResponse"))
         }
@@ -1987,15 +1980,46 @@ enum BreezSDKLiquidMapper {
         guard let feesSat = prepareReceiveResponse["feesSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareReceiveResponse"))
         }
+        var payerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "payerAmountSat") {
+            guard let payerAmountSatTmp = prepareReceiveResponse["payerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "payerAmountSat"))
+            }
+            payerAmountSat = payerAmountSatTmp
+        }
+        var minPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "minPayerAmountSat") {
+            guard let minPayerAmountSatTmp = prepareReceiveResponse["minPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "minPayerAmountSat"))
+            }
+            minPayerAmountSat = minPayerAmountSatTmp
+        }
+        var maxPayerAmountSat: UInt64?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "maxPayerAmountSat") {
+            guard let maxPayerAmountSatTmp = prepareReceiveResponse["maxPayerAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "maxPayerAmountSat"))
+            }
+            maxPayerAmountSat = maxPayerAmountSatTmp
+        }
+        var swapperFeerate: Double?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "swapperFeerate") {
+            guard let swapperFeerateTmp = prepareReceiveResponse["swapperFeerate"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "swapperFeerate"))
+            }
+            swapperFeerate = swapperFeerateTmp
+        }
 
-        return PrepareReceiveResponse(payerAmountSat: payerAmountSat, paymentMethod: paymentMethod, feesSat: feesSat)
+        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, swapperFeerate: swapperFeerate)
     }
 
     static func dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [String: Any?] {
         return [
-            "payerAmountSat": prepareReceiveResponse.payerAmountSat == nil ? nil : prepareReceiveResponse.payerAmountSat,
             "paymentMethod": valueOf(paymentMethod: prepareReceiveResponse.paymentMethod),
             "feesSat": prepareReceiveResponse.feesSat,
+            "payerAmountSat": prepareReceiveResponse.payerAmountSat == nil ? nil : prepareReceiveResponse.payerAmountSat,
+            "minPayerAmountSat": prepareReceiveResponse.minPayerAmountSat == nil ? nil : prepareReceiveResponse.minPayerAmountSat,
+            "maxPayerAmountSat": prepareReceiveResponse.maxPayerAmountSat == nil ? nil : prepareReceiveResponse.maxPayerAmountSat,
+            "swapperFeerate": prepareReceiveResponse.swapperFeerate == nil ? nil : prepareReceiveResponse.swapperFeerate,
         ]
     }
 

@@ -706,10 +706,12 @@ impl LiquidSdk {
     fn get_and_validate_chain_pair(
         &self,
         direction: Direction,
-        user_lockup_amount_sat: u64,
+        user_lockup_amount_sat: Option<u64>,
     ) -> Result<ChainPair, PaymentError> {
         let pair = self.get_chain_pair(direction)?;
-        self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+        if let Some(user_lockup_amount_sat) = user_lockup_amount_sat {
+            self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
+        }
         Ok(pair)
     }
 
@@ -1631,6 +1633,9 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let mut min_payer_amount_sat = None;
+        let mut max_payer_amount_sat = None;
+        let mut swapper_feerate = None;
         let fees_sat;
         match req.payment_method {
             PaymentMethod::Lightning => {
@@ -1651,29 +1656,35 @@ impl LiquidSdk {
                     .within(payer_amount_sat)
                     .map_err(|_| PaymentError::AmountOutOfRange)?;
 
+                min_payer_amount_sat = Some(reverse_pair.limits.minimal);
+                max_payer_amount_sat = Some(reverse_pair.limits.maximal);
+                swapper_feerate = Some(reverse_pair.fees.percentage);
+
                 debug!(
                     "Preparing Lightning Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
                 );
             }
             PaymentMethod::BitcoinAddress => {
-                let Some(payer_amount_sat) = req.payer_amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`payer_amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
-                };
+                let payer_amount_sat = req.payer_amount_sat;
                 let pair =
                     self.get_and_validate_chain_pair(Direction::Incoming, payer_amount_sat)?;
                 let claim_fees_sat = pair.fees.claim_estimate();
                 let server_fees_sat = pair.fees.server();
-                fees_sat = pair.fees.boltz(payer_amount_sat) + claim_fees_sat + server_fees_sat;
-                debug!(
-                    "Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
-                );
+                let service_fees_sat = payer_amount_sat
+                    .map(|user_lockup_amount_sat| pair.fees.boltz(user_lockup_amount_sat))
+                    .unwrap_or_default();
+
+                min_payer_amount_sat = Some(pair.limits.minimal);
+                max_payer_amount_sat = Some(pair.limits.maximal);
+                swapper_feerate = Some(pair.fees.percentage);
+
+                fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
+                debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
             PaymentMethod::LiquidAddress => {
                 fees_sat = 0;
-                debug!(
-                    "Preparing Liquid Receive Swap with: amount_sat {:?} sat, fees_sat {fees_sat} sat",
-                    req.payer_amount_sat
-                );
+                let payer_amount_sat = req.payer_amount_sat;
+                debug!("Preparing Liquid Receive Swap with: amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
         };
 
@@ -1681,6 +1692,9 @@ impl LiquidSdk {
             payer_amount_sat: req.payer_amount_sat,
             fees_sat,
             payment_method: req.payment_method.clone(),
+            min_payer_amount_sat,
+            max_payer_amount_sat,
+            swapper_feerate,
         })
     }
 
@@ -1708,6 +1722,7 @@ impl LiquidSdk {
             payment_method,
             payer_amount_sat: amount_sat,
             fees_sat,
+            ..
         } = &req.prepare_response;
 
         match payment_method {
@@ -1733,12 +1748,7 @@ impl LiquidSdk {
                 self.create_receive_swap(*amount_sat, *fees_sat, description, description_hash)
                     .await
             }
-            PaymentMethod::BitcoinAddress => {
-                let Some(amount_sat) = amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be specified when `PaymentMethod::BitcoinAddress` is used.".to_string() });
-                };
-                self.receive_onchain(*amount_sat, *fees_sat).await
-            }
+            PaymentMethod::BitcoinAddress => self.receive_onchain(*amount_sat, *fees_sat).await,
             PaymentMethod::LiquidAddress => {
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
 
@@ -1898,15 +1908,19 @@ impl LiquidSdk {
 
     async fn create_receive_chain_swap(
         &self,
-        user_lockup_amount_sat: u64,
+        user_lockup_amount_sat: Option<u64>,
         fees_sat: u64,
     ) -> Result<ChainSwap, PaymentError> {
         let pair = self.get_and_validate_chain_pair(Direction::Incoming, user_lockup_amount_sat)?;
         let claim_fees_sat = pair.fees.claim_estimate();
         let server_fees_sat = pair.fees.server();
+        // Service fees are 0 if this is a zero-amount swap
+        let service_fees_sat = user_lockup_amount_sat
+            .map(|user_lockup_amount_sat| pair.fees.boltz(user_lockup_amount_sat))
+            .unwrap_or_default();
 
         ensure_sdk!(
-            fees_sat == pair.fees.boltz(user_lockup_amount_sat) + claim_fees_sat + server_fees_sat,
+            fees_sat == service_fees_sat + claim_fees_sat + server_fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
 
@@ -1938,7 +1952,7 @@ impl LiquidSdk {
             preimage_hash: preimage.sha256,
             claim_public_key: Some(claim_public_key),
             refund_public_key: Some(refund_public_key),
-            user_lock_amount: Some(user_lockup_amount_sat),
+            user_lock_amount: user_lockup_amount_sat,
             server_lock_amount: None,
             pair_hash: Some(pair.hash.clone()),
             referral_id: None,
@@ -1949,8 +1963,12 @@ impl LiquidSdk {
         let create_response_json =
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
-        let accept_zero_conf = user_lockup_amount_sat <= pair.limits.maximal_zero_conf;
-        let receiver_amount_sat = user_lockup_amount_sat - fees_sat;
+        let accept_zero_conf = user_lockup_amount_sat
+            .map(|user_lockup_amount_sat| user_lockup_amount_sat <= pair.limits.maximal_zero_conf)
+            .unwrap_or(false);
+        let receiver_amount_sat = user_lockup_amount_sat
+            .map(|user_lockup_amount_sat| user_lockup_amount_sat - fees_sat)
+            .unwrap_or(0);
 
         let swap = ChainSwap {
             id: swap_id.clone(),
@@ -1960,7 +1978,7 @@ impl LiquidSdk {
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
-            payer_amount_sat: user_lockup_amount_sat,
+            payer_amount_sat: user_lockup_amount_sat.unwrap_or(0),
             receiver_amount_sat,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
@@ -1983,15 +2001,18 @@ impl LiquidSdk {
     }
 
     /// Receive from a Bitcoin transaction via a chain swap.
+    ///
+    /// If no `user_lockup_amount_sat` is specified, this is an amountless swap and `fees_sat` exclude
+    /// the service fees.
     async fn receive_onchain(
         &self,
-        payer_amount_sat: u64,
+        user_lockup_amount_sat: Option<u64>,
         fees_sat: u64,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
         let swap = self
-            .create_receive_chain_swap(payer_amount_sat, fees_sat)
+            .create_receive_chain_swap(user_lockup_amount_sat, fees_sat)
             .await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
@@ -2170,7 +2191,7 @@ impl LiquidSdk {
 
         let swap = self
             .create_receive_chain_swap(
-                req.prepare_response.amount_sat,
+                Some(req.prepare_response.amount_sat),
                 req.prepare_response.fees_sat,
             )
             .await?;

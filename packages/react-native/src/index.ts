@@ -299,9 +299,12 @@ export interface PrepareReceiveRequest {
 }
 
 export interface PrepareReceiveResponse {
-    payerAmountSat?: number
     paymentMethod: PaymentMethod
     feesSat: number
+    payerAmountSat?: number
+    minPayerAmountSat?: number
+    maxPayerAmountSat?: number
+    swapperFeerate?: number
 }
 
 export interface PrepareRefundRequest {

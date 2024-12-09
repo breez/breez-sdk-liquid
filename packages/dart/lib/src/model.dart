@@ -936,16 +936,49 @@ class PrepareReceiveRequest {
 class PrepareReceiveResponse {
   final PaymentMethod paymentMethod;
   final BigInt? payerAmountSat;
+
+  /// Generally represents the total fees that would be paid to send or receive this payment.
+  ///
+  /// In case of Zero-Amount Receive Chain swaps, the swapper service fee (`swapper_feerate` times
+  /// the amount) is paid in addition to `fees_sat`. The swapper service feerate is already known
+  /// in the beginning, but the exact swapper service fee will only be known when the
+  /// `payer_amount_sat` is known.
+  ///
+  /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
   final BigInt feesSat;
+
+  /// The minimum amount the payer can send for this swap to succeed.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? minPayerAmountSat;
+
+  /// The maximum amount the payer can send for this swap to succeed.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final BigInt? maxPayerAmountSat;
+
+  /// The percentage of the sent amount that will count towards the service fee.
+  ///
+  /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+  final double? swapperFeerate;
 
   const PrepareReceiveResponse({
     required this.paymentMethod,
     this.payerAmountSat,
     required this.feesSat,
+    this.minPayerAmountSat,
+    this.maxPayerAmountSat,
+    this.swapperFeerate,
   });
 
   @override
-  int get hashCode => paymentMethod.hashCode ^ payerAmountSat.hashCode ^ feesSat.hashCode;
+  int get hashCode =>
+      paymentMethod.hashCode ^
+      payerAmountSat.hashCode ^
+      feesSat.hashCode ^
+      minPayerAmountSat.hashCode ^
+      maxPayerAmountSat.hashCode ^
+      swapperFeerate.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -954,7 +987,10 @@ class PrepareReceiveResponse {
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
           payerAmountSat == other.payerAmountSat &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          minPayerAmountSat == other.minPayerAmountSat &&
+          maxPayerAmountSat == other.maxPayerAmountSat &&
+          swapperFeerate == other.swapperFeerate;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

@@ -8,7 +8,7 @@ use boltz_client::{
         SubmarinePair, SwapTree,
     },
     util::secrets::Preimage,
-    PublicKey,
+    Amount, PublicKey,
 };
 use sdk_common::invoice::parse_invoice;
 
@@ -311,6 +311,18 @@ impl Swapper for MockSwapper {
     }
 
     fn get_bolt12_invoice(&self, _offer: &str, _amount_sat: u64) -> Result<String, PaymentError> {
+        unimplemented!()
+    }
+
+    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError> {
+        unimplemented!()
+    }
+
+    fn accept_zero_amount_chain_swap_quote(
+        &self,
+        _swap_id: &str,
+        _server_lockup_sat: u64,
+    ) -> Result<(), PaymentError> {
         unimplemented!()
     }
 }

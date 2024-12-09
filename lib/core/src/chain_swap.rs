@@ -436,6 +436,20 @@ impl ChainSwapHandler {
             | ChainSwapStates::TransactionLockupFailed
             | ChainSwapStates::TransactionRefunded
             | ChainSwapStates::SwapExpired => {
+                // Zero-amount Receive Chain Swaps also get to TransactionLockupFailed when user locks up funds
+                let is_zero_amount = swap.payer_amount_sat == 0;
+                if matches!(swap_state, ChainSwapStates::TransactionLockupFailed) && is_zero_amount
+                {
+                    match self.handle_amountless_update(swap).await {
+                        Ok(_) => {
+                            // We successfully accepted the quote, the swap should continue as normal
+                            return Ok(()); // Break from TxLockupFailed branch
+                        }
+                        // In case of error, we continue and mark it as refundable
+                        Err(e) => error!("Failed to accept the quote for swap {}: {e:?}", &swap.id),
+                    }
+                }
+
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
@@ -453,7 +467,7 @@ impl ChainSwapHandler {
                         }
                     }
                     Some(refund_tx_id) => warn!(
-                        "Refund tx for Chain Swap {id} was already broadcast: txid {refund_tx_id}"
+                        "Refund for Chain Swap {id} was already broadcast: txid {refund_tx_id}"
                     ),
                 };
                 Ok(())
@@ -464,6 +478,82 @@ impl ChainSwapHandler {
                 Ok(())
             }
         }
+    }
+
+    async fn handle_amountless_update(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
+        let quote = self
+            .swapper
+            .get_zero_amount_chain_swap_quote(&swap.id)
+            .map(|quote| quote.to_sat())?;
+        info!("Got quote of {quote} sat for swap {}", &swap.id);
+
+        self.validate_and_update_amountless_swap(swap, quote)
+            .await?;
+        self.swapper
+            .accept_zero_amount_chain_swap_quote(&swap.id, quote)
+    }
+
+    async fn validate_and_update_amountless_swap(
+        &self,
+        swap: &ChainSwap,
+        quote_server_lockup_amount_sat: u64,
+    ) -> Result<(), PaymentError> {
+        debug!("Validating {swap:?}");
+
+        ensure_sdk!(
+            matches!(swap.direction, Direction::Incoming),
+            PaymentError::generic(&format!(
+                "Only an incoming chain swap can be a zero-amount swap. Swap ID: {}",
+                &swap.id
+            ))
+        );
+
+        let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
+        let script_balance = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .script_get_balance(script_pubkey.as_script())?;
+        debug!("Found lockup balance {script_balance:?}");
+        let user_lockup_amount_sat = match script_balance.confirmed > 0 {
+            true => script_balance.confirmed,
+            false => match script_balance.unconfirmed > 0 {
+                true => script_balance.unconfirmed.unsigned_abs(),
+                false => 0,
+            },
+        };
+        ensure_sdk!(
+            user_lockup_amount_sat > 0,
+            PaymentError::generic("Lockup address has no confirmed or unconfirmed balance")
+        );
+
+        let pair = swap.get_boltz_pair()?;
+        let swapper_service_feerate = pair.fees.percentage;
+        let swapper_server_fees_sat = pair.fees.server();
+        let service_fees_sat =
+            ((swapper_service_feerate / 100.0) * user_lockup_amount_sat as f64).ceil() as u64;
+        let fees_sat = swapper_server_fees_sat + service_fees_sat;
+        ensure_sdk!(
+            user_lockup_amount_sat > fees_sat,
+            PaymentError::generic(&format!("Invalid quote: fees ({fees_sat} sat) are higher than user lockup ({user_lockup_amount_sat} sat)"))
+        );
+
+        let expected_server_lockup_amount_sat = user_lockup_amount_sat - fees_sat;
+        debug!("user_lockup_amount_sat = {}, service_fees_sat = {}, server_fees_sat = {}, expected_server_lockup_amount_sat = {}, quote_server_lockup_amount_sat = {}",
+            user_lockup_amount_sat, service_fees_sat, swapper_server_fees_sat, expected_server_lockup_amount_sat, quote_server_lockup_amount_sat);
+        ensure_sdk!(
+            expected_server_lockup_amount_sat <= quote_server_lockup_amount_sat,
+            PaymentError::generic(&format!("Invalid quote: expected at least {expected_server_lockup_amount_sat} sat, got {quote_server_lockup_amount_sat} sat"))
+        );
+
+        let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
+        self.persister.update_zero_amount_swap_values(
+            &swap.id,
+            user_lockup_amount_sat,
+            receiver_amount_sat,
+        )?;
+
+        Ok(())
     }
 
     async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
