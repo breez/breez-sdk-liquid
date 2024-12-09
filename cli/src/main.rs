@@ -39,7 +39,8 @@ fn show_results(result: Result<String>) -> Result<()> {
         })?,
     };
 
-    Ok(println!("{result_str}"))
+    println!("{result_str}");
+    Ok(())
 }
 
 struct CliEventListener {}
