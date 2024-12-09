@@ -277,7 +277,7 @@ pub(crate) async fn handle_command(
                 None => {
                     let min = prepare_response.min_payer_amount_sat;
                     let max = prepare_response.max_payer_amount_sat;
-                    let service_feerate = prepare_response.service_feerate;
+                    let service_feerate = prepare_response.swapper_feerate;
                     format!(
                         "Fees: {fees} sat + {service_feerate:?}% of the sent amount. \
                         Sender should send between {min:?} sat and {max:?} sat. \
