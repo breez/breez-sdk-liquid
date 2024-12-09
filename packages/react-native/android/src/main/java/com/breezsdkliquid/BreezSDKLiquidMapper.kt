@@ -1719,17 +1719,17 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    val serviceFeerate =
+    val swapperFeerate =
         if (hasNonNullKey(
                 prepareReceiveResponse,
-                "serviceFeerate",
+                "swapperFeerate",
             )
         ) {
-            prepareReceiveResponse.getDouble("serviceFeerate")
+            prepareReceiveResponse.getDouble("swapperFeerate")
         } else {
             null
         }
-    return PrepareReceiveResponse(paymentMethod, feesSat, payerAmountSat, minPayerAmountSat, maxPayerAmountSat, serviceFeerate)
+    return PrepareReceiveResponse(paymentMethod, feesSat, payerAmountSat, minPayerAmountSat, maxPayerAmountSat, swapperFeerate)
 }
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
@@ -1739,7 +1739,7 @@ fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
         "payerAmountSat" to prepareReceiveResponse.payerAmountSat,
         "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
         "maxPayerAmountSat" to prepareReceiveResponse.maxPayerAmountSat,
-        "serviceFeerate" to prepareReceiveResponse.serviceFeerate,
+        "swapperFeerate" to prepareReceiveResponse.swapperFeerate,
     )
 
 fun asPrepareReceiveResponseList(arr: ReadableArray): List<PrepareReceiveResponse> {

@@ -436,7 +436,7 @@ dictionary PrepareReceiveResponse {
     u64? payer_amount_sat;
     u64? min_payer_amount_sat;
     u64? max_payer_amount_sat;
-    f64? service_feerate;
+    f64? swapper_feerate;
 };
 
 dictionary ReceivePaymentRequest {

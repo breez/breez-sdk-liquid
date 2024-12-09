@@ -2001,15 +2001,15 @@ enum BreezSDKLiquidMapper {
             }
             maxPayerAmountSat = maxPayerAmountSatTmp
         }
-        var serviceFeerate: Double?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "serviceFeerate") {
-            guard let serviceFeerateTmp = prepareReceiveResponse["serviceFeerate"] as? Double else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "serviceFeerate"))
+        var swapperFeerate: Double?
+        if hasNonNilKey(data: prepareReceiveResponse, key: "swapperFeerate") {
+            guard let swapperFeerateTmp = prepareReceiveResponse["swapperFeerate"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "swapperFeerate"))
             }
-            serviceFeerate = serviceFeerateTmp
+            swapperFeerate = swapperFeerateTmp
         }
 
-        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, serviceFeerate: serviceFeerate)
+        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, payerAmountSat: payerAmountSat, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, swapperFeerate: swapperFeerate)
     }
 
     static func dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [String: Any?] {
@@ -2019,7 +2019,7 @@ enum BreezSDKLiquidMapper {
             "payerAmountSat": prepareReceiveResponse.payerAmountSat == nil ? nil : prepareReceiveResponse.payerAmountSat,
             "minPayerAmountSat": prepareReceiveResponse.minPayerAmountSat == nil ? nil : prepareReceiveResponse.minPayerAmountSat,
             "maxPayerAmountSat": prepareReceiveResponse.maxPayerAmountSat == nil ? nil : prepareReceiveResponse.maxPayerAmountSat,
-            "serviceFeerate": prepareReceiveResponse.serviceFeerate == nil ? nil : prepareReceiveResponse.serviceFeerate,
+            "swapperFeerate": prepareReceiveResponse.swapperFeerate == nil ? nil : prepareReceiveResponse.swapperFeerate,
         ]
     }
 

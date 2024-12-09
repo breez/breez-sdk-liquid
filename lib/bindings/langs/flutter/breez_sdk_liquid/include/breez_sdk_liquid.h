@@ -369,7 +369,7 @@ typedef struct wire_cst_prepare_receive_response {
   uint64_t fees_sat;
   uint64_t *min_payer_amount_sat;
   uint64_t *max_payer_amount_sat;
-  double *service_feerate;
+  double *swapper_feerate;
 } wire_cst_prepare_receive_response;
 
 typedef struct wire_cst_receive_payment_request {

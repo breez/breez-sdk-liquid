@@ -3760,14 +3760,14 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_minPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
-        let mut var_serviceFeerate = <Option<f64>>::sse_decode(deserializer);
+        let mut var_swapperFeerate = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
             payment_method: var_paymentMethod,
             payer_amount_sat: var_payerAmountSat,
             fees_sat: var_feesSat,
             min_payer_amount_sat: var_minPayerAmountSat,
             max_payer_amount_sat: var_maxPayerAmountSat,
-            service_feerate: var_serviceFeerate,
+            swapper_feerate: var_swapperFeerate,
         };
     }
 }
@@ -5826,7 +5826,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
             self.fees_sat.into_into_dart().into_dart(),
             self.min_payer_amount_sat.into_into_dart().into_dart(),
             self.max_payer_amount_sat.into_into_dart().into_dart(),
-            self.service_feerate.into_into_dart().into_dart(),
+            self.swapper_feerate.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7712,7 +7712,7 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
         <u64>::sse_encode(self.fees_sat, serializer);
         <Option<u64>>::sse_encode(self.min_payer_amount_sat, serializer);
         <Option<u64>>::sse_encode(self.max_payer_amount_sat, serializer);
-        <Option<f64>>::sse_encode(self.service_feerate, serializer);
+        <Option<f64>>::sse_encode(self.swapper_feerate, serializer);
     }
 }
 
@@ -9595,7 +9595,7 @@ mod io {
                 fees_sat: self.fees_sat.cst_decode(),
                 min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
                 max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
-                service_feerate: self.service_feerate.cst_decode(),
+                swapper_feerate: self.swapper_feerate.cst_decode(),
             }
         }
     }
@@ -10746,7 +10746,7 @@ mod io {
                 fees_sat: Default::default(),
                 min_payer_amount_sat: core::ptr::null_mut(),
                 max_payer_amount_sat: core::ptr::null_mut(),
-                service_feerate: core::ptr::null_mut(),
+                swapper_feerate: core::ptr::null_mut(),
             }
         }
     }
@@ -12892,7 +12892,7 @@ mod io {
         fees_sat: u64,
         min_payer_amount_sat: *mut u64,
         max_payer_amount_sat: *mut u64,
-        service_feerate: *mut f64,
+        swapper_feerate: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

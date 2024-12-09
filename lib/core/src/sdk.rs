@@ -1635,7 +1635,7 @@ impl LiquidSdk {
 
         let mut min_payer_amount_sat = None;
         let mut max_payer_amount_sat = None;
-        let mut service_feerate = None;
+        let mut swapper_feerate = None;
         let fees_sat;
         match req.payment_method {
             PaymentMethod::Lightning => {
@@ -1658,7 +1658,7 @@ impl LiquidSdk {
 
                 min_payer_amount_sat = Some(reverse_pair.limits.minimal);
                 max_payer_amount_sat = Some(reverse_pair.limits.maximal);
-                service_feerate = Some(reverse_pair.fees.percentage);
+                swapper_feerate = Some(reverse_pair.fees.percentage);
 
                 debug!(
                     "Preparing Lightning Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
@@ -1676,7 +1676,7 @@ impl LiquidSdk {
 
                 min_payer_amount_sat = Some(pair.limits.minimal);
                 max_payer_amount_sat = Some(pair.limits.maximal);
-                service_feerate = Some(pair.fees.percentage);
+                swapper_feerate = Some(pair.fees.percentage);
 
                 fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
@@ -1694,7 +1694,7 @@ impl LiquidSdk {
             payment_method: req.payment_method.clone(),
             min_payer_amount_sat,
             max_payer_amount_sat,
-            service_feerate,
+            swapper_feerate,
         })
     }
 

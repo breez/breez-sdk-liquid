@@ -318,7 +318,7 @@ pub struct PrepareReceiveResponse {
     /// The percentage of the sent amount that will count towards the service fee.
     ///
     /// When the method is [PaymentMethod::LiquidAddress], this is empty.
-    pub service_feerate: Option<f64>,
+    pub swapper_feerate: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].

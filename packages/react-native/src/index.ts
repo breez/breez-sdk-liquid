@@ -304,7 +304,7 @@ export interface PrepareReceiveResponse {
     payerAmountSat?: number
     minPayerAmountSat?: number
     maxPayerAmountSat?: number
-    serviceFeerate?: number
+    swapperFeerate?: number
 }
 
 export interface PrepareRefundRequest {

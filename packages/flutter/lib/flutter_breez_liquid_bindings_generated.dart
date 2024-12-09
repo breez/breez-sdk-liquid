@@ -4346,7 +4346,7 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Double> service_feerate;
+  external ffi.Pointer<ffi.Double> swapper_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {

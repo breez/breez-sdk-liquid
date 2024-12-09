@@ -951,7 +951,7 @@ class PrepareReceiveResponse {
   /// The percentage of the sent amount that will count towards the service fee.
   ///
   /// When the method is [PaymentMethod::LiquidAddress], this is empty.
-  final double? serviceFeerate;
+  final double? swapperFeerate;
 
   const PrepareReceiveResponse({
     required this.paymentMethod,
@@ -959,7 +959,7 @@ class PrepareReceiveResponse {
     required this.feesSat,
     this.minPayerAmountSat,
     this.maxPayerAmountSat,
-    this.serviceFeerate,
+    this.swapperFeerate,
   });
 
   @override
@@ -969,7 +969,7 @@ class PrepareReceiveResponse {
       feesSat.hashCode ^
       minPayerAmountSat.hashCode ^
       maxPayerAmountSat.hashCode ^
-      serviceFeerate.hashCode;
+      swapperFeerate.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -981,7 +981,7 @@ class PrepareReceiveResponse {
           feesSat == other.feesSat &&
           minPayerAmountSat == other.minPayerAmountSat &&
           maxPayerAmountSat == other.maxPayerAmountSat &&
-          serviceFeerate == other.serviceFeerate;
+          swapperFeerate == other.swapperFeerate;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].

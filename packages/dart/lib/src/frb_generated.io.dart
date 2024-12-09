@@ -2921,7 +2921,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.min_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.minPayerAmountSat);
     wireObj.max_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.maxPayerAmountSat);
-    wireObj.service_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.serviceFeerate);
+    wireObj.swapper_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.swapperFeerate);
   }
 
   @protected
@@ -5796,7 +5796,7 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> max_payer_amount_sat;
 
-  external ffi.Pointer<ffi.Double> service_feerate;
+  external ffi.Pointer<ffi.Double> swapper_feerate;
 }
 
 final class wire_cst_receive_payment_request extends ffi.Struct {
