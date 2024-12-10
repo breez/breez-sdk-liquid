@@ -49,9 +49,6 @@ pub(crate) struct ChainSwapHandler {
 #[async_trait]
 impl BlockListener for ChainSwapHandler {
     async fn on_bitcoin_block(&self, height: u32) {
-        if let Err(e) = self.rescan_incoming_refunds(height, false).await {
-            error!("Error rescanning incoming refunds: {e:?}");
-        }
         if let Err(e) = self.claim_outgoing(height).await {
             error!("Error claiming outgoing: {e:?}");
         }
@@ -936,13 +933,6 @@ impl ChainSwapHandler {
             swap.state == Refundable,
             PaymentError::Generic {
                 err: format!("Chain Swap {id} was not marked as `Refundable`")
-            }
-        );
-
-        ensure_sdk!(
-            swap.refund_tx_id.is_none(),
-            PaymentError::Generic {
-                err: format!("A refund tx for incoming Chain Swap {id} was already broadcast",)
             }
         );
 
