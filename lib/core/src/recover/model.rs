@@ -664,19 +664,20 @@ impl SwapsList {
             .into_values()
             .filter_map(|imm| imm.mrh_script)
             .collect();
+        let receive_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
+            .receive_swap_immutable_data_by_swap_id
+            .clone()
+            .into_values()
+            .map(|imm| imm.claim_script)
+            .collect();
         let mut swap_scripts = receive_swap_lbtc_mrh_scripts.clone();
+        swap_scripts.extend(receive_swap_lbtc_claim_scripts.clone());
         if !partial_sync {
             let send_swap_scripts: Vec<LBtcScript> = self
                 .send_swap_immutable_data_by_swap_id
                 .clone()
                 .into_values()
                 .map(|imm| imm.lockup_script)
-                .collect();
-            let receive_swap_lbtc_claim_scripts: Vec<LBtcScript> = self
-                .receive_swap_immutable_data_by_swap_id
-                .clone()
-                .into_values()
-                .map(|imm| imm.claim_script)
                 .collect();
             let send_chain_swap_lbtc_lockup_scripts: Vec<LBtcScript> = self
                 .send_chain_swap_immutable_data_by_swap_id
@@ -691,7 +692,6 @@ impl SwapsList {
                 .map(|imm| imm.claim_script)
                 .collect();
             swap_scripts.extend(send_swap_scripts.clone());
-            swap_scripts.extend(receive_swap_lbtc_claim_scripts.clone());
             swap_scripts.extend(send_chain_swap_lbtc_lockup_scripts.clone());
             swap_scripts.extend(receive_chain_swap_lbtc_claim_scripts.clone());
         }

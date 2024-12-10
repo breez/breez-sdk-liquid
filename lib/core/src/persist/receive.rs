@@ -56,6 +56,7 @@ impl Persister {
             SET
                 description = :description,
                 claim_tx_id = :claim_tx_id,
+                lockup_tx_id = :lockup_tx_id,
                 mrh_tx_id = :mrh_tx_id
             WHERE
                 id = :id",
@@ -63,9 +64,14 @@ impl Persister {
                 ":id": &receive_swap.id,
                 ":description": &receive_swap.description,
                 ":claim_tx_id": &receive_swap.claim_tx_id,
+                ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
             },
         )?;
+
+        if receive_swap.mrh_tx_id.is_some() {
+            Self::delete_reserved_address_inner(con, &receive_swap.mrh_address)?;
+        }
 
         Ok(())
     }

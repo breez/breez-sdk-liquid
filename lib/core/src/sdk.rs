@@ -1270,9 +1270,13 @@ impl LiquidSdk {
             Some(swap) => match swap.state {
                 Created => swap,
                 TimedOut => {
-                    self.send_swap_handler
-                        .update_swap_info(&swap.id, PaymentState::Created, None, None, None)
-                        .await?;
+                    self.send_swap_handler.update_swap_info(
+                        &swap.id,
+                        PaymentState::Created,
+                        None,
+                        None,
+                        None,
+                    )?;
                     swap
                 }
                 Pending => return Err(PaymentError::PaymentInProgress),
@@ -1640,16 +1644,12 @@ impl LiquidSdk {
                     None => {
                         debug!("Timeout occurred without payment, set swap to timed out");
                         match swap {
-                            Swap::Send(_) => {
-                                self.send_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None).await?;
-                            },
-                            Swap::Chain(_) => {
-                                self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
+                            Swap::Send(_) => self.send_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None)?,
+                            Swap::Chain(_) => self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
                                     swap_id: expected_swap_id,
                                     to_state: TimedOut,
                                     ..Default::default()
-                                }).await?;
-                            },
+                                })?,
                             _ => ()
                         }
                         return Err(PaymentError::PaymentTimeout)
@@ -2311,19 +2311,15 @@ impl LiquidSdk {
         for swap in recoverable_swaps {
             let swap_id = &swap.id();
 
-            let update_swap_info_res = match swap {
-                Swap::Receive(ReceiveSwap {
-                    state,
-                    claim_tx_id,
-                    mrh_tx_id,
-                    lockup_tx_id,
-                    ..
-                }) => {
-                    let history_updates = vec![&claim_tx_id, &mrh_tx_id]
+            // Update the payment wallet txs before updating the swap so the tx data is pulled into the payment
+            match swap {
+                Swap::Receive(receive_swap) => {
+                    let history_updates = vec![&receive_swap.claim_tx_id, &receive_swap.mrh_tx_id];
+                    for tx_id in history_updates
                         .into_iter()
                         .flatten()
-                        .collect::<Vec<&String>>();
-                    for tx_id in history_updates {
+                        .collect::<Vec<&String>>()
+                    {
                         if let Some(tx) =
                             tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
                         {
@@ -2331,29 +2327,17 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    self.receive_swap_handler
-                        .update_swap_info(
-                            swap_id,
-                            state,
-                            claim_tx_id.as_deref(),
-                            lockup_tx_id.as_deref(),
-                            mrh_tx_id.as_deref(),
-                            None,
-                        )
-                        .await
+                    if let Err(e) = self.receive_swap_handler.update_swap(receive_swap) {
+                        error!("Error persisting recovered receive swap {swap_id}: {e}");
+                    }
                 }
-                Swap::Send(SendSwap {
-                    state,
-                    preimage,
-                    lockup_tx_id,
-                    refund_tx_id,
-                    ..
-                }) => {
-                    let history_updates = vec![&lockup_tx_id, &refund_tx_id]
+                Swap::Send(send_swap) => {
+                    let history_updates = vec![&send_swap.lockup_tx_id, &send_swap.refund_tx_id];
+                    for tx_id in history_updates
                         .into_iter()
                         .flatten()
-                        .collect::<Vec<&String>>();
-                    for tx_id in history_updates {
+                        .collect::<Vec<&String>>()
+                    {
                         if let Some(tx) =
                             tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
                         {
@@ -2361,34 +2345,22 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    self.send_swap_handler
-                        .update_swap_info(
-                            swap_id,
-                            state,
-                            preimage.as_deref(),
-                            lockup_tx_id.as_deref(),
-                            refund_tx_id.as_deref(),
-                        )
-                        .await
+                    if let Err(e) = self.send_swap_handler.update_swap(send_swap) {
+                        error!("Error persisting recovered send swap {swap_id}: {e}");
+                    }
                 }
-                Swap::Chain(ChainSwap {
-                    state,
-                    direction,
-                    server_lockup_tx_id,
-                    user_lockup_tx_id,
-                    claim_address,
-                    claim_tx_id,
-                    refund_tx_id,
-                    ..
-                }) => {
-                    let history_updates = match direction {
-                        Direction::Incoming => vec![&claim_tx_id],
-                        Direction::Outgoing => vec![&user_lockup_tx_id, &refund_tx_id],
-                    }
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<&String>>();
-                    for tx_id in history_updates {
+                Swap::Chain(chain_swap) => {
+                    let history_updates = match chain_swap.direction {
+                        Direction::Incoming => vec![&chain_swap.claim_tx_id],
+                        Direction::Outgoing => {
+                            vec![&chain_swap.user_lockup_tx_id, &chain_swap.refund_tx_id]
+                        }
+                    };
+                    for tx_id in history_updates
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<&String>>()
+                    {
                         if let Some(tx) =
                             tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
                         {
@@ -2396,34 +2368,11 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-
-                    self.chain_swap_handler
-                        .update_swap_info(&ChainSwapUpdate {
-                            swap_id: swap_id.clone(),
-                            to_state: state,
-                            server_lockup_tx_id,
-                            user_lockup_tx_id,
-                            claim_address: match direction {
-                                Direction::Incoming => claim_address,
-                                Direction::Outgoing => None,
-                            },
-                            claim_tx_id,
-                            refund_tx_id,
-                        })
-                        .await
+                    if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
+                        error!("Error persisting recovered chain swap {swap_id}: {e}");
+                    }
                 }
             };
-
-            match update_swap_info_res {
-                Ok((PaymentState::Recoverable, PaymentState::Created))
-                | Ok((PaymentState::Recoverable, PaymentState::Pending)) => {
-                    info!("Tracking recoverable swap: {swap_id}");
-                    if let Err(e) = self.status_stream.track_swap_id(swap_id) {
-                        error!("Unable to track swap id {swap_id}: {e}");
-                    }
-                }
-                _ => {}
-            }
         }
 
         let payments = self

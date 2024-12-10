@@ -89,8 +89,7 @@ impl ReceiveSwapHandler {
                     }
                     None => {
                         error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                        self.update_swap_info(id, Failed, None, None, None, None)
-                            .await?;
+                        self.update_swap_info(id, Failed, None, None, None, None)?;
                     }
                 }
                 Ok(())
@@ -129,8 +128,7 @@ impl ReceiveSwapHandler {
                 info!("swapper lockup was verified");
 
                 let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)
-                    .await?;
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)?;
 
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
 
@@ -210,8 +208,7 @@ impl ReceiveSwapHandler {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => {
-                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)
-                            .await?;
+                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)?;
                         match self.claim(id).await {
                             Ok(_) => {}
                             Err(err) => match err {
@@ -241,8 +238,41 @@ impl ReceiveSwapHandler {
                 err: format!("Receive Swap not found {swap_id}"),
             })
     }
-    /// Transitions a Receive swap to a new state
-    pub(crate) async fn update_swap_info(
+
+    fn notify_swap_changes(
+        &self,
+        swap: ReceiveSwap,
+        updated_swap: ReceiveSwap,
+    ) -> Result<(), PaymentError> {
+        let payment_id = updated_swap
+            .claim_tx_id
+            .clone()
+            .or(updated_swap.mrh_tx_id.clone())
+            .or(swap.claim_tx_id.clone())
+            .or(swap.mrh_tx_id.clone());
+        if let Some(payment_id) = payment_id {
+            let _ = self.subscription_notifier.send(payment_id);
+        }
+        Ok(())
+    }
+
+    // Updates the swap without state transition validation
+    pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
+        let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
+        if updated_swap != swap {
+            info!(
+                "Updating Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
+                updated_swap.id, updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
+            );
+            self.persister
+                .insert_or_update_receive_swap(&updated_swap)?;
+            self.notify_swap_changes(swap, updated_swap)?;
+        }
+        Ok(())
+    }
+
+    // Updates the swap state with validation
+    pub(crate) fn update_swap_info(
         &self,
         swap_id: &str,
         to_state: PaymentState,
@@ -250,7 +280,7 @@ impl ReceiveSwapHandler {
         lockup_tx_id: Option<&str>,
         mrh_tx_id: Option<&str>,
         mrh_amount_sat: Option<u64>,
-    ) -> Result<(PaymentState, PaymentState), PaymentError> {
+    ) -> Result<(), PaymentError> {
         info!(
             "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
             swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
@@ -271,16 +301,10 @@ impl ReceiveSwapHandler {
             self.persister.delete_reserved_address(&swap.mrh_address)?;
         }
 
-        // Only notify subscribers if the swap changes
-        let payment_id = claim_tx_id
-            .or(mrh_tx_id)
-            .map(|id| id.to_string())
-            .or(swap.claim_tx_id.clone())
-            .or(swap.mrh_tx_id.clone());
         if updated_swap != swap {
-            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
+            self.notify_swap_changes(swap, updated_swap)?;
         }
-        Ok((swap.state, updated_swap.state))
+        Ok(())
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
@@ -475,7 +499,6 @@ mod tests {
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
-                    .await
                     .is_ok());
             }
         }
@@ -499,7 +522,6 @@ mod tests {
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)
-                    .await
                     .is_err());
             }
         }
