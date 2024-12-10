@@ -272,17 +272,13 @@ impl Recoverer {
             .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let swap_btc_scripts = swaps_list.get_swap_btc_scripts(partial_sync);
-        let btc_script_histories = self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .get_scripts_history(
-                &swap_btc_scripts
-                    .iter()
-                    .map(|x| x.as_script())
-                    .collect::<Vec<&lwk_wollet::bitcoin::Script>>(),
-            )?;
+        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+        let swap_btc_script_bufs = swaps_list.get_swap_btc_scripts(partial_sync);
+        let swap_btc_scripts = swap_btc_script_bufs
+            .iter()
+            .map(|x| x.as_script())
+            .collect::<Vec<&lwk_wollet::bitcoin::Script>>();
+        let btc_script_histories = bitcoin_chain_service.get_scripts_history(&swap_btc_scripts)?;
         let btx_script_tx_ids: Vec<lwk_wollet::bitcoin::Txid> = btc_script_histories
             .iter()
             .flatten()
@@ -290,26 +286,24 @@ impl Recoverer {
             .map(lwk_wollet::bitcoin::Txid::from_raw_hash)
             .collect::<Vec<lwk_wollet::bitcoin::Txid>>();
 
-        let btc_swap_scripts_len = swap_btc_scripts.len();
+        let btc_swap_scripts_len = swap_btc_script_bufs.len();
         let btc_script_histories_len = btc_script_histories.len();
         ensure!(
                 btc_swap_scripts_len == btc_script_histories_len,
                 anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
             );
-        let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_scripts
+        let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_script_bufs
             .clone()
             .into_iter()
             .zip(btc_script_histories.iter())
             .map(|(k, v)| (k, v.iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let btc_script_txs = self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .get_transactions(&btx_script_tx_ids)?;
+        let btc_script_txs = bitcoin_chain_service.get_transactions(&btx_script_tx_ids)?;
+        let btc_script_balances = bitcoin_chain_service.scripts_get_balance(&swap_btc_scripts)?;
         let btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>> =
-            swap_btc_scripts
+            swap_btc_script_bufs
+                .clone()
                 .into_iter()
                 .zip(btc_script_histories.iter())
                 .map(|(script, history)| {
@@ -323,6 +317,10 @@ impl Recoverer {
                     (script, relevant_txs)
                 })
                 .collect();
+        let btc_script_to_balance_map: HashMap<BtcScript, GetBalanceRes> = swap_btc_script_bufs
+            .into_iter()
+            .zip(btc_script_balances)
+            .collect();
 
         Ok(SwapsHistories {
             send: swaps_list.send_histories_by_swap_id(&lbtc_script_to_history_map),
@@ -336,6 +334,7 @@ impl Recoverer {
                 &lbtc_script_to_history_map,
                 &btc_script_to_history_map,
                 &btc_script_to_txs_map,
+                &btc_script_to_balance_map,
             ),
         })
     }
@@ -619,56 +618,57 @@ impl Recoverer {
                 }
             };
 
+            // Get the current confirmed amount available for the lockup script
+            let btc_user_lockup_amount_sat = history
+                .btc_lockup_script_balance
+                .map(|balance| balance.confirmed)
+                .unwrap_or_default();
+
             // The btc_lockup_script_history can contain 3 kinds of txs, of which only 2 are expected:
             // - 1) btc_user_lockup_tx_id (initial BTC funds sent by the sender)
-            // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in Success case)
-            // - 2B) btc_refund_tx_id (refund tx we initiate, in Failure case)
+            // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in success case)
+            // - 2B) btc_refund_tx_id (refund tx we initiate, in failure case or with lockup address reuse)
             // The exact type of the second is found in the next step.
-            let (btc_user_lockup_tx_id, btc_second_tx_id) = match history
-                .btc_lockup_script_history
-                .len()
-            {
-                // Only lockup tx available
-                1 => (Some(history.btc_lockup_script_history[0].clone()), None),
-
-                // Both txs available (lockup + claim, or lockup + refund)
-                // Any tx above the first two, we ignore, as that is address re-use which is not supported
-                n if n >= 2 => {
-                    let first_tx = history.btc_lockup_script_txs[0].clone();
-                    let first_tx_id = history.btc_lockup_script_history[0].clone();
-                    let second_tx_id = history.btc_lockup_script_history[1].clone();
-
-                    let btc_lockup_script = receive_chain_swap_immutable_data_by_swap_id
-                        .get(&swap_id)
-                        .map(|imm| imm.lockup_script.clone())
-                        .ok_or_else(|| {
-                            anyhow!(
-                                "BTC lockup script not found for Onchain Receive Swap {swap_id}"
-                            )
-                        })?;
-
-                    // We check the full tx, to determine if this is the BTC lockup tx
-                    let is_first_tx_lockup_tx = first_tx
-                        .output
+            let btc_lockup_script = receive_chain_swap_immutable_data_by_swap_id
+                .get(&swap_id)
+                .map(|imm| imm.lockup_script.clone())
+                .ok_or_else(|| {
+                    anyhow!("BTC lockup script not found for Onchain Receive Swap {swap_id}")
+                })?;
+            let (btc_lockup_incoming_txs, btc_lockup_outgoing_txs): (Vec<_>, Vec<_>) =
+                history.btc_lockup_script_txs.iter().partition(|tx| {
+                    tx.output
                         .iter()
-                        .any(|out| matches!(&out.script_pubkey, x if x == &btc_lockup_script));
-
-                    match is_first_tx_lockup_tx {
-                        true => (Some(first_tx_id), Some(second_tx_id)),
-                        false => (Some(second_tx_id), Some(first_tx_id)),
-                    }
-                }
-                n => {
-                    warn!("BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
-                    (None, None)
-                }
-            };
+                        .any(|out| matches!(&out.script_pubkey, x if x == &btc_lockup_script))
+                });
+            let btc_user_lockup_tx_id = btc_lockup_incoming_txs
+                .first()
+                .and_then(|tx| {
+                    history
+                        .btc_lockup_script_history
+                        .iter()
+                        .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
+                })
+                .cloned();
+            let btc_last_outgoing_tx_id = btc_lockup_outgoing_txs
+                .last()
+                .and_then(|tx| {
+                    history
+                        .btc_lockup_script_history
+                        .iter()
+                        .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
+                })
+                .cloned();
 
             // The second BTC tx is only a refund in case we didn't claim.
-            // If we claimed, then the second BTC tx was an internal BTC server claim tx, which we're not tracking.
+            // If we claimed, then the first outgoing BTC tx was the swapper BTC claim tx.
+            // If there are more than 2 txs then this is a refund from lockup address re-use, so take the last tx.
             let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
-                true => None,
-                false => btc_second_tx_id,
+                true => match btc_lockup_outgoing_txs.len() > 1 {
+                    true => btc_last_outgoing_tx_id,
+                    false => None,
+                },
+                false => btc_last_outgoing_tx_id,
             };
 
             res.insert(
@@ -678,6 +678,7 @@ impl Recoverer {
                     lbtc_claim_tx_id,
                     lbtc_claim_address,
                     btc_user_lockup_tx_id,
+                    btc_user_lockup_amount_sat,
                     btc_refund_tx_id,
                 },
             );

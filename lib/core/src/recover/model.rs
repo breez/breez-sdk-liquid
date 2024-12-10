@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use anyhow::anyhow;
 use boltz_client::ElementsAddress;
+use electrum_client::GetBalanceRes;
 use lwk_wollet::elements::Txid;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
@@ -193,6 +194,8 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
     pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
+    /// BTC total funds available at the swap funding address.
+    pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
 }
@@ -201,26 +204,36 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
 // or marked refundable. Perhaps we should check in the recovery the lockup balance and set accordingly.
 impl PartialSwapState for RecoveredOnchainDataChainReceive {
     fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+        let is_refundable = is_expired && self.btc_user_lockup_amount_sat > 0;
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
-                    true => Some(PaymentState::Complete),
+                    true => match is_refundable {
+                        true => Some(PaymentState::Refundable),
+                        false => Some(PaymentState::Complete),
+                    },
                     false => Some(PaymentState::Pending),
                 },
                 (None, Some(btc_refund_tx_id)) => match btc_refund_tx_id.confirmed() {
-                    true => Some(PaymentState::Failed),
+                    true => match is_refundable {
+                        true => Some(PaymentState::Refundable),
+                        false => Some(PaymentState::Failed),
+                    },
                     false => Some(PaymentState::RefundPending),
                 },
                 (Some(lbtc_claim_tx_id), Some(btc_refund_tx_id)) => {
                     match btc_refund_tx_id.confirmed() {
                         true => match lbtc_claim_tx_id.confirmed() {
-                            true => Some(PaymentState::Complete),
+                            true => match is_refundable {
+                                true => Some(PaymentState::Refundable),
+                                false => Some(PaymentState::Complete),
+                            },
                             false => Some(PaymentState::Pending),
                         },
                         false => Some(PaymentState::RefundPending),
                     }
                 }
-                (None, None) => match is_expired {
+                (None, None) => match is_refundable {
                     true => Some(PaymentState::Refundable),
                     false => Some(PaymentState::Pending),
                 },
@@ -388,6 +401,7 @@ pub(crate) struct ReceiveChainSwapHistory {
     pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
     pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
     pub(crate) btc_lockup_script_txs: Vec<boltz_client::bitcoin::Transaction>,
+    pub(crate) btc_lockup_script_balance: Option<GetBalanceRes>,
 }
 
 /// Swap immutable data
@@ -627,6 +641,7 @@ impl SwapsList {
         lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
         btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
         btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
+        btc_script_to_balance_map: &HashMap<BtcScript, GetBalanceRes>,
     ) -> HashMap<String, ReceiveChainSwapHistory> {
         let receive_chain_swaps_by_lbtc_script = self.receive_chain_swaps_by_lbtc_claim_script();
 
@@ -643,6 +658,8 @@ impl SwapsList {
                         .get(&imm.lockup_script)
                         .cloned()
                         .unwrap_or_default();
+                    let btc_script_balance =
+                        btc_script_to_balance_map.get(&imm.lockup_script).cloned();
 
                     data.insert(
                         imm.swap_id.clone(),
@@ -650,6 +667,7 @@ impl SwapsList {
                             lbtc_claim_script_history: lbtc_script_history.clone(),
                             btc_lockup_script_history: btc_script_history,
                             btc_lockup_script_txs: btc_script_txs,
+                            btc_lockup_script_balance: btc_script_balance,
                         },
                     );
                 }
