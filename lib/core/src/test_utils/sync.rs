@@ -116,6 +116,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
     ReceiveSyncData {
         swap_id: "receive-swap".to_string(),
         invoice: "".to_string(),
+        pair_fees_json: "".to_string(),
         create_response_json: "".to_string(),
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
@@ -133,6 +134,7 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
     SendSyncData {
         swap_id: "send-swap".to_string(),
         invoice: "".to_string(),
+        pair_fees_json: "".to_string(),
         create_response_json: "".to_string(),
         refund_private_key: "".to_string(),
         payer_amount_sat: 0,
@@ -149,6 +151,7 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
     ChainSyncData {
         swap_id: "chain-swap".to_string(),
         preimage: "".to_string(),
+        pair_fees_json: "".to_string(),
         create_response_json: "".to_string(),
         direction: Direction::Incoming,
         lockup_address: "".to_string(),
