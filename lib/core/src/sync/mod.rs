@@ -277,9 +277,7 @@ impl SyncService {
         }
 
         // Step 2: Recover each swap's data from chain
-        self.recoverer
-            .recover_from_onchain(&mut swaps, false)
-            .await?;
+        self.recoverer.recover_from_onchain(&mut swaps).await?;
 
         Ok(succeded.into_iter().zip(swaps.into_iter()).collect())
     }

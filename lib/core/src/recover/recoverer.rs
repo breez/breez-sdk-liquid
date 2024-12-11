@@ -114,19 +114,12 @@ impl Recoverer {
     ///
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
-    /// - `partial_sync`: recovers related scripts like MRH when true, otherwise recovers all scripts.
-    pub(crate) async fn recover_from_onchain(
-        &self,
-        swaps: &mut [Swap],
-        partial_sync: bool,
-    ) -> Result<()> {
+    pub(crate) async fn recover_from_onchain(&self, swaps: &mut [Swap]) -> Result<()> {
         self.onchain_wallet.full_scan().await?;
         let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
 
         let swaps_list = swaps.to_vec().try_into()?;
-        let histories = self
-            .fetch_swaps_histories(&swaps_list, partial_sync)
-            .await?;
+        let histories = self.fetch_swaps_histories(&swaps_list).await?;
 
         let recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
         let recovered_send_with_claim_tx = recovered_send_data
@@ -277,13 +270,8 @@ impl Recoverer {
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
-    async fn fetch_swaps_histories(
-        &self,
-        swaps_list: &SwapsList,
-        partial_sync: bool,
-    ) -> Result<SwapsHistories> {
-        let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts(partial_sync);
-
+    async fn fetch_swaps_histories(&self, swaps_list: &SwapsList) -> Result<SwapsHistories> {
+        let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts();
         let lbtc_script_histories = self
             .liquid_chain_service
             .lock()
@@ -303,7 +291,7 @@ impl Recoverer {
             .collect();
 
         let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
-        let swap_btc_script_bufs = swaps_list.get_swap_btc_scripts(partial_sync);
+        let swap_btc_script_bufs = swaps_list.get_swap_btc_scripts();
         let swap_btc_scripts = swap_btc_script_bufs
             .iter()
             .map(|x| x.as_script())

@@ -2168,7 +2168,7 @@ impl LiquidSdk {
             .map(Into::into)
             .collect();
         self.recoverer
-            .recover_from_onchain(&mut rescannable_swaps, false)
+            .recover_from_onchain(&mut rescannable_swaps)
             .await?;
         for swap in rescannable_swaps {
             let swap_id = &swap.id();
@@ -2304,7 +2304,7 @@ impl LiquidSdk {
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
         let mut recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
         self.recoverer
-            .recover_from_onchain(&mut recoverable_swaps, partial_sync)
+            .recover_from_onchain(&mut recoverable_swaps)
             .await?;
         let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
