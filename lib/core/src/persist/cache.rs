@@ -2,10 +2,12 @@ use anyhow::Result;
 use rusqlite::{Transaction, TransactionBehavior};
 use std::str::FromStr;
 
+use crate::model::GetInfoResponse;
 use crate::sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, RecordType};
 
 use super::Persister;
 
+const KEY_WALLET_INFO: &str = "wallet_info";
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
@@ -60,6 +62,19 @@ impl Persister {
         let res = Self::delete_cached_item_inner(&tx, key);
         tx.commit()?;
         res
+    }
+
+    pub fn set_wallet_info(&self, info: &GetInfoResponse) -> Result<()> {
+        let serialized_info = serde_json::to_string(info)?;
+        self.update_cached_item(KEY_WALLET_INFO, serialized_info)
+    }
+
+    pub fn get_wallet_info(&self) -> Result<Option<GetInfoResponse>> {
+        let info_str = self.get_cached_item(KEY_WALLET_INFO)?;
+        Ok(match info_str {
+            Some(str) => serde_json::from_str(str.as_str())?,
+            None => None,
+        })
     }
 
     pub fn set_swapper_proxy_url(&self, swapper_proxy_url: String) -> Result<()> {

@@ -1485,6 +1485,21 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_payment = _frbgen_breez_liquid_cst_new_list_paymentPtr
       .asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_payment_state> frbgen_breez_liquid_cst_new_list_payment_state(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_payment_state(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_payment_statePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_state> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_payment_state');
+  late final _frbgen_breez_liquid_cst_new_list_payment_state =
+      _frbgen_breez_liquid_cst_new_list_payment_statePtr
+          .asFunction<ffi.Pointer<wire_cst_list_payment_state> Function(int)>();
+
   ffi.Pointer<wire_cst_list_payment_type> frbgen_breez_liquid_cst_new_list_payment_type(
     int len,
   ) {
@@ -3947,6 +3962,13 @@ final class wire_cst_list_payment_type extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_list_payment_state extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_ListPaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 }
@@ -3970,6 +3992,8 @@ final class wire_cst_list_payment_details extends ffi.Struct {
 
 final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_payment_type> filters;
+
+  external ffi.Pointer<wire_cst_list_payment_state> states;
 
   external ffi.Pointer<ffi.Int64> from_timestamp;
 
