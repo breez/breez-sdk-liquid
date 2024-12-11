@@ -61,22 +61,14 @@ impl TxMap {
     }
 }
 
-pub(crate) trait PartialSwapState {
-    /// Determine partial swap state, based on recovered chain data.
-    ///
-    /// This is a partial state, which means it may be incomplete because it's based on partial
-    /// information. Some swap states cannot be determined based only on chain data.
-    /// In these cases we do not assume any swap state.
-    fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState>;
-}
-
 pub(crate) struct RecoveredOnchainDataSend {
     pub(crate) lockup_tx_id: Option<HistoryTxId>,
     pub(crate) claim_tx_id: Option<HistoryTxId>,
     pub(crate) refund_tx_id: Option<HistoryTxId>,
 }
-impl PartialSwapState for RecoveredOnchainDataSend {
-    fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+
+impl RecoveredOnchainDataSend {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(_) => Some(PaymentState::Complete),
@@ -107,8 +99,9 @@ pub(crate) struct RecoveredOnchainDataReceive {
     pub(crate) mrh_tx_id: Option<HistoryTxId>,
     pub(crate) mrh_amount_sat: Option<u64>,
 }
-impl PartialSwapState for RecoveredOnchainDataReceive {
-    fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+
+impl RecoveredOnchainDataReceive {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(claim_tx_id) => match claim_tx_id.confirmed() {
@@ -146,11 +139,12 @@ pub(crate) struct RecoveredOnchainDataChainSend {
     /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
     pub(crate) btc_claim_tx_id: Option<HistoryTxId>,
 }
+
 // TODO: We have to be careful around overwriting the RefundPending state, as this swap monitored
 // after the expiration of the swap and if new funds are detected on the lockup script they are refunded.
 // Perhaps we should check in the recovery the lockup balance and set accordingly.
-impl PartialSwapState for RecoveredOnchainDataChainSend {
-    fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+impl RecoveredOnchainDataChainSend {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
         match &self.lbtc_user_lockup_tx_id {
             Some(_) => match (&self.btc_claim_tx_id, &self.lbtc_refund_tx_id) {
                 (Some(btc_claim_tx_id), None) => match btc_claim_tx_id.confirmed() {
@@ -162,12 +156,12 @@ impl PartialSwapState for RecoveredOnchainDataChainSend {
                     false => Some(PaymentState::RefundPending),
                 },
                 (Some(btc_claim_tx_id), Some(lbtc_refund_tx_id)) => {
-                    match lbtc_refund_tx_id.confirmed() {
-                        true => match btc_claim_tx_id.confirmed() {
+                    match btc_claim_tx_id.confirmed() {
+                        true => match lbtc_refund_tx_id.confirmed() {
                             true => Some(PaymentState::Complete),
-                            false => Some(PaymentState::Pending),
+                            false => Some(PaymentState::RefundPending),
                         },
-                        false => Some(PaymentState::RefundPending),
+                        false => Some(PaymentState::Pending),
                     }
                 }
                 (None, None) => match is_expired {
@@ -199,12 +193,15 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
 }
-// TODO: We have to be careful around overwriting the Refundable or RefundPending state, as this swap monitored
-// after the expiration of the swap and if new funds are detected on the lockup script they are either refunded
-// or marked refundable. Perhaps we should check in the recovery the lockup balance and set accordingly.
-impl PartialSwapState for RecoveredOnchainDataChainReceive {
-    fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
-        let is_refundable = is_expired && self.btc_user_lockup_amount_sat > 0;
+
+impl RecoveredOnchainDataChainReceive {
+    pub(crate) fn derive_partial_state(
+        &self,
+        min_lockup_amount_sat: u64,
+        is_expired: bool,
+    ) -> Option<PaymentState> {
+        let is_refundable = self.btc_user_lockup_amount_sat > 0
+            && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat);
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
@@ -222,15 +219,15 @@ impl PartialSwapState for RecoveredOnchainDataChainReceive {
                     false => Some(PaymentState::RefundPending),
                 },
                 (Some(lbtc_claim_tx_id), Some(btc_refund_tx_id)) => {
-                    match btc_refund_tx_id.confirmed() {
-                        true => match lbtc_claim_tx_id.confirmed() {
+                    match lbtc_claim_tx_id.confirmed() {
+                        true => match btc_refund_tx_id.confirmed() {
                             true => match is_refundable {
                                 true => Some(PaymentState::Refundable),
                                 false => Some(PaymentState::Complete),
                             },
-                            false => Some(PaymentState::Pending),
+                            false => Some(PaymentState::RefundPending),
                         },
-                        false => Some(PaymentState::RefundPending),
+                        false => Some(PaymentState::Pending),
                     }
                 }
                 (None, None) => match is_refundable {
