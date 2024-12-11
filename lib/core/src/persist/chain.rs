@@ -36,10 +36,9 @@ impl Persister {
                 refund_private_key,
                 claim_fees_sat,
                 created_at,
-                state,
-                pair_fees_json
+                state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 &chain_swap.id,
                 &id_hash,
@@ -57,7 +56,6 @@ impl Persister {
                 &chain_swap.claim_fees_sat,
                 &chain_swap.created_at,
                 &chain_swap.state,
-                &chain_swap.pair_fees_json,
             ),
         )?;
 
@@ -68,7 +66,8 @@ impl Persister {
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_tx_id = :claim_tx_id,
-                refund_tx_id = :refund_tx_id
+                refund_tx_id = :refund_tx_id,
+                pair_fees_json = :pair_fees_json
             WHERE
                 id = :id",
             named_params! {
@@ -78,6 +77,7 @@ impl Persister {
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
+                ":pair_fees_json": &chain_swap.pair_fees_json,
             },
         )?;
 
