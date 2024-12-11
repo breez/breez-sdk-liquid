@@ -1021,7 +1021,7 @@ impl LiquidSdk {
                     PaymentError::InsufficientFunds
                 );
 
-                self.pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat)
+                self.pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
                     .await
             }
             SendDestination::Bolt11 { invoice } => {
@@ -1075,6 +1075,7 @@ impl LiquidSdk {
                     },
                     amount_sat,
                     fees_sat,
+                    false,
                 )
                 .await
             }
@@ -1128,7 +1129,22 @@ impl LiquidSdk {
         address_data: LiquidAddressData,
         receiver_amount_sat: u64,
         fees_sat: u64,
+        skip_already_paid_check: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
+        let destination = address_data
+            .to_uri()
+            .unwrap_or(address_data.address.clone());
+        let payments = self.persister.get_payments(&ListPaymentsRequest {
+            details: Some(ListPaymentDetails::Liquid {
+                destination: destination.clone(),
+            }),
+            ..Default::default()
+        })?;
+        ensure_sdk!(
+            skip_already_paid_check || payments.is_empty(),
+            PaymentError::AlreadyPaid
+        );
+
         let tx = self
             .onchain_wallet
             .build_tx_or_drain_tx(
@@ -1160,7 +1176,6 @@ impl LiquidSdk {
             is_confirmed: false,
         };
 
-        let destination = address_data.to_uri().unwrap_or(address_data.address);
         let description = address_data.message;
 
         self.persister.insert_or_update_payment(
