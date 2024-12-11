@@ -71,9 +71,6 @@ pub fn default_config(
     LiquidSdk::default_config(network, breez_api_key)
 }
 
-pub fn parse(input: String) -> Result<InputType, PaymentError> {
-    rt().block_on(async { LiquidSdk::parse(&input).await })
-}
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }
@@ -101,6 +98,18 @@ impl BindingLiquidSdk {
 
     pub fn check_message(&self, req: CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
         self.sdk.check_message(&req)
+    }
+
+    pub fn set_external_input_parsers(&self, external_input_parsers: Vec<ExternalInputParser>) {
+        rt().block_on(async {
+            self.sdk
+                .set_external_input_parsers(external_input_parsers)
+                .await
+        });
+    }
+
+    pub fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        rt().block_on(async { self.sdk.parse(&input).await })
     }
 
     pub fn prepare_send_payment(

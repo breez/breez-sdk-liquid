@@ -347,6 +347,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse(
+      port_,
+      that,
+      input,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parsePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parsePtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
     int port_,
     int that,
@@ -745,23 +765,6 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_wire__crate__bindings__default_config =
       _frbgen_breez_liquid_wire__crate__bindings__default_configPtr
           .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
-
-  void frbgen_breez_liquid_wire__crate__bindings__parse(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
-  ) {
-    return _frbgen_breez_liquid_wire__crate__bindings__parse(
-      port_,
-      input,
-    );
-  }
-
-  late final _frbgen_breez_liquid_wire__crate__bindings__parsePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__parse');
-  late final _frbgen_breez_liquid_wire__crate__bindings__parse =
-      _frbgen_breez_liquid_wire__crate__bindings__parsePtr
-          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,

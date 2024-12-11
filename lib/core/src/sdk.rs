@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-
 use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -23,6 +19,9 @@ use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -73,6 +72,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
+    pub(crate) external_input_parsers: Mutex<Vec<ExternalInputParser>>,
 }
 
 impl LiquidSdk {
@@ -235,6 +235,7 @@ impl LiquidSdk {
             receive_swap_handler,
             chain_swap_handler,
             buy_bitcoin_service,
+            external_input_parsers: Mutex::new(Vec::new()),
         });
         Ok(sdk)
     }
@@ -574,7 +575,7 @@ impl LiquidSdk {
     }
 
     async fn validate_bitcoin_address(&self, input: &str) -> Result<String, PaymentError> {
-        match sdk::LiquidSdk::parse(input).await? {
+        match self.parse(input).await? {
             InputType::BitcoinAddress {
                 address: bitcoin_address_data,
                 ..
@@ -823,7 +824,7 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let payment_destination;
 
-        match Self::parse(&req.destination).await {
+        match self.parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
                 address: mut liquid_address_data,
             }) => {
@@ -2693,7 +2694,9 @@ impl LiquidSdk {
     }
 
     /// Parses a string into an [InputType]. See [input_parser::parse].
-    pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
+    ///
+    /// Can optionally be configured to use external input parsers using [LiquidSdk::set_external_input_parsers].
+    pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         if let Ok(offer) = input.parse::<Offer>() {
             // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
             //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
@@ -2748,7 +2751,8 @@ impl LiquidSdk {
             });
         }
 
-        parse(input)
+        let external_parsers = self.external_input_parsers.lock().await;
+        parse(input, Some(&external_parsers))
             .await
             .map_err(|e| PaymentError::generic(&e.to_string()))
     }
@@ -2783,6 +2787,16 @@ impl LiquidSdk {
     /// An error is thrown if a global logger is already configured.
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
+    }
+
+    /// Configures a set of external input parsers that are used by [LiquidSdk::parse] when the input
+    /// is not recognized. See [ExternalInputParser] for more details on how to configure external parsing.
+    pub async fn set_external_input_parsers(
+        &self,
+        external_input_parsers: Vec<ExternalInputParser>,
+    ) {
+        let mut parsers = self.external_input_parsers.lock().await;
+        *parsers = external_input_parsers;
     }
 }
 

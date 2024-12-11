@@ -65,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.4.0';
 
   @override
-  int get rustContentHash => 425220482;
+  int get rustContentHash => -2032324171;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -118,6 +118,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<LnUrlWithdrawResult> crateBindingsBindingLiquidSdkLnurlWithdraw(
       {required BindingLiquidSdk that, required LnUrlWithdrawRequest req});
+
+  Future<InputType> crateBindingsBindingLiquidSdkParse(
+      {required BindingLiquidSdk that, required String input});
 
   Future<SendPaymentResponse> crateBindingsBindingLiquidSdkPayOnchain(
       {required BindingLiquidSdk that, required PayOnchainRequest req});
@@ -173,8 +176,6 @@ abstract class RustLibApi extends BaseApi {
   Future<BindingLiquidSdk> crateBindingsConnect({required ConnectRequest req});
 
   Config crateBindingsDefaultConfig({required LiquidNetwork network, String? breezApiKey});
-
-  Future<InputType> crateBindingsParse({required String input});
 
   LNInvoice crateBindingsParseInvoice({required String input});
 
@@ -621,6 +622,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkLnurlWithdrawConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_lnurl_withdraw",
         argNames: ["that", "req"],
+      );
+
+  @override
+  Future<InputType> crateBindingsBindingLiquidSdkParse(
+      {required BindingLiquidSdk that, required String input}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_String(input);
+        return wire.wire__crate__bindings__BindingLiquidSdk_parse(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_input_type,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkParseConstMeta,
+      argValues: [that, input],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkParseConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_parse",
+        argNames: ["that", "input"],
       );
 
   @override
@@ -1148,28 +1175,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsDefaultConfigConstMeta => const TaskConstMeta(
         debugName: "default_config",
         argNames: ["network", "breezApiKey"],
-      );
-
-  @override
-  Future<InputType> crateBindingsParse({required String input}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        var arg0 = cst_encode_String(input);
-        return wire.wire__crate__bindings__parse(port_, arg0);
-      },
-      codec: DcoCodec(
-        decodeSuccessData: dco_decode_input_type,
-        decodeErrorData: dco_decode_payment_error,
-      ),
-      constMeta: kCrateBindingsParseConstMeta,
-      argValues: [input],
-      apiImpl: this,
-    ));
-  }
-
-  TaskConstMeta get kCrateBindingsParseConstMeta => const TaskConstMeta(
-        debugName: "parse",
-        argNames: ["input"],
       );
 
   @override
@@ -6921,6 +6926,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkLnurlWithdraw(that: this, req: req);
+
+  Future<InputType> parse({required String input}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkParse(that: this, input: input);
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);

@@ -1091,6 +1091,10 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw(
                                                                                 uintptr_t that,
                                                                                 struct wire_cst_ln_url_withdraw_request *req);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse(int64_t port_,
+                                                                       uintptr_t that,
+                                                                       struct wire_cst_list_prim_u_8_strict *input);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(int64_t port_,
                                                                              uintptr_t that,
                                                                              struct wire_cst_pay_onchain_request *req);
@@ -1165,9 +1169,6 @@ void frbgen_breez_liquid_wire__crate__bindings__connect(int64_t port_,
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__default_config(int32_t network,
                                                                                struct wire_cst_list_prim_u_8_strict *breez_api_key);
-
-void frbgen_breez_liquid_wire__crate__bindings__parse(int64_t port_,
-                                                      struct wire_cst_list_prim_u_8_strict *input);
 
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__parse_invoice(struct wire_cst_list_prim_u_8_strict *input);
 
@@ -1381,6 +1382,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_auth);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_pay);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_lnurl_pay);
@@ -1402,7 +1404,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__breez_log_stream);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__connect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__default_config);
-    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__parse_invoice);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
     return dummy_var;

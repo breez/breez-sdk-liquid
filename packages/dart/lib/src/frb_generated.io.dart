@@ -4152,6 +4152,26 @@ class RustLibWire implements BaseWire {
       _wire__crate__bindings__BindingLiquidSdk_lnurl_withdrawPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ln_url_withdraw_request>)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_parse(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_parse(
+      port_,
+      that,
+      input,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_parsePtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse');
+  late final _wire__crate__bindings__BindingLiquidSdk_parse =
+      _wire__crate__bindings__BindingLiquidSdk_parsePtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
+
   void wire__crate__bindings__BindingLiquidSdk_pay_onchain(
     int port_,
     int that,
@@ -4542,22 +4562,6 @@ class RustLibWire implements BaseWire {
       'frbgen_breez_liquid_wire__crate__bindings__default_config');
   late final _wire__crate__bindings__default_config = _wire__crate__bindings__default_configPtr
       .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
-
-  void wire__crate__bindings__parse(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
-  ) {
-    return _wire__crate__bindings__parse(
-      port_,
-      input,
-    );
-  }
-
-  late final _wire__crate__bindings__parsePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>>(
-          'frbgen_breez_liquid_wire__crate__bindings__parse');
-  late final _wire__crate__bindings__parse = _wire__crate__bindings__parsePtr
-      .asFunction<void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)>();
 
   WireSyncRust2DartDco wire__crate__bindings__parse_invoice(
     ffi.Pointer<wire_cst_list_prim_u_8_strict> input,
