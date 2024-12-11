@@ -314,7 +314,7 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError> {
+    fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, PaymentError> {
         unimplemented!()
     }
 

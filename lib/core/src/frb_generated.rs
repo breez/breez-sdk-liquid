@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.4.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 425220482;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2032324171;
 
 // Section: executor
 
@@ -807,6 +807,53 @@ fn wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw_impl(
                             api_req,
                         )
                         .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_parse_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    input: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_parse",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_input = input.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok =
+                            crate::bindings::BindingLiquidSdk::parse(&*api_that_guard, api_input)
+                                .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1695,30 +1742,6 @@ fn wire__crate__bindings__default_config_impl(
                 let output_ok = crate::bindings::default_config(api_network, api_breez_api_key)?;
                 Ok(output_ok)
             })())
-        },
-    )
-}
-fn wire__crate__bindings__parse_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    input: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "parse",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_input = input.cst_decode();
-            move |context| async move {
-                transform_result_dco::<_, _, crate::error::PaymentError>(
-                    (move || async move {
-                        let output_ok = crate::bindings::parse(api_input).await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
         },
     )
 }
@@ -11232,6 +11255,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_parse(
+        port_: i64,
+        that: usize,
+        input: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_parse_impl(port_, that, input)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_pay_onchain(
         port_: i64,
         that: usize,
@@ -11409,14 +11441,6 @@ mod io {
         breez_api_key: *mut wire_cst_list_prim_u_8_strict,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__bindings__default_config_impl(network, breez_api_key)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__parse(
-        port_: i64,
-        input: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__bindings__parse_impl(port_, input)
     }
 
     #[no_mangle]
