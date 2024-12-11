@@ -191,7 +191,9 @@ impl Recoverer {
                         };
                         let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
-                        if let Some(new_state) = recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired) {
+                        if let Some(new_state) =
+                            recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
+                        {
                             chain_swap.state = new_state;
                         }
                         chain_swap.server_lockup_tx_id = recovered_data

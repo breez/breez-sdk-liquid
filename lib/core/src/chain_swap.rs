@@ -27,7 +27,6 @@ use crate::{
         PaymentTxData, PaymentType, Swap, SwapScriptV2, Transaction as SdkTransaction,
     },
     persist::Persister,
-    sdk::CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS,
     swapper::Swapper,
     utils,
     wallet::OnchainWallet,
@@ -115,106 +114,6 @@ impl ChainSwapHandler {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
         }
-    }
-
-    pub(crate) async fn rescan_incoming_refunds(
-        &self,
-        height: u32,
-        ignore_monitoring_block_height: bool,
-    ) -> Result<()> {
-        let chain_swaps: Vec<ChainSwap> = self
-            .persister
-            .list_chain_swaps()?
-            .into_iter()
-            .filter(|s| s.direction == Direction::Incoming && s.state != PaymentState::Recoverable)
-            .collect();
-        info!(
-            "Rescanning {} incoming Chain Swap(s) user lockup txs at height {}",
-            chain_swaps.len(),
-            height
-        );
-        for swap in chain_swaps {
-            if let Err(e) = self
-                .rescan_incoming_user_lockup_balance(&swap, height, ignore_monitoring_block_height)
-                .await
-            {
-                error!(
-                    "Error rescanning user lockup of incoming Chain Swap {}: {e:?}",
-                    swap.id
-                );
-            }
-        }
-        Ok(())
-    }
-
-    /// ### Arguments
-    /// - `swap`: the swap being rescanned
-    /// - `current_height`: the tip
-    /// - `ignore_monitoring_block_height`: if true, it rescans an expired swap even after the
-    ///   cutoff monitoring block height
-    async fn rescan_incoming_user_lockup_balance(
-        &self,
-        swap: &ChainSwap,
-        current_height: u32,
-        ignore_monitoring_block_height: bool,
-    ) -> Result<()> {
-        let monitoring_block_height =
-            swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS;
-        let is_swap_expired = current_height > swap.timeout_block_height;
-        let is_monitoring_expired = match ignore_monitoring_block_height {
-            true => false,
-            false => current_height > monitoring_block_height,
-        };
-
-        if (is_swap_expired && !is_monitoring_expired) || swap.state == RefundPending {
-            let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
-            let script_balance = self
-                .bitcoin_chain_service
-                .lock()
-                .await
-                .script_get_balance(script_pubkey.as_script())?;
-            info!(
-                "Incoming Chain Swap {} has {} confirmed and {} unconfirmed sats",
-                swap.id, script_balance.confirmed, script_balance.unconfirmed
-            );
-
-            if script_balance.confirmed > 0
-                && script_balance.unconfirmed == 0
-                && swap.state != Refundable
-            {
-                // If there are unspent funds sent to the lockup script address then set
-                // the state to Refundable.
-                info!(
-                    "Incoming Chain Swap {} has {} unspent sats. Setting the swap to refundable",
-                    swap.id, script_balance.confirmed
-                );
-                self.update_swap_info(&ChainSwapUpdate {
-                    swap_id: swap.id.clone(),
-                    to_state: Refundable,
-                    ..Default::default()
-                })?;
-            } else if script_balance.confirmed == 0 {
-                // If the funds sent to the lockup script address are spent then set the
-                // state back to Complete/Failed.
-                let to_state = match swap.claim_tx_id {
-                    Some(_) => Complete,
-                    None => Failed,
-                };
-
-                if to_state != swap.state {
-                    info!(
-                        "Incoming Chain Swap {} has 0 unspent sats. Setting the swap to {:?}",
-                        swap.id, to_state
-                    );
-                    self.update_swap_info(&ChainSwapUpdate {
-                        swap_id: swap.id.clone(),
-                        to_state,
-                        ..Default::default()
-                    })?;
-                }
-            }
-        }
-        Ok(())
     }
 
     async fn claim_incoming(&self, height: u32) -> Result<()> {

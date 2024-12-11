@@ -65,8 +65,6 @@ pub struct LiquidSdk {
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
     pub(crate) swapper: Arc<dyn Swapper>,
     pub(crate) recoverer: Arc<Recoverer>,
-    // TODO: Remove field if unnecessary
-    #[allow(dead_code)]
     pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     pub(crate) bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     pub(crate) fiat_api: Arc<dyn FiatAPI>,
@@ -2163,15 +2161,23 @@ impl LiquidSdk {
     /// (within last [CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS] blocks = ~30 days), calling this
     /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
-        let height = self
-            .bitcoin_chain_service
-            .lock()
-            .await
-            .tip()
-            .map(|tip| tip.height as u32)?;
-        self.chain_swap_handler
-            .rescan_incoming_refunds(height, true)
+        let mut rescannable_swaps: Vec<Swap> = self
+            .persister
+            .list_chain_swaps()?
+            .into_iter()
+            .map(Into::into)
+            .collect();
+        self.recoverer
+            .recover_from_onchain(&mut rescannable_swaps, false)
             .await?;
+        for swap in rescannable_swaps {
+            let swap_id = &swap.id();
+            if let Swap::Chain(chain_swap) = swap {
+                if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
+                    error!("Error persisting rescanned Chain Swap {swap_id}: {e}");
+                }
+            }
+        }
         Ok(())
     }
 
@@ -2369,7 +2375,7 @@ impl LiquidSdk {
                         }
                     }
                     if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
-                        error!("Error persisting recovered chain swap {swap_id}: {e}");
+                        error!("Error persisting recovered Chain Swap {swap_id}: {e}");
                     }
                 }
             };
