@@ -44,22 +44,44 @@ impl Recoverer {
         })
     }
 
-    pub(crate) async fn get_send_swap_preimage_from_claim_tx_id(
-        swap_id: &str,
-        claim_tx_id: &lwk_wollet::elements::Txid,
-        chain_service: Arc<Mutex<dyn LiquidChainService>>,
-    ) -> Result<String, anyhow::Error> {
-        debug!("Send Swap {swap_id} has claim tx {claim_tx_id}");
+    async fn recover_preimages<'a>(
+        &self,
+        claim_tx_ids_by_swap_id: HashMap<&'a String, Txid>,
+    ) -> Result<HashMap<&'a String, String>> {
+        let claim_tx_ids: Vec<Txid> = claim_tx_ids_by_swap_id.values().copied().collect();
 
-        let claim_tx = chain_service
+        let claim_txs = self
+            .liquid_chain_service
             .lock()
             .await
-            .get_transactions(&[*claim_tx_id])
+            .get_transactions(claim_tx_ids.as_slice())
             .await
-            .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
-            .first()
-            .cloned()
-            .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
+            .map_err(|e| anyhow!("Failed to fetch claim txs from recovery: {e}"))?;
+
+        let claim_tx_ids_len = claim_tx_ids.len();
+        let claim_txs_len = claim_txs.len();
+        ensure!(
+            claim_tx_ids_len == claim_txs_len,
+            anyhow!("Got {claim_txs_len} send claim transactions, expected {claim_tx_ids_len}")
+        );
+
+        let claim_txs_by_swap_id: HashMap<&String, lwk_wollet::elements::Transaction> =
+            claim_tx_ids_by_swap_id.into_keys().zip(claim_txs).collect();
+
+        let mut preimages = HashMap::new();
+        for (swap_id, claim_tx) in claim_txs_by_swap_id {
+            if let Ok(preimage) = Self::get_send_swap_preimage_from_claim_tx(swap_id, &claim_tx) {
+                preimages.insert(swap_id, preimage);
+            }
+        }
+        Ok(preimages)
+    }
+
+    pub(crate) fn get_send_swap_preimage_from_claim_tx(
+        swap_id: &str,
+        claim_tx: &lwk_wollet::elements::Transaction,
+    ) -> Result<String, anyhow::Error> {
+        debug!("Send Swap {swap_id} has claim tx {}", claim_tx.txid());
 
         let input = claim_tx
             .input
@@ -107,6 +129,17 @@ impl Recoverer {
             .await?;
 
         let recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
+        let recovered_send_with_claim_tx = recovered_send_data
+            .iter()
+            .filter_map(|(swap_id, send_data)| {
+                send_data
+                    .claim_tx_id
+                    .clone()
+                    .map(|claim_tx_id| (swap_id, claim_tx_id.txid))
+            })
+            .collect::<HashMap<&String, Txid>>();
+        let mut recovered_preimages = self.recover_preimages(recovered_send_with_claim_tx).await?;
+
         let recovered_receive_data =
             self.recover_receive_swap_tx_ids(&tx_map, histories.receive)?;
         let recovered_chain_send_data = self.recover_send_chain_swap_tx_ids(
@@ -144,14 +177,8 @@ impl Recoverer {
                         .refund_tx_id
                         .clone()
                         .map(|h| h.txid.to_string());
-                    if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
-                        send_swap.preimage = Self::get_send_swap_preimage_from_claim_tx_id(
-                            &send_swap.id,
-                            &claim_tx_id.txid,
-                            self.liquid_chain_service.clone(),
-                        )
-                        .await
-                        .ok();
+                    if let Some(preimage) = recovered_preimages.remove(swap_id) {
+                        send_swap.preimage = Some(preimage);
                     }
                 }
                 Swap::Receive(receive_swap) => {

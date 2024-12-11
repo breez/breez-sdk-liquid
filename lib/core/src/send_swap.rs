@@ -365,12 +365,20 @@ impl SendSwapHandler {
             }),
             Some(claim_tx_entry) => {
                 let claim_tx_id = claim_tx_entry.txid;
-                Ok(Recoverer::get_send_swap_preimage_from_claim_tx_id(
-                    id,
-                    &claim_tx_id,
-                    self.chain_service.clone(),
-                )
-                .await?)
+                let claim_tx = self
+                    .chain_service
+                    .lock()
+                    .await
+                    .get_transactions(&[claim_tx_id])
+                    .await
+                    .map_err(|e| anyhow!("Failed to fetch claim txs {claim_tx_id:?}: {e}"))?
+                    .first()
+                    .cloned()
+                    .ok_or(anyhow!("Claim tx not found for Send swap {id}"))?;
+
+                Ok(Recoverer::get_send_swap_preimage_from_claim_tx(
+                    id, &claim_tx,
+                )?)
             }
         }
     }
