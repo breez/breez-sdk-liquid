@@ -569,7 +569,6 @@ enum PaymentState {
     "TimedOut",
     "Refundable",
     "RefundPending",
-    "Recoverable",
 };
 
 dictionary RefundableSwap {

@@ -6,17 +6,16 @@ use async_trait::async_trait;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use boltz_client::util::secrets::Preimage;
-use boltz_client::{Bolt11Invoice, ToHex};
+use boltz_client::Bolt11Invoice;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
-use lwk_wollet::bitcoin::Witness;
 use lwk_wollet::elements::{LockTime, Transaction};
-use lwk_wollet::hashes::{sha256, Hash};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
+use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
@@ -115,8 +114,7 @@ impl SendSwapHandler {
                             .await?;
                         self.validate_send_swap_preimage(id, &swap.invoice, &preimage)
                             .await?;
-                        self.update_swap_info(id, Complete, Some(&preimage), None, None)
-                            .await?;
+                        self.update_swap_info(id, Complete, Some(&preimage), None, None)?;
                     }
                 }
 
@@ -154,15 +152,14 @@ impl SendSwapHandler {
                                 None,
                                 None,
                                 refund_tx_id.as_deref(),
-                            )
-                            .await?;
+                            )?;
                         }
                     },
                     // Do not attempt broadcasting a refund if lockup tx was never sent and swap is
                     // unrecoverable. We resolve the payment as failed.
                     None => {
                         warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has never been broadcast. Resolving payment as failed.");
-                        self.update_swap_info(id, Failed, None, None, None).await?;
+                        self.update_swap_info(id, Failed, None, None, None)?;
                     }
                 }
 
@@ -239,8 +236,7 @@ impl SendSwapHandler {
             None,
         )?;
 
-        self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)
-            .await?;
+        self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)?;
 
         Ok(lockup_tx)
     }
@@ -254,15 +250,47 @@ impl SendSwapHandler {
             })
     }
 
-    /// Transitions a Send swap to a new state
-    pub(crate) async fn update_swap_info(
+    fn notify_swap_changes(
+        &self,
+        swap: SendSwap,
+        updated_swap: SendSwap,
+    ) -> Result<(), PaymentError> {
+        let payment_id = updated_swap
+            .lockup_tx_id
+            .clone()
+            .or(swap.lockup_tx_id.clone());
+        if let Some(payment_id) = payment_id {
+            let _ = self.subscription_notifier.send(payment_id);
+        }
+        Ok(())
+    }
+
+    // Updates the swap without state transition validation
+    pub(crate) fn update_swap(&self, updated_swap: SendSwap) -> Result<(), PaymentError> {
+        let swap = self.fetch_send_swap_by_id(&updated_swap.id)?;
+        if updated_swap != swap {
+            info!(
+                "Updating Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
+                updated_swap.id,
+                updated_swap.state,
+                updated_swap.lockup_tx_id,
+                updated_swap.refund_tx_id
+            );
+            self.persister.insert_or_update_send_swap(&updated_swap)?;
+            self.notify_swap_changes(swap, updated_swap)?;
+        }
+        Ok(())
+    }
+
+    // Updates the swap state with validation
+    pub(crate) fn update_swap_info(
         &self,
         swap_id: &str,
         to_state: PaymentState,
         preimage: Option<&str>,
         lockup_tx_id: Option<&str>,
         refund_tx_id: Option<&str>,
-    ) -> Result<(PaymentState, PaymentState), PaymentError> {
+    ) -> Result<(), PaymentError> {
         info!(
             "Transitioning Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
             swap_id, to_state, lockup_tx_id, refund_tx_id
@@ -277,15 +305,10 @@ impl SendSwapHandler {
             refund_tx_id,
         )?;
         let updated_swap = self.fetch_send_swap_by_id(swap_id)?;
-
-        // Only notify subscribers if the swap changes
-        let payment_id = lockup_tx_id
-            .map(|c| c.to_string())
-            .or(swap.lockup_tx_id.clone());
         if updated_swap != swap {
-            payment_id.and_then(|payment_id| self.subscription_notifier.send(payment_id).ok());
+            self.notify_swap_changes(swap, updated_swap)?;
         }
-        Ok((swap.state, updated_swap.state))
+        Ok(())
     }
 
     async fn cooperate_claim(&self, send_swap: &SendSwap) -> Result<(), PaymentError> {
@@ -301,14 +324,13 @@ impl SendSwapHandler {
             Some(&claim_tx_details.preimage),
             None,
             None,
-        )
-        .await?;
+        )?;
         self.swapper
             .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)?;
         Ok(())
     }
 
-    async fn get_preimage_from_script_path_claim_spend(
+    pub(crate) async fn get_preimage_from_script_path_claim_spend(
         &self,
         swap: &SendSwap,
     ) -> Result<String, PaymentError> {
@@ -343,37 +365,20 @@ impl SendSwapHandler {
             }),
             Some(claim_tx_entry) => {
                 let claim_tx_id = claim_tx_entry.txid;
-                debug!("Send Swap {id} has claim tx {claim_tx_id}");
-
                 let claim_tx = self
                     .chain_service
                     .lock()
                     .await
                     .get_transactions(&[claim_tx_id])
                     .await
-                    .map_err(|e| anyhow!("Failed to fetch claim tx {claim_tx_id}: {e}"))?
+                    .map_err(|e| anyhow!("Failed to fetch claim txs {claim_tx_id:?}: {e}"))?
                     .first()
                     .cloned()
-                    .ok_or_else(|| anyhow!("Fetching claim tx returned an empty list"))?;
+                    .ok_or(anyhow!("Claim tx not found for Send swap {id}"))?;
 
-                let input = claim_tx
-                    .input
-                    .first()
-                    .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
-
-                let script_witness_bytes = input.clone().witness.script_witness;
-                info!("Found Send Swap {id} claim tx witness: {script_witness_bytes:?}");
-                let script_witness = Witness::from(script_witness_bytes);
-
-                let preimage_bytes = script_witness
-                    .nth(1)
-                    .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
-                let preimage = sha256::Hash::from_slice(preimage_bytes)
-                    .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
-                let preimage_hex = preimage.to_hex();
-                debug!("Found Send Swap {id} claim tx preimage: {preimage_hex}");
-
-                Ok(preimage_hex)
+                Ok(Recoverer::get_send_swap_preimage_from_claim_tx(
+                    id, &claim_tx,
+                )?)
             }
         }
     }
@@ -487,9 +492,8 @@ impl SendSwapHandler {
             };
 
             if let Ok(refund_tx_id) = refund_tx_id_result {
-                let update_swap_info_result = self
-                    .update_swap_info(&swap.id, RefundPending, None, None, Some(&refund_tx_id))
-                    .await;
+                let update_swap_info_result =
+                    self.update_swap_info(&swap.id, RefundPending, None, None, Some(&refund_tx_id));
                 if let Err(err) = update_swap_info_result {
                     warn!(
                         "Could not update Send swap {} information, error: {err:?}",
@@ -513,13 +517,6 @@ impl SendSwapHandler {
         to_state: PaymentState,
     ) -> Result<(), PaymentError> {
         match (from_state, to_state) {
-            (Recoverable, Created | Pending | Refundable | RefundPending | Failed | Complete) => {
-                Ok(())
-            }
-            (_, Recoverable) => Err(PaymentError::Generic {
-                err: format!("Cannot transition from {from_state:?} to Recoverable state"),
-            }),
-
             (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
                 err: "Cannot transition from {from_state:?} to Created state".to_string(),
@@ -607,11 +604,10 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let send_swap = new_send_swap(Some(*first_state));
-                storage.insert_send_swap(&send_swap)?;
+                storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler
                     .update_swap_info(&send_swap.id, *allowed_state, None, None, None)
-                    .await
                     .is_ok());
             }
         }
@@ -631,11 +627,10 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let send_swap = new_send_swap(Some(*first_state));
-                storage.insert_send_swap(&send_swap)?;
+                storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler
                     .update_swap_info(&send_swap.id, *disallowed_state, None, None, None)
-                    .await
                     .is_err());
             }
         }

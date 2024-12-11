@@ -11,16 +11,16 @@ use crate::persist::{get_where_clause_state_in, Persister};
 use crate::sync::model::RecordType;
 
 impl Persister {
-    pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
+    pub(crate) fn insert_or_update_chain_swap_inner(
+        con: &Connection,
+        chain_swap: &ChainSwap,
+    ) -> Result<()> {
         // There is a limit of 16 param elements in a single tuple in rusqlite,
         // so we split up the insert into two statements.
         let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
-        tx.execute(
+        con.execute(
             "
-            INSERT INTO chain_swaps (
+            INSERT OR REPLACE INTO chain_swaps (
                 id,
                 id_hash,
                 direction,
@@ -61,7 +61,7 @@ impl Persister {
             ),
         )?;
 
-        tx.execute(
+        con.execute(
             "UPDATE chain_swaps
             SET
                 description = :description,
@@ -81,6 +81,14 @@ impl Persister {
             },
         )?;
 
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_chain_swap_inner(&tx, chain_swap)?;
         self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
         tx.commit()?;
         self.sync_trigger.try_send(())?;
