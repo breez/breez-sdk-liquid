@@ -190,7 +190,6 @@ impl Persister {
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
-            PaymentState::Recoverable,
         ])];
 
         self.list_receive_swaps_where(&con, where_clause)

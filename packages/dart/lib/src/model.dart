@@ -736,12 +736,6 @@ enum PaymentState {
   ///
   /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
   refundPending,
-
-  /// ## Recoverable Swaps
-  ///
-  /// The status for swaps that have been synced in, and whose information is recoverable from
-  /// chain
-  recoverable,
   ;
 }
 
