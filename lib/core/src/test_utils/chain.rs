@@ -9,9 +9,13 @@ use boltz_client::{
     },
     Amount,
 };
-use electrum_client::bitcoin::{consensus::deserialize, OutPoint, Script, TxOut};
 use electrum_client::GetBalanceRes;
+use electrum_client::{
+    bitcoin::{consensus::deserialize, OutPoint, Script, TxOut},
+    HeaderNotification,
+};
 use lwk_wollet::{
+    bitcoin::constants::genesis_block,
     elements::{BlockHash, Txid as ElementsTxid},
     History,
 };
@@ -60,7 +64,7 @@ impl MockLiquidChainService {
 #[async_trait]
 impl LiquidChainService for MockLiquidChainService {
     async fn tip(&mut self) -> Result<u32> {
-        unimplemented!()
+        Ok(0)
     }
 
     async fn broadcast(
@@ -139,8 +143,11 @@ impl MockBitcoinChainService {
 
 #[async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
-    fn tip(&mut self) -> Result<electrum_client::HeaderNotification> {
-        unimplemented!()
+    fn tip(&mut self) -> Result<HeaderNotification> {
+        Ok(HeaderNotification {
+            height: 0,
+            header: genesis_block(lwk_wollet::bitcoin::Network::Testnet).header,
+        })
     }
 
     fn broadcast(
@@ -186,11 +193,14 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<electrum_client::GetBalanceRes> {
-        unimplemented!()
+        Ok(GetBalanceRes {
+            confirmed: 0,
+            unconfirmed: 0,
+        })
     }
 
     fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
-        unimplemented!()
+        Ok(vec![])
     }
 
     async fn verify_tx(
