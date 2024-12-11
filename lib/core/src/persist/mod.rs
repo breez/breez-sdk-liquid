@@ -115,13 +115,17 @@ impl Persister {
         )?;
 
         if let Some(destination) = destination {
+            // Only store the destination if there is no payment_details entry else
+            // the destination is overwritten by the tx script_pubkey
             con.execute(
-                "INSERT OR REPLACE INTO payment_details (
+                "INSERT INTO payment_details (
                     tx_id,
                     destination,
                     description 
                 )
-                VALUES (?, ?, ?)
+                VALUES (?1, ?2, ?3)
+                ON CONFLICT (tx_id)
+                DO UPDATE SET description = COALESCE(?3, description) 
             ",
                 (ptx.tx_id, destination, description),
             )?;
