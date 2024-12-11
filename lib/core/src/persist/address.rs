@@ -1,6 +1,6 @@
 use anyhow::Result;
 use log::debug;
-use rusqlite::{Row, Transaction, TransactionBehavior};
+use rusqlite::{Connection, Row, TransactionBehavior};
 
 use crate::error::PaymentError;
 
@@ -80,7 +80,10 @@ impl Persister {
         Ok(())
     }
 
-    fn delete_reserved_address_inner(tx: &Transaction, address: &str) -> Result<(), PaymentError> {
+    pub(crate) fn delete_reserved_address_inner(
+        tx: &Connection,
+        address: &str,
+    ) -> Result<(), PaymentError> {
         tx.execute(
             "DELETE FROM reserved_addresses WHERE address = ?",
             [address],

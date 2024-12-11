@@ -6,6 +6,7 @@ pub(crate) mod chain;
 pub(crate) mod chain_swap;
 pub(crate) mod persist;
 pub(crate) mod receive_swap;
+pub(crate) mod recover;
 pub(crate) mod sdk;
 pub(crate) mod send_swap;
 pub(crate) mod status_stream;

@@ -644,6 +644,21 @@ impl Swap {
         }
     }
 }
+impl From<ChainSwap> for Swap {
+    fn from(swap: ChainSwap) -> Self {
+        Self::Chain(swap)
+    }
+}
+impl From<SendSwap> for Swap {
+    fn from(swap: SendSwap) -> Self {
+        Self::Send(swap)
+    }
+}
+impl From<ReceiveSwap> for Swap {
+    fn from(swap: ReceiveSwap) -> Self {
+        Self::Receive(swap)
+    }
+}
 
 #[derive(Clone, Debug)]
 pub(crate) enum SwapScriptV2 {
@@ -947,6 +962,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
+    /// The transaction id of the swapper's tx broadcast
+    pub(crate) lockup_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
@@ -1102,12 +1119,6 @@ pub enum PaymentState {
     ///
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
-
-    /// ## Recoverable Swaps
-    ///
-    /// The status for swaps that have been synced in, and whose information is recoverable from
-    /// chain
-    Recoverable = 7,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -1125,7 +1136,6 @@ impl FromSql for PaymentState {
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
                 6 => Ok(PaymentState::RefundPending),
-                7 => Ok(PaymentState::Recoverable),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),

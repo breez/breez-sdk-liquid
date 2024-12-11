@@ -11,18 +11,19 @@ use crate::sync::model::RecordType;
 use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
-    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
-
+    pub(crate) fn insert_or_update_send_swap_inner(
+        con: &Connection,
+        send_swap: &SendSwap,
+    ) -> Result<()> {
         let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
-        tx.execute(
+        con.execute(
             "
-            INSERT INTO send_swaps (
+            INSERT OR REPLACE INTO send_swaps (
                 id,
                 id_hash,
                 invoice,
                 bolt12_offer,
+                preimage,
                 payment_hash,
                 description,
                 payer_amount_sat,
@@ -41,6 +42,7 @@ impl Persister {
                 &id_hash,
                 &send_swap.invoice,
                 &send_swap.bolt12_offer,
+                &send_swap.preimage,
                 &send_swap.payment_hash,
                 &send_swap.description,
                 &send_swap.payer_amount_sat,
@@ -55,6 +57,14 @@ impl Persister {
             ),
         )?;
 
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_send_swap_inner(&tx, send_swap)?;
         self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
         tx.commit()?;
         self.sync_trigger.try_send(())?;
@@ -152,11 +162,6 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_send_swaps_where(&con, vec![])
-    }
-
     pub(crate) fn list_send_swaps_where(
         &self,
         con: &Connection,
@@ -195,7 +200,6 @@ impl Persister {
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Pending,
             PaymentState::RefundPending,
-            PaymentState::Recoverable,
         ])];
         self.list_send_swaps_where(&con, where_clause)
     }
@@ -354,7 +358,7 @@ mod tests {
         create_persister!(storage);
         let send_swap = new_send_swap(None);
 
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_send_swap_by_id(&send_swap.id).is_ok());
         // Fetch swap by invoice
@@ -372,7 +376,7 @@ mod tests {
         // List general send swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_send_swap(&new_send_swap(None))?;
+            storage.insert_or_update_send_swap(&new_send_swap(None))?;
         }
 
         let con = storage.get_connection()?;
@@ -380,7 +384,7 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing send swaps
-        storage.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
         let ongoing_swaps = storage.list_ongoing_send_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
@@ -396,7 +400,7 @@ mod tests {
         create_persister!(storage);
 
         let mut send_swap = new_send_swap(None);
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
 
         // Update metadata
         let new_state = PaymentState::Pending;
