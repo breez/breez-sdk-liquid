@@ -18,12 +18,12 @@ use crate::{
 };
 
 use self::client::SyncerClient;
-use self::model::SyncOutgoingChanges;
 use self::model::{
     data::{ChainSyncData, ReceiveSyncData, SendSyncData, SyncData},
     sync::ListChangesRequest,
     RecordType, SyncState,
 };
+use self::model::{DecryptionError, SyncOutgoingChanges};
 
 pub(crate) mod client;
 pub(crate) mod model;
@@ -201,22 +201,25 @@ impl SyncService {
         Ok(())
     }
 
-    async fn handle_decryption(&self, new_record: Record) -> Result<DecryptionInfo> {
-        log::info!(
+    async fn handle_decryption(
+        &self,
+        new_record: Record,
+    ) -> Result<DecryptionInfo, DecryptionError> {
+        log::debug!(
             "Handling decryption for record record_id {}",
             &new_record.id
         );
 
         // Step 3: Check whether or not record is applicable (from its schema_version)
         if !new_record.is_applicable()? {
-            return Err(anyhow!("Record is not applicable: schema_version too high"));
+            return Err(DecryptionError::SchemaNotApplicable);
         }
 
         // Step 4: Check whether we already have this record, and if the revision is newer
         let maybe_sync_state = self.persister.get_sync_state_by_record_id(&new_record.id)?;
         if let Some(sync_state) = &maybe_sync_state {
             if sync_state.record_revision >= new_record.revision {
-                return Err(anyhow!("Remote record revision is lower or equal to the persisted one. Skipping update."));
+                return Err(DecryptionError::AlreadyPersisted);
             }
         }
 
@@ -246,6 +249,8 @@ impl SyncService {
                 .unwrap_or(false),
         };
         let last_commit_time = maybe_outgoing_changes.map(|details| details.commit_time);
+
+        log::debug!("Successfully decrypted record {}", &decrypted_record.id);
 
         Ok(DecryptionInfo {
             new_sync_state,
@@ -291,11 +296,14 @@ impl SyncService {
 
         // Step 3: Decrypt all the records, if possible. Filter those whose revision/schema is not
         // applicable
+        let mut succeded = vec![];
         let mut decrypted: Vec<DecryptionInfo> = vec![];
         for record in incoming_records {
             let record_id = record.id.clone();
             match self.handle_decryption(record).await {
                 Ok(decryption_info) => decrypted.push(decryption_info),
+                // If we already have this record, it should be cleaned from sync_incoming
+                Err(DecryptionError::AlreadyPersisted) => succeded.push(record_id),
                 Err(e) => {
                     log::debug!(
                         "Could not handle decryption of incoming record {record_id}: {e:?}",
@@ -312,8 +320,6 @@ impl SyncService {
         ) = decrypted
             .into_iter()
             .partition(|result| result.record.data.is_swap());
-
-        let mut succeded = vec![];
 
         // Step 5: Recover the swap records' data from onchain, and commit it
         for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
@@ -347,7 +353,7 @@ impl SyncService {
         data_id: &str,
         record_type: RecordType,
     ) -> Result<()> {
-        log::info!("Handling push for record record_id {record_id} data_id {data_id}");
+        log::debug!("Handling push for record record_id {record_id} data_id {data_id}");
 
         // Step 1: Get the sync state, if it exists, to compute the revision
         let maybe_sync_state = self.persister.get_sync_state_by_record_id(record_id)?;
