@@ -159,6 +159,7 @@ export interface LiquidAddressData {
 
 export interface ListPaymentsRequest {
     filters?: PaymentType[]
+    states?: PaymentState[]
     fromTimestamp?: number
     toTimestamp?: number
     offset?: number

@@ -362,6 +362,7 @@ sealed class ListPaymentDetails with _$ListPaymentDetails {
 /// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 class ListPaymentsRequest {
   final List<PaymentType>? filters;
+  final List<PaymentState>? states;
 
   /// Epoch time, in seconds
   final PlatformInt64? fromTimestamp;
@@ -374,6 +375,7 @@ class ListPaymentsRequest {
 
   const ListPaymentsRequest({
     this.filters,
+    this.states,
     this.fromTimestamp,
     this.toTimestamp,
     this.offset,
@@ -384,6 +386,7 @@ class ListPaymentsRequest {
   @override
   int get hashCode =>
       filters.hashCode ^
+      states.hashCode ^
       fromTimestamp.hashCode ^
       toTimestamp.hashCode ^
       offset.hashCode ^
@@ -396,6 +399,7 @@ class ListPaymentsRequest {
       other is ListPaymentsRequest &&
           runtimeType == other.runtimeType &&
           filters == other.filters &&
+          states == other.states &&
           fromTimestamp == other.fromTimestamp &&
           toTimestamp == other.toTimestamp &&
           offset == other.offset &&
