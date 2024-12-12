@@ -341,37 +341,49 @@ impl LiquidSdk {
                     _ = interval.tick() => {
                         // Get the Liquid tip and process a new block
                         let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
-                        match liquid_tip_res {
+                        let is_new_liquid_block = match liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
-                                if height > current_liquid_block {
-                                    // Sync on new Liquid block
-                                    _ = cloned.sync().await;
-                                    // Update swap handlers
-                                    cloned.chain_swap_handler.on_liquid_block(height).await;
-                                    cloned.send_swap_handler.on_liquid_block(height).await;
-                                    current_liquid_block = height;
-                                } else {
-                                    // Partial sync of wallet txs
-                                    _ = cloned.sync_payments_with_chain_data(true).await;
-                                }
+                                let is_new_liquid_block = height > current_liquid_block;
+                                current_liquid_block = height;
+                                is_new_liquid_block
                             },
-                            Err(e) => error!("Failed to fetch Liquid tip {e}"),
+                            Err(e) => {
+                                error!("Failed to fetch Liquid tip {e}");
+                                false
+                            }
                         };
                         // Get the Bitcoin tip and process a new block
                         let bitcoin_tip_res = cloned.bitcoin_chain_service.lock().await.tip().map(|tip| tip.height as u32);
-                        match bitcoin_tip_res {
+                        let is_new_bitcoin_block = match bitcoin_tip_res {
                             Ok(height) => {
                                 debug!("Got Bitcoin tip: {height}");
-                                if height > current_bitcoin_block {
-                                    // Update swap handlers
-                                    cloned.chain_swap_handler.on_bitcoin_block(height).await;
-                                    cloned.send_swap_handler.on_bitcoin_block(height).await;
-                                    current_bitcoin_block = height;
-                                }
+                                let is_new_bitcoin_block = height > current_bitcoin_block;
+                                current_bitcoin_block = height;
+                                is_new_bitcoin_block
                             },
-                            Err(e) => error!("Failed to fetch Bitcoin tip {e}"),
+                            Err(e) => {
+                                error!("Failed to fetch Bitcoin tip {e}");
+                                false
+                            }
                         };
+                        if is_new_liquid_block || is_new_bitcoin_block {
+                            // Sync on new Liquid or Bitcoin block
+                            _ = cloned.sync().await;
+                        } else {
+                            // Partial sync of wallet txs
+                            _ = cloned.sync_payments_with_chain_data(true).await;
+                        }
+                        if is_new_liquid_block {
+                            // Update swap handlers
+                            cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
+                            cloned.send_swap_handler.on_liquid_block(current_liquid_block).await;
+                        }
+                        if is_new_bitcoin_block {
+                            // Update swap handlers
+                            cloned.chain_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                            cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                        }
                     }
 
                     _ = shutdown_receiver.changed() => {
