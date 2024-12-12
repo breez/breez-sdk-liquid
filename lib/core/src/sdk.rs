@@ -1,3 +1,4 @@
+use std::ops::Not as _;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
@@ -356,37 +357,46 @@ impl LiquidSdk {
                     _ = interval.tick() => {
                         // Get the Liquid tip and process a new block
                         let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
-                        match liquid_tip_res {
+                        let is_new_liquid_block = match liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
-                                if height > current_liquid_block {
-                                    // Sync on new Liquid block
-                                    _ = cloned.sync().await;
-                                    // Update swap handlers
-                                    cloned.chain_swap_handler.on_liquid_block(height).await;
-                                    cloned.send_swap_handler.on_liquid_block(height).await;
-                                    current_liquid_block = height;
-                                } else {
-                                    // Partial sync of wallet txs
-                                    _ = cloned.sync_payments_with_chain_data(true).await;
-                                }
+                                let is_new_liquid_block = height > current_liquid_block;
+                                current_liquid_block = height;
+                                is_new_liquid_block
                             },
-                            Err(e) => error!("Failed to fetch Liquid tip {e}"),
+                            Err(e) => {
+                                error!("Failed to fetch Liquid tip {e}");
+                                false
+                            }
                         };
                         // Get the Bitcoin tip and process a new block
                         let bitcoin_tip_res = cloned.bitcoin_chain_service.lock().await.tip().map(|tip| tip.height as u32);
-                        match bitcoin_tip_res {
+                        let is_new_bitcoin_block = match bitcoin_tip_res {
                             Ok(height) => {
                                 debug!("Got Bitcoin tip: {height}");
-                                if height > current_bitcoin_block {
-                                    // Update swap handlers
-                                    cloned.chain_swap_handler.on_bitcoin_block(height).await;
-                                    cloned.send_swap_handler.on_bitcoin_block(height).await;
-                                    current_bitcoin_block = height;
-                                }
+                                let is_new_bitcoin_block = height > current_bitcoin_block;
+                                current_bitcoin_block = height;
+                                is_new_bitcoin_block
                             },
-                            Err(e) => error!("Failed to fetch Bitcoin tip {e}"),
+                            Err(e) => {
+                                error!("Failed to fetch Bitcoin tip {e}");
+                                false
+                            }
                         };
+
+                        // Only partial sync when there are no new Liquid or Bitcoin blocks
+                        let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
+                        _ = cloned.sync(partial_sync).await;
+
+                        // Update swap handlers
+                        if is_new_liquid_block {
+                            cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
+                            cloned.send_swap_handler.on_liquid_block(current_liquid_block).await;
+                        }
+                        if is_new_bitcoin_block {
+                            cloned.chain_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                            cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                        }
                     }
 
                     _ = shutdown_receiver.changed() => {
@@ -2516,7 +2526,7 @@ impl LiquidSdk {
     }
 
     /// Synchronizes the local state with the mempool and onchain data.
-    pub async fn sync(&self) -> SdkResult<()> {
+    pub async fn sync(&self, partial_sync: bool) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
@@ -2527,16 +2537,16 @@ impl LiquidSdk {
         match is_first_sync {
             true => {
                 self.event_manager.pause_notifications();
-                self.sync_payments_with_chain_data(false).await?;
+                self.sync_payments_with_chain_data(partial_sync).await?;
                 self.event_manager.resume_notifications();
                 self.persister.set_is_first_sync_complete(true)?;
             }
             false => {
-                self.sync_payments_with_chain_data(false).await?;
+                self.sync_payments_with_chain_data(partial_sync).await?;
             }
         }
         let duration_ms = Instant::now().duration_since(t0).as_millis();
-        info!("Synchronized with mempool and onchain data (t = {duration_ms} ms)");
+        info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
         self.notify_event_listeners(SdkEvent::Synced).await?;
         Ok(())

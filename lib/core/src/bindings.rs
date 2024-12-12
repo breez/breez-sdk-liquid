@@ -256,7 +256,7 @@ impl BindingLiquidSdk {
 
     #[frb(name = "sync")]
     pub async fn sync(&self) -> Result<(), SdkError> {
-        self.sdk.sync().await.map_err(Into::into)
+        self.sdk.sync(false).await.map_err(Into::into)
     }
 
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {

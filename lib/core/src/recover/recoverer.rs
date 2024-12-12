@@ -659,6 +659,7 @@ impl Recoverer {
                         .iter()
                         .any(|out| matches!(&out.script_pubkey, x if x == &btc_lockup_script))
                 });
+            // Get the user lockup tx from the first incoming txs
             let btc_user_lockup_tx_id = btc_lockup_incoming_txs
                 .first()
                 .and_then(|tx| {
@@ -668,19 +669,28 @@ impl Recoverer {
                         .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
                 })
                 .cloned();
-            let btc_last_outgoing_tx_id = btc_lockup_outgoing_txs
-                .last()
-                .and_then(|tx| {
+            let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
+                .iter()
+                .filter_map(|tx| {
                     history
                         .btc_lockup_script_history
                         .iter()
                         .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
                 })
+                .cloned()
+                .collect();
+            // Get the last unconfirmed tx from the outgoing txs, else take the last outgoing tx
+            let btc_last_outgoing_tx_id = btc_outgoing_tx_ids
+                .iter()
+                .rev()
+                .find(|h| h.height == 0)
+                .or(btc_outgoing_tx_ids.last())
                 .cloned();
 
-            // The second BTC tx is only a refund in case we didn't claim.
-            // If we claimed, then the first outgoing BTC tx was the swapper BTC claim tx.
-            // If there are more than 2 txs then this is a refund from lockup address re-use, so take the last tx.
+            // The first outgoing BTC tx is only a refund in case we didn't claim.
+            // If we claimed, then the first tx was the swapper BTC claim tx.
+            // If there are more than 1 outgoing txs then this is a refund from lockup address re-use,
+            // so take the last unconfirmed tx else take the last confirmed tx.
             let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
                 true => match btc_lockup_outgoing_txs.len() > 1 {
                     true => btc_last_outgoing_tx_id,
