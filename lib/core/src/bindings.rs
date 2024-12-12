@@ -66,10 +66,6 @@ pub fn default_config(
     LiquidSdk::default_config(network, breez_api_key)
 }
 
-pub async fn parse(input: String) -> Result<InputType, PaymentError> {
-    LiquidSdk::parse(&input).await
-}
-
 #[frb(sync)]
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
@@ -95,6 +91,10 @@ impl BindingLiquidSdk {
         req: CheckMessageRequest,
     ) -> Result<CheckMessageResponse, SdkError> {
         self.sdk.check_message(&req)
+    }
+
+    pub async fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        self.sdk.parse(&input).await
     }
 
     pub async fn add_event_listener(

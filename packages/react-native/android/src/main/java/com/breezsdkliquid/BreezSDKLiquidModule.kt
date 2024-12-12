@@ -76,21 +76,6 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
-    fun parse(
-        input: String,
-        promise: Promise,
-    ) {
-        executor.execute {
-            try {
-                val res = parse(input)
-                promise.resolve(readableMapOf(res))
-            } catch (e: Exception) {
-                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
-            }
-        }
-    }
-
-    @ReactMethod
     fun parseInvoice(
         input: String,
         promise: Promise,
@@ -215,6 +200,21 @@ class BreezSDKLiquidModule(
                 val checkMessageRequest =
                     asCheckMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "CheckMessageRequest")) }
                 val res = getBindingLiquidSdk().checkMessage(checkMessageRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun parse(
+        input: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().parse(input)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)

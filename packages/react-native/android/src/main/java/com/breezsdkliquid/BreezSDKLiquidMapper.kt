@@ -272,6 +272,14 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val externalInputParsers =
+        if (hasNonNullKey(config, "externalInputParsers")) {
+            config.getArray("externalInputParsers")?.let {
+                asExternalInputParserList(it)
+            }
+        } else {
+            null
+        }
     return Config(
         liquidElectrumUrl,
         bitcoinElectrumUrl,
@@ -283,6 +291,7 @@ fun asConfig(config: ReadableMap): Config? {
         breezApiKey,
         cacheDir,
         zeroConfMaxAmountSat,
+        externalInputParsers,
     )
 }
 
@@ -298,6 +307,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "breezApiKey" to config.breezApiKey,
         "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
+        "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {
@@ -413,6 +423,42 @@ fun asCurrencyInfoList(arr: ReadableArray): List<CurrencyInfo> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asCurrencyInfo(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asExternalInputParser(externalInputParser: ReadableMap): ExternalInputParser? {
+    if (!validateMandatoryFields(
+            externalInputParser,
+            arrayOf(
+                "providerId",
+                "inputRegex",
+                "parserUrl",
+            ),
+        )
+    ) {
+        return null
+    }
+    val providerId = externalInputParser.getString("providerId")!!
+    val inputRegex = externalInputParser.getString("inputRegex")!!
+    val parserUrl = externalInputParser.getString("parserUrl")!!
+    return ExternalInputParser(providerId, inputRegex, parserUrl)
+}
+
+fun readableMapOf(externalInputParser: ExternalInputParser): ReadableMap =
+    readableMapOf(
+        "providerId" to externalInputParser.providerId,
+        "inputRegex" to externalInputParser.inputRegex,
+        "parserUrl" to externalInputParser.parserUrl,
+    )
+
+fun asExternalInputParserList(arr: ReadableArray): List<ExternalInputParser> {
+    val list = ArrayList<ExternalInputParser>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asExternalInputParser(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -3291,6 +3337,7 @@ fun pushToArray(
 ) {
     when (value) {
         null -> array.pushNull()
+        is ExternalInputParser -> array.pushMap(readableMapOf(value))
         is FiatCurrency -> array.pushMap(readableMapOf(value))
         is LnOfferBlindedPath -> array.pushMap(readableMapOf(value))
         is LocaleOverrides -> array.pushMap(readableMapOf(value))

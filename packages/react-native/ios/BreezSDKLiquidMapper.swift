@@ -328,8 +328,12 @@ enum BreezSDKLiquidMapper {
             }
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
+        var externalInputParsers: [ExternalInputParser]?
+        if let externalInputParsersTmp = config["externalInputParsers"] as? [[String: Any?]] {
+            externalInputParsers = try asExternalInputParserList(arr: externalInputParsersTmp)
+        }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, externalInputParsers: externalInputParsers)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -344,6 +348,7 @@ enum BreezSDKLiquidMapper {
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
+            "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
         ]
     }
 
@@ -497,6 +502,45 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(currencyInfoList: [CurrencyInfo]) -> [Any] {
         return currencyInfoList.map { v -> [String: Any?] in return dictionaryOf(currencyInfo: v) }
+    }
+
+    static func asExternalInputParser(externalInputParser: [String: Any?]) throws -> ExternalInputParser {
+        guard let providerId = externalInputParser["providerId"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "providerId", typeName: "ExternalInputParser"))
+        }
+        guard let inputRegex = externalInputParser["inputRegex"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "inputRegex", typeName: "ExternalInputParser"))
+        }
+        guard let parserUrl = externalInputParser["parserUrl"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "parserUrl", typeName: "ExternalInputParser"))
+        }
+
+        return ExternalInputParser(providerId: providerId, inputRegex: inputRegex, parserUrl: parserUrl)
+    }
+
+    static func dictionaryOf(externalInputParser: ExternalInputParser) -> [String: Any?] {
+        return [
+            "providerId": externalInputParser.providerId,
+            "inputRegex": externalInputParser.inputRegex,
+            "parserUrl": externalInputParser.parserUrl,
+        ]
+    }
+
+    static func asExternalInputParserList(arr: [Any]) throws -> [ExternalInputParser] {
+        var list = [ExternalInputParser]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var externalInputParser = try asExternalInputParser(externalInputParser: val)
+                list.append(externalInputParser)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "ExternalInputParser"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(externalInputParserList: [ExternalInputParser]) -> [Any] {
+        return externalInputParserList.map { v -> [String: Any?] in return dictionaryOf(externalInputParser: v) }
     }
 
     static func asFiatCurrency(fiatCurrency: [String: Any?]) throws -> FiatCurrency {

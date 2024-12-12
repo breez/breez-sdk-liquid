@@ -21,7 +21,7 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.4.0", features = [
-  "chrono",
+    "chrono",
 ], optional = true }
 # We need at least lightning v0.0.125 for the Bolt12 structs. The lightning version from sdk-common is too old (v0.0.118, matching vls-core).
 lightning = "0.0.125"
@@ -32,7 +32,7 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-s
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5955216ec4ed003972b4473a77207dfb744da882", features = ["liquid"]}
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "e537feb8ed134bc3c7af5196e10a0a189dd36ac7", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -44,8 +44,8 @@ tokio = { version = "1", features = ["rt", "macros"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = [
-  "sink",
-  "std",
+    "sink",
+    "std",
 ] }
 async-trait = "0.1.80"
 hex = "0.4"

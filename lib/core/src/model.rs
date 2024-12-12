@@ -53,6 +53,10 @@ pub struct Config {
     pub zero_conf_max_amount_sat: Option<u64>,
     /// The Breez API key used for making requests to their mempool service
     pub breez_api_key: Option<String>,
+    /// A set of external input parsers that are used by [LiquidSdk::parse] when the input
+    /// is not recognized. See [ExternalInputParser] for more details on how to configure
+    /// external parsing.
+    pub external_input_parsers: Option<Vec<ExternalInputParser>>,
 }
 
 impl Config {
@@ -68,6 +72,7 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
+            external_input_parsers: None,
         }
     }
 
@@ -83,6 +88,7 @@ impl Config {
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
             zero_conf_max_amount_sat: None,
             breez_api_key,
+            external_input_parsers: None,
         }
     }
 

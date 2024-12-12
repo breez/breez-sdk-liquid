@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
-
 use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -23,6 +19,9 @@ use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
+use std::collections::HashMap;
+use std::time::Instant;
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -574,7 +573,7 @@ impl LiquidSdk {
     }
 
     async fn validate_bitcoin_address(&self, input: &str) -> Result<String, PaymentError> {
-        match sdk::LiquidSdk::parse(input).await? {
+        match self.parse(input).await? {
             InputType::BitcoinAddress {
                 address: bitcoin_address_data,
                 ..
@@ -823,7 +822,7 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let payment_destination;
 
-        match Self::parse(&req.destination).await {
+        match self.parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
                 address: mut liquid_address_data,
             }) => {
@@ -2693,7 +2692,9 @@ impl LiquidSdk {
     }
 
     /// Parses a string into an [InputType]. See [input_parser::parse].
-    pub async fn parse(input: &str) -> Result<InputType, PaymentError> {
+    ///
+    /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
+    pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         if let Ok(offer) = input.parse::<Offer>() {
             // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
             //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
@@ -2748,7 +2749,8 @@ impl LiquidSdk {
             });
         }
 
-        parse(input)
+        let external_parsers = &self.config.external_input_parsers;
+        parse(input, external_parsers.as_deref())
             .await
             .map_err(|e| PaymentError::generic(&e.to_string()))
     }
