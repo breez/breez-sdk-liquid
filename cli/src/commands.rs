@@ -556,7 +556,7 @@ pub(crate) async fn handle_command(
             command_result!("Rescanned successfully")
         }
         Command::Sync => {
-            sdk.sync().await?;
+            sdk.sync(false).await?;
             command_result!("Synced successfully")
         }
         Command::RecommendedFees => {
