@@ -78,6 +78,46 @@ pub(crate) struct DecryptedRecord {
     pub(crate) data: SyncData,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum DecryptionError {
+    #[error("Record is not applicable: schema_version too high")]
+    SchemaNotApplicable,
+
+    #[error("Remote record revision is lower or equal to the persisted one. Skipping update.")]
+    AlreadyPersisted,
+
+    #[error("Could not decrypt payload with signer: {err}")]
+    InvalidPayload { err: String },
+
+    #[error("Could not deserialize JSON bytes: {err}")]
+    DeserializeError { err: String },
+
+    #[error("Generic error: {err}")]
+    Generic { err: String },
+}
+
+impl DecryptionError {
+    pub(crate) fn invalid_payload(err: crate::model::SignerError) -> Self {
+        Self::InvalidPayload {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn deserialize_error(err: serde_json::Error) -> Self {
+        Self::DeserializeError {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<anyhow::Error> for DecryptionError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Generic {
+            err: value.to_string(),
+        }
+    }
+}
+
 pub(crate) struct DecryptionInfo {
     pub(crate) new_sync_state: SyncState,
     pub(crate) record: DecryptedRecord,
@@ -135,9 +175,14 @@ impl Record {
         Ok(CURRENT_SCHEMA_VERSION.major >= record_version.major)
     }
 
-    pub(crate) fn decrypt(self, signer: Arc<Box<dyn Signer>>) -> Result<DecryptedRecord> {
-        let dec_data = signer.ecies_decrypt(self.data)?;
-        let data = serde_json::from_slice(&dec_data)?;
+    pub(crate) fn decrypt(
+        self,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Result<DecryptedRecord, DecryptionError> {
+        let dec_data = signer
+            .ecies_decrypt(self.data)
+            .map_err(DecryptionError::invalid_payload)?;
+        let data = serde_json::from_slice(&dec_data).map_err(DecryptionError::deserialize_error)?;
         Ok(DecryptedRecord {
             id: self.id,
             revision: self.revision,
