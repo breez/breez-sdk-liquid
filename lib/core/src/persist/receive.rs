@@ -18,7 +18,7 @@ impl Persister {
         let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
         con.execute(
             "
-            INSERT OR REPLACE INTO receive_swaps (
+            INSERT INTO receive_swaps (
                 id,
                 id_hash,
                 preimage,
@@ -34,7 +34,9 @@ impl Persister {
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING
+            ",
             (
                 &receive_swap.id,
                 id_hash,
@@ -59,7 +61,8 @@ impl Persister {
                 description = :description,
                 claim_tx_id = :claim_tx_id,
                 lockup_tx_id = :lockup_tx_id,
-                mrh_tx_id = :mrh_tx_id
+                mrh_tx_id = :mrh_tx_id,
+                state = :state
             WHERE
                 id = :id",
             named_params! {
@@ -68,6 +71,7 @@ impl Persister {
                 ":claim_tx_id": &receive_swap.claim_tx_id,
                 ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
+                ":state": &receive_swap.state,
             },
         )?;
 
