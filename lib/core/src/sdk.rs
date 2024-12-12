@@ -1,3 +1,4 @@
+use std::ops::Not as _;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
@@ -367,20 +368,17 @@ impl LiquidSdk {
                                 false
                             }
                         };
-                        if is_new_liquid_block || is_new_bitcoin_block {
-                            // Sync on new Liquid or Bitcoin block
-                            _ = cloned.sync().await;
-                        } else {
-                            // Partial sync of wallet txs
-                            _ = cloned.sync_payments_with_chain_data(true).await;
-                        }
+
+                        // Only partial sync when there are no new Liquid or Bitcoin blocks
+                        let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
+                        _ = cloned.sync(partial_sync).await;
+
+                        // Update swap handlers
                         if is_new_liquid_block {
-                            // Update swap handlers
                             cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_liquid_block(current_liquid_block).await;
                         }
                         if is_new_bitcoin_block {
-                            // Update swap handlers
                             cloned.chain_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                             cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                         }
@@ -2498,7 +2496,7 @@ impl LiquidSdk {
     }
 
     /// Synchronizes the local state with the mempool and onchain data.
-    pub async fn sync(&self) -> SdkResult<()> {
+    pub async fn sync(&self, partial_sync: bool) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
@@ -2509,16 +2507,16 @@ impl LiquidSdk {
         match is_first_sync {
             true => {
                 self.event_manager.pause_notifications();
-                self.sync_payments_with_chain_data(false).await?;
+                self.sync_payments_with_chain_data(partial_sync).await?;
                 self.event_manager.resume_notifications();
                 self.persister.set_is_first_sync_complete(true)?;
             }
             false => {
-                self.sync_payments_with_chain_data(false).await?;
+                self.sync_payments_with_chain_data(partial_sync).await?;
             }
         }
         let duration_ms = Instant::now().duration_since(t0).as_millis();
-        info!("Synchronized with mempool and onchain data (t = {duration_ms} ms)");
+        info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
         self.notify_event_listeners(SdkEvent::Synced).await?;
         Ok(())
