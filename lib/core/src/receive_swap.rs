@@ -71,7 +71,8 @@ impl ReceiveSwapHandler {
                 match swap_state {
                     // If the swap is not local (pulled from real-time sync) we do not claim twice
                     RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {
-                        return Ok(())
+                        log::debug!("Received {swap_state:?} for non-local Receive swap {id} from status stream, skipping update.");
+                        return Ok(());
                     }
                     _ => {}
                 }

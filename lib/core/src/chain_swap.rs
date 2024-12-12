@@ -103,6 +103,7 @@ impl ChainSwapHandler {
                     // If the swap is not local (pulled from real-time sync) we do not claim twice
                     ChainSwapStates::TransactionServerMempool
                     | ChainSwapStates::TransactionServerConfirmed => {
+                        log::debug!("Received {swap_state:?} for non-local Chain swap {id} from status stream, skipping update.");
                         return Ok(());
                     }
                     _ => {}
