@@ -505,7 +505,7 @@ pub struct RefundResponse {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
@@ -570,6 +570,7 @@ pub struct RestoreRequest {
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
+    pub states: Option<Vec<PaymentState>>,
     /// Epoch time, in seconds
     pub from_timestamp: Option<i64>,
     /// Epoch time, in seconds
@@ -1028,7 +1029,8 @@ pub struct RefundableSwap {
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, Default, EnumString, Eq, PartialEq, Serialize, Hash)]
+#[strum(serialize_all = "lowercase")]
 pub enum PaymentState {
     #[default]
     Created = 0,

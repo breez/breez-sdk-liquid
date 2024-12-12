@@ -57,8 +57,8 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         .ok_or(anyhow!("An invalid SDK directory was specified"))?
         .to_string();
 
-    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-    let onchain_wallet = Arc::new(MockWallet::new());
+    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+    let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
 
     let send_swap_handler = SendSwapHandler::new(
         config.clone(),

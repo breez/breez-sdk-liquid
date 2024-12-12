@@ -519,6 +519,7 @@ dictionary RestoreRequest {
 
 dictionary ListPaymentsRequest {
     sequence<PaymentType>? filters = null;
+    sequence<PaymentState>? states = null;
     i64? from_timestamp = null;
     i64? to_timestamp = null;
     u32? offset = null;

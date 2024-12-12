@@ -604,6 +604,20 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
         }
     }
 
+    if let Some(states) = &req.states {
+        if !states.is_empty() {
+            let states_hash: HashSet<i8> = HashSet::from_iter(states.iter().map(|s| *s as i8));
+            where_clause.push(format!(
+                "COALESCE(rs.state, ss.state, cs.state) in ({})",
+                states_hash
+                    .iter()
+                    .map(|t| format!("{}", t))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+    }
+
     if let Some(details) = &req.details {
         match details {
             ListPaymentDetails::Bitcoin { address } => {
