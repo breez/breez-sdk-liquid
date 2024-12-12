@@ -298,7 +298,7 @@ pub(crate) async fn handle_command(
             let mut result = command_result!(&response);
             result.push('\n');
 
-            match parse(&response.destination).await? {
+            match parse(&response.destination, None).await? {
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
@@ -574,14 +574,14 @@ pub(crate) async fn handle_command(
             command_result!("Liquid SDK instance disconnected")
         }
         Command::Parse { input } => {
-            let res = LiquidSdk::parse(&input).await?;
+            let res = sdk.parse(&input).await?;
             command_result!(res)
         }
         Command::LnurlPay {
             lnurl,
             validate_success_url,
         } => {
-            let input = LiquidSdk::parse(&lnurl).await?;
+            let input = sdk.parse(&lnurl).await?;
             let res = match input {
                 InputType::LnUrlPay { data: pd } => {
                     let prompt = format!(
@@ -618,7 +618,7 @@ pub(crate) async fn handle_command(
             command_result!(res)
         }
         Command::LnurlWithdraw { lnurl } => {
-            let input = LiquidSdk::parse(&lnurl).await?;
+            let input = sdk.parse(&lnurl).await?;
             let res = match input {
                 InputType::LnUrlWithdraw { data: pd } => {
                     let prompt = format!(
@@ -644,7 +644,7 @@ pub(crate) async fn handle_command(
         Command::LnurlAuth { lnurl } => {
             let lnurl_endpoint = lnurl.trim();
 
-            let res = match parse(lnurl_endpoint).await? {
+            let res = match parse(lnurl_endpoint, None).await? {
                 InputType::LnUrlAuth { data: ad } => {
                     let auth_res = sdk.lnurl_auth(ad).await?;
                     serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())

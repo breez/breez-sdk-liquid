@@ -5,6 +5,7 @@
 
 import 'bindings.dart';
 import 'frb_generated.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
@@ -141,6 +142,11 @@ class Config {
   /// The Breez API key used for making requests to their mempool service
   final String? breezApiKey;
 
+  /// A set of external input parsers that are used by [LiquidSdk::parse] when the input
+  /// is not recognized. See [ExternalInputParser] for more details on how to configure
+  /// external parsing.
+  final List<ExternalInputParser>? externalInputParsers;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -152,6 +158,7 @@ class Config {
     required this.zeroConfMinFeeRateMsat,
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
+    this.externalInputParsers,
   });
 
   @override
@@ -165,7 +172,8 @@ class Config {
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
       zeroConfMaxAmountSat.hashCode ^
-      breezApiKey.hashCode;
+      breezApiKey.hashCode ^
+      externalInputParsers.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -181,7 +189,8 @@ class Config {
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
-          breezApiKey == other.breezApiKey;
+          breezApiKey == other.breezApiKey &&
+          externalInputParsers == other.externalInputParsers;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].

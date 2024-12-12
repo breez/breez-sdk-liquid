@@ -68,6 +68,7 @@ export interface Config {
     breezApiKey?: string
     cacheDir?: string
     zeroConfMaxAmountSat?: number
+    externalInputParsers?: ExternalInputParser[]
 }
 
 export interface ConnectRequest {
@@ -87,6 +88,12 @@ export interface CurrencyInfo {
     uniqSymbol?: SymbolType
     localizedName: LocalizedName[]
     localeOverrides: LocaleOverrides[]
+}
+
+export interface ExternalInputParser {
+    providerId: string
+    inputRegex: string
+    parserUrl: string
 }
 
 export interface FiatCurrency {
@@ -747,11 +754,6 @@ export const defaultConfig = async (network: LiquidNetwork, breezApiKey: string 
     return response
 }
 
-export const parse = async (input: string): Promise<InputType> => {
-    const response = await BreezSDKLiquid.parse(input)
-    return response
-}
-
 export const parseInvoice = async (input: string): Promise<LnInvoice> => {
     const response = await BreezSDKLiquid.parseInvoice(input)
     return response
@@ -774,6 +776,11 @@ export const signMessage = async (req: SignMessageRequest): Promise<SignMessageR
 
 export const checkMessage = async (req: CheckMessageRequest): Promise<CheckMessageResponse> => {
     const response = await BreezSDKLiquid.checkMessage(req)
+    return response
+}
+
+export const parse = async (input: string): Promise<InputType> => {
+    const response = await BreezSDKLiquid.parse(input)
     return response
 }
 

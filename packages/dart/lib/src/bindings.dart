@@ -6,6 +6,7 @@
 import 'bindings/duplicates.dart';
 import 'error.dart';
 import 'frb_generated.dart';
+import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
@@ -23,8 +24,6 @@ Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogS
 
 Config defaultConfig({required LiquidNetwork network, String? breezApiKey}) =>
     RustLib.instance.api.crateBindingsDefaultConfig(network: network, breezApiKey: breezApiKey);
-
-Future<InputType> parse({required String input}) => RustLib.instance.api.crateBindingsParse(input: input);
 
 LNInvoice parseInvoice({required String input}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input);
@@ -64,6 +63,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req});
 
   Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req});
+
+  Future<InputType> parse({required String input});
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 

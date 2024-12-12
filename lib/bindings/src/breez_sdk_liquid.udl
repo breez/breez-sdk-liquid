@@ -335,6 +335,7 @@ dictionary Config {
     string? breez_api_key;
     string? cache_dir;
     u64? zero_conf_max_amount_sat;
+    sequence<ExternalInputParser>? external_input_parsers;
 };
 
 enum LiquidNetwork {
@@ -629,6 +630,12 @@ dictionary LogEntry {
     string level;
 };
 
+dictionary ExternalInputParser {
+    string provider_id;
+    string input_regex;
+    string parser_url;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
@@ -641,9 +648,6 @@ namespace breez_sdk_liquid {
     
     [Throws=SdkError]
     Config default_config(LiquidNetwork network, string? breez_api_key);
-
-    [Throws=PaymentError]
-    InputType parse(string input);
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string input);
@@ -689,6 +693,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     CheckMessageResponse check_message(CheckMessageRequest req);
+
+    [Throws=PaymentError]
+    InputType parse(string input);
 
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
