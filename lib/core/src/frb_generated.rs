@@ -2372,6 +2372,7 @@ impl SseDecode for crate::model::Config {
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
+        let mut var_syncServiceUrl = <String>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_externalInputParsers =
@@ -2385,6 +2386,7 @@ impl SseDecode for crate::model::Config {
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             zero_conf_min_fee_rate_msat: var_zeroConfMinFeeRateMsat,
+            sync_service_url: var_syncServiceUrl,
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
             breez_api_key: var_breezApiKey,
             external_input_parsers: var_externalInputParsers,
@@ -2744,6 +2746,18 @@ impl SseDecode for crate::model::ListPaymentDetails {
     }
 }
 
+impl SseDecode for Vec<crate::model::PaymentState> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::PaymentState>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::model::PaymentType> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2760,6 +2774,7 @@ impl SseDecode for crate::model::ListPaymentsRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_filters = <Option<Vec<crate::model::PaymentType>>>::sse_decode(deserializer);
+        let mut var_states = <Option<Vec<crate::model::PaymentState>>>::sse_decode(deserializer);
         let mut var_fromTimestamp = <Option<i64>>::sse_decode(deserializer);
         let mut var_toTimestamp = <Option<i64>>::sse_decode(deserializer);
         let mut var_offset = <Option<u32>>::sse_decode(deserializer);
@@ -2767,6 +2782,7 @@ impl SseDecode for crate::model::ListPaymentsRequest {
         let mut var_details = <Option<crate::model::ListPaymentDetails>>::sse_decode(deserializer);
         return crate::model::ListPaymentsRequest {
             filters: var_filters,
+            states: var_states,
             from_timestamp: var_fromTimestamp,
             to_timestamp: var_toTimestamp,
             offset: var_offset,
@@ -3470,6 +3486,17 @@ impl SseDecode for Option<Vec<crate::bindings::ExternalInputParser>> {
             return Some(<Vec<crate::bindings::ExternalInputParser>>::sse_decode(
                 deserializer,
             ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<crate::model::PaymentState>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::model::PaymentState>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -4598,6 +4625,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.zero_conf_min_fee_rate_msat
                 .into_into_dart()
                 .into_dart(),
+            self.sync_service_url.into_into_dart().into_dart(),
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
             self.breez_api_key.into_into_dart().into_dart(),
             self.external_input_parsers.into_into_dart().into_dart(),
@@ -4907,6 +4935,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ListPaymentsRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.filters.into_into_dart().into_dart(),
+            self.states.into_into_dart().into_dart(),
             self.from_timestamp.into_into_dart().into_dart(),
             self.to_timestamp.into_into_dart().into_dart(),
             self.offset.into_into_dart().into_dart(),
@@ -6674,6 +6703,7 @@ impl SseEncode for crate::model::Config {
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
+        <String>::sse_encode(self.sync_service_url, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
         <Option<String>>::sse_encode(self.breez_api_key, serializer);
         <Option<Vec<crate::bindings::ExternalInputParser>>>::sse_encode(
@@ -6953,6 +6983,16 @@ impl SseEncode for crate::model::ListPaymentDetails {
     }
 }
 
+impl SseEncode for Vec<crate::model::PaymentState> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::PaymentState>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::model::PaymentType> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6967,6 +7007,7 @@ impl SseEncode for crate::model::ListPaymentsRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<Vec<crate::model::PaymentType>>>::sse_encode(self.filters, serializer);
+        <Option<Vec<crate::model::PaymentState>>>::sse_encode(self.states, serializer);
         <Option<i64>>::sse_encode(self.from_timestamp, serializer);
         <Option<i64>>::sse_encode(self.to_timestamp, serializer);
         <Option<u32>>::sse_encode(self.offset, serializer);
@@ -7527,6 +7568,16 @@ impl SseEncode for Option<Vec<crate::bindings::ExternalInputParser>> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <Vec<crate::bindings::ExternalInputParser>>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<crate::model::PaymentState>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::model::PaymentState>>::sse_encode(value, serializer);
         }
     }
 }
@@ -8771,6 +8822,7 @@ mod io {
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 zero_conf_min_fee_rate_msat: self.zero_conf_min_fee_rate_msat.cst_decode(),
+                sync_service_url: self.sync_service_url.cst_decode(),
                 zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
                 breez_api_key: self.breez_api_key.cst_decode(),
                 external_input_parsers: self.external_input_parsers.cst_decode(),
@@ -9041,6 +9093,16 @@ mod io {
             }
         }
     }
+    impl CstDecode<Vec<crate::model::PaymentState>> for *mut wire_cst_list_payment_state {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::model::PaymentState> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
     impl CstDecode<Vec<crate::model::PaymentType>> for *mut wire_cst_list_payment_type {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::model::PaymentType> {
@@ -9056,6 +9118,7 @@ mod io {
         fn cst_decode(self) -> crate::model::ListPaymentsRequest {
             crate::model::ListPaymentsRequest {
                 filters: self.filters.cst_decode(),
+                states: self.states.cst_decode(),
                 from_timestamp: self.from_timestamp.cst_decode(),
                 to_timestamp: self.to_timestamp.cst_decode(),
                 offset: self.offset.cst_decode(),
@@ -10228,6 +10291,7 @@ mod io {
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 zero_conf_min_fee_rate_msat: Default::default(),
+                sync_service_url: core::ptr::null_mut(),
                 zero_conf_max_amount_sat: core::ptr::null_mut(),
                 breez_api_key: core::ptr::null_mut(),
                 external_input_parsers: core::ptr::null_mut(),
@@ -10400,6 +10464,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 filters: core::ptr::null_mut(),
+                states: core::ptr::null_mut(),
                 from_timestamp: core::ptr::null_mut(),
                 to_timestamp: core::ptr::null_mut(),
                 offset: core::ptr::null_mut(),
@@ -12082,6 +12147,17 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment_state(
+        len: i32,
+    ) -> *mut wire_cst_list_payment_state {
+        let wrap = wire_cst_list_payment_state {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_list_payment_type(
         len: i32,
     ) -> *mut wire_cst_list_payment_type {
@@ -12265,6 +12341,7 @@ mod io {
         network: i32,
         payment_timeout_sec: u64,
         zero_conf_min_fee_rate_msat: u32,
+        sync_service_url: *mut wire_cst_list_prim_u_8_strict,
         zero_conf_max_amount_sat: *mut u64,
         breez_api_key: *mut wire_cst_list_prim_u_8_strict,
         external_input_parsers: *mut wire_cst_list_external_input_parser,
@@ -12486,6 +12563,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_list_payment_state {
+        ptr: *mut i32,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_payment_type {
         ptr: *mut i32,
         len: i32,
@@ -12494,6 +12577,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_payments_request {
         filters: *mut wire_cst_list_payment_type,
+        states: *mut wire_cst_list_payment_state,
         from_timestamp: *mut i64,
         to_timestamp: *mut i64,
         offset: *mut u32,
