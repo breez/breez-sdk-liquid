@@ -55,6 +55,13 @@ pub trait BitcoinChainService: Send + Sync {
     /// Return the confirmed and unconfirmed balances of a list of script hashes
     fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>>;
 
+    /// Return the confirmed and unconfirmed balances of a script hash
+    async fn script_get_balance_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<GetBalanceRes>;
+
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
         &self,
@@ -211,6 +218,39 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
     fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
         Ok(self.client.batch_script_get_balance(scripts)?)
+    }
+
+    async fn script_get_balance_with_retry(
+        &self,
+        script: &Script,
+        retries: u64,
+    ) -> Result<GetBalanceRes> {
+        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
+        info!("Fetching script balance for {}", script_hash);
+        let mut script_balance = GetBalanceRes {
+            confirmed: 0,
+            unconfirmed: 0,
+        };
+
+        let mut retry = 0;
+        while retry <= retries {
+            script_balance = self.script_get_balance(script)?;
+            match script_balance {
+                GetBalanceRes {
+                    confirmed: 0,
+                    unconfirmed: 0,
+                } => {
+                    retry += 1;
+                    info!(
+                        "Got zero balance for script {}, retrying in {} seconds...",
+                        script_hash, retry
+                    );
+                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                }
+                _ => break,
+            }
+        }
+        Ok(script_balance)
     }
 
     async fn verify_tx(
