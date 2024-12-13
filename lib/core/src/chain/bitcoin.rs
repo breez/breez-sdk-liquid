@@ -1,4 +1,3 @@
-use std::thread;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
@@ -173,7 +172,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         "Script history for {} got zero transactions, retrying in {} seconds...",
                         script_hash, retry
                     );
-                    thread::sleep(Duration::from_secs(retry));
+                    tokio::time::sleep(Duration::from_secs(retry)).await;
                 }
                 false => break,
             }

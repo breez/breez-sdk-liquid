@@ -1,4 +1,4 @@
-use std::{str::FromStr, thread, time::Duration};
+use std::{str::FromStr, time::Duration};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -192,7 +192,7 @@ impl LiquidChainService for HybridLiquidChainService {
                     retry += 1;
                     info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
                     // Waiting 1s between retries, so we detect the new tx as soon as possible
-                    thread::sleep(Duration::from_secs(1));
+                    tokio::time::sleep(Duration::from_secs(1)).await;
                 }
                 false => break,
             }
@@ -290,7 +290,7 @@ async fn get_with_retry(url: &str, retries: usize) -> Result<Response> {
             }
             let secs = 1 << attempt;
 
-            thread::sleep(Duration::from_secs(secs));
+            tokio::time::sleep(Duration::from_secs(secs)).await;
         }
     }
 }
