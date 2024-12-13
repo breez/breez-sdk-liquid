@@ -27,6 +27,8 @@ impl ChainSyncData {
     pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
         for field in updated_fields {
             match field.as_str() {
+                "payer_amount_sat" => self.payer_amount_sat = other.payer_amount_sat,
+                "receiver_amount_sat" => self.receiver_amount_sat = other.receiver_amount_sat,
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
                 _ => continue,
             }
