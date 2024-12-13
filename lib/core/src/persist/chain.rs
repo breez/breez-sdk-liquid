@@ -64,6 +64,8 @@ impl Persister {
             "UPDATE chain_swaps
             SET
                 description = :description,
+                payer_amount_sat = :payer_amount_sat,
+                receiver_amount_sat = :receiver_amount_sat,
                 accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
@@ -76,6 +78,8 @@ impl Persister {
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
+                ":payer_amount_sat": &chain_swap.payer_amount_sat,
+                ":receiver_amount_sat": &chain_swap.receiver_amount_sat,
                 ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
@@ -274,8 +278,10 @@ impl Persister {
         receiver_amount_sat: u64,
     ) -> Result<(), PaymentError> {
         log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}, receiver_amount_sat = {receiver_amount_sat}");
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con: Connection = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 payer_amount_sat = :payer_amount_sat,
@@ -288,6 +294,22 @@ impl Persister {
                 ":receiver_amount_sat": receiver_amount_sat,
             },
         )?;
+        self.commit_outgoing(
+            &tx,
+            swap_id,
+            RecordType::Chain,
+            Some(vec![
+                "payer_amount_sat".to_string(),
+                "receiver_amount_sat".to_string(),
+            ]),
+        )?;
+        tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
+
         Ok(())
     }
 
