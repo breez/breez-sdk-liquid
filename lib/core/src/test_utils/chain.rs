@@ -193,6 +193,14 @@ impl BitcoinChainService for MockBitcoinChainService {
         unimplemented!()
     }
 
+    async fn script_get_balance_with_retry(
+        &self,
+        _script: &boltz_client::bitcoin::Script,
+        _retries: u64,
+    ) -> Result<electrum_client::GetBalanceRes> {
+        unimplemented!()
+    }
+
     async fn verify_tx(
         &self,
         _address: &boltz_client::Address,

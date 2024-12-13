@@ -513,7 +513,8 @@ impl ChainSwapHandler {
             .bitcoin_chain_service
             .lock()
             .await
-            .script_get_balance(script_pubkey.as_script())?;
+            .script_get_balance_with_retry(script_pubkey.as_script(), 10)
+            .await?;
         debug!("Found lockup balance {script_balance:?}");
         let user_lockup_amount_sat = match script_balance.confirmed > 0 {
             true => script_balance.confirmed,
