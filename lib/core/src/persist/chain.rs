@@ -20,7 +20,7 @@ impl Persister {
         let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
         con.execute(
             "
-            INSERT OR REPLACE INTO chain_swaps (
+            INSERT INTO chain_swaps (
                 id,
                 id_hash,
                 direction,
@@ -38,7 +38,8 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		    ON CONFLICT DO NOTHING",
             (
                 &chain_swap.id,
                 &id_hash,
@@ -63,21 +64,25 @@ impl Persister {
             "UPDATE chain_swaps
             SET
                 description = :description,
+                accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_tx_id = :claim_tx_id,
                 refund_tx_id = :refund_tx_id,
-                pair_fees_json = :pair_fees_json
+                pair_fees_json = :pair_fees_json,
+                state = :state
             WHERE
                 id = :id",
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
+                ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
+                ":state": &chain_swap.state,
             },
         )?;
 

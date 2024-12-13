@@ -18,43 +18,57 @@ impl Persister {
         let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
         con.execute(
             "
-            INSERT OR REPLACE INTO send_swaps (
+            INSERT INTO send_swaps (
                 id,
                 id_hash,
                 invoice,
                 bolt12_offer,
-                preimage,
                 payment_hash,
-                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
                 refund_private_key,
-                lockup_tx_id,
-                refund_tx_id,
                 created_at,
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING
+            ",
             (
                 &send_swap.id,
                 &id_hash,
                 &send_swap.invoice,
                 &send_swap.bolt12_offer,
-                &send_swap.preimage,
                 &send_swap.payment_hash,
-                &send_swap.description,
                 &send_swap.payer_amount_sat,
                 &send_swap.receiver_amount_sat,
                 &send_swap.create_response_json,
                 &send_swap.refund_private_key,
-                &send_swap.lockup_tx_id,
-                &send_swap.refund_tx_id,
                 &send_swap.created_at,
                 &send_swap.state,
                 &send_swap.pair_fees_json,
             ),
+        )?;
+
+        con.execute(
+            "UPDATE send_swaps 
+            SET
+                description = :description,
+                preimage = :preimage,
+                lockup_tx_id = :lockup_tx_id,
+                refund_tx_id = :refund_tx_id,
+                state = :state
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": &send_swap.id,
+                ":description": &send_swap.description,
+                ":preimage": &send_swap.preimage,
+                ":lockup_tx_id": &send_swap.lockup_tx_id,
+                ":refund_tx_id": &send_swap.refund_tx_id,
+                ":state": &send_swap.state,
+            },
         )?;
 
         Ok(())
